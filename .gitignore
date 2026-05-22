@@ -128,4 +128,8 @@ sonarqube-report.json
 .codex
 trace_processor
 tracebox
-.scratch/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
