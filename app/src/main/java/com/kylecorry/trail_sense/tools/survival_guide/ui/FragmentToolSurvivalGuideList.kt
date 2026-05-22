@@ -1,75 +1,83 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.graphics.Color
-import android.os.Bundle
-import android.view.View
-import android.widget.ScrollView
-import android.widget.TextView
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useArgument
-import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.views.badge.Badge
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ListItemTag
-import com.kylecorry.andromeda.views.list.ResourceListIcon
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useBackPressedCallback
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useSearch
-import com.kylecorry.trail_sense.shared.extensions.useShowDisclaimer
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.SearchView
-import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.tools.survival_guide.domain.SurvivalGuideRepo
 
-class FragmentToolSurvivalGuideList :
-    TrailSenseReactiveFragment(R.layout.fragment_survival_guide_chapters) {
+@Composable
+fun Fragment.SurvivalGuideListContent(modifier: Modifier = Modifier) {
+    val context = requireContext()
+    val navController = findNavController()
+    val repo = remember { SurvivalGuideRepo.getInstance(context) }
 
-    override fun update() {
-        // Views
-        val listView = useView<AndromedaListView>(R.id.list)
-        val emptyTextView = useView<TextView>(R.id.empty_text)
-        val searchView = useView<SearchView>(R.id.search)
-        val summaryView = useView<TextView>(R.id.summary)
-        val summaryHolderView = useView<View>(R.id.summary_holder)
-        val summaryTitleView = useView<TextView>(R.id.summary_title)
-        val summaryScrollView = useView<ScrollView>(R.id.summary_scroll)
-        val summaryChapterBadgeView = useView<Badge>(R.id.summary_chapter_title)
-        val navController = useNavController()
+    var chapters by remember { mutableStateOf<List<com.kylecorry.trail_sense.tools.survival_guide.domain.SurvivalGuideSection>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
 
-        // Arguments
-        val searchArgumentQuery = useArgument<String>("search_query") ?: ""
+    LaunchedEffect(Unit) {
+        chapters = repo.getChapters()
+    }
 
-        // State
-        val (query, setQuery) = useState(searchArgumentQuery)
-        val chapters = useSurvivalGuideChapters()
-        val (searchResults, summary) = useSearchSurvivalGuide(query)
+    val filtered = chapters.filter {
+        searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)
+    }
 
-        // Services
-        val context = useAndroidContext()
-        val markdown = useService<MarkdownService>()
-
-        useShowDisclaimer(
-            getString(R.string.survival_guide),
-            getString(R.string.survival_guide_disclaimer),
-            "pref_survival_guide_disclaimer_shown_v2",
-            cancelText = null,
-            considerShownIfCancelled = false
+    Column(modifier = modifier.fillMaxSize()) {
+        TrailSenseSearchBar(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = "Search survival guide..."
         )
 
-        useBackPressedCallback(query, searchView) {
-            if (query.isNotBlank()) {
-                setQuery("")
-                searchView.query = ""
-                true
-            } else {
-                false
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            items(filtered) { chapter ->
+                TrailSenseCard(
+                    onClick = {
+                        val bundle = Bundle().apply {
+                            putLong("chapter_id", chapter.id)
+                        }
+                        navController.navigate(R.id.survivalGuideReaderFragment, bundle)
+                    }
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(chapter.name, style = MaterialTheme.typography.titleMedium)
+                    }
+                }
             }
+        }
+    }
+}
+
+class FragmentToolSurvivalGuideList : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        SurvivalGuideListContent()
+    }
+}
         }
 
         useSearch(searchView, setQuery)

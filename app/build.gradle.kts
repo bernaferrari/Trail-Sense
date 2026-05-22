@@ -143,6 +143,9 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 }
 
 dependencies {
+    // Internal modules
+    implementation(project(":shared"))
+
     // Kotlin
     implementation(libs.kotlinx.coroutines.android)
     coreLibraryDesugaring(libs.desugar.jdk.libs)

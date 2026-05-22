@@ -1,59 +1,74 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import android.graphics.Color
-import android.os.Bundle
-import android.text.util.Linkify.WEB_URLS
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.core.text.method.LinkMovementMethodCompat
-import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
-import androidx.core.view.isVisible
-import com.google.android.flexbox.FlexboxLayout
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useArgument
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useCoroutineQueue
-import com.kylecorry.andromeda.views.badge.Badge
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useToolEventListener
-import com.kylecorry.trail_sense.shared.extensions.useTrigger
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.trail_sense.tools.field_guide.FieldGuideToolRegistration
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTagRow
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 
-class FieldGuidePageFragment : TrailSenseReactiveFragment(R.layout.fragment_field_guide_page) {
+@Composable
+fun Fragment.FieldGuidePageContent(modifier: Modifier = Modifier) {
+    val context = requireContext()
+    val repo = remember { FieldGuideRepo.getInstance(context) }
+    val pageId = remember { arguments?.getLong("page_id") ?: 0L }
 
-    override fun update() {
-        // Views
-        val titleView = useView<Toolbar>(R.id.field_guide_page_title)
-        val notesView = useView<TextView>(R.id.notes)
-        val imageView = useView<ImageView>(R.id.image)
-        val tagsView = useView<FlexboxLayout>(R.id.tags)
-        val sightingsView = useView<TextView>(R.id.sightings_title)
-        val navController = useNavController()
+    var page by remember { mutableStateOf<FieldGuidePage?>(null) }
 
-        // State
-        val page = usePage()
+    LaunchedEffect(pageId) {
+        page = repo.getPage(pageId)
+    }
 
-        // Services
-        val files = useService<FileSubsystem>()
-        val prefs = useService<UserPreferences>()
-        val fieldGuideFormatter = useService<FieldGuideFormatService>()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        TrailSenseCard {
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    text = page?.name ?: "Loading...",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
-        useEffect(notesView) {
-            notesView.movementMethod = LinkMovementMethodCompat.getInstance()
+                page?.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+                    Spacer(Modifier.height(8.dp))
+                    TrailSenseTagRow(tags = tags.map { it.name })
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = page?.description ?: "",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
+    }
+}
+
+class FieldGuidePageFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        FieldGuidePageContent()
+    }
+}
 
         useEffect(page, titleView, notesView, imageView, tagsView, navController, fieldGuideFormatter) {
             titleView.rightButton.isVisible = page?.isBuiltIn == false

@@ -1,66 +1,125 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.widget.TextView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.useArgument
-import com.kylecorry.andromeda.fragments.useBackgroundMemo
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ListItemTag
-import com.kylecorry.andromeda.views.list.ListMenuItem
-import com.kylecorry.sol.time.Time.toZonedDateTime
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useToolEventListener
-import com.kylecorry.trail_sense.shared.extensions.useTrigger
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
-import com.kylecorry.trail_sense.tools.field_guide.FieldGuideToolRegistration
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.launch
 
-class SightingListFragment : TrailSenseReactiveFragment(R.layout.fragment_sightings_list) {
-    override fun update() {
-        // Views
-        val listView = useView<AndromedaListView>(R.id.list)
-        val emptyTextView = useView<TextView>(R.id.sightings_empty_text)
-        val createButtonView = useView<FloatingActionButton>(R.id.create_btn)
-        val titleView = useView<Toolbar>(R.id.title)
+@Composable
+fun Fragment.SightingListContent(modifier: Modifier = Modifier) {
+    val context = requireContext()
+    val navController = findNavController()
+    val scope = rememberCoroutineScope()
 
-        // Services
-        val formatter = useService<FormatService>()
-        val fieldGuideFormatter = useService<FieldGuideFormatService>()
-        val repo = useService<FieldGuideRepo>()
-        val navController = useNavController()
-        val navigator = useService<Navigator>()
-        val context = useAndroidContext()
+    val repo = remember { FieldGuideRepo.getInstance(context) }
+    val pageId = remember { arguments?.getLong("page_id") ?: 0L }
 
-        // Arguments
-        val pageId = useArgument<Long>("page_id") ?: 0
+    var sightings by remember { mutableStateOf<List<Sighting>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-        // State
-        val (refreshKey, triggerRefresh) = useTrigger()
-        useToolEventListener(FieldGuideToolRegistration.BROADCAST_SIGHTING_RECORDED) {
-            triggerRefresh()
+    LaunchedEffect(pageId) {
+        isLoading = true
+        sightings = repo.getSightings(pageId).sortedByDescending { it.timestamp }
+        isLoading = false
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        if (isLoading) {
+            Text(
+                "Loading sightings...",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else if (sightings.isEmpty()) {
+            TrailSenseEmptyState(
+                message = getString(R.string.no_sightings),
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                itemsIndexed(sightings) { index, sighting ->
+                    TrailSenseCard(
+                        onClick = {
+                            val bundle = Bundle().apply {
+                                putLong("page_id", pageId)
+                                putLong("sighting_id", sighting.id)
+                            }
+                            navController.navigate(R.id.fieldGuideSightingFragment, bundle)
+                        }
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                text = sighting.timestamp.toString(),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "${sighting.coordinate.latitude}, ${sighting.coordinate.longitude}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
         }
 
-        val page = useBackgroundMemo(repo, pageId, refreshKey, resetOnResume) {
-            repo.getPage(pageId)
+        FloatingActionButton(
+            onClick = {
+                val bundle = Bundle().apply {
+                    putLong("page_id", pageId)
+                }
+                navController.navigate(R.id.createFieldGuideSightingFragment, bundle)
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = getString(R.string.create))
         }
+    }
+}
+
+class SightingListFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        SightingListContent()
+    }
+}
 
         val sightings = useMemo(page) {
             page?.sightings?.sortedByDescending { it.time } ?: emptyList()

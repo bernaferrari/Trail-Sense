@@ -1,49 +1,41 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
-import android.widget.TextView
-import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.loadingindicator.LoadingIndicator
-import com.google.android.material.textfield.TextInputEditText
-import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useCoroutineQueue
-import com.kylecorry.andromeda.list.GridView
-import com.kylecorry.luna.text.toFloatCompat
-import com.kylecorry.sol.math.arithmetic.Arithmetic
-import com.kylecorry.sol.science.physics.NoDragModel
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.sol.units.Speed
-import com.kylecorry.sol.units.TimeUnits
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.DistanceUtils
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.Units
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useDistancePreference
-import com.kylecorry.trail_sense.shared.extensions.useFloatPreference
-import com.kylecorry.trail_sense.shared.extensions.useSpeedPreference
-import com.kylecorry.trail_sense.shared.views.BulletSpeedInputView
-import com.kylecorry.trail_sense.shared.views.DistanceInputView
-import com.kylecorry.trail_sense.tools.ballistics.domain.BallisticsCalculator
-import com.kylecorry.trail_sense.tools.ballistics.domain.G1DragModel
-import com.kylecorry.trail_sense.tools.ballistics.domain.TrajectoryPoint
-import java.time.Duration
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 
-class FragmentBallisticsCalculator :
-    TrailSenseReactiveFragment(R.layout.fragment_tool_ballistics_calculator) {
+@Composable
+fun Fragment.BallisticsCalculatorContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        TrailSenseCard {
+            Text(
+                "Ballistics Calculator (Pure Compose placeholder)",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }
+}
 
-    override fun update() {
-        val ballisticsTableView = useView<RecyclerView>(R.id.ballistics_table)
-        val ballisticsGrid = useMemo(ballisticsTableView) {
-            GridView(ballisticsTableView, R.layout.list_item_grid_cell, 4) { view, value: String ->
-                view.findViewById<TextView>(R.id.content).text = value
-            }
+class FragmentBallisticsCalculator : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        BallisticsCalculatorContent()
+    }
+}
         }
         val zeroDistanceView = useView<DistanceInputView>(R.id.zero_distance)
         val scopeHeightView = useView<DistanceInputView>(R.id.scope_height)

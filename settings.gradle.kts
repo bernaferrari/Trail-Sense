@@ -33,4 +33,5 @@ dependencyResolutionManagement {
 }
 
 include(":app")
+include(":shared")
 rootProject.name = "Trail Sense"

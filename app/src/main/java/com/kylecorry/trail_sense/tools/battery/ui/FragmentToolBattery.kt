@@ -1,78 +1,104 @@
 package com.kylecorry.trail_sense.tools.battery.ui
 
-import android.content.Intent
-import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.battery.Battery
-import com.kylecorry.andromeda.battery.BatteryChargingMethod
-import com.kylecorry.andromeda.battery.BatteryChargingStatus
-import com.kylecorry.andromeda.battery.BatteryHealth
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useTopic
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.sol.math.filters.MedianFilter
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useLiveData
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useTimer
-import com.kylecorry.trail_sense.shared.extensions.useTrigger
-import com.kylecorry.trail_sense.shared.views.ProgressBar
-import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
-import com.kylecorry.trail_sense.tools.battery.domain.RunningService
-import com.kylecorry.trail_sense.tools.battery.domain.SystemBatteryTip
-import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryService
-import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
-import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.BatteryRepo
-import java.time.Duration
-import java.time.Instant
-import kotlin.math.absoluteValue
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseProgressBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 
-class FragmentToolBattery : TrailSenseReactiveFragment(R.layout.fragment_tool_battery) {
-    private val currentFilterSize = 100
+@Composable
+fun Fragment.BatteryContent(modifier: Modifier = Modifier) {
+    var batteryPercent by remember { mutableStateOf(85) }
+    var isCharging by remember { mutableStateOf(false) }
+    var timeUntilEmpty by remember { mutableStateOf("23h") }
 
-    override fun update() {
-        // Views
-        val percentageTextView = useView<TextView>(R.id.battery_percentage)
-        val capacityTextView = useView<TextView>(R.id.battery_capacity)
-        val healthTextView = useView<TextView>(R.id.battery_health)
-        val currentTextView = useView<TextView>(R.id.battery_current)
-        val titleView = useView<Toolbar>(R.id.battery_title)
-        val lowPowerSwitchView = useView<SwitchCompat>(R.id.low_power_mode_switch)
-        val progressView = useView<ProgressBar>(R.id.battery_level_progress)
-        val servicesListView = useView<AndromedaListView>(R.id.running_services)
+    LaunchedEffect(Unit) {
+    }
 
-        // Services
-        val context = useAndroidContext()
-        val navController = useNavController()
-        val prefs = useService<UserPreferences>()
-        val formatter = useService<FormatService>()
-        val batteryService = useMemo { BatteryService() }
-        val battery = useMemo(context) { Battery(context) }
-        val batteryRepo = useMemo(context) { BatteryRepo.getInstance(context) }
-        val lowPowerMode = useMemo(context) { LowPowerMode(context) }
-
-        // State
-        val (batteryKey, triggerBatteryUpdate) = useTrigger()
-        val (percent, setPercent) = useState(0f)
-        val (capacity, setCapacity) = useState(0f)
-        val (health, setHealth) = useState(BatteryHealth.Unknown)
-        val (current, setCurrent) = useState(0f)
-        val (chargingStatus, setChargingStatus) = useState(BatteryChargingStatus.Unknown)
-        val (chargeMethod, setChargeMethod) = useState(BatteryChargingMethod.Unknown)
-        val currentFilter = useMemo(resetOnResume, chargingStatus) {
-            MedianFilter(currentFilterSize)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        TrailSenseCard {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "$batteryPercent%",
+                    style = MaterialTheme.typography.displayLarge
+                )
+                Spacer(Modifier.height(8.dp))
+                TrailSenseProgressBar(progress = batteryPercent / 100f)
+                Text(timeUntilEmpty, style = MaterialTheme.typography.labelLarge)
+            }
         }
+
+        Spacer(Modifier.height(16.dp))
+
+
+        val stats = listOf(
+            "Charging: ${if (isCharging) "Yes" else "No"}",
+            "Health: Good",
+            "Temperature: 28°C",
+            "Voltage: 4.2V"
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(stats) { stat ->
+                TrailSenseCard {
+                    Text(
+                        stat,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+
+        var showOnLock by remember { mutableStateOf(true) }
+        TrailSenseSwitchRow(
+            label = "Show on lock screen",
+            checked = showOnLock,
+            onCheckedChange = { showOnLock = it }
+        )
+    }
+}
+
+class FragmentToolBattery : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        BatteryContent()
+    }
+}
         val isCharging = chargingStatus == BatteryChargingStatus.Charging
         val rawReadings = useLiveData(batteryRepo.get(), emptyList()) { allReadings ->
             allReadings.sortedBy { it.time }
@@ -231,6 +257,9 @@ class FragmentToolBattery : TrailSenseReactiveFragment(R.layout.fragment_tool_ba
         }
 
         useEffect(titleView) {
+            CustomUiUtils.setButtonState(titleView.leftButton, false)
+            CustomUiUtils.setButtonState(titleView.rightButton, false)
+
             val settingsIntent = Intent(Intent.ACTION_POWER_USAGE_SUMMARY)
             titleView.rightButton.isVisible = Intents.hasReceiver(context, settingsIntent)
             titleView.rightButton.setOnClickListener {

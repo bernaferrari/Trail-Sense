@@ -25,6 +25,7 @@ import androidx.core.view.size
 import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+// Migration note: Compose NavHost groundwork exists in main.navigation.TrailSenseNavHost
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.textfield.TextInputEditText
 import com.kylecorry.andromeda.alerts.Alerts

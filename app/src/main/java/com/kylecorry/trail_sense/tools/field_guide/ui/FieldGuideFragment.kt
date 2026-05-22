@@ -1,51 +1,129 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.widget.TextView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.kylecorry.andromeda.alerts.dialog
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useClickCallback
-import com.kylecorry.andromeda.views.list.AndromedaListView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useBackPressedCallback
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useResumeEffect
-import com.kylecorry.trail_sense.shared.extensions.useShowDisclaimer
-import com.kylecorry.trail_sense.shared.extensions.useTrigger
-import com.kylecorry.trail_sense.shared.views.SearchView
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTagRow
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuideService
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideCleanupCommand
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 
-class FieldGuideFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_field_guide) {
+@Composable
+fun Fragment.FieldGuideContent(modifier: Modifier = Modifier) {
+    val context = requireContext()
+    val navController = findNavController()
 
-    override fun update() {
-        // Views
-        val listView = useView<AndromedaListView>(R.id.list)
-        val addButtonView = useView<FloatingActionButton>(R.id.add_btn)
-        val searchView = useView<SearchView>(R.id.search)
-        val emptyView = useView<TextView>(R.id.empty_text)
+    val repo = remember { FieldGuideRepo.getInstance(context) }
 
-        listView.emptyView = emptyView
+    var pages by remember { mutableStateOf<List<FieldGuidePage>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-        // State
-        val (reloadKey, triggerReload) = useTrigger()
+    LaunchedEffect(Unit) {
+        pages = repo.getPages().sortedBy { it.name }
+    }
 
-        // Services
-        val service = useService<FieldGuideService>()
+    val filteredPages = remember(pages, searchQuery, selectedCategory) {
+        pages.filter { page ->
+            val matchesSearch = searchQuery.isBlank() ||
+                page.name.contains(searchQuery, ignoreCase = true) ||
+                page.description.contains(searchQuery, ignoreCase = true)
 
-        // Callbacks
-        val createPage = useCreatePage()
-        val editPage = useEditPage()
-        val viewPage = useViewPage()
-        val deletePage = useDeletePage(triggerReload)
-        val hidePage = useHidePage(triggerReload)
+            val matchesCategory = selectedCategory == null ||
+                page.tags.any { it.name.equals(selectedCategory, ignoreCase = true) }
+
+            matchesSearch && matchesCategory
+        }
+    }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        TrailSenseSearchBar(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = "Search field guide..."
+        )
+
+        val categories = listOf("Plant", "Animal", "Rock", "Weather", "Other")
+        TrailSenseTagRow(tags = categories)
+
+        if (filteredPages.isEmpty()) {
+            Text(
+                "No pages found",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(filteredPages) { page ->
+                    TrailSenseCard(
+                        onClick = {
+                            val bundle = Bundle().apply {
+                                putLong("page_id", page.id)
+                            }
+                            navController.navigate(R.id.fieldGuidePageFragment, bundle)
+                        }
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(page.name, style = MaterialTheme.typography.titleMedium)
+                            if (page.description.isNotBlank()) {
+                                Text(
+                                    page.description.take(120) + if (page.description.length > 120) "..." else "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    FloatingActionButton(
+        onClick = {
+            navController.navigate(R.id.createFieldGuidePageFragment)
+        },
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "Add page")
+    }
+}
+
+class FieldGuideFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        FieldGuideContent()
+    }
+}
 
         // One time setup
         useShowDisclaimer(

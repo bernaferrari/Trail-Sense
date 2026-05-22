@@ -1,88 +1,59 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
-import android.graphics.Color
-import android.os.Bundle
-import android.text.method.LinkMovementMethod
-import android.view.View
-import com.kylecorry.trail_sense.shared.views.LocationDataPointView
-import android.widget.TextView
-import androidx.core.view.isVisible
-import com.google.android.material.button.MaterialButton
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.show
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useClickCallback
-import com.kylecorry.andromeda.fragments.useFlow
-import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
-import com.kylecorry.andromeda.torch.ScreenTorch
-import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.sol.units.Distance
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.dem.DEM
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useCoordinatePreference
-import com.kylecorry.trail_sense.shared.extensions.useDestroyEffect
-import com.kylecorry.trail_sense.shared.extensions.useFloatPreference
-import com.kylecorry.trail_sense.shared.extensions.useIntPreference
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
-import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.requireMainActivity
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sharing.ActionItem
-import com.kylecorry.trail_sense.shared.sharing.Share
-import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheet
-import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
-import com.kylecorry.trail_sense.tools.map.MapToolRegistration
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
-import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView
-import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheet
-import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import java.time.Instant
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 
-class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
-    override fun update() {
-        val mapView = useView<MapView>(R.id.map)
-        val lockButton = useView<MaterialButton>(R.id.lock_btn)
-        val zoomInButton = useView<MaterialButton>(R.id.zoom_in_btn)
-        val zoomOutButton = useView<MaterialButton>(R.id.zoom_out_btn)
-        val timeButton = useView<MaterialButton>(R.id.time_btn)
-        val menuButton = useView<MaterialButton>(R.id.menu_btn)
-        val navigationSheetView = useView<NavigationSheetView>(R.id.navigation_sheet)
-        val mapDistanceSheetView = useView<MapDistanceSheet>(R.id.distance_sheet)
-        val attributionView = useView<TextView>(R.id.map_attribution)
-        val timeSheet = useView<DateTimeSliderSheet>(R.id.time_sheet)
-        val sensorStatusBadges = useView<SensorStatusBadgeView>(R.id.sensor_status_badges)
-        val (mapTime, setMapTime) = useState<Instant?>(null)
-        val (hasTimeDependentLayers, setHasTimeDependentLayers) = useState(false)
+@Composable
+fun Fragment.MapContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                android.view.LayoutInflater.from(ctx).inflate(R.layout.fragment_map, null)
+            },
+            modifier = Modifier.fillMaxSize()
+        )
 
-        useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
-            timeButton.isVisible = hasTimeDependentLayers
-            if (hasTimeDependentLayers) {
-                timeButton.isChecked = mapTime != null || timeSheet.isVisible
-            } else {
-                if (timeSheet.isVisible) {
-                    setMapTime(null)
-                    timeSheet.hide()
-                }
+        TrailSenseSearchBar(
+            value = "",
+            onValueChange = {},
+            placeholder = "Search map...",
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 8.dp)
+        )
+
+        FloatingActionButton(
+            onClick = { },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(painterResource(R.drawable.ic_location), contentDescription = "My location")
+        }
+    }
+}
+
+class MapFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        MapContent()
+    }
+}
             }
 
             timeButton.setOnClickListener {
@@ -93,7 +64,7 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
                     timeSheet.setTime(mapTime)
                     timeSheet.show()
                 }
-                timeButton.isChecked = mapTime != null || timeSheet.isVisible
+                CustomUiUtils.setButtonState(timeButton, mapTime != null || timeSheet.isVisible)
             }
 
             timeSheet.onTimeChanged = {
@@ -151,13 +122,10 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
         }
         useEffectWithCleanup(manager, mapView, resetOnResume) {
             manager.resume(context, mapView, this@MapFragment)
+            setHasTimeDependentLayers(mapView.layerManager.getLayers().any { it.isTimeDependent })
             return@useEffectWithCleanup {
                 manager.pause(mapView)
             }
-        }
-
-        useEffect(manager.key, mapView) {
-            setHasTimeDependentLayers(mapView.layerManager.getLayers().any { it.isTimeDependent })
         }
 
         useEffect(mapView) {
@@ -257,16 +225,9 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
             manager.onBoundsChanged()
         }
 
-        val traceViews =
-            useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
-                listOfNotNull(
-                    zoomInButton,
-                    zoomOutButton,
-                    if (hasTimeDependentLayers) timeButton else null,
-                    menuButton,
-                    sensorStatusBadges
-                )
-            }
+        val traceViews = useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges) {
+            listOf(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges)
+        }
 
         useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, resetOnResume) {
             switchMapLockMode(lockMode, mapView, lockButton, traceViews, screenLight, context)
@@ -297,6 +258,9 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
         }
 
         useEffect(zoomInButton, zoomOutButton) {
+            CustomUiUtils.setButtonState(zoomInButton, false)
+            CustomUiUtils.setButtonState(zoomOutButton, false)
+
             zoomInButton.setOnClickListener {
                 mapView.zoom(2f)
             }
@@ -388,6 +352,10 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
         }
 
         // Menu
+        useEffect(menuButton) {
+            CustomUiUtils.setButtonState(menuButton, false)
+        }
+
         useClickCallback(menuButton, startDistanceMeasurement) {
             val actions = listOf(
                 MapAction.Measure to getString(R.string.measure),
@@ -437,7 +405,7 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
     private fun switchMapLockMode(
         mode: MapLockMode,
         map: MapView,
-        button: MaterialButton,
+        button: FloatingActionButton,
         traceViews: List<View>,
         screenLight: ScreenTorch,
         context: android.content.Context
@@ -461,8 +429,8 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
                 map.mapAzimuth = 0f
 
                 // Show as locked
-                button.setIconResource(R.drawable.satellite)
-                button.isChecked = true
+                button.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(button, true)
             }
 
             MapLockMode.Compass -> {
@@ -470,8 +438,8 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
                 map.isPanEnabled = false
 
                 // Show as locked
-                button.setIconResource(R.drawable.ic_compass_icon)
-                button.isChecked = true
+                button.setImageResource(R.drawable.ic_compass_icon)
+                CustomUiUtils.setButtonState(button, true)
             }
 
             MapLockMode.Free -> {
@@ -482,8 +450,8 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
                 map.mapAzimuth = 0f
 
                 // Show as unlocked
-                button.setIconResource(R.drawable.satellite)
-                button.isChecked = false
+                button.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(button, false)
             }
 
             MapLockMode.Trace -> {
@@ -500,8 +468,8 @@ class MapFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_map) {
                 map.isZoomEnabled = false
 
                 // Show as locked
-                button.setIconResource(R.drawable.lock)
-                button.isChecked = true
+                button.setImageResource(R.drawable.lock)
+                CustomUiUtils.setButtonState(button, true)
 
                 // Full brightness
                 screenLight.on()

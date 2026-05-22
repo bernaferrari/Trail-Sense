@@ -1,61 +1,66 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.graphics.Color
-import android.view.ViewGroup
-import android.widget.TextView
-import androidx.core.net.toUri
-import androidx.core.view.children
-import androidx.core.view.isVisible
-import androidx.core.widget.NestedScrollView
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.core.ui.ExpansionLayout
-import com.kylecorry.andromeda.core.ui.Views
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.useArgument
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.pdf.PdfConvert
-import com.kylecorry.andromeda.print.ColorMode
-import com.kylecorry.andromeda.print.Orientation
-import com.kylecorry.andromeda.print.Printer
-import com.kylecorry.andromeda.print.ScaleMode
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.debugging.isDebug
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
-import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
-import kotlinx.coroutines.delay
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.tools.survival_guide.domain.SurvivalGuideRepo
 
-class FragmentToolSurvivalGuideReader :
-    TrailSenseReactiveFragment(R.layout.fragment_survival_guide) {
+@Composable
+fun Fragment.SurvivalGuideReaderContent(modifier: Modifier = Modifier) {
+    val context = requireContext()
+    val repo = remember { SurvivalGuideRepo.getInstance(context) }
+    val chapterId = remember { arguments?.getLong("chapter_id") ?: 0L }
 
-    override fun update() {
-        val context = useAndroidContext()
+    var content by remember { mutableStateOf("Loading...") }
+    var title by remember { mutableStateOf("") }
 
-        // Views
-        val titleView = useView<Toolbar>(R.id.guide_name)
-        val scrollView = useView<NestedScrollView>(R.id.guide_scroll)
+    LaunchedEffect(chapterId) {
+        val chapter = repo.getChapter(chapterId)
+        title = chapter?.name ?: "Survival Guide"
+        content = chapter?.content ?: "Content not found."
+    }
 
-        // Arguments
-        val chapter = useChapter()
-        val content = useChapterContent()
-        val headerIndex = useArgument<Int>("header_index") ?: 0
-
-        // State
-        val printChapter = usePrintChapter()
-
-        // Render the title bar
-        useEffect(titleView, chapter) {
-            titleView.title.text = chapter.title
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        TrailSenseCard {
+            Column(Modifier.padding(16.dp)) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
+    }
+}
+
+class FragmentToolSurvivalGuideReader : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        SurvivalGuideReaderContent()
+    }
+}
 
         // Print button
         useEffect(printChapter, titleView) {

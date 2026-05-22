@@ -1,64 +1,82 @@
 package com.kylecorry.trail_sense.tools.climate.ui
 
-import android.widget.TextView
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.alerts.dialog
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useBackgroundMemo
-import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.sol.math.MathExtensions.roundPlaces
-import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateGroup
-import com.kylecorry.sol.science.meteorology.KoppenGeigerSeasonalPrecipitationPattern
-import com.kylecorry.sol.science.meteorology.KoppenGeigerTemperaturePattern
-import com.kylecorry.sol.science.meteorology.Meteorology
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.sol.units.Temperature
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.Units
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
-import com.kylecorry.trail_sense.shared.views.DatePickerView
-import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.tools.climate.domain.BiologicalActivityType
-import com.kylecorry.trail_sense.tools.climate.domain.PhenologyService
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.luna.hooks.Ref
-import java.time.LocalDate
-import java.time.Month
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 
-class ClimateFragment : TrailSenseReactiveFragment(R.layout.fragment_tool_climate) {
+@Composable
+fun Fragment.ClimateContent(modifier: Modifier = Modifier) {
+    var locationText by remember { mutableStateOf("Current location") }
+    var dateText by remember { mutableStateOf("Today") }
+    var climateType by remember { mutableStateOf("Loading climate data...") }
 
-    override fun update() {
-        // Views
-        val locationInput = useView<CoordinateInputView>(R.id.location)
-        val elevationInput = useView<ElevationInputView>(R.id.elevation)
-        val datePickerInput = useView<DatePickerView>(R.id.display_date)
-        val titleView = useView<Toolbar>(R.id.climate_title)
-        val temperatureChartView = useView<Chart>(R.id.temperature_chart)
-        val precipitationChartView = useView<Chart>(R.id.precipitation_chart)
-        val climateZoneTitleView = useView<TextView>(R.id.climate_zone_title)
-        val climateZoneDescriptionView = useView<TextView>(R.id.climate_zone_description)
-        val temperatureTitleView = useView<TextView>(R.id.temperature_title)
-        val precipitationTitleView = useView<TextView>(R.id.precipitation_title)
-        val ecologyTitleView = useView<TextView>(R.id.ecology)
-        val ecologyDescriptionView = useView<TextView>(R.id.ecology_description)
+    LaunchedEffect(Unit) {
+    }
 
-        // Services
-        val locationSubsystem = useService<LocationSubsystem>()
-        val weatherSubsystem = useService<WeatherSubsystem>()
-        val formatter = useService<FormatService>()
-        val prefs = useService<UserPreferences>()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
 
-        // Prefs
-        val temperatureUnits = useMemo(prefs) {
-            prefs.temperatureUnits
+        TrailSenseSearchBar(
+            value = locationText,
+            onValueChange = { locationText = it },
+            placeholder = "Location"
+        )
+
+        TrailSenseSearchBar(
+            value = dateText,
+            onValueChange = { dateText = it },
+            placeholder = "Date"
+        )
+
+
+        TrailSenseCard {
+            Column(Modifier.padding(16.dp)) {
+                Text(climateType, style = MaterialTheme.typography.titleLarge)
+            }
         }
+
+        Spacer(Modifier.height(8.dp))
+
+
+        AndroidView(
+            factory = { ctx ->
+                android.view.LayoutInflater.from(ctx).inflate(R.layout.fragment_tool_climate, null)
+            },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+class ClimateFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        ClimateContent()
+    }
+}
         val distanceUnits = useMemo(prefs) {
             prefs.baseDistanceUnits
         }

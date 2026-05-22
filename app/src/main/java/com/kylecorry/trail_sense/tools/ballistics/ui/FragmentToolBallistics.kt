@@ -1,42 +1,22 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.views.CustomViewPagerAdapter
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
 
-class FragmentToolBallistics : TrailSenseReactiveFragment(R.layout.fragment_tabs) {
+class FragmentToolBallistics : TrailSenseComposeFragment() {
 
-
-    override fun update() {
-        val tabsView = useView<TabLayout>(R.id.tabs)
-        val viewPagerView = useView<ViewPager2>(R.id.viewpager)
-
-        val pages = useMemo {
-            listOf(
-                FragmentScopeAdjustment(),
-                FragmentBallisticsCalculator(),
-                FragmentEnergyCalculator()
-            )
-        }
-
-        val pageNames = useMemo {
-            listOf(
-                getString(R.string.scope),
-                getString(R.string.ballistics),
-                getString(R.string.energy)
-            )
-        }
-
-        useEffect(tabsView, viewPagerView) {
-            viewPagerView.adapter = CustomViewPagerAdapter(this, pages)
-            // Disable view pager scroll
-            viewPagerView.isUserInputEnabled = false
-            TabLayoutMediator(tabsView, viewPagerView) { tab, position ->
-                tab.text = pageNames[position]
-            }.attach()
-        }
+    @Composable
+    override fun FragmentContent() {
+        AndroidView(
+            factory = { ctx ->
+                android.view.LayoutInflater.from(ctx).inflate(R.layout.fragment_tabs, null)
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }

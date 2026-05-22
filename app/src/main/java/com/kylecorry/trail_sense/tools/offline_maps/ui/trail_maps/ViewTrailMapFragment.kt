@@ -1,43 +1,44 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.trail_maps
 
-import android.graphics.Color
-import androidx.core.view.doOnLayout
-import androidx.navigation.fragment.findNavController
-import com.google.android.material.button.MaterialButton
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.trail_sense.shared.views.Toolbar
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useTrigger
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.tools.map.ui.MapView
-import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.EditOfflineMapAttributionCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
 
-class ViewTrailMapFragment : TrailSenseReactiveFragment(R.layout.fragment_offline_map_view) {
+@Composable
+fun Fragment.VectorMapContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                android.view.LayoutInflater.from(ctx).inflate(R.layout.fragment_offline_map_view, null)
+            },
+            modifier = Modifier.fillMaxSize()
+        )
 
-    override fun update() {
-        val context = useAndroidContext()
-        val title = useView<Toolbar>(R.id.title)
-        val zoomInButton = useView<MaterialButton>(R.id.zoom_in_btn)
-        val zoomOutButton = useView<MaterialButton>(R.id.zoom_out_btn)
-        val mapView = useView<MapView>(R.id.map)
-        val mapId = useMemo {
-            requireArguments().getLong("offline_map_file_id")
-        }
+        Text(
+            "Map controls will be pure Compose",
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+    }
+}
+
+class ViewVectorMapFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        VectorMapContent()
+    }
+}
         val (refreshKey, refresh) = useTrigger()
         val map = useOfflineMap(mapId, refreshKey)
 
@@ -46,6 +47,9 @@ class ViewTrailMapFragment : TrailSenseReactiveFragment(R.layout.fragment_offlin
         }
 
         useEffect(zoomInButton, zoomOutButton, mapView) {
+            CustomUiUtils.setButtonState(zoomInButton, false)
+            CustomUiUtils.setButtonState(zoomOutButton, false)
+
             zoomInButton.setOnClickListener { mapView.zoom(2f) }
             zoomOutButton.setOnClickListener { mapView.zoom(0.5f) }
         }
@@ -81,7 +85,7 @@ class ViewTrailMapFragment : TrailSenseReactiveFragment(R.layout.fragment_offlin
                 return@useEffectWithCleanup {}
             }
             val factory = LayerFactory()
-            val layer = Tools.getMapLayerDefinition(context, TrailMapsTileSource.SOURCE_ID)!!
+            val layer = Tools.getMapLayerDefinition(context, MapsforgeTileSource.SOURCE_ID)!!
             val tileLayer = factory.createLayer(layer)
             tileLayer.setFeatureFilter(map.id.toString())
             mapView.setLayers(listOf(tileLayer))

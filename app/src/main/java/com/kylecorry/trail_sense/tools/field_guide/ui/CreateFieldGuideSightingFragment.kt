@@ -1,72 +1,43 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import androidx.core.widget.addTextChangedListener
-import com.google.android.material.materialswitch.MaterialSwitch
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.useArgument
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useBackgroundMemo
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.sol.time.Time.toZonedDateTime
-import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useBindCoordinateAndElevationViews
-import com.kylecorry.trail_sense.shared.extensions.useCoordinateInputView
-import com.kylecorry.trail_sense.shared.extensions.useElevationInputView
-import com.kylecorry.trail_sense.shared.extensions.useNavController
-import com.kylecorry.trail_sense.shared.extensions.useUnsavedChangesPrompt
-import com.kylecorry.trail_sense.shared.views.MaterialDateTimeInputView
-import com.kylecorry.trail_sense.shared.views.Notepad
-import com.kylecorry.trail_sense.shared.views.Toolbar
-import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
-import java.time.LocalDateTime
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 
-class CreateFieldGuideSightingFragment :
-    TrailSenseReactiveFragment(R.layout.fragment_create_field_guide_sighting) {
-
-    override fun update() {
-        // Views
-        val datetimeView = useView<MaterialDateTimeInputView>(R.id.time)
-        val coordinateView = useCoordinateInputView(R.id.location, lifecycleHookTrigger)
-        val elevationView = useElevationInputView(R.id.elevation, lifecycleHookTrigger)
-        val notesView = useView<Notepad>(R.id.notes)
-        val harvestedSwitchView = useView<MaterialSwitch>(R.id.harvested)
-        val showOnMapSwitchView = useView<MaterialSwitch>(R.id.show_on_map)
-        val titleView = useView<Toolbar>(R.id.title)
-
-        // Arguments
-        val pageId = useArgument<Long>("page_id") ?: 0
-        val sightingId = useArgument<Long>("sighting_id") ?: 0
-
-        // State
-        val (datetime, setDatetime) = useState<LocalDateTime?>(null)
-        val (location, setLocation) = useState<Coordinate?>(null)
-        val (elevation, setElevation) = useState<Distance?>(null)
-        val (notes, setNotes) = useState<String?>(null)
-        val (harvested, setHarvested) = useState(false)
-        val (showOnMap, setShowOnMap) = useState(true)
-        val (initialDatetime, setInitialDatetime) = useState<LocalDateTime?>(null)
-
-        // Services
-        val repo = useService<FieldGuideRepo>()
-        val navController = useNavController()
-        val context = useAndroidContext()
-        val prefs = useService<UserPreferences>()
-        val fieldGuideFormatter = useService<FieldGuideFormatService>()
-
-        // Memo
-        val initialSighting = useBackgroundMemo(repo, sightingId) {
-            if (sightingId != 0L) {
-                repo.getSighting(sightingId)
-            } else {
-                null
+@Composable
+fun Fragment.CreateFieldGuideSightingContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        TrailSenseCard {
+            Column(Modifier.padding(16.dp)) {
+                Text("Create Sighting", style = MaterialTheme.typography.titleLarge)
+                Button(onClick = { }) {
+                    Text("Save")
+                }
             }
+        }
+    }
+}
+
+class CreateFieldGuideSightingFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        CreateFieldGuideSightingContent()
+    }
+}
         }
 
         val hasChanges = useMemo(
@@ -189,6 +160,7 @@ class CreateFieldGuideSightingFragment :
             notes,
             showOnMap
         ) {
+            CustomUiUtils.setButtonState(titleView.rightButton, true)
             titleView.rightButton.setOnClickListener {
                 inBackground {
                     Alerts.withLoading(context, getString(R.string.saving)) {
