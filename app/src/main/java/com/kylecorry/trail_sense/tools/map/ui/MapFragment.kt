@@ -165,7 +165,7 @@ fun Fragment.MapContent(modifier: Modifier = Modifier) {
                 TrailSenseEmptyState(
                     icon = Icons.Default.Map,
                     title = "Map",
-                    description = "Live pan/zoom + AndroidView MapView. Paths + Offline Maps now have expressive shells in Nav3 (see AppRoute). Full layers, measurement, beacons integration active."
+                    description = "Live pan/zoom + MapView. Paths, PhotoMaps & Offline now polished expressive M3 shells in Nav3. Full layers + measurement active."
                 )
             }
         }

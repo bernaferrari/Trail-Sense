@@ -64,9 +64,28 @@ class CreateBlankMapCommand(
         var center = location.location
 
         val cancelled = onMain {
-            val view = View.inflate(context, R.layout.fragment_blank_map_create_sheet, null)
-            val distanceInput = view.findViewById<DistanceInputView>(R.id.distance_input)
-            val coordinateInput = view.findViewById<CoordinateInputView>(R.id.coordinate_input)
+            // Programmatic container (no XML): replaces deleted fragment_blank_map_create_sheet.xml
+            // after Offline Maps expressive shell conversion. Uses the shared input views directly.
+            val coordinateInput = CoordinateInputView(context)
+            val distanceInput = DistanceInputView(context)
+            val view = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                addView(
+                    coordinateInput,
+                    android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                addView(
+                    distanceInput,
+                    android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                setPadding(32, 16, 32, 16)
+            }
 
             coordinateInput.coordinate = center
             coordinateInput.setOnCoordinateChangeListener {
