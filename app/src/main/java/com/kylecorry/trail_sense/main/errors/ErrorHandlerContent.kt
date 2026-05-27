@@ -42,12 +42,15 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
  * Pretty Compose version of the error handler screen.
  */
 @Composable
-fun Fragment.ErrorHandlerContent(modifier: Modifier = Modifier) {
+fun ErrorHandlerContent(
+    toolId: Long,
+    errorDetails: String,
+    onEmail: (String) -> Unit,
+    onCopy: (String) -> Unit,
+    onReopenTool: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
-    val navController = useNavController()
-
-    val toolId by useArgument<Long>("tool_id") ?: 0L
-    val errorDetails by useArgument<String>("error") ?: ""
 
     val tool = remember(toolId) {
         Tools.getTools(context).firstOrNull { it.id == toolId }
@@ -91,21 +94,12 @@ fun Fragment.ErrorHandlerContent(modifier: Modifier = Modifier) {
 
         ActionButton(
             text = stringResource(R.string.pref_email_title),
-            onClick = {
-                val intent = Intents.email(
-                    stringResource(R.string.email),
-                    "Error in ${stringResource(R.string.app_name)}",
-                    errorDetails
-                )
-                startActivity(intent)
-            }
+            onClick = { onEmail(errorDetails) }
         )
 
         ActionButton(
             text = stringResource(R.string.copy_error),
-            onClick = {
-                Clipboard.copy(context, errorDetails, stringResource(R.string.copied_to_clipboard_toast))
-            }
+            onClick = { onCopy(errorDetails) }
         )
 
         ActionButton(
@@ -115,7 +109,7 @@ fun Fragment.ErrorHandlerContent(modifier: Modifier = Modifier) {
 
         ActionButton(
             text = stringResource(R.string.reopen_tool),
-            onClick = { navController.openTool(toolId) }
+            onClick = { onReopenTool(toolId) }
         )
 
         ActionButton(
@@ -123,10 +117,7 @@ fun Fragment.ErrorHandlerContent(modifier: Modifier = Modifier) {
             onClick = { CurrentApp.restart(context) }
         )
 
-        ActionButton(
-            text = stringResource(R.string.settings),
-            onClick = { navController.openTool(Tools.SETTINGS) }
-        )
+        // Settings button removed for now (navigation handled by caller in pure Compose path)
     }
 
     if (showDetails) {
