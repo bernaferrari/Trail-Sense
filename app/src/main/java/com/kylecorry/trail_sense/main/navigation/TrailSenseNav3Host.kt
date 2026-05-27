@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
+import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListScreen
 
 @Composable
 fun TrailSenseNav3Host(
@@ -47,15 +48,24 @@ fun TrailSenseNav3Host(
             // Legacy Fragment navigation has been eliminated from the main experience.
             // Individual tools below use the modern design system.
 
-            entry<AppRoute.Navigation> { Placeholder(it) }
+            entry<AppRoute.Navigation> {
+                // Newly converted real modern screen (Navigator + sheets)
+                com.kylecorry.trail_sense.tools.navigation.ui.NavigatorFragment().NavigatorContent()
+            }
             entry<AppRoute.NavigationSettings> { Placeholder(it) }
             entry<AppRoute.Astronomy> { Placeholder(it) }
             entry<AppRoute.AstronomySettings> { Placeholder(it) }
             entry<AppRoute.Weather> { Placeholder(it) }
             entry<AppRoute.WeatherSettings> { Placeholder(it) }
-            entry<AppRoute.Map> { Placeholder(it) }
+            entry<AppRoute.Map> {
+                // Real expressive M3 map shell (AndroidView + MapView for daily usable rendering + controls)
+                com.kylecorry.trail_sense.tools.map.ui.MapFragment().MapContent()
+            }
             entry<AppRoute.MapSettings> { Placeholder(it) }
-            entry<AppRoute.BeaconList> { Placeholder(it) }
+            entry<AppRoute.BeaconList> {
+                // Newly converted real modern screen (Beacons list + details/place)
+                com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListFragment().BeaconListContent()
+            }
             entry<AppRoute.PlaceBeacon> { Placeholder(it) }
             entry<AppRoute.BeaconDetails> { Placeholder(it) }
             entry<AppRoute.BeaconSettings> { Placeholder(it) }
@@ -66,16 +76,31 @@ fun TrailSenseNav3Host(
             entry<AppRoute.MapList> { Placeholder(it) }
             entry<AppRoute.PhotoMaps> { Placeholder(it) }
             entry<AppRoute.PhotoMapSettings> { Placeholder(it) }
+            // ── Field Guide family promoted (real Nav3 entries, expressive Compose) ──
             entry<AppRoute.FieldGuide> { Placeholder(it) }
-            entry<AppRoute.FieldGuidePage> { Placeholder(it) }
-            entry<AppRoute.CreateFieldGuideSighting> { Placeholder(it) }
-            entry<AppRoute.SightingList> { Placeholder(it) }
-            entry<AppRoute.CreateFieldGuidePage> { Placeholder(it) }
+            entry<AppRoute.FieldGuidePage> {
+                // Clean TrailSenseComposeFragment + design system (card, tags, etc)
+                com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuidePageFragment().FieldGuidePageContent()
+            }
+            entry<AppRoute.CreateFieldGuideSighting> {
+                com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuideSightingFragment().CreateFieldGuideSightingContent()
+            }
+            entry<AppRoute.SightingList> { route ->
+                // Real promoted entry using pure SightingListScreen (design system heavy, testTags, preview)
+                val sightingRoute = route as? AppRoute.SightingList
+                SightingListScreen(pageId = sightingRoute?.pageId ?: 0L)
+            }
+            entry<AppRoute.CreateFieldGuidePage> {
+                com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuidePageFragment().CreateFieldGuidePageContent()
+            }
             entry<AppRoute.GuideList> { Placeholder(it) }
             entry<AppRoute.Guide> { Placeholder(it) }
             entry<AppRoute.SurvivalGuideList> { Placeholder(it) }
             entry<AppRoute.SurvivalGuideReader> { Placeholder(it) }
-            entry<AppRoute.PackList> { Placeholder(it) }
+            entry<AppRoute.PackList> {
+                // Newly converted real modern screen (Packs list - expressive cards, search, FAB, menus)
+                com.kylecorry.trail_sense.tools.packs.ui.PackListFragment().PackListContent()
+            }
             entry<AppRoute.PackItemList> { Placeholder(it) }
             entry<AppRoute.CreateItem> { Placeholder(it) }
             entry<AppRoute.Tides> { Placeholder(it) }
@@ -88,7 +113,10 @@ fun TrailSenseNav3Host(
             entry<AppRoute.AugmentedRealitySettings> { Placeholder(it) }
             entry<AppRoute.Clinometer> { Placeholder(it) }
             entry<AppRoute.ClinometerSettings> { Placeholder(it) }
-            entry<AppRoute.Level> { Placeholder(it) }
+            entry<AppRoute.Level> {
+                // Newly converted real modern screen (Level/Bubble - pure Compose rewrite of visualization)
+                com.kylecorry.trail_sense.tools.level.ui.LevelFragment().LevelContent()
+            }
             entry<AppRoute.BubbleLevelSettings> { Placeholder(it) }
             entry<AppRoute.Flashlight> { Placeholder(it) }
             entry<AppRoute.ScreenFlashlight> { Placeholder(it) }
