@@ -63,18 +63,27 @@ fun TrailSenseNav3Host(
             }
             entry<AppRoute.MapSettings> { Placeholder(it) }
             entry<AppRoute.BeaconList> {
-                // Newly converted real modern screen (Beacons list + details/place)
+                // Expressive shell (global ref sweep fix for modern path). Full list port in follow-up (legacy Bound still serves deep links).
                 com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListFragment().BeaconListContent()
             }
             entry<AppRoute.PlaceBeacon> { Placeholder(it) }
             entry<AppRoute.BeaconDetails> { Placeholder(it) }
             entry<AppRoute.BeaconSettings> { Placeholder(it) }
-            entry<AppRoute.Paths> { Placeholder(it) }
-            entry<AppRoute.PathDetails> { Placeholder(it) }
+            entry<AppRoute.Paths> {
+                // Expressive shell (truncated in final zero-XML d3o)
+                com.kylecorry.trail_sense.tools.paths.ui.PathsFragment().PathsContent()
+            }
+            entry<AppRoute.PathDetails> {
+                // Expressive shell (truncated)
+                com.kylecorry.trail_sense.tools.paths.ui.PathOverviewFragment().PathOverviewContent()
+            }
             entry<AppRoute.PathsSettings> { Placeholder(it) }
             entry<AppRoute.OfflineMapView> { Placeholder(it) }
             entry<AppRoute.MapList> { Placeholder(it) }
-            entry<AppRoute.PhotoMaps> { Placeholder(it) }
+            entry<AppRoute.PhotoMaps> {
+                // Expressive shell (truncated d3o)
+                com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsFragment().PhotoMapsContent()
+            }
             entry<AppRoute.PhotoMapSettings> { Placeholder(it) }
             // ── Field Guide family promoted (real Nav3 entries, expressive Compose) ──
             entry<AppRoute.FieldGuide> { Placeholder(it) }
@@ -118,7 +127,10 @@ fun TrailSenseNav3Host(
                 com.kylecorry.trail_sense.tools.level.ui.LevelFragment().LevelContent()
             }
             entry<AppRoute.BubbleLevelSettings> { Placeholder(it) }
-            entry<AppRoute.Flashlight> { Placeholder(it) }
+            entry<AppRoute.Flashlight> {
+                // Newly converted real modern screen (main Flashlight - expressive M3 power button, mode chips, brightness, full reactivity)
+                com.kylecorry.trail_sense.tools.flashlight.ui.FragmentToolFlashlight().FlashlightContent()
+            }
             entry<AppRoute.ScreenFlashlight> { Placeholder(it) }
             entry<AppRoute.FlashlightSettings> { Placeholder(it) }
             entry<AppRoute.SignalFinder> { Placeholder(it) }

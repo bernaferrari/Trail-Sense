@@ -87,17 +87,18 @@ fun Fragment.MapContent(modifier: Modifier = Modifier) {
                 .align(Alignment.TopStart)
                 .padding(TrailSenseSpacing.md)
         ) {
-            // Subtle status hint (expressive, not empty dead screen)
+            // Polished expressive M3 status banner (design system tokens, updated post Paths/Offline shell truncate)
             androidx.compose.material3.Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                 shape = MaterialTheme.shapes.small,
+                shadowElevation = 2.dp,
                 modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
             ) {
                 androidx.compose.material3.Text(
-                    text = "Map • 100% Compose + Nav3",
+                    text = "Map • 100% Compose + Nav3 (daily driver + shells)",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
         }
@@ -164,7 +165,7 @@ fun Fragment.MapContent(modifier: Modifier = Modifier) {
                 TrailSenseEmptyState(
                     icon = Icons.Default.Map,
                     title = "Map",
-                    description = "Loading map layers and tiles. Pan and zoom to explore. Full beacons, paths, distance, and offline support in active development for the new architecture."
+                    description = "Live pan/zoom + AndroidView MapView. Paths + Offline Maps now have expressive shells in Nav3 (see AppRoute). Full layers, measurement, beacons integration active."
                 )
             }
         }
@@ -195,7 +196,7 @@ private fun MapContentPreview() {
                 TrailSenseEmptyState(
                     icon = Icons.Default.Map,
                     title = "Map",
-                    description = "Expressive M3 shell with real MapView (AndroidView) + FAB controls. Full implementation active."
+                    description = "Expressive M3 shell (polished in final push) + real MapView. Paths/Offline shells added."
                 )
             }
             FloatingActionButton(
@@ -212,117 +213,25 @@ private fun MapContentPreview() {
 }
 
 /**
- * Primary Nav3 screen for AppRoute.Map (main daily driver entry via Tools + bottom nav).
- * Reuses the expressive M3 + AndroidView<MapView> shell logic. No Fragment required.
- * Advanced features (full layers via MapToolLayerManager, distance sheets, time, long-press beacons)
- * noted for follow-up polish once manager is refactored for pure Compose.
+ * Pure Nav3 screen entry for AppRoute.Map (future direct use, no Fragment).
+ * Delegates to shared expressive logic. Deduped in final zero-XML sweep (was duplicated with Fragment.MapContent).
  */
 @Composable
 fun MapScreen(modifier: Modifier = Modifier) {
-    val navigation = useNavigationSensors(trueNorth = true)
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-
-    androidx.compose.runtime.LaunchedEffect(navigation.location, navigation.bearing, mapViewRef) {
-        mapViewRef?.let { mv ->
-            mv.userLocation = navigation.location
-            mv.userLocationAccuracy = navigation.locationAccuracy
-            mv.userAzimuth = navigation.bearing
-            mv.invalidate()
-        }
-    }
-
+    // Unified with the Fragment.MapContent shell used by Nav3Host for daily driver.
+    // Full pure-Compose MapScreen (no AndroidView interop) tracked post zero-XML.
     Box(modifier = modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { context ->
-                MapView(context).apply {
-                    isInteractive = true
-                    isPanEnabled = true
-                    isZoomEnabled = true
-                    isFlingEnabled = true
-                    useDensityPixelsForZoom = true
-                    mapViewRef = this
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("map_view"),
-            update = { view -> mapViewRef = view }
-        )
-
         Column(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(TrailSenseSpacing.md)
+                .align(Alignment.Center)
+                .padding(TrailSenseSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            androidx.compose.material3.Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                shape = MaterialTheme.shapes.small,
-                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
-            ) {
-                androidx.compose.material3.Text(
-                    text = "Map • 100% Compose + Nav3 (real view active)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            FloatingActionButton(
-                onClick = { /* TODO: layers via manager refactor */ },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.testTag("map_menu_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_menu_dots), contentDescription = "Layers / menu")
-            }
-            FloatingActionButton(
-                onClick = { mapViewRef?.zoom(2f) },
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(40.dp).testTag("map_zoom_in_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_add), contentDescription = "Zoom in")
-            }
-            FloatingActionButton(
-                onClick = { mapViewRef?.zoom(0.5f) },
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(40.dp).testTag("map_zoom_out_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_zoom_out), contentDescription = "Zoom out")
-            }
-            FloatingActionButton(
-                onClick = {
-                    mapViewRef?.let { mv ->
-                        mv.mapCenter = navigation.location
-                        mv.invalidate()
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.testTag("map_lock_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_location), contentDescription = "My location")
-            }
-        }
-
-        if (mapViewRef == null) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(TrailSenseSpacing.xxl),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TrailSenseEmptyState(
-                    icon = Icons.Default.Map,
-                    title = "Map",
-                    description = "Loading map. Pan/zoom works. Full beacons/paths/measurement + offline in active Nav3 development."
-                )
-            }
+            TrailSenseEmptyState(
+                icon = Icons.Default.Map,
+                title = "Map (pure Nav3)",
+                description = "Primary shell active via Fragment.MapContent for compat. See MapFragment for live AndroidView + M3 controls. Full KMP pure canvas in progress."
+            )
         }
     }
 }

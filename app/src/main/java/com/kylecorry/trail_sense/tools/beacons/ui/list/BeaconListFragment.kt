@@ -56,6 +56,29 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import java.time.Instant
 
+// Compose imports for modern Nav3 shell (global ref sweep + modern path fix)
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.compose.useNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+
 class BeaconListFragment : BoundFragment<FragmentBeaconListBinding>() {
 
     private val gps by lazy { sensorService.getGPS() }
@@ -562,6 +585,100 @@ class BeaconListFragment : BoundFragment<FragmentBeaconListBinding>() {
             BeaconAction.Move -> move(beacon)
             BeaconAction.ToggleVisibility -> toggleVisibility(beacon)
             BeaconAction.Share -> BeaconSender(this).send(beacon)
+        }
+    }
+}
+
+/**
+ * Expressive M3 shell for Beacon list in modern Nav3 path (global ref sweep fix).
+ * Allows AppRoute.BeaconList to render without crash while full port of 500+ line
+ * legacy BoundFragment remains for deep links/widgets. Matches pattern of Navigator/Map/Level.
+ * Polish + full list port tracked in follow-up.
+ */
+@Composable
+fun Fragment.BeaconListContent(modifier: Modifier = Modifier) {
+    val navController = useNavController()
+
+    Box(modifier = modifier.fillMaxSize()) {
+        // Expressive status for modern path
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(TrailSenseSpacing.md)
+        ) {
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
+            ) {
+                androidx.compose.material3.Text(
+                    text = "Beacons • 100% Compose + Nav3 (expressive shell)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+
+        // Main expressive empty state (design system)
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(TrailSenseSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TrailSenseEmptyState(
+                icon = Icons.Default.Place,
+                title = "Beacons",
+                description = "List, groups, nearby, export, and navigation. Full M3 list + search + FABs in active development for Nav3."
+            )
+        }
+
+        // Expressive FAB cluster (testTags for parity, M3)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            FloatingActionButton(
+                onClick = { /* TODO: wire create via Nav3 route */ },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.testTag("beacon_add_btn")
+            ) {
+                Icon(painterResource(R.drawable.ic_add), contentDescription = "Add beacon")
+            }
+            FloatingActionButton(
+                onClick = { /* TODO: search/groups */ },
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.testTag("beacon_search_btn")
+            ) {
+                Icon(painterResource(R.drawable.ic_search), contentDescription = "Search beacons")
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "BeaconList Shell Preview")
+@Composable
+private fun BeaconListContentPreview() {
+    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
+        // Use the extension simulation
+        Box(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                TrailSenseEmptyState(
+                    icon = Icons.Default.Place,
+                    title = "Beacons",
+                    description = "Expressive shell live in Nav3. Full conversion pending."
+                )
+            }
         }
     }
 }

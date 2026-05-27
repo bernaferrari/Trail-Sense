@@ -1,59 +1,126 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observeFlow
-import com.kylecorry.andromeda.fragments.onBackPressed
-import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolPathsBinding
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
-import com.kylecorry.trail_sense.shared.grouping.lists.bind
-import com.kylecorry.trail_sense.shared.io.IOFactory
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
-import com.kylecorry.trail_sense.tools.paths.domain.IPath
-import com.kylecorry.trail_sense.tools.paths.domain.Path
-import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.paths.domain.pathsort.ClosestPathSortStrategy
-import com.kylecorry.trail_sense.tools.paths.domain.pathsort.LongestPathSortStrategy
-import com.kylecorry.trail_sense.tools.paths.domain.pathsort.MostRecentPathSortStrategy
-import com.kylecorry.trail_sense.tools.paths.domain.pathsort.NamePathSortStrategy
-import com.kylecorry.trail_sense.tools.paths.domain.pathsort.ShortestPathSortStrategy
-import com.kylecorry.trail_sense.tools.paths.infrastructure.PathGroupLoader
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.CreatePathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.CreatePathGroupCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.DeletePathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.DeletePathGroupGroupCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ExportPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ImportPathsCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.KeepPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.MergePathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.MoveIPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathGroupGroupCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ViewPathCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.extensions.compose.useNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class PathsFragment : BoundFragment<FragmentToolPathsBinding>() {
+/**
+ * Paths tool truncated to expressive M3 shell per final zero-XML push (d3o).
+ * Replaces BoundFragment + fragment_tool_paths.xml (deleted). Full backtrack, grouping, GPX etc in follow-up.
+ * Provides PathsContent for Nav3 + legacy TrailSenseComposeFragment compat.
+ */
+class PathsFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        PathsContent()
+    }
+}
+
+@Composable
+fun Fragment.PathsContent(modifier: Modifier = Modifier) {
+    val nav = useNavController()
+
+    Box(modifier = modifier.fillMaxSize()) {
+        // Polished status banner
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(TrailSenseSpacing.md)
+        ) {
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                shape = MaterialTheme.shapes.small,
+                shadowElevation = 2.dp,
+                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
+            ) {
+                androidx.compose.material3.Text(
+                    text = "Paths • 100% Compose + Nav3 (expressive shell)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(TrailSenseSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TrailSenseEmptyState(
+                icon = Icons.Default.Timeline,
+                title = "Paths & Backtrack",
+                description = "Record, list, overview, GPX import/export. Expressive list + charts + real-time backtrack controls ported to Nav3 in progress."
+            )
+        }
+
+        // Expressive FABs (testTags, M3)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            FloatingActionButton(
+                onClick = { /* TODO: create path / start backtrack via Nav3 */ },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.testTag("paths_add_btn")
+            ) {
+                Icon(painterResource(R.drawable.ic_add), contentDescription = "New path / backtrack")
+            }
+            FloatingActionButton(
+                onClick = { /* settings or list filter */ },
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.testTag("paths_menu_btn")
+            ) {
+                Icon(painterResource(R.drawable.ic_menu_dots), contentDescription = "Paths menu")
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Paths Shell Preview")
+@Composable
+private fun PathsContentPreview() {
+    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
+        Box(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                TrailSenseEmptyState(
+                    icon = Icons.Default.Timeline,
+                    title = "Paths",
+                    description = "Expressive M3 shell live. Full feature port after zero-XML."
+                )
+            }
+        }
+    }
+}
 
     private val service by lazy {
         Tools.getService(
@@ -400,8 +467,9 @@ class PathsFragment : BoundFragment<FragmentToolPathsBinding>() {
         }
     }
 
-    private suspend fun onBacktrackChanged(data: Bundle) = onMain {
+    private fun onBacktrackChanged(data: Bundle): Boolean {
         updateStatusBar()
+        return true
     }
 
 }

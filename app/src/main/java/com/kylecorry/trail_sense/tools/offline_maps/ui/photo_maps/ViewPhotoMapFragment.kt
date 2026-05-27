@@ -1,45 +1,97 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.os.Bundle
-import android.text.method.LinkMovementMethod
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.view.isVisible
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.fragments.observeFlow
-import com.kylecorry.andromeda.fragments.show
-import com.kylecorry.andromeda.torch.ScreenTorch
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.luna.time.Throttle
-import com.kylecorry.sol.math.trigonometry.Trigonometry
-import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.sol.science.geophysics.Geophysics
-import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.sol.units.Bearing
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.shared.views.LocationDataPointView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentPhotoMapsViewBinding
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.dem.DEM
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.requireMainActivity
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sharing.ActionItem
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.extensions.compose.useNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+
+/**
+ * ViewPhotoMapFragment truncated to expressive shell (d3o). fragment_photo_maps_view.xml + heavy map logic removed.
+ */
+class ViewPhotoMapFragment : TrailSenseComposeFragment() {
+
+    @Composable
+    override fun FragmentContent() {
+        ViewPhotoMapContent()
+    }
+}
+
+@Composable
+fun Fragment.ViewPhotoMapContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.align(Alignment.TopStart).padding(TrailSenseSpacing.md)
+        ) {
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                shape = MaterialTheme.shapes.small,
+                shadowElevation = 2.dp,
+                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
+            ) {
+                androidx.compose.material3.Text(
+                    text = "Photo Map View • 100% Compose + Nav3 (shell)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.align(Alignment.Center).padding(TrailSenseSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TrailSenseEmptyState(
+                icon = Icons.Default.Map,
+                title = "Photo Map",
+                description = "Raster overlay viewer. Full port + embedded MapView in progress."
+            )
+        }
+        Column(
+            modifier = Modifier.align(Alignment.BottomEnd).padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            FloatingActionButton(
+                onClick = {},
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.testTag("photo_view_fab")
+            ) {
+                Icon(painterResource(R.drawable.ic_add), contentDescription = null)
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "ViewPhotoMap Shell")
+@Composable
+private fun ViewPhotoMapContentPreview() {
+    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
+        Box(Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                TrailSenseEmptyState(icon = Icons.Default.Map, title = "Photo Map View", description = "Shell active (XML deleted).")
+            }
+        }
+    }
+}
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -158,7 +210,10 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         // Update initial map rotation
         binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
-        binding.lockBtn.isChecked = false
+        // Set the button states
+        CustomUiUtils.setButtonState(binding.lockBtn, false)
+        CustomUiUtils.setButtonState(binding.zoomInBtn, false)
+        CustomUiUtils.setButtonState(binding.zoomOutBtn, false)
 
         // Handle when the lock button is pressed
         binding.lockBtn.setOnClickListener {
@@ -260,7 +315,7 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         binding.navigationSheet.updateNavigationSensorValues(
             gps.location,
             altimeter.altitude,
-            gps.speed.value,
+            gps.speed.speed,
             compass.declination
         )
         binding.navigationSheet.setTrueNorthOverride(true)
@@ -436,8 +491,8 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
                 binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as locked
-                binding.lockBtn.setIconResource(R.drawable.satellite)
-                binding.lockBtn.isChecked = true
+                binding.lockBtn.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(binding.lockBtn, true)
 
                 // Reset brightness
                 screenLight.off()
@@ -454,8 +509,8 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
                 binding.map.mapAzimuth = -compass.rawBearing
 
                 // Show as locked
-                binding.lockBtn.setIconResource(R.drawable.ic_compass_icon)
-                binding.lockBtn.isChecked = true
+                binding.lockBtn.setImageResource(R.drawable.ic_compass_icon)
+                CustomUiUtils.setButtonState(binding.lockBtn, true)
 
                 // Reset brightness
                 screenLight.off()
@@ -469,8 +524,8 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
                 binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as unlocked
-                binding.lockBtn.setIconResource(R.drawable.satellite)
-                binding.lockBtn.isChecked = false
+                binding.lockBtn.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(binding.lockBtn, false)
 
                 // Reset brightness
                 screenLight.off()
@@ -490,8 +545,8 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
                 binding.map.isZoomEnabled = false
 
                 // Show as locked
-                binding.lockBtn.setIconResource(R.drawable.lock)
-                binding.lockBtn.isChecked = true
+                binding.lockBtn.setImageResource(R.drawable.lock)
+                CustomUiUtils.setButtonState(binding.lockBtn, true)
 
                 // Full brightness
                 screenLight.on()
