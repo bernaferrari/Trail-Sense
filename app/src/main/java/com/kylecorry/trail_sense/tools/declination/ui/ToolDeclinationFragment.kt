@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.declination.ui
 
+import androidx.compose.runtime.Composable
 import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
 
 /**

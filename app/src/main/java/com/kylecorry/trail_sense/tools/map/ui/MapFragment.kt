@@ -1,21 +1,21 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 
 @Composable
 fun Fragment.MapContent(modifier: Modifier = Modifier) {

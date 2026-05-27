@@ -28,7 +28,7 @@ fun TrailSenseSectionHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = TrailSenseSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

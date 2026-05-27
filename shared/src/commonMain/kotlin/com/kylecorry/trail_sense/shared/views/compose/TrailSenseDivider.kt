@@ -8,9 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/**
- * Reusable pretty divider component — shared design system building block in :shared.
- */
 @Composable
 fun TrailSenseDivider(
     modifier: Modifier = Modifier
@@ -18,7 +15,7 @@ fun TrailSenseDivider(
     HorizontalDivider(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = TrailSenseSpacing.lg),
         thickness = 1.dp,
         color = MaterialTheme.colorScheme.outlineVariant
     )

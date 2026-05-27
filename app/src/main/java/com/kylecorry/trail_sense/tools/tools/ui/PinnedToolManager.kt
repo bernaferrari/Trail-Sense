@@ -15,7 +15,7 @@ class PinnedToolManager(private val prefs: UserPreferences) {
         }
     }
 
-    private fun getPinnedToolIds(): List<Long> {
+    fun getPinnedToolIds(): List<Long> {
         return synchronized(lock) {
             pinned.toList()
         }

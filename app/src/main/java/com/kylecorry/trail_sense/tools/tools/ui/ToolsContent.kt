@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,35 +27,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils.oneTimeToast
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.compose.useAndroidContext
-import com.kylecorry.trail_sense.shared.extensions.compose.useEffect
-import com.kylecorry.trail_sense.shared.extensions.compose.useMemo
-import com.kylecorry.trail_sense.shared.extensions.compose.useService
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -67,44 +43,49 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.coroutines.onDefault
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.CustomUiUtils.oneTimeToast
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.extensions.compose.useAndroidContext
 import com.kylecorry.trail_sense.shared.extensions.compose.useEffect
 import com.kylecorry.trail_sense.shared.extensions.compose.useMemo
 import com.kylecorry.trail_sense.shared.extensions.compose.useService
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseElevation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapes
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortFactory
+import com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType
 
-/**
- * Modern Compose replacement for the legacy ToolsFragment (BoundFragment + GridView + XML renderers).
- * This is the first major "pretty" screen in the KMP/CMP migration.
- */
 @Composable
 fun Fragment.ToolsContent(modifier: Modifier = Modifier) {
     val prefs = useService<UserPreferences>()
-    val navController = findNavController() // Available inside FragmentContent via AndromedaFragment
+    val navController = findNavController()
+    val context = requireContext()
 
     // Core data
     var tools by remember { mutableStateOf(emptyList<Tool>()) }
     var filter by remember { mutableStateOf("") }
     var sortType by remember { mutableStateOf(prefs.toolSort) }
 
-    // Pinned state (managed locally, synced to prefs)
+    // Pinned state
     val pinnedManager = remember { PinnedToolManager(prefs) }
     var pinnedIds by remember { mutableStateOf(pinnedManager.getPinnedToolIds().toSet()) }
 
     // Search helper
-    val toolSearch = remember { ToolSearch(requireContext()) }
+    val toolSearch = remember { ToolSearch(context) }
 
     // Load tools once
     useEffect {
-        tools = Tools.getTools(requireContext())
+        tools = Tools.getTools(context)
     }
 
     val filteredTools = useMemo(tools, filter) {
@@ -115,46 +96,37 @@ fun Fragment.ToolsContent(modifier: Modifier = Modifier) {
         tools.filter { pinnedIds.contains(it.id) }
     }
 
-    val sortedTools = useMemo(filteredTools, sortType) {
-        filteredTools.sortedBy { it.name }
+    // Apply sort
+    val sortFactory = remember { ToolSortFactory(context) }
+    val categorizedTools = useMemo(filteredTools, sortType) {
+        sortFactory.getToolSort(sortType).sort(filteredTools)
     }
 
-    // Context menu state for long-press
+    // Context menu state
     var contextMenuTool by remember { mutableStateOf<Tool?>(null) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = TrailSenseSpacing.lg)
     ) {
-        // Search + Settings row
+        // Search bar + settings
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 8.dp),
+                .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
+            TrailSenseSearchBar(
                 value = filter,
                 onValueChange = { filter = it },
-                placeholder = { Text(stringResource(R.string.search)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null
-                    )
-                },
-                singleLine = true,
+                placeholder = stringResource(R.string.search),
                 modifier = Modifier
                     .weight(1f)
-                    .testTag("tool_search"),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                    .testTag("tool_search")
             )
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
 
             IconButton(
                 onClick = {
@@ -171,18 +143,20 @@ fun Fragment.ToolsContent(modifier: Modifier = Modifier) {
         }
 
         Spacer(Modifier.height(8.dp))
+
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 140.dp),
-            contentPadding = PaddingValues(bottom = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = TrailSenseSpacing.xxxl),
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
             modifier = Modifier.fillMaxSize()
         ) {
+            // Pinned section (only when not searching)
             if (filter.isBlank() && pinnedTools.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    SectionHeader(
+                    TrailSenseSectionHeader(
                         title = stringResource(R.string.pinned),
-                        iconRes = R.drawable.ic_edit,
+                        icon = painterResource(R.drawable.ic_edit),
                         onIconClick = {
                             editPinnedTools(tools, pinnedManager, pinnedIds) { newPinned ->
                                 pinnedIds = newPinned
@@ -211,36 +185,50 @@ fun Fragment.ToolsContent(modifier: Modifier = Modifier) {
                 }
             }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                SectionHeader(
-                    title = stringResource(R.string.tools),
-                    iconRes = R.drawable.sort_ascending,
-                    onIconClick = {
-                        changeSortType { newSort ->
-                            sortType = newSort
-                            prefs.toolSort = newSort
-                        }
+            // Tools section — grouped by category when sorted by Category
+            for (group in categorizedTools) {
+                if (group.categoryName != null) {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) },
+                        key = "category_${group.categoryName}"
+                    ) {
+                        TrailSenseSectionHeader(title = group.categoryName)
                     }
-                )
-            }
+                } else if (filter.isBlank() || categorizedTools.size > 1) {
+                    // Single flat section header for alphabetical sort
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        TrailSenseSectionHeader(
+                            title = stringResource(R.string.tools),
+                            icon = painterResource(R.drawable.sort_ascending),
+                            onIconClick = {
+                                changeSortType { newSort ->
+                                    sortType = newSort
+                                    prefs.toolSort = newSort
+                                }
+                            }
+                        )
+                    }
+                }
 
-            items(
-                items = sortedTools,
-                key = { "tool_${it.id}" }
-            ) { tool ->
-                ToolCard(
-                    tool = tool,
-                    onClick = {
-                        navController.navigateWithAnimation(tool.navAction)
-                    },
-                    onLongClick = {
-                        contextMenuTool = tool
-                    }
-                )
+                items(
+                    items = group.tools,
+                    key = { "tool_${it.id}" }
+                ) { tool ->
+                    ToolCard(
+                        tool = tool,
+                        onClick = {
+                            navController.navigateWithAnimation(tool.navAction)
+                        },
+                        onLongClick = {
+                            contextMenuTool = tool
+                        }
+                    )
+                }
             }
         }
     }
 
+    // Context menu
     ContextMenu(
         tool = contextMenuTool,
         isPinned = contextMenuTool?.let { pinnedIds.contains(it.id) } ?: false,
@@ -269,42 +257,15 @@ fun Fragment.ToolsContent(modifier: Modifier = Modifier) {
         }
     )
 
-    val context = useAndroidContext()
+    // One-time toast hint
+    val androidContext = useAndroidContext()
     useEffect {
         oneTimeToast(
-            context,
+            androidContext,
             getString(R.string.tool_long_press_hint_toast),
             "tools_long_press_notice_shown",
             short = false
         )
-    }
-}
-
-@Composable
-private fun SectionHeader(
-    title: String,
-    iconRes: Int,
-    onIconClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(Modifier.weight(1f))
-        IconButton(onClick = onIconClick) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = title,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 
@@ -320,31 +281,31 @@ private fun ToolCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .height(80.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
             .testTag("tool_card_${tool.id}"),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(TrailSenseShapes.medium),
+        elevation = CardDefaults.cardElevation(defaultElevation = TrailSenseElevation.low),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = TrailSenseSpacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 painter = iconPainter,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(32.dp)
             )
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
             Text(
                 text = tool.name,
                 style = MaterialTheme.typography.titleMedium,
@@ -423,7 +384,9 @@ private fun Fragment.editPinnedTools(
         if (currentPinned.contains(tool.id)) "0${tool.name}" else tool.name
     }
     val names = sorted.map { it.name }
-    val preselected = sorted.mapIndexedNotNull { idx, t -> if (currentPinned.contains(t.id)) idx else null }
+    val preselected = sorted.mapIndexedNotNull { idx, t ->
+        if (currentPinned.contains(t.id)) idx else null
+    }
 
     com.kylecorry.andromeda.pickers.Pickers.items(
         requireContext(),
@@ -439,12 +402,12 @@ private fun Fragment.editPinnedTools(
     }
 }
 
-private fun Fragment.changeSortType(onSelected: (com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType) -> Unit) {
-    val types = com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType.values()
+private fun Fragment.changeSortType(onSelected: (ToolSortType) -> Unit) {
+    val types = ToolSortType.values()
     val labels = types.map {
         when (it) {
-            com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType.Name -> getString(R.string.name)
-            com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType.Category -> getString(R.string.category)
+            ToolSortType.Name -> getString(R.string.name)
+            ToolSortType.Category -> getString(R.string.category)
         }
     }
 
@@ -452,7 +415,7 @@ private fun Fragment.changeSortType(onSelected: (com.kylecorry.trail_sense.tools
         requireContext(),
         getString(R.string.sort),
         labels,
-        types.indexOf(com.kylecorry.trail_sense.shared.UserPreferences(requireContext()).toolSort)
+        types.indexOf(UserPreferences(requireContext()).toolSort)
     ) { idx ->
         if (idx != null) onSelected(types[idx])
     }
@@ -460,19 +423,23 @@ private fun Fragment.changeSortType(onSelected: (com.kylecorry.trail_sense.tools
 
 private fun Fragment.addToolToHomeScreen(tool: Tool) {
     tryOrNothing {
-        val shortcutInfo = androidx.core.content.pm.ShortcutInfoCompat.Builder(requireContext(), "tool-${tool.id}")
+        val shortcutInfo = androidx.core.content.pm.ShortcutInfoCompat.Builder(
+            requireContext(),
+            "tool-${tool.id}"
+        )
             .setIcon(
                 androidx.core.graphics.drawable.IconCompat.createFromIcon(
                     requireContext(),
                     android.graphics.drawable.Icon.createWithResource(requireContext(), tool.icon)
                 )
             )
-            .setIntent(com.kylecorry.trail_sense.main.MainActivity.openToolIntent(requireContext(), tool.id))
+            .setIntent(MainActivity.openToolIntent(requireContext(), tool.id))
             .setShortLabel(tool.name)
             .setLongLabel(tool.name)
             .build()
 
-        val callbackIntent = androidx.core.content.pm.ShortcutManagerCompat.createShortcutResultIntent(requireContext(), shortcutInfo)
+        val callbackIntent = androidx.core.content.pm.ShortcutManagerCompat
+            .createShortcutResultIntent(requireContext(), shortcutInfo)
         val successCallback = android.app.PendingIntent.getBroadcast(
             requireContext(), 0, callbackIntent,
             android.app.PendingIntent.FLAG_IMMUTABLE

@@ -2,9 +2,11 @@ import java.time.LocalDate
 
 plugins {
     id("com.android.application")
+    alias(libs.plugins.compose.compiler)
     id("com.google.devtools.ksp")
     id("dev.detekt")
     id("kotlin-parcelize")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -46,6 +48,7 @@ android {
         // Support for view binding
         viewBinding = true
         buildConfig = true
+        compose = true
     }
     buildTypes {
         // ------- RELEASES -------
@@ -148,6 +151,7 @@ dependencies {
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.android)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // AndroidX
@@ -160,6 +164,10 @@ dependencies {
     implementation(libs.work.runtime.ktx)
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.ui.ktx)
+    // Navigation 3 (pure Compose navigation) - added for the terminal zero-Fragment migration
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.lifecycle.runtime.compose)
     ksp(libs.room.compiler)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
@@ -170,6 +178,19 @@ dependencies {
     implementation(libs.camera.view)
     implementation(libs.androidx.core.remoteviews)
     implementation(libs.androidx.exifinterface)
+
+    // Compose
+    val composeBom = platform(libs.compose.bom)
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
+    androidTestImplementation(libs.compose.ui.test.junit4)
 
     // Material
     implementation(libs.material)
@@ -241,4 +262,5 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.mockito.kotlin)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 }

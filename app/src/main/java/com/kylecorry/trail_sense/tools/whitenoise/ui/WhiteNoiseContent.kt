@@ -20,8 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 
 @Composable
@@ -31,32 +35,28 @@ fun Fragment.WhiteNoiseContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
     ) {
         TrailSenseButton(
             text = if (isPlaying) "Stop" else "Play",
             onClick = { isPlaying = !isPlaying },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
+        TrailSenseSectionHeader(title = "Sound", modifier = Modifier.padding(top = TrailSenseSpacing.md))
 
         var selectedSound by remember { mutableStateOf("White Noise") }
-        Column(Modifier.padding(horizontal = 16.dp)) {
-            Text("Sound", style = MaterialTheme.typography.labelMedium)
-            Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("White", "Pink", "Brown").forEach { sound ->
-                    TrailSenseChip(
-                        text = sound,
-                        selected = selectedSound == sound,
-                        onClick = { selectedSound = sound }
-                    )
-                }
+        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+            listOf("White", "Pink", "Brown").forEach { sound ->
+                TrailSenseChip(
+                    text = sound,
+                    selected = selectedSound == sound,
+                    onClick = { selectedSound = sound }
+                )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        TrailSenseDivider(modifier = Modifier.padding(vertical = TrailSenseSpacing.md))
 
         var sleepTimerEnabled by remember { mutableStateOf(false) }
         TrailSenseSwitchRow(
@@ -65,25 +65,21 @@ fun Fragment.WhiteNoiseContent(modifier: Modifier = Modifier) {
             onCheckedChange = { sleepTimerEnabled = it }
         )
 
-        Spacer(Modifier.height(8.dp))
-
         var durationText by remember { mutableStateOf("30") }
         OutlinedTextField(
             value = durationText,
             onValueChange = { durationText = it },
             label = { Text("Duration (min)") },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(top = TrailSenseSpacing.sm)
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(TrailSenseSpacing.xl))
 
         TrailSenseCard {
-            Column(Modifier.padding(16.dp)) {
-                Text(
-                    text = if (isPlaying) getString(R.string.on) else getString(R.string.off),
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
+            Text(
+                text = if (isPlaying) getString(R.string.on) else getString(R.string.off),
+                style = MaterialTheme.typography.headlineSmall
+            )
         }
     }
 }

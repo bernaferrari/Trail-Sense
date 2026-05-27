@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,13 +14,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 /**
- * Reusable pretty list item component — shared design system building block in :shared.
+ * Modern, expressive list item — Material 3 Expressive style.
+ * Supports leading icon, rich content, and trailing elements.
  */
 @Composable
 fun TrailSenseListItem(
@@ -26,13 +36,34 @@ fun TrailSenseListItem(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: Painter? = null,
-    onClick: (() -> Unit)? = null
+    trailing: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+    animateEntrance: Boolean = true
 ) {
+    var visible by remember { mutableStateOf(!animateEntrance) }
+
+    LaunchedEffect(Unit) {
+        if (animateEntrance) {
+            delay(40)
+            visible = true
+        }
+    }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = TrailSenseAnimation.fastFade,
+        label = "listItemEntrance"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .alpha(alpha)
             .clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -42,10 +73,13 @@ fun TrailSenseListItem(
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(TrailSenseSpacing.md))
         }
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
@@ -58,6 +92,11 @@ fun TrailSenseListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        if (trailing != null) {
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            trailing()
         }
     }
 }

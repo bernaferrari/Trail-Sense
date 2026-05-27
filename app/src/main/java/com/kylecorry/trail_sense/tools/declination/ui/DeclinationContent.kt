@@ -11,8 +11,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,10 +21,10 @@ import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.compose.useEffect
+import com.kylecorry.trail_sense.shared.extensions.compose.useLocation
 import com.kylecorry.trail_sense.shared.extensions.compose.useMemo
 import com.kylecorry.trail_sense.shared.extensions.compose.useService
 import com.kylecorry.trail_sense.shared.extensions.compose.useState
-import com.kylecorry.trail_sense.shared.extensions.useLocation
 
 /**
  * Compose conversion of ToolDeclinationFragment (Ralph Loop iteration 2).
@@ -36,9 +35,9 @@ fun Fragment.DeclinationContent(modifier: Modifier = Modifier) {
     val formatService = useService<FormatService>()
 
     val (initialLocation, isLocationUpToDate) = useLocation()
-    var location by useState(initialLocation)
+    val (location, setLocation) = useState(initialLocation)
 
-    val declination by useMemo(location) {
+    val declination = useMemo(location) {
         location?.let { Geophysics.getGeomagneticDeclination(it) }
     }
 
@@ -71,7 +70,7 @@ fun Fragment.DeclinationContent(modifier: Modifier = Modifier) {
                 com.kylecorry.trail_sense.shared.views.CoordinateInputView(ctx).apply {
                     coordinate = initialLocation
                     setOnCoordinateChangeListener { newCoord ->
-                        if (newCoord != null) location = newCoord
+                        if (newCoord != null) setLocation(newCoord)
                     }
                 }
             },
@@ -104,50 +103,7 @@ fun Fragment.DeclinationContent(modifier: Modifier = Modifier) {
 
     useEffect(initialLocation, isLocationUpToDate) {
         if (isLocationUpToDate) {
-            location = initialLocation
+            setLocation(initialLocation)
         }
-    }
-}
-}
-
-@Composable
-fun Fragment.DeclinationContent(modifier: Modifier = Modifier) {
-    // For the first pass we keep the heavy custom views via AndroidView.
-    // Later we can decide to fully port DeclinationView and CoordinateInputView to Compose Canvas / fields.
-
-    val (location, setLocation) = useState<com.kylecorry.sol.units.Coordinate?>(null)
-    val declination = useMemo(location) {
-        location?.let { com.kylecorry.sol.science.geophysics.Geophysics.getGeomagneticDeclination(it) }
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Title / declination value (pretty typography)
-        Text(
-            text = declination?.let { "%.1f°".format(it) } ?: "—",
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
-        )
-
-        // The two complex custom views are kept via AndroidView for now.
-        // This is the exact pattern used by ToolMagnifierFragment (CameraView) and is acceptable during migration.
-        AndroidView(
-            factory = { ctx ->
-                // In a real conversion we would inflate or construct the two views here
-                // and wire the listeners. For skeleton we just show a placeholder.
-                android.widget.TextView(ctx).apply {
-                    text = "Declination + Coordinate input (AndroidView placeholder — real views wired in next iteration)"
-                }
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-
-    // Example of wiring the existing useLocation hook pattern into Compose state
-    // (the real version will use the Compose sensor hooks or the existing useLocation extension)
-    useEffect {
-        // Placeholder for the real location + declination calculation wiring
     }
 }

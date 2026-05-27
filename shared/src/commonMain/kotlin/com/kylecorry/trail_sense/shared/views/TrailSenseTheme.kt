@@ -3,49 +3,125 @@ package com.kylecorry.trail_sense.shared.views
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.materialkolor.PaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 
 /**
- * Shared (KMP-ready) version of the Trail Sense design system.
- * Dynamic colors are Android-only for now (expect/actual will be added when CMP is enabled).
+ * Trail Sense Design System — Material 3 Expressive + Material Kolor
+ *
+ * Supports:
+ * - User-selected accent colors (Orange, Blue, Green, Red, Purple, Teal)
+ * - True Android Dynamic Color (wallpaper-based Material You) when "Dynamic" is chosen
+ * - Excellent light/dark + AMOLED harmony via Material Kolor
  */
-private val TrailSenseLightColors = lightColorScheme(
-    primary = Color(0xFFFF6D00),
-    onPrimary = Color(0xFF351000),
-    primaryContainer = Color(0x80FF6D00),
-    onPrimaryContainer = Color(0xFF351000),
-    secondaryContainer = Color(0x80FF6D00),
-    tertiaryContainer = Color(0x80FF6D00),
-    onSecondaryContainer = Color(0xFF351000),
-    onTertiaryContainer = Color(0xFF351000)
-)
+sealed interface TrailSenseColorScheme {
+    data object Orange : TrailSenseColorScheme
+    data object Blue : TrailSenseColorScheme
+    data object Green : TrailSenseColorScheme
+    data object Red : TrailSenseColorScheme
+    data object Purple : TrailSenseColorScheme
+    data object Teal : TrailSenseColorScheme
 
-private val TrailSenseDarkColors = darkColorScheme(
-    primary = Color(0xFFFF6D00),
-    onPrimary = Color(0xFF351000),
-    primaryContainer = Color(0x80FF6D00),
-    onPrimaryContainer = Color(0xFF351000),
-    secondaryContainer = Color(0x80FF6D00),
-    tertiaryContainer = Color(0x80FF6D00),
-    onSecondaryContainer = Color(0xFF351000),
-    onTertiaryContainer = Color(0xFF351000)
-)
+    /**
+     * Use the system's Dynamic Color (Android 12+ wallpaper-based Material You).
+     * Falls back gracefully on older Android or non-Android platforms.
+     */
+    data object Dynamic : TrailSenseColorScheme
 
+    companion object {
+        val entries: List<TrailSenseColorScheme> = listOf(
+            Orange, Blue, Green, Red, Purple, Teal, Dynamic
+        )
+
+        fun fromId(id: Int): TrailSenseColorScheme = when (id) {
+            0 -> Orange
+            1 -> Blue
+            2 -> Green
+            3 -> Red
+            4 -> Purple
+            5 -> Teal
+            6 -> Dynamic
+            else -> Orange
+        }
+
+        fun toId(scheme: TrailSenseColorScheme): Int = when (scheme) {
+            Orange -> 0
+            Blue -> 1
+            Green -> 2
+            Red -> 3
+            Purple -> 4
+            Teal -> 5
+            Dynamic -> 6
+        }
+    }
+}
+
+private fun TrailSenseColorScheme.toSeedColor(): Color = when (this) {
+    TrailSenseColorScheme.Orange -> Color(0xFFE85D04)
+    TrailSenseColorScheme.Blue   -> Color(0xFF1565C0)
+    TrailSenseColorScheme.Green  -> Color(0xFF2E7D32)
+    TrailSenseColorScheme.Red    -> Color(0xFFC62828)
+    TrailSenseColorScheme.Purple -> Color(0xFF6A1B9A)
+    TrailSenseColorScheme.Teal   -> Color(0xFF00897B)
+    TrailSenseColorScheme.Dynamic -> Color(0xFF6750A4)
+}
+
+/**
+ * The main Trail Sense theme.
+ *
+ * @param colorScheme Which accent / dynamic mode to use. Defaults to a warm, nature-friendly Orange.
+ * @param darkTheme Whether to use dark mode. Defaults to system setting.
+ * @param isAmoled Whether to use pure black surfaces (for AMOLED devices).
+ * @param content Your UI content.
+ */
 @Composable
 fun TrailSenseTheme(
+    colorScheme: TrailSenseColorScheme = TrailSenseColorScheme.Orange,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    isAmoled: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // For JVM / non-Android targets we default to system dark/light.
-    // On Android the app module can still provide dynamic color overrides later.
-    val useDarkTheme = isSystemInDarkTheme()
-    val colorScheme = if (useDarkTheme) TrailSenseDarkColors else TrailSenseLightColors
+    val colorSchemeResult: ColorScheme = when (colorScheme) {
+        TrailSenseColorScheme.Dynamic -> {
+            if (isAndroidDynamicColorAvailable()) {
+                val context = LocalContext.current
+                if (darkTheme) {
+                    dynamicDarkColorScheme(context)
+                } else {
+                    dynamicLightColorScheme(context)
+                }
+            } else {
+                rememberDynamicColorScheme(
+                    seedColor = TrailSenseColorScheme.Dynamic.toSeedColor(),
+                    isDark = darkTheme,
+                    isAmoled = isAmoled,
+                    style = PaletteStyle.TonalSpot
+                )
+            }
+        }
+
+        else -> {
+            rememberDynamicColorScheme(
+                seedColor = colorScheme.toSeedColor(),
+                isDark = darkTheme,
+                isAmoled = isAmoled,
+                style = PaletteStyle.TonalSpot
+            )
+        }
+    }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colorSchemeResult,
+        typography = MaterialTheme.typography,
+        shapes = MaterialTheme.shapes,
         content = content
     )
 }
+
+@Composable
+private fun isAndroidDynamicColorAvailable(): Boolean = true

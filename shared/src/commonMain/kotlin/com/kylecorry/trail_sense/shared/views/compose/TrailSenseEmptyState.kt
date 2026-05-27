@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
- * Reusable pretty empty state component — shared design system building block in :shared.
+ * Expressive empty state — Material 3 Expressive style.
  */
 @Composable
 fun TrailSenseEmptyState(
@@ -30,7 +30,7 @@ fun TrailSenseEmptyState(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(horizontal = TrailSenseSpacing.xxl, vertical = TrailSenseSpacing.xxxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -38,24 +38,24 @@ fun TrailSenseEmptyState(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(64.dp)
+            modifier = Modifier.size(72.dp)
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(TrailSenseSpacing.xl))
 
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
 
         if (description != null) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(TrailSenseSpacing.md))
 
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )

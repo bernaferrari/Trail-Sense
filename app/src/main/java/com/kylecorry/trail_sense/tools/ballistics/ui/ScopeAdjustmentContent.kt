@@ -33,7 +33,7 @@ fun Fragment.ScopeAdjustmentContent(modifier: Modifier = Modifier) {
     ) {
         AndroidView(
             factory = { ctx ->
-                MaterialSpinnerView(ctx).apply {
+                MaterialSpinnerView(ctx, null).apply {
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -43,7 +43,7 @@ fun Fragment.ScopeAdjustmentContent(modifier: Modifier = Modifier) {
 
         AndroidView(
             factory = { ctx ->
-                DistanceInputView(ctx).apply {
+                DistanceInputView(ctx, null).apply {
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -54,7 +54,7 @@ fun Fragment.ScopeAdjustmentContent(modifier: Modifier = Modifier) {
         TrailSenseCard {
             Column(Modifier.padding(16.dp)) {
                 Text(
-                    text = getString(R.string.adjustment),
+                    text = getString(R.string.scope_adjustment),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

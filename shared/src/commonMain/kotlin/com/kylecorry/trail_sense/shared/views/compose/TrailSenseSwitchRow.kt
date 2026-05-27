@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun TrailSenseSwitchRow(
@@ -23,7 +22,10 @@ fun TrailSenseSwitchRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -31,7 +33,7 @@ fun TrailSenseSwitchRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(TrailSenseSpacing.md))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange

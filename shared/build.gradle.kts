@@ -1,51 +1,45 @@
 plugins {
-    id("org.jetbrains.kotlin.multiplatform")
     id("com.android.library")
-    id("org.jetbrains.compose")          // Compose Multiplatform
-    id("org.jetbrains.kotlin.plugin.compose") // Compose compiler plugin
+    alias(libs.plugins.compose.compiler)
+    id("kotlin-parcelize")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "com.kylecorry.trail_sense"
 version = "1.0.0"
 
-kotlin {
-    androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "11"
-            }
-        }
-    }
-    jvm()
-
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
-                implementation(compose.ui)
-            }
-        }
-        val androidMain by getting {
-            dependencies {
-                // Android-specific (will add via expect/actual later)
-            }
-        }
-    }
-}
-
 android {
     namespace = "com.kylecorry.trail_sense.shared"
-    compileSdk = 34
+    compileSdk = 37
     defaultConfig {
-        minSdk = 24
+        minSdk = 23
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        getByName("main") {
+            kotlin.srcDir("src/commonMain/kotlin")
+            kotlin.srcDir("src/androidMain/kotlin")
+        }
+    }
+}
+
+dependencies {
+    val composeBom = platform(libs.compose.bom)
+    implementation(composeBom)
+    implementation("androidx.compose.runtime:runtime")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.materialkolor:material-kolor:4.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
