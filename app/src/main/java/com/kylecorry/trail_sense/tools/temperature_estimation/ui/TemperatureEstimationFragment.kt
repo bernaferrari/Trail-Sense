@@ -1,15 +1,33 @@
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
-import android.os.Bundle
-import android.text.InputType
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.view.isVisible
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import com.kylecorry.andromeda.core.coroutines.onMain
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
@@ -21,14 +39,25 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolTemperatureEstimationBinding
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.extensions.compose.useLifecycleEffect
+import com.kylecorry.trail_sense.shared.extensions.compose.useService
+import com.kylecorry.trail_sense.shared.extensions.compose.useTimer
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.ElevationInputView
+import com.kylecorry.trail_sense.shared.views.TextInputView
 import com.kylecorry.trail_sense.shared.views.UnitInputView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.Duration
 
 private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnits) {
@@ -37,57 +66,57 @@ private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnit
     MetersPerSecond(DistanceUnits.Meters, TimeUnits.Seconds)
 }
 
-class TemperatureEstimationFragment : BoundFragment<FragmentToolTemperatureEstimationBinding>() {
+class TemperatureEstimationFragment : TrailSenseComposeFragment() {
 
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val thermometer by lazy { sensorService.getThermometer() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val temperatureUnits by lazy { prefs.temperatureUnits }
-    private val location by lazy { LocationSubsystem.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
-    private val intervalometer = CoroutineTimer {
-        if (!isBound) {
-            return@CoroutineTimer
-        }
-        val temp = getEstimation()
-        binding.temperatureTitle.title.text = if (temp == null || temp.value.isNaN()) {
-            getString(R.string.dash)
-        } else {
-            formatService.formatTemperature(temp.convertTo(temperatureUnits))
-        }
+    @Composable
+    override fun FragmentContent() {
+        TemperatureEstimationContent()
     }
+}
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolTemperatureEstimationBinding {
-        return FragmentToolTemperatureEstimationBinding.inflate(layoutInflater, container, false)
-    }
+@Composable
+private fun Fragment.TemperatureEstimationContent(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs = useService<UserPreferences>()
+    val sensorService = useService<SensorService>()
+    val thermometer = remember { sensorService.getThermometer() }
+    val locationSubsystem = remember { LocationSubsystem.getInstance(context) }
+    val formatService = remember { FormatService.getInstance(context) }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    val temperatureUnits = prefs.temperatureUnits
+    val distanceUnitsPref = prefs.distanceUnits
 
-        val temps = if (temperatureUnits == TemperatureUnits.Celsius) {
+    // View refs for calling methods like autofill/pause (required for custom views with side effects)
+    var baseElevationView by remember { mutableStateOf<ElevationInputView?>(null) }
+    var destElevationView by remember { mutableStateOf<ElevationInputView?>(null) }
+    var baseTempView by remember { mutableStateOf<UnitInputView<TemperatureUnits>?>(null) }
+    var windSpeedView by remember { mutableStateOf<UnitInputView<WindSpeedUnit>?>(null) }
+    var humidityView by remember { mutableStateOf<TextInputView?>(null) }
+
+    // Autofill loading state (Compose managed)
+    var isAutofilling by remember { mutableStateOf(false) }
+
+    // Result state, updated by timer polling the authoritative custom view state
+    var resultText by remember { mutableStateOf("-") }
+
+    // Setup units lists (same logic as old onViewCreated)
+    val tempDisplayUnits = remember(temperatureUnits, formatService) {
+        val units = if (temperatureUnits == TemperatureUnits.Celsius) {
             listOf(TemperatureUnits.Celsius, TemperatureUnits.Fahrenheit)
         } else {
             listOf(TemperatureUnits.Fahrenheit, TemperatureUnits.Celsius)
-        }.map {
+        }
+        units.map {
             UnitInputView.DisplayUnit(
                 it,
                 formatService.getTemperatureUnitName(it, true),
                 formatService.getTemperatureUnitName(it, false)
             )
         }
+    }
 
-        binding.tempEstBaseElevation.hint = getString(R.string.base_elevation)
-        binding.tempEstDestElevation.hint = getString(R.string.destination_elevation)
-
-        binding.tempEstBaseTemperature.units = temps
-        binding.tempEstBaseTemperature.unit = temperatureUnits
-        binding.tempEstBaseTemperature.hint = getString(R.string.current_temperature)
-
-        val speedUnits = if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) {
+    val windDisplayUnits = remember(distanceUnitsPref, formatService) {
+        val units = if (distanceUnitsPref == UserPreferences.DistanceUnits.Meters) {
             listOf(
                 WindSpeedUnit.KilometersPerHour,
                 WindSpeedUnit.MetersPerSecond,
@@ -99,152 +128,293 @@ class TemperatureEstimationFragment : BoundFragment<FragmentToolTemperatureEstim
                 WindSpeedUnit.KilometersPerHour,
                 WindSpeedUnit.MetersPerSecond
             )
-        }.map {
+        }
+        units.map {
             val name = formatService.getSpeedUnitName(it.distance, it.time, true)
             UnitInputView.DisplayUnit(it, name, name)
         }
+    }
 
-        binding.tempEstWindSpeed.units = speedUnits
-        binding.tempEstWindSpeed.unit = speedUnits.firstOrNull()?.unit
-        binding.tempEstWindSpeed.hint = getString(R.string.wind_speed)
-        binding.tempEstWindSpeed.allowNegative = false
-        binding.tempEstHumidity.setHint(getString(R.string.humidity))
-        binding.tempEstHumidity.setInputType(
-            InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+    // Initial elevation (rounded like old code)
+    val initialElevation = remember {
+        val elev = locationSubsystem.elevation.convertTo(prefs.baseDistanceUnits)
+        Distance.from(
+            elev.value.roundPlaces(Units.getDecimalPlaces(elev.units)),
+            elev.units
         )
-        binding.tempEstHumidity.setOnTextChangeListener {
-            updateHumidityError()
-        }
+    }
 
-        binding.tempEstAutofill.setOnClickListener {
-            autofill()
-        }
-
-        setThermometerFieldFromSensor()
-
-        // Set the initial elevation
-        val elevation = location.elevation.convertTo(prefs.baseDistanceUnits)
-        val roundedElevation = Distance.from(
-            elevation.value.roundPlaces(
-                Units.getDecimalPlaces(elevation.units)
-            ),
-            elevation.units
+    // Timer to poll estimation (mirrors old 200ms intervalometer, using views as source of truth)
+    val (startTimer, stopTimer) = useTimer(200L, autostart = false) {
+        val est = computeEstimation(
+            baseElevationView, destElevationView, baseTempView, humidityView, windSpeedView,
+            formatService, temperatureUnits
         )
-        binding.tempEstBaseElevation.elevation = roundedElevation
-    }
-
-    override fun onResume() {
-        super.onResume()
-        intervalometer.interval(200)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        intervalometer.stop()
-        binding.tempEstBaseElevation.pause()
-        binding.tempEstDestElevation.pause()
-    }
-
-    private fun autofill() {
-        inBackground {
-            onMain {
-                binding.tempEstAutofill.isVisible = false
-                binding.tempEstLoading.isVisible = true
-                binding.tempEstBaseTemperature.isEnabled = false
-                binding.tempEstBaseElevation.autofill()
-            }
-
-            readAll(
-                listOf(thermometer),
-                Duration.ofSeconds(10),
-                forceStopOnCompletion = true
-            )
-
-            onMain {
-                setThermometerFieldFromSensor()
-                binding.tempEstAutofill.isVisible = true
-                binding.tempEstLoading.isVisible = false
-                binding.tempEstBaseTemperature.isEnabled = true
-            }
-        }
-    }
-
-    private fun setThermometerFieldFromSensor() {
-        val sensorTemperature = thermometer.temperature
-
-        if ((thermometer.hasValidReading || sensorTemperature != 0f) && !sensorTemperature.isNaN()) {
-            val temp = Temperature.celsius(sensorTemperature).convertTo(temperatureUnits)
-            binding.tempEstBaseTemperature.amount = temp.value.safeRoundToInt()
-            binding.tempEstBaseTemperature.unit = temperatureUnits
-        }
-    }
-
-    private fun getEstimation(): Temperature? {
-        var temp = getBaseTemperature() ?: return null
-        val destElevation = getDestElevation()
-        val baseElevation = getBaseElevation()
-        val humidity = getHumidity()
-        val windSpeed = getWindSpeed()
-
-        if (destElevation != null) {
-            if (baseElevation == null) {
-                return null
-            }
-            temp = Meteorology.getTemperatureAtElevation(temp, baseElevation, destElevation)
-        }
-
-        if (humidity != null) {
-            temp = Temperature.celsius(
-                Meteorology.getHeatIndex(temp.celsius().value, humidity)
-            ).convertTo(temp.units)
-        }
-
-        if (windSpeed != null) {
-            temp = Meteorology.getWindChill(temp, windSpeed)
-        }
-
-        return temp
-    }
-
-    private fun getBaseTemperature(): Temperature? {
-        val amount = binding.tempEstBaseTemperature.amount?.toFloat() ?: return null
-        val units = binding.tempEstBaseTemperature.unit as TemperatureUnits
-        val uiTemp = Temperature.from(amount, units)
-        return uiTemp.convertTo(TemperatureUnits.Celsius)
-    }
-
-    private fun getBaseElevation(): Distance? {
-        val distance = binding.tempEstBaseElevation.elevation ?: return null
-        return distance.meters()
-    }
-
-    private fun getDestElevation(): Distance? {
-        val distance = binding.tempEstDestElevation.elevation ?: return null
-        return distance.meters()
-    }
-
-    private fun getHumidity(): Float? {
-        return binding.tempEstHumidity.text?.toString()?.toFloatCompat()?.takeIf {
-            it in 0f..100f
-        }
-    }
-
-    private fun updateHumidityError() {
-        val humidityText = binding.tempEstHumidity.text?.toString()
-        val humidity = humidityText?.toFloatCompat()
-        binding.tempEstHumidity.setError(
-            if (humidityText.isNullOrEmpty() || humidity == null || humidity in 0f..100f) {
-                null
+        onMain {
+            resultText = if (est == null || est.value.isNaN()) {
+                "-"
             } else {
-                getString(R.string.humidity_must_be_between_0_and_100)
+                formatService.formatTemperature(est.convertTo(temperatureUnits))
             }
+        }
+    }
+
+    useLifecycleEffect(Lifecycle.Event.ON_RESUME) {
+        startTimer()
+        // Initial sensor fill on resume like old behavior
+        setInitialFromSensorIfNeeded(baseTempView, thermometer, temperatureUnits, formatService)
+    }
+
+    useLifecycleEffect(Lifecycle.Event.ON_PAUSE) {
+        stopTimer()
+        baseElevationView?.pause()
+        destElevationView?.pause()
+    }
+
+    // One-time initial setup effect (like onViewCreated)
+    LaunchedEffect(Unit) {
+        // The AndroidViews handle their own initial config in factory
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(TrailSenseSpacing.lg)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    ) {
+        // Result display (replaces old Toolbar title with large expressive text)
+        Text(
+            text = resultText,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = TrailSenseSpacing.md)
+                .testTag("temperature_title")
         )
+
+        TrailSenseCard {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+                // Base elevation
+                AndroidView(
+                    factory = { ctx ->
+                        ElevationInputView(ctx).apply {
+                            hint = ctx.getString(R.string.base_elevation)
+                            elevation = initialElevation
+                            baseElevationView = this
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("temp_est_base_elevation")
+                )
+
+                // Dest elevation
+                AndroidView(
+                    factory = { ctx ->
+                        ElevationInputView(ctx).apply {
+                            hint = ctx.getString(R.string.destination_elevation)
+                            destElevationView = this
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("temp_est_dest_elevation")
+                )
+
+                // Base temperature (UnitInputView)
+                AndroidView(
+                    factory = { ctx ->
+                        UnitInputView<TemperatureUnits>(ctx).apply {
+                            units = tempDisplayUnits
+                            unit = temperatureUnits
+                            hint = ctx.getString(R.string.current_temperature)
+                            baseTempView = this
+                        }
+                    },
+                    update = { view ->
+                        // Keep unit in sync if prefs change (rare)
+                        if (view.unit != temperatureUnits) view.unit = temperatureUnits
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("temp_est_base_temperature")
+                )
+
+                // Humidity (TextInputView)
+                AndroidView(
+                    factory = { ctx ->
+                        TextInputView(ctx, null).apply {
+                            setHint(ctx.getString(R.string.humidity))
+                            setInputType(
+                                android.text.InputType.TYPE_CLASS_NUMBER or
+                                    android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+                            )
+                            humidityView = this
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("temp_est_humidity")
+                )
+
+                // Wind speed
+                AndroidView(
+                    factory = { ctx ->
+                        UnitInputView<WindSpeedUnit>(ctx).apply {
+                            units = windDisplayUnits
+                            unit = windDisplayUnits.firstOrNull()?.unit
+                            hint = ctx.getString(R.string.wind_speed)
+                            allowNegative = false
+                            windSpeedView = this
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("temp_est_wind_speed")
+                )
+
+                // Autofill row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TrailSenseButton(
+                        text = stringResource(R.string.autofill),
+                        onClick = {
+                            isAutofilling = true
+                            baseTempView?.isEnabled = false
+                            baseElevationView?.autofill()
+                            // Background sensor read + fill (ported autofill logic using coroutine)
+                            CoroutineScope(Dispatchers.Default).launch {
+                                try {
+                                    readAll(
+                                        listOf(thermometer),
+                                        Duration.ofSeconds(10),
+                                        forceStopOnCompletion = true
+                                    )
+                                } catch (_: Exception) {
+                                }
+                                onMain {
+                                    setInitialFromSensorIfNeeded(
+                                        baseTempView,
+                                        thermometer,
+                                        temperatureUnits,
+                                        formatService
+                                    )
+                                    isAutofilling = false
+                                    baseTempView?.isEnabled = true
+                                }
+                            }
+                        },
+                        modifier = Modifier.testTag("temp_est_autofill")
+                    )
+
+                    if (isAutofilling) {
+                        Spacer(Modifier.height(TrailSenseSpacing.md))
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(start = TrailSenseSpacing.md)
+                                .size(24.dp)
+                                .testTag("temp_est_loading")
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- Helper functions (logic ported/adapted from original, now pure or view-interacting) ---
+
+private fun computeEstimation(
+    baseElevationView: ElevationInputView?,
+    destElevationView: ElevationInputView?,
+    baseTempView: UnitInputView<TemperatureUnits>?,
+    humidityView: TextInputView?,
+    windSpeedView: UnitInputView<WindSpeedUnit>?,
+    formatService: FormatService,
+    temperatureUnits: TemperatureUnits
+): Temperature? {
+    var temp = getBaseTemperature(baseTempView) ?: return null
+    val destElevation = getDestElevation(destElevationView)
+    val baseElevation = getBaseElevation(baseElevationView)
+    val humidity = getHumidity(humidityView)
+    val windSpeed = getWindSpeed(windSpeedView)
+
+    if (destElevation != null) {
+        if (baseElevation == null) return null
+        temp = Meteorology.getTemperatureAtElevation(temp, baseElevation, destElevation)
     }
 
-    private fun getWindSpeed(): Speed? {
-        val amount = binding.tempEstWindSpeed.amount?.toFloat() ?: return null
-        val unit = binding.tempEstWindSpeed.unit as? WindSpeedUnit ?: return null
-        return Speed.from(amount, unit.distance, unit.time)
+    if (humidity != null) {
+        temp = Temperature.celsius(
+            Meteorology.getHeatIndex(temp.celsius().value, humidity)
+        ).convertTo(temp.units)
     }
 
+    if (windSpeed != null) {
+        temp = Meteorology.getWindChill(temp, windSpeed)
+    }
+    return temp
+}
+
+private fun getBaseTemperature(view: UnitInputView<TemperatureUnits>?): Temperature? {
+    val amount = view?.amount?.toFloat() ?: return null
+    val units = (view.unit as? TemperatureUnits) ?: return null
+    return Temperature.from(amount, units).convertTo(TemperatureUnits.Celsius)
+}
+
+private fun getBaseElevation(view: ElevationInputView?): Distance? {
+    return view?.elevation?.meters()
+}
+
+private fun getDestElevation(view: ElevationInputView?): Distance? {
+    return view?.elevation?.meters()
+}
+
+private fun getHumidity(view: TextInputView?): Float? {
+    return view?.text?.toString()?.toFloatCompat()?.takeIf { it in 0f..100f }
+}
+
+private fun getWindSpeed(view: UnitInputView<WindSpeedUnit>?): Speed? {
+    val amount = view?.amount?.toFloat() ?: return null
+    val unit = view.unit as? WindSpeedUnit ?: return null
+    return Speed.from(amount, unit.distance, unit.time)
+}
+
+private fun setInitialFromSensorIfNeeded(
+    baseTempView: UnitInputView<TemperatureUnits>?,
+    thermometer: com.kylecorry.andromeda.sense.thermometer.IThermometer,
+    temperatureUnits: TemperatureUnits,
+    formatService: FormatService
+) {
+    val sensorTemperature = thermometer.temperature
+    if ((thermometer.hasValidReading || sensorTemperature != 0f) && !sensorTemperature.isNaN()) {
+        val temp = Temperature.celsius(sensorTemperature).convertTo(temperatureUnits)
+        baseTempView?.amount = temp.value.safeRoundToInt()
+        baseTempView?.unit = temperatureUnits
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TemperatureEstimationContentPreview() {
+    MaterialTheme {
+        // Preview would require full Fragment context for hooks; showing structure only
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("42 °F", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+            TrailSenseCard {
+                Text("Base elevation, dest elevation, temp, humidity, wind inputs (AndroidView in real use)")
+            }
+            TrailSenseButton(text = "Autofill", onClick = {})
+        }
+    }
 }
