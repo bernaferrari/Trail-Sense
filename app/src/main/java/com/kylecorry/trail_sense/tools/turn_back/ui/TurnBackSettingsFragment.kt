@@ -40,7 +40,7 @@ fun TurnBackSettingsContent(modifier: Modifier = Modifier) {
             .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
     ) {
         TrailSenseSectionHeader(
-            text = stringResource(R.string.tool_turn_back),
+            title = stringResource(R.string.tool_turn_back),
             modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
         )
 

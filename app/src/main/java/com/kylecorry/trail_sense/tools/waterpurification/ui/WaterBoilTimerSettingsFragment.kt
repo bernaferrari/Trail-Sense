@@ -39,7 +39,7 @@ fun WaterBoilTimerSettingsContent(modifier: Modifier = Modifier) {
             .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
     ) {
         TrailSenseSectionHeader(
-            text = stringResource(R.string.water_boil_timer),
+            title = stringResource(R.string.water_boil_timer),
             modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
         )
 

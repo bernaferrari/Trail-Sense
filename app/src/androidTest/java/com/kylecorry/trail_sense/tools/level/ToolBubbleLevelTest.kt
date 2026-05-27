@@ -12,9 +12,9 @@ class ToolBubbleLevelTest : ToolTestBase(Tools.BUBBLE_LEVEL) {
 
     @Test
     fun verifyBasicFunctionality() {
-        // Verify it shows the current angle
+        // Verify it shows the current angle (now rendered via Compose with testTag("angle_display"))
+        // Use stable text matcher instead of R.id (Compose migration per SKILL.md)
         hasText(
-            R.id.level_title,
             Regex(
                 string(
                     R.string.bubble_level_angles,
@@ -24,7 +24,7 @@ class ToolBubbleLevelTest : ToolTestBase(Tools.BUBBLE_LEVEL) {
             )
         )
 
-        // Verify the level is shown (will fail if the level is not visible)
-        isVisible(R.id.level)
+        // Verify the level visualization is shown (testTag("level") on the Canvas area)
+        isVisible("level")
     }
 }

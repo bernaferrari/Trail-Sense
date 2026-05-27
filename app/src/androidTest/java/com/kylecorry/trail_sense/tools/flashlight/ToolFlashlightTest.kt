@@ -33,21 +33,21 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
             return
         }
 
-        click(R.id.flashlight_on_btn)
+        click(id("flashlight_on_btn"))
         hasNotification(
             FlashlightService.NOTIFICATION_ID,
             title = string(R.string.flashlight_title)
         )
         isTrue { TestUtils.isTorchOn }
 
-        click(R.id.flashlight_on_btn)
+        click(id("flashlight_on_btn"))
         doesNotHaveNotification(FlashlightService.NOTIFICATION_ID)
         isFalse { TestUtils.isTorchOn }
     }
 
     private fun canToggleScreenFlashlight() {
-        click(R.id.screen_flashlight_btn)
-        isNotVisible(R.id.screen_flashlight_btn)
+        click(id("screen_flashlight_btn"))
+        isNotVisible(id("screen_flashlight_btn"))
 
         click(R.id.red_white_switcher)
         click(R.id.red_white_switcher)
@@ -56,7 +56,7 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
 
         click(R.id.off_btn)
 
-        isVisible(R.id.screen_flashlight_btn)
+        isVisible(id("screen_flashlight_btn"))
     }
 
     private fun verifyQuickAction() {
