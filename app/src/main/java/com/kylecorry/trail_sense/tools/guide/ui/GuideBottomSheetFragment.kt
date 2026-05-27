@@ -1,17 +1,16 @@
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.fragments.BoundBottomSheetDialogFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.trail_sense.databinding.FragmentGuideBinding
-import com.kylecorry.trail_sense.shared.text.TextUtils
+import androidx.compose.runtime.Composable
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 
-class GuideBottomSheetFragment : BoundBottomSheetDialogFragment<FragmentGuideBinding>() {
+/**
+ * Bottom sheet variant of guide detail. Reuses the modern GuideContent composable.
+ * Shown programmatically via UserGuideUtils (show() extension handles presentation).
+ */
+class GuideBottomSheetFragment : TrailSenseComposeFragment() {
 
     private val guide: UserGuide by lazy {
         UserGuide(
@@ -20,26 +19,11 @@ class GuideBottomSheetFragment : BoundBottomSheetDialogFragment<FragmentGuideBin
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.guideName.title.text = guide.name
-
-        inBackground {
-            val content = onIO {
-                TextUtils.loadTextFromResources(requireContext(), guide.contents)
-            }
-            if (isBound) {
-                binding.guideScroll.removeAllViews()
-                binding.guideScroll.addView(TextUtils.getMarkdownView(requireContext(), content))
-            }
-        }
-    }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentGuideBinding {
-        return FragmentGuideBinding.inflate(layoutInflater, container, false)
+    @Composable
+    override fun FragmentContent() {
+        // Bridge the lazy guide into the shared composable via args (consistent with GuideFragment)
+        // We set arguments in create(), so the GuideContent extension reads them.
+        GuideContent()
     }
 
     companion object {
