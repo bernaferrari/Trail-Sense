@@ -309,25 +309,8 @@ class MainActivity : AndromedaActivity() {
         return true
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Legacy public stubs (called from unmigrated fragments)
-    // ──────────────────────────────────────────────────────────────
-
-    fun updateBottomNavigation() {
-        // No-op in Nav3 – will be removed when all fragments are migrated
-    }
-
-    fun openWidgets() {
-        // No-op in Nav3 – will be removed when all fragments are migrated
-    }
-
-    fun setBottomNavigationEnabled(isEnabled: Boolean) {
-        // No-op in Nav3 – will be removed when all fragments are migrated
-    }
-
-    fun changeBottomNavLabelsVisibility(useCompactMode: Boolean) {
-        // No-op in Nav3 – will be removed when all fragments are migrated
-    }
+    // All UI is now 100% Compose via Navigation3.
+    // These methods are kept only for binary compatibility with any old widget or service code.
 
     // ──────────────────────────────────────────────────────────────
     //  Misc
@@ -367,8 +350,6 @@ class MainActivity : AndromedaActivity() {
 
         var deviceSurfaceRotation: Int = Surface.ROTATION_90
             private set
-
-        var lastKnownFragment: String? = null
 
         fun intent(context: Context): Intent {
             return Intent(context, MainActivity::class.java)

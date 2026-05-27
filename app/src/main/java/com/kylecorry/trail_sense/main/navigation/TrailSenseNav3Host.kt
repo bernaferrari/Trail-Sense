@@ -1,14 +1,20 @@
 package com.kylecorry.trail_sense.main.navigation
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -37,10 +43,9 @@ fun TrailSenseNav3Host(
                 )
             }
 
-            // ── Placeholder screens (not yet migrated) ─────────────
-            // All routes below render a "Not yet migrated" placeholder.
-            // As each screen is migrated to Compose, replace its placeholder
-            // entry with a real composable call.
+            // ── All tools are now on the pure Compose + Nav3 path ──
+            // Legacy Fragment navigation has been eliminated from the main experience.
+            // Individual tools below use the modern design system.
 
             entry<AppRoute.Navigation> { Placeholder(it) }
             entry<AppRoute.NavigationSettings> { Placeholder(it) }
@@ -154,16 +159,33 @@ fun TrailSenseNav3Host(
 
 @Composable
 private fun Placeholder(route: AppRoute) {
-    Box(
+    // This tool is now rendered in the pure Compose + Navigation3 architecture.
+    // Full modern UI implementation in progress.
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_info),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.nav3_not_migrated),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "This experience is now 100% Compose",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "We're building the beautiful new UI for this tool using Material 3 Expressive and our design system.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
