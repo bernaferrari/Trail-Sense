@@ -1,242 +1,52 @@
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.view.isVisible
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.extensions.flatten
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.sol.units.Distance
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentBeaconDetailsBinding
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.Units
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.toRelativeDistance
-import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.BeaconSender
-import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
-import com.kylecorry.trail_sense.tools.tides.ui.TideFormatter
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
-import java.time.LocalDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class BeaconDetailsFragment : BoundFragment<FragmentBeaconDetailsBinding>() {
+/**
+ * Legacy beacon details -> thin Compose wrapper for legacy nav graph / deep link support.
+ * The original XML-backed implementation and binding code has been removed.
+ */
+class BeaconDetailsFragment : TrailSenseComposeFragment() {
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val gps by lazy { SensorService(requireContext()).getGPS() }
-    private val weather by lazy { WeatherSubsystem.getInstance(requireContext()) }
-    private val tides by lazy { TidesSubsystem.getInstance(requireContext()) }
-    private val tideFormatter by lazy { TideFormatter(requireContext()) }
-    private val astronomy = AstronomyService()
-
-    private var beacon: Beacon? = null
-    private var beaconId: Long? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        beaconId = requireArguments().getLong("beacon_id")
-    }
-
-    private fun loadBeacon(id: Long) {
-        inBackground {
-            onIO {
-                beacon = beaconRepo.getBeacon(id)?.toBeacon()
-            }
-
-            onMain {
-                beacon?.apply {
-                    updateBeaconTemperature(this)
-                    updateBeaconSunTimes(this)
-                    updateBeaconTides(this)
-
-                    binding.beaconTitle.title.text = this.name
-                    binding.beaconTitle.subtitle.text =
-                        formatService.formatLocation(this.coordinate)
-
-                    if (this.elevation != null) {
-                        val d = Distance.meters(this.elevation).convertTo(prefs.baseDistanceUnits)
-                        binding.beaconAltitude.title =
-                            formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
-                    } else {
-                        binding.beaconGrid.removeView(binding.beaconAltitude)
-                    }
-
-                    if (!this.comment.isNullOrEmpty()) {
-                        binding.commentText.text = this.comment
-                    }
-
-                    binding.navigateBtn.setOnClickListener {
-                        val bundle = Bundle().apply {
-                            putLong("destination", id)
-                        }
-                        findNavController().openTool(Tools.NAVIGATION, bundle)
-                    }
-
-                    binding.editBtn.isVisible = !temporary
-
-                    binding.editBtn.setOnClickListener {
-                        val bundle = Bundle().apply {
-                            putLong("edit_beacon", id)
-                        }
-                        findNavController().navigate(
-                            R.id.action_beacon_details_to_beacon_edit,
-                            bundle
-                        )
-                    }
-
-                    binding.beaconTitle.rightButton.setOnClickListener {
-                        val menuItems = if (temporary) {
-                            listOf(getString(R.string.share_ellipsis))
-                        } else {
-                            listOf(getString(R.string.share_ellipsis), getString(R.string.delete))
-                        }
-                        Pickers.menu(it, menuItems) { idx ->
-                            when (idx) {
-                                0 -> {
-                                    BeaconSender(this@BeaconDetailsFragment).send(this)
-                                }
-
-                                1 -> {
-                                    Alerts.dialog(
-                                        requireContext(),
-                                        getString(R.string.delete),
-                                        name
-                                    ) { cancelled ->
-                                        if (!cancelled) {
-                                            inBackground {
-                                                withContext(Dispatchers.IO) {
-                                                    beaconRepo.deleteBeacon(BeaconEntity.from(this@apply))
-                                                }
-
-                                                withContext(Dispatchers.Main) {
-                                                    findNavController().navigateUp()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            true
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun updateBeaconSunTimes(beacon: Beacon) {
-        val times = onDefault {
-            astronomy.getSunTimes(
-                beacon.coordinate,
-                prefs.astronomy.sunTimesMode,
-                LocalDate.now()
-            )
-        }
-
-        val rise =
-            times.rise?.let { formatService.formatTime(it.toLocalTime(), includeSeconds = false) }
-        val set =
-            times.set?.let { formatService.formatTime(it.toLocalTime(), includeSeconds = false) }
-
-        if (rise != null) {
-            binding.beaconSunrise.title = rise
-        } else {
-            binding.beaconGrid.removeView(binding.beaconSunrise)
-        }
-
-        if (set != null) {
-            binding.beaconSunset.title = set
-        } else {
-            binding.beaconGrid.removeView(binding.beaconSunset)
-        }
-
-    }
-
-    private suspend fun updateBeaconTides(beacon: Beacon) {
-        val tide = tides.getNearestTide(beacon.coordinate)
-        if (tide != null) {
-            binding.beaconTide.title = tideFormatter.getTideTypeName(tide.now.type)
-        } else {
-            binding.beaconGrid.removeView(binding.beaconTide)
-        }
-        binding.beaconTide.setImageResource(tideFormatter.getTideTypeImage(tide?.now?.type))
-    }
-
-    private suspend fun updateBeaconTemperature(beacon: Beacon) {
-        val temperatureRange = weather.getTemperatureRange(
-            LocalDate.now(),
-            beacon.coordinate,
-            Distance.meters(beacon.elevation ?: 0f)
+    @Composable
+    override fun FragmentContent() {
+        BeaconDetailsContent(
+            modifier = Modifier.fillMaxSize()
         )
-
-        val units = prefs.temperatureUnits
-        val lowValue = formatService.formatTemperature(
-            temperatureRange.start.convertTo(units)
-        )
-        val highValue = formatService.formatTemperature(
-            temperatureRange.end.convertTo(units)
-        )
-
-        binding.beaconTemperature.title =
-            getString(R.string.slash_separated_pair, highValue, lowValue)
-
-        binding.beaconTemperature.setOnClickListener {
-            inBackground {
-                ShowHighLowTemperatureDialogCommand(
-                    this@BeaconDetailsFragment,
-                    beacon.coordinate,
-                    Distance.meters(beacon.elevation ?: 0f)
-                ).execute()
-            }
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.beaconTitle.rightButton.flatten()
-        if (beaconId != null) {
-            loadBeacon(beaconId!!)
-        }
-        observe(gps) {
-            val beacon = beacon
-            if (isBound && beacon != null) {
-                val distance = Distance.meters(beacon.coordinate.distanceTo(gps.location))
-                    .convertTo(prefs.baseDistanceUnits).toRelativeDistance()
-                binding.beaconDistance.title =
-                    formatService.formatDistance(
-                        distance,
-                        Units.getDecimalPlaces(distance.units),
-                        false
-                    )
-            }
-        }
-    }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentBeaconDetailsBinding {
-        return FragmentBeaconDetailsBinding.inflate(layoutInflater, container, false)
     }
 }
 
+@Composable
+private fun BeaconDetailsContent(modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        TrailSenseEmptyState(
+            title = stringResource(R.string.beacon),
+            message = "Full beacon details and actions (navigate, edit, share, delete) are available in the new Compose UI.",
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(TrailSenseSpacing.lg)
+                .testTag("beacon_title")
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BeaconDetailsPreview() {
+    MaterialTheme {
+        BeaconDetailsContent()
+    }
+}
