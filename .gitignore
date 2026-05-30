@@ -8,7 +8,12 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
+# Gradle build outputs (all modules + root)
 /build
+**/build/
+.gradle/
+captures/
+# captures already listed below, kept for compatibility
 /captures
 .externalNativeBuild
 .cxx

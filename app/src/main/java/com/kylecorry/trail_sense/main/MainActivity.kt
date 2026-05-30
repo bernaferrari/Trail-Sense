@@ -4,36 +4,51 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.Menu
 import android.view.Surface
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.compose.setContent
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.get
+import androidx.core.view.size
+import androidx.core.view.updateLayoutParams
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
+import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.textfield.TextInputEditText
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.andromeda.core.tryOrLog
+import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.fragments.AndromedaFragment
-import com.kylecorry.andromeda.fragments.ColorTheme
 import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.databinding.ActivityMainBinding
+import com.kylecorry.trail_sense.main.errors.ExceptionHandler
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
-import com.kylecorry.trail_sense.main.navigation.AppRoute
-import com.kylecorry.trail_sense.main.navigation.TrailSenseApp
+import com.kylecorry.trail_sense.main.theme.ThemeProvider
 import com.kylecorry.trail_sense.onboarding.OnboardingActivity
 import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
+import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.navigation.NavigationUtils.setupWithNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerView
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
@@ -48,21 +63,28 @@ class MainActivity : AndromedaActivity() {
     var isRunning = false
         private set
 
-    // Stub error banner for compile compatibility with unmigrated fragments.
-    // Will be replaced with a Compose-based error mechanism during fragment migration.
-    val errorBanner: ErrorBannerView by lazy { ErrorBannerView(this, null) }
+    private var _binding: ActivityMainBinding? = null
+    private val binding: ActivityMainBinding
+        get() = _binding!!
 
-    private lateinit var userPrefs: UserPreferences
+    private val navController: NavController?
+        get() = findNavController()
+
+    val errorBanner: ErrorBannerView
+        get() = binding.errorBanner
+
+    private val userPrefs = getAppService<UserPreferences>()
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
+
+    private val themeProvider = ThemeProvider()
 
     private val permissions = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private var bottomInsets = 0
     private var appInitialized = false
-
-    private var nav3PendingRoute: AppRoute? by mutableStateOf(null)
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -70,11 +92,24 @@ class MainActivity : AndromedaActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        com.kylecorry.trail_sense.main.errors.ExceptionHandler.initialize(this)
 
-        userPrefs = UserPreferences(applicationContext)
+    override fun attachBaseContext(newBase: Context) {
+        // This is needed to prevent old colors from remaining when the theme changes
+        // Dynamic colors are only disabled until onCreate is called since it needs the activity to be created
+        setColorTheme(themeProvider.getColorTheme(), false)
+        super.attachBaseContext(newBase)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        ExceptionHandler.initialize(this)
+
         updateTheme()
+
+        val isBlackTheme =
+            userPrefs.theme == UserPreferences.Theme.Black
+                    || userPrefs.theme == UserPreferences.Theme.Night
+                    || (isDarkThemeOn() && userPrefs.theme == UserPreferences.Theme.SystemBlack)
+
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
@@ -85,22 +120,132 @@ class MainActivity : AndromedaActivity() {
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
-        setContent {
-            TrailSenseApp(
-                initialRoute = AppRoute.Tools,
-                pendingRoute = nav3PendingRoute
+        _binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(_binding?.root)
+
+        // Handle black theme
+        if (isBlackTheme) {
+            window.decorView.rootView.setBackgroundColor(Color.BLACK)
+            binding.bottomNavigation.setBackgroundColor(Color.BLACK)
+        }
+
+        if (userPrefs.theme == UserPreferences.Theme.Night) {
+            binding.colorFilter.setColorFilter(
+                PorterDuffColorFilter(
+                    Color.RED,
+                    PorterDuff.Mode.MULTIPLY
+                )
             )
         }
+
         updateFullscreenMode()
+        bindLayoutInsets()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
+    /**
+     * Update the bottom nav selection based on the current navigation destination
+     */
+    private fun updateBottomNavSelection() {
+        val currentNavId = navController?.currentDestination?.id
+        val tools = Tools.getTools(this)
+        val selectedTool = tools.firstOrNull { it.isOpen(currentNavId ?: 0) }
+        // If the tool appears in the bottom nav, select it. Otherwise, select the Tools tab
+        val idToSelect = if (selectedTool != null) {
+            val isToolPinnedToNav =
+                binding.bottomNavigation.menu.findItem(selectedTool.navAction) != null
+            if (isToolPinnedToNav) {
+                selectedTool.navAction
+            } else {
+                R.id.action_experimental_tools
+            }
+        } else {
+            R.id.action_experimental_tools
+        }
+
+        binding.bottomNavigation.menu.findItem(idToSelect)?.isChecked = true
+
+        lastKnownFragment = getFragment()?.javaClass?.simpleName
+    }
+
+    fun changeBottomNavLabelsVisibility(useCompactMode: Boolean) {
+        userPrefs.useCompactMode = useCompactMode
+        setBottomNavLabelsVisibility()
+    }
+
+    fun showAllBottomNavLabels(useBottomNavLabels: Boolean) {
+        userPrefs.useShowAllBottomNavigationLabels = useBottomNavLabels
+        setBottomNavLabelsVisibility()
+    }
+
+    private fun setBottomNavLabelsVisibility() {
+        binding.bottomNavigation.apply {
+            if (userPrefs.useCompactMode) {
+                layoutParams.height = Resources.dp(context, 55f).toInt() + bottomInsets
+                labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_UNLABELED
+            } else {
+                layoutParams.height = LayoutParams.WRAP_CONTENT
+                if (userPrefs.useShowAllBottomNavigationLabels) {
+                    labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
+                } else {
+                    labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_AUTO
+                }
+
+            }
+        }
+    }
+
+    private fun bindLayoutInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets =
+                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            bottomInsets = insets.bottom
+            setBottomNavLabelsVisibility()
+            windowInsets
+        }
+    }
+
+    private fun updateTheme() {
+        val mode = themeProvider.getColorTheme()
+        setColorTheme(mode, userPrefs.useDynamicColors)
+    }
+
+    fun reloadTheme() {
+        updateTheme()
+        updateFullscreenMode()
+        recreate()
     }
 
     override fun onStart() {
         super.onStart()
-
-        if (!appInitialized) {
+        if (!appInitialized && _binding != null) {
             appInitialized = true
+            updateBottomNavigation()
+
+            navController?.addOnDestinationChangedListener { _, _, _ ->
+                binding.quickActionsSheet.close()
+                updateBottomNavSelection()
+            }
+
+            val previousPermissionStatus = permissions.map {
+                Permissions.hasPermission(this, it)
+            }
             requestPermissions(permissions) {
-                startNav3App()
+                val currentPermissionStatus = permissions.map {
+                    Permissions.hasPermission(this, it)
+                }
+                val permissionsChanged =
+                    previousPermissionStatus.zip(currentPermissionStatus).any { it.first != it.second }
+                startApp(permissionsChanged)
             }
         }
     }
@@ -136,11 +281,19 @@ class MainActivity : AndromedaActivity() {
         )
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Nav3 startup & intent handling
-    // ──────────────────────────────────────────────────────────────
+    private fun startApp(shouldReloadNavigation: Boolean) {
+        errorBanner.dismissAll()
 
-    private fun startNav3App() {
+        if (shouldReloadNavigation) {
+            navController?.navigate(
+                binding.bottomNavigation.selectedItemId,
+                null,
+                NavOptions.Builder().setPopUpTo(
+                    navController?.currentDestination?.id ?: R.id.action_experimental_tools, true
+                ).build()
+            )
+        }
+
         ComposedCommand(
             ShowDisclaimerCommand(this),
             PowerSavingModeAlertCommand(this),
@@ -148,7 +301,12 @@ class MainActivity : AndromedaActivity() {
             NotifyForkPoliciesCommand(this)
         ).execute()
 
-        handleNav3IntentAction(intent)
+        if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
+            val item = binding.bottomNavigation.menu.findItem(R.id.action_weather)
+            item?.isVisible = false
+        }
+
+        handleIntentAction(intent)
 
         if (SafeMode.isEnabled()) {
             Alerts.toast(
@@ -159,11 +317,17 @@ class MainActivity : AndromedaActivity() {
         }
     }
 
-    private fun handleNav3IntentAction(intent: Intent) {
+    private fun handleIntentAction(intent: Intent) {
         if (intent.action == TrailSenseExceptionHandler.ACTION_TOOL_ERROR) {
             val toolId = intent.getLongExtra(TrailSenseExceptionHandler.EXTRA_TOOL_ID, 0L)
             val error = intent.getStringExtra(TrailSenseExceptionHandler.EXTRA_ERROR) ?: ""
-            nav3PendingRoute = AppRoute.ErrorHandler(toolId = toolId, error = error)
+            navController?.navigate(
+                R.id.fragmentToolErrorHandler,
+                Bundle().apply {
+                    putLong("tool_id", toolId)
+                    putString("error", error)
+                }
+            )
             return
         }
 
@@ -171,57 +335,56 @@ class MainActivity : AndromedaActivity() {
             val toolId = intent.getLongExtra("tool_id", -1)
             val tool = Tools.getTool(this, toolId)
             if (tool != null) {
-                nav3PendingRoute = AppRoute.fromNavId(tool.navAction) ?: AppRoute.Tools
+                if (navController?.currentDestination?.id != tool.navAction) {
+                    navController?.navigate(tool.navAction)
+                }
+                binding.bottomNavigation.selectedItemId = tool.navAction
             }
             return
         }
 
         val tools = Tools.getTools(this)
-        for (tool in tools) {
-            for (handler in tool.intentHandlers) {
-                if (handler.handle(this, intent)) return
+        tools.forEach { tool ->
+            tool.intentHandlers.forEach { handler ->
+                if (handler.handle(this, intent)) {
+                    return
+                }
             }
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Theme
-    // ──────────────────────────────────────────────────────────────
-
-    private fun updateTheme() {
-        val mode = when (userPrefs.theme) {
-            UserPreferences.Theme.Light -> ColorTheme.Light
-            UserPreferences.Theme.Dark, UserPreferences.Theme.Black, UserPreferences.Theme.Night -> ColorTheme.Dark
-            UserPreferences.Theme.System, UserPreferences.Theme.SystemBlack -> ColorTheme.System
-            UserPreferences.Theme.SunriseSunset -> sunriseSunsetTheme()
-        }
-        setColorTheme(mode, userPrefs.useDynamicColors)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntentAction(intent)
     }
 
-    fun reloadTheme() {
-        updateTheme()
-        updateFullscreenMode()
-        cache.putBoolean("pref_theme_just_changed", true)
-        recreate()
-    }
-
-    private fun sunriseSunsetTheme(): ColorTheme {
-        val astronomyService = com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService()
-        val location = SensorSubsystem.getInstance(this).lastKnownLocation
-        if (location == Coordinate.zero) {
-            return ColorTheme.System
-        }
-        val isSunUp = astronomyService.isSunUp(location)
-        return if (isSunUp) {
-            ColorTheme.Light
-        } else {
-            ColorTheme.Dark
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        binding.bottomNavigation.selectedItemId = savedInstanceState.getInt(
+            "page",
+            binding.bottomNavigation.menu[0].itemId
+        )
+        if (savedInstanceState.containsKey("navigation")) {
+            tryOrNothing {
+                val bundle = savedInstanceState.getBundle("navigation_arguments")
+                navController?.navigate(savedInstanceState.getInt("navigation"), bundle)
+            }
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Volume keys
-    // ──────────────────────────────────────────────────────────────
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        tryOrLog {
+            outState.putInt("page", binding.bottomNavigation.selectedItemId)
+            navController?.currentBackStackEntry?.arguments?.let {
+                outState.putBundle("navigation_arguments", it)
+            }
+            navController?.currentDestination?.id?.let {
+                outState.putInt("navigation", it)
+            }
+        }
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
@@ -242,14 +405,17 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun getVolumeAction(): VolumeAction? {
+        val navigationId = navController?.currentDestination?.id
         val fragment = getFragment() as? AndromedaFragment ?: return null
         val tools = Tools.getTools(this)
+
+        // Sort order = High priority active, open tool, normal priority active
 
         val highPriorityAction = tools.flatMap { tool ->
             tool.volumeActions.filter {
                 it.priority == ToolVolumeActionPriority.High && it.isActive(
                     this,
-                    false,
+                    tool.isOpen(navigationId ?: 0),
                     fragment
                 )
             }
@@ -259,11 +425,20 @@ class MainActivity : AndromedaActivity() {
             return highPriorityAction.create(fragment)
         }
 
+        val activeAction =
+            tools.firstOrNull { it.isOpen(navigationId ?: 0) }?.volumeActions?.firstOrNull {
+                it.isActive(this, true, fragment)
+            }
+
+        if (activeAction != null) {
+            return activeAction.create(fragment)
+        }
+
         val normalPriorityAction = tools.flatMap { tool ->
             tool.volumeActions.filter {
                 it.priority == ToolVolumeActionPriority.Normal && it.isActive(
                     this,
-                    false,
+                    tool.isOpen(navigationId ?: 0),
                     fragment
                 )
             }
@@ -286,35 +461,79 @@ class MainActivity : AndromedaActivity() {
         return false
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Lifecycle helpers
-    // ──────────────────────────────────────────────────────────────
+    fun updateBottomNavigation() {
+        setBottomNavLabelsVisibility()
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleNav3IntentAction(intent)
+        val bottomNavTools = userPrefs.bottomNavigationTools
+
+        val tools = Tools.getTools(this)
+        binding.bottomNavigation.menu.clear()
+        bottomNavTools.forEachIndexed { index, toolId ->
+            val toolItem = tools.firstOrNull { it.id == toolId } ?: return@forEachIndexed
+            binding.bottomNavigation.menu.add(
+                Menu.NONE,
+                toolItem.navAction,
+                index,
+                toolItem.name
+            ).setIcon(toolItem.icon)
+        }
+
+        binding.bottomNavigation.menu.add(
+            Menu.NONE,
+            R.id.action_experimental_tools,
+            bottomNavTools.size,
+            getString(R.string.tools)
+        ).setIcon(R.drawable.apps)
+            .setOnMenuItemClickListener {
+                if (navController?.currentDestination?.id == R.id.action_experimental_tools && !binding.quickActionsSheet.isOpen()) {
+                    val searchinput = findViewById<TextInputEditText>(R.id.search_view_edit_text)
+                    if (searchinput?.requestFocus() == true) {
+                        val imm = getSystemService(InputMethodManager::class.java)
+                        imm.showSoftInput(searchinput, InputMethodManager.SHOW_IMPLICIT)
+                        return@setOnMenuItemClickListener true
+                    }
+                }
+                false
+            }
+
+        // Loop through each item of the bottom navigation and override the long press behavior
+        for (i in 0 until binding.bottomNavigation.menu.size) {
+            val item = binding.bottomNavigation.menu[i]
+            val view = binding.bottomNavigation.findViewById<View>(item.itemId)
+            view.setOnLongClickListener {
+                binding.quickActionsSheet.show(this)
+                true
+            }
+        }
+
+        // Open the left most item by default (and clear the back stack)
+        val initialItem = if (SafeMode.isEnabled()) {
+            tools.first { it.id == Tools.SETTINGS }.navAction
+        } else {
+            binding.bottomNavigation.menu[0].itemId
+        }
+
+        // Only initialize the nav graph once
+        effect("navGraph") {
+            initializeNavGraph(initialItem)
+        }
+        // Bind to navigation
+        navController?.let { binding.bottomNavigation.setupWithNavController(it, false) }
+
+        updateBottomNavSelection()
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+    private fun initializeNavGraph(startDestination: Int) {
+        val nav = navController ?: return
+        val navGraph = nav.navInflater.inflate(R.navigation.nav_graph)
+        navGraph.setStartDestination(startDestination)
+        nav.graph = navGraph
     }
 
     private fun onPowerSavingModeChanged(data: Bundle): Boolean {
         recreate()
         return true
     }
-
-    // All UI is now 100% Compose via Navigation3.
-    // These methods are kept only for binary compatibility with any old widget or service code.
-
-    // ──────────────────────────────────────────────────────────────
-    //  Misc
-    // ──────────────────────────────────────────────────────────────
 
     private fun updateAllWidgets() {
         Tools.getTools(this).flatMap { it.widgets }.forEach {
@@ -331,6 +550,18 @@ class MainActivity : AndromedaActivity() {
         }
     }
 
+    fun openWidgets() {
+        binding.quickActionsSheet.show(this, 1)
+    }
+
+    fun setBottomNavigationEnabled(isEnabled: Boolean) {
+        if (isEnabled) {
+            binding.bottomNavigation.enable()
+        } else {
+            binding.bottomNavigation.disable()
+        }
+    }
+
     private fun updateFullscreenMode() {
         val isNightMode = userPrefs.theme == UserPreferences.Theme.Night
         val shouldBeFullscreen = isNightMode && userPrefs.nightModeFullscreen
@@ -338,10 +569,13 @@ class MainActivity : AndromedaActivity() {
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
 
         if (shouldBeFullscreen) {
+            // Hide system bars (status bar and navigation bar)
             windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+            // Set behavior to show bars temporarily when user swipes from edge
             windowInsetsController.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         } else {
+            // Show system bars
             windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
         }
     }
@@ -350,6 +584,8 @@ class MainActivity : AndromedaActivity() {
 
         var deviceSurfaceRotation: Int = Surface.ROTATION_90
             private set
+
+        var lastKnownFragment: String? = null
 
         fun intent(context: Context): Intent {
             return Intent(context, MainActivity::class.java)

@@ -259,7 +259,10 @@ class FragmentToolPedometer : BoundFragment<FragmentToolPedometerBinding>() {
         val distance = getDistance(steps)
         val lastReset = lastResetTime?.toZonedDateTime()
 
-        binding.pedometerTitle.rightButton.isChecked = prefs.pedometer.alertDistance != null
+        CustomUiUtils.setButtonState(
+            binding.pedometerTitle.rightButton,
+            prefs.pedometer.alertDistance != null
+        )
 
         if (lastReset != null) {
             val dateString = if (lastReset.toLocalDate() == LocalDate.now()) {
