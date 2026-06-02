@@ -1,22 +1,43 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import androidx.preference.EditTextPreference
-import androidx.preference.Preference
-import androidx.preference.SeekBarPreference
-import com.kylecorry.andromeda.alerts.dialog
-import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.IThermometer
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.andromeda.fragments.asLiveData
-import com.kylecorry.andromeda.fragments.AndromedaPreferenceFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
+import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
@@ -30,37 +51,30 @@ import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillHistoricalTemperaturesCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChartPreference
+import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.roundToInt
 
-class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
+class ThermometerSettingsFragment : Fragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private var calibratedThermometer: IThermometer? = null
     private val prefs by lazy { UserPreferences(requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
     private val temperatureUnits by lazy { prefs.temperatureUnits }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
-    private var temperatureTxt: Preference? = null
-    private var minTempCalibratedC: EditTextPreference? = null
-    private var maxTempCalibratedC: EditTextPreference? = null
-    private var minTempUncalibratedC: EditTextPreference? = null
-    private var maxTempUncalibratedC: EditTextPreference? = null
-    private var minTempCalibratedF: EditTextPreference? = null
-    private var maxTempCalibratedF: EditTextPreference? = null
-    private var minTempUncalibratedF: EditTextPreference? = null
-    private var maxTempUncalibratedF: EditTextPreference? = null
-    private var smoothingSeekBar: SeekBarPreference? = null
-    private var chart: TemperatureChartPreference? = null
-    private var backfillPref: Preference? = null
 
     private val weather by lazy { WeatherSubsystem.getInstance(requireContext()) }
     private var history: List<WeatherObservation> = emptyList()
@@ -68,122 +82,316 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
 
     private val runner = CoroutineQueueRunner()
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.thermometer_settings, rootKey)
-        setIconColor(Resources.androidTextColorSecondary(requireContext()))
+    private var setTemperatureState: ((String) -> Unit)? = null
+    private var setChartState: ((TemperatureChartData) -> Unit)? = null
+    private var setCalibrationState: ((TemperatureCalibrationState) -> Unit)? = null
+    private var setSmoothingState: ((Int) -> Unit)? = null
+    private var setBackfillVisible: ((Boolean) -> Unit)? = null
 
-        // TODO: No need for multiple units, use a UnitPreference
-        minTempCalibratedC = editText(R.string.pref_min_calibrated_temp_c)
-        maxTempCalibratedC = editText(R.string.pref_max_calibrated_temp_c)
-        minTempUncalibratedC = editText(R.string.pref_min_uncalibrated_temp_c)
-        maxTempUncalibratedC = editText(R.string.pref_max_uncalibrated_temp_c)
-        minTempCalibratedF = editText(R.string.pref_min_calibrated_temp_f)
-        maxTempCalibratedF = editText(R.string.pref_max_calibrated_temp_f)
-        minTempUncalibratedF = editText(R.string.pref_min_uncalibrated_temp_f)
-        maxTempUncalibratedF = editText(R.string.pref_max_uncalibrated_temp_f)
-        temperatureTxt = preference(R.string.pref_temperature_holder)
-        smoothingSeekBar = seekBar(R.string.pref_temperature_smoothing)
-        chart = findPreference(getString(R.string.pref_holder_temperature_chart))
-        backfillPref = preference(R.string.pref_backfill_temperatures)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    val sourceOptions = remember {
+                        options(R.array.thermometer_source_entries, R.array.thermometer_source_values)
+                    }
 
-        smoothingSeekBar?.summary =
-            formatService.formatPercentage(prefs.thermometer.smoothing * 100)
+                    var temperature by remember { mutableStateOf(getString(R.string.dash)) }
+                    var chartData by remember {
+                        mutableStateOf(TemperatureChartData(emptyList(), emptyList()))
+                    }
+                    var source by remember { mutableStateOf(getSourcePreference()) }
+                    var smoothing by remember {
+                        mutableStateOf(getInt(R.string.pref_temperature_smoothing, 0))
+                    }
+                    var calibration by remember {
+                        mutableStateOf(getCalibrationState())
+                    }
+                    var backfillVisible by remember {
+                        mutableStateOf(prefs.thermometer.source == ThermometerSource.Historic)
+                    }
 
-        smoothingSeekBar?.setOnPreferenceChangeListener { _, newValue ->
-            val change = newValue.toString().toFloat() / 1000f
-            smoothingSeekBar?.summary = formatService.formatPercentage(change * 100)
-            true
-        }
+                    setTemperatureState = {
+                        temperature = it
+                    }
+                    setChartState = {
+                        chartData = it
+                    }
+                    setCalibrationState = {
+                        calibration = it
+                    }
+                    setSmoothingState = {
+                        smoothing = it
+                    }
+                    setBackfillVisible = {
+                        backfillVisible = it
+                    }
 
-        if (prefs.temperatureUnits == TemperatureUnits.Celsius) {
-            minTempCalibratedF?.isVisible = false
-            maxTempCalibratedF?.isVisible = false
-            minTempUncalibratedF?.isVisible = false
-            maxTempUncalibratedF?.isVisible = false
-            minTempCalibratedC?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.minActualTemperatureF =
-                    Temperature.from(temp, TemperatureUnits.Celsius)
-                        .convertTo(TemperatureUnits.Fahrenheit).value
-                true
-            }
-            minTempUncalibratedC?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.minBatteryTemperatureF =
-                    Temperature.from(temp, TemperatureUnits.Celsius)
-                        .convertTo(TemperatureUnits.Fahrenheit).value
-                true
-            }
-            maxTempCalibratedC?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.maxActualTemperatureF =
-                    Temperature.from(temp, TemperatureUnits.Celsius)
-                        .convertTo(TemperatureUnits.Fahrenheit).value
-                true
-            }
-            maxTempUncalibratedC?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.maxBatteryTemperatureF =
-                    Temperature.from(temp, TemperatureUnits.Celsius)
-                        .convertTo(TemperatureUnits.Fahrenheit).value
-                true
-            }
-        } else {
-            minTempCalibratedC?.isVisible = false
-            maxTempCalibratedC?.isVisible = false
-            minTempUncalibratedC?.isVisible = false
-            maxTempUncalibratedC?.isVisible = false
-            minTempCalibratedF?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.minActualTemperature =
-                    Temperature.from(temp, TemperatureUnits.Fahrenheit).celsius().value
-                true
-            }
-            minTempUncalibratedF?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.minBatteryTemperature =
-                    Temperature.from(temp, TemperatureUnits.Fahrenheit).celsius().value
-                true
-            }
-            maxTempCalibratedF?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.maxActualTemperature =
-                    Temperature.from(temp, TemperatureUnits.Fahrenheit).celsius().value
-                true
-            }
-            maxTempUncalibratedF?.setOnPreferenceChangeListener { _, newValue ->
-                val temp = (newValue as String).toFloatCompat() ?: 0f
-                prefs.thermometer.maxBatteryTemperature =
-                    Temperature.from(temp, TemperatureUnits.Fahrenheit).celsius().value
-                true
-            }
-        }
-
-        backfillPref?.isVisible = prefs.thermometer.source == ThermometerSource.Historic
-        onClick(backfillPref) {
-            dialog(
-                backfillPref?.title ?: "",
-                getString(R.string.pref_backfill_temperatures_description)
-            ) {
-                if (!it) {
-                    inBackground {
-                        val loading =
-                            AlertLoadingIndicator(requireContext(), getString(R.string.updating))
-                        loading.show()
-                        BackfillHistoricalTemperaturesCommand.create(requireContext()).execute()
-                        loading.hide()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = TrailSenseSpacing.lg,
+                                end = TrailSenseSpacing.lg,
+                                top = TrailSenseSpacing.lg,
+                                bottom = TrailSenseSpacing.xxxl
+                            )
+                        ) {
+                            item("header") {
+                                TrailSenseSectionHeader(
+                                    title = stringResource(R.string.tool_thermometer_title)
+                                )
+                            }
+                            item("temperature") {
+                                SettingsInfoRow(
+                                    label = stringResource(R.string.temperature),
+                                    summary = temperature,
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            if (chartData.data.isNotEmpty()) {
+                                item("chart") {
+                                    TemperatureChartView(
+                                        data = chartData.data,
+                                        raw = chartData.raw,
+                                        modifier = Modifier
+                                            .padding(horizontal = TrailSenseSpacing.lg)
+                                            .padding(vertical = TrailSenseSpacing.sm)
+                                    )
+                                }
+                            }
+                            item("source") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.source),
+                                    selected = optionLabel(sourceOptions, source),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.source),
+                                            sourceOptions,
+                                            source
+                                        ) {
+                                            source = it
+                                            putString(R.string.pref_thermometer_source, it)
+                                            onSourceChanged(sourceFromPreference(it))
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("smoothing") {
+                                ThermometerSmoothingRow(
+                                    smoothing = smoothing,
+                                    summary = formatService.formatPercentage(smoothing / 10f),
+                                    onSmoothingChange = {
+                                        smoothing = it
+                                        putInt(R.string.pref_temperature_smoothing, it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            if (temperatureUnits == TemperatureUnits.Celsius) {
+                                item("min_uncalibrated_c") {
+                                    temperatureRow(
+                                        R.string.min_temp_uncalibrated,
+                                        calibration.minBatteryC
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.min_temp_uncalibrated),
+                                            calibration.minBatteryC
+                                        ) { value ->
+                                            prefs.thermometer.minBatteryTemperature = value
+                                            prefs.thermometer.minBatteryTemperatureF =
+                                                Temperature.from(value, TemperatureUnits.Celsius)
+                                                    .convertTo(TemperatureUnits.Fahrenheit).value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("min_calibrated_c") {
+                                    temperatureRow(
+                                        R.string.min_temp_calibrated,
+                                        calibration.minActualC
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.min_temp_calibrated),
+                                            calibration.minActualC
+                                        ) { value ->
+                                            prefs.thermometer.minActualTemperature = value
+                                            prefs.thermometer.minActualTemperatureF =
+                                                Temperature.from(value, TemperatureUnits.Celsius)
+                                                    .convertTo(TemperatureUnits.Fahrenheit).value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("max_uncalibrated_c") {
+                                    temperatureRow(
+                                        R.string.max_temp_uncalibrated,
+                                        calibration.maxBatteryC
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.max_temp_uncalibrated),
+                                            calibration.maxBatteryC
+                                        ) { value ->
+                                            prefs.thermometer.maxBatteryTemperature = value
+                                            prefs.thermometer.maxBatteryTemperatureF =
+                                                Temperature.from(value, TemperatureUnits.Celsius)
+                                                    .convertTo(TemperatureUnits.Fahrenheit).value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("max_calibrated_c") {
+                                    temperatureRow(
+                                        R.string.max_temp_calibrated,
+                                        calibration.maxActualC
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.max_temp_calibrated),
+                                            calibration.maxActualC
+                                        ) { value ->
+                                            prefs.thermometer.maxActualTemperature = value
+                                            prefs.thermometer.maxActualTemperatureF =
+                                                Temperature.from(value, TemperatureUnits.Celsius)
+                                                    .convertTo(TemperatureUnits.Fahrenheit).value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                            } else {
+                                item("min_uncalibrated_f") {
+                                    temperatureRow(
+                                        R.string.min_temp_uncalibrated,
+                                        calibration.minBatteryF
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.min_temp_uncalibrated),
+                                            calibration.minBatteryF
+                                        ) { value ->
+                                            prefs.thermometer.minBatteryTemperatureF = value
+                                            prefs.thermometer.minBatteryTemperature =
+                                                Temperature.from(value, TemperatureUnits.Fahrenheit)
+                                                    .celsius().value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("min_calibrated_f") {
+                                    temperatureRow(
+                                        R.string.min_temp_calibrated,
+                                        calibration.minActualF
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.min_temp_calibrated),
+                                            calibration.minActualF
+                                        ) { value ->
+                                            prefs.thermometer.minActualTemperatureF = value
+                                            prefs.thermometer.minActualTemperature =
+                                                Temperature.from(value, TemperatureUnits.Fahrenheit)
+                                                    .celsius().value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("max_uncalibrated_f") {
+                                    temperatureRow(
+                                        R.string.max_temp_uncalibrated,
+                                        calibration.maxBatteryF
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.max_temp_uncalibrated),
+                                            calibration.maxBatteryF
+                                        ) { value ->
+                                            prefs.thermometer.maxBatteryTemperatureF = value
+                                            prefs.thermometer.maxBatteryTemperature =
+                                                Temperature.from(value, TemperatureUnits.Fahrenheit)
+                                                    .celsius().value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                                item("max_calibrated_f") {
+                                    temperatureRow(
+                                        R.string.max_temp_calibrated,
+                                        calibration.maxActualF
+                                    ) {
+                                        pickTemperature(
+                                            getString(R.string.max_temp_calibrated),
+                                            calibration.maxActualF
+                                        ) { value ->
+                                            prefs.thermometer.maxActualTemperatureF = value
+                                            prefs.thermometer.maxActualTemperature =
+                                                Temperature.from(value, TemperatureUnits.Fahrenheit)
+                                                    .celsius().value
+                                            refreshCalibrationState()
+                                            reloadThermometer()
+                                        }
+                                    }
+                                }
+                            }
+                            item("reset") {
+                                SettingsActionRow(
+                                    label = stringResource(R.string.reset_calibration),
+                                    onClick = ::resetCalibration,
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            if (backfillVisible) {
+                                item("backfill") {
+                                    SettingsActionRow(
+                                        label = stringResource(R.string.pref_backfill_temperatures_title),
+                                        onClick = ::backfillTemperatures,
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                }
+                            }
+                            item("guide") {
+                                SettingsActionRow(
+                                    label = stringResource(R.string.tool_user_guide_title),
+                                    onClick = {
+                                        UserGuideUtils.showGuide(
+                                            this@ThermometerSettingsFragment,
+                                            R.raw.guide_tool_settings
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+    }
 
-        onClick(preference(R.string.pref_reset_thermometer_calibration_button)) {
-            resetCalibration()
-        }
-
-        onClick(preference(R.string.pref_thermometer_user_guide_button)) {
-            UserGuideUtils.showGuide(this, R.raw.guide_tool_settings)
-        }
+    @Composable
+    private fun androidx.compose.foundation.lazy.LazyItemScope.temperatureRow(
+        title: Int,
+        value: Float,
+        onClick: () -> Unit
+    ) {
+        SettingsPickerRow(
+            label = getString(title),
+            selected = DecimalFormatter.format(value, 1),
+            onClick = onClick,
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -195,21 +403,41 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
             R.string.pref_min_uncalibrated_temp_c,
             R.string.pref_max_uncalibrated_temp_c
         ).map { getString(it) } + listOf(source)
-        PreferencesSubsystem.getInstance(requireContext()).preferences.onChange.asLiveData()
-            .observe(viewLifecycleOwner) {
-                if (thermometerInvalidationKeys.contains(it)) {
-                    reloadThermometer()
-                }
-
-                if (it == source) {
-                    onSourceChanged()
-                }
+        cache.onChange.asLiveData().observe(viewLifecycleOwner) {
+            if (thermometerInvalidationKeys.contains(it)) {
+                reloadThermometer()
             }
+
+            if (it == source) {
+                onSourceChanged(prefs.thermometer.source)
+            }
+        }
 
         observe(weather.weatherChanged) {
             updateData()
         }
         updateData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        reloadThermometer()
+        displayErrors(prefs.thermometer.source)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        calibratedThermometer?.stop(this::onThermometerUpdate)
+        hideLocationUnsetError()
+    }
+
+    override fun onDestroyView() {
+        setTemperatureState = null
+        setChartState = null
+        setCalibrationState = null
+        setSmoothingState = null
+        setBackfillVisible = null
+        super.onDestroyView()
     }
 
     private fun updateData() {
@@ -225,8 +453,6 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
     }
 
     private fun updateChart() {
-        chart?.isVisible = history.isNotEmpty()
-
         val displayReadings = history.filter {
             Duration.between(
                 it.time,
@@ -234,7 +460,8 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
             ) <= prefs.weather.pressureHistory
         }.map {
             Reading(
-                it.temperature.convertTo(temperatureUnits).value, it.time
+                it.temperature.convertTo(temperatureUnits).value,
+                it.time
             )
         }
 
@@ -250,45 +477,32 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
             )
         }
 
-        if (displayReadings.isNotEmpty()) {
-            chart?.plot(displayReadings, displayRawReadings)
-        }
+        setChartState?.invoke(TemperatureChartData(displayReadings, displayRawReadings))
     }
 
-    private fun onSourceChanged() {
-        val source = prefs.thermometer.source
+    private fun onSourceChanged(source: ThermometerSource) {
         when (source) {
             ThermometerSource.Historic -> setSmoothing(0f)
             ThermometerSource.Sensor -> setSmoothing(0.2f)
         }
-        backfillPref?.isVisible = source == ThermometerSource.Historic
+        setBackfillVisible?.invoke(source == ThermometerSource.Historic)
         displayErrors(source)
         resetCalibration()
     }
 
     private fun resetCalibration() {
         prefs.thermometer.resetThermometerCalibration()
-        minTempCalibratedC?.text =
-            DecimalFormatter.format(prefs.thermometer.minActualTemperature, 1)
-        maxTempCalibratedC?.text =
-            DecimalFormatter.format(prefs.thermometer.maxActualTemperature, 1)
-        minTempUncalibratedC?.text =
-            DecimalFormatter.format(prefs.thermometer.minBatteryTemperature, 1)
-        maxTempUncalibratedC?.text =
-            DecimalFormatter.format(prefs.thermometer.maxBatteryTemperature, 1)
-        minTempCalibratedF?.text =
-            DecimalFormatter.format(prefs.thermometer.minActualTemperatureF, 1)
-        maxTempCalibratedF?.text =
-            DecimalFormatter.format(prefs.thermometer.maxActualTemperatureF, 1)
-        minTempUncalibratedF?.text =
-            DecimalFormatter.format(prefs.thermometer.minBatteryTemperatureF, 1)
-        maxTempUncalibratedF?.text =
-            DecimalFormatter.format(prefs.thermometer.maxBatteryTemperatureF, 1)
+        refreshCalibrationState()
+        reloadThermometer()
     }
 
     private fun setSmoothing(smoothing: Float) {
-        smoothingSeekBar?.value = (smoothing * 1000).safeRoundToInt()
-        smoothingSeekBar?.summary = formatService.formatPercentage(smoothing * 100)
+        prefs.thermometer.smoothing = smoothing
+        setSmoothingState?.invoke((smoothing * 1000).safeRoundToInt())
+    }
+
+    private fun refreshCalibrationState() {
+        setCalibrationState?.invoke(getCalibrationState())
     }
 
     private fun reloadThermometer() {
@@ -297,29 +511,118 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
         calibratedThermometer?.start(this::onThermometerUpdate)
     }
 
-    override fun onResume() {
-        super.onResume()
-        reloadThermometer()
-        val source = prefs.thermometer.source
-        displayErrors(source)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        calibratedThermometer?.stop(this::onThermometerUpdate)
-        hideLocationUnsetError()
-    }
-
     private fun onThermometerUpdate(): Boolean {
         val temperature = calibratedThermometer?.temperature ?: return true
-        temperatureTxt?.summary =
+        setTemperatureState?.invoke(
             formatService.formatTemperature(
                 Temperature.from(
                     temperature,
                     TemperatureUnits.Celsius
                 ).convertTo(prefs.temperatureUnits)
             )
+        )
         return true
+    }
+
+    private fun backfillTemperatures() {
+        Alerts.dialog(
+            requireContext(),
+            getString(R.string.pref_backfill_temperatures_title),
+            getString(R.string.pref_backfill_temperatures_description)
+        ) {
+            if (!it) {
+                inBackground {
+                    val loading =
+                        AlertLoadingIndicator(requireContext(), getString(R.string.updating))
+                    loading.show()
+                    BackfillHistoricalTemperaturesCommand.create(requireContext()).execute()
+                    loading.hide()
+                }
+            }
+        }
+    }
+
+    private fun pickOption(
+        title: String,
+        options: List<ThermometerOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    private fun pickTemperature(
+        title: String,
+        current: Float,
+        onSelected: (Float) -> Unit
+    ) {
+        Pickers.number(
+            requireContext(),
+            title,
+            null,
+            current,
+            allowDecimals = true,
+            allowNegative = false,
+            hint = getString(R.string.temperature)
+        ) {
+            if (it != null) {
+                onSelected(it.toFloat())
+            }
+        }
+    }
+
+    private fun options(entriesId: Int, valuesId: Int): List<ThermometerOption> {
+        val entries = resources.getStringArray(entriesId)
+        val values = resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            ThermometerOption(value, entries.getOrElse(index) { value })
+        }
+    }
+
+    private fun optionLabel(options: List<ThermometerOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
+    }
+
+    private fun getSourcePreference(): String {
+        return cache.getString(getString(R.string.pref_thermometer_source)) ?: "historic"
+    }
+
+    private fun sourceFromPreference(value: String): ThermometerSource {
+        return if (value == "sensor") ThermometerSource.Sensor else ThermometerSource.Historic
+    }
+
+    private fun getCalibrationState(): TemperatureCalibrationState {
+        return TemperatureCalibrationState(
+            minBatteryC = prefs.thermometer.minBatteryTemperature,
+            minActualC = prefs.thermometer.minActualTemperature,
+            maxBatteryC = prefs.thermometer.maxBatteryTemperature,
+            maxActualC = prefs.thermometer.maxActualTemperature,
+            minBatteryF = prefs.thermometer.minBatteryTemperatureF,
+            minActualF = prefs.thermometer.minActualTemperatureF,
+            maxBatteryF = prefs.thermometer.maxBatteryTemperatureF,
+            maxActualF = prefs.thermometer.maxActualTemperatureF
+        )
+    }
+
+    private fun getInt(key: Int, defaultValue: Int): Int {
+        return cache.getInt(getString(key)) ?: defaultValue
+    }
+
+    private fun putString(key: Int, value: String) {
+        cache.putString(getString(key), value)
+    }
+
+    private fun putInt(key: Int, value: Int) {
+        cache.putInt(getString(key), value)
     }
 
     private fun displayErrors(source: ThermometerSource) {
@@ -340,7 +643,8 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
         val navController = findNavController()
         val error = UserError(
             ErrorBannerReason.LocationNotSet,
-            getString(R.string.location_not_set) + "\n" + getString(R.string.for_historic_temperatures),
+            getString(R.string.location_not_set) + "\n" +
+                    getString(R.string.for_historic_temperatures),
             R.drawable.satellite,
             getString(R.string.set)
         ) {
@@ -356,4 +660,78 @@ class ThermometerSettingsFragment : AndromedaPreferenceFragment() {
             .any { it.id == GPSDiagnosticScanner.LOCATION_UNSET }
     }
 
+    private data class TemperatureChartData(
+        val data: List<Reading<Float>>,
+        val raw: List<Reading<Float>>
+    )
+
+    private data class TemperatureCalibrationState(
+        val minBatteryC: Float,
+        val minActualC: Float,
+        val maxBatteryC: Float,
+        val maxActualC: Float,
+        val minBatteryF: Float,
+        val minActualF: Float,
+        val maxBatteryF: Float,
+        val maxActualF: Float
+    )
+
+    private data class ThermometerOption(
+        val value: String,
+        val label: String
+    )
+}
+
+@Composable
+private fun TemperatureChartView(
+    data: List<Reading<Float>>,
+    raw: List<Reading<Float>>,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { context ->
+            Chart(context).apply {
+                tag = TemperatureChart(this, false)
+            }
+        },
+        update = {
+            (it.tag as TemperatureChart).plot(data, raw)
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(dimensionResource(R.dimen.chart_height))
+    )
+}
+
+@Composable
+private fun ThermometerSmoothingRow(
+    smoothing: Int,
+    summary: String,
+    onSmoothingChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = TrailSenseSpacing.md)
+    ) {
+        Text(
+            text = stringResource(R.string.smoothing),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = summary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Slider(
+            value = smoothing.toFloat(),
+            onValueChange = {
+                onSmoothingChange(it.roundToInt().coerceIn(0, 1000))
+            },
+            valueRange = 0f..1000f,
+            steps = 999
+        )
+    }
 }
