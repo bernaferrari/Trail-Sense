@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
@@ -16,9 +17,28 @@ class TextInputView(context: Context, attrs: AttributeSet?) :
     private val holder: TextInputLayout
 
     init {
-        inflate(context, R.layout.view_text_input, this)
-        edittext = findViewById(R.id.text_input)
-        holder = findViewById(R.id.text_input_holder)
+        holder = TextInputLayout(context).apply {
+            id = R.id.text_input_holder
+        }
+        edittext = TextInputEditText(context).apply {
+            id = R.id.text_input
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_NONE
+            inputType = InputType.TYPE_CLASS_TEXT
+        }
+        holder.addView(
+            edittext,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        addView(
+            holder,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
 
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TextInputView)
         try {

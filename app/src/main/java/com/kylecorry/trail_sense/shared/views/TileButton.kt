@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.setPadding
@@ -20,9 +21,58 @@ class TileButton(context: Context, attrs: AttributeSet?) : ConstraintLayout(cont
     private var isOn = false
 
     init {
-        inflate(context, R.layout.view_tile_button, this)
-        textView = findViewById(R.id.tile_text)
-        icon = findViewById(R.id.tile_btn)
+        icon = ImageView(context).apply {
+            id = R.id.tile_btn
+            background = AppCompatResources.getDrawable(context, R.drawable.rounded_rectangle)
+            cropToPadding = true
+            elevation = Resources.dp(context, 2f)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setPadding(Resources.dp(context, 32f).toInt())
+        }
+        addView(
+            icon,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            ).apply {
+                setMargins(
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt()
+                )
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
+        textView = TextView(context).apply {
+            id = R.id.tile_text
+            elevation = Resources.dp(context, 4f)
+            isClickable = false
+            isFocusable = false
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            maxLines = 1
+            textAlignment = TEXT_ALIGNMENT_CENTER
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+        }
+        addView(
+            textView,
+            LayoutParams(
+                0,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+                marginEnd = Resources.dp(context, 8f).toInt()
+                bottomMargin = Resources.dp(context, 8f).toInt()
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.TileButton, 0, 0)
         setImageResource(a.getResourceId(R.styleable.TileButton_tileIcon, R.drawable.flashlight))
         val padding = a.getDimensionPixelSize(R.styleable.TileButton_tilePadding, -1)
