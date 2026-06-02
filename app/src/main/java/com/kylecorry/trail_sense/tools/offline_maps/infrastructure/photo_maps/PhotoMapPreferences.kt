@@ -8,19 +8,19 @@ import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.MapSortMethod
 
 class PhotoMapPreferences(context: Context) : PreferenceRepo(context) {
-    val autoReducePhotoMaps by BooleanPreference(
+    var autoReducePhotoMaps by BooleanPreference(
         cache,
         context.getString(R.string.pref_low_resolution_maps),
         true
     )
 
-    val autoReducePdfMaps by BooleanPreference(
+    var autoReducePdfMaps by BooleanPreference(
         cache,
         context.getString(R.string.pref_low_resolution_pdf_maps),
         true
     )
 
-    val showMapPreviews by BooleanPreference(
+    var showMapPreviews by BooleanPreference(
         cache,
         context.getString(R.string.pref_show_map_previews),
         true
@@ -33,19 +33,19 @@ class PhotoMapPreferences(context: Context) : PreferenceRepo(context) {
         MapSortMethod.MostRecent
     )
 
-    val keepMapFacingUp by BooleanPreference(
+    var keepMapFacingUp by BooleanPreference(
         cache,
         context.getString(R.string.pref_keep_map_facing_up),
         true
     )
 
-    val keepScreenUnlockedWhileOpen by BooleanPreference(
+    var keepScreenUnlockedWhileOpen by BooleanPreference(
         cache,
         context.getString(R.string.pref_photo_maps_keep_unlocked),
         false
     )
 
-    val highDetailMode by BooleanPreference(
+    var highDetailMode by BooleanPreference(
         cache,
         context.getString(R.string.pref_photo_maps_high_detail_mode),
         true
