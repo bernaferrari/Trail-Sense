@@ -291,6 +291,10 @@
     <item name="qr_title" type="id" />
     <item name="qr_code" type="id" />
     <item name="path_points_list" type="id" />
+    <item name="waypoint_time" type="id" />
+    <item name="signal_strength" type="id" />
+    <item name="waypoint_coordinates" type="id" />
+    <item name="waypoint_menu_btn" type="id" />
     <item name="override_reason" type="id" />
     <item name="preferences_fragment" type="id" />
     <item name="empty_view_description" type="id" />

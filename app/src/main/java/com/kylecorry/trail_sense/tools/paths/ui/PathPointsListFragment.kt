@@ -14,11 +14,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.list.ListView
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ListItemWaypointBinding
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -26,7 +26,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 class PathPointsListFragment : BottomSheetDialogFragment() {
 
     private var points: List<PathPoint> = emptyList()
-    private var list: ListView<PathPoint>? = null
+    private var adapter: PathPointAdapter? = null
     private var pathPointViews: PathPointViews? = null
     private val binding: PathPointViews
         get() = pathPointViews ?: error("Path point views are not ready")
@@ -37,8 +37,8 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
     var onViewPointListener: (point: PathPoint) -> Unit = {}
 
     fun setPoints(points: List<PathPoint>) {
-        list?.setData(points)
         this.points = points
+        adapter?.setData(points)
     }
 
     override fun onCreateView(
@@ -62,22 +62,24 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        list = null
+        adapter = null
         pathPointViews = null
         super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        list = ListView(binding.pathPointsList, R.layout.list_item_waypoint) { view, point ->
-            val binding = ListItemWaypointBinding.bind(view)
-            drawWaypointListItem(binding, point)
+        adapter = PathPointAdapter().also {
+            binding.pathPointsList.layoutManager = LinearLayoutManager(requireContext())
+            binding.pathPointsList.adapter = it
+            binding.pathPointsList.addItemDecoration(
+                DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
+            )
+            it.setData(points)
         }
-        list?.addLineSeparator()
-        list?.setData(points)
     }
 
-    private fun drawWaypointListItem(itemBinding: ListItemWaypointBinding, item: PathPoint) {
+    private fun drawWaypointListItem(itemView: WaypointListItemView, item: PathPoint) {
         val itemStrategy = WaypointListItem(
             requireContext(),
             formatService,
@@ -96,8 +98,33 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
             }
         )
 
-        itemStrategy.display(itemBinding, item)
+        itemStrategy.display(itemView, item)
     }
+
+    private inner class PathPointAdapter : RecyclerView.Adapter<PathPointViewHolder>() {
+        private var data = emptyList<PathPoint>()
+
+        fun setData(points: List<PathPoint>) {
+            data = points
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PathPointViewHolder {
+            return PathPointViewHolder(WaypointListItemView(parent.context))
+        }
+
+        override fun onBindViewHolder(holder: PathPointViewHolder, position: Int) {
+            drawWaypointListItem(holder.view, data[position])
+        }
+
+        override fun getItemCount(): Int {
+            return data.size
+        }
+    }
+
+    private class PathPointViewHolder(
+        val view: WaypointListItemView
+    ) : RecyclerView.ViewHolder(view)
 }
 
 private data class PathPointViews(
