@@ -36,6 +36,13 @@
     <item name="error_close" type="id" />
     <item name="fragment_holder" type="id" />
     <item name="quick_actions_sheet" type="id" />
+    <item name="tabs" type="id" />
+    <item name="close_button" type="id" />
+    <item name="quick_actions_container" type="id" />
+    <item name="recommended_quick_actions" type="id" />
+    <item name="quick_actions" type="id" />
+    <item name="widgets_container" type="id" />
+    <item name="widgets" type="id" />
     <item name="bottom_navigation" type="id" />
     <item name="page_name" type="id" />
     <item name="page_image" type="id" />

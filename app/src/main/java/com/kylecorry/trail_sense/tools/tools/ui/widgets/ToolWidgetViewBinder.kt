@@ -16,7 +16,6 @@ import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.databinding.ViewQuickActionSheetBinding
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
@@ -26,7 +25,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class ToolWidgetViewBinder(
     private val fragment: Fragment,
-    private val binding: ViewQuickActionSheetBinding
+    private val widgetsContainer: FlexboxLayout
 ) {
 
     private val widgets = mutableListOf<WidgetInstance>()
@@ -53,7 +52,7 @@ class ToolWidgetViewBinder(
         // Only show the selected widgets
         val widgets = allWidgets.filter { selectedWidgets.contains(it.id) }
 
-        binding.widgets.removeAllViews()
+        widgetsContainer.removeAllViews()
 
         // 2 cells on a Pixel phone = 102dp
         val halfSummaryHeight = Resources.dp(context, 102f).toInt()
@@ -87,7 +86,7 @@ class ToolWidgetViewBinder(
             }
             layout.setPadding(summaryGap)
 
-            binding.widgets.addView(layout)
+            widgetsContainer.addView(layout)
 
             val updateFunction = {
                 fragment.inBackground {
@@ -99,9 +98,8 @@ class ToolWidgetViewBinder(
                             layout.updateAppWidget(views)
                             layout.getChildAt(0)?.backgroundTintList =
                                 ColorStateList.valueOf(
-                                    Resources.getAndroidColorAttr(
-                                        context,
-                                        com.google.android.material.R.attr.colorSurfaceContainerHighest
+                                    Resources.androidBackgroundColorSecondary(
+                                        context
                                     )
                                 )
                         }
@@ -115,12 +113,7 @@ class ToolWidgetViewBinder(
                 widget.widgetView.getView(context, null)
             layout.updateAppWidget(widgetView)
             layout.getChildAt(0)?.backgroundTintList =
-                ColorStateList.valueOf(
-                    Resources.getAndroidColorAttr(
-                        context,
-                        com.google.android.material.R.attr.colorSurfaceContainerHighest
-                    )
-                )
+                ColorStateList.valueOf(Resources.androidBackgroundColorSecondary(context))
         }
 
         this.widgets.forEach {
@@ -178,10 +171,11 @@ class ToolWidgetViewBinder(
         this.widgets.clear()
     }
 
-    private suspend fun onUpdate(data: Bundle) = onMain {
-        val widgetId = data.getString("widgetId") ?: return@onMain
-        val widget = widgets.find { it.widget.id == widgetId } ?: return@onMain
+    private fun onUpdate(data: Bundle): Boolean {
+        val widgetId = data.getString("widgetId") ?: return true
+        val widget = widgets.find { it.widget.id == widgetId } ?: return true
         widget.updateFunction()
+        return true
     }
 
     private data class WidgetInstance(

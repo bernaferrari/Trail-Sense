@@ -2,16 +2,28 @@ package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.util.AttributeSet
-import android.view.MotionEvent
+import android.view.View
+import android.view.View.MeasureSpec
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayout
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.tabs.TabLayout
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ViewQuickActionSheetBinding
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 
@@ -20,29 +32,184 @@ class QuickActionSheet @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ConstraintLayout(context, attrs) {
 
-    private val binding: ViewQuickActionSheetBinding
+    private val closeButton: ImageButton
+    private val tabs: TabLayout
+    private val quickActionsContainer: LinearLayout
+    private val recommendedQuickActions: FlexboxLayout
+    private val quickActions: FlexboxLayout
+    private val widgetsContainer: ScrollView
+    private val widgets: FlexboxLayout
+
     private var quickActionBinder: MainActivityQuickActionBinder? = null
     private var widgetBinder: ToolWidgetViewBinder? = null
     private var backCallback: OnBackPressedCallback? = null
 
     init {
-        inflate(context, R.layout.view_quick_action_sheet, this)
-        binding = ViewQuickActionSheetBinding.bind(this)
+        if (id == View.NO_ID) {
+            id = R.id.quick_actions_sheet
+        }
 
-        binding.root.isClickable = true
-        binding.root.isFocusable = true
-        binding.root.setOnTouchListener { _, event_ -> true }
+        val padding = Resources.dp(context, 8f).toInt()
+        val surfaceColor = Resources.getAndroidColorAttr(
+            context,
+            com.google.android.material.R.attr.colorSurfaceContainer
+        )
+        setBackgroundColor(surfaceColor)
+        setPadding(padding, padding, padding, padding)
 
-        binding.closeButton.setOnClickListener {
+        isClickable = true
+        isFocusable = true
+        setOnTouchListener { _, _ -> true }
+
+        tabs = TabLayout(context).apply {
+            id = R.id.tabs
+            setBackgroundColor(surfaceColor)
+            elevation = 0f
+            tabMode = TabLayout.MODE_AUTO
+        }
+        addView(
+            tabs,
+            LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                endToStart = R.id.close_button
+                startToStart = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+            }
+        )
+
+        closeButton = ImageButton(context).apply {
+            id = R.id.close_button
+            setBackgroundColor(Color.TRANSPARENT)
+            setImageResource(R.drawable.ic_cancel)
+            imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+        }
+        addView(
+            closeButton,
+            LayoutParams(
+                Resources.dp(context, 32f).toInt(),
+                Resources.dp(context, 32f).toInt()
+            ).apply {
+                bottomToBottom = R.id.tabs
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+            }
+        )
+
+        quickActionsContainer = LinearLayout(context).apply {
+            id = R.id.quick_actions_container
+            orientation = LinearLayout.VERTICAL
+        }
+        addView(
+            quickActionsContainer,
+            LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = Resources.dp(context, 16f).toInt()
+                topToBottom = R.id.tabs
+            }
+        )
+
+        recommendedQuickActions = FlexboxLayout(context).apply {
+            id = R.id.recommended_quick_actions
+            alignItems = AlignItems.CENTER
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.CENTER
+        }
+        quickActionsContainer.addView(
+            recommendedQuickActions,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        quickActionsContainer.addView(
+            ImageView(context).apply {
+                setImageResource(R.drawable.rectangle)
+                scaleType = ImageView.ScaleType.FIT_XY
+                imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Resources.dp(context, 1f).toInt()
+            ).apply {
+                topMargin = Resources.dp(context, 8f).toInt()
+                bottomMargin = Resources.dp(context, 8f).toInt()
+            }
+        )
+
+        quickActions = FlexboxLayout(context).apply {
+            id = R.id.quick_actions
+            alignItems = AlignItems.CENTER
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.CENTER
+        }
+        quickActionsContainer.addView(
+            quickActions,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        widgetsContainer = object : ScrollView(context) {
+            override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+                val maxHeight = Resources.dp(context, 350f).toInt()
+                super.onMeasure(
+                    widthMeasureSpec,
+                    MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
+                )
+            }
+        }.apply {
+            id = R.id.widgets_container
+            isNestedScrollingEnabled = true
+        }
+        addView(
+            widgetsContainer,
+            LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topToBottom = R.id.tabs
+            }
+        )
+
+        widgets = FlexboxLayout(context).apply {
+            id = R.id.widgets
+            alignItems = AlignItems.CENTER
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.FLEX_START
+            setPadding(
+                0,
+                Resources.dp(context, 16f).toInt(),
+                0,
+                Resources.dp(context, 16f).toInt()
+            )
+        }
+        widgetsContainer.addView(
+            widgets,
+            android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                leftMargin = Resources.dp(context, 16f).toInt()
+                rightMargin = Resources.dp(context, 16f).toInt()
+            }
+        )
+
+        closeButton.setOnClickListener {
             close()
         }
 
-        binding.tabs.addTab(
-            binding.tabs.newTab().also { it.text = context.getString(R.string.quick_actions) })
-        binding.tabs.addTab(
-            binding.tabs.newTab().also { it.text = context.getString(R.string.widgets) })
+        tabs.addTab(
+            tabs.newTab().also { it.text = context.getString(R.string.quick_actions) })
+        tabs.addTab(
+            tabs.newTab().also { it.text = context.getString(R.string.widgets) })
 
-        binding.tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 if (tab == null) {
                     return
@@ -67,8 +234,8 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     fun close() {
-        binding.quickActions.removeAllViews()
-        binding.quickActionsSheet.isVisible = false
+        quickActions.removeAllViews()
+        isVisible = false
         widgetBinder?.unbind()
         widgetBinder = null
         backCallback?.remove()
@@ -94,11 +261,15 @@ class QuickActionSheet @JvmOverloads constructor(
         }
 
         widgetBinder?.unbind()
-        quickActionBinder = MainActivityQuickActionBinder(fragment, binding)
-        widgetBinder = ToolWidgetViewBinder(fragment, binding)
+        quickActionBinder = MainActivityQuickActionBinder(
+            fragment,
+            recommendedQuickActions,
+            quickActions
+        )
+        widgetBinder = ToolWidgetViewBinder(fragment, widgets)
         quickActionBinder?.bind()
         widgetBinder?.bind()
-        binding.quickActionsSheet.isVisible = true
+        isVisible = true
 
         backCallback?.remove()
         backCallback = activity.onBackPressedDispatcher.addCallback(activity, true) {
@@ -107,23 +278,23 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     fun isOpen(): Boolean {
-        return binding.quickActionsSheet.isVisible
+        return isVisible
     }
 
     private fun showQuickActions() {
-        if (binding.tabs.selectedTabPosition != 0) {
-            binding.tabs.selectTab(binding.tabs.getTabAt(0))
+        if (tabs.selectedTabPosition != 0) {
+            tabs.selectTab(tabs.getTabAt(0))
         }
-        binding.quickActionsContainer.isVisible = true
-        binding.widgetsContainer.isVisible = false
+        quickActionsContainer.isVisible = true
+        widgetsContainer.isVisible = false
     }
 
     private fun showWidgets() {
-        if (binding.tabs.selectedTabPosition != 1) {
-            binding.tabs.selectTab(binding.tabs.getTabAt(1))
+        if (tabs.selectedTabPosition != 1) {
+            tabs.selectTab(tabs.getTabAt(1))
         }
-        binding.quickActionsContainer.isVisible = false
-        binding.widgetsContainer.isVisible = true
+        quickActionsContainer.isVisible = false
+        widgetsContainer.isVisible = true
     }
 
 }
