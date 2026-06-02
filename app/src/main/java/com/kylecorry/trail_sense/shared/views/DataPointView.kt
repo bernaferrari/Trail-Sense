@@ -118,6 +118,15 @@ class DataPointView(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         dataPointImage.isVisible = res != null
     }
 
+    fun setContentGravity(gravity: Int) {
+        dataPoint.layoutParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        ).also {
+            it.gravity = gravity
+        }
+    }
+
     fun setShowDescription(showDescription: Boolean) {
         dataPointDescription.isVisible = showDescription
     }

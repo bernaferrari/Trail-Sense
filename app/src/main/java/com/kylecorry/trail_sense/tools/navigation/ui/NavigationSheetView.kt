@@ -1,9 +1,12 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.Gravity
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -61,14 +64,91 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
     private val etaDataView: DataPointView
 
     init {
-        inflate(context, R.layout.view_navigation_sheet, this)
-        toolbar = findViewById<Toolbar>(R.id.navigation_sheet_title)
-        distanceDataView = findViewById<DataPointView>(R.id.navigation_distance)
-        bearingDataView = findViewById<DataPointView>(R.id.navigation_bearing)
-        elevationDataView = findViewById<DataPointView>(R.id.navigation_elevation)
-        etaDataView = findViewById<DataPointView>(R.id.navigation_eta)
+        val root = LinearLayout(context).apply {
+            id = R.id.navigation_sheet
+            background = ColorDrawable(
+                Resources.getAndroidColorAttr(
+                    context,
+                    com.google.android.material.R.attr.colorSurfaceContainer
+                )
+            )
+            orientation = LinearLayout.VERTICAL
+        }
+        addView(
+            root,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        toolbar = Toolbar(context, null).apply {
+            id = R.id.navigation_sheet_title
+            leftButton.setImageResource(R.drawable.ic_tool_notes)
+            rightButton.setImageResource(R.drawable.ic_cancel)
+        }
+        root.addView(
+            toolbar,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        val dataRow = LinearLayout(context).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+        }
+        root.addView(
+            dataRow,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+                marginEnd = Resources.dp(context, 8f).toInt()
+            }
+        )
+
+        distanceDataView = addNavigationDataPoint(dataRow, R.id.navigation_distance, R.drawable.ruler)
+        bearingDataView = addNavigationDataPoint(
+            dataRow,
+            R.id.navigation_bearing,
+            R.drawable.ic_compass_icon
+        )
+        elevationDataView = addNavigationDataPoint(
+            dataRow,
+            R.id.navigation_elevation,
+            R.drawable.ic_altitude
+        )
+        etaDataView = addNavigationDataPoint(dataRow, R.id.navigation_eta, R.drawable.ic_tool_clock)
+
         bearingDataView.setShowDescription(false)
         toolbar.leftButton.flatten()
+    }
+
+    private fun addNavigationDataPoint(
+        row: LinearLayout,
+        id: Int,
+        icon: Int
+    ): DataPointView {
+        val view = DataPointView(context, null).apply {
+            this.id = id
+            setContentGravity(Gravity.CENTER)
+            setImageResource(icon)
+        }
+        row.addView(
+            view,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+                marginEnd = Resources.dp(context, 8f).toInt()
+            }
+        )
+        return view
     }
 
 

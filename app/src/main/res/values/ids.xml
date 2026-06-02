@@ -351,6 +351,15 @@
     <item name="prompt_duration" type="id" />
     <item name="content" type="id" />
     <item name="search" type="id" />
+    <item name="map_distance_title" type="id" />
+    <item name="create_path_btn" type="id" />
+    <item name="navigation_sheet_title" type="id" />
+    <item name="navigation_distance" type="id" />
+    <item name="navigation_bearing" type="id" />
+    <item name="navigation_elevation" type="id" />
+    <item name="navigation_eta" type="id" />
+    <item name="coordinate_input" type="id" />
+    <item name="distance_input" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />

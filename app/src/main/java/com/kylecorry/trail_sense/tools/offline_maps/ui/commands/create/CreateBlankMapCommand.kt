@@ -4,11 +4,13 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
-import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.core.units.PercentCoordinate
+import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Bearing
@@ -64,28 +66,9 @@ class CreateBlankMapCommand(
         var center = location.location
 
         val cancelled = onMain {
-            // Programmatic container (no XML): replaces deleted fragment_blank_map_create_sheet.xml
-            // after Offline Maps expressive shell conversion. Uses the shared input views directly.
-            val coordinateInput = CoordinateInputView(context)
-            val distanceInput = DistanceInputView(context)
-            val view = android.widget.LinearLayout(context).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                addView(
-                    coordinateInput,
-                    android.widget.LinearLayout.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                )
-                addView(
-                    distanceInput,
-                    android.widget.LinearLayout.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                )
-                setPadding(32, 16, 32, 16)
-            }
+            val view = createBlankMapCalibrationView()
+            val distanceInput = view.findViewById<DistanceInputView>(R.id.distance_input)
+            val coordinateInput = view.findViewById<CoordinateInputView>(R.id.coordinate_input)
 
             coordinateInput.coordinate = center
             coordinateInput.setOnCoordinateChangeListener {
@@ -118,6 +101,64 @@ class CreateBlankMapCommand(
             MapCalibrationPoint(center, PercentCoordinate(0.5f, 0.5f)),
             MapCalibrationPoint(topLeft, PercentCoordinate(0f, 0f)),
         )
+    }
+
+    private fun createBlankMapCalibrationView(): View {
+        val padding = Resources.dp(context, 16f).toInt()
+        val smallSpacing = Resources.dp(context, 4f).toInt()
+        val spacing = Resources.dp(context, 8f).toInt()
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+        }
+
+        root.addView(
+            TextView(context).apply {
+                text = context.getString(R.string.center)
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        root.addView(
+            CoordinateInputView(context).apply {
+                id = R.id.coordinate_input
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = smallSpacing
+            }
+        )
+
+        root.addView(
+            TextView(context).apply {
+                text = context.getString(R.string.size)
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = spacing
+            }
+        )
+
+        root.addView(
+            DistanceInputView(context).apply {
+                id = R.id.distance_input
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = smallSpacing
+            }
+        )
+
+        return root
     }
 
 }
