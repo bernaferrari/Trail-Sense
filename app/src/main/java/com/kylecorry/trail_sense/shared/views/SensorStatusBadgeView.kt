@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import androidx.core.view.doOnAttach
@@ -10,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.andromeda.views.badge.Badge
@@ -50,10 +52,33 @@ class SensorStatusBadgeView(
         orientation = VERTICAL
         gravity = android.view.Gravity.START
 
-        inflate(context, R.layout.view_sensor_status_badges, this)
+        gpsBadge = Badge(context, null).apply {
+            id = R.id.gps_status
+            setForegroundTint(Color.BLACK)
+            setImageResource(R.drawable.satellite)
+        }
+        addView(
+            gpsBadge,
+            LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = Resources.dp(context, 8f).toInt()
+            }
+        )
 
-        gpsBadge = findViewById(R.id.gps_status)
-        compassBadge = findViewById(R.id.compass_status)
+        compassBadge = Badge(context, null).apply {
+            id = R.id.compass_status
+            setForegroundTint(Color.BLACK)
+            setImageResource(R.drawable.ic_compass_icon)
+        }
+        addView(
+            compassBadge,
+            LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
 
         if (!SensorService(context).hasCompass()) {
             compassBadge.visibility = GONE

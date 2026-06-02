@@ -318,6 +318,8 @@
     <item name="date_picker" type="id" />
     <item name="time_text" type="id" />
     <item name="time_slider" type="id" />
+    <item name="gps_status" type="id" />
+    <item name="compass_status" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />
