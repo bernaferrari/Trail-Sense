@@ -31,13 +31,13 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
         20f
     )
 
-    val useGyroOnlyAfterCalibration by BooleanPreference(
+    var useGyroOnlyAfterCalibration by BooleanPreference(
         cache,
         context.getString(R.string.pref_ar_use_gyro_only_after_calibration),
         false
     )
 
-    val adjustForPathElevation by BooleanPreference(
+    var adjustForPathElevation by BooleanPreference(
         cache,
         context.getString(R.string.pref_ar_adjust_for_path_elevation),
         false
@@ -94,7 +94,7 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
         false
     )
 
-    val increaseExposureAtNight by BooleanPreference(
+    var increaseExposureAtNight by BooleanPreference(
         cache,
         context.getString(R.string.pref_increase_ar_exposure_at_night),
         true

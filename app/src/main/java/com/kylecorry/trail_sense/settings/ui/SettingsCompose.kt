@@ -70,11 +70,13 @@ fun SettingsSwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    summary: String? = null
+    summary: String? = null,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
             .padding(vertical = TrailSenseSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -95,7 +97,8 @@ fun SettingsSwitchRow(
         Spacer(Modifier.width(TrailSenseSpacing.md))
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
         )
     }
 }

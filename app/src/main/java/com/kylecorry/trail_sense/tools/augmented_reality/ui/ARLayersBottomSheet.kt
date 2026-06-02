@@ -1,35 +1,47 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
-import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentContainerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils.replaceChildFragment
+import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 class ARLayersBottomSheet : BottomSheetDialogFragment() {
 
     private var onDismissListener: (() -> Unit)? = null
-    private var arLayerViews: ARLayerViews? = null
-    private val binding: ARLayerViews
-        get() = arLayerViews ?: error("AR layer views are not ready")
+    private val prefs by lazy { UserPreferences(requireContext()).augmentedReality }
 
     fun setOnDismissListener(listener: (() -> Unit)?) {
         onDismissListener = listener
@@ -40,118 +52,180 @@ class ARLayersBottomSheet : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createARLayerViews(requireContext())
-        arLayerViews = views
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    ARLayerHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
+                    var showBeaconLayer by remember {
+                        mutableStateOf(prefs.showBeaconLayer)
+                    }
+                    var showPathLayer by remember { mutableStateOf(prefs.showPathLayer) }
+                    var showAstronomyLayer by remember {
+                        mutableStateOf(prefs.showAstronomyLayer)
+                    }
+                    var showGridLayer by remember { mutableStateOf(prefs.showGridLayer) }
+
+                    ARLayersBottomSheetContent(
+                        showBeaconLayer = showBeaconLayer,
+                        onShowBeaconLayerChange = {
+                            showBeaconLayer = it
+                            prefs.showBeaconLayer = it
+                        },
+                        showPathLayer = showPathLayer,
+                        onShowPathLayerChange = {
+                            showPathLayer = it
+                            prefs.showPathLayer = it
+                        },
+                        showAstronomyLayer = showAstronomyLayer,
+                        onShowAstronomyLayerChange = {
+                            showAstronomyLayer = it
+                            prefs.showAstronomyLayer = it
+                        },
+                        showGridLayer = showGridLayer,
+                        onShowGridLayerChange = {
+                            showGridLayer = it
+                            prefs.showGridLayer = it
+                        },
+                        onClose = ::dismiss
                     )
                 }
             }
         }
     }
 
-    override fun onDestroyView() {
-        arLayerViews = null
-        super.onDestroyView()
-    }
-
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         onDismissListener?.invoke()
     }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.title.rightButton.setOnClickListener {
-            dismiss()
-        }
-
-        replaceChildFragment(
-            ARLayersBottomSheetPreferenceFragment(),
-            binding.preferencesFragment.id
-        )
-    }
 }
-
-private data class ARLayerViews(
-    val root: View,
-    val title: Toolbar,
-    val overrideReason: TextView,
-    val preferencesFragment: FragmentContainerView
-)
 
 @Composable
-private fun ARLayerHost(
-    views: ARLayerViews,
+private fun ARLayersBottomSheetContent(
+    showBeaconLayer: Boolean,
+    onShowBeaconLayerChange: (Boolean) -> Unit,
+    showPathLayer: Boolean,
+    onShowPathLayerChange: (Boolean) -> Unit,
+    showAstronomyLayer: Boolean,
+    onShowAstronomyLayerChange: (Boolean) -> Unit,
+    showGridLayer: Boolean,
+    onShowGridLayerChange: (Boolean) -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createARLayerViews(context: Context): ARLayerViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                bottom = TrailSenseSpacing.xxxl
+            )
+        ) {
+            item("title") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = TrailSenseSpacing.xl,
+                            end = TrailSenseSpacing.sm,
+                            top = TrailSenseSpacing.sm,
+                            bottom = TrailSenseSpacing.sm
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.layers),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
+                }
+            }
+            item("override_reason") {
+                Text(
+                    text = stringResource(R.string.ar_layer_override_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        start = TrailSenseSpacing.xl,
+                        end = TrailSenseSpacing.xl,
+                        bottom = TrailSenseSpacing.md
+                    )
+                )
+            }
+            item("beacons_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.beacons))
+            }
+            item("beacons") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showBeaconLayer,
+                    onCheckedChange = onShowBeaconLayerChange,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("paths_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.paths))
+            }
+            item("paths") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showPathLayer,
+                    onCheckedChange = onShowPathLayerChange,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("astronomy_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.astronomy))
+            }
+            item("astronomy") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showAstronomyLayer,
+                    onCheckedChange = onShowAstronomyLayerChange,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("grid_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.grid))
+            }
+            item("grid") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showGridLayer,
+                    onCheckedChange = onShowGridLayerChange,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
     }
-
-    val title = Toolbar(context, null).apply {
-        id = R.id.title
-        this.title.text = context.getString(R.string.layers)
-        subtitle.isVisible = false
-        rightButton.setImageResource(R.drawable.ic_cancel)
-        rightButton.isVisible = true
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val overrideReason = TextView(context).apply {
-        id = R.id.override_reason
-        text = context.getString(R.string.ar_layer_override_message)
-    }
-    root.addView(
-        overrideReason,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val preferences = FragmentContainerView(context).apply {
-        id = R.id.preferences_fragment
-    }
-    root.addView(
-        preferences,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    return ARLayerViews(root, title, overrideReason, preferences)
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ARLayerHostPreview() {
+private fun ARLayersBottomSheetContentPreview() {
     TrailSenseTheme {
-        ARLayerHost(
-            views = createARLayerViews(LocalContext.current)
+        ARLayersBottomSheetContent(
+            showBeaconLayer = true,
+            onShowBeaconLayerChange = {},
+            showPathLayer = true,
+            onShowPathLayerChange = {},
+            showAstronomyLayer = true,
+            onShowAstronomyLayerChange = {},
+            showGridLayer = true,
+            onShowGridLayerChange = {},
+            onClose = {}
         )
     }
 }
