@@ -2,10 +2,13 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
 import com.google.android.material.slider.LabelFormatter
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
@@ -40,10 +43,76 @@ class DateTimeSliderSheet(context: Context, attrs: AttributeSet?) : FrameLayout(
     private var currentTime: ZonedDateTime = ZonedDateTime.now()
 
     init {
-        inflate(context, R.layout.view_date_time_slider_sheet, this)
-        datePicker = findViewById(R.id.date_picker)
-        timeText = findViewById(R.id.time_text)
-        timeSlider = findViewById(R.id.time_slider)
+        val root = LinearLayout(context).apply {
+            background = android.graphics.drawable.ColorDrawable(
+                Resources.getAndroidColorAttr(
+                    context,
+                    com.google.android.material.R.attr.colorSurfaceContainer
+                )
+            )
+            orientation = LinearLayout.VERTICAL
+        }
+        addView(
+            root,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            )
+        )
+
+        datePicker = DatePickerView(context, null).apply {
+            id = R.id.date_picker
+        }
+        root.addView(
+            datePicker,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 16f).toInt()
+                marginEnd = Resources.dp(context, 16f).toInt()
+                topMargin = Resources.dp(context, 16f).toInt()
+            }
+        )
+
+        timeText = TextView(context).apply {
+            id = R.id.time_text
+            val typedValue = TypedValue()
+            if (context.theme.resolveAttribute(
+                    com.google.android.material.R.attr.textAppearanceBody1,
+                    typedValue,
+                    true
+                )
+            ) {
+                setTextAppearance(typedValue.resourceId)
+            }
+        }
+        root.addView(
+            timeText,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                topMargin = Resources.dp(context, 16f).toInt()
+            }
+        )
+
+        timeSlider = Slider(context, null).apply {
+            id = R.id.time_slider
+        }
+        root.addView(
+            timeSlider,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 16f).toInt()
+                marginEnd = Resources.dp(context, 16f).toInt()
+                bottomMargin = Resources.dp(context, 16f).toInt()
+            }
+        )
+
         timeSlider.valueFrom = 0f
         timeSlider.valueTo = Duration.ofDays(1).toMinutes().toFloat()
         timeSlider.labelBehavior = LabelFormatter.LABEL_GONE
