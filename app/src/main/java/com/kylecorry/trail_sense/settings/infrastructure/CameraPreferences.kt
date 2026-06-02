@@ -13,7 +13,7 @@ class CameraPreferences(context: Context) : PreferenceRepo(context), ICameraPref
         false
     )
 
-    override val projectionType by StringEnumPreference(
+    override var projectionType by StringEnumPreference(
         cache,
         context.getString(R.string.pref_augmented_reality_mapper),
         ProjectionType.entries.associateBy { it.id },
