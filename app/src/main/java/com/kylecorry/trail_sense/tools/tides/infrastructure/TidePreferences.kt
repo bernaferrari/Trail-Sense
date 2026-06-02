@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 
 class TidePreferences(context: Context) : PreferenceRepo(context), ITidePreferences {
 
-    override val showNearestTide by BooleanPreference(
+    override var showNearestTide by BooleanPreference(
         cache,
         context.getString(R.string.pref_show_nearest_tide),
         false
