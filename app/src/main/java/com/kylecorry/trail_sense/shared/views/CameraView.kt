@@ -197,6 +197,17 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
         preview.setBackgroundColor(color)
     }
 
+    fun setFlipEnabled(enabled: Boolean) {
+        changeCameraBtn.isVisible = enabled
+        changeCameraBtn.setOnClickListener(
+            if (enabled) {
+                View.OnClickListener { camera?.flipCamera() }
+            } else {
+                null
+            }
+        )
+    }
+
     fun setExposureCompensation(value: Float) {
         exposureCompensation = value
 
@@ -275,12 +286,7 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
         changeCameraBtn = findViewById(R.id.camera_change)
 
         context.withStyledAttributes(attrs, R.styleable.CameraView) {
-            if (getBoolean(R.styleable.CameraView_flipEnable, false)) {
-                changeCameraBtn.visibility = View.VISIBLE
-                changeCameraBtn.setOnClickListener {
-                    camera?.flipCamera()
-                }
-            }
+            setFlipEnabled(getBoolean(R.styleable.CameraView_flipEnable, false))
         }
 
         torchBtn.setOnClickListener {

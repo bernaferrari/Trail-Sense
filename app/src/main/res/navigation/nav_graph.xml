@@ -42,8 +42,7 @@
     <fragment
         android:id="@+id/action_weather"
         android:name="com.kylecorry.trail_sense.tools.weather.ui.WeatherFragment"
-        android:label="activity_weather"
-        tools:layout="@layout/activity_weather" />
+        android:label="activity_weather" />
     <fragment
         android:id="@+id/mapFragment"
         android:name="com.kylecorry.trail_sense.tools.map.ui.MapFragment"
@@ -54,9 +53,8 @@
         android:label="MapSettingsFragment" />
     <fragment
         android:id="@+id/offlineMapViewFragment"
-        android:name="com.kylecorry.trail_sense.tools.offline_maps.ui.trail_maps.ViewTrailMapFragment"
-        android:label="OfflineMapViewFragment"
-        tools:layout="@layout/fragment_offline_map_view">
+        android:name="com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapFragment"
+        android:label="OfflineMapViewFragment">
         <argument
             android:name="offline_map_file_id"
             app:argType="long" />

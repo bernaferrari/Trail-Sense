@@ -1,238 +1,894 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import android.content.Context
+import android.graphics.Color
+import android.os.Bundle
+import android.text.method.LinkMovementMethod
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.core.system.GeoUri
+import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.core.ui.useCallback
+import com.kylecorry.andromeda.core.ui.useService
+import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
+import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.fragments.show
+import com.kylecorry.andromeda.fragments.useBackgroundEffect
+import com.kylecorry.andromeda.fragments.useClickCallback
+import com.kylecorry.andromeda.fragments.useFlow
+import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.sense.location.ISatelliteGPS
+import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.extensions.compose.useNavigationSensors
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.map.ui.MapView
+import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dem.DEM
+import com.kylecorry.trail_sense.shared.extensions.useCoordinatePreference
+import com.kylecorry.trail_sense.shared.extensions.useDestroyEffect
+import com.kylecorry.trail_sense.shared.extensions.useFloatPreference
+import com.kylecorry.trail_sense.shared.extensions.useIntPreference
+import com.kylecorry.trail_sense.shared.extensions.useNavController
+import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
+import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.requireMainActivity
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sharing.ActionItem
+import com.kylecorry.trail_sense.shared.sharing.Share
+import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheet
+import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheet
+import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import java.time.Instant
 
-/**
- * Map tool entry point as TrailSenseComposeFragment (for legacy deep links / PendingIntents).
- * Expressive M3 shell with AndroidView interop for the complex custom MapView (per SKILL.md:
- * complex map rendering/gestures/layers kept in existing custom view with other consumers).
- *
- * Real map rendering (panning, zooming, base layers) is now live in both legacy fragment
- * containers and (via MapScreen) the primary Nav3 host.
- */
-@Composable
-fun Fragment.MapContent(modifier: Modifier = Modifier) {
-    val navigation = useNavigationSensors(trueNorth = true)
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+class MapFragment : ReactiveAndromedaFragment() {
 
-    // Feed live location / bearing into the map view when available (basic shell wiring)
-    androidx.compose.runtime.LaunchedEffect(navigation.location, navigation.bearing, mapViewRef) {
-        mapViewRef?.let { mv ->
-            mv.userLocation = navigation.location
-            mv.userLocationAccuracy = navigation.locationAccuracy
-            mv.userAzimuth = navigation.bearing
-            mv.invalidate()
-        }
-    }
+    private var mapViews: MapViews? = null
+    private var wasViewCreated = false
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Real map via the powerful existing custom Canvas-based MapView (layers, tiles, gestures).
-        // Full layer registration (beacons, paths, DEM etc) + measurement + time sheets
-        // require MapToolLayerManager (fragment-bound today); basic rendering + interaction works immediately.
-        AndroidView(
-            factory = { context ->
-                MapView(context).apply {
-                    isInteractive = true
-                    isPanEnabled = true
-                    isZoomEnabled = true
-                    isFlingEnabled = true
-                    useDensityPixelsForZoom = true
-                    // Initial center will be updated by effect; default behavior shows tiles if any cached/pref
-                    mapViewRef = this
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createMapViews(requireContext())
+        mapViews = views
+        wasViewCreated = true
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    MapHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("map_view"),
-            update = { view ->
-                // Re-feed on recomposition if needed (effects handle primary updates)
-                mapViewRef = view
-            }
-        )
-
-        // Expressive M3 overlay controls using design system (no XML)
-        // Top attribution / status area could go here in future polish
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(TrailSenseSpacing.md)
-        ) {
-            // Polished expressive M3 status banner (design system tokens, updated post Paths/Offline shell truncate)
-            androidx.compose.material3.Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                shape = MaterialTheme.shapes.small,
-                shadowElevation = 2.dp,
-                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
-            ) {
-                androidx.compose.material3.Text(
-                    text = "Map • 100% Compose + Nav3 (daily driver + shells)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-        }
-
-        // Expressive FAB cluster (M3, design tokens, testTags for parity with old R.id.*)
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            FloatingActionButton(
-                onClick = { /* TODO: wire full layers bottom sheet + MapToolLayerManager */ },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.testTag("map_menu_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = "Map menu / layers"
-                )
-            }
-
-            FloatingActionButton(
-                onClick = { mapViewRef?.zoom(2f) },
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(40.dp).testTag("map_zoom_in_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_add), contentDescription = "Zoom in")
-            }
-
-            FloatingActionButton(
-                onClick = { mapViewRef?.zoom(0.5f) },
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(40.dp).testTag("map_zoom_out_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_zoom_out), contentDescription = "Zoom out")
-            }
-
-            FloatingActionButton(
-                onClick = {
-                    // Center on user (basic shell action)
-                    mapViewRef?.let { mv ->
-                        mv.mapCenter = navigation.location
-                        mv.invalidate()
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.testTag("map_lock_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_location), contentDescription = "My location")
-            }
-        }
-
-        // Helpful non-empty state overlay when map is empty / first load (expressive)
-        // In real use the AndroidView map fills; this is visible in edge cases or before tiles.
-        if (mapViewRef == null) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(TrailSenseSpacing.xxl),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TrailSenseEmptyState(
-                    icon = Icons.Default.Map,
-                    title = "Map",
-                    description = "Live pan/zoom + MapView. Paths, PhotoMaps & Offline now polished expressive M3 shells in Nav3. Full layers + measurement active."
-                )
             }
         }
     }
-}
 
-class MapFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        MapContent()
+    override fun onDestroyView() {
+        wasViewCreated = false
+        mapViews = null
+        super.onDestroyView()
     }
-}
 
-@Preview(showBackground = true, name = "Map Shell Preview")
-@Composable
-private fun MapContentPreview() {
-    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
-        // Preview cannot easily host real MapView or Fragment hooks; show expressive shell hint
-        Box(Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                TrailSenseEmptyState(
-                    icon = Icons.Default.Map,
-                    title = "Map",
-                    description = "Expressive M3 shell (polished in final push) + real MapView. Paths/Offline shells added."
-                )
+    override fun onPause() {
+        super.onPause()
+        cleanupEffects()
+    }
+
+    override fun onUpdate() {
+        if (!wasViewCreated) {
+            return
+        }
+
+        val views = mapViews ?: return
+        val mapView = views.map
+        val lockButton = views.lockButton
+        val zoomInButton = views.zoomInButton
+        val zoomOutButton = views.zoomOutButton
+        val timeButton = views.timeButton
+        val menuButton = views.menuButton
+        val navigationSheetView = views.navigationSheet
+        val mapDistanceSheetView = views.distanceSheet
+        val attributionView = views.mapAttribution
+        val timeSheet = views.timeSheet
+        val sensorStatusBadges = views.sensorStatusBadges
+        val (mapTime, setMapTime) = useState<Instant?>(null)
+        val (hasTimeDependentLayers, setHasTimeDependentLayers) = useState(false)
+
+        useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
+            timeButton.isVisible = hasTimeDependentLayers
+            if (hasTimeDependentLayers) {
+                CustomUiUtils.setButtonState(timeButton, mapTime != null || timeSheet.isVisible)
+            } else {
+                if (timeSheet.isVisible) {
+                    setMapTime(null)
+                    timeSheet.hide()
+                }
             }
-            FloatingActionButton(
-                onClick = {},
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .testTag("map_lock_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_location), contentDescription = null)
+
+            timeButton.setOnClickListener {
+                if (timeSheet.isVisible) {
+                    setMapTime(null)
+                    timeSheet.hide()
+                } else {
+                    timeSheet.setTime(mapTime)
+                    timeSheet.show()
+                }
+                CustomUiUtils.setButtonState(timeButton, mapTime != null || timeSheet.isVisible)
+            }
+
+            timeSheet.onTimeChanged = {
+                setMapTime(it)
             }
         }
-    }
-}
 
-/**
- * Pure Nav3 screen entry for AppRoute.Map (future direct use, no Fragment).
- * Delegates to shared expressive logic. Deduped in final zero-XML sweep (was duplicated with Fragment.MapContent).
- */
-@Composable
-fun MapScreen(modifier: Modifier = Modifier) {
-    // Unified with the Fragment.MapContent shell used by Nav3Host for daily driver.
-    // Full pure-Compose MapScreen (no AndroidView interop) tracked post zero-XML.
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(TrailSenseSpacing.xxl),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TrailSenseEmptyState(
-                icon = Icons.Default.Map,
-                title = "Map (pure Nav3)",
-                description = "Primary shell active via Fragment.MapContent for compat. See MapFragment for live AndroidView + M3 controls. Full KMP pure canvas in progress."
+        val navigation = useNavigationSensors(trueNorth = true)
+        val context = useAndroidContext()
+        val sensors = useService<SensorService>()
+        val hasCompass = useMemo(sensors) { sensors.hasCompass() }
+        val navigator = useService<Navigator>()
+        val pathService = useService<PathService>()
+        val destination = useFlow(navigator.destination2, state = BackgroundMinimumState.Resumed)
+        val prefs = useService<UserPreferences>()
+        val formatter = useService<FormatService>()
+        val activity = useActivity()
+        val navController = useNavController()
+        val (lockMode, setLockMode) = useLockMode()
+
+        val screenLight = useMemo(activity) {
+            ScreenTorch(activity.window)
+        }
+
+        val screenLock = useMemo(prefs) {
+            NavigationScreenLock(prefs.map.keepScreenUnlockedWhileOpen)
+        }
+
+        useEffect(mapView, prefs, resetOnResume) {
+            mapView.useDensityPixelsForZoom = !prefs.map.highDetailMode
+            mapView.layerManager.invalidate()
+            mapView.invalidate()
+        }
+
+        useEffect(screenLock, activity, resetOnResume, destination) {
+            screenLock.updateLock(activity)
+        }
+
+        useDestroyEffect(screenLock, activity) {
+            screenLock.releaseLock(activity)
+        }
+
+        useClickCallback(lockButton, lockMode, hasCompass) {
+            setLockMode(getNextLockMode(lockMode, hasCompass))
+        }
+
+        useEffect(attributionView) {
+            attributionView.movementMethod = LinkMovementMethod.getInstance()
+        }
+
+        // Layers
+        val manager = useMemo { MapToolLayerManager() }
+        useEffect(manager, mapView, mapTime, manager.key) {
+            manager.setTime(mapView, mapTime)
+        }
+        useEffectWithCleanup(manager, mapView, resetOnResume) {
+            manager.resume(context, mapView, this@MapFragment)
+            return@useEffectWithCleanup {
+                manager.pause(mapView)
+            }
+        }
+
+        useEffect(manager.key, mapView) {
+            setHasTimeDependentLayers(mapView.layerManager.getLayers().any { it.isTimeDependent })
+        }
+
+        useEffect(mapView) {
+            mapView.setBackgroundColor(Color.rgb(127, 127, 127))
+        }
+
+        useBackgroundEffect(mapView, manager.key, attributionView) {
+            val attribution = mapView.getAttribution(context)
+            onMain {
+                attributionView.text = attribution
+                attributionView.isVisible = attribution != null
+            }
+        }
+
+        val layerEditSheet = useMemo(prefs) {
+            MapLayersBottomSheet(
+                MapToolRegistration.MAP_ID
             )
         }
+
+        usePauseEffect(layerEditSheet) {
+            tryOrNothing {
+                layerEditSheet.setOnDismissListener(null)
+                layerEditSheet.dismiss()
+            }
+        }
+
+        val adjustLayers = useCallback<Unit>(manager, layerEditSheet, context, mapView) {
+            manager.pause(mapView)
+            layerEditSheet.setOnDismissListener {
+                manager.resume(context, mapView, this@MapFragment)
+                setHasTimeDependentLayers(
+                    mapView.layerManager.getLayers().any { it.isTimeDependent })
+            }
+            layerEditSheet.show(this)
+        }
+
+        // Distance
+        val stopDistanceMeasurement = useCallback<Unit>(mapDistanceSheetView, manager) {
+            manager.stopDistanceMeasurement()
+            mapDistanceSheetView.hide()
+        }
+
+        val startDistanceMeasurement =
+            useCallback(
+                mapDistanceSheetView,
+                stopDistanceMeasurement,
+                navController,
+                manager,
+                pathService,
+                navigation.location
+            ) { location: Coordinate?, startWithUserLocation: Boolean ->
+                val initialPoints = listOfNotNull(
+                    if (startWithUserLocation) navigation.location else null,
+                    location
+                ).toTypedArray()
+                manager.startDistanceMeasurement(initialPoints)
+                mapDistanceSheetView.show()
+                mapDistanceSheetView.cancelListener = {
+                    stopDistanceMeasurement()
+                }
+                mapDistanceSheetView.createPathListener = {
+                    inBackground {
+                        val id = CreatePathCommand(
+                            pathService,
+                            prefs.navigation,
+                            null
+                        ).execute(manager.getDistanceMeasurementPoints())
+
+                        onMain {
+                            navController.navigateWithAnimation(
+                                R.id.pathDetailsFragment,
+                                Bundle().apply {
+                                    putLong("path_id", id)
+                                }
+                            )
+                        }
+                    }
+                }
+                mapDistanceSheetView.undoListener = {
+                    manager.undoLastDistanceMeasurement()
+                }
+            }
+
+        // Update layer values
+        useEffect(mapView, navigation.location, navigation.locationAccuracy) {
+            mapView.userLocation = navigation.location
+            mapView.userLocationAccuracy = navigation.locationAccuracy
+            mapView.invalidate()
+        }
+
+        useEffect(mapView, navigation.bearing) {
+            mapView.userAzimuth = navigation.bearing
+        }
+
+        useEffect(manager, mapView.mapBounds, manager.key) {
+            manager.onBoundsChanged()
+        }
+
+        val traceViews =
+            useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
+                listOfNotNull(
+                    zoomInButton,
+                    zoomOutButton,
+                    if (hasTimeDependentLayers) timeButton else null,
+                    menuButton,
+                    sensorStatusBadges
+                )
+            }
+
+        useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, resetOnResume) {
+            switchMapLockMode(lockMode, mapView, lockButton, traceViews, screenLight, context)
+        }
+
+        usePauseEffect(screenLight) {
+            screenLight.off()
+            requireMainActivity().setBottomNavigationEnabled(true)
+        }
+
+        useSavedMapState(mapView)
+
+        useEffect(mapView, lockMode, navigation.location) {
+            if (mapView.mapCenter == Coordinate.zero) {
+                mapView.mapCenter = navigation.location
+                mapView.resolution = 2f
+            }
+
+            if (lockMode == MapLockMode.Location || lockMode == MapLockMode.Compass) {
+                mapView.mapCenter = navigation.location
+            }
+        }
+
+        useEffect(mapView, lockMode, navigation.bearing) {
+            if (lockMode == MapLockMode.Compass) {
+                mapView.mapAzimuth = navigation.bearing.value
+            }
+        }
+
+        useEffect(zoomInButton, zoomOutButton) {
+            CustomUiUtils.setButtonState(zoomInButton, false)
+            CustomUiUtils.setButtonState(zoomOutButton, false)
+
+            zoomInButton.setOnClickListener {
+                mapView.zoom(2f)
+            }
+
+            zoomOutButton.setOnClickListener {
+                mapView.zoom(0.5f)
+            }
+        }
+
+        useEffect(navigationSheetView, destination, navigation) {
+            if (destination != null) {
+                navigationSheetView.updateNavigationSensorValues(navigation)
+                navigationSheetView.setTrueNorthOverride(true)
+                navigationSheetView.show(destination, true)
+            } else {
+                navigationSheetView.hide()
+            }
+        }
+
+        useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
+            mapView.setOnLongPressListener { location ->
+                if (manager.isMeasuringDistance()) {
+                    return@setOnLongPressListener
+                }
+                manager.setSelectedLocation(location)
+                inBackground {
+                    val elevation = Distance.meters(DEM.getElevation(location).elevation)
+
+                    onMain {
+                        Share.actions(
+                            this@MapFragment,
+                            formatter.formatLocation(location),
+                            listOf(
+                                ActionItem(getString(R.string.beacon), R.drawable.ic_location) {
+                                    val bundle = Bundle().apply {
+                                        putParcelable("initial_location", GeoUri(location))
+                                    }
+                                    navController.navigateWithAnimation(
+                                        R.id.placeBeaconFragment,
+                                        bundle
+                                    )
+                                    manager.setSelectedLocation(null)
+                                },
+                                ActionItem(getString(R.string.navigate), R.drawable.ic_beacon) {
+                                    navigator.navigateTo(
+                                        location,
+                                        formatter.formatLocation(location),
+                                        BeaconOwner.Maps
+                                    )
+                                    manager.setSelectedLocation(null)
+                                },
+                                ActionItem(getString(R.string.distance), R.drawable.ruler) {
+                                    startDistanceMeasurement(location, true)
+                                    manager.setSelectedLocation(null)
+                                },
+                            ),
+                            subtitle = getString(
+                                R.string.elevation_value,
+                                formatter.formatElevation(elevation)
+                            ),
+                        ) {
+                            manager.setSelectedLocation(null)
+                        }
+                    }
+                }
+            }
+        }
+
+        useEffect(mapDistanceSheetView, manager, prefs) {
+            manager.setOnDistanceChangedCallback { distance ->
+                val relative = distance
+                    .convertTo(prefs.baseDistanceUnits)
+                    .toRelativeDistance()
+                mapDistanceSheetView.setDistance(relative)
+            }
+        }
+
+        // Menu
+        useEffect(menuButton) {
+            CustomUiUtils.setButtonState(menuButton, false)
+        }
+
+        useClickCallback(menuButton, startDistanceMeasurement) {
+            val actions = listOf(
+                MapAction.Measure to getString(R.string.measure),
+                MapAction.CreatePath to getString(R.string.create_path),
+                MapAction.AdjustLayers to getString(R.string.layers),
+                MapAction.Trace to getString(R.string.trace)
+            )
+
+            Pickers.menu(
+                menuButton,
+                actions.map { action -> action.second }
+            ) { index ->
+                when (actions[index].first) {
+                    MapAction.Measure, MapAction.CreatePath -> startDistanceMeasurement(
+                        null,
+                        false
+                    )
+
+                    MapAction.AdjustLayers -> adjustLayers()
+                    MapAction.Trace -> setLockMode(MapLockMode.Trace)
+                }
+                true
+            }
+        }
+
+        // Disclaimer
+        useEffect(context) {
+            CustomUiUtils.disclaimer(
+                context,
+                getString(R.string.map),
+                getString(R.string.map_tool_disclaimer),
+                "pref_map_tool_disclaimer_shown"
+            )
+        }
+
+        // Sensor status
+        useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
+            val gps = navigation.gps ?: return@useEffect
+            val compass = navigation.compass ?: return@useEffect
+            sensorStatusBadges.setSensors(gps as ISatelliteGPS, compass)
+            sensorStatusBadges.setOnClickListener {
+                ImproveAccuracyAlerter(context).alert(sensorStatusBadges.getSensors())
+            }
+        }
+    }
+
+    private fun switchMapLockMode(
+        mode: MapLockMode,
+        map: MapView,
+        button: FloatingActionButton,
+        traceViews: List<View>,
+        screenLight: ScreenTorch,
+        context: android.content.Context
+    ) {
+        // Reset trace mode defaults
+        map.isInteractive = true
+        map.isZoomEnabled = true
+        traceViews.forEach { it.isVisible = true }
+        screenLight.off()
+        requireMainActivity().setBottomNavigationEnabled(true)
+
+        when (mode) {
+            MapLockMode.Location -> {
+                // Disable pan
+                map.isPanEnabled = false
+
+                // Zoom in and center on location
+                map.resolution = 2f
+
+                // Reset the rotation
+                map.mapAzimuth = 0f
+
+                // Show as locked
+                button.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(button, true)
+            }
+
+            MapLockMode.Compass -> {
+                // Disable pan
+                map.isPanEnabled = false
+
+                // Show as locked
+                button.setImageResource(R.drawable.ic_compass_icon)
+                CustomUiUtils.setButtonState(button, true)
+            }
+
+            MapLockMode.Free -> {
+                // Enable pan
+                map.isPanEnabled = true
+
+                // Reset the rotation
+                map.mapAzimuth = 0f
+
+                // Show as unlocked
+                button.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(button, false)
+            }
+
+            MapLockMode.Trace -> {
+                CustomUiUtils.disclaimer(
+                    context,
+                    getString(R.string.trace),
+                    getString(R.string.map_trace_instructions),
+                    "disclaimer_shown_map_trace",
+                    cancelText = null
+                )
+
+                // Disable all interaction
+                map.isInteractive = false
+                map.isZoomEnabled = false
+
+                // Show as locked
+                button.setImageResource(R.drawable.lock)
+                CustomUiUtils.setButtonState(button, true)
+
+                // Full brightness
+                screenLight.on()
+
+                // Hide buttons
+                traceViews.forEach { it.isVisible = false }
+
+                // Hide the bottom navigation
+                requireMainActivity().setBottomNavigationEnabled(false)
+            }
+        }
+    }
+
+    private fun getNextLockMode(mode: MapLockMode, hasCompass: Boolean): MapLockMode {
+        return when (mode) {
+            MapLockMode.Location -> {
+                if (hasCompass) {
+                    MapLockMode.Compass
+                } else {
+                    MapLockMode.Free
+                }
+            }
+
+            MapLockMode.Compass -> {
+                MapLockMode.Free
+            }
+
+            MapLockMode.Free -> {
+                MapLockMode.Location
+            }
+
+            MapLockMode.Trace -> {
+                MapLockMode.Free
+            }
+        }
+    }
+
+    private fun useSavedMapState(mapView: MapView) {
+        val prefs = useService<UserPreferences>()
+        val shouldSave = useMemo(prefs, resetOnResume) {
+            prefs.map.saveMapState
+        }
+        val key = "cache_map_state"
+        val (center, setCenter) = useCoordinatePreference("${key}_coordinate")
+        val (scale, setScale) = useFloatPreference("${key}_scale")
+
+        useEffect(mapView, shouldSave) {
+            if (!shouldSave) {
+                setCenter(null)
+                setScale(null)
+            } else {
+                // Intentionally not in the useEffect dependencies
+                center?.let { mapView.mapCenter = it }
+                scale?.let { mapView.resolutionPixels = it }
+            }
+
+            mapView.setOnScaleChangeListener {
+                if (shouldSave) {
+                    setScale(it)
+                }
+            }
+            mapView.setOnCenterChangeListener {
+                if (shouldSave) {
+                    setCenter(it)
+                }
+            }
+        }
+    }
+
+    private fun useLockMode(): Pair<MapLockMode, (MapLockMode) -> Unit> {
+        val prefs = useService<UserPreferences>()
+        val shouldSave = useMemo(prefs, resetOnResume) {
+            prefs.map.saveMapState
+        }
+        val key = "cache_map_state"
+        val (savedLockModeId, setSavedLockModeId) = useIntPreference("${key}_lock_mode")
+        val savedLockMode = useMemo(savedLockModeId) {
+            MapLockMode.entries.firstOrNull { it.id == savedLockModeId && it != MapLockMode.Trace }
+        }
+        val (lockMode, setLockMode) = useState(savedLockMode ?: MapLockMode.Free)
+        val exposedSetLockMode = useCallback(shouldSave) { newLockMode: MapLockMode ->
+            setLockMode(newLockMode)
+            if (shouldSave) {
+                setSavedLockModeId(newLockMode.id)
+            }
+        }
+
+        useEffect(shouldSave) {
+            if (!shouldSave) {
+                setSavedLockModeId(null)
+            }
+        }
+
+        return lockMode to exposedSetLockMode
+    }
+
+    private enum class MapLockMode(val id: Int) {
+        Location(1),
+        Compass(2),
+        Free(3),
+        Trace(4)
     }
 }
 
+private data class MapViews(
+    val root: View,
+    val map: MapView,
+    val mapAttribution: TextView,
+    val menuButton: FloatingActionButton,
+    val timeButton: FloatingActionButton,
+    val zoomInButton: FloatingActionButton,
+    val zoomOutButton: FloatingActionButton,
+    val lockButton: FloatingActionButton,
+    val sensorStatusBadges: SensorStatusBadgeView,
+    val navigationSheet: NavigationSheetView,
+    val distanceSheet: MapDistanceSheet,
+    val timeSheet: DateTimeSliderSheet
+)
+
+@Composable
+private fun MapHost(
+    views: MapViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createMapViews(context: Context): MapViews {
+    val root = ConstraintLayout(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val map = MapView(context).apply {
+        id = R.id.map
+        keepScreenOn = true
+    }
+    root.addView(
+        map,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.time_sheet
+        }
+    )
+
+    val attribution = TextView(context).apply {
+        id = R.id.map_attribution
+        setBackgroundColor(Color.parseColor("#88000000"))
+        linksClickable = true
+        setPadding(4.dp(context), 2.dp(context), 4.dp(context), 2.dp(context))
+        setTextColor(Color.WHITE)
+        textSize = 8f
+    }
+    root.addView(
+        attribution,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            endToEnd = R.id.map
+            bottomToBottom = R.id.map
+        }
+    )
+
+    val menuButton = smallMapFab(context, R.id.menu_btn, R.drawable.ic_menu_dots)
+    root.addView(
+        menuButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            endToEnd = R.id.map
+            topToTop = R.id.map
+            topMargin = 8.dp(context)
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val timeButton = smallMapFab(context, R.id.time_btn, R.drawable.ic_tool_clock).apply {
+        visibility = View.GONE
+    }
+    root.addView(
+        timeButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomToTop = R.id.zoom_in_btn
+            startToStart = R.id.zoom_in_btn
+        }
+    )
+
+    val zoomInButton = smallMapFab(context, R.id.zoom_in_btn, R.drawable.ic_add)
+    root.addView(
+        zoomInButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomToTop = R.id.zoom_out_btn
+            startToStart = R.id.zoom_out_btn
+        }
+    )
+
+    val zoomOutButton = smallMapFab(context, R.id.zoom_out_btn, R.drawable.ic_zoom_out)
+    root.addView(
+        zoomOutButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomToTop = R.id.lock_btn
+            startToStart = R.id.lock_btn
+            endToEnd = R.id.lock_btn
+            bottomMargin = 16.dp(context)
+        }
+    )
+
+    val lockButton = smallMapFab(context, R.id.lock_btn, R.drawable.satellite)
+    root.addView(
+        lockButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.time_sheet
+            marginEnd = 16.dp(context)
+            bottomMargin = 48.dp(context)
+        }
+    )
+
+    val sensorStatusBadges = SensorStatusBadgeView(context).apply {
+        id = R.id.sensor_status_badges
+        alpha = 0.6f
+    }
+    root.addView(
+        sensorStatusBadges,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.time_sheet
+            marginStart = 16.dp(context)
+            bottomMargin = 32.dp(context)
+        }
+    )
+
+    val navigationSheet = NavigationSheetView(context).apply {
+        id = R.id.navigation_sheet
+        visibility = View.GONE
+    }
+    root.addView(
+        navigationSheet,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.distance_sheet
+        }
+    )
+
+    val distanceSheet = MapDistanceSheet(context, null).apply {
+        id = R.id.distance_sheet
+        visibility = View.GONE
+    }
+    root.addView(
+        distanceSheet,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val timeSheet = DateTimeSliderSheet(context, null).apply {
+        id = R.id.time_sheet
+        visibility = View.GONE
+    }
+    root.addView(
+        timeSheet,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.navigation_sheet
+        }
+    )
+
+    return MapViews(
+        root = root,
+        map = map,
+        mapAttribution = attribution,
+        menuButton = menuButton,
+        timeButton = timeButton,
+        zoomInButton = zoomInButton,
+        zoomOutButton = zoomOutButton,
+        lockButton = lockButton,
+        sensorStatusBadges = sensorStatusBadges,
+        navigationSheet = navigationSheet,
+        distanceSheet = distanceSheet,
+        timeSheet = timeSheet
+    )
+}
+
+private fun smallMapFab(
+    context: Context,
+    id: Int,
+    drawable: Int
+): FloatingActionButton {
+    return FloatingActionButton(
+        context,
+        null,
+        com.google.android.material.R.attr.floatingActionButtonSmallStyle
+    ).apply {
+        this.id = id
+        alpha = 0.86f
+        isClickable = true
+        isFocusable = true
+        setImageResource(drawable)
+    }
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MapHostPreview() {
+    TrailSenseTheme {
+        MapHost(
+            views = createMapViews(LocalContext.current)
+        )
+    }
+}

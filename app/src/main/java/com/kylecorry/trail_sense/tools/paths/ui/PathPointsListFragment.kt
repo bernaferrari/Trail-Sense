@@ -1,70 +1,149 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.kylecorry.andromeda.list.ListView
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.databinding.ListItemWaypointBinding
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
-/**
- * Path points bottom sheet truncated to expressive shell (final push).
- * BoundBottomSheet + fragment_path_points_list.xml + list_item_waypoint + WaypointListItem deleted.
- * Callers (was only PathOverview) simplified by truncate. For legacy, shows Compose shell.
- */
-class PathPointsListFragment : TrailSenseComposeFragment() {
+class PathPointsListFragment : BottomSheetDialogFragment() {
 
-    @Composable
-    override fun FragmentContent() {
-        PathPointsListContent()
+    private var points: List<PathPoint> = emptyList()
+    private var list: ListView<PathPoint>? = null
+    private var pathPointViews: PathPointViews? = null
+    private val binding: PathPointViews
+        get() = pathPointViews ?: error("Path point views are not ready")
+    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    var onCreateBeaconListener: (point: PathPoint) -> Unit = {}
+    var onDeletePointListener: (point: PathPoint) -> Unit = {}
+    var onNavigateToPointListener: (point: PathPoint) -> Unit = {}
+    var onViewPointListener: (point: PathPoint) -> Unit = {}
+
+    fun setPoints(points: List<PathPoint>) {
+        list?.setData(points)
+        this.points = points
     }
-}
 
-@Composable
-fun Fragment.PathPointsListContent(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(TrailSenseSpacing.xxl),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TrailSenseEmptyState(
-                icon = Icons.Default.List,
-                title = "Path Points",
-                description = "Waypoint list + actions (beacon, delete, nav). Full Compose list in progress; legacy bottom sheet path removed with XML."
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "PathPoints Shell Preview")
-@Composable
-private fun PathPointsListContentPreview() {
-    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
-        Box(Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                TrailSenseEmptyState(
-                    icon = Icons.Default.List,
-                    title = "Waypoints",
-                    description = "Expressive shell (XML deleted)."
-                )
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createPathPointViews(requireContext())
+        pathPointViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    PathPointHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        list = null
+        pathPointViews = null
+        super.onDestroyView()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        list = ListView(binding.pathPointsList, R.layout.list_item_waypoint) { view, point ->
+            val binding = ListItemWaypointBinding.bind(view)
+            drawWaypointListItem(binding, point)
+        }
+        list?.addLineSeparator()
+        list?.setData(points)
+    }
+
+    private fun drawWaypointListItem(itemBinding: ListItemWaypointBinding, item: PathPoint) {
+        val itemStrategy = WaypointListItem(
+            requireContext(),
+            formatService,
+            {
+                onCreateBeaconListener(it)
+                dismiss()
+            },
+            { onDeletePointListener(it) },
+            {
+                onNavigateToPointListener(it)
+                dismiss()
+            },
+            {
+                onViewPointListener(it)
+                dismiss()
+            }
+        )
+
+        itemStrategy.display(itemBinding, item)
+    }
+}
+
+private data class PathPointViews(
+    val root: View,
+    val pathPointsList: RecyclerView
+)
+
+@Composable
+private fun PathPointHost(
+    views: PathPointViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createPathPointViews(context: Context): PathPointViews {
+    val root = FrameLayout(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val list = RecyclerView(context).apply {
+        id = R.id.path_points_list
+    }
+    root.addView(
+        list,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+
+    return PathPointViews(root, list)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PathPointHostPreview() {
+    TrailSenseTheme {
+        PathPointHost(
+            views = createPathPointViews(LocalContext.current)
+        )
     }
 }
