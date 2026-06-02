@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
-import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -8,20 +7,32 @@ import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.qr.QR
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.views.CameraView
@@ -30,15 +41,11 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 class ScanQRBottomSheet(
     private val title: String,
     private val onTextScanned: (text: String?) -> Boolean
-) :
-    BottomSheetDialogFragment() {
+) : BottomSheetDialogFragment() {
 
     private val cameraSize = Size(200, 200)
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
-    private var qrImportViews: QRImportViews? = null
-    private val binding: QRImportViews?
-        get() = qrImportViews
-
+    private var camera: CameraView? = null
     private var lastMessage: String? = null
 
     override fun onCreateView(
@@ -46,14 +53,23 @@ class ScanQRBottomSheet(
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createQRImportViews(requireContext())
-        qrImportViews = views
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    QRImportHost(
-                        views = views,
+                    QRImportContent(
+                        title = title,
+                        onClose = {
+                            onTextScanned(null)
+                            dismiss()
+                        },
+                        onCameraReady = {
+                            camera = it
+                            it.clipToOutline = true
+                            it.start(cameraSize) { bitmap ->
+                                onCameraUpdate(bitmap)
+                            }
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -61,30 +77,14 @@ class ScanQRBottomSheet(
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val views = binding ?: return
-        views.camera.clipToOutline = true
-        views.camera.start(cameraSize) {
-            onCameraUpdate(it)
-        }
-
-        views.toolTitle.title.text = title
-
-        views.toolTitle.rightButton.setOnClickListener {
-            onTextScanned(null)
-            dismiss()
-        }
-    }
-
     override fun onDestroyView() {
-        binding?.camera?.stop()
-        qrImportViews = null
+        camera?.stop()
+        camera = null
         super.onDestroyView()
     }
 
     private fun onCameraUpdate(bitmap: Bitmap) {
-        if (binding == null) {
+        if (camera == null) {
             bitmap.recycle()
             return
         }
@@ -104,77 +104,69 @@ class ScanQRBottomSheet(
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        binding?.camera?.stop()
+        camera?.stop()
         haptics.off()
     }
-
 }
-
-private data class QRImportViews(
-    val root: View,
-    val toolTitle: Toolbar,
-    val camera: CameraView
-)
 
 @Composable
-private fun QRImportHost(
-    views: QRImportViews,
+private fun QRImportContent(
+    title: String,
+    onClose: () -> Unit,
+    onCameraReady: (CameraView) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Surface(
         modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createQRImportViews(context: Context): QRImportViews {
-    val root = ConstraintLayout(context).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val title = Toolbar(context, null).apply {
-        id = R.id.tool_title
-        this.title.text = context.getString(R.string.beacon_qr_import_instructions)
-        subtitle.isVisible = false
-        rightButton.setImageResource(R.drawable.ic_cancel)
-        rightButton.isVisible = true
-    }
-    root.addView(
-        title,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+                    .testTag("tool_title"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(android.R.string.cancel)
+                    )
+                }
+            }
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .testTag("camera"),
+                factory = { context ->
+                    CameraView(context, null).apply {
+                        id = R.id.camera
+                        setBackgroundResource(R.drawable.rounded_rectangle)
+                        setFlipEnabled(true)
+                        onCameraReady(this)
+                    }
+                }
+            )
         }
-    )
-
-    val camera = CameraView(context, null).apply {
-        id = R.id.camera
-        setBackgroundResource(R.drawable.rounded_rectangle)
-        setFlipEnabled(true)
     }
-    root.addView(
-        camera,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.tool_title
-            dimensionRatio = "H,1:1"
-        }
-    )
-
-    return QRImportViews(root, title, camera)
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun QRImportHostPreview() {
+private fun QRImportContentPreview() {
     TrailSenseTheme {
-        QRImportHost(
-            views = createQRImportViews(LocalContext.current)
+        QRImportContent(
+            title = "Scan QR",
+            onClose = {},
+            onCameraReady = {}
         )
     }
 }
