@@ -1,34 +1,52 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.content.Context
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.andromeda.views.chart.data.AreaChartLayer
+import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Reading
@@ -52,9 +70,8 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
     private val weatherRepo by lazy { WeatherRepo.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private var altitudeViews: AltitudeViews? = null
-    private val binding: AltitudeViews?
-        get() = altitudeViews
+    private var chart: Chart? = null
+    private var updateHistoryLengthText: ((String) -> Unit)? = null
     private var units = DistanceUnits.Meters
     private var backtrackReadings = listOf<Reading<Float>>()
     private var weatherReadings = listOf<Reading<Float>>()
@@ -80,14 +97,28 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createAltitudeViews(requireContext())
-        altitudeViews = views
+        units = prefs.baseDistanceUnits
+
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    AltitudeHost(
-                        views = views,
+                    var historyLengthText by remember { mutableStateOf(getHistoryLengthText()) }
+                    DisposableEffect(Unit) {
+                        updateHistoryLengthText = { historyLengthText = it }
+                        onDispose {
+                            updateHistoryLengthText = null
+                            chart = null
+                        }
+                    }
+                    AltitudeSheetContent(
+                        historyLengthText = historyLengthText,
+                        onHistoryLengthClick = ::pickHistoryDuration,
+                        onChartReady = {
+                            chart = it
+                            configureChart(it)
+                            updateChart()
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -96,28 +127,14 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        altitudeViews = null
+        chart = null
+        updateHistoryLengthText = null
         super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val views = binding ?: return
         units = prefs.baseDistanceUnits
-        views.chart.configureYAxis(
-            labelCount = 5,
-            drawGridLines = true
-        )
-
-        views.chart.configureXAxis(
-            labelCount = 7,
-            drawGridLines = true,
-            labelFormatter = HourChartLabelFormatter(requireContext()) { startTime }
-        )
-
-        views.chart.emptyText = requireContext().getString(R.string.no_data)
-
-        views.chart.plot(elevationLine)
 
         observe(getBacktrackReadings()) {
             backtrackReadings = it
@@ -127,23 +144,39 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
             weatherReadings = it
             updateChart()
         }
+    }
 
-        views.altitudeHistoryLength.setOnClickListener {
-            CustomUiUtils.pickDuration(
-                requireContext(),
-                historyDuration,
-                getString(R.string.elevation_history_length)
-            ) {
-                if (it != null) {
-                    historyDuration = it
-                    updateChart()
-                }
+    private fun configureChart(chart: Chart) {
+        chart.configureYAxis(
+            labelCount = 5,
+            drawGridLines = true
+        )
+
+        chart.configureXAxis(
+            labelCount = 7,
+            drawGridLines = true,
+            labelFormatter = HourChartLabelFormatter(requireContext()) { startTime }
+        )
+
+        chart.emptyText = requireContext().getString(R.string.no_data)
+        chart.plot(elevationLine)
+    }
+
+    private fun pickHistoryDuration() {
+        CustomUiUtils.pickDuration(
+            requireContext(),
+            historyDuration,
+            getString(R.string.elevation_history_length)
+        ) {
+            if (it != null) {
+                historyDuration = it
+                updateChart()
             }
         }
     }
 
     private fun updateChart(readings: List<Reading<Float>>) {
-        val views = binding ?: return
+        val chart = chart ?: return
 
         startTime = readings.firstOrNull()?.time ?: Instant.now()
 
@@ -154,19 +187,16 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
         val margin = Distance.meters(10f).convertTo(units).value
         val minRange = Distance.meters(100f).convertTo(units).value
         val range = Chart.getYRange(data, margin, minRange)
-        views.chart.configureYAxis(
+        chart.configureYAxis(
             minimum = range.start,
             maximum = range.end,
             labelCount = 5,
             drawGridLines = true
         )
 
-
         elevationLine.data = data
         elevationLine.fillTo = range.start
-
-        views.altitudeHistoryLength.text =
-            getString(R.string.last_duration, formatService.formatDuration(historyDuration))
+        updateHistoryLengthText?.invoke(getHistoryLengthText())
     }
 
     private fun updateChart() {
@@ -181,7 +211,6 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
                             ) < maxFilterHistoryDuration
                         }
 
-
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
                 onIO {
@@ -195,6 +224,10 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
 
             onMain { updateChart(filteredReadings) }
         }
+    }
+
+    private fun getHistoryLengthText(): String {
+        return getString(R.string.last_duration, formatService.formatDuration(historyDuration))
     }
 
     private fun getWeatherReadings(): LiveData<List<Reading<Float>>> {
@@ -213,89 +246,72 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
             Instant.now().minus(maxFilterHistoryDuration)
         )
     }
-
 }
-
-private data class AltitudeViews(
-    val root: View,
-    val altitudeHistoryLength: TextView,
-    val chart: Chart
-)
 
 @Composable
-private fun AltitudeHost(
-    views: AltitudeViews,
+private fun AltitudeSheetContent(
+    historyLengthText: String,
+    onHistoryLengthClick: () -> Unit,
+    onChartReady: (Chart) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Surface(
         modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createAltitudeViews(context: Context): AltitudeViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val title = TextView(context).apply {
-        text = context.getString(R.string.elevation_history)
-        textSize = 18f
-        typeface = Typeface.DEFAULT_BOLD
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val historyLength = TextView(context).apply {
-        id = R.id.altitude_history_length
-        gravity = android.view.Gravity.CENTER_VERTICAL
-        setCompoundDrawables(24.dp(context), right = R.drawable.ic_drop_down)
-    }
-    root.addView(
-        historyLength,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = 8.dp(context)
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.elevation_history),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Row(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .clickable(onClick = onHistoryLengthClick)
+                    .testTag("altitude_history_length"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = historyLengthText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .height(dimensionResource(R.dimen.chart_height))
+                    .testTag("chart"),
+                factory = { context ->
+                    Chart(context).apply {
+                        id = R.id.chart
+                        onChartReady(this)
+                    }
+                }
+            )
         }
-    )
-
-    val chart = Chart(context).apply {
-        id = R.id.chart
     }
-    root.addView(
-        chart,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            context.resources.getDimensionPixelSize(R.dimen.chart_height)
-        ).apply {
-            topMargin = 16.dp(context)
-        }
-    )
-
-    return AltitudeViews(root, historyLength, chart)
-}
-
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun AltitudeHostPreview() {
+private fun AltitudeSheetContentPreview() {
     TrailSenseTheme {
-        AltitudeHost(
-            views = createAltitudeViews(LocalContext.current)
+        AltitudeSheetContent(
+            historyLengthText = "Last 24 hours",
+            onHistoryLengthClick = {},
+            onChartReady = {}
         )
     }
 }
