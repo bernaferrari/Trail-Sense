@@ -143,7 +143,7 @@ private fun ARLayersBottomSheetContent(
                     IconButton(onClick = onClose) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close)
+                            contentDescription = stringResource(android.R.string.cancel)
                         )
                     }
                 }
