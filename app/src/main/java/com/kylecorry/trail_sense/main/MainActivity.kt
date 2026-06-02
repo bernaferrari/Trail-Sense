@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -16,7 +17,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.isVisible
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.commitNow
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -25,6 +31,7 @@ import androidx.core.view.size
 import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.textfield.TextInputEditText
 import com.kylecorry.andromeda.alerts.Alerts
@@ -33,10 +40,8 @@ import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.AndromedaActivity
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ActivityMainBinding
 import com.kylecorry.trail_sense.main.errors.ExceptionHandler
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
@@ -63,8 +68,8 @@ class MainActivity : AndromedaActivity() {
     var isRunning = false
         private set
 
-    private var _binding: ActivityMainBinding? = null
-    private val binding: ActivityMainBinding
+    private var _binding: MainActivityViews? = null
+    private val binding: MainActivityViews
         get() = _binding!!
 
     private val navController: NavController?
@@ -120,8 +125,9 @@ class MainActivity : AndromedaActivity() {
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
-        _binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(_binding?.root)
+        _binding = createMainActivityViews(this)
+        setContentView(binding.root)
+        setupNavHost()
 
         // Handle black theme
         if (isBlackTheme) {
@@ -145,6 +151,18 @@ class MainActivity : AndromedaActivity() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    private fun setupNavHost() {
+        if (supportFragmentManager.findFragmentById(R.id.fragment_holder) != null) {
+            return
+        }
+
+        val navHost = NavHostFragment()
+        supportFragmentManager.commitNow {
+            replace(R.id.fragment_holder, navHost)
+            setPrimaryNavigationFragment(navHost)
+        }
     }
 
     /**
@@ -406,7 +424,7 @@ class MainActivity : AndromedaActivity() {
 
     private fun getVolumeAction(): VolumeAction? {
         val navigationId = navController?.currentDestination?.id
-        val fragment = getFragment() as? AndromedaFragment ?: return null
+        val fragment = getFragment() ?: return null
         val tools = Tools.getTools(this)
 
         // Sort order = High priority active, open tool, normal priority active
@@ -609,4 +627,115 @@ class MainActivity : AndromedaActivity() {
         }
     }
 
+}
+
+private data class MainActivityViews(
+    val root: CoordinatorLayout,
+    val colorFilter: ColorFilterConstraintLayout,
+    val errorBanner: ErrorBannerView,
+    val fragmentHolder: FragmentContainerView,
+    val quickActionsSheet: com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheet,
+    val bottomNavigation: CustomBottomNavigationView
+)
+
+private fun createMainActivityViews(context: Context): MainActivityViews {
+    val root = CoordinatorLayout(context).apply {
+        id = R.id.coordinator
+        layoutParams = ViewGroup.MarginLayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val colorFilter = ColorFilterConstraintLayout(context, null).apply {
+        id = R.id.color_filter
+    }
+    root.addView(
+        colorFilter,
+        CoordinatorLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+
+    val errorBanner = ErrorBannerView(context, null).apply {
+        id = R.id.error_banner
+        isVisible = false
+    }
+    colorFilter.addView(
+        errorBanner,
+        LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topToTop = LayoutParams.PARENT_ID
+            startToStart = LayoutParams.PARENT_ID
+            endToEnd = LayoutParams.PARENT_ID
+        }
+    )
+
+    val bottomNavigation = CustomBottomNavigationView(context, null).apply {
+        id = R.id.bottom_navigation
+        itemIconTintList = AppCompatResources.getColorStateList(context, R.drawable.selector)
+        itemTextColor = ColorStateList.valueOf(
+            Resources.getAndroidColorAttr(
+                context,
+                com.google.android.material.R.attr.colorOnSurface
+            )
+        )
+    }
+    colorFilter.addView(
+        bottomNavigation,
+        LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomToBottom = LayoutParams.PARENT_ID
+            startToStart = LayoutParams.PARENT_ID
+            endToEnd = LayoutParams.PARENT_ID
+        }
+    )
+
+    val fragmentHolder = FragmentContainerView(context).apply {
+        id = R.id.fragment_holder
+    }
+    colorFilter.addView(
+        fragmentHolder,
+        LayoutParams(
+            0,
+            0
+        ).apply {
+            topToBottom = R.id.error_banner
+            bottomToTop = R.id.bottom_navigation
+            startToStart = LayoutParams.PARENT_ID
+            endToEnd = LayoutParams.PARENT_ID
+        }
+    )
+
+    val quickActionsSheet = com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheet(
+        context,
+        null
+    ).apply {
+        id = R.id.quick_actions_sheet
+    }
+    colorFilter.addView(
+        quickActionsSheet,
+        LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            bottomToTop = R.id.bottom_navigation
+            startToStart = LayoutParams.PARENT_ID
+            endToEnd = LayoutParams.PARENT_ID
+        }
+    )
+
+    return MainActivityViews(
+        root,
+        colorFilter,
+        errorBanner,
+        fragmentHolder,
+        quickActionsSheet,
+        bottomNavigation
+    )
 }
