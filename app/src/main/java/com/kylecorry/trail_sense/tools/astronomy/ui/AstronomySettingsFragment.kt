@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
@@ -431,6 +432,20 @@ class AstronomySettingsFragment : AndromedaFragment() {
             AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_DISABLED,
             ::onSunriseAlertsChanged
         )
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
+        val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
+
+        cache.onChange.asLiveData().observe(viewLifecycleOwner) {
+            if (it == sunsetAlertTimeKey) {
+                restartSunsetAlerts()
+            } else if (it == sunriseAlertTimeKey) {
+                restartSunriseAlerts()
+            }
+        }
     }
 
     override fun onPause() {
