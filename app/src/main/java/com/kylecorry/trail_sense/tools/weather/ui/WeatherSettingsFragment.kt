@@ -31,6 +31,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
+import com.kylecorry.trail_sense.settings.ui.SettingsInfoRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
@@ -507,10 +508,9 @@ class WeatherSettingsFragment : Fragment() {
                             }
                             if (isDebug()) {
                                 item("debug_timing") {
-                                    SettingsActionRow(
+                                    SettingsInfoRow(
                                         label = "Timing (Debug)",
                                         summary = debugTimingSummary,
-                                        onClick = {},
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
                                 }

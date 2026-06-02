@@ -131,6 +131,22 @@ fun SettingsActionRow(
 }
 
 @Composable
+fun SettingsInfoRow(
+    label: String,
+    modifier: Modifier = Modifier,
+    summary: String? = null
+) {
+    TrailSenseListItem(
+        title = label,
+        subtitle = summary,
+        onClick = null,
+        animateEntrance = false,
+        modifier = modifier
+    )
+    TrailSenseDivider()
+}
+
+@Composable
 fun SettingsPickerRow(
     label: String,
     selected: String,
