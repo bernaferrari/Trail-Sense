@@ -3,16 +3,16 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.IdRes
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
 data class ToolDiagnosticAction(
     val name: String,
-    val action: (fragment: AndromedaFragment) -> Unit
+    val action: (fragment: Fragment) -> Unit
 ) {
     companion object {
         fun navigate(

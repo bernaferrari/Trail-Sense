@@ -8,22 +8,21 @@ import com.kylecorry.andromeda.core.math.MathUtils
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.ParallelCoroutineRunner
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapFile
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapType
+import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 import com.kylecorry.trail_sense.tools.offline_maps.domain.isExternal
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.persistence.PhotoMapEntity
 import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupEntity
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.mapsforge.MapsforgeAdapter
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.persistence.TrailMapEntity
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolEventEmitter
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.MapFileTypeUtils
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.persistence.VectorMapEntity
+import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import java.util.UUID
 
 class MapRepo private constructor(context: Context) {
@@ -31,6 +30,7 @@ class MapRepo private constructor(context: Context) {
     private val photoMapDao = AppDatabase.getInstance(context).photoMapDao()
     private val mapGroupDao = AppDatabase.getInstance(context).mapGroupDao()
     private val files = FileSubsystem.getInstance(context)
+    private val tileCache = getAppService<PersistentTileCache>()
 
     suspend fun getPhotoMaps(): List<PhotoMap> = onIO {
         val photoMaps = photoMapDao.getAll()
@@ -59,7 +59,7 @@ class MapRepo private constructor(context: Context) {
             tryOrNothing { files.delete(it.path) }
         }
         photoMapDao.delete(PhotoMapEntity.from(map))
-        emit(OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_DELETED, map.id, OfflineMapType.Photo)
+        invalidatePhotoMapCache(map.id)
     }
 
     suspend fun delete(map: TrailMap) = onIO {
@@ -70,8 +70,7 @@ class MapRepo private constructor(context: Context) {
                 tryOrNothing { files.delete(it.path) }
             }
         }
-        offlineMapFileDao.delete(TrailMapEntity.from(map))
-        emit(OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_DELETED, map.id, OfflineMapType.Trail)
+        offlineMapFileDao.delete(VectorMapEntity.from(map))
     }
 
     suspend fun copyToAppStorage(map: TrailMap): TrailMap? = onIO {
@@ -120,22 +119,12 @@ class MapRepo private constructor(context: Context) {
 
     suspend fun add(map: PhotoMap): Long = onIO {
         val newId = photoMapDao.upsert(PhotoMapEntity.from(map)).getUpsertedId(map.id)
-        emit(
-            if (map.id == 0L) OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_ADDED else OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_CHANGED,
-            newId,
-            OfflineMapType.Photo
-        )
+        invalidatePhotoMapCache(newId)
         newId
     }
 
-    suspend fun add(file: TrailMap): Long = onIO {
-        val newId = offlineMapFileDao.upsert(TrailMapEntity.from(file)).getUpsertedId(file.id)
-        emit(
-            if (file.id == 0L) OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_ADDED else OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_CHANGED,
-            newId,
-            OfflineMapType.Trail
-        )
-        newId
+    suspend fun add(file: VectorMap): Long = onIO {
+        offlineMapFileDao.upsert(VectorMapEntity.from(file)).getUpsertedId(file.id)
     }
 
     suspend fun getPhotoMaps(parentId: Long?): List<PhotoMap> = onIO {
@@ -158,6 +147,20 @@ class MapRepo private constructor(context: Context) {
             newMap.copy(isAvailable = newMap.files.all { files.canRead(it.path) })
         } else {
             newMap
+        }
+    }
+
+    private suspend fun invalidatePhotoMapCache(mapId: Long) {
+        val cacheKeys = listOf(
+            "${PhotoMapTileSource.SOURCE_ID}-true-$mapId",
+            "${PhotoMapTileSource.SOURCE_ID}-false-$mapId",
+            "${PhotoMapTileSource.SOURCE_ID}-null-$mapId",
+            "${PhotoMapTileSource.SOURCE_ID}-true",
+            "${PhotoMapTileSource.SOURCE_ID}-false",
+            "${PhotoMapTileSource.SOURCE_ID}-null",
+        )
+        cacheKeys.forEach {
+            tileCache.invalidate(it)
         }
     }
 
@@ -199,14 +202,6 @@ class MapRepo private constructor(context: Context) {
                 )
             )
         )
-    }
-
-    private fun emit(broadcastId: String, mapId: Long, mapType: OfflineMapType) {
-        val data = EventData().apply {
-            putLong(OfflineMapsToolRegistration.BROADCAST_PARAM_OFFLINE_MAP_ID, mapId)
-            putLong(OfflineMapsToolRegistration.BROADCAST_PARAM_OFFLINE_MAP_TYPE, mapType.id)
-        }
-        ToolEventEmitter.broadcast(broadcastId, data)
     }
 
     companion object {

@@ -4,26 +4,57 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.material.tabs.TabLayoutMediator
-import com.kylecorry.andromeda.fragments.BoundFragment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentTabsBinding
-import com.kylecorry.trail_sense.shared.views.CustomViewPagerAdapter
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class FragmentToolConvert : BoundFragment<FragmentTabsBinding>() {
+class FragmentToolConvert : Fragment() {
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    ConverterTabs(
+                        pages = getPages(),
+                        names = getPageNames()
+                    )
+                }
+            }
+        }
+    }
 
-        val convertTools = listOf(
-            FragmentToolCoordinateConvert(),
-            FragmentDistanceConverter(),
-            FragmentTemperatureConverter(),
-            FragmentVolumeConverter(),
-            FragmentWeightConverter(),
-            FragmentTimeConverter()
+    private fun getPages(): List<ConverterPage> {
+        val context = requireContext()
+        return listOf(
+            FragmentToolCoordinateConvert(context),
+            FragmentDistanceConverter(context),
+            FragmentTemperatureConverter(context),
+            FragmentVolumeConverter(context),
+            FragmentWeightConverter(context),
+            FragmentTimeConverter(context)
         )
-        val convertNames = listOf(
+    }
+
+    private fun getPageNames(): List<String> {
+        return listOf(
             getString(R.string.coordinates_tab),
             getString(R.string.distance),
             getString(R.string.temperature),
@@ -31,17 +62,27 @@ class FragmentToolConvert : BoundFragment<FragmentTabsBinding>() {
             getString(R.string.weight),
             getString(R.string.time)
         )
-        binding.viewpager.adapter = CustomViewPagerAdapter(this, convertTools)
-
-        TabLayoutMediator(binding.tabs, binding.viewpager) { tab, position ->
-            tab.text = convertNames[position]
-        }.attach()
     }
+}
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentTabsBinding {
-        return FragmentTabsBinding.inflate(layoutInflater, container, false)
+@Composable
+fun ConverterTabs(
+    pages: List<ConverterPage>,
+    names: List<String>,
+    modifier: Modifier = Modifier
+) {
+    var selectedIndex by remember { mutableIntStateOf(0) }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        PrimaryScrollableTabRow(selectedTabIndex = selectedIndex) {
+            names.forEachIndexed { index, name ->
+                Tab(
+                    selected = selectedIndex == index,
+                    onClick = { selectedIndex = index },
+                    text = { Text(name) }
+                )
+            }
+        }
+        pages[selectedIndex].Content()
     }
 }

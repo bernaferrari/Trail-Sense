@@ -22,9 +22,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
-import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
@@ -96,7 +94,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         hasText("Test Group 2")
 
         // Export current group via toolbar menu
-        click(toolbarButton(R.id.paths_title, Side.Right))
+        click(R.id.paths_menu_btn)
         click(string(R.string.export))
         clickOk()
         optional { hasText("trail-sense-") }
@@ -173,11 +171,11 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
     }
 
     private fun changeSort() {
-        click(toolbarButton(R.id.paths_title, Side.Right))
+        click(R.id.paths_menu_btn)
         click(string(R.string.sort_by, string(R.string.most_recent)))
         click(string(R.string.name))
         clickOk()
-        click(toolbarButton(R.id.paths_title, Side.Right))
+        click(R.id.paths_menu_btn)
         hasText(string(R.string.sort_by, string(R.string.name)))
         back(false)
     }

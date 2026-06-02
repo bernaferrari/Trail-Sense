@@ -1,231 +1,297 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import androidx.compose.foundation.layout.Arrangement
+import android.os.Bundle
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.GeoUri
+import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.views.list.AndromedaListView
+import com.kylecorry.andromeda.views.list.ListItem
+import com.kylecorry.andromeda.views.list.ListItemTag
+import com.kylecorry.andromeda.views.list.ListMenuItem
+import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
+import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/**
- * Pure Compose expressive Sighting list screen for real Nav3Host entries (and legacy fragment compat).
- * Promotes the Field Guide family to 100% Compose + design system. Demo data for quick visible win;
- * swap to FieldGuideRepo + real Sighting loading + full actions (map, photo, edit) in next wave.
- * Heavy use of TrailSense* (SearchBar, ListItem, Card, Chip, SectionHeader, EmptyState, Spacing).
- * testTags + preview per SKILL.md.
- */
-@Composable
-fun SightingListScreen(
-    pageId: Long,
-    onCreateSighting: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    var showHarvestedOnly by remember { mutableStateOf(false) }
+class SightingListFragment : Fragment() {
 
-    // Demo sightings (expressive placeholder — replace with live repo query + Sighting domain in follow-up)
-    val demoSightings = remember {
-        listOf(
-            DemoSighting(1L, "Mossy Oak", Instant.now().minusSeconds(86400 * 2), "47.6 N, 122.3 W", harvested = true, notes = "Great find near stream"),
-            DemoSighting(2L, "Chanterelle Cluster", Instant.now().minusSeconds(86400 * 5), "47.8 N, 122.1 W", harvested = false, notes = "Under douglas fir"),
-            DemoSighting(3L, "Granite Outcrop", Instant.now().minusSeconds(86400 * 12), "48.1 N, 121.9 W", harvested = false, notes = "Interesting vein"),
-        )
-    }
+    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(requireContext()) }
+    private val pageId by lazy { requireArguments().getLong("page_id") }
 
-    val filtered = remember(searchQuery, showHarvestedOnly, demoSightings) {
-        demoSightings.filter { s ->
-            val matchesSearch = searchQuery.isBlank() ||
-                s.name.contains(searchQuery, ignoreCase = true) ||
-                (s.notes?.contains(searchQuery, ignoreCase = true) == true) ||
-                s.location.contains(searchQuery, ignoreCase = true)
-            val matchesFilter = !showHarvestedOnly || s.harvested
-            matchesSearch && matchesFilter
-        }
-    }
+    private var page by mutableStateOf<FieldGuidePage?>(null)
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TrailSenseSearchBar(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = stringResource(R.string.search),
-                modifier = Modifier
-                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
-                    .testTag("sighting_search")
-            )
-
-            // Filter row — expressive chips (harvested toggle)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-            ) {
-                TrailSenseChip(
-                    text = "Harvested only",
-                    selected = showHarvestedOnly,
-                    onClick = { showHarvestedOnly = !showHarvestedOnly },
-                    modifier = Modifier.testTag("filter_harvested")
-                )
-                if (pageId != 0L) {
-                    Text(
-                        "Page #$pageId",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.align(Alignment.CenterVertically)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    SightingListScreen(
+                        items = getSightingListItems(),
+                        onCreate = ::createSighting
                     )
                 }
             }
+        }
+    }
 
-            if (filtered.isEmpty()) {
-                TrailSenseEmptyState(
-                    title = "No sightings",
-                    message = if (searchQuery.isNotBlank() || showHarvestedOnly) "Try adjusting your search or filters." else "Record your first sighting for this page using the + button.",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(TrailSenseSpacing.lg)
-                        .testTag("empty_state")
-                )
-            } else {
-                TrailSenseSectionHeader(
-                    title = "Sightings (${filtered.size})",
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.xs)
-                )
+    override fun onResume() {
+        super.onResume()
+        loadPage()
+    }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        horizontal = TrailSenseSpacing.lg,
-                        vertical = TrailSenseSpacing.sm
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    items(filtered, key = { it.id }) { sighting ->
-                        TrailSenseListItem(
-                            title = sighting.name,
-                            subtitle = formatSightingMeta(sighting),
-                            icon = Icons.Default.LocationOn,
-                            modifier = Modifier.testTag("sighting_row_${sighting.id}"),
-                            onClick = {
-                                // Future: navigate to sighting detail or edit (real Nav3)
-                            },
-                            trailing = {
-                                if (sighting.harvested) {
-                                    TrailSenseChip(text = "Harvested", selected = true, onClick = {})
-                                }
-                            }
+    private fun loadPage() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            page = withContext(Dispatchers.IO) {
+                repo.getPage(pageId)
+            }
+        }
+    }
+
+    private fun getSightingListItems(): List<ListItem> {
+        val currentPage = page
+        val sightings = currentPage?.sightings?.sortedByDescending { it.time } ?: emptyList()
+        return sightings.map {
+            ListItem(
+                it.id,
+                it.time?.let { time ->
+                    formatter.formatRelativeDateTime(
+                        time.toZonedDateTime(),
+                        includeSeconds = false
+                    )
+                } ?: getString(R.string.sighting),
+                it.notes,
+                tags = listOfNotNull(
+                    if (it.harvested == true) {
+                        ListItemTag(
+                            getString(R.string.harvested),
+                            null,
+                            Resources.androidTextColorSecondary(requireContext())
                         )
-                        if (sighting.notes?.isNotBlank() == true) {
-                            TrailSenseCard(
-                                modifier = Modifier
-                                    .padding(start = 56.dp, end = 0.dp, top = 0.dp, bottom = TrailSenseSpacing.sm)
-                                    .testTag("sighting_notes_${sighting.id}")
-                            ) {
-                                Text(
-                                    sighting.notes,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(TrailSenseSpacing.md)
-                                )
-                            }
-                        }
+                    } else {
+                        null
                     }
+                ),
+                menu = listOfNotNull(
+                    if (it.location != null) ListMenuItem(getString(R.string.navigate)) {
+                        navigateToSighting(it)
+                    } else null,
+                    if (it.location != null) ListMenuItem(getString(R.string.create_beacon)) {
+                        createBeacon(it)
+                    } else null,
+                    ListMenuItem(getString(R.string.edit)) {
+                        editSighting(it)
+                    },
+                    ListMenuItem(getString(R.string.delete)) {
+                        deleteSighting(it)
+                    }
+                )
+            ) {
+                editSighting(it)
+            }
+        }
+    }
+
+    private fun createSighting() {
+        findNavController().navigateWithAnimation(
+            R.id.createFieldGuideSightingFragment,
+            Bundle().apply {
+                putLong("page_id", pageId)
+            }
+        )
+    }
+
+    private fun editSighting(sighting: Sighting) {
+        findNavController().navigateWithAnimation(
+            R.id.createFieldGuideSightingFragment,
+            Bundle().apply {
+                putLong("page_id", pageId)
+                putLong("sighting_id", sighting.id)
+            }
+        )
+    }
+
+    private fun deleteSighting(sighting: Sighting) {
+        Alerts.dialog(
+            requireContext(),
+            getString(R.string.delete),
+            sighting.time?.let { time ->
+                formatter.formatRelativeDateTime(
+                    time.toZonedDateTime(),
+                    includeSeconds = false
+                )
+            } ?: getString(R.string.sighting)
+        ) { cancelled ->
+            if (!cancelled) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        repo.deleteSighting(sighting)
+                    }
+                    loadPage()
                 }
             }
         }
+    }
 
-        FloatingActionButton(
-            onClick = onCreateSighting,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TrailSenseSpacing.lg)
-                .testTag("add_sighting_fab")
-        ) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create))
+    private fun navigateToSighting(sighting: Sighting) {
+        navigator.navigateTo(
+            sighting.location ?: Coordinate.zero,
+            page?.name ?: "",
+            BeaconOwner.FieldGuide,
+            elevation = sighting.altitude
+        )
+        findNavController().openTool(Tools.NAVIGATION)
+    }
+
+    private fun createBeacon(sighting: Sighting) {
+        val bundle = Bundle().apply {
+            putParcelable(
+                "initial_location",
+                GeoUri(
+                    sighting.location ?: Coordinate.zero,
+                    sighting.altitude,
+                    mapOf("label" to (page?.name ?: ""))
+                )
+            )
+        }
+        findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
+    }
+}
+
+@Composable
+private fun SightingListScreen(
+    items: List<ListItem>,
+    onCreate: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                SightingListHeader()
+                SightingListView(
+                    items = items,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            FloatingActionButton(
+                onClick = onCreate,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .testTag("create_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+            }
         }
     }
 }
 
 @Composable
-fun Fragment.SightingListContent(modifier: Modifier = Modifier) {
-    val navController = findNavController()
-    val pageId = remember { arguments?.getLong("page_id", 0L) ?: 0L }
-
-    SightingListScreen(
-        pageId = pageId,
-        onCreateSighting = {
-            // Legacy nav kept for compatibility during hybrid migration (promote with CreateFieldGuideSighting route)
-            val bundle = android.os.Bundle().apply {
-                putLong("page_id", pageId)
-            }
-            navController.navigate(R.id.createFieldGuideSightingFragment, bundle)
-        },
-        modifier = modifier
-    )
+private fun SightingListHeader() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Text(
+            text = stringResource(R.string.sightings),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
-private data class DemoSighting(
-    val id: Long,
-    val name: String,
-    val time: Instant?,
-    val location: String,
-    val harvested: Boolean = false,
-    val notes: String? = null
-)
-
-private fun formatSightingMeta(s: DemoSighting): String {
-    val date = s.time?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ofPattern("MMM d, yyyy")) ?: "Unknown date"
-    return "$date • ${s.location}"
-}
-
-@Preview(showBackground = true)
 @Composable
-private fun SightingListScreenPreview() {
-    MaterialTheme {
-        SightingListScreen(pageId = 42L)
-    }
-}
-
-class SightingListFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        SightingListContent()
-    }
+private fun SightingListView(
+    items: List<ListItem>,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.testTag("list"),
+        factory = { context ->
+            FrameLayout(context).apply {
+                val list = AndromedaListView(context, null).apply {
+                    id = R.id.list
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
+                val empty = TextView(context).apply {
+                    text = context.getString(R.string.no_sightings)
+                    gravity = Gravity.CENTER
+                    visibility = View.GONE
+                }
+                list.emptyView = empty
+                addView(list)
+                addView(
+                    empty,
+                    FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER
+                    )
+                )
+            }
+        },
+        update = { container ->
+            container.findViewById<AndromedaListView>(R.id.list)
+                .setItems(items)
+        }
+    )
 }

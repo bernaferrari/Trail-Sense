@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.fragments.AndromedaFragment
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticSeverity
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 
-class DiagnosticAlerter(private val fragment: AndromedaFragment) {
+class DiagnosticAlerter(private val fragment: Fragment) {
 
     private val context = fragment.requireContext()
 

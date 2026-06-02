@@ -6,44 +6,78 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
-import androidx.core.view.isVisible
 import androidx.exifinterface.media.ExifInterface
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.databinding.FragmentCloudResultsBinding
+import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
+import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.abs
 
-class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
+class CloudResultsFragment : Fragment() {
 
-    private var image: Bitmap? = null
+    private var image by mutableStateOf<Bitmap?>(null)
     private var classifier: ICloudClassifier = SoftmaxCloudClassifier(this::debugLogFeatures)
-    private var selection: List<CloudSelection> = emptyList()
+    private var selection by mutableStateOf<List<CloudSelection>>(emptyList())
+    private var isLoading by mutableStateOf(false)
+    private var time by mutableStateOf(Instant.now())
+    private var cloudList: AndromedaListView? = null
+
     private val repo by lazy { CloudRepo.getInstance(requireContext()) }
-    private var time = Instant.now()
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private val mapper by lazy {
         CloudSelectionListItemMapper(requireContext()) { genus, selected ->
@@ -54,7 +88,6 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
                     it
                 }
             }
-            updateItems()
         }
     }
 
@@ -65,48 +98,33 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
         uri = BundleCompat.getParcelable(arguments ?: Bundle(), "image", Uri::class.java)
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentCloudResultsBinding {
-        return FragmentCloudResultsBinding.inflate(layoutInflater, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        time = Instant.now()
-        binding.cloudImage.clipToOutline = true
-        binding.cloudTitle.subtitle.text =
-            formatter.formatDateTime(
-                time.toZonedDateTime(),
-                relative = true,
-                abbreviateMonth = true
-            )
-        binding.cloudTitle.subtitle.setOnClickListener {
-            inBackground {
-                val current = time.toZonedDateTime().toLocalDateTime()
-                val newTime = CoroutinePickers.datetime(
-                    requireContext(),
-                    UserPreferences(requireContext()).use24HourTime,
-                    current
-                )
-                if (newTime != null) {
-                    time = newTime.toZonedDateTime().toInstant()
-                    onMain {
-                        if (isBound) {
-                            binding.cloudTitle.subtitle.text =
-                                formatter.formatDateTime(
-                                    time.toZonedDateTime(),
-                                    relative = true,
-                                    abbreviateMonth = true
-                                )
-                        }
-                    }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    CloudResultsScreen(
+                        image = image,
+                        selection = selection,
+                        mapper = mapper,
+                        title = stringResource(R.string.clouds),
+                        subtitle = formatter.formatDateTime(
+                            time.toZonedDateTime(),
+                            relative = true,
+                            abbreviateMonth = true
+                        ),
+                        isLoading = isLoading,
+                        canSave = selection.any { it.isSelected },
+                        onDateClick = ::pickTime,
+                        onSave = ::save,
+                        onListCreated = { cloudList = it }
+                    )
                 }
             }
-        }
-        binding.cloudTitle.rightButton.setOnClickListener {
-            save()
         }
     }
 
@@ -114,7 +132,7 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
         super.onResume()
         if (uri != null && selection.isEmpty()) {
             analyze()
-        } else {
+        } else if (selection.isEmpty()) {
             selection = CloudGenus.values().map { CloudSelection(it, null, false) } + listOf(
                 CloudSelection(
                     null,
@@ -122,21 +140,43 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
                     false
                 )
             )
-            updateItems()
+        }
+    }
+
+    override fun onDestroyView() {
+        cloudList = null
+        super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        image?.recycle()
+        image = null
+    }
+
+    private fun pickTime() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val current = time.toZonedDateTime().toLocalDateTime()
+            val newTime = CoroutinePickers.datetime(
+                requireContext(),
+                UserPreferences(requireContext()).use24HourTime,
+                current
+            )
+            if (newTime != null) {
+                time = newTime.toZonedDateTime().toInstant()
+            }
         }
     }
 
     private fun save() {
-        inBackground {
+        viewLifecycleOwner.lifecycleScope.launch {
             val readings =
                 selection.filter { it.isSelected }
                     .map { Reading(CloudObservation(0, it.genus), time) }
             readings.forEach {
                 repo.add(it)
             }
-            onMain {
-                findNavController().navigateUp()
-            }
+            findNavController().navigateUp()
         }
     }
 
@@ -146,23 +186,19 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
 
     private fun analyze() {
         val uri = uri ?: return
-        binding.loadingIndicator.isVisible = true
+        isLoading = true
         selection = emptyList()
-        binding.cloudList.setItems(emptyList())
-        inBackground {
-            onIO {
-                if (image == null) {
-                    image = loadImage(uri)
-                    DeleteTempFilesCommand(requireContext()).execute()
-                }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            if (image == null) {
+                image = loadImage(uri)
+                DeleteTempFilesCommand(requireContext()).execute()
             }
             val results = onDefault {
                 image?.let { classifier.classify(it) }
             }
-            onMain {
-                binding.cloudImage.isVisible = true
-                binding.cloudImage.setImageBitmap(image)
-                results?.let { setResult(results) }
+            results?.let { setResult(it) } ?: run {
+                isLoading = false
             }
         }
     }
@@ -189,23 +225,8 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
         rotated
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        image?.recycle()
-    }
-
-    private fun updateItems() {
-        if (isBound) {
-            binding.cloudList.setItems(selection, mapper)
-        }
-    }
-
     private fun setResult(result: List<ClassificationResult<CloudGenus?>>) {
-        if (!isBound) {
-            return
-        }
-
-        binding.loadingIndicator.isVisible = false
+        isLoading = false
         val maxConfidence = result[0].confidence
         val threshold = if (result[0].value == null) 0.001f else 0.1f
         selection = result.map {
@@ -215,7 +236,153 @@ class CloudResultsFragment : BoundFragment<FragmentCloudResultsBinding>() {
                 abs(it.confidence - maxConfidence) <= threshold
             )
         }
-        updateItems()
-        binding.cloudList.scrollToPosition(0, false)
+        cloudList?.scrollToPosition(0, false)
     }
+}
+
+@Composable
+private fun CloudResultsScreen(
+    image: Bitmap?,
+    selection: List<CloudSelection>,
+    mapper: CloudSelectionListItemMapper,
+    title: String,
+    subtitle: String,
+    isLoading: Boolean,
+    canSave: Boolean,
+    onDateClick: () -> Unit,
+    onSave: () -> Unit,
+    onListCreated: (AndromedaListView) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CloudResultsHeader(
+                title = title,
+                subtitle = subtitle,
+                canSave = canSave,
+                onDateClick = onDateClick,
+                onSave = onSave
+            )
+            if (image != null) {
+                CloudImage(
+                    image = image,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 12.dp)
+                )
+            }
+            Box(modifier = Modifier.fillMaxSize()) {
+                CloudSelectionList(
+                    selection = selection,
+                    mapper = mapper,
+                    onListCreated = onListCreated,
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .testTag("loading_indicator")
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CloudResultsHeader(
+    title: String,
+    subtitle: String,
+    canSave: Boolean,
+    onDateClick: () -> Unit,
+    onSave: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    modifier = Modifier.testTag("cloud_title"),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .clickable(onClick = onDateClick)
+                        .testTag("cloud_subtitle"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onSave,
+                enabled = canSave,
+                modifier = Modifier
+                    .alpha(if (canSave) 1f else 0.38f)
+                    .testTag("cloud_save_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CloudImage(
+    image: Bitmap,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier
+            .size(100.dp)
+            .testTag("cloud_image"),
+        factory = { context ->
+            ImageView(context).apply {
+                id = R.id.cloud_image
+                clipToOutline = true
+                setBackgroundResource(R.drawable.rounded_rectangle)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+            }
+        },
+        update = {
+            it.setImageBitmap(image)
+        }
+    )
+}
+
+@Composable
+private fun CloudSelectionList(
+    selection: List<CloudSelection>,
+    mapper: CloudSelectionListItemMapper,
+    onListCreated: (AndromedaListView) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.testTag("cloud_list"),
+        factory = { context ->
+            AndromedaListView(context, null).apply {
+                id = R.id.cloud_list
+                onListCreated(this)
+            }
+        },
+        update = {
+            it.setItems(selection, mapper)
+        }
+    )
 }

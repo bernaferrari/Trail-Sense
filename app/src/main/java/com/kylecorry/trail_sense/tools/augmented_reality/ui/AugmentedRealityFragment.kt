@@ -1,12 +1,28 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.navigation.NavController
@@ -19,8 +35,7 @@ import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.ui.setTextDistinct
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.BoundFragment
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.show
@@ -28,6 +43,7 @@ import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.google.android.material.button.MaterialButton
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
@@ -38,7 +54,6 @@ import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolAugmentedRealityBinding
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getCardinalDirectionColor
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -48,6 +63,10 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.readableName
+import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheet
+import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
@@ -73,7 +92,13 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.math.hypot
 
-class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBinding>() {
+class AugmentedRealityFragment : AndromedaFragment() {
+
+    private var augmentedRealityViews: AugmentedRealityViews? = null
+    private val binding: AugmentedRealityViews
+        get() = augmentedRealityViews ?: error("Augmented reality views are not ready")
+    private val isViewReady: Boolean
+        get() = augmentedRealityViews != null && view != null
 
     private var mode = ARMode.Normal
     private var timeOverride: Instant? = null
@@ -151,7 +176,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
 
     private var lastLocation = Coordinate.zero
     private val layerManagementUpdater = CoroutineTimer(actionBehavior = TimerActionBehavior.Skip) {
-        if (!isBound) return@CoroutineTimer
+        if (!isViewReady) return@CoroutineTimer
         if (!userPrefs.augmentedReality.showPathLayer) return@CoroutineTimer
         if (binding.arView.location == lastLocation) return@CoroutineTimer
         lastLocation = binding.arView.location
@@ -169,7 +194,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
 
     private val guidanceLocationUpdater =
         CoroutineTimer(actionBehavior = TimerActionBehavior.Skip) {
-            if (!isBound) return@CoroutineTimer
+            if (!isViewReady) return@CoroutineTimer
             if (activeGuidanceTarget == null) return@CoroutineTimer
             refreshGuidance()
         }
@@ -178,8 +203,33 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
     private val calibrationFactory = ARCalibratorFactory()
     private val astronomyService = AstronomyService()
 
-    private var visibleLayersOverride by state<List<ARLayer>?>(null)
-    private var visibleLayers by state<List<ARLayer>>(emptyList())
+    private var visibleLayersOverride: List<ARLayer>? = null
+    private var visibleLayers: List<ARLayer> = emptyList()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createAugmentedRealityViews(requireContext())
+        augmentedRealityViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    AugmentedRealityHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        augmentedRealityViews = null
+        super.onDestroyView()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -300,6 +350,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
         }
 
         updateLayerVisibility()
+        updateExposureCompensation()
         updateTimeButtonState()
         updateGuidanceButtonState()
         guidanceLocationUpdater.interval(1000)
@@ -346,29 +397,20 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
         guidanceLocationUpdater.stop()
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
-
-        effect(
-            "layer_visibility",
-            visibleLayers,
-            visibleLayersOverride,
-            lifecycleHookTrigger.onResume()
-        ) {
-            binding.arView.setLayers(visibleLayersOverride ?: visibleLayers)
+    private fun applyVisibleLayers() {
+        if (!isViewReady) {
+            return
         }
+        binding.arView.setLayers(visibleLayersOverride ?: visibleLayers)
+    }
 
-        val astronomy = useService<AstronomySubsystem>()
-        val isNight = astronomy.isNight()
-        val prefs = useService<UserPreferences>()
-        val shouldIncreaseExposureAtNight = useMemo(prefs) {
-            prefs.augmentedReality.increaseExposureAtNight
+    private fun updateExposureCompensation() {
+        if (!isViewReady) {
+            return
         }
-
-        // Increase exposure at night
-        useEffect(binding.arView, isNight, shouldIncreaseExposureAtNight) {
-            binding.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
-        }
+        val isNight = AstronomySubsystem.getInstance(requireContext()).isNight()
+        val shouldIncreaseExposureAtNight = userPrefs.augmentedReality.increaseExposureAtNight
+        binding.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
     }
 
     // TODO: Extract focus formatters
@@ -451,12 +493,6 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
         return true
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater, container: ViewGroup?
-    ): FragmentToolAugmentedRealityBinding {
-        return FragmentToolAugmentedRealityBinding.inflate(layoutInflater, container, false)
-    }
-
     private fun setMode(mode: ARMode, extras: Bundle? = null) {
         val previousMode = this.mode
         this.mode = mode
@@ -486,6 +522,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
             }
         }
 
+        applyVisibleLayers()
         updateGuidanceButtonState()
     }
 
@@ -594,7 +631,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
                 tryOrLog {
                     val state = target.refresh(binding.arView)
                     onMain {
-                        if (!isBound || activeGuidanceTarget !== target) {
+                        if (!isViewReady || activeGuidanceTarget !== target) {
                             return@onMain
                         }
 
@@ -695,6 +732,7 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
             if (userPrefs.augmentedReality.showPathLayer) pathsLayer else null,
             if (userPrefs.augmentedReality.showBeaconLayer) beaconLayer else null
         )
+        applyVisibleLayers()
         updateGuidanceButtonState()
     }
 
@@ -725,4 +763,344 @@ class AugmentedRealityFragment : BoundFragment<FragmentToolAugmentedRealityBindi
         }
     }
 
+}
+
+private data class AugmentedRealityViews(
+    val root: View,
+    val camera: CameraView,
+    val arView: AugmentedRealityView,
+    val cameraToggle: ImageButton,
+    val calibrateBtn: ImageButton,
+    val layersBtn: ImageButton,
+    val timeBtn: ImageButton,
+    val searchBtn: ImageButton,
+    val accuracyView: SensorStatusBadgeView,
+    val focusActionButton: Button,
+    val calibrationPanel: LinearLayout,
+    val confirmCalibrationButton: Button,
+    val cancelCalibrationButton: MaterialButton,
+    val guidancePanel: ConstraintLayout,
+    val arGuideIcon: ImageView,
+    val arGuideName: TextView,
+    val arGuideCancel: ImageButton,
+    val timeSheet: DateTimeSliderSheet
+)
+
+@Composable
+private fun AugmentedRealityHost(
+    views: AugmentedRealityViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews {
+    val root = ConstraintLayout(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val camera = CameraView(context, null).apply {
+        id = R.id.camera
+    }
+    root.addView(
+        camera,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.guidance_panel
+        }
+    )
+
+    val arView = AugmentedRealityView(context, null).apply {
+        id = R.id.ar_view
+    }
+    root.addView(
+        arView,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.guidance_panel
+        }
+    )
+
+    val cameraToggle = createArIconButton(context, R.id.camera_toggle, R.drawable.ic_camera)
+    root.addView(
+        cameraToggle,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            setMargins(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
+        }
+    )
+
+    val calibrate = createArIconButton(context, R.id.calibrate_btn, R.drawable.ic_compass_icon)
+    root.addView(
+        calibrate,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            setMargins(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
+        }
+    )
+
+    val layers = createArIconButton(context, R.id.layers_btn, R.drawable.ic_layers)
+    root.addView(
+        layers,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            startToStart = R.id.calibrate_btn
+            endToEnd = R.id.calibrate_btn
+            topToBottom = R.id.calibrate_btn
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val search = createArIconButton(context, R.id.search_btn, R.drawable.ic_search).apply {
+        visibility = View.GONE
+    }
+    root.addView(
+        search,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            startToStart = R.id.camera_toggle
+            endToEnd = R.id.camera_toggle
+            topToBottom = R.id.camera_toggle
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val time = createArIconButton(context, R.id.time_btn, R.drawable.ic_tool_clock)
+    root.addView(
+        time,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            startToStart = R.id.camera_toggle
+            endToEnd = R.id.camera_toggle
+            topToBottom = R.id.search_btn
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val accuracy = SensorStatusBadgeView(context, null).apply {
+        id = R.id.accuracy_view
+        alpha = 0.6f
+    }
+    root.addView(
+        accuracy,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.calibration_panel
+            marginStart = 16.dp(context)
+            bottomMargin = 48.dp(context)
+        }
+    )
+
+    val focusAction = Button(context).apply {
+        id = R.id.focus_action_button
+        visibility = View.GONE
+    }
+    root.addView(
+        focusAction,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.calibration_panel
+            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
+        }
+    )
+
+    val calibrationPanel = LinearLayout(context).apply {
+        id = R.id.calibration_panel
+        orientation = LinearLayout.HORIZONTAL
+        visibility = View.GONE
+    }
+    val confirmCalibration = Button(context).apply {
+        id = R.id.confirm_calibration_button
+        text = context.getString(R.string.calibrate)
+    }
+    calibrationPanel.addView(
+        confirmCalibration,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+    val cancelCalibration = MaterialButton(context).apply {
+        id = R.id.cancel_calibration_button
+        icon = ContextCompat.getDrawable(context, R.drawable.ic_cancel)
+        iconSize = 24.dp(context)
+        setPadding(6.dp(context), paddingTop, 6.dp(context), paddingBottom)
+    }
+    calibrationPanel.addView(
+        cancelCalibration,
+        LinearLayout.LayoutParams(38.dp(context), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            marginStart = 8.dp(context)
+        }
+    )
+    root.addView(
+        calibrationPanel,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.guidance_panel
+            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
+        }
+    )
+
+    val guidancePanel = ConstraintLayout(context).apply {
+        id = R.id.guidance_panel
+        setPadding(16.dp(context), 16.dp(context), 16.dp(context), 16.dp(context))
+        setBackgroundColor(resolveThemeColor(context, com.google.android.material.R.attr.colorSurfaceContainer))
+        visibility = View.GONE
+    }
+    root.addView(
+        guidancePanel,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToTop = R.id.time_sheet
+        }
+    )
+
+    val guideLabel = TextView(context).apply {
+        id = R.id.ar_guide_label
+        text = context.getString(R.string.target)
+    }
+    guidancePanel.addView(
+        guideLabel,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = R.id.ar_guide_name
+            endToEnd = R.id.ar_guide_name
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val guideIcon = ImageView(context).apply {
+        id = R.id.ar_guide_icon
+        setBackgroundResource(R.drawable.circle)
+        setPadding(5.dp(context), 5.dp(context), 5.dp(context), 5.dp(context))
+    }
+    guidancePanel.addView(
+        guideIcon,
+        ConstraintLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = R.id.ar_guide_label
+            bottomToBottom = R.id.ar_guide_name
+        }
+    )
+
+    val guideCancel = createTransparentIconButton(context, R.id.ar_guide_cancel, R.drawable.ic_cancel).apply {
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    guidancePanel.addView(
+        guideCancel,
+        ConstraintLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = R.id.ar_guide_label
+            bottomToBottom = R.id.ar_guide_name
+        }
+    )
+
+    val guideName = TextView(context).apply {
+        id = R.id.ar_guide_name
+        textSize = 16f
+    }
+    guidancePanel.addView(
+        guideName,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToEnd = R.id.ar_guide_icon
+            endToStart = R.id.ar_guide_cancel
+            topToBottom = R.id.ar_guide_label
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+            topMargin = 4.dp(context)
+        }
+    )
+
+    val timeSheet = DateTimeSliderSheet(context, null).apply {
+        id = R.id.time_sheet
+        visibility = View.GONE
+    }
+    root.addView(
+        timeSheet,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    return AugmentedRealityViews(
+        root = root,
+        camera = camera,
+        arView = arView,
+        cameraToggle = cameraToggle,
+        calibrateBtn = calibrate,
+        layersBtn = layers,
+        timeBtn = time,
+        searchBtn = search,
+        accuracyView = accuracy,
+        focusActionButton = focusAction,
+        calibrationPanel = calibrationPanel,
+        confirmCalibrationButton = confirmCalibration,
+        cancelCalibrationButton = cancelCalibration,
+        guidancePanel = guidancePanel,
+        arGuideIcon = guideIcon,
+        arGuideName = guideName,
+        arGuideCancel = guideCancel,
+        timeSheet = timeSheet
+    )
+}
+
+private fun createArIconButton(context: Context, id: Int, icon: Int): ImageButton {
+    return createTransparentIconButton(context, id, icon).apply {
+        imageTintList = ColorStateList.valueOf(Color.WHITE)
+    }
+}
+
+private fun createTransparentIconButton(context: Context, id: Int, icon: Int): ImageButton {
+    return ImageButton(context).apply {
+        this.id = id
+        setImageResource(icon)
+        setBackgroundColor(Color.TRANSPARENT)
+    }
+}
+
+private fun resolveThemeColor(context: Context, attr: Int): Int {
+    val value = android.util.TypedValue()
+    context.theme.resolveAttribute(attr, value, true)
+    return if (value.resourceId != 0) {
+        ContextCompat.getColor(context, value.resourceId)
+    } else {
+        value.data
+    }
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AugmentedRealityHostPreview() {
+    TrailSenseTheme {
+        AugmentedRealityHost(
+            views = createAugmentedRealityViews(LocalContext.current)
+        )
+    }
 }

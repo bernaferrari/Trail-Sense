@@ -23,6 +23,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapFile
 import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
@@ -129,8 +130,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canViewOfflineMap() {
         click("Test Map")
         hasText("Test Map")
-        click(R.id.zoom_in_btn)
-        click(R.id.zoom_out_btn)
+        click(id("zoom_in_btn"))
+        click(id("zoom_out_btn"))
         back()
     }
 
@@ -274,7 +275,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         input(string(R.string.name), name, index = 1)
         clickOk()
 
-        hasText(R.id.map_title, name)
+        hasText(name)
         if (goBack) {
             back()
         }
@@ -344,13 +345,13 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(R.id.lock_btn)
         click(R.id.lock_btn)
         click(R.id.lock_btn)
-        click(toolbarButton(R.id.map_title, Side.Left))
+        click(id("map_recenter_btn"))
     }
 
     private fun canZoom() {
         click(R.id.zoom_in_btn)
         click(R.id.zoom_out_btn)
-        click(toolbarButton(R.id.map_title, Side.Left))
+        click(id("map_recenter_btn"))
     }
 
     private fun canLongPressMap() {
@@ -388,7 +389,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
     private fun verifyMapMenuOptions() {
         // Calibrate
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Calibrate")
         hasText("Point 1 of 2")
         click("Next")
@@ -396,27 +397,27 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         isVisible(R.id.map)
 
         // User guide
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("User Guide")
         hasText("Offline Maps")
         back()
         isVisible(R.id.map)
 
         // Rename
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Rename")
         input("Test Map", "Test Map 2")
         clickOk()
         hasText("Test Map 2")
 
         // Change projection
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Change projection")
         click("Equidistant")
         clickOk()
 
         // Measure
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Measure")
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
@@ -424,7 +425,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(toolbarButton(R.id.map_distance_title, Side.Right))
 
         // Create path
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Create path")
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
@@ -432,7 +433,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(toolbarButton(R.id.map_distance_title, Side.Right))
 
         // Layers
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Layers")
         scrollUntil { hasText("Location") }
         scrollUntil { hasText("Beacons") }
@@ -443,7 +444,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(toolbarButton(R.id.title, Side.Right))
 
         // Export
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Export")
         // Pressing back is needed sometimes to close the drive selector
         backUntil {
@@ -454,7 +455,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         }
 
         // Print
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Print")
         hasText("Copies")
         backUntil {
@@ -462,7 +463,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         }
 
         // Trace
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click("Trace")
         clickOk()
         not { isVisible(R.id.zoom_in_btn) }
@@ -474,7 +475,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         isVisible(R.id.zoom_out_btn)
 
         // Delete
-        click(toolbarButton(R.id.map_title, Side.Right))
+        click(id("map_menu_btn"))
         click(string(R.string.delete))
         clickOk()
 

@@ -4,19 +4,47 @@ import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
+import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.list.ListView
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.altitude.BarometricAltimeter
 import com.kylecorry.andromeda.sense.location.GPS
@@ -31,8 +59,6 @@ import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentSensorDetailsBinding
-import com.kylecorry.trail_sense.databinding.ListItemSensorBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -46,6 +72,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.MockHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
@@ -53,14 +80,22 @@ import java.time.ZonedDateTime
 import java.time.format.TextStyle
 import java.util.Locale
 
-class SensorDetailsFragment : BoundFragment<FragmentSensorDetailsBinding>() {
+class SensorDetailsFragment : Fragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
-    private lateinit var sensorListView: ListView<SensorDetails>
     private val prefs by lazy { UserPreferences(requireContext()) }
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val sensorDetailsMap = mutableMapOf<String, SensorDetails?>()
+    private var sensorDetails by mutableStateOf<List<SensorDetails>>(emptyList())
+    private val handler = Handler(Looper.getMainLooper())
+    private val sensorListener = { updateAllSensorDetails() }
+    private val updateRunnable = object : Runnable {
+        override fun run() {
+            updateAllSensorDetails()
+            handler.postDelayed(this, 500)
+        }
+    }
 
     // Hardware sensors
     private val accelerometer by lazy { sensorService.getAccelerometer() }
@@ -83,44 +118,65 @@ class SensorDetailsFragment : BoundFragment<FragmentSensorDetailsBinding>() {
     private val cachedAltimeter by lazy { CachedAltimeter(requireContext(), 500) }
 
     private val unavailableText by lazy { getString(R.string.unavailable) }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentSensorDetailsBinding {
-        return FragmentSensorDetailsBinding.inflate(layoutInflater, container, false)
+    private val observedSensors: List<ISensor> by lazy {
+        listOf(
+            cachedGPS,
+            cachedAltimeter,
+            gps,
+            compass,
+            barometer,
+            altimeter,
+            thermometer,
+            hygrometer,
+            gravity,
+            accelerometer,
+            cellSignal,
+            magnetometer,
+            battery,
+            gyroscope
+        )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        sensorListView =
-            ListView(binding.sensorsList, R.layout.list_item_sensor) { sensorView, details ->
-                val itemBinding = ListItemSensorBinding.bind(sensorView)
-                itemBinding.sensorName.text = details.name
-                itemBinding.sensorDetails.text = details.description
-                itemBinding.sensorStatus.setImageResource(details.statusIcon)
-                itemBinding.sensorStatus.setStatusText(details.statusMessage)
-                itemBinding.sensorStatus.setBackgroundTint(details.statusColor)
-                itemBinding.sensorStatus.setForegroundTint(Color.BLACK)
+    override fun onCreateView(
+        layoutInflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    SensorDetailsScreen(
+                        sensors = sensorDetails,
+                        onShowSensorList = ::showSensorList
+                    )
+                }
             }
+        }
+    }
 
-        sensorListView.addLineSeparator()
+    override fun onResume() {
+        super.onResume()
+        initializeUnavailableSensors()
+        observedSensors.forEach { it.start(sensorListener) }
+        updateAllSensorDetails()
+        handler.removeCallbacks(updateRunnable)
+        handler.postDelayed(updateRunnable, 500)
+    }
 
-        observe(cachedGPS) { updateGPSCache() }
-        observe(cachedAltimeter) { updateAltimeterCache() }
-        observe(gps) { updateGPS() }
-        observe(compass) { updateCompass() }
-        observe(barometer) { updateBarometer() }
-        observe(altimeter) { updateAltimeter() }
-        observe(thermometer) { updateThermometer() }
-        observe(hygrometer) { updateHygrometer() }
-        observe(gravity) { updateGravity() }
-        observe(accelerometer) { updateAccelerometer() }
-        observe(cellSignal) { updateCellSignal() }
-        observe(magnetometer) { updateMagnetometer() }
-        observe(battery) { updateBattery() }
-        observe(gyroscope) { updateGyro() }
+    override fun onPause() {
+        handler.removeCallbacks(updateRunnable)
+        observedSensors.forEach { it.stop(sensorListener) }
+        super.onPause()
+    }
 
+    override fun onDestroyView() {
+        handler.removeCallbacks(updateRunnable)
+        observedSensors.forEach { it.stop(sensorListener) }
+        super.onDestroyView()
+    }
+
+    private fun initializeUnavailableSensors() {
         if (!Sensors.hasCompass(requireContext())) {
             sensorDetailsMap["compass"] = SensorDetails(
                 getString(R.string.pref_compass_sensor_title),
@@ -130,37 +186,52 @@ class SensorDetailsFragment : BoundFragment<FragmentSensorDetailsBinding>() {
                 R.drawable.ic_compass_icon
             )
         }
+    }
 
-        binding.sensorDetailsTitle.rightButton.setOnClickListener {
-            val sensorManager = requireContext().getSystemService<SensorManager>()
-            val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
+    private fun showSensorList() {
+        val sensorManager = requireContext().getSystemService<SensorManager>()
+        val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
 
-            val items = sensors?.mapIndexed { index, sensor ->
-                ListItem(
-                    index.toLong(),
-                    sensor.name,
-                    "${sensor.stringType} (${sensor.type})"
-                )
-            }
-
-            CustomUiUtils.showList(
-                requireContext(),
-                getString(R.string.sensors),
-                items ?: emptyList()
+        val items = sensors?.mapIndexed { index, sensor ->
+            ListItem(
+                index.toLong(),
+                sensor.name,
+                "${sensor.stringType} (${sensor.type})"
             )
         }
 
-        scheduleUpdates(Duration.ofMillis(500))
+        CustomUiUtils.showList(
+            requireContext(),
+            getString(R.string.sensors),
+            items ?: emptyList()
+        )
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
+    private fun updateAllSensorDetails(): Boolean {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            handler.post { updateAllSensorDetails() }
+            return true
+        }
+
+        updateGPSCache()
+        updateAltimeterCache()
+        updateGPS()
+        updateCompass()
+        updateBarometer()
+        updateAltimeter()
+        updateThermometer()
+        updateHygrometer()
+        updateGravity()
+        updateAccelerometer()
+        updateCellSignal()
+        updateMagnetometer()
+        updateBattery()
+        updateGyro()
         updateClock()
         synchronized(this) {
-            val details =
-                sensorDetailsMap.toList().mapNotNull { it.second }.sortedBy { it.name }
-            sensorListView.setData(details)
+            sensorDetails = sensorDetailsMap.toList().mapNotNull { it.second }.sortedBy { it.name }
         }
+        return true
     }
 
     private fun updateGyro() {
@@ -496,4 +567,111 @@ class SensorDetailsFragment : BoundFragment<FragmentSensorDetailsBinding>() {
         @DrawableRes val statusIcon: Int
     )
 
+}
+
+@Composable
+private fun SensorDetailsScreen(
+    sensors: List<SensorDetailsFragment.SensorDetails>,
+    onShowSensorList: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("sensor_details_title"),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.pref_sensor_details_title),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    IconButton(
+                        onClick = onShowSensorList,
+                        modifier = Modifier.testTag("sensor_details_button")
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_sensors),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("sensors_list")
+            ) {
+                items(sensors) { sensor ->
+                    SensorDetailsRow(sensor)
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SensorDetailsRow(
+    sensor: SensorDetailsFragment.SensorDetails,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = sensor.name,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Row(
+            modifier = Modifier.padding(top = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = ComposeColor(sensor.statusColor)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(sensor.statusIcon),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = ComposeColor.Black
+                    )
+                    Text(
+                        text = sensor.statusMessage,
+                        modifier = Modifier.padding(start = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ComposeColor.Black
+                    )
+                }
+            }
+            Text(
+                text = sensor.description,
+                modifier = Modifier.padding(start = 8.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }

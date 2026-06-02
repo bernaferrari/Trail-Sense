@@ -1,26 +1,38 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.BoundFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentPhotoMapCalibrationBinding
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -31,6 +43,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPrefer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.CoordinateInputView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
@@ -43,10 +57,15 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibratio
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 
-class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBinding>() {
+class PhotoMapCalibrationFragment : Fragment() {
 
     private val service = getAppService<OfflineMapService>()
     private val prefs by lazy { UserPreferences(requireContext()) }
+    private var calibrationViews: PhotoMapCalibrationViews? = null
+    private val binding: PhotoMapCalibrationViews
+        get() = calibrationViews ?: error("Photo map calibration views are not ready")
+    private val isBound: Boolean
+        get() = calibrationViews != null
 
     private var mapId = 0L
     private var map: PhotoMap? = null
@@ -80,6 +99,26 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
         mapId = requireArguments().getLong("mapId")
     }
 
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createPhotoMapCalibrationViews(requireContext())
+        calibrationViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    PhotoMapCalibrationHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         // Populate the last known location
@@ -102,14 +141,12 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
 
     override fun onPause() {
         super.onPause()
-        binding.calibrationMap.stop()
+        calibrationViews?.calibrationMap?.stop()
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentPhotoMapCalibrationBinding {
-        return FragmentPhotoMapCalibrationBinding.inflate(layoutInflater, container, false)
+    override fun onDestroyView() {
+        calibrationViews = null
+        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -170,6 +207,9 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
             }
         }
 
+        CustomUiUtils.setButtonState(binding.zoomInBtn, false)
+        CustomUiUtils.setButtonState(binding.zoomOutBtn, false)
+
         binding.zoomOutBtn.setOnClickListener {
             binding.calibrationMap.zoomBy(0.5f)
         }
@@ -217,7 +257,7 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
         val isCalibrated = isFullyCalibrated()
         if (binding.previewButton.isVisible != isCalibrated) {
             binding.previewButton.isVisible = isCalibrated
-            binding.previewButton.isChecked = showPreview
+            CustomUiUtils.setButtonState(binding.previewButton, showPreview)
         }
 
         map = map?.copy(
@@ -338,7 +378,7 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
             return
         }
 
-        binding.previewButton.isChecked = enabled
+        CustomUiUtils.setButtonState(binding.previewButton, enabled)
 
         showPreview = enabled
         updateMapCalibration()
@@ -445,4 +485,197 @@ class PhotoMapCalibrationFragment : BoundFragment<FragmentPhotoMapCalibrationBin
         }
     }
 
+}
+
+private data class PhotoMapCalibrationViews(
+    val root: View,
+    val previewButton: Button,
+    val calibrationMap: MapCalibrationView,
+    val zoomOutBtn: FloatingActionButton,
+    val zoomInBtn: FloatingActionButton,
+    val mapCalibrationBottomPanel: LinearLayout,
+    val mapCalibrationTitle: TextView,
+    val mapCalibrationCoordinate: CoordinateInputView,
+    val calibrationPrev: Button,
+    val calibrationNext: Button
+)
+
+@Composable
+private fun PhotoMapCalibrationHost(
+    views: PhotoMapCalibrationViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
+    val margin = Resources.dp(context, 16f).toInt()
+    val panelPadding = Resources.dp(context, 16f).toInt()
+    val zoomBottom = Resources.dp(context, 176f).toInt()
+
+    val root = FrameLayout(context)
+
+    val previewButton = Button(context).apply {
+        id = R.id.preview_button
+        text = context.getString(R.string.preview)
+        alpha = 0.86f
+        visibility = View.GONE
+    }
+
+    val calibrationMap = MapCalibrationView(context).apply {
+        id = R.id.calibration_map
+    }
+
+    val zoomOutBtn = FloatingActionButton(context).apply {
+        id = R.id.zoom_out_btn
+        alpha = 0.86f
+        setImageResource(R.drawable.ic_zoom_out)
+        isClickable = true
+        isFocusable = true
+    }
+
+    val zoomInBtn = FloatingActionButton(context).apply {
+        id = R.id.zoom_in_btn
+        alpha = 0.86f
+        setImageResource(R.drawable.ic_add)
+        isClickable = true
+        isFocusable = true
+    }
+
+    val bottomPanel = LinearLayout(context).apply {
+        id = R.id.map_calibration_bottom_panel
+        orientation = LinearLayout.VERTICAL
+        setPadding(panelPadding, panelPadding, panelPadding, panelPadding)
+        setBackgroundColor(Resources.getAndroidColorAttr(context, android.R.attr.colorBackground))
+        visibility = View.GONE
+    }
+
+    val title = TextView(context).apply {
+        id = R.id.map_calibration_title
+        gravity = Gravity.CENTER_VERTICAL
+        compoundDrawablePadding = Resources.dp(context, 8f).toInt()
+    }
+
+    val coordinate = CoordinateInputView(context).apply {
+        id = R.id.map_calibration_coordinate
+    }
+
+    val prev = Button(context).apply {
+        id = R.id.calibration_prev
+        text = context.getString(R.string.previous)
+    }
+
+    val next = Button(context).apply {
+        id = R.id.calibration_next
+        text = context.getString(R.string.next)
+    }
+
+    val buttons = LinearLayout(context).apply {
+        gravity = Gravity.CENTER or Gravity.END
+        orientation = LinearLayout.HORIZONTAL
+        addView(
+            prev,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = margin
+            }
+        )
+        addView(next)
+    }
+
+    bottomPanel.addView(title)
+    bottomPanel.addView(
+        coordinate,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = margin
+        }
+    )
+    bottomPanel.addView(
+        buttons,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = margin
+        }
+    )
+
+    root.addView(
+        calibrationMap,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+    root.addView(
+        previewButton,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        ).apply {
+            topMargin = margin
+        }
+    )
+    root.addView(
+        zoomOutBtn,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            marginEnd = margin
+            bottomMargin = zoomBottom
+        }
+    )
+    root.addView(
+        zoomInBtn,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            marginEnd = margin
+            bottomMargin = zoomBottom + Resources.dp(context, 56f).toInt()
+        }
+    )
+    root.addView(
+        bottomPanel,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM
+        )
+    )
+
+    return PhotoMapCalibrationViews(
+        root = root,
+        previewButton = previewButton,
+        calibrationMap = calibrationMap,
+        zoomOutBtn = zoomOutBtn,
+        zoomInBtn = zoomInBtn,
+        mapCalibrationBottomPanel = bottomPanel,
+        mapCalibrationTitle = title,
+        mapCalibrationCoordinate = coordinate,
+        calibrationPrev = prev,
+        calibrationNext = next
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PhotoMapCalibrationHostPreview() {
+    TrailSenseTheme {
+        PhotoMapCalibrationHost(
+            views = createPhotoMapCalibrationViews(androidx.compose.ui.platform.LocalContext.current)
+        )
+    }
 }

@@ -37,13 +37,8 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
             click(chapter.title)
 
             // Wait for the chapter to load
-            hasText(R.id.guide_name, chapter.title, ignoreCase = true)
-            hasText(R.id.guide_scroll) { it.isNotEmpty() }
-            if (chapter.searchable) {
-                scrollUntil { click("Be prepared") }
-            } else {
-                scrollUntil { click("Books and manuals") }
-            }
+            hasText(chapter.title, ignoreCase = true)
+            click("Be prepared")
 
             back()
         }
@@ -53,8 +48,8 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         hasText("fishing gear")
         click("Fish")
 
-        hasText(R.id.guide_name, "Food")
-        hasText(R.id.guide_scroll) { it.contains("Fish") }
+        hasText("Food")
+        hasText("Fish")
 
         back()
 

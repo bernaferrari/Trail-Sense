@@ -6,11 +6,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.core.system.Package
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.trail_sense.databinding.FragmentCommsPluginBinding
+import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class FragmentToolLocalTalk : BoundFragment<FragmentCommsPluginBinding>() {
+class FragmentToolLocalTalk : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -21,11 +25,22 @@ class FragmentToolLocalTalk : BoundFragment<FragmentCommsPluginBinding>() {
         )
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentCommsPluginBinding {
-        return FragmentCommsPluginBinding.inflate(layoutInflater, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    Text(
+                        text = "",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
     }
 
     private fun openApp(context: Context, packageName: String, tool: String) {

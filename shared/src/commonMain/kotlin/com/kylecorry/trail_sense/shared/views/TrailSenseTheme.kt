@@ -3,11 +3,8 @@ package com.kylecorry.trail_sense.shared.views
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 
@@ -87,23 +84,15 @@ fun TrailSenseTheme(
     content: @Composable () -> Unit
 ) {
     val colorSchemeResult: ColorScheme = when (colorScheme) {
-        TrailSenseColorScheme.Dynamic -> {
-            if (isAndroidDynamicColorAvailable()) {
-                val context = LocalContext.current
-                if (darkTheme) {
-                    dynamicDarkColorScheme(context)
-                } else {
-                    dynamicLightColorScheme(context)
-                }
-            } else {
-                rememberDynamicColorScheme(
-                    seedColor = TrailSenseColorScheme.Dynamic.toSeedColor(),
-                    isDark = darkTheme,
-                    isAmoled = isAmoled,
-                    style = PaletteStyle.TonalSpot
-                )
-            }
-        }
+        // Dynamic is treated as a special seed on non-Android platforms.
+        // The Android app can later provide true wallpaper-based dynamic colors
+        // by wrapping this theme or supplying a precomputed ColorScheme.
+        TrailSenseColorScheme.Dynamic -> rememberDynamicColorScheme(
+            seedColor = TrailSenseColorScheme.Dynamic.toSeedColor(),
+            isDark = darkTheme,
+            isAmoled = isAmoled,
+            style = PaletteStyle.TonalSpot
+        )
 
         else -> {
             rememberDynamicColorScheme(
@@ -122,6 +111,3 @@ fun TrailSenseTheme(
         content = content
     )
 }
-
-@Composable
-private fun isAndroidDynamicColorAvailable(): Boolean = true

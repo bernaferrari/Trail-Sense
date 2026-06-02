@@ -10,8 +10,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.mute
 import com.kylecorry.trail_sense.test_utils.TestUtils.unmute
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -24,7 +23,7 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
         }
 
         // Verify the title
-        hasText(R.id.metal_detector_title, Regex("\\d+ uT"))
+        hasText(Regex("\\d+ uT"))
 
         // Make sure the chart is visible
         isVisible(R.id.metal_chart)
@@ -36,16 +35,16 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
 
         // Can adjust threshold (just verify it is set)
         isVisible(R.id.threshold)
-        hasText(R.id.threshold_amount, "5.0 uT")
+        hasText("5.0 uT")
 
         // Can play sound
         val originalVolume = mute()
-        click(toolbarButton(R.id.metal_detector_title, Side.Right))
-        click(toolbarButton(R.id.metal_detector_title, Side.Right))
+        click(id("metal_audio_btn"))
+        click(id("metal_audio_btn"))
         unmute(originalVolume)
 
         // Can disable vibration
-        var buttonVibrationToggle = toolbarButton(R.id.metal_detector_title, Side.Left)
+        val buttonVibrationToggle = id("metal_vibration_btn")
         click(buttonVibrationToggle)
         // TODO: assert button state and vibration subsystem state
 

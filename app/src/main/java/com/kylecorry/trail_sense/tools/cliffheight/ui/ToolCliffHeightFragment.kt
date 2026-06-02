@@ -1,96 +1,61 @@
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.fragments.BoundFragment
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolCliffHeightBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.PressState
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
+import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 
-class ToolCliffHeightFragment : BoundFragment<FragmentToolCliffHeightBinding>() {
-
-    private val service = CliffHeightService()
-    private val timer = CoroutineTimer {
-        update()
-    }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val userPrefs by lazy { UserPreferences(requireContext()) }
-    private val gps by lazy { SensorService(requireContext()).getGPS() }
-
-    private lateinit var units: DistanceUnits
-    private var startTime: Instant? = null
-    private var running = false
-    private var location: Coordinate? = null
-
-    private val singlePressDuration = Duration.ofMillis(200)
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.startBtn.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_UP -> updateState(PressState.Up)
-                MotionEvent.ACTION_DOWN -> updateState(PressState.Down)
-            }
-            true
-        }
-
-        binding.cliffHeightTitle.rightButton.setOnClickListener {
-            UserGuideUtils.showGuide(this, R.raw.guide_tool_cliff_height)
-        }
-    }
-
-    private fun updateState(action: PressState) {
-        if (!running) {
-            if (action == PressState.Down) {
-                start()
-                running = true
-            }
-        } else {
-            if (action == PressState.Up && Duration.between(
-                    startTime,
-                    Instant.now()
-                ) > singlePressDuration
-            ) {
-                stop()
-                running = false
-            }
-
-            if (action == PressState.Down) {
-                stop()
-                running = false
-            }
-        }
-    }
-
-    private fun stop() {
-        timer.stop()
-        binding.startBtn.setState(false)
-
-    }
-
-    private fun start() {
-        startTime = Instant.now()
-        timer.interval(16)
-        binding.startBtn.setState(true)
-    }
-
+class ToolCliffHeightFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,33 +67,156 @@ class ToolCliffHeightFragment : BoundFragment<FragmentToolCliffHeightBinding>() 
             considerShownIfCancelled = true,
             cancelText = null
         )
-
-
     }
 
-    override fun onResume() {
-        super.onResume()
-        units = userPrefs.baseDistanceUnits
-        location = gps.location
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    CliffHeightScreen(
+                        onOpenGuide = {
+                            UserGuideUtils.showGuide(this@ToolCliffHeightFragment, R.raw.guide_tool_cliff_height)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CliffHeightScreen(
+    onOpenGuide: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val service = remember { CliffHeightService() }
+    val formatter = remember { FormatService.getInstance(context) }
+    val prefs = remember { UserPreferences(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val units = remember { prefs.baseDistanceUnits }
+    val location = remember { gps.location.takeIf { it != Coordinate.zero } }
+    val singlePressDuration = remember { Duration.ofMillis(200) }
+    var startTime by remember { mutableStateOf<Instant?>(null) }
+    var running by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf("") }
+
+    LaunchedEffect(running, startTime, units, location) {
+        while (running) {
+            title = formatHeight(service, formatter, startTime, units, location)
+            delay(16)
+        }
     }
 
-    override fun onPause() {
-        super.onPause()
-        timer.stop()
-    }
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CliffHeightHeader(
+                    title = title,
+                    onOpenGuide = onOpenGuide
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.tool_cliff_height_disclaimer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                        .testTag("tide_disclaimer"),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-    fun update() {
-        val start = startTime ?: return
-        val height = service.getCliffHeight(start, Instant.now(), location)
-        val converted = height.convertTo(units)
-        val formatted = formatService.formatDistance(converted, 2)
-        binding.cliffHeightTitle.title.text = formatted
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(250.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (running) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    )
+                    .pointerInput(running) {
+                        detectTapGestures(
+                            onPress = {
+                                if (!running) {
+                                    startTime = Instant.now()
+                                    running = true
+                                    val released = tryAwaitRelease()
+                                    if (released && Duration.between(startTime, Instant.now()) > singlePressDuration) {
+                                        running = false
+                                    }
+                                } else {
+                                    running = false
+                                }
+                            }
+                        )
+                    }
+                    .testTag("start_btn"),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_tool_cliff_height),
+                    contentDescription = null,
+                    modifier = Modifier.size(112.dp)
+                )
+            }
+        }
     }
+}
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolCliffHeightBinding {
-        return FragmentToolCliffHeightBinding.inflate(layoutInflater, container, false)
+@Composable
+private fun CliffHeightHeader(
+    title: String,
+    onOpenGuide: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
+            .testTag("cliff_height_title")
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.align(Alignment.CenterStart),
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        IconButton(
+            onClick = onOpenGuide,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                contentDescription = null
+            )
+        }
     }
+}
+
+private fun formatHeight(
+    service: CliffHeightService,
+    formatter: FormatService,
+    startTime: Instant?,
+    units: DistanceUnits,
+    location: Coordinate?
+): String {
+    val start = startTime ?: return ""
+    val height = service.getCliffHeight(start, Instant.now(), location)
+    val converted = height.convertTo(units)
+    return formatter.formatDistance(converted, 2)
 }

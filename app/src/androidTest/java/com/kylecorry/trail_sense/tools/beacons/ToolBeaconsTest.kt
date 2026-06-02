@@ -15,8 +15,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -47,7 +46,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         click(R.id.create_btn)
         click(string(R.string.beacon), exact = true)
 
-        hasText(R.id.create_beacon_title, string(R.string.create_beacon))
+        hasText(string(R.string.create_beacon))
 
         input(R.id.beacon_name, "Test beacon")
         input(R.id.beacon_location, "42, -72")
@@ -55,7 +54,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         isNotChecked(R.id.create_at_distance)
 
-        scrollToEnd(R.id.create_beacon_scroll)
+        scrollToEnd(id("create_beacon_scroll"))
 
         hasText(R.id.beacon_group_picker, string(R.string.no_group))
         hasText(R.id.beacon_color_picker, string(R.string.color))
@@ -63,7 +62,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         input(R.id.comment, "Test notes")
 
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(id("create_beacon_save_btn"))
 
         hasText(R.id.beacon_title, string(R.string.beacons))
         hasText("Test beacon")
@@ -71,8 +70,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
     private fun openBeacon() {
         click("Test beacon")
-        hasText(R.id.beacon_title, "Test beacon")
-        hasText(R.id.beacon_title, "42.000000°,  -72.000000°")
+        hasText("Test beacon")
+        hasText("42.000000°,  -72.000000°")
 
         hasText(R.id.beacon_altitude, "1000 ft")
         hasText(R.id.beacon_altitude, string(R.string.elevation))
@@ -94,7 +93,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun shareBeacon() {
-        click(toolbarButton(R.id.beacon_title, Side.Right))
+        click(id("beacon_menu_btn"))
         click(string(R.string.share_ellipsis))
 
         hasText(string(android.R.string.copy))
@@ -106,14 +105,14 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun editBeacon() {
-        click(R.id.edit_btn)
-        hasText(R.id.create_beacon_title, string(R.string.create_beacon))
+        click(id("edit_btn"))
+        hasText(string(R.string.create_beacon))
         hasText(R.id.beacon_name, "Test beacon")
         hasText(R.id.beacon_location, "42.000000°,  -72.000000°")
         hasText(R.id.beacon_elevation, "1000")
         isNotChecked(R.id.create_at_distance)
 
-        scrollToEnd(R.id.create_beacon_scroll)
+        scrollToEnd(id("create_beacon_scroll"))
         hasText(R.id.comment, "Test notes")
         hasText(R.id.beacon_group_picker, string(R.string.no_group))
         hasText(R.id.beacon_color_picker, string(R.string.color))
@@ -121,9 +120,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         input(R.id.comment, "Test notes 2")
 
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(id("create_beacon_save_btn"))
 
-        hasText(R.id.beacon_title, "Test beacon")
+        hasText("Test beacon")
         hasText(R.id.comment_text, "Test notes 2")
     }
 
@@ -178,12 +177,12 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         input(R.id.beacon_name, "Test beacon 2")
         input(R.id.beacon_location, "42, -72")
 
-        scrollToEnd(R.id.create_beacon_scroll)
+        scrollToEnd(id("create_beacon_scroll"))
         hasText("Test group")
 
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(id("create_beacon_save_btn"))
 
-        hasText(R.id.beacon_title, "Test group")
+        hasText("Test group")
         hasText("Test beacon 2")
         back(false)
         hasText("Test group")

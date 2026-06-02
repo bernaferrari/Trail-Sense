@@ -4,166 +4,255 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolLightningBinding
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class FragmentToolLightning : BoundFragment<FragmentToolLightningBinding>() {
+class FragmentToolLightning : Fragment() {
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
-
     private val repo by lazy { LightningRepo.getInstance(requireContext()) }
 
-    private lateinit var units: DistanceUnits
-
-    private var lightningTime: Instant? = null
-    private var strike: Reading<LightningStrike>? = null
-    private var lastStrike: Reading<LightningStrike>? = null
-
-    private val timer = CoroutineTimer {
-        updateUI()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.lightningTitle.subtitle.setCompoundDrawables(
-            Resources.dp(requireContext(), 24f).toInt(),
-            left = R.drawable.ic_alert
-        )
-
-        CustomUiUtils.setImageColor(binding.lightningTitle.subtitle, AppColor.Red.color)
-
-        binding.lightningTitle.subtitle.isVisible = false
-
-        binding.startBtn.setOnClickListener {
-            if (lightningTime == null) {
-                onLightning()
-            } else {
-                onThunder()
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    LightningScreen(
+                        formatService = formatService,
+                        prefs = prefs,
+                        loadLastStrike = {
+                            withContext(Dispatchers.IO) {
+                                repo.getLast()
+                            }
+                        },
+                        saveStrike = {
+                            withContext(Dispatchers.IO) {
+                                repo.add(it)
+                            }
+                        }
+                    )
+                }
             }
         }
     }
+}
 
-    private fun onLightning() {
-        lightningTime = Instant.now()
-        binding.startBtn.setImageResource(R.drawable.ic_thunder)
-        binding.startBtn.setText(getString(R.string.thunder))
-        binding.startBtn.setState(true)
-    }
+@Composable
+private fun LightningScreen(
+    formatService: FormatService,
+    prefs: UserPreferences,
+    loadLastStrike: suspend () -> Reading<LightningStrike>?,
+    saveStrike: suspend (Reading<LightningStrike>) -> Unit
+) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val scope = rememberCoroutineScope()
 
-    private fun onThunder() {
-        lightningTime?.let { record(it) }
-        reset(false)
-    }
-
-    private fun reset(clearDistance: Boolean) {
-        lightningTime = null
-        if (clearDistance) {
-            binding.lightningTitle.title.text = ""
-            binding.lightningTitle.subtitle.isVisible = false
+    DisposableEffect(view) {
+        val previous = view.keepScreenOn
+        view.keepScreenOn = true
+        onDispose {
+            view.keepScreenOn = previous
         }
-        binding.startBtn.setImageResource(R.drawable.ic_torch_on)
-        binding.startBtn.setText(getString(R.string.lightning))
-        binding.startBtn.setState(false)
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolLightningBinding {
-        return FragmentToolLightningBinding.inflate(layoutInflater, container, false)
-    }
+    var units by remember { mutableStateOf(prefs.baseDistanceUnits) }
+    var lightningTime by remember { mutableStateOf<Instant?>(null) }
+    var strike by remember { mutableStateOf<Reading<LightningStrike>?>(null) }
+    var lastStrike by remember { mutableStateOf<Reading<LightningStrike>?>(null) }
+    var now by remember { mutableStateOf(Instant.now()) }
 
-    override fun onResume() {
-        super.onResume()
+    LaunchedEffect(Unit) {
         units = prefs.baseDistanceUnits
-        reset(true)
-        loadLastStrike()
-        timer.interval(20)
+        lightningTime = null
+        strike = null
+        lastStrike = loadLastStrike()
     }
 
-    override fun onPause() {
-        super.onPause()
-        timer.stop()
-    }
-
-    private fun loadLastStrike() {
-        inBackground {
-            lastStrike = repo.getLast()
+    LaunchedEffect(lightningTime, strike) {
+        while (true) {
+            now = Instant.now()
+            delay(20)
         }
     }
 
-    private fun updateUI() {
-        // Distance of current strike
-        val current = lightningTime?.let { getDistance(it) } ?: strike?.value?.distance
-        current?.let {
-            val distance = it
-                .convertTo(units)
-                .toRelativeDistance()
-            binding.lightningTitle.title.text = formatService.formatDistance(
-                distance,
-                Units.getDecimalPlaces(distance.units),
-                false
-            )
-            binding.lightningTitle.subtitle.isVisible =
-                Meteorology.isLightningStrikeDangerous(distance)
-        }
+    val currentDistance = lightningTime?.let { getDistance(it, now) } ?: strike?.value?.distance
+    val relativeDistance = currentDistance?.convertTo(units)?.toRelativeDistance()
+    val distanceText = relativeDistance?.let {
+        formatService.formatDistance(
+            it,
+            Units.getDecimalPlaces(it.units),
+            false
+        )
+    }.orEmpty()
+    val isDangerous = relativeDistance?.let { Meteorology.isLightningStrikeDangerous(it) } ?: false
+    val previousStrikeText = lastStrike?.let {
+        val distance = it.value.distance.convertTo(units).toRelativeDistance()
+        val lastTime = context.getString(
+            R.string.last_lightning_strike_at,
+            formatService.formatTime(it.time, includeSeconds = false)
+        )
+        val lastDistance = formatService.formatDistance(
+            distance,
+            Units.getDecimalPlaces(distance.units),
+            false
+        )
+        context.getString(R.string.dash_separated_pair, lastTime, lastDistance)
+    }.orEmpty()
 
-        // Distance of previous strike
-        lastStrike?.let {
-            val distance = it.value.distance
-                .convertTo(units)
-                .toRelativeDistance()
-
-            val lastTime = getString(
-                R.string.last_lightning_strike_at, formatService.formatTime(
-                    it.time,
-                    includeSeconds = false
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+        ) {
+            Column(
+                modifier = Modifier.align(Alignment.TopCenter),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = distanceText,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
                 )
-            )
+                if (isDangerous) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.lightning_dangerously_close),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
-            val lastDistance = formatService.formatDistance(
-                distance,
-                Units.getDecimalPlaces(distance.units),
-                false
-            )
+            Button(
+                onClick = {
+                    val startedAt = lightningTime
+                    if (startedAt == null) {
+                        lightningTime = Instant.now()
+                    } else {
+                        val distance = getDistance(startedAt, Instant.now())
+                        val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
+                        strike?.let { lastStrike = it }
+                        strike = currentStrike
+                        lightningTime = null
+                        scope.launch {
+                            saveStrike(currentStrike)
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(250.dp)
+                    .clip(CircleShape),
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (lightningTime == null) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    contentColor = if (lightningTime == null) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onPrimary
+                    }
+                )
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (lightningTime == null) R.drawable.ic_torch_on else R.drawable.ic_thunder
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Text(
+                        text = stringResource(
+                            if (lightningTime == null) R.string.lightning else R.string.thunder
+                        ),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
-            binding.previousStrike.text =
-                getString(R.string.dash_separated_pair, lastTime, lastDistance)
+            if (previousStrikeText.isNotBlank()) {
+                Text(
+                    text = previousStrikeText,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
+}
 
-    private fun record(lightning: Instant) {
-        val distance = getDistance(lightning)
-        inBackground {
-            val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
-            strike?.let { lastStrike = it }
-            strike = currentStrike
-            repo.add(currentStrike)
-        }
-    }
-
-    private fun getDistance(lightning: Instant): Distance {
-        return Distance.meters(Meteorology.getLightningStrikeDistance(lightning, Instant.now()))
-    }
-
+private fun getDistance(lightning: Instant, thunder: Instant): Distance {
+    return Distance.meters(Meteorology.getLightningStrikeDistance(lightning, thunder))
 }

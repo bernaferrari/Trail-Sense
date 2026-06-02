@@ -4,14 +4,14 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.widgets.Widgets
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.luna.text.capitalizeWords
+import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
-import com.kylecorry.trail_sense.shared.andromeda_temp.EventBus
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionOpenTool
 import com.kylecorry.trail_sense.shared.views.QuickActionNone
@@ -43,11 +43,11 @@ import com.kylecorry.trail_sense.tools.metaldetector.MetalDetectorToolRegistrati
 import com.kylecorry.trail_sense.tools.mirror.MirrorCameraToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.notes.NotesToolRegistration
-import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.packs.PackingListsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.permits.PermitsToolRegistration
+import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.qr.QRCodeScannerToolRegistration
 import com.kylecorry.trail_sense.tools.ruler.RulerToolRegistration
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
@@ -63,6 +63,9 @@ import com.kylecorry.trail_sense.tools.waterpurification.WaterBoilTimerToolRegis
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.whistle.WhistleToolRegistration
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object Tools {
 
@@ -117,7 +120,9 @@ object Tools {
         MapToolRegistration,
         MagnifierToolRegistration
     )
-    private val bus = EventBus<Bundle>()
+    private val topics = mutableMapOf<String, Topic<Bundle>>()
+    private val broadcastScope = CoroutineScope(Dispatchers.Main)
+
 
     fun isToolAvailable(context: Context, toolId: Long): Boolean {
         return getTool(context, toolId) != null
@@ -131,6 +136,7 @@ object Tools {
         val tools = hooks.memo("tools", Resources.getLocale(context).language) {
             registry.map { it.getTool(context.applicationContext) }
         }
+
 
         return tools.filter { !availableOnly || it.isAvailable(context) }
     }
@@ -168,15 +174,21 @@ object Tools {
     }
 
     fun broadcast(toolBroadcastId: String, data: Bundle? = null) {
-        bus.publish(toolBroadcastId, data ?: Bundle())
+        broadcastScope.launch {
+            topics[toolBroadcastId]?.publish(data ?: Bundle())
+        }
     }
 
-    fun subscribe(toolBroadcastId: String, callback: suspend (Bundle) -> Unit) {
-        bus.subscribe(toolBroadcastId, callback)
+    fun subscribe(toolBroadcastId: String, callback: (Bundle) -> Boolean) {
+        val topic = topics.getOrPut(toolBroadcastId) {
+            Topic()
+        }
+        topic.subscribe(callback)
     }
 
-    fun unsubscribe(toolBroadcastId: String, callback: suspend (Bundle) -> Unit) {
-        bus.unsubscribe(toolBroadcastId, callback)
+    fun unsubscribe(toolBroadcastId: String, callback: (Bundle) -> Boolean) {
+        val topic = topics[toolBroadcastId]
+        topic?.unsubscribe(callback)
     }
 
     fun getService(context: Context, serviceId: String): ToolService? {

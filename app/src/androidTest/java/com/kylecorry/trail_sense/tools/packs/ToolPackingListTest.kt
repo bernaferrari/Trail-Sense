@@ -16,8 +16,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 import kotlin.math.roundToInt
@@ -26,7 +25,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.pack_list_title, string(R.string.packing_lists))
+        hasText(string(R.string.packing_lists))
 
         shouldHaveNoPacks()
         canCreateAPack()
@@ -92,9 +91,9 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
     private fun canEditAnItemOnClick() {
         click(com.kylecorry.andromeda.views.R.id.title)
-        hasText(R.id.create_item_title, string(R.string.edit_item_title))
+        hasText(string(R.string.edit_item_title))
         hasItemForm("Test Item 1", 2, 2, string(R.string.category_food), 1.1f)
-        click(R.id.create_btn)
+        click(id("create_btn"))
         hasItem(
             "Test Item 1",
             2,
@@ -107,9 +106,9 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
     private fun canEditAnItemFromMenu() {
         clickListItemMenu(string(R.string.edit), 1)
-        hasText(R.id.create_item_title, string(R.string.edit_item_title))
+        hasText(string(R.string.edit_item_title))
         hasItemForm("Test Item 1", 2, 2, string(R.string.category_food), 1.1f)
-        click(R.id.create_btn)
+        click(id("create_btn"))
         hasItem(
             "Test Item 1",
             2,
@@ -195,7 +194,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         clickToolbarMenuItem(string(R.string.rename))
         input("Test Pack 1", "Test Pack 2")
         clickOk()
-        hasText(R.id.inventory_list_title, "Test Pack 2")
+        hasText("Test Pack 2")
     }
 
     private fun canClearPackAmounts() {
@@ -220,7 +219,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             hasText("test-pack-2.csv")
         }
         backUntil {
-            hasText(R.id.inventory_list_title, "Test Pack 2")
+            hasText("Test Pack 2")
         }
     }
 
@@ -228,7 +227,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         waitFor {
             TestUtils.back()
         }
-        hasText(R.id.pack_list_title, string(R.string.packing_lists))
+        hasText(string(R.string.packing_lists))
         hasText(com.kylecorry.andromeda.views.R.id.title, "Test Pack 2")
     }
 
@@ -236,7 +235,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         clickListItemMenu(string(android.R.string.copy))
         input(string(R.string.name), "Copied Pack")
         clickOk()
-        hasText(R.id.inventory_list_title, "Copied Pack")
+        hasText("Copied Pack")
         hasItem(
             "Test Item 1",
             0,
@@ -250,7 +249,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     private fun canDeletePack() {
         clickToolbarMenuItem(string(R.string.delete))
         clickOk()
-        hasText(R.id.pack_list_title, string(R.string.packing_lists))
+        hasText(string(R.string.packing_lists))
         not {
             hasText(com.kylecorry.andromeda.views.R.id.title, "Copied Pack")
         }
@@ -312,7 +311,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun clickToolbarMenuItem(label: String) {
-        click(toolbarButton(R.id.inventory_list_title, Side.Right))
+        click(id("inventory_menu_btn"))
         click(label)
     }
 
@@ -324,7 +323,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         weight: Float
     ) {
         click(R.id.add_btn)
-        hasText(R.id.create_item_title, string(R.string.create_item_title))
+        hasText(string(R.string.create_item_title))
 
         input(R.id.name_edit, name)
         input(R.id.count_edit, amount.toString())
@@ -336,7 +335,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         }
         clickOk()
         input(R.id.item_weight_input, weight.toString())
-        click(R.id.create_btn)
+        click(id("create_btn"))
     }
 
     private fun createPackingList(name: String) {
@@ -347,7 +346,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         clickOk()
 
         // Verify the new pack is created
-        hasText(R.id.inventory_list_title, name)
+        hasText(name)
         hasText(R.id.inventory_empty_text, string(R.string.inventory_empty_text))
     }
 }

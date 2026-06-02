@@ -1,77 +1,124 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import com.kylecorry.andromeda.fragments.BoundFragment
+import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolCoordinateConvertBinding
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 
-class FragmentToolCoordinateConvert : BoundFragment<FragmentToolCoordinateConvertBinding>() {
+class FragmentToolCoordinateConvert(context: Context) : ConverterPage {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
+    private val formatService = FormatService.getInstance(context)
     private val formats = BuiltInCoordinateFormat.entries
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.toUnits.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
+    @Composable
+    override fun Content() {
+        var coordinateText by remember { mutableStateOf("") }
+        var format by remember { mutableStateOf(formats.first()) }
+        var showPicker by remember { mutableStateOf(false) }
+        val coordinate = remember(coordinateText) { Coordinate.parse(coordinateText) }
+        val result = remember(coordinate, format) {
+            coordinate?.let { formatService.formatLocation(it, format) }.orEmpty()
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top
             ) {
-                update()
+                OutlinedTextField(
+                    value = coordinateText,
+                    onValueChange = { coordinateText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.location)) },
+                    isError = coordinateText.isNotBlank() && coordinate == null,
+                    supportingText = {
+                        if (coordinateText.isNotBlank() && coordinate == null) {
+                            Text(stringResource(R.string.coordinate_input_invalid_location))
+                        }
+                    },
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.distance_to),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = { showPicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(formatService.formatCoordinateType(format))
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = result,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                update()
-            }
         }
 
-        binding.coordinateEdit.setOnCoordinateChangeListener {
-            update()
+        if (showPicker) {
+            AlertDialog(
+                onDismissRequest = { showPicker = false },
+                title = { Text(stringResource(R.string.distance_to)) },
+                text = {
+                    Column {
+                        formats.forEach { option ->
+                            TextButton(
+                                onClick = {
+                                    format = option
+                                    showPicker = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = formatService.formatCoordinateType(option),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showPicker = false }) {
+                        Text(stringResource(R.string.done))
+                    }
+                }
+            )
         }
-
-        val toAdapter = ArrayAdapter(
-            requireContext(),
-            R.layout.spinner_item_plain,
-            R.id.item_name,
-            formats.map { formatService.formatCoordinateType(it) })
-        binding.toUnits.prompt = getString(R.string.distance_from)
-        binding.toUnits.adapter = toAdapter
-        binding.toUnits.setSelection(0)
     }
-
-    override fun onPause() {
-        super.onPause()
-        binding.coordinateEdit.pause()
-    }
-
-
-    fun update() {
-        val coordinate = binding.coordinateEdit.coordinate
-        val to = formats[binding.toUnits.selectedItemPosition]
-
-        if (coordinate == null) {
-            binding.result.text = ""
-            return
-        }
-
-        binding.result.text = formatService.formatLocation(coordinate, to)
-    }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolCoordinateConvertBinding {
-        return FragmentToolCoordinateConvertBinding.inflate(layoutInflater, container, false)
-    }
-
 }

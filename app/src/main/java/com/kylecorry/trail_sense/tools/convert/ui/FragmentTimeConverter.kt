@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import android.content.Context
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
-class FragmentTimeConverter : SimpleConvertFragment<TimeUnits>(TimeUnits.Minutes, TimeUnits.Hours) {
+class FragmentTimeConverter(private val context: Context) :
+    SimpleConvertFragment<TimeUnits>(TimeUnits.Minutes, TimeUnits.Hours) {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     override val units = listOf(
         TimeUnits.Seconds,
@@ -17,10 +19,10 @@ class FragmentTimeConverter : SimpleConvertFragment<TimeUnits>(TimeUnits.Minutes
 
     override fun getUnitName(unit: TimeUnits): String {
         return when (unit) {
-            TimeUnits.Seconds -> getString(R.string.seconds)
-            TimeUnits.Minutes -> getString(R.string.minutes)
-            TimeUnits.Hours -> getString(R.string.hours)
-            TimeUnits.Days -> getString(R.string.days)
+            TimeUnits.Seconds -> context.getString(R.string.seconds)
+            TimeUnits.Minutes -> context.getString(R.string.minutes)
+            TimeUnits.Hours -> context.getString(R.string.hours)
+            TimeUnits.Days -> context.getString(R.string.days)
             else -> ""
         }
     }

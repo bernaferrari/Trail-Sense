@@ -4,189 +4,510 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.sense.level.Level
+import com.kylecorry.andromeda.sense.compass.ICompass
+import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolSolarPanelBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
+import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import kotlin.math.absoluteValue
 
-class FragmentToolSolarPanel : BoundFragment<FragmentToolSolarPanelBinding>() {
+class FragmentToolSolarPanel : Fragment() {
 
-    private val solarPanelService = SolarPanelService()
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val compass by lazy { sensorService.getCompass() }
-    private val orientation by lazy { Level(sensorService.getOrientation()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-
-    private var position: Pair<Float, Bearing>? = null
-    private var nowDuration = Duration.ofHours(2)
-    private var alignToRestOfDay = true
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        updateButtonState()
-        binding.solarTodayBtn.setOnClickListener {
-            position = null
-            alignToRestOfDay = true
-            updatePosition()
-            updateButtonState()
-        }
-        binding.solarNowBtn.setOnClickListener {
-            val wasAligningToRestOfDay = alignToRestOfDay
-            CustomUiUtils.pickDuration(
-                requireContext(),
-                nowDuration,
-                getString(R.string.duration_of_charge)
-            ) {
-                if (it != null) {
-                    nowDuration = it
-                    position = null
-                    alignToRestOfDay = false
-                    updatePosition()
-                } else {
-                    alignToRestOfDay = wasAligningToRestOfDay
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    SolarPanelScreen()
                 }
-                updateButtonState()
             }
         }
-        Alerts.dialog(
-            requireContext(),
-            getString(R.string.tool_solar_panel_title),
-            getString(R.string.solar_panel_instructions),
-            cancelText = null
-        )
+    }
+}
 
-        observe(compass) {}
-        observe(orientation) {}
-
-        scheduleUpdates(INTERVAL_30_FPS)
-        throttleUpdates(16)
+@Composable
+private fun SolarPanelScreen(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val view = LocalView.current
+    val solarPanelService = remember { SolarPanelService() }
+    val sensorService = remember { SensorService(context) }
+    val gps = remember { sensorService.getGPS() }
+    val compass = remember { sensorService.getCompass() }
+    val orientation = remember { Level(sensorService.getOrientation()) }
+    val formatter = remember { FormatService.getInstance(context) }
+    val prefs = remember { UserPreferences(context) }
+    val declination = remember { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
+    var position by remember { mutableStateOf<Pair<Float, Bearing>?>(null) }
+    var nowDuration by remember { mutableStateOf(Duration.ofHours(2)) }
+    var alignToRestOfDay by remember { mutableStateOf(true) }
+    var gpsUpdateKey by remember { mutableIntStateOf(0) }
+    var frame by remember { mutableIntStateOf(0) }
+    var isResumed by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (position == null) {
-            gps.start(this::onGPSUpdate)
+    LaunchedEffect(Unit) {
+        Alerts.dialog(
+            context,
+            context.getString(R.string.tool_solar_panel_title),
+            context.getString(R.string.solar_panel_instructions),
+            cancelText = null
+        )
+    }
+
+    DisposableEffect(lifecycleOwner, compass, orientation, gps, view) {
+        var isStarted = false
+        val sensorListener = { true }
+        val gpsListener = {
+            gpsUpdateKey++
+            false
+        }
+
+        fun startSensors() {
+            if (isStarted) {
+                return
+            }
+            isStarted = true
+            view.keepScreenOn = true
+            compass.start(sensorListener)
+            orientation.start(sensorListener)
+            gps.start(gpsListener)
+        }
+
+        fun stopSensors() {
+            if (!isStarted) {
+                return
+            }
+            isStarted = false
+            compass.stop(sensorListener)
+            orientation.stop(sensorListener)
+            gps.stop(gpsListener)
+            view.keepScreenOn = false
+        }
+
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    isResumed = true
+                    startSensors()
+                }
+
+                Lifecycle.Event.ON_PAUSE -> {
+                    isResumed = false
+                    stopSensors()
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (isResumed) {
+            startSensors()
+        }
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            stopSensors()
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        gps.stop(this::onGPSUpdate)
+    LaunchedEffect(isResumed) {
+        if (!isResumed) {
+            return@LaunchedEffect
+        }
+        while (isActive) {
+            frame++
+            delay(33)
+        }
     }
 
-    private fun getDeclination(): Float {
-        return declination.getDeclination()
+    LaunchedEffect(alignToRestOfDay, nowDuration, gpsUpdateKey) {
+        position = null
+        val duration = if (alignToRestOfDay) Duration.ofDays(1) else nowDuration
+        position = withContext(Dispatchers.IO) {
+            solarPanelService.getBestPosition(
+                gps.location,
+                duration,
+                restrictToToday = alignToRestOfDay
+            )
+        }
     }
 
-    private fun onGPSUpdate(): Boolean {
-        updatePosition()
-        return false
-    }
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            SolarArrow(
+                visible = position != null && getAltitudeDiff(position, orientation) > ALTITUDE_THRESHOLD,
+                rotation = 0f,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+                    .testTag("arrow_up")
+            )
+            SolarArrow(
+                visible = position != null && getAltitudeDiff(position, orientation) < -ALTITUDE_THRESHOLD,
+                rotation = 180f,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp)
+                    .testTag("arrow_down")
+            )
+            SolarArrow(
+                visible = position != null && getAzimuthDiff(position, compass, declination, prefs) < -AZIMUTH_THRESHOLD,
+                rotation = 270f,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 16.dp)
+                    .testTag("arrow_left")
+            )
+            SolarArrow(
+                visible = position != null && getAzimuthDiff(position, compass, declination, prefs) > AZIMUTH_THRESHOLD,
+                rotation = 90f,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 16.dp)
+                    .testTag("arrow_right")
+            )
 
-    private fun updatePosition() {
-        inBackground {
-            withContext(Dispatchers.IO) {
-                position = solarPanelService.getBestPosition(
-                    gps.location,
-                    if (alignToRestOfDay) Duration.ofDays(1) else nowDuration,
-                    restrictToToday = alignToRestOfDay
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(56.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SolarModeButton(
+                        text = formatter.formatDuration(nowDuration),
+                        selected = !alignToRestOfDay,
+                        onClick = {
+                            CustomUiUtils.pickDuration(
+                                context,
+                                nowDuration,
+                                context.getString(R.string.duration_of_charge)
+                            ) {
+                                if (it != null) {
+                                    nowDuration = it
+                                    alignToRestOfDay = false
+                                }
+                            }
+                        },
+                        modifier = Modifier.testTag("solar_now_btn")
+                    )
+                    SolarModeButton(
+                        text = stringResource(R.string.today),
+                        selected = alignToRestOfDay,
+                        onClick = {
+                            alignToRestOfDay = true
+                        },
+                        modifier = Modifier.testTag("solar_today_btn")
+                    )
+                }
+                position?.let {
+                    Text(
+                        text = getEnergyText(solarPanelService, gps, orientation, compass, alignToRestOfDay, nowDuration, formatter, context.getString(R.string.up_to_amount)),
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .testTag("energy"),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            if (position == null) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .testTag("solar_loading")
+                )
+            } else {
+                SolarPanelReadout(
+                    position = position!!,
+                    compass = compass,
+                    orientation = orientation,
+                    formatter = formatter,
+                    prefs = prefs,
+                    declination = declination,
+                    frame = frame,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 72.dp)
+                        .testTag("solar_content")
                 )
             }
         }
     }
-
-    private fun updateButtonState() {
-        binding.solarModeControls.check(
-            if (alignToRestOfDay) R.id.solar_today_btn else R.id.solar_now_btn
-        )
-    }
-
-    override fun onUpdate() {
-        binding.solarNowBtn.text = formatService.formatDuration(nowDuration)
-
-        if (position == null) {
-            binding.solarContent.isVisible = false
-            binding.solarLoading.isVisible = true
-        }
-
-        val solarPosition = position ?: return
-
-        if (prefs.compass.useTrueNorth) {
-            compass.declination = getDeclination()
-        } else {
-            compass.declination = 0f
-        }
-
-        binding.solarContent.isVisible = true
-        binding.solarLoading.isVisible = false
-        val declinationOffset = if (prefs.compass.useTrueNorth) {
-            0f
-        } else {
-            -getDeclination()
-        }
-        val desiredAzimuth = solarPosition.second.withDeclination(declinationOffset).inverse()
-        val azimuthDiff = deltaAngle(desiredAzimuth.value, compass.rawBearing)
-        val azimuthAligned = azimuthDiff.absoluteValue < AZIMUTH_THRESHOLD
-        binding.azimuthComplete.visibility = if (azimuthAligned) View.VISIBLE else View.INVISIBLE
-        binding.currentAzimuth.text =
-            formatService.formatDegrees(compass.rawBearing, replace360 = true)
-        binding.desiredAzimuth.text =
-            formatService.formatDegrees(desiredAzimuth.value, replace360 = true)
-        binding.arrowLeft.visibility =
-            if (!azimuthAligned && azimuthDiff < 0) View.VISIBLE else View.INVISIBLE
-        binding.arrowRight.visibility =
-            if (!azimuthAligned && azimuthDiff > 0) View.VISIBLE else View.INVISIBLE
-
-        val altitudeDiff = solarPosition.first - orientation.y
-        val altitudeAligned = altitudeDiff.absoluteValue < ALTITUDE_THRESHOLD
-        binding.altitudeComplete.visibility = if (altitudeAligned) View.VISIBLE else View.INVISIBLE
-        binding.currentAltitude.text = formatService.formatDegrees(orientation.y)
-        binding.desiredAltitude.text = formatService.formatDegrees(solarPosition.first)
-        binding.arrowUp.visibility =
-            if (!altitudeAligned && altitudeDiff > 0) View.VISIBLE else View.INVISIBLE
-        binding.arrowDown.visibility =
-            if (!altitudeAligned && altitudeDiff < 0) View.VISIBLE else View.INVISIBLE
-
-        val energy = solarPanelService.getSolarEnergy(
-            gps.location,
-            orientation.y,
-            compass.bearing.inverse(),
-            if (alignToRestOfDay) Duration.ofDays(1) else nowDuration,
-            restrictToToday = alignToRestOfDay
-        )
-        binding.energy.text =
-            getString(R.string.up_to_amount, formatService.formatSolarEnergy(energy))
-    }
-
-    companion object {
-        private const val AZIMUTH_THRESHOLD = 5
-        private const val ALTITUDE_THRESHOLD = 5
-    }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolSolarPanelBinding {
-        return FragmentToolSolarPanelBinding.inflate(layoutInflater, container, false)
-    }
-
 }
+
+@Composable
+private fun SolarModeButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (selected) {
+        Button(onClick = onClick, modifier = modifier) {
+            Text(text)
+        }
+    } else {
+        OutlinedButton(onClick = onClick, modifier = modifier) {
+            Text(text)
+        }
+    }
+}
+
+@Composable
+private fun SolarArrow(
+    visible: Boolean,
+    rotation: Float,
+    modifier: Modifier = Modifier
+) {
+    if (!visible) {
+        Spacer(modifier = modifier.size(32.dp))
+        return
+    }
+
+    Icon(
+        painter = painterResource(R.drawable.ic_arrow),
+        contentDescription = null,
+        modifier = modifier
+            .size(32.dp)
+            .graphicsLayer(rotationZ = rotation),
+        tint = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun SolarPanelReadout(
+    position: Pair<Float, Bearing>,
+    compass: ICompass,
+    orientation: Level,
+    formatter: FormatService,
+    prefs: UserPreferences,
+    declination: IDeclinationStrategy,
+    frame: Int,
+    modifier: Modifier = Modifier
+) {
+    // Force this composable to refresh from live sensors.
+    frame.hashCode()
+
+    if (prefs.compass.useTrueNorth) {
+        compass.declination = declination.getDeclination()
+    } else {
+        compass.declination = 0f
+    }
+
+    val declinationOffset = if (prefs.compass.useTrueNorth) {
+        0f
+    } else {
+        -declination.getDeclination()
+    }
+    val desiredAzimuth = position.second.withDeclination(declinationOffset).inverse()
+    val azimuthAligned = getAzimuthDiff(position, compass, declination, prefs).absoluteValue < AZIMUTH_THRESHOLD
+    val altitudeAligned = getAltitudeDiff(position, orientation).absoluteValue < ALTITUDE_THRESHOLD
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(56.dp)
+    ) {
+        SolarReadoutRow(
+            label = stringResource(R.string.tilt),
+            labelTag = "tilt_label",
+            current = formatter.formatDegrees(orientation.y),
+            currentTag = "current_altitude",
+            desired = formatter.formatDegrees(position.first),
+            desiredTag = "desired_altitude",
+            isComplete = altitudeAligned,
+            completeTag = "altitude_complete"
+        )
+        SolarReadoutRow(
+            label = stringResource(R.string.compass_azimuth),
+            labelTag = "azimuth_label",
+            current = formatter.formatDegrees(compass.rawBearing, replace360 = true),
+            currentTag = "current_azimuth",
+            desired = formatter.formatDegrees(desiredAzimuth.value, replace360 = true),
+            desiredTag = "desired_azimuth",
+            isComplete = azimuthAligned,
+            completeTag = "azimuth_complete"
+        )
+    }
+}
+
+@Composable
+private fun SolarReadoutRow(
+    label: String,
+    labelTag: String,
+    current: String,
+    currentTag: String,
+    desired: String,
+    desiredTag: String,
+    isComplete: Boolean,
+    completeTag: String
+) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = label,
+                modifier = Modifier.testTag(labelTag),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(24.dp))
+            if (isComplete) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .testTag(completeTag),
+                    tint = colorResource(R.color.positive)
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .testTag(completeTag)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = current,
+                modifier = Modifier.testTag(currentTag),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(24.dp))
+            Text(
+                text = desired,
+                modifier = Modifier.testTag(desiredTag),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+private fun getEnergyText(
+    solarPanelService: SolarPanelService,
+    gps: IGPS,
+    orientation: Level,
+    compass: ICompass,
+    alignToRestOfDay: Boolean,
+    nowDuration: Duration,
+    formatter: FormatService,
+    upToFormat: String
+): String {
+    val energy = solarPanelService.getSolarEnergy(
+        gps.location,
+        orientation.y,
+        compass.bearing.inverse(),
+        if (alignToRestOfDay) Duration.ofDays(1) else nowDuration,
+        restrictToToday = alignToRestOfDay
+    )
+    return upToFormat.format(formatter.formatSolarEnergy(energy))
+}
+
+private fun getAzimuthDiff(
+    position: Pair<Float, Bearing>?,
+    compass: ICompass,
+    declination: IDeclinationStrategy,
+    prefs: UserPreferences
+): Float {
+    position ?: return 0f
+    val declinationOffset = if (prefs.compass.useTrueNorth) {
+        0f
+    } else {
+        -declination.getDeclination()
+    }
+    val desiredAzimuth = position.second.withDeclination(declinationOffset).inverse()
+    return deltaAngle(desiredAzimuth.value, compass.rawBearing)
+}
+
+private fun getAltitudeDiff(
+    position: Pair<Float, Bearing>?,
+    orientation: Level
+): Float {
+    position ?: return 0f
+    return position.first - orientation.y
+}
+
+private const val AZIMUTH_THRESHOLD = 5
+private const val ALTITUDE_THRESHOLD = 5

@@ -7,8 +7,7 @@ import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.camera.Camera
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.fragments.AndromedaFragment
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.IPermissionRequester
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
@@ -116,8 +115,8 @@ fun <T> T.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) w
     }
 }
 
-fun AndromedaFragment.requestCamera(action: (hasPermission: Boolean) -> Unit) {
-    requestPermissions(listOf(Manifest.permission.CAMERA)) {
+fun Fragment.requestCamera(action: (hasPermission: Boolean) -> Unit) {
+    requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
         action(Camera.isAvailable(requireContext()))
     }
 }

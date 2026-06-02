@@ -1,149 +1,544 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
+import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.fragments.AndromedaFragment
+import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.print.Printer
+import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.extensions.compose.useNavController
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.PrintMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
+import kotlin.math.absoluteValue
 
-/**
- * Photo maps (offline raster) truncated to expressive shell (d3o final push).
- * Replaced Bound + fragment_tool_photo_maps.xml (and related offline tabs). 5 offline XMLs deleted after.
- */
-class PhotoMapsFragment : TrailSenseComposeFragment() {
+class PhotoMapsFragment : AndromedaFragment() {
 
-    @Composable
-    override fun FragmentContent() {
-        PhotoMapsContent()
+    private val service = getAppService<MapService>()
+    private val formatter = getAppService<FormatService>()
+
+    private var mapId = 0L
+    private var autoLockLocation = false
+    private var map: PhotoMap? = null
+    private var currentFragment: Fragment? = null
+    private var pendingFragment: Fragment? = null
+    private var isMapHostReady = false
+    private var title by mutableStateOf("")
+    private var subtitle by mutableStateOf<String?>(null)
+    private var showRecenter by mutableStateOf(false)
+
+    private val exportService by lazy { FragmentMapExportService(this) }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        mapId = requireArguments().getLong("mapId")
+        autoLockLocation = requireArguments().getBoolean("autoLockLocation", false)
     }
-}
 
-@Composable
-fun Fragment.PhotoMapsContent(modifier: Modifier = Modifier) {
-    val nav = useNavController()
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(TrailSenseSpacing.md)
-        ) {
-            androidx.compose.material3.Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                shape = MaterialTheme.shapes.small,
-                shadowElevation = 2.dp,
-                modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
-            ) {
-                androidx.compose.material3.Text(
-                    text = "Photo Maps • 100% Compose + Nav3 (shell)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(TrailSenseSpacing.xxl),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TrailSenseEmptyState(
-                icon = Icons.Default.Map,
-                title = "Photo Maps",
-                description = "Import, calibrate, warp, view custom offline maps. Expressive M3 gallery + calibration in Nav3."
-            )
-
-            // Light expressive M3 polish: feature highlights (post final zero-XML push for Offline Maps 5 + Photo)
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-            androidx.compose.material3.Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md)
-            ) {
-                Column(modifier = Modifier.padding(TrailSenseSpacing.md)) {
-                    androidx.compose.material3.Text(
-                        "• Photo + blank map import",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    androidx.compose.material3.Text(
-                        "• Calibration, warp, projection",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    androidx.compose.material3.Text(
-                        "• Overlay on main map + paths",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    PhotoMapsScreen(
+                        title = title,
+                        subtitle = subtitle,
+                        showRecenter = showRecenter,
+                        onRecenter = ::recenter,
+                        onMenuClick = ::showMenu,
+                        onMapHostReady = ::onMapHostReady,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
         }
+    }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        inBackground {
+            loadMap()
+        }
+    }
+
+    override fun onDestroyView() {
+        isMapHostReady = false
+        pendingFragment = null
+        super.onDestroyView()
+    }
+
+    private fun showMenu(anchor: View) {
+        val fragment = currentFragment
+        val isMapView = fragment != null && fragment is ViewPhotoMapFragment
+        val isCalibrationFragment = fragment != null && fragment is PhotoMapCalibrationFragment
+
+        val actions = listOf(
+            MapContextualAction.Calibrate to if (isMapView) getString(R.string.calibrate) else null,
+            MapContextualAction.Guide to getString(R.string.tool_user_guide_title),
+            MapContextualAction.Rename to getString(R.string.rename),
+            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) getString(
+                R.string.change_map_projection
+            ) else null,
+            MapContextualAction.Measure to if (isMapView) getString(R.string.measure) else null,
+            MapContextualAction.CreatePath to if (isMapView) getString(R.string.create_path) else null,
+            MapContextualAction.AdjustLayers to if (isMapView) getString(R.string.layers) else null,
+            MapContextualAction.Export to if (isMapView) getString(R.string.export) else null,
+            MapContextualAction.Print to if (isMapView && Printer.canPrint()) getString(R.string.print) else null,
+            MapContextualAction.Delete to getString(R.string.delete),
+            MapContextualAction.Trace to if (isMapView) getString(R.string.trace) else null
+        )
+
+
+        Pickers.menu(
+            anchor,
+            actions.map { action -> action.second }
+        ) { index ->
+            when (actions[index].first) {
+                MapContextualAction.Calibrate -> calibrate()
+                MapContextualAction.Guide -> openGuide()
+                MapContextualAction.Rename -> rename()
+                MapContextualAction.ChangeProjection -> changeProjection(isCalibrationFragment)
+                MapContextualAction.Measure, MapContextualAction.CreatePath -> measure()
+                MapContextualAction.Export -> export()
+                MapContextualAction.Print -> print()
+                MapContextualAction.Delete -> delete()
+                MapContextualAction.Trace -> trace()
+                MapContextualAction.AdjustLayers -> adjustLayers()
+            }
+            true
+        }
+    }
+
+    private fun openGuide() {
+        UserGuideUtils.openGuide(this, R.raw.guide_tool_offline_maps)
+    }
+
+    private fun calibrate() {
+        showRecenter = true
+        val fragment = PhotoMapCalibrationFragment.create(mapId, this::showRotation) {
+            inBackground {
+                autoRotate()
+                loadMap()
+            }
+        }
+        setFragment(fragment)
+    }
+
+    private fun showRotation(rotation: Float) {
+        subtitle = getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
+    }
+
+    private fun hideRotation() {
+        subtitle = null
+    }
+
+    private fun delete() {
+        inBackground {
+            map?.let {
+                DeleteMapCommand(requireContext(), service).execute(it)
+                findNavController().popBackStack()
+            }
+        }
+    }
+
+    private fun print() {
+        val command = PrintMapCommand(requireContext())
+        inBackground(BackgroundMinimumState.Created) {
+            map?.let {
+                command.execute(it)
+            }
+        }
+    }
+
+    private fun export() {
+        inBackground {
+            map?.let {
+                service.getPhotoMap(it.id)?.let { updated ->
+                    exportService.export(updated)
+                }
+            }
+        }
+    }
+
+    private fun measure() {
+        val fragment = currentFragment
+        if (fragment != null && fragment is ViewPhotoMapFragment) {
+            fragment.startDistanceMeasurement(emptyArray())
+        }
+    }
+
+    private fun trace() {
+        val fragment = currentFragment
+        if (fragment != null && fragment is ViewPhotoMapFragment) {
+            fragment.trace()
+        }
+    }
+
+    private fun adjustLayers() {
+        val fragment = currentFragment
+        if (fragment != null && fragment is ViewPhotoMapFragment) {
+            fragment.adjustLayers()
+        }
+    }
+
+    private fun rename() {
+        inBackground {
+            map?.let {
+                service.getPhotoMap(it.id)?.let { updated ->
+                    RenameMapCommand(requireContext(), service).execute(updated)
+                    val renamed = service.getPhotoMap(updated.id)
+                    onMain {
+                        map = renamed
+                        title = renamed?.name.orEmpty()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun changeProjection(showConfirmation: Boolean) {
+        val projections = MapProjectionType.values()
+        val projectionNames = projections.map { formatter.formatMapProjection(it) }
+        Pickers.item(
+            requireContext(),
+            getString(R.string.change_map_projection),
+            projectionNames,
+            projections.indexOf(map?.metadata?.projection)
         ) {
-            FloatingActionButton(
-                onClick = { /* import / calibrate */ },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.testTag("photo_map_add_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_add), contentDescription = "Add photo map")
+            it ?: return@item
+            val newProjection = projections[it]
+            val applyProjectionChange = {
+                map?.let { m ->
+                    inBackground {
+                        val updated = service.getPhotoMap(m.id) ?: return@inBackground
+                        val changed = service.setProjection(updated, newProjection)
+                        onMain {
+                            map = changed
+                            reload()
+                        }
+                    }
+                }
             }
-            FloatingActionButton(
-                onClick = { /* list / settings */ },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.testTag("photo_map_list_btn")
-            ) {
-                Icon(painterResource(R.drawable.ic_list), contentDescription = "Maps list")
+
+            if (showConfirmation) {
+                Alerts.dialog(
+                    requireContext(),
+                    getString(R.string.change_map_projection),
+                    getString(R.string.map_calibration_clear_message)
+                ) { cancelled ->
+                    if (!cancelled) {
+                        applyProjectionChange()
+                    }
+                }
+            } else {
+                applyProjectionChange()
             }
         }
     }
+
+    private fun recenter() {
+        val fragment = currentFragment
+        if (fragment != null && fragment is ViewPhotoMapFragment) {
+            fragment.recenter()
+        }
+
+        if (fragment != null && fragment is PhotoMapCalibrationFragment) {
+            fragment.recenter()
+        }
+    }
+
+    private fun reload() {
+        val fragment = currentFragment
+        if (fragment != null && fragment is ViewPhotoMapFragment) {
+            fragment.reloadMap()
+        }
+
+        if (fragment != null && fragment is PhotoMapCalibrationFragment) {
+            fragment.reloadMap()
+        }
+    }
+
+    private suspend fun loadMap() {
+        val loaded = service.getPhotoMap(mapId)
+        onMain {
+            loaded?.let(::onMapLoad)
+        }
+    }
+
+    private fun onMapLoad(map: PhotoMap) {
+        this.map = map
+        title = map.name
+        when {
+            !map.georeference.isWarpingCompleted -> warp()
+            !map.isCalibrated -> calibrate()
+            else -> view()
+        }
+    }
+
+    private fun warp() {
+        hideRotation()
+        val fragment = WarpMapFragment().apply {
+            arguments = Bundle().apply {
+                putLong("mapId", mapId)
+            }
+        }.also {
+            showRecenter = false
+            it.setOnCompleteListener {
+                inBackground {
+                    loadMap()
+                }
+            }
+        }
+
+        setFragment(fragment)
+    }
+
+    private suspend fun autoRotate() {
+        val updatedMap = service.getPhotoMap(mapId) ?: return
+        if (!updatedMap.isCalibrated) return
+        val newRotation = MapRotationCalculator().calculate(updatedMap)
+
+        val delta = Trigonometry.deltaAngle(newRotation, updatedMap.georeference.rotation).absoluteValue
+        if (delta > 1f) {
+            toast(getString(R.string.map_auto_rotated))
+        }
+
+        val rotated = updatedMap.copy(
+            georeference = updatedMap.georeference.copy(
+                rotation = newRotation,
+                isRotationCompleted = true
+            )
+        )
+
+        service.add(rotated)
+        onMain {
+            map = rotated
+        }
+    }
+
+
+    private fun view() {
+        hideRotation()
+        showRecenter = true
+        val fragment = ViewPhotoMapFragment.create(mapId, autoLockLocation)
+        setFragment(fragment)
+    }
+
+    private fun setFragment(fragment: Fragment) {
+        currentFragment = fragment
+        if (!isMapHostReady) {
+            pendingFragment = fragment
+            return
+        }
+
+        pendingFragment = null
+        val fragmentManager = childFragmentManager
+        fragmentManager.commit {
+            replace(R.id.map_fragment, fragment)
+        }
+    }
+
+    private fun onMapHostReady() {
+        if (isMapHostReady) {
+            return
+        }
+
+        isMapHostReady = true
+        pendingFragment?.let(::setFragment)
+    }
 }
 
-@Preview(showBackground = true, name = "PhotoMaps Shell Preview")
 @Composable
-private fun PhotoMapsContentPreview() {
-    com.kylecorry.trail_sense.shared.views.TrailSenseTheme {
-        Box(Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                TrailSenseEmptyState(
-                    icon = Icons.Default.Map,
-                    title = "Photo Maps",
-                    description = "Expressive shell (XMLs deleted)."
-                )
-            }
+private fun PhotoMapsScreen(
+    title: String,
+    subtitle: String?,
+    showRecenter: Boolean,
+    onRecenter: () -> Unit,
+    onMenuClick: (View) -> Unit,
+    onMapHostReady: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            PhotoMapHeader(
+                title = title,
+                subtitle = subtitle,
+                showRecenter = showRecenter,
+                onRecenter = onRecenter,
+                onMenuClick = onMenuClick
+            )
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("map_fragment"),
+                factory = { context ->
+                    FrameLayout(context).apply {
+                        id = R.id.map_fragment
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        onMapHostReady()
+                    }
+                }
+            )
         }
     }
 }
 
+@Composable
+private fun PhotoMapHeader(
+    title: String,
+    subtitle: String?,
+    showRecenter: Boolean,
+    onRecenter: () -> Unit,
+    onMenuClick: (View) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (showRecenter) {
+                HeaderImageButton(
+                    id = R.id.map_recenter_btn,
+                    icon = R.drawable.ic_recenter,
+                    tag = "map_recenter_btn",
+                    onClick = { _ -> onRecenter() }
+                )
+            } else {
+                Spacer(modifier = Modifier.size(48.dp))
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+                    .testTag("map_title")
+            ) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            HeaderImageButton(
+                id = R.id.map_menu_btn,
+                icon = R.drawable.ic_menu_dots,
+                tag = "map_menu_btn",
+                onClick = onMenuClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeaderImageButton(
+    id: Int,
+    icon: Int,
+    tag: String,
+    onClick: (View) -> Unit
+) {
+    val tint = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    AndroidView(
+        modifier = Modifier
+            .size(48.dp)
+            .testTag(tag),
+        factory = { context ->
+            ImageButton(context).apply {
+                this.id = id
+                background = null
+                setImageResource(icon)
+            }
+        },
+        update = {
+            it.setColorFilter(tint)
+            it.setOnClickListener { view -> onClick(view) }
+        }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PhotoMapsScreenPreview() {
+    TrailSenseTheme {
+        PhotoMapsScreen(
+            title = "Topo Survey",
+            subtitle = "Rotation: 2°",
+            showRecenter = true,
+            onRecenter = {},
+            onMenuClick = {},
+            onMapHostReady = {}
+        )
+    }
+}

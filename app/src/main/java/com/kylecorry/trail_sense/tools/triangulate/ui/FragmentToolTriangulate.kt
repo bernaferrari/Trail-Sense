@@ -1,23 +1,43 @@
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.graphics.Typeface
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.BoundFragment
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -27,7 +47,6 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolTriangulateBinding
 import com.kylecorry.trail_sense.shared.AppUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryMarkerColor
@@ -44,12 +63,22 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
+import com.kylecorry.trail_sense.shared.views.BearingInputView
+import com.kylecorry.trail_sense.shared.views.CoordinateInputView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
+import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 
-class FragmentToolTriangulate : BoundFragment<FragmentToolTriangulateBinding>() {
+class FragmentToolTriangulate : Fragment() {
+
+    private var triangulateViews: TriangulateViews? = null
+    private val binding: TriangulateViews
+        get() = triangulateViews ?: error("Triangulate views are not ready")
+    private val isBound: Boolean
+        get() = triangulateViews != null
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -75,6 +104,26 @@ class FragmentToolTriangulate : BoundFragment<FragmentToolTriangulateBinding>() 
 
     private val updateTimer = CoroutineTimer {
         update()
+    }
+
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createTriangulateViews(requireContext())
+        triangulateViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    TriangulateHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -353,6 +402,11 @@ class FragmentToolTriangulate : BoundFragment<FragmentToolTriangulateBinding>() 
         saveState()
     }
 
+    override fun onDestroyView() {
+        triangulateViews = null
+        super.onDestroyView()
+    }
+
     private fun update() {
         if (!isBound) {
             return
@@ -464,9 +518,431 @@ class FragmentToolTriangulate : BoundFragment<FragmentToolTriangulateBinding>() 
         return location != null && bearing != null
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater, container: ViewGroup?
-    ): FragmentToolTriangulateBinding {
-        return FragmentToolTriangulateBinding.inflate(layoutInflater, container, false)
+}
+
+private data class TriangulateViews(
+    val root: View,
+    val triangulateTitle: TriangulateTitle,
+    val actions: ChipGroup,
+    val createBeacon: Chip,
+    val navigate: Chip,
+    val shareLocation: Chip,
+    val updateGpsOverride: Chip,
+    val map: MapView,
+    val locationButtonGroup: MaterialButtonToggleGroup,
+    val locationButtonOther: MaterialButton,
+    val locationButtonSelf: MaterialButton,
+    val location1Expansion: TriangulateExpansion,
+    val location1Title: TextView,
+    val location1DropdownIcon: ImageView,
+    val location1Instructions: TextView,
+    val location1: CoordinateInputView,
+    val bearing1: BearingInputView,
+    val location2Expansion: TriangulateExpansion,
+    val location2Title: TextView,
+    val location2DropdownIcon: ImageView,
+    val location2Instructions: TextView,
+    val location2: CoordinateInputView,
+    val bearing2: BearingInputView,
+    val resetBtn: MaterialButton
+)
+
+private data class TriangulateTitle(
+    val title: TextView
+)
+
+private class TriangulateExpansion(
+    val root: View,
+    private val content: View,
+    header: View
+) {
+    private var listener: ((Boolean) -> Unit)? = null
+    private var expanded = false
+
+    init {
+        content.isVisible = false
+        header.setOnClickListener {
+            setExpanded(!expanded)
+        }
+    }
+
+    fun setOnExpandStateChangedListener(listener: ((Boolean) -> Unit)?) {
+        this.listener = listener
+    }
+
+    fun expand() {
+        setExpanded(true)
+    }
+
+    private fun setExpanded(expanded: Boolean) {
+        if (this.expanded == expanded) {
+            return
+        }
+        this.expanded = expanded
+        content.isVisible = expanded
+        listener?.invoke(expanded)
+    }
+}
+
+@Composable
+private fun TriangulateHost(
+    views: TriangulateViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private data class TriangulateLocationSection(
+    val expansion: TriangulateExpansion,
+    val title: TextView,
+    val dropdownIcon: ImageView,
+    val instructions: TextView,
+    val coordinate: CoordinateInputView,
+    val bearing: BearingInputView
+)
+
+private fun createTriangulateViews(context: Context): TriangulateViews {
+    val root = ScrollView(context).apply {
+        isFillViewport = false
+    }
+    val content = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(0, 0, 0, context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin))
+    }
+    root.addView(
+        content,
+        ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    val titleText = TextView(context).apply {
+        id = R.id.triangulate_title
+        textSize = 20f
+        typeface = Typeface.DEFAULT_BOLD
+        setPadding(16.dp(context), 16.dp(context), 16.dp(context), 8.dp(context))
+        setTextColor(resolveThemeColor(context, android.R.attr.textColorPrimary))
+    }
+    content.addView(
+        titleText,
+        linearParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    )
+
+    val actions = ChipGroup(context).apply {
+        id = R.id.actions
+        visibility = View.GONE
+    }
+    val createBeacon = createActionChip(
+        context,
+        R.id.create_beacon,
+        context.getString(R.string.beacon),
+        R.drawable.ic_location
+    )
+    val navigate = createActionChip(
+        context,
+        R.id.navigate,
+        context.getString(R.string.navigate),
+        R.drawable.ic_beacon
+    )
+    val shareLocation = createActionChip(
+        context,
+        R.id.share_location,
+        context.getString(R.string.share_ellipsis),
+        R.drawable.ic_share
+    )
+    val updateGpsOverride = createActionChip(
+        context,
+        R.id.update_gps_override,
+        context.getString(R.string.update_gps_override),
+        R.drawable.satellite
+    )
+    actions.addView(createBeacon)
+    actions.addView(navigate)
+    actions.addView(shareLocation)
+    actions.addView(updateGpsOverride)
+    content.addView(
+        actions,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            start = 16.dp(context),
+            end = 16.dp(context)
+        )
+    )
+
+    val map = MapView(context).apply {
+        id = R.id.map
+        background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
+        backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
+        backgroundColorOverride = Resources.color(context, R.color.colorSecondary)
+    }
+    content.addView(
+        map,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            200.dp(context),
+            start = 8.dp(context),
+            top = 8.dp(context),
+            end = 8.dp(context)
+        )
+    )
+
+    content.addView(
+        TextView(context).apply {
+            text = context.getString(R.string.location_to_triangulate)
+        },
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            start = 8.dp(context),
+            top = 16.dp(context),
+            end = 8.dp(context)
+        )
+    )
+
+    val locationButtonGroup = MaterialButtonToggleGroup(context).apply {
+        id = R.id.location_button_group
+        isSingleSelection = true
+    }
+    val locationButtonOther = MaterialButton(context).apply {
+        id = R.id.location_button_other
+        text = context.getString(R.string.destination)
+    }
+    val locationButtonSelf = MaterialButton(context).apply {
+        id = R.id.location_button_self
+        text = context.getString(R.string.my_location)
+    }
+    locationButtonGroup.addView(
+        locationButtonOther,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+    locationButtonGroup.addView(
+        locationButtonSelf,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+    content.addView(
+        locationButtonGroup,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            start = 8.dp(context),
+            top = 8.dp(context),
+            end = 8.dp(context)
+        )
+    )
+
+    val location1 = createLocationSection(context, 1)
+    content.addView(
+        location1.expansion.root,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            start = 8.dp(context),
+            top = 16.dp(context),
+            end = 8.dp(context)
+        )
+    )
+
+    val location2 = createLocationSection(context, 2)
+    content.addView(
+        location2.expansion.root,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            start = 8.dp(context),
+            top = 16.dp(context),
+            end = 8.dp(context)
+        )
+    )
+
+    val resetBtn = MaterialButton(context).apply {
+        id = R.id.reset_btn
+        text = context.getString(R.string.reset)
+    }
+    content.addView(
+        resetBtn,
+        linearParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            top = 16.dp(context),
+            gravity = Gravity.CENTER_HORIZONTAL
+        )
+    )
+
+    return TriangulateViews(
+        root = root,
+        triangulateTitle = TriangulateTitle(titleText),
+        actions = actions,
+        createBeacon = createBeacon,
+        navigate = navigate,
+        shareLocation = shareLocation,
+        updateGpsOverride = updateGpsOverride,
+        map = map,
+        locationButtonGroup = locationButtonGroup,
+        locationButtonOther = locationButtonOther,
+        locationButtonSelf = locationButtonSelf,
+        location1Expansion = location1.expansion,
+        location1Title = location1.title,
+        location1DropdownIcon = location1.dropdownIcon,
+        location1Instructions = location1.instructions,
+        location1 = location1.coordinate,
+        bearing1 = location1.bearing,
+        location2Expansion = location2.expansion,
+        location2Title = location2.title,
+        location2DropdownIcon = location2.dropdownIcon,
+        location2Instructions = location2.instructions,
+        location2 = location2.coordinate,
+        bearing2 = location2.bearing,
+        resetBtn = resetBtn
+    )
+}
+
+private fun createActionChip(
+    context: Context,
+    id: Int,
+    text: String,
+    icon: Int
+): Chip {
+    return Chip(context).apply {
+        this.id = id
+        this.text = text
+        setChipIconResource(icon)
+        chipIconSize = context.resources.getDimension(R.dimen.chip_icon_size)
+        chipIconTint = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+        iconStartPadding = 4.dp(context).toFloat()
+    }
+}
+
+private fun createLocationSection(
+    context: Context,
+    index: Int
+): TriangulateLocationSection {
+    val root = LinearLayout(context).apply {
+        id = if (index == 1) R.id.location_1_expansion else R.id.location_2_expansion
+        orientation = LinearLayout.VERTICAL
+        background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
+        backgroundTintList = ColorStateList.valueOf(
+            resolveThemeColor(context, android.R.attr.colorBackgroundFloating)
+        )
+    }
+
+    val header = LinearLayout(context).apply {
+        gravity = Gravity.CENTER_VERTICAL
+        orientation = LinearLayout.HORIZONTAL
+        setPadding(16.dp(context), 16.dp(context), 16.dp(context), 16.dp(context))
+    }
+    val title = TextView(context).apply {
+        id = if (index == 1) R.id.location_1_title else R.id.location_2_title
+        gravity = Gravity.CENTER_VERTICAL
+        compoundDrawablePadding = 8.dp(context)
+        setCompoundDrawables(left = R.drawable.ic_info)
+        CustomUiUtils.setImageColor(this, Resources.androidTextColorSecondary(context))
+    }
+    val dropdown = ImageView(context).apply {
+        id = if (index == 1) R.id.location_1_dropdown_icon else R.id.location_2_dropdown_icon
+        setImageResource(R.drawable.ic_drop_down)
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    header.addView(
+        title,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+    header.addView(
+        dropdown,
+        LinearLayout.LayoutParams(24.dp(context), 24.dp(context))
+    )
+    root.addView(
+        header,
+        linearParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    )
+
+    val body = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(16.dp(context), 0, 16.dp(context), 16.dp(context))
+    }
+    val instructions = TextView(context).apply {
+        id = if (index == 1) R.id.location_1_instructions else R.id.location_2_instructions
+    }
+    val coordinate = CoordinateInputView(context).apply {
+        id = if (index == 1) R.id.location_1 else R.id.location_2
+    }
+    val bearing = BearingInputView(context).apply {
+        id = if (index == 1) R.id.bearing_1 else R.id.bearing_2
+    }
+    body.addView(
+        instructions,
+        linearParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    )
+    body.addView(
+        coordinate,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            top = 24.dp(context)
+        )
+    )
+    body.addView(
+        bearing,
+        linearParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            top = 24.dp(context)
+        )
+    )
+    root.addView(
+        body,
+        linearParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    )
+
+    return TriangulateLocationSection(
+        expansion = TriangulateExpansion(root, body, header),
+        title = title,
+        dropdownIcon = dropdown,
+        instructions = instructions,
+        coordinate = coordinate,
+        bearing = bearing
+    )
+}
+
+private fun linearParams(
+    width: Int,
+    height: Int,
+    start: Int = 0,
+    top: Int = 0,
+    end: Int = 0,
+    bottom: Int = 0,
+    gravity: Int? = null
+): LinearLayout.LayoutParams {
+    return LinearLayout.LayoutParams(width, height).apply {
+        setMargins(start, top, end, bottom)
+        gravity?.let { this.gravity = it }
+    }
+}
+
+private fun resolveThemeColor(context: Context, attr: Int): Int {
+    val value = TypedValue()
+    context.theme.resolveAttribute(attr, value, true)
+    return if (value.resourceId != 0) {
+        ContextCompat.getColor(context, value.resourceId)
+    } else {
+        value.data
+    }
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TriangulateHostPreview() {
+    TrailSenseTheme {
+        TriangulateHost(
+            views = createTriangulateViews(androidx.compose.ui.platform.LocalContext.current)
+        )
     }
 }

@@ -1,19 +1,32 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.andromeda.fragments.BoundFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.observeFlow
@@ -25,7 +38,6 @@ import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentPhotoMapsViewBinding
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -39,9 +51,11 @@ import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
@@ -54,7 +68,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
+class ViewPhotoMapFragment : Fragment() {
+    private var photoMapViews: ViewPhotoMapViews? = null
+    private val binding: ViewPhotoMapViews
+        get() = photoMapViews ?: error("Photo map views are not ready")
+    private val isBound: Boolean
+        get() = photoMapViews != null
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
@@ -85,6 +104,9 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
     private var mapLockMode = MapLockMode.Free
 
     private val throttle = Throttle(20)
+    private val updateTimer = CoroutineTimer {
+        updatePeriodic()
+    }
 
     private var shouldLockOnMapLoad = false
 
@@ -94,11 +116,24 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         shouldLockOnMapLoad = requireArguments().getBoolean("autoLockLocation", false)
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentPhotoMapsViewBinding {
-        return FragmentPhotoMapsViewBinding.inflate(layoutInflater, container, false)
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createViewPhotoMapViews(requireContext())
+        photoMapViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    ViewPhotoMapHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -110,6 +145,7 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         if (mapLockMode == MapLockMode.Trace) {
             updateMapLockMode(MapLockMode.Trace, prefs.photoMaps.keepMapFacingUp)
         }
+        updateTimer.interval(5000)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -172,8 +208,6 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         binding.zoomInBtn.setOnClickListener {
             binding.map.zoom(2f)
         }
-
-        scheduleUpdates(5000)
     }
 
     private fun getDefaultMapAzimuth(keepMapUp: Boolean): Float {
@@ -496,9 +530,12 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
 
     override fun onPause() {
         super.onPause()
+        updateTimer.stop()
         layerSheet?.setOnDismissListener(null)
         layerSheet?.dismiss()
-        layerManager.pause(binding.map)
+        photoMapViews?.let {
+            layerManager.pause(it.map)
+        }
         // Reset brightness
         screenLight.off()
 
@@ -514,24 +551,19 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
         activity?.let { screenLock.releaseLock(it) }
+        photoMapViews = null
+        super.onDestroyView()
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
-
-        useEffect(resetOnResume) {
-            activity?.let { screenLock.updateLock(it) }
-        }
-
-        effect("attribution", layerManager.key) {
-            inBackground {
-                val attribution = binding.map.getAttribution(requireContext())
-                onMain {
-                    binding.mapAttribution.text = attribution
-                    binding.mapAttribution.isVisible = attribution != null
-                }
+    private fun updatePeriodic() {
+        activity?.let { screenLock.updateLock(it) }
+        val views = photoMapViews ?: return
+        inBackground {
+            val attribution = views.map.getAttribution(requireContext())
+            onMain {
+                views.mapAttribution.text = attribution
+                views.mapAttribution.isVisible = attribution != null
             }
         }
     }
@@ -578,4 +610,175 @@ class ViewPhotoMapFragment : BoundFragment<FragmentPhotoMapsViewBinding>() {
         }
     }
 
+}
+
+private data class ViewPhotoMapViews(
+    val root: View,
+    val map: MapView,
+    val mapAttribution: TextView,
+    val zoomInBtn: FloatingActionButton,
+    val zoomOutBtn: FloatingActionButton,
+    val lockBtn: FloatingActionButton,
+    val navigationSheet: com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView,
+    val distanceSheet: MapDistanceSheet
+)
+
+@Composable
+private fun ViewPhotoMapHost(
+    views: ViewPhotoMapViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
+    val margin = Resources.dp(context, 16f).toInt()
+    val bottomReserve = Resources.dp(context, 120f).toInt()
+    val fabStep = Resources.dp(context, 56f).toInt()
+
+    val root = FrameLayout(context)
+
+    val map = MapView(context).apply {
+        id = R.id.map
+        setBackgroundColor(Resources.color(context, R.color.colorSecondary))
+    }
+
+    val attribution = TextView(context).apply {
+        id = R.id.map_attribution
+        setBackgroundColor(0x88000000.toInt())
+        linksClickable = true
+        setPadding(
+            Resources.dp(context, 4f).toInt(),
+            Resources.dp(context, 2f).toInt(),
+            Resources.dp(context, 4f).toInt(),
+            Resources.dp(context, 2f).toInt()
+        )
+        setTextColor(Color.WHITE)
+        textSize = 8f
+        visibility = View.GONE
+    }
+
+    val lockBtn = FloatingActionButton(context).apply {
+        id = R.id.lock_btn
+        alpha = 0.86f
+        setImageResource(R.drawable.satellite)
+    }
+
+    val zoomOutBtn = FloatingActionButton(context).apply {
+        id = R.id.zoom_out_btn
+        alpha = 0.86f
+        setImageResource(R.drawable.ic_zoom_out)
+        isClickable = true
+        isFocusable = true
+    }
+
+    val zoomInBtn = FloatingActionButton(context).apply {
+        id = R.id.zoom_in_btn
+        alpha = 0.86f
+        setImageResource(R.drawable.ic_add)
+        isClickable = true
+        isFocusable = true
+    }
+
+    val navigationSheet =
+        com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView(context).apply {
+            id = R.id.navigation_sheet
+            visibility = View.GONE
+        }
+
+    val distanceSheet = MapDistanceSheet(context, null).apply {
+        id = R.id.distance_sheet
+        visibility = View.GONE
+    }
+
+    root.addView(
+        map,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+    root.addView(
+        attribution,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            bottomMargin = bottomReserve
+        }
+    )
+    root.addView(
+        zoomInBtn,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            marginEnd = margin
+            bottomMargin = bottomReserve + fabStep * 2
+        }
+    )
+    root.addView(
+        zoomOutBtn,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            marginEnd = margin
+            bottomMargin = bottomReserve + fabStep
+        }
+    )
+    root.addView(
+        lockBtn,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            marginEnd = margin
+            bottomMargin = bottomReserve
+        }
+    )
+    root.addView(
+        navigationSheet,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM
+        )
+    )
+    root.addView(
+        distanceSheet,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.BOTTOM
+        )
+    )
+
+    return ViewPhotoMapViews(
+        root = root,
+        map = map,
+        mapAttribution = attribution,
+        zoomInBtn = zoomInBtn,
+        zoomOutBtn = zoomOutBtn,
+        lockBtn = lockBtn,
+        navigationSheet = navigationSheet,
+        distanceSheet = distanceSheet
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ViewPhotoMapHostPreview() {
+    TrailSenseTheme {
+        ViewPhotoMapHost(
+            views = createViewPhotoMapViews(androidx.compose.ui.platform.LocalContext.current)
+        )
+    }
 }

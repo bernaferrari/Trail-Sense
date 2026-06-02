@@ -1,14 +1,15 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import android.content.Context
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.shared.FormatService
 import kotlin.math.absoluteValue
 
-class FragmentWeightConverter :
+class FragmentWeightConverter(context: Context) :
     SimpleConvertFragment<WeightUnits>(WeightUnits.Kilograms, WeightUnits.Pounds) {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     override val units = WeightUnits.values().toList()
 

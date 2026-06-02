@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import android.os.Bundle
-import androidx.compose.runtime.Composable
-import androidx.fragment.app.Fragment
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 
-/**
- * Bottom sheet variant of guide detail. Reuses the modern GuideContent composable.
- * Shown programmatically via UserGuideUtils (show() extension handles presentation).
- */
-class GuideBottomSheetFragment : TrailSenseComposeFragment() {
+class GuideBottomSheetFragment : BottomSheetDialogFragment() {
 
     private val guide: UserGuide by lazy {
         UserGuide(
@@ -19,11 +19,19 @@ class GuideBottomSheetFragment : TrailSenseComposeFragment() {
         )
     }
 
-    @Composable
-    override fun FragmentContent() {
-        // Bridge the lazy guide into the shared composable via args (consistent with GuideFragment)
-        // We set arguments in create(), so the GuideContent extension reads them.
-        GuideContent()
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    GuideScreen(name = guide.name, resource = guide.contents)
+                }
+            }
+        }
     }
 
     companion object {

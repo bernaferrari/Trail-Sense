@@ -1,17 +1,34 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
-import android.widget.ProgressBar
-import android.widget.TextView
-import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.textfield.TextInputEditText
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useCoroutineQueue
-import com.kylecorry.andromeda.list.GridView
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.physics.NoDragModel
@@ -24,212 +41,212 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseReactiveFragment
-import com.kylecorry.trail_sense.shared.extensions.useDistancePreference
-import com.kylecorry.trail_sense.shared.extensions.useFloatPreference
-import com.kylecorry.trail_sense.shared.extensions.useSpeedPreference
-import com.kylecorry.trail_sense.shared.views.BulletSpeedInputView
-import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.tools.ballistics.domain.BallisticsCalculator
 import com.kylecorry.trail_sense.tools.ballistics.domain.G1DragModel
 import com.kylecorry.trail_sense.tools.ballistics.domain.TrajectoryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Duration
 
-class FragmentBallisticsCalculator :
-    TrailSenseReactiveFragment(R.layout.fragment_tool_ballistics_calculator) {
+@Composable
+fun BallisticsCalculatorPage(
+    modifier: Modifier = Modifier
+) {
+    val formatter = remember { AppServiceRegistry.get<FormatService>() }
+    val prefs = remember { AppServiceRegistry.get<UserPreferences>() }
+    val normalScopeHeight = remember { Distance.from(1.5f, DistanceUnits.Inches) }
+    val (zeroDistance, setZeroDistance) = rememberDistancePreference("cache-ballistics-sight-in-range")
+    val (storedScopeHeight, setScopeHeight) = rememberDistancePreference("cache-ballistics-scope-height")
+    val scopeHeight = storedScopeHeight ?: normalScopeHeight
+    val (bulletSpeed, setBulletSpeed) = rememberSpeedPreference("cache-ballistics-bullet-speed")
+    val (ballisticCoefficient, setBallisticCoefficient) = rememberFloatPreference("cache-ballistics-ballistic-coefficient")
+    var ballisticCoefficientText by remember {
+        mutableStateOf(ballisticCoefficient?.let { DecimalFormatter.format(it, 5, false) } ?: "")
+    }
+    var trajectory by remember { mutableStateOf(emptyList<TrajectoryPoint>()) }
+    var loading by remember { mutableStateOf(false) }
 
-    override fun update() {
-        val ballisticsTableView = useView<RecyclerView>(R.id.ballistics_table)
-        val ballisticsGrid = useMemo(ballisticsTableView) {
-            GridView(ballisticsTableView, R.layout.list_item_grid_cell, 4) { view, value: String ->
-                view.findViewById<TextView>(R.id.content).text = value
-            }
-        }
-        val zeroDistanceView = useView<DistanceInputView>(R.id.zero_distance)
-        val scopeHeightView = useView<DistanceInputView>(R.id.scope_height)
-        val bulletSpeedView = useView<BulletSpeedInputView>(R.id.bullet_speed)
-        val loadingView = useView<ProgressBar>(R.id.loading)
-        // TODO: Picker for different bullet types with option for Custom BC
-        val ballisticCoefficientView = useView<TextInputEditText>(R.id.ballistic_coefficient)
-
-        val formatter = useService<FormatService>()
-        val prefs = useService<UserPreferences>()
-        val queue = useCoroutineQueue()
-
-        // TODO: Determine normal value for metric
-        val normalScopeHeight = useMemo {
-            Distance.from(1.5f, DistanceUnits.Inches)
-        }
-
-        val (zeroDistance, setZeroDistance) = useDistancePreference("cache-ballistics-sight-in-range")
-        val (scopeHeight, setScopeHeight) = useDistancePreference("cache-ballistics-scope-height")
-        val (bulletSpeed, setBulletSpeed) = useSpeedPreference("cache-ballistics-bullet-speed")
-        val (ballisticCoefficient, setBallisticCoefficient) = useFloatPreference("cache-ballistics-ballistic-coefficient")
-        val (trajectory, setTrajectory) = useState(emptyList<TrajectoryPoint>())
-        val (loading, setLoading) = useState(false)
-
-        useEffect(scopeHeightView, scopeHeight, normalScopeHeight) {
-            if (scopeHeight == null) {
-                setScopeHeight(normalScopeHeight)
-                scopeHeightView.value = normalScopeHeight
-            }
-        }
-
-        // Intentionally not re-running when the values change
-        useEffect(
-            zeroDistanceView,
-            scopeHeightView,
-            bulletSpeedView,
-            ballisticCoefficientView,
-            ballisticsGrid
-        ) {
-            zeroDistanceView.units =
-                formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
-            zeroDistanceView.hint = getString(R.string.sight_in_range)
-            if (zeroDistance != null) {
-                zeroDistanceView.value = zeroDistance
-            }
-            zeroDistanceView.setOnValueChangeListener {
-                setZeroDistance(it ?: Distance.from(0f, DistanceUnits.Yards))
-            }
-
-            scopeHeightView.units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits)
-            scopeHeightView.hint = getString(R.string.scope_height)
-            if (scopeHeight != null) {
-                scopeHeightView.value = scopeHeight
-            }
-            scopeHeightView.setOnValueChangeListener {
-                setScopeHeight(it ?: Distance.from(0f, DistanceUnits.Inches))
-            }
-
-            bulletSpeedView.units =
-                formatter.sortDistanceUnits(listOf(DistanceUnits.Feet, DistanceUnits.Meters))
-            bulletSpeedView.hint = getString(R.string.muzzle_velocity)
-
-            if (bulletSpeed != null) {
-                bulletSpeedView.value = bulletSpeed
-            }
-
-            bulletSpeedView.setOnValueChangeListener {
-                setBulletSpeed(it)
-            }
-
-            if (ballisticCoefficient != null) {
-                ballisticCoefficientView.setText(
-                    DecimalFormatter.format(
-                        ballisticCoefficient,
-                        5,
-                        false
-                    )
-                )
-            }
-            ballisticCoefficientView.addTextChangedListener {
-                setBallisticCoefficient(it?.toString()?.toFloatCompat())
-            }
-
-            ballisticsGrid.addLineSeparator()
-        }
-
-        useBackgroundEffect(zeroDistance, scopeHeight, bulletSpeed, ballisticCoefficient) {
-            queue.replace {
-                setLoading(true)
-                setTrajectory(
-                    if (bulletSpeed != null && bulletSpeed.value > 0 && zeroDistance != null && scopeHeight != null) {
-                        calculateTrajectory(
-                            zeroDistance,
-                            scopeHeight,
-                            bulletSpeed,
-                            ballisticCoefficient
-                        )
-                    } else {
-                        emptyList()
-                    }
-                )
-                setLoading(false)
-            }
-        }
-
-        useEffect(ballisticsTableView, trajectory, zeroDistance, bulletSpeed) {
-            val smallUnits = if (prefs.distanceUnits == UserPreferences.DistanceUnits.Feet) {
-                DistanceUnits.Inches
+    LaunchedEffect(zeroDistance, scopeHeight, bulletSpeed, ballisticCoefficient) {
+        loading = true
+        trajectory = withContext(Dispatchers.Default) {
+            if (bulletSpeed != null && bulletSpeed.value > 0 && zeroDistance != null) {
+                calculateTrajectory(zeroDistance, scopeHeight, bulletSpeed, ballisticCoefficient)
             } else {
-                DistanceUnits.Centimeters
+                emptyList()
             }
-            // TODO: Set units in header
-            val listItems = listOf(
-                getString(
-                    R.string.time_header_units, formatter.formatDuration(
-                        Duration.ZERO, short = true,
-                        includeSeconds = true
-                    ).replace("0", "").trim()
-                ),
-                getString(
-                    R.string.range_header_units,
-                    formatter.getDistanceUnitName(zeroDistance?.units ?: DistanceUnits.Feet, true)
-                ),
-                getString(R.string.velocity_header_units, "fps"),
-                getString(
-                    R.string.drop_header_units,
-                    formatter.getDistanceUnitName(smallUnits, true)
+        }
+        loading = false
+    }
+
+    BallisticsForm(modifier = modifier) {
+        DistanceField(
+            label = stringResource(R.string.sight_in_range),
+            value = zeroDistance,
+            units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+            defaultUnit = DistanceUnits.Yards,
+            onValueChange = { setZeroDistance(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+            modifier = Modifier.testTag("zero_distance")
+        )
+        DistanceField(
+            label = stringResource(R.string.scope_height),
+            value = scopeHeight,
+            units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
+            defaultUnit = DistanceUnits.Inches,
+            onValueChange = { setScopeHeight(it ?: Distance.from(0f, DistanceUnits.Inches)) },
+            modifier = Modifier.testTag("scope_height")
+        )
+        SpeedField(
+            label = stringResource(R.string.muzzle_velocity),
+            value = bulletSpeed,
+            units = formatter.sortDistanceUnits(listOf(DistanceUnits.Feet, DistanceUnits.Meters)),
+            defaultUnit = DistanceUnits.Feet,
+            onValueChange = setBulletSpeed,
+            modifier = Modifier.testTag("bullet_speed")
+        )
+        OutlinedTextField(
+            value = ballisticCoefficientText,
+            onValueChange = {
+                ballisticCoefficientText = it
+                setBallisticCoefficient(it.toFloatCompat())
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("ballistic_coefficient"),
+            label = { Text(stringResource(R.string.ballistic_coefficient)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            singleLine = true
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("ballistics_table"),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            if (loading) {
+                CircularProgressIndicator(modifier = Modifier.testTag("loading"))
+            } else {
+                BallisticsTable(
+                    trajectory = trajectory,
+                    zeroDistance = zeroDistance,
+                    bulletSpeed = bulletSpeed,
+                    formatter = formatter,
+                    prefs = prefs
                 )
-            ) + trajectory.flatMap { point ->
-                val seconds = DecimalFormatter.format(
-                    point.time,
-                    2
-                )
-                val distance = DecimalFormatter.format(
+            }
+        }
+    }
+}
+
+@Composable
+private fun BallisticsTable(
+    trajectory: List<TrajectoryPoint>,
+    zeroDistance: Distance?,
+    bulletSpeed: Speed?,
+    formatter: FormatService,
+    prefs: UserPreferences
+) {
+    val smallUnits = if (prefs.distanceUnits == UserPreferences.DistanceUnits.Feet) {
+        DistanceUnits.Inches
+    } else {
+        DistanceUnits.Centimeters
+    }
+    val headers = listOf(
+        stringResource(
+            R.string.time_header_units,
+            formatter.formatDuration(
+                Duration.ZERO,
+                short = true,
+                includeSeconds = true
+            ).replace("0", "").trim()
+        ),
+        stringResource(
+            R.string.range_header_units,
+            formatter.getDistanceUnitName(zeroDistance?.units ?: DistanceUnits.Feet, true)
+        ),
+        stringResource(R.string.velocity_header_units, "fps"),
+        stringResource(
+            R.string.drop_header_units,
+            formatter.getDistanceUnitName(smallUnits, true)
+        )
+    )
+
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        item {
+            BallisticsTableRow(
+                values = headers,
+                header = true
+            )
+        }
+        items(trajectory) { point ->
+            val values = listOf(
+                DecimalFormatter.format(point.time, 2),
+                DecimalFormatter.format(
                     point.distance.convertTo(zeroDistance?.units ?: DistanceUnits.Feet).value,
                     Units.getDecimalPlaces(zeroDistance?.units ?: DistanceUnits.Feet)
-                )
-                val drop = DecimalFormatter.format(
-                    point.drop.convertTo(smallUnits).value,
-                    1
-                )
-
-                val velocity = DecimalFormatter.format(
+                ),
+                DecimalFormatter.format(
                     point.velocity.convertTo(
                         bulletSpeed?.distanceUnits ?: DistanceUnits.Feet,
                         bulletSpeed?.timeUnits ?: TimeUnits.Seconds
                     ).value,
                     0
-                )
-
-                listOf(
-                    seconds,
-                    distance,
-                    velocity,
-                    drop
-                )
-            }
-
-            ballisticsGrid.setData(listItems)
-        }
-
-        useEffect(loadingView, ballisticsTableView, loading) {
-            ballisticsTableView.isVisible = !loading
-            loadingView.isVisible = loading
+                ),
+                DecimalFormatter.format(point.drop.convertTo(smallUnits).value, 1)
+            )
+            BallisticsTableRow(values = values)
         }
     }
-
-
-    private fun calculateTrajectory(
-        zeroDistance: Distance,
-        scopeHeight: Distance,
-        bulletSpeed: Speed,
-        ballisticCoefficient: Float?
-    ): List<TrajectoryPoint> {
-        return tryOrDefault(emptyList()) {
-            val dragModel =
-                if (ballisticCoefficient == null || Arithmetic.isZero(ballisticCoefficient)) {
-                    NoDragModel()
-                } else {
-                    G1DragModel(ballisticCoefficient)
-                }
-
-            val calculator = BallisticsCalculator()
-            calculator.calculateTrajectory(zeroDistance, scopeHeight, bulletSpeed, dragModel)
-        }
-    }
-
 }
 
+@Composable
+private fun BallisticsTableRow(
+    values: List<String>,
+    header: Boolean = false
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                if (header) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            )
+    ) {
+        values.forEach { value ->
+            Text(
+                text = value,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (header) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (header) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+    }
+}
+
+private fun calculateTrajectory(
+    zeroDistance: Distance,
+    scopeHeight: Distance,
+    bulletSpeed: Speed,
+    ballisticCoefficient: Float?
+): List<TrajectoryPoint> {
+    return tryOrDefault(emptyList()) {
+        val dragModel = if (ballisticCoefficient == null || Arithmetic.isZero(ballisticCoefficient)) {
+            NoDragModel()
+        } else {
+            G1DragModel(ballisticCoefficient)
+        }
+
+        BallisticsCalculator().calculateTrajectory(zeroDistance, scopeHeight, bulletSpeed, dragModel)
+    }
+}

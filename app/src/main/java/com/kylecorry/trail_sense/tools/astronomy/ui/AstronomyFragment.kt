@@ -1,18 +1,41 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.slider.LabelFormatter
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.fragments.BoundFragment
+import com.kylecorry.luna.text.capitalizeWords
+import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.luna.time.CoroutineTimer
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.views.chart.Chart
+import com.kylecorry.andromeda.views.list.AndromedaListView
+import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -26,18 +49,18 @@ import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ActivityAstronomyBinding
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
-import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
-import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
+import com.kylecorry.trail_sense.shared.views.DatePickerView
+import com.kylecorry.trail_sense.shared.views.Slider
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstroPositions
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyEvent
@@ -63,7 +86,13 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
+class AstronomyFragment : AndromedaFragment() {
+
+    private var astronomyViews: AstronomyViews? = null
+    private val binding: AstronomyViews
+        get() = astronomyViews ?: error("Astronomy views are not ready")
+    private val isViewReady: Boolean
+        get() = astronomyViews != null && view != null
 
     private lateinit var gps: IGPS
 
@@ -86,14 +115,15 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
 
     private var gpsErrorShown = false
 
-    private val triggers = HookTriggers()
+    private val periodicUpdater = CoroutineTimer {
+        refreshAstronomy()
+    }
 
-    private var displayDate by state(LocalDate.now())
-    private var location by state(Coordinate.zero)
-    private var currentSeekChartTime by state(ZonedDateTime.now())
-    private var isSeeking by state(false)
-
-    private val moonUpdaterQueue = CoroutineQueueRunner()
+    private var displayDate = LocalDate.now()
+    private var location = Coordinate.zero
+    private var currentSeekChartTime = ZonedDateTime.now()
+    private var isSeeking = false
+    private var currentMoonTilt = 0f
 
     private val astroChartDataProvider by lazy {
         if (prefs.astronomy.centerSunAndMoon) {
@@ -115,11 +145,36 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
         )
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createAstronomyViews(requireContext())
+        astronomyViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    AstronomyHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        astronomyViews = null
+        super.onDestroyView()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         AstronomyQuickActionBinder(
-            this, binding, prefs.astronomy
+            this, binding.astronomyTitle, prefs.astronomy
         ).bind()
 
         chart = AstroChart(binding.sunMoonChart, this::showTimeSeeker)
@@ -146,6 +201,7 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
 
         binding.displayDate.setOnDateChangeListener {
             displayDate = it
+            refreshAstronomy()
         }
 
         binding.displayDate.searchEnabled = true
@@ -186,7 +242,10 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
                                 search, location, currentDate
                             )
                             onMain {
-                                binding.displayDate.date = nextEvent ?: currentDate
+                                val newDate = nextEvent ?: currentDate
+                                displayDate = newDate
+                                binding.displayDate.date = newDate
+                                refreshAstronomy()
 
                                 if (nextEvent == null) {
                                     toast(
@@ -224,9 +283,10 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
                 minChartTime, maxChartTime
             ).seconds * progress / maxProgress.toFloat()).toLong()
             currentSeekChartTime = minChartTime.plusSeconds(seconds)
+            refreshSeekDetails()
         }
 
-        scheduleUpdates(INTERVAL_1_FPS)
+        refreshAstronomy()
     }
 
     private fun showTimeSeeker(time: ZonedDateTime?) {
@@ -271,13 +331,9 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
 
     private fun getSeekProgress(): Int {
         val totalDuration = Duration.between(minChartTime, maxChartTime).seconds
-        if (totalDuration <= 0) {
-            return 0
-        }
-
         val currentDuration = Duration.between(minChartTime, currentSeekChartTime).seconds
         val progress = maxProgress * currentDuration / totalDuration.toFloat()
-        return progress.toInt().coerceIn(0, maxProgress)
+        return progress.toInt()
     }
 
     private fun hideTimeSeeker() {
@@ -319,6 +375,10 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
         chart.setBands(prefs.astronomy.showAstronomyBands)
         binding.displayDate.reset()
         requestLocationUpdate()
+        binding.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
+        detectAndShowGPSError()
+        periodicUpdater.interval(60000)
+        refreshAstronomy()
 
         CustomUiUtils.oneTimeToast(
             requireContext(),
@@ -330,11 +390,13 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
     override fun onPause() {
         super.onPause()
         gps.stop(this::onLocationUpdate)
+        periodicUpdater.stop()
         gpsErrorShown = false
     }
 
     private fun requestLocationUpdate() {
         location = gps.location
+        refreshAstronomy()
         if (gps.hasValidReading) {
             onLocationUpdate()
         } else {
@@ -344,6 +406,7 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
 
     private fun onLocationUpdate(): Boolean {
         location = gps.location
+        refreshAstronomy()
         return false
     }
 
@@ -352,7 +415,7 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
     }
 
     private suspend fun updateMoonUI() {
-        if (!isBound) {
+        if (!isViewReady) {
             return
         }
 
@@ -428,7 +491,7 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
     }
 
     private suspend fun updateAstronomyDetails() {
-        if (!isBound) {
+        if (!isViewReady) {
             return
         }
 
@@ -504,97 +567,293 @@ class AstronomyFragment : BoundFragment<ActivityAstronomyBinding>() {
         }
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater, container: ViewGroup?
-    ): ActivityAstronomyBinding {
-        return ActivityAstronomyBinding.inflate(layoutInflater, container, false)
-    }
-
-    override fun onUpdate() {
-        effect("location_unset", gps, lifecycleHookTrigger.onResume()) {
-            detectAndShowGPSError()
+    private fun refreshSeekDetails() {
+        if (!isSeeking || !isViewReady) {
+            return
         }
-
-        effect(
-            "list",
-            displayDate,
-            location,
-            lifecycleHookTrigger.onResume()
-        ) {
-            inBackground {
-                updateAstronomyDetails()
-            }
-        }
-
-        effect(
-            "seek_details",
-            currentSeekChartTime,
-            displayDate,
-            isSeeking,
-            location,
-            lifecycleHookTrigger.onResume()
-        ) {
-            if (!isSeeking) {
-                return@effect
-            }
-            updateSeekPositions()
-            binding.seekTime.text = formatService.formatTime(
-                currentSeekChartTime.toLocalTime(),
-                includeSeconds = false
-            )
-        }
-
-        effect(
-            "chart",
-            displayDate,
-            currentSeekChartTime,
-            isSeeking,
-            location,
-            triggers.frequency("chart", Duration.ofMinutes(1)),
-            lifecycleHookTrigger.onResume()
-        ) {
-            inBackground {
-                if (!isBound) {
-                    return@inBackground
-                }
-                updateAstronomyChart()
-
-                if (isSeeking) {
-                    plotMoonImage(data.moon, currentSeekChartTime)
-                    plotSunImage(data.sun, currentSeekChartTime)
-                }
-            }
-        }
-
-        effect(
-            "sun_time",
-            location,
-            triggers.frequency("sun_time", Duration.ofMinutes(1)),
-            lifecycleHookTrigger.onResume()
-        ) {
-            inBackground {
-                displayTimeUntilNextSunEvent()
-            }
-        }
-
-        effect(
-            "moon_phase",
-            displayDate,
-            currentSeekChartTime,
-            isSeeking,
-            triggers.frequency("moon_phase", Duration.ofMinutes(15)),
-            lifecycleHookTrigger.onResume()
-        ) {
-            inBackground {
-                moonUpdaterQueue.enqueue {
-                    updateMoonUI()
-                }
-            }
-        }
-
-        effect("day_view_decorator", location) {
-            binding.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
+        updateSeekPositions()
+        binding.seekTime.text = formatService.formatTime(
+            currentSeekChartTime.toLocalTime(),
+            includeSeconds = false
+        )
+        if (data.moon.isNotEmpty() && data.sun.isNotEmpty()) {
+            val tilt = astronomyService.getMoonTilt(location, currentSeekChartTime)
+            plotMoonImage(data.moon, currentSeekChartTime, tilt)
+            plotSunImage(data.sun, currentSeekChartTime)
         }
     }
 
+    private fun refreshAstronomy() {
+        if (!isViewReady || !this::gps.isInitialized) {
+            return
+        }
+        detectAndShowGPSError()
+        binding.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
+        inBackground {
+            updateAstronomyDetails()
+            updateAstronomyChart()
+            displayTimeUntilNextSunEvent()
+            updateMoonUI()
+            onMain {
+                refreshSeekDetails()
+            }
+        }
+    }
+
+}
+
+private data class AstronomyViews(
+    val root: View,
+    val astronomyTitle: Toolbar,
+    val displayDate: DatePickerView,
+    val sunMoonChart: Chart,
+    val timeSeekerPanel: ScrollView,
+    val seekTime: TextView,
+    val closeSeek: ImageButton,
+    val timeSeeker: Slider,
+    val sunPositionText: TextView,
+    val moonPositionText: TextView,
+    val astronomyDetailList: AndromedaListView,
+    val button3d: Button
+)
+
+@Composable
+private fun AstronomyHost(
+    views: AstronomyViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createAstronomyViews(context: Context): AstronomyViews {
+    val root = ConstraintLayout(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val title = Toolbar(context, null).apply {
+        id = R.id.astronomy_title
+    }
+    root.addView(
+        title,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val displayDate = DatePickerView(context, null).apply {
+        id = R.id.display_date
+    }
+    root.addView(
+        displayDate,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.astronomy_title
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+            topMargin = 16.dp(context)
+        }
+    )
+
+    val chart = Chart(context).apply {
+        id = R.id.sunMoonChart
+    }
+    root.addView(
+        chart,
+        ConstraintLayout.LayoutParams(
+            0,
+            context.resources.getDimensionPixelSize(R.dimen.chart_height)
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.display_date
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val timeSeekerPanel = ScrollView(context).apply {
+        id = R.id.time_seeker_panel
+        visibility = View.GONE
+    }
+    root.addView(
+        timeSeekerPanel,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.sunMoonChart
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val seekContent = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+    }
+    timeSeekerPanel.addView(
+        seekContent,
+        ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    val seekHeader = ConstraintLayout(context)
+    seekContent.addView(
+        seekHeader,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    val seekTime = TextView(context).apply {
+        id = R.id.seek_time
+        textAlignment = View.TEXT_ALIGNMENT_CENTER
+        textSize = 18f
+        setTypeface(typeface, android.graphics.Typeface.BOLD)
+    }
+    seekHeader.addView(
+        seekTime,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val closeSeek = ImageButton(context).apply {
+        id = R.id.close_seek
+        setImageResource(R.drawable.ic_cancel)
+        setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        imageTintList = android.content.res.ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    seekHeader.addView(
+        closeSeek,
+        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val timeSeeker = Slider(context, null).apply {
+        id = R.id.time_seeker
+    }
+    seekContent.addView(
+        timeSeeker,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = 16.dp(context)
+        }
+    )
+
+    val positions = LinearLayout(context).apply {
+        orientation = LinearLayout.HORIZONTAL
+    }
+    seekContent.addView(
+        positions,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val sunPosition = TextView(context).apply {
+        id = R.id.sun_position_text
+        setLineSpacing(0f, 0.8f)
+    }
+    positions.addView(
+        sunPosition,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+
+    val moonPosition = TextView(context).apply {
+        id = R.id.moon_position_text
+        setLineSpacing(0f, 0.8f)
+    }
+    positions.addView(
+        moonPosition,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+
+    val list = AndromedaListView(context, null).apply {
+        id = R.id.astronomy_detail_list
+        clipToPadding = false
+        setPadding(0, 0, 0, 16.dp(context))
+    }
+    root.addView(
+        list,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.sunMoonChart
+            bottomToTop = R.id.button_3d
+            topMargin = 16.dp(context)
+        }
+    )
+
+    val button3d = Button(context).apply {
+        id = R.id.button_3d
+        text = context.getString(R.string.view_in_3d)
+    }
+    root.addView(
+        button3d,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
+        }
+    )
+
+    return AstronomyViews(
+        root = root,
+        astronomyTitle = title,
+        displayDate = displayDate,
+        sunMoonChart = chart,
+        timeSeekerPanel = timeSeekerPanel,
+        seekTime = seekTime,
+        closeSeek = closeSeek,
+        timeSeeker = timeSeeker,
+        sunPositionText = sunPosition,
+        moonPositionText = moonPosition,
+        astronomyDetailList = list,
+        button3d = button3d
+    )
+}
+
+private fun Int.dp(context: Context): Int {
+    return com.kylecorry.andromeda.core.system.Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AstronomyHostPreview() {
+    TrailSenseTheme {
+        AstronomyHost(
+            views = createAstronomyViews(LocalContext.current)
+        )
+    }
 }

@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.volume
 
-import com.kylecorry.andromeda.fragments.AndromedaFragment
+import androidx.fragment.app.Fragment
 
-class SystemVolumeAction(fragment: AndromedaFragment) : VolumeAction {
+class SystemVolumeAction(fragment: Fragment) : VolumeAction {
     override fun onButtonPress(isUpButton: Boolean): Boolean {
         return false
     }

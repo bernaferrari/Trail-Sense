@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.flashlight.volumeactions
 
-import com.kylecorry.andromeda.fragments.AndromedaFragment
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.ui.FragmentToolFlashlight
 
 class FlashlightToggleVolumeAction(
-    private val fragment: AndromedaFragment
+    private val fragment: Fragment
 ) : VolumeAction {
 
     private val flashlightFragment = fragment as? FragmentToolFlashlight

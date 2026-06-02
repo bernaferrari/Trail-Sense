@@ -1,34 +1,74 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
-import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.annotation.IdRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentCreateItemBinding
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.WeightInputView
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class CreateItemFragment : BoundFragment<FragmentCreateItemBinding>() {
+class CreateItemFragment : Fragment() {
 
     private val itemRepo by lazy { PackRepo.getInstance(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
-    private val prefs by lazy { DependencyRegistry.get<PreferencesSubsystem>() }
+    private val prefs by lazy { AppServiceRegistry.get<PreferencesSubsystem>() }
 
     private val defaultCategory by lazy {
         val lastCategoryId = prefs.preferences.getInt(KEY_LAST_CATEGORY)
@@ -40,79 +80,76 @@ class CreateItemFragment : BoundFragment<FragmentCreateItemBinding>() {
         WeightUnits.entries.firstOrNull { it.id == lastUnitId }
     }
 
-    private var editingItem: PackItem? = null
-
-    private var packId: Long = 0
-    private var itemId: Long = 0
-
-    val nameMapper by lazy { ItemCategoryStringMapper(requireContext()) }
-
+    private val nameMapper by lazy { ItemCategoryStringMapper(requireContext()) }
 
     private val sortedCategories by lazy {
         ItemCategory.entries.sortedBy { nameMapper.getString(it) }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    private var editingItem by mutableStateOf<PackItem?>(null)
+    private var name by mutableStateOf("")
+    private var amountText by mutableStateOf("")
+    private var desiredAmountText by mutableStateOf("")
+    private var category by mutableStateOf<ItemCategory?>(null)
+    private var weight by mutableStateOf<Weight?>(null)
+    private var selectedWeightUnit by mutableStateOf<WeightUnits?>(null)
+    private var isOptional by mutableStateOf(false)
+
+    private var packId: Long = 0
+    private var itemId: Long = 0
+
+    private val selectedCategory: ItemCategory
+        get() = category ?: defaultCategory
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         itemId = arguments?.getLong("edit_item_id") ?: 0L
         packId = arguments?.getLong("pack_id") ?: 0L
-
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.itemWeightInput.units = formatService.sortWeightUnits(WeightUnits.entries)
-        binding.itemWeightInput.showPoundsAndOunces = true
-        if (itemId == 0L && defaultWeightUnit != null) {
-            binding.itemWeightInput.unit = defaultWeightUnit
-        }
-
-        binding.createBtn.setOnClickListener {
-            val name = binding.nameEdit.text?.toString()
-            val amount = binding.countEdit.text?.toString()?.toDoubleCompat() ?: 0.0
-            val desiredAmount = binding.desiredAmountEdit.text?.toString()?.toDoubleCompat() ?: 0.0
-            val category = sortedCategories[binding.categorySpinner.selectedItemPosition]
-            val weight = binding.itemWeightInput.value
-            val selectedUnit = binding.itemWeightInput.unit
-            val isOptional = binding.optionalSwitch.isChecked
-
-            if (name != null) {
-                inBackground {
-                    withContext(Dispatchers.IO) {
-
-                        prefs.preferences.putInt(KEY_LAST_CATEGORY, category.id)
-                        selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
-
-                        itemRepo.addItem(
-                            PackItem(
-                                editingItem?.id ?: 0,
-                                packId,
-                                name,
-                                category,
-                                amount,
-                                desiredAmount,
-                                weight,
-                                isOptional
-                            )
-                        )
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        findNavController().popBackStack()
-                    }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: android.os.Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    CreateItemScreen(
+                        title = stringResource(
+                            if (itemId == 0L) R.string.create_item_title else R.string.edit_item_title
+                        ),
+                        name = name,
+                        amount = amountText,
+                        desiredAmount = desiredAmountText,
+                        category = selectedCategory,
+                        categories = sortedCategories.map { it to nameMapper.getString(it) },
+                        weight = weight,
+                        weightUnit = selectedWeightUnit,
+                        weightUnits = formatService.sortWeightUnits(WeightUnits.entries),
+                        isOptional = isOptional,
+                        onNameChange = { name = it },
+                        onAmountChange = { amountText = it },
+                        onDesiredAmountChange = { desiredAmountText = it },
+                        onCategoryChange = { category = it },
+                        onWeightChange = { newWeight, unit ->
+                            weight = newWeight
+                            selectedWeightUnit = unit
+                        },
+                        onOptionalChange = { isOptional = it },
+                        onSave = ::saveItem
+                    )
                 }
             }
         }
+    }
 
-
-        binding.categorySpinner.setItems(sortedCategories.map { nameMapper.getString(it) })
-        binding.categorySpinner.setHint(getString(R.string.category))
-
-        if (itemId == 0L) {
-            binding.categorySpinner.setSelection(sortedCategories.indexOf(defaultCategory))
-        }
-
-        promptIfUnsavedChanges(this::hasChanges)
+    override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        category = defaultCategory
+        selectedWeightUnit = defaultWeightUnit
+        promptIfUnsavedChanges(::hasChanges)
 
         if (itemId != 0L) {
             loadEditingItem(itemId)
@@ -120,48 +157,67 @@ class CreateItemFragment : BoundFragment<FragmentCreateItemBinding>() {
     }
 
     private fun loadEditingItem(id: Long) {
-        inBackground {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val item = withContext(Dispatchers.IO) {
+                itemRepo.getItem(id)
+            } ?: return@launch
+
+            editingItem = item
+            name = item.name
+            amountText = DecimalFormatter.format(item.amount, 4, false)
+            desiredAmountText = DecimalFormatter.format(item.desiredAmount, 4, false)
+            category = item.category
+            weight = item.weight
+            selectedWeightUnit = item.weight?.units ?: defaultWeightUnit
+            isOptional = item.isOptional
+        }
+    }
+
+    private fun saveItem() {
+        val selectedUnit = selectedWeightUnit
+        val itemCategory = selectedCategory
+        val currentWeight = weight
+        val currentName = name
+        val amount = amountText.toDoubleCompat() ?: 0.0
+        val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
+        val optional = isOptional
+
+        viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                editingItem = itemRepo.getItem(id)
-            }
+                prefs.preferences.putInt(KEY_LAST_CATEGORY, itemCategory.id)
+                selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
 
-            withContext(Dispatchers.Main) {
-                editingItem?.let {
-                    if (!isBound) {
-                        return@let
-                    }
-                    binding.createItemTitle.title.text = getString(R.string.edit_item_title)
-                    binding.nameEdit.setText(it.name)
-                    binding.countEdit.setText(DecimalFormatter.format(it.amount, 4, false))
-                    binding.desiredAmountEdit.setText(
-                        DecimalFormatter.format(
-                            it.desiredAmount,
-                            4,
-                            false
-                        )
+                itemRepo.addItem(
+                    PackItem(
+                        editingItem?.id ?: 0,
+                        packId,
+                        currentName,
+                        itemCategory,
+                        amount,
+                        desiredAmount,
+                        currentWeight,
+                        optional
                     )
-                    binding.categorySpinner.setSelection(sortedCategories.indexOf(it.category))
-                    binding.itemWeightInput.value = it.weight
-                    binding.optionalSwitch.isChecked = it.isOptional
-                    if (it.weight == null) {
-                        binding.itemWeightInput.unit =
-                            defaultWeightUnit ?: binding.itemWeightInput.units.firstOrNull()
-                    }
-                }
+                )
             }
 
+            findNavController().popBackStack()
         }
     }
 
     private fun hasChanges(): Boolean {
-        val name = binding.nameEdit.text?.toString()
-        val amount = binding.countEdit.text?.toString()?.toDoubleCompat() ?: 0.0
-        val desiredAmount = binding.desiredAmountEdit.text?.toString()?.toDoubleCompat() ?: 0.0
-        val category = sortedCategories[binding.categorySpinner.selectedItemPosition]
-        val weight = binding.itemWeightInput.value
-        val isOptional = binding.optionalSwitch.isChecked
+        val itemCategory = selectedCategory
+        val amount = amountText.toDoubleCompat() ?: 0.0
+        val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
 
-        return !nothingEntered() && (name != editingItem?.name || amount != editingItem?.amount || desiredAmount != editingItem?.desiredAmount || category != editingItem?.category || weight != editingItem?.weight || isOptional != editingItem?.isOptional)
+        return !nothingEntered() && (
+            name != editingItem?.name ||
+                amount != editingItem?.amount ||
+                desiredAmount != editingItem?.desiredAmount ||
+                itemCategory != editingItem?.category ||
+                weight != editingItem?.weight ||
+                isOptional != editingItem?.isOptional
+            )
     }
 
     private fun nothingEntered(): Boolean {
@@ -169,25 +225,306 @@ class CreateItemFragment : BoundFragment<FragmentCreateItemBinding>() {
             return false
         }
 
-        val name = binding.nameEdit.text?.toString()
-        val amount = binding.countEdit.text?.toString()
-        val desiredAmount = binding.desiredAmountEdit.text?.toString()
-        val category = sortedCategories[binding.categorySpinner.selectedItemPosition]
-        val weight = binding.itemWeightInput.value
-
-        return name.isNullOrBlank() && amount.isNullOrBlank() && desiredAmount.isNullOrBlank() && category == defaultCategory && weight == null
-    }
-
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentCreateItemBinding {
-        return FragmentCreateItemBinding.inflate(layoutInflater, container, false)
+        return name.isBlank() &&
+            amountText.isBlank() &&
+            desiredAmountText.isBlank() &&
+            selectedCategory == defaultCategory &&
+            weight == null
     }
 
     companion object {
         private const val KEY_LAST_CATEGORY = "cache_packing_lists_last_category"
         private const val KEY_LAST_WEIGHT_UNIT = "cache_packing_lists_last_weight_unit"
     }
+}
 
+@Composable
+private fun CreateItemScreen(
+    title: String,
+    name: String,
+    amount: String,
+    desiredAmount: String,
+    category: ItemCategory,
+    categories: List<Pair<ItemCategory, String>>,
+    weight: Weight?,
+    weightUnit: WeightUnits?,
+    weightUnits: List<WeightUnits>,
+    isOptional: Boolean,
+    onNameChange: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onDesiredAmountChange: (String) -> Unit,
+    onCategoryChange: (ItemCategory) -> Unit,
+    onWeightChange: (Weight?, WeightUnits?) -> Unit,
+    onOptionalChange: (Boolean) -> Unit,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                CreateItemHeader(title = title)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp, bottom = 96.dp)
+                ) {
+                    AndroidTextInput(
+                        text = name,
+                        label = stringResource(R.string.name),
+                        inputType = InputType.TYPE_CLASS_TEXT,
+                        viewId = R.id.name_edit,
+                        onTextChange = onNameChange
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AndroidTextInput(
+                        text = amount,
+                        label = stringResource(R.string.packed_amount),
+                        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                        viewId = R.id.count_edit,
+                        onTextChange = onAmountChange
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AndroidTextInput(
+                        text = desiredAmount,
+                        label = stringResource(R.string.desired_amount),
+                        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                        viewId = R.id.desired_amount_edit,
+                        onTextChange = onDesiredAmountChange
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    CategoryInput(
+                        category = category,
+                        categories = categories,
+                        onCategoryChange = onCategoryChange
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.weight_per_item),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    WeightInput(
+                        weight = weight,
+                        selectedUnit = weightUnit,
+                        units = weightUnits,
+                        onWeightChange = onWeightChange
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OptionalInput(
+                        checked = isOptional,
+                        onCheckedChange = onOptionalChange
+                    )
+                }
+            }
+            FloatingActionButton(
+                onClick = onSave,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .testTag("create_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreateItemHeader(title: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp)
+                .testTag("create_item_title"),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun AndroidTextInput(
+    text: String,
+    label: String,
+    inputType: Int,
+    @IdRes viewId: Int,
+    onTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            TextInputLayout(context).apply {
+                hint = label
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                addView(
+                    TextInputEditText(context).apply {
+                        id = viewId
+                        this.inputType = inputType
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        doAfterTextChanged {
+                            onTextChange(it?.toString().orEmpty())
+                        }
+                    }
+                )
+            }
+        },
+        update = { input ->
+            input.hint = label
+            val editText = input.editText
+            if (editText?.text?.toString() != text) {
+                editText?.setText(text)
+                editText?.setSelection(editText.text?.length ?: 0)
+            }
+        }
+    )
+}
+
+@Composable
+private fun CategoryInput(
+    category: ItemCategory,
+    categories: List<Pair<ItemCategory, String>>,
+    onCategoryChange: (ItemCategory) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            MaterialSpinnerView(context, null).apply {
+                id = R.id.category_spinner
+                setHint(context.getString(R.string.category))
+                setItems(categories.map { it.second })
+                setOnItemSelectedListener { position ->
+                    val selected = categories.getOrNull(position ?: return@setOnItemSelectedListener)
+                    if (selected != null) {
+                        onCategoryChange(selected.first)
+                    }
+                }
+            }
+        },
+        update = { spinner ->
+            val index = categories.indexOfFirst { it.first == category }.coerceAtLeast(0)
+            spinner.setItems(categories.map { it.second })
+            if (spinner.selectedItemPosition != index) {
+                spinner.setSelection(index)
+            }
+        }
+    )
+}
+
+@Composable
+private fun WeightInput(
+    weight: Weight?,
+    selectedUnit: WeightUnits?,
+    units: List<WeightUnits>,
+    onWeightChange: (Weight?, WeightUnits?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            WeightInputView(context).apply {
+                id = R.id.item_weight_input
+                this.units = units
+                showPoundsAndOunces = true
+                selectedUnit?.let { unit = it }
+                setOnValueChangeListener {
+                    onWeightChange(it, unit)
+                }
+            }
+        },
+        update = { input ->
+            input.units = units
+            input.showPoundsAndOunces = true
+            val fallbackUnit = selectedUnit ?: input.unit ?: units.firstOrNull()
+
+            if (weight == null) {
+                if (input.value != null) {
+                    input.value = null
+                }
+                if (fallbackUnit != null && input.unit != fallbackUnit) {
+                    input.unit = fallbackUnit
+                }
+            } else if (input.value != weight) {
+                input.value = weight
+            }
+        }
+    )
+}
+
+@Composable
+private fun OptionalInput(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("optional_switch"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.packing_list_optional),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CreateItemScreenPreview() {
+    TrailSenseTheme {
+        CreateItemScreen(
+            title = "Create item",
+            name = "Water bottle",
+            amount = "1",
+            desiredAmount = "2",
+            category = ItemCategory.Hydration,
+            categories = listOf(
+                ItemCategory.Food to "Food",
+                ItemCategory.Hydration to "Hydration",
+                ItemCategory.Clothing to "Clothing"
+            ),
+            weight = null,
+            weightUnit = WeightUnits.Pounds,
+            weightUnits = WeightUnits.entries,
+            isOptional = false,
+            onNameChange = {},
+            onAmountChange = {},
+            onDesiredAmountChange = {},
+            onCategoryChange = {},
+            onWeightChange = { _, _ -> },
+            onOptionalChange = {},
+            onSave = {}
+        )
+    }
 }

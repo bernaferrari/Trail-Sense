@@ -1,34 +1,49 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.graphics.Typeface
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.core.ui.setTextDistinct
-import com.kylecorry.andromeda.fragments.BoundFragment
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.clinometer.IClinometer
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.cache.TrackedState
-import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.normalizeAngle
 import com.kylecorry.sol.science.geology.AvalancheRisk
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolClinometerBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryMarkerColor
 import com.kylecorry.trail_sense.shared.DistanceUtils
@@ -39,9 +54,13 @@ import com.kylecorry.trail_sense.shared.extensions.getMarkdown
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.DataPointView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMarker
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasCircle
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARLineLayer
@@ -52,7 +71,11 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
+class ClinometerFragment : Fragment() {
+
+    private var clinometerViews: ClinometerViews? = null
+    private val binding: ClinometerViews
+        get() = clinometerViews ?: error("Clinometer views are not ready")
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val orientation by lazy { sensorService.getOrientation() }
@@ -98,11 +121,34 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
     private val clinometer: IClinometer
         get() = if (useCamera) cameraClinometer else sideClinometer
 
+    override fun onCreateView(
+        inflater: android.view.LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createClinometerViews(requireContext())
+        clinometerViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    ClinometerHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         toast(getString(R.string.set_inclination_instructions))
+
+        CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
+        CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, false)
 
         binding.cameraViewHolder.clipToOutline = true
         binding.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
@@ -145,7 +191,8 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
     private fun startSideClinometer() {
         binding.camera.stop()
         binding.arView.stop()
-        binding.clinometerTitle.leftButton.setIconResource(R.drawable.ic_camera)
+        binding.clinometerTitle.leftButton.setImageResource(R.drawable.ic_camera)
+        CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
         useCamera = false
     }
 
@@ -157,7 +204,8 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
                     readFrames = false, shouldStabilizePreview = false
                 )
                 binding.arView.start(false)
-                binding.clinometerTitle.leftButton.setIconResource(R.drawable.ic_phone_portrait)
+                binding.clinometerTitle.leftButton.setImageResource(R.drawable.ic_phone_portrait)
+                CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
             } else {
                 startSideClinometer()
                 if (showAlert) {
@@ -202,7 +250,7 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
-                binding.clinometerTitle.rightButton.isChecked = true
+                CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, true)
                 CustomUiUtils.disclaimer(
                     requireContext(),
                     getString(R.string.instructions),
@@ -231,7 +279,7 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
             if (distance != null) {
                 knownHeight = distance
                 distanceAway = null
-                binding.clinometerTitle.rightButton.isChecked = true
+                CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, true)
 
                 CustomUiUtils.disclaimer(
                     requireContext(),
@@ -251,7 +299,9 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
         super.onResume()
         if (distanceAway == null && knownHeight == null) {
             distanceAway = prefs.clinometer.baselineDistance
-            binding.clinometerTitle.rightButton.isChecked = distanceAway != null
+            CustomUiUtils.setButtonState(
+                binding.clinometerTitle.rightButton, distanceAway != null
+            )
         }
 
         if (useCamera) {
@@ -271,6 +321,7 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
 
     override fun onDestroyView() {
         binding.arView.unbind()
+        clinometerViews = null
         super.onDestroyView()
     }
 
@@ -393,12 +444,6 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
         return !invalidOrientations.contains(deviceOrientation.orientation)
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater, container: ViewGroup?
-    ): FragmentToolClinometerBinding {
-        return FragmentToolClinometerBinding.inflate(layoutInflater, container, false)
-    }
-
     private fun getBottomIncline(): Float {
         val locked1 = lockedIncline1 ?: 0f
         val locked2 = lockedIncline2 ?: clinometer.incline
@@ -510,4 +555,302 @@ class ClinometerFragment : BoundFragment<FragmentToolClinometerBinding>() {
     }
 
 
+}
+
+private data class ClinometerViews(
+    val root: View,
+    val clinometerTitle: ClinometerTitle,
+    val clinometer: ClinometerView,
+    val cameraViewHolder: LinearLayout,
+    val camera: CameraView,
+    val arView: AugmentedRealityView,
+    val cameraClinometer: CameraClinometerView,
+    val avalancheRisk: DataPointView,
+    val estimatedHeight: DataPointView,
+    val clinometerInstructions: TextView,
+    val cameraClinometerInstructions: TextView
+)
+
+private data class ClinometerTitle(
+    val root: View,
+    val leftButton: ImageButton,
+    val rightButton: ImageButton,
+    val title: TextView,
+    val subtitle: TextView
+)
+
+@Composable
+private fun ClinometerHost(
+    views: ClinometerViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createClinometerViews(context: Context): ClinometerViews {
+    val root = ConstraintLayout(context).apply {
+        id = R.id.incline_container
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val title = createClinometerTitle(context)
+    root.addView(
+        title.root,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val dataPoints = LinearLayout(context).apply {
+        id = R.id.data_points
+        orientation = LinearLayout.HORIZONTAL
+    }
+    val avalancheRisk = DataPointView(context, null).apply {
+        id = R.id.avalanche_risk
+        description = context.getString(R.string.avalanche_risk)
+        setImageResource(R.drawable.avalanche)
+    }
+    val estimatedHeight = DataPointView(context, null).apply {
+        id = R.id.estimated_height
+        description = context.getString(R.string.height)
+        setImageResource(R.drawable.ruler)
+    }
+    dataPoints.addView(
+        avalancheRisk,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+    dataPoints.addView(
+        estimatedHeight,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    )
+    root.addView(
+        dataPoints,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            setMargins(16.dp(context), 0, 16.dp(context), 32.dp(context))
+        }
+    )
+
+    val instrumentFrame = FrameLayout(context).apply {
+        id = View.generateViewId()
+    }
+    root.addView(
+        instrumentFrame,
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            topToBottom = R.id.clinometer_title
+            bottomToTop = R.id.data_points
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            dimensionRatio = "1:1"
+            setMargins(16.dp(context), 16.dp(context), 16.dp(context), 16.dp(context))
+        }
+    )
+
+    val clinometer = ClinometerView(context).apply {
+        id = R.id.clinometer
+    }
+    instrumentFrame.addView(
+        clinometer,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+
+    val cameraViewHolder = LinearLayout(context).apply {
+        id = R.id.camera_view_holder
+        orientation = LinearLayout.HORIZONTAL
+        visibility = View.GONE
+        background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
+        backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
+        clipToOutline = true
+    }
+    val cameraFrame = FrameLayout(context)
+    val camera = CameraView(context, null).apply {
+        id = R.id.camera
+    }
+    val arView = AugmentedRealityView(context).apply {
+        id = R.id.ar_view
+    }
+    val reticle = View(context).apply {
+        setBackgroundColor(ContextCompat.getColor(context, R.color.orange_40))
+    }
+    cameraFrame.addView(
+        camera,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+    cameraFrame.addView(
+        arView,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        )
+    )
+    cameraFrame.addView(
+        reticle,
+        FrameLayout.LayoutParams(60.dp(context), 1.dp(context), Gravity.CENTER)
+    )
+    val cameraClinometer = CameraClinometerView(context).apply {
+        id = R.id.camera_clinometer
+    }
+    cameraViewHolder.addView(
+        cameraFrame,
+        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+    )
+    cameraViewHolder.addView(
+        cameraClinometer,
+        LinearLayout.LayoutParams(50.dp(context), ViewGroup.LayoutParams.MATCH_PARENT)
+    )
+    instrumentFrame.addView(
+        cameraViewHolder,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+
+    val clinometerInstructions = createInstructionView(
+        context,
+        R.id.clinometer_instructions,
+        R.drawable.ic_rotate_flat_to_portrait
+    )
+    val cameraClinometerInstructions = createInstructionView(
+        context,
+        R.id.camera_clinometer_instructions,
+        R.drawable.ic_rotate_landscape_to_portrait
+    )
+    instrumentFrame.addView(
+        clinometerInstructions,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER
+        )
+    )
+    instrumentFrame.addView(
+        cameraClinometerInstructions,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER
+        )
+    )
+
+    return ClinometerViews(
+        root = root,
+        clinometerTitle = title,
+        clinometer = clinometer,
+        cameraViewHolder = cameraViewHolder,
+        camera = camera,
+        arView = arView,
+        cameraClinometer = cameraClinometer,
+        avalancheRisk = avalancheRisk,
+        estimatedHeight = estimatedHeight,
+        clinometerInstructions = clinometerInstructions,
+        cameraClinometerInstructions = cameraClinometerInstructions
+    )
+}
+
+private fun createClinometerTitle(context: Context): ClinometerTitle {
+    val root = LinearLayout(context).apply {
+        id = R.id.clinometer_title
+        gravity = Gravity.CENTER_VERTICAL
+        orientation = LinearLayout.HORIZONTAL
+        setPadding(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
+    }
+    val leftButton = ImageButton(context).apply {
+        id = R.id.clinometer_mode_btn
+        setImageResource(R.drawable.ic_camera)
+        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    val textHolder = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER
+    }
+    val title = TextView(context).apply {
+        gravity = Gravity.CENTER
+        textSize = 24f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(Resources.androidTextColorPrimary(context))
+    }
+    val subtitle = TextView(context).apply {
+        gravity = Gravity.CENTER
+        textSize = 14f
+        setTextColor(Resources.androidTextColorSecondary(context))
+    }
+    textHolder.addView(
+        title,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+    textHolder.addView(
+        subtitle,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+    val rightButton = ImageButton(context).apply {
+        id = R.id.clinometer_measure_btn
+        setImageResource(R.drawable.ruler)
+        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    root.addView(leftButton, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
+    root.addView(textHolder, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+    root.addView(rightButton, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
+
+    return ClinometerTitle(
+        root = root,
+        leftButton = leftButton,
+        rightButton = rightButton,
+        title = title,
+        subtitle = subtitle
+    )
+}
+
+private fun createInstructionView(
+    context: Context,
+    id: Int,
+    icon: Int
+): TextView {
+    return TextView(context).apply {
+        this.id = id
+        gravity = Gravity.CENTER
+        text = context.getString(R.string.clinometer_rotate_device)
+        compoundDrawablePadding = 8.dp(context)
+        setCompoundDrawables(top = icon)
+        CustomUiUtils.setImageColor(this, Resources.androidTextColorSecondary(context))
+    }
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ClinometerHostPreview() {
+    TrailSenseTheme {
+        ClinometerHost(
+            views = createClinometerViews(androidx.compose.ui.platform.LocalContext.current)
+        )
+    }
 }

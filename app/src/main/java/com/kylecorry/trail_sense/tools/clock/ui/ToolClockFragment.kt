@@ -2,161 +2,132 @@ package com.kylecorry.trail_sense.tools.clock.ui
 
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.background.AlarmTaskScheduler
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.andromeda.permissions.PermissionRationale
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.extensions.compose.useBooleanPreference
-import com.kylecorry.trail_sense.shared.extensions.compose.useEffect
-import com.kylecorry.trail_sense.shared.extensions.compose.useEffectWithCleanup
-import com.kylecorry.trail_sense.shared.extensions.compose.useIntPreference
-import com.kylecorry.trail_sense.shared.extensions.compose.useLifecycleEffect
-import com.kylecorry.trail_sense.shared.extensions.compose.useService
-import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
+import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
+import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
-import com.kylecorry.trail_sense.tools.clock.ui.ClockView
+import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
-class ToolClockFragment : TrailSenseComposeFragment() {
+class ToolClockFragment : Fragment() {
 
-    @Composable
-    override fun FragmentContent() {
-        val prefs = useService<UserPreferences>()
-        val sensorService = useService<SensorService>()
-        val gps = remember { sensorService.getGPS() }
-        val formatService = remember { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val sensorService by lazy { SensorService(requireContext()) }
+    private val gps by lazy { sensorService.getGPS() }
+    private val prefs by lazy { UserPreferences(requireContext()) }
 
-        var gpsTime by remember { mutableStateOf(Instant.now()) }
-        var systemTime by remember { mutableStateOf(Instant.now()) }
-        var isGpsTime by remember { mutableStateOf(false) }
-        var isUpdating by remember { mutableStateOf(true) }
-
-        val showAnalog by remember { mutableStateOf(prefs.clock.showAnalogClock) }
-        val use24Hour by remember { mutableStateOf(prefs.use24HourTime) }
-
-        val (brightness, _) = useIntPreference(stringResource(R.string.pref_screen_torch_brightness))
-        val (isRed, _) = useBooleanPreference("cache_red_light")
-
-        useEffect(gps) {
-            gps.start {
-                gpsTime = getGPSTime()
-                systemTime = Instant.now()
-                isGpsTime = true
-
-                if (gps is CustomGPS && (gps as CustomGPS).isTimedOut) {
-                    CustomUiUtils.oneTimeToast(requireContext(), getString(R.string.no_gps_signal), "clock_gps_timeout")
-                    gpsTime = Instant.now()
-                    isGpsTime = false
-                }
-
-                isUpdating = false
-                true
-            }
-            isUpdating = true
-        }
-
-        useLifecycleEffect(androidx.lifecycle.Lifecycle.Event.ON_PAUSE) {
-            gps.stop { true }
-        }
-
-        var liveTime by remember { mutableStateOf(Instant.now()) }
-
-        useEffectWithCleanup {
-            val timer = com.kylecorry.andromeda.core.time.CoroutineTimer {
-                liveTime = Instant.now()
-            }
-            timer.interval(1000)
-            return@useEffectWithCleanup { timer.stop() }
-        }
-
-        val currentTime = remember(gpsTime, systemTime, liveTime) {
-            val diff = Duration.between(systemTime, liveTime)
-            gpsTime.plus(diff)
-        }
-
-        ToolClockContent(
-            currentTime = currentTime,
-            isGpsTime = isGpsTime,
-            isUpdating = isUpdating,
-            showAnalogClock = showAnalog,
-            use24Hour = use24Hour,
-            formatService = formatService,
-            onSyncGPS = {
-                gps.start { true }
-                isUpdating = true
-            },
-            onRequestPIP = {
-                requestScheduleExactAlarms {
-                    sendNextMinuteNotification(gpsTime, systemTime, formatService)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    ClockScreen(
+                        formatService = formatService,
+                        prefs = prefs,
+                        gps = gps,
+                        getGpsTime = ::getGPSTime,
+                        requestExactAlarms = { requestExactAlarms(it) },
+                        onScheduleNextMinute = ::sendNextMinuteNotification
+                    )
                 }
             }
-        )
+        }
     }
 
     private fun getGPSTime(): Instant {
-        val gps = SensorService(requireContext()).getGPS()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             tryOrNothing {
                 return SystemClock.currentGnssTimeClock().instant()
             }
         }
+
         val fixTime = gps.fixTimeElapsedNanos ?: return gps.time
         val systemTime = SystemClock.elapsedRealtimeNanos()
         val timeDiff = fixTime - systemTime
         return gps.time.plusNanos(timeDiff)
     }
 
-    private fun sendNextMinuteNotification(
-        gpsTime: Instant,
-        systemTime: Instant,
-        formatService: FormatService
-    ) {
+    private fun sendNextMinuteNotification(gpsTime: Instant, systemTime: Instant) {
         val systemDiff = Duration.between(systemTime, Instant.now())
         val currentTime = gpsTime.plus(systemDiff)
         val clockError = Duration.between(systemTime, gpsTime)
         val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
         val displayTimeWithSeconds = myTime.toLocalDateTime()
         var displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
-        if (displayTimeWithSeconds.second > 45) {
+        val displayTimeSecond = displayTimeWithSeconds.second
+        if (displayTimeSecond > 45) {
             displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(2)
         }
         val sendTime = displayTime.minus(clockError)
@@ -168,117 +139,259 @@ class ToolClockFragment : TrailSenseComposeFragment() {
             getString(R.string.clock_sync_instructions, formattedTime)
         ) { cancelled ->
             if (!cancelled) {
-                Alerts.toast(requireContext(), getString(R.string.pip_notification_scheduled, formattedTime))
+                Alerts.toast(
+                    requireContext(),
+                    getString(R.string.pip_notification_scheduled, formattedTime)
+                )
+
                 val scheduler = AlarmTaskScheduler(requireContext()) {
-                    NextMinuteBroadcastReceiver.pendingIntent(requireContext(), formattedTime)
+                    NextMinuteBroadcastReceiver.pendingIntent(
+                        requireContext(),
+                        formattedTime
+                    )
                 }
                 scheduler.once(sendTime.toZonedDateTime().toInstant())
-                getResult(Intent(Settings.ACTION_DATE_SETTINGS)) { _, _ -> }
+                startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
+            }
+        }
+    }
+
+    private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermission(
+            SpecialPermission.SCHEDULE_EXACT_ALARMS,
+            PermissionRationale(
+                getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
+                AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                    getString(
+                        R.string.allow_schedule_exact_alarms_instructions,
+                        getString(R.string.app_name),
+                        getString(R.string.settings)
+                    )
+                ),
+                ok = getString(R.string.settings),
+            )
+        ) {
+            val isGranted = Permissions.hasPermission(
+                requireContext(),
+                SpecialPermission.SCHEDULE_EXACT_ALARMS
+            )
+            if (!isGranted) {
+                alertExactAlarmsDenied()
+            }
+            action(isGranted)
+        }
+    }
+}
+
+@Composable
+private fun ClockScreen(
+    formatService: FormatService,
+    prefs: UserPreferences,
+    gps: com.kylecorry.andromeda.core.sensors.ISensor,
+    getGpsTime: () -> Instant,
+    requestExactAlarms: ((Boolean) -> Unit) -> Unit,
+    onScheduleNextMinute: (Instant, Instant) -> Unit
+) {
+    val context = LocalContext.current
+    var gpsTime by remember { mutableStateOf(Instant.now()) }
+    var systemTime by remember { mutableStateOf(Instant.now()) }
+    var isGpsTime by remember { mutableStateOf(false) }
+    var isUpdatingClock by remember { mutableStateOf(true) }
+    var now by remember { mutableStateOf(Instant.now()) }
+
+    fun onGpsUpdate(): Boolean {
+        gpsTime = getGpsTime()
+        systemTime = Instant.now()
+        isGpsTime = true
+
+        if (gps is CustomGPS && gps.isTimedOut) {
+            Alerts.toast(context, context.getString(R.string.no_gps_signal))
+            gpsTime = Instant.now()
+            isGpsTime = false
+        }
+
+        isUpdatingClock = false
+        return false
+    }
+
+    fun startGpsUpdate() {
+        isUpdatingClock = true
+        gps.start(::onGpsUpdate)
+    }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> startGpsUpdate()
+                Lifecycle.Event.ON_PAUSE -> gps.stop(::onGpsUpdate)
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            gps.stop(::onGpsUpdate)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = Instant.now()
+            delay(20)
+        }
+    }
+
+    val systemDiff = Duration.between(systemTime, now)
+    val currentTime = gpsTime.plus(systemDiff)
+    val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
+    val timeText = formatService.formatTime(myTime.toLocalTime())
+    val dateText = formatService.formatDate(myTime)
+    val showAnalogClock = prefs.clock.showAnalogClock
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.align(Alignment.TopCenter),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (showAnalogClock) {
+                        Text(
+                            text = timeText,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    IconButton(onClick = { startGpsUpdate() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.reload)
+                        )
+                    }
+                }
+                Text(
+                    text = dateText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (showAnalogClock) {
+                    AnalogClock(
+                        time = myTime.toLocalTime()
+                    )
+                } else {
+                    Text(
+                        text = timeText,
+                        style = MaterialTheme.typography.displayMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(
+                        if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (isUpdatingClock) {
+                Text(
+                    text = stringResource(R.string.clock_waiting_for_gps),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Button(
+                    onClick = {
+                        requestExactAlarms {
+                            onScheduleNextMinute(gpsTime, systemTime)
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    Text(stringResource(R.string.pip_button))
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ToolClockContent(
-    currentTime: Instant,
-    isGpsTime: Boolean,
-    isUpdating: Boolean,
-    showAnalogClock: Boolean,
-    use24Hour: Boolean,
-    formatService: FormatService,
-    onSyncGPS: () -> Unit,
-    onRequestPIP: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val zoned = remember(currentTime) {
-        ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
-    }
+private fun AnalogClock(time: LocalTime) {
+    val outline = MaterialTheme.colorScheme.outline
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val secondary = MaterialTheme.colorScheme.secondary
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(TrailSenseSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = formatService.formatTime(zoned.toLocalTime()),
-                style = MaterialTheme.typography.headlineMedium
-            )
-            TrailSenseButton(
-                text = stringResource(R.string.reload),
-                onClick = onSyncGPS,
-                modifier = Modifier.size(height = 36.dp, width = 100.dp)
+    Canvas(modifier = Modifier.size(250.dp)) {
+        val radius = min(size.width, size.height) / 2f
+        val center = Offset(size.width / 2f, size.height / 2f)
+        drawCircle(outline, radius = radius, center = center, style = Stroke(width = 4f))
+
+        for (tick in 0 until 60) {
+            val angle = tick / 60f * 360f - 90f
+            val startRadius = radius * if (tick % 5 == 0) 0.86f else 0.92f
+            val endRadius = radius * 0.96f
+            drawLine(
+                color = if (tick % 5 == 0) onSurface else outline,
+                start = center.pointAt(startRadius, angle),
+                end = center.pointAt(endRadius, angle),
+                strokeWidth = if (tick % 5 == 0) 4f else 2f,
+                cap = StrokeCap.Round
             )
         }
 
-        Spacer(Modifier.height(TrailSenseSpacing.xl))
+        val hour = time.hour % 12
+        val hourAngle = ((hour + time.minute / 60f) / 12f) * 360f - 90f
+        val minuteAngle = ((time.minute + time.second / 60f) / 60f) * 360f - 90f
+        val secondAngle = (time.second / 60f) * 360f - 90f
 
-        if (showAnalogClock) {
-            AndroidView(
-                factory = { ctx ->
-                    ClockView(ctx).apply {
-                        time = zoned.toLocalTime()
-                        use24Hours = use24Hour
-                    }
-                },
-                update = { view ->
-                    view.time = zoned.toLocalTime()
-                    view.use24Hours = use24Hour
-                },
-                modifier = Modifier.size(240.dp)
-            )
-        } else {
-            Text(
-                text = formatService.formatTime(zoned.toLocalTime()),
-                style = MaterialTheme.typography.displayLarge
-            )
-        }
-
-        Spacer(Modifier.height(TrailSenseSpacing.md))
-
-        Text(
-            text = if (isGpsTime) stringResource(R.string.clock_source_gps) else stringResource(R.string.clock_source_device),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        drawLine(
+            color = onSurface,
+            start = center,
+            end = center.pointAt(radius * 0.48f, hourAngle),
+            strokeWidth = 10f,
+            cap = StrokeCap.Round
         )
-
-        if (isUpdating) {
-            Spacer(Modifier.height(TrailSenseSpacing.sm))
-            Text(
-                text = stringResource(R.string.clock_waiting_for_gps),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        Spacer(Modifier.height(TrailSenseSpacing.xl))
-
-        TrailSenseButton(
-            text = stringResource(R.string.pip_button),
-            onClick = onRequestPIP
+        drawLine(
+            color = primary,
+            start = center,
+            end = center.pointAt(radius * 0.72f, minuteAngle),
+            strokeWidth = 6f,
+            cap = StrokeCap.Round
         )
+        drawLine(
+            color = secondary,
+            start = center,
+            end = center.pointAt(radius * 0.8f, secondAngle),
+            strokeWidth = 3f,
+            cap = StrokeCap.Round
+        )
+        drawCircle(primary, radius = 7f, center = center)
     }
 }
 
-internal data class ClockOffset(val seconds: Long, val direction: ClockOffsetDirection)
-
-internal enum class ClockOffsetDirection {
-    Accurate,
-    Slow,
-    Fast
-}
-
-private fun getClockOffset(duration: Duration): ClockOffset {
-    val seconds = duration.abs().seconds
-    val direction = when {
-        seconds == 0L -> ClockOffsetDirection.Accurate
-        duration.isNegative -> ClockOffsetDirection.Fast
-        else -> ClockOffsetDirection.Slow
-    }
-    return ClockOffset(seconds, direction)
+private fun Offset.pointAt(radius: Float, degrees: Float): Offset {
+    val radians = Math.toRadians(degrees.toDouble())
+    return Offset(
+        x + (cos(radians) * radius).toFloat(),
+        y + (sin(radians) * radius).toFloat()
+    )
 }

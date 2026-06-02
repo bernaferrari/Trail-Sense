@@ -83,7 +83,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: Fragment) :
                     }
 
                     if (fragment is BeaconListFragment) {
-                        fragment.refresh() // Legacy compat; modern Nav3 uses routes + Content shell (see global ref sweep)
+                        fragment.refresh()
                     }
                 }
             }

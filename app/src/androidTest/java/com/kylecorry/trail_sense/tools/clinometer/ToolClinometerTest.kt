@@ -14,8 +14,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 import kotlin.text.Regex
@@ -52,7 +50,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     }
 
     private fun canSwitchToDialMode() {
-        click(toolbarButton(R.id.clinometer_title, Side.Left))
+        click(R.id.clinometer_mode_btn)
 
         if (Camera.hasBackCamera(context)) {
             isTrue {
@@ -64,7 +62,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     private fun switchToCurrentMode(){
         optional {
             hasText("Hold your phone vertically", waitForTime = 1000)
-            click(toolbarButton(R.id.clinometer_title, Side.Left))
+            click(R.id.clinometer_mode_btn)
         }
     }
 
@@ -84,7 +82,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     }
 
     private fun canEstimateDistance() {
-        click(toolbarButton(R.id.clinometer_title, Side.Right))
+        click(R.id.clinometer_measure_btn)
 
         click(string(R.string.distance))
 
@@ -104,7 +102,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     }
 
     private fun canEstimateHeight() {
-        click(toolbarButton(R.id.clinometer_title, Side.Right))
+        click(R.id.clinometer_measure_btn)
 
         click(string(R.string.height))
 

@@ -1,11 +1,30 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -13,16 +32,20 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.BoundFragment
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
+import com.kylecorry.andromeda.views.list.AndromedaListView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentOfflineMapListBinding
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.andromeda_temp.map
 import com.kylecorry.trail_sense.shared.andromeda_temp.unwrap
@@ -33,6 +56,9 @@ import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
+import com.kylecorry.trail_sense.shared.views.SearchView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
@@ -66,7 +92,11 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.TrailMapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.FragmentMapExportService
 
-class OfflineMapListFragment : BoundFragment<FragmentOfflineMapListBinding>() {
+class OfflineMapListFragment : AndromedaFragment() {
+
+    private var offlineMapViews: OfflineMapListViews? = null
+    private val binding: OfflineMapListViews
+        get() = offlineMapViews ?: error("Offline map list views are not ready")
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
@@ -90,11 +120,24 @@ class OfflineMapListFragment : BoundFragment<FragmentOfflineMapListBinding>() {
     }
     private val exportService by lazy { FragmentMapExportService(this) }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentOfflineMapListBinding {
-        return FragmentOfflineMapListBinding.inflate(layoutInflater, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createOfflineMapListViews(requireContext())
+        offlineMapViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    OfflineMapListHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -477,4 +520,234 @@ class OfflineMapListFragment : BoundFragment<FragmentOfflineMapListBinding>() {
     }
 
 
+}
+
+private data class OfflineMapListViews(
+    val root: View,
+    val mapListTitle: OfflineMapListTitle,
+    val searchbox: SearchView,
+    val mapList: AndromedaListView,
+    val mapEmptyText: TextView,
+    val overlayMask: ImageView,
+    val addMenu: FloatingActionButtonMenu,
+    val addBtn: FloatingActionButton
+)
+
+private data class OfflineMapListTitle(
+    val root: View,
+    val title: TextView,
+    val leftButton: ImageButton,
+    val rightButton: ImageButton
+)
+
+@Composable
+private fun OfflineMapListHost(
+    views: OfflineMapListViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createOfflineMapListViews(context: Context): OfflineMapListViews {
+    val root = ConstraintLayout(context).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val title = createOfflineMapListTitle(context)
+    root.addView(
+        title.root,
+        ConstraintLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val searchbox = SearchView(context, null).apply {
+        id = R.id.searchbox
+    }
+    root.addView(
+        searchbox,
+        ConstraintLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.map_list_title
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val list = AndromedaListView(context, null).apply {
+        id = R.id.map_list
+    }
+    root.addView(
+        list,
+        ConstraintLayout.LayoutParams(
+            0,
+            0
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.searchbox
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            topMargin = 16.dp(context)
+        }
+    )
+
+    val emptyText = TextView(context).apply {
+        id = R.id.map_empty_text
+        text = context.getString(R.string.no_maps)
+        textSize = 18f
+        visibility = View.GONE
+        setTextColor(Resources.androidTextColorPrimary(context))
+    }
+    root.addView(
+        emptyText,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = R.id.map_list
+            bottomToBottom = R.id.map_list
+        }
+    )
+
+    val overlay = ImageView(context).apply {
+        id = R.id.overlay_mask
+        alpha = 0.86f
+        setBackgroundColor(resolveThemeColor(context, android.R.attr.colorBackground))
+        isClickable = true
+        visibility = View.GONE
+    }
+    root.addView(
+        overlay,
+        ConstraintLayout.LayoutParams(
+            0,
+            0
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
+    )
+
+    val addButton = FloatingActionButton(context).apply {
+        id = R.id.add_btn
+        setImageResource(R.drawable.ic_add)
+        isClickable = true
+        isFocusable = true
+    }
+    root.addView(
+        addButton,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            marginEnd = 16.dp(context)
+            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
+        }
+    )
+
+    val addMenu = FloatingActionButtonMenu(context, null).apply {
+        id = R.id.add_menu
+        visibility = View.GONE
+        setMenu(R.menu.add_map_menu)
+    }
+    root.addView(
+        addMenu,
+        ConstraintLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            endToEnd = R.id.add_btn
+            bottomToTop = R.id.add_btn
+            bottomMargin = 16.dp(context)
+        }
+    )
+
+    return OfflineMapListViews(
+        root = root,
+        mapListTitle = title,
+        searchbox = searchbox,
+        mapList = list,
+        mapEmptyText = emptyText,
+        overlayMask = overlay,
+        addMenu = addMenu,
+        addBtn = addButton
+    )
+}
+
+private fun createOfflineMapListTitle(context: Context): OfflineMapListTitle {
+    val root = LinearLayout(context).apply {
+        id = R.id.map_list_title
+        gravity = Gravity.CENTER_VERTICAL
+        orientation = LinearLayout.HORIZONTAL
+        setPadding(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
+    }
+    val help = ImageButton(context).apply {
+        id = R.id.map_list_help_btn
+        contentDescription = context.getString(R.string.help)
+        setImageResource(R.drawable.ic_help)
+        backgroundTintList = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    val title = TextView(context).apply {
+        text = context.getString(R.string.offline_maps)
+        textSize = 20f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(Resources.androidTextColorPrimary(context))
+    }
+    val menu = ImageButton(context).apply {
+        id = R.id.map_list_menu_btn
+        contentDescription = context.getString(R.string.sort)
+        setImageResource(R.drawable.ic_menu_dots)
+        backgroundTintList = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+    }
+    root.addView(help, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
+    root.addView(title, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+    root.addView(menu, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
+
+    return OfflineMapListTitle(root, title, help, menu)
+}
+
+private fun resolveThemeColor(context: Context, attr: Int): Int {
+    val value = TypedValue()
+    context.theme.resolveAttribute(attr, value, true)
+    return if (value.resourceId != 0) {
+        ContextCompat.getColor(context, value.resourceId)
+    } else {
+        value.data
+    }
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun OfflineMapListHostPreview() {
+    TrailSenseTheme {
+        OfflineMapListHost(
+            views = createOfflineMapListViews(LocalContext.current)
+        )
+    }
 }

@@ -11,8 +11,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -25,12 +24,12 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         hasText("Battery log")
         hasText("Updates every 1h - Low battery usage")
 
-        isNotChecked(R.id.low_power_mode_switch)
-        click(R.id.low_power_mode_switch)
-        isChecked(R.id.low_power_mode_switch)
+        isNotChecked(id("low_power_mode_switch"))
+        click(id("low_power_mode_switch"))
+        isChecked(id("low_power_mode_switch"))
 
         // Stop the battery log
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
+        click(id("battery_service_stop_btn"))
         not { hasText("Battery log") }
 
         scrollUntil {
@@ -39,7 +38,7 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         optional {
             hasText("Network")
         }
-        backUntil { isVisible(R.id.battery_title) }
+        backUntil { isVisible(id("battery_title")) }
 
         hasListItems(
             "Airplane mode",
@@ -57,7 +56,7 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         )
 
         // Open battery settings
-        click(toolbarButton(R.id.battery_title, Side.Right))
+        click(id("battery_settings_btn"))
         hasText("Battery")
     }
 

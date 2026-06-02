@@ -1,80 +1,155 @@
 package com.kylecorry.trail_sense.tools.mirror.ui
 
+import android.Manifest
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
-import com.kylecorry.andromeda.fragments.BoundFragment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.torch.ScreenTorch
-import com.kylecorry.trail_sense.databinding.FragmentToolMirrorCameraBinding
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
-import com.kylecorry.trail_sense.shared.permissions.requestCamera
+import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
+import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class ToolMirrorCameraFragment : BoundFragment<FragmentToolMirrorCameraBinding>() {
+class ToolMirrorCameraFragment : Fragment() {
     private val flashlight by lazy { ScreenTorch(requireActivity().window) }
-    private var isCameraEnabled by state(false)
-    private var wasPermissionRequested by state(false)
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater, container: ViewGroup?
-    ): FragmentToolMirrorCameraBinding {
-        return FragmentToolMirrorCameraBinding.inflate(layoutInflater, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
-        binding.camera.setShowTorch(false)
-        binding.camera.setPreviewBackgroundColor(Color.WHITE)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        isCameraEnabled = Permissions.isCameraEnabled(requireContext())
-        flashlight.on()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopCamera()
-        flashlight.off()
-    }
-
-    private fun startCamera() {
-        binding.camera.start(
-            readFrames = false,
-            preferBackCamera = false,
-            shouldStabilizePreview = false
-        )
-    }
-
-    private fun stopCamera() {
-        binding.camera.stop()
-    }
-
-    override fun onUpdate() {
-        super.onUpdate()
-        effect("camera_permission", wasPermissionRequested, lifecycleHookTrigger.onResume()) {
-            if (!wasPermissionRequested) {
-                wasPermissionRequested = true
-                requestCamera {
-                    isCameraEnabled = it
-                    if (!it) {
-                        alertNoCameraPermission()
-                    }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    MirrorCameraScreen(
+                        onRequestCamera = ::requestCameraPermission,
+                        onResumeScreen = { flashlight.on() },
+                        onPauseScreen = { flashlight.off() }
+                    )
                 }
             }
         }
+    }
 
-        effect("camera", isCameraEnabled, lifecycleHookTrigger.onResume()) {
-            if (isCameraEnabled) {
-                startCamera()
-            } else {
-                stopCamera()
+    private fun requestCameraPermission(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+            val isAvailable = Permissions.isCameraEnabled(requireContext())
+            if (!isAvailable) {
+                alertNoCameraPermission()
+            }
+            action(isAvailable)
+        }
+    }
+}
+
+@Composable
+private fun MirrorCameraScreen(
+    onRequestCamera: ((Boolean) -> Unit) -> Unit,
+    onResumeScreen: () -> Unit,
+    onPauseScreen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val cameraView = remember {
+        CameraView(context, null).apply {
+            setScaleType(PreviewView.ScaleType.FIT_CENTER)
+            setShowTorch(false)
+            setPreviewBackgroundColor(Color.WHITE)
+            keepScreenOn = true
+        }
+    }
+    var isCameraEnabled by remember {
+        mutableStateOf(Permissions.isCameraEnabled(context))
+    }
+    var wasPermissionRequested by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!wasPermissionRequested) {
+            wasPermissionRequested = true
+            onRequestCamera {
+                isCameraEnabled = it
             }
         }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, cameraView, isCameraEnabled) {
+        fun startCamera() {
+            if (isCameraEnabled) {
+                cameraView.start(
+                    readFrames = false,
+                    preferBackCamera = false,
+                    shouldStabilizePreview = false
+                )
+            } else {
+                cameraView.stop()
+            }
+        }
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    onResumeScreen()
+                    startCamera()
+                }
+
+                Lifecycle.Event.ON_PAUSE -> {
+                    cameraView.stop()
+                    onPauseScreen()
+                }
+
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        startCamera()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            cameraView.stop()
+            onPauseScreen()
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ComposeColor.White),
+        contentAlignment = Alignment.Center
+    ) {
+        AndroidView(
+            factory = { cameraView },
+            modifier = Modifier
+                .fillMaxSize(0.9f)
+                .padding(0.dp)
+                .testTag("camera")
+        )
     }
 }

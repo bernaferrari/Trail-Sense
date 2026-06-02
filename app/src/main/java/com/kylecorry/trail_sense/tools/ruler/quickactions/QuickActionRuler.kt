@@ -1,27 +1,34 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
 import android.view.ViewGroup
-import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
+import android.widget.ImageButton
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.tools.ruler.ui.RulerView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.ruler.ui.RulerCanvas
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionRuler(
-    btn: QuickActionButtonView,
+    btn: ImageButton,
     fragment: Fragment,
 ) : QuickActionButton(btn, fragment) {
     private val prefs by lazy { UserPreferences(context) }
 
-    private var ruler: RulerView? = null
+    private var ruler: ComposeView? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -30,15 +37,30 @@ class QuickActionRuler(
             removeRuler()
         }
 
-        val ruler = RulerView(context)
+        val ruler = ComposeView(context)
         this.ruler = ruler
         ruler.isVisible = false
-        ruler.setBackgroundColor(
-            Resources.getAndroidColorAttr(
-                context,
-                com.google.android.material.R.attr.colorSurfaceContainer
-            )
-        )
+        ruler.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+        ruler.setContent {
+            TrailSenseTheme {
+                RulerCanvas(
+                    rulerUnits = if (prefs.baseDistanceUnits.isMetric) {
+                        DistanceUnits.Centimeters
+                    } else {
+                        DistanceUnits.Inches
+                    },
+                    highlight = null,
+                    yDpi = Screen.ydpi(context),
+                    scale = prefs.ruler.rulerScale,
+                    flipped = prefs.ruler.rulerFlipped,
+                    onDistanceSelected = {
+                        setState(false)
+                        ruler.isVisible = false
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
 
         ruler.x = 0f
         ruler.y = 0f
@@ -62,11 +84,6 @@ class QuickActionRuler(
         root?.addView(ruler)
 
         setIcon(R.drawable.ruler)
-        ruler.metric = prefs.baseDistanceUnits.isMetric
-        ruler.setOnTouchListener {
-            setState(false)
-            ruler.isVisible = false
-        }
     }
 
     override fun onClick() {

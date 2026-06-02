@@ -19,9 +19,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickDate
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickTime
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -101,27 +99,27 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         clickListItemMenu("Edit")
         hasText(R.id.name, "A Test")
         input(R.id.name, "A Test 2")
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(R.id.create_field_guide_page_save_btn)
 
         // Verify the changes
         hasText("A Test 2")
 
         // Open it an edit
         click("A Test 2")
-        click(toolbarButton(R.id.field_guide_page_title, Side.Right))
+        click(id("field_guide_page_edit_btn"))
         hasText(R.id.name, "A Test 2")
         input(R.id.name, "A Test 3")
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(R.id.create_field_guide_page_save_btn)
 
         // Verify the changes
-        hasText(R.id.field_guide_page_title, "A Test 3")
+        hasText("A Test 3")
 
         back()
     }
 
     private fun canOpenPage() {
         click("Ant")
-        hasText(R.id.field_guide_page_title, "Ant")
+        hasText("Ant")
         hasText("A small insect")
         canLogSightings()
         val tags = listOf(
@@ -156,7 +154,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     }
 
     private fun canCreatePage() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         input(R.id.name, "A Test")
         click(R.id.tag_classifications)
         click("Bird")
@@ -192,14 +190,14 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         isVisible(R.id.image)
 
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(R.id.create_field_guide_page_save_btn)
 
         // Verify it shows up in the list
         hasText("A Test")
         click("A Test")
 
         // Verify the details
-        hasText(R.id.field_guide_page_title, "A Test")
+        hasText("A Test")
         hasText("Notes")
 
         val tags = listOf(
@@ -224,9 +222,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     private fun canLogSightings() {
         click("Sightings (0)")
         hasText("No sightings")
-        hasText(R.id.toolbar_subtitle, "Ant", exact = true)
-        click(R.id.create_btn)
-        hasText(R.id.toolbar_subtitle, "Ant", exact = true)
+        click(id("create_btn"))
         click(R.id.time)
         pickDate(2025, 1, 1)
         pickTime(6, 0, true)
@@ -236,7 +232,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Harvested")
         click("Show on map")
         input("Notes", "Test")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(id("field_guide_sighting_save_btn"))
 
         // Sightings list
         hasText("Sightings")
@@ -252,7 +248,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         isNotChecked("Show on map")
         click("Show on map")
         input("Test", "Test 2")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(id("field_guide_sighting_save_btn"))
 
         // Sightings list is updated
         hasText("Test 2")
@@ -265,7 +261,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         isChecked("Harvested")
         isChecked("Show on map")
         input("Test 2", "Test 3")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(id("field_guide_sighting_save_btn"))
 
         // Sightings list is updated
         hasText("Test 3")

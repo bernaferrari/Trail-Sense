@@ -7,32 +7,59 @@ import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
-import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.fragments.BoundFragment
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.list.ListView
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentScanTextBinding
-import com.kylecorry.trail_sense.databinding.ListItemQrResultBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.andromeda_temp.getOrNull
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
-import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
+import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
@@ -40,116 +67,51 @@ import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
+class ScanQRFragment : Fragment() {
 
     private val cameraSize = Size(200, 200)
 
-    private var history = mutableListOf<String>()
-    private lateinit var qrHistoryList: ListView<String>
+    private var history by mutableStateOf<List<String>>(emptyList())
+    private var historyScrollRequest by mutableIntStateOf(0)
+    private var cameraView: CameraView? = null
+    private var shouldStartCamera = false
 
     private val beaconQREncoder = BeaconQREncoder()
     private val noteQREncoder = NoteQREncoder()
 
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
     private val scanLock = Any()
 
-    private val pickMediaLoadingIndicator by lazy {
-        AlertLoadingIndicator(
-            requireContext(),
-            getString(R.string.scanning_image)
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding.gallery.setOnClickListener {
-            scanFromGallery()
-        }
-
-        qrHistoryList =
-            ListView(binding.qrHistory, R.layout.list_item_qr_result) { itemView, text ->
-                val itemBinding = ListItemQrResultBinding.bind(itemView)
-
-                val type = when {
-                    isURL(text) -> ScanType.Url
-                    isLocation(text) -> ScanType.Geo
-                    else -> ScanType.Text
-                }
-
-                itemBinding.qrText.text = text.ifEmpty { null }
-                itemBinding.qrWeb.isVisible = type == ScanType.Url
-                itemBinding.qrLocation.isVisible = type == ScanType.Geo
-                itemBinding.qrBeacon.isVisible = type == ScanType.Geo
-                itemBinding.qrSaveNote.isVisible = type == ScanType.Text
-                itemBinding.qrCopy.isVisible = true
-                itemBinding.qrDelete.isVisible = true
-                itemBinding.qrActions.isVisible = text.isNotEmpty()
-
-                itemBinding.qrMessageType.setImageResource(
-                    when (type) {
-                        ScanType.Text -> R.drawable.ic_tool_notes
-                        ScanType.Url -> R.drawable.ic_link
-                        ScanType.Geo -> R.drawable.ic_location
-                    }
-                )
-
-                itemBinding.qrCopy.setOnClickListener {
-                    copy(text)
-                }
-
-                itemBinding.qrSaveNote.setOnClickListener {
-                    createNote(text)
-                }
-
-                itemBinding.qrLocation.setOnClickListener {
-                    openMap(text)
-                }
-
-                itemBinding.qrBeacon.setOnClickListener {
-                    createBeacon(text)
-                }
-
-                itemBinding.qrWeb.setOnClickListener {
-                    openUrl(text)
-                }
-
-                itemBinding.qrDelete.setOnClickListener {
-                    deleteResult(text)
-                }
-            }
-        binding.camera.clipToOutline = true
-    }
-
-    private fun scanFromGallery() {
-        inBackground(BackgroundMinimumState.Created) {
-            val uri =
-                IntentUriPicker(this@ScanQRFragment, requireContext()).open(listOf("image/*"))
-                    .getOrNull() ?: return@inBackground
-
-            try {
-                pickMediaLoadingIndicator.show()
-
-                val path = onIO { files.copyToTemp(uri) }?.path ?: return@inBackground
-
-                val bitmap = onIO {
-                    BitmapUtils.decodeBitmapScaled(
-                        path,
-                        mediaMaxWidth,
-                        mediaMaxHeight
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    QrScannerScreen(
+                        history = history,
+                        scrollRequest = historyScrollRequest,
+                        onCameraReady = ::onCameraReady,
+                        onCopy = ::copy,
+                        onCreateNote = ::createNote,
+                        onOpenMap = ::openMap,
+                        onCreateBeacon = ::createBeacon,
+                        onOpenUrl = ::openUrl,
+                        onDelete = ::deleteResult
                     )
-                } ?: return@inBackground
-
-                DeleteTempFilesCommand(requireContext()).execute()
-
-                onCameraUpdate(
-                    bitmap = bitmap,
-                    isFromGallery = true
-                )
-            } finally {
-                pickMediaLoadingIndicator.hide()
+                }
             }
+        }
+    }
+
+    private fun onCameraReady(cameraView: CameraView) {
+        this.cameraView = cameraView
+        cameraView.clipToOutline = true
+        if (shouldStartCamera && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            startCamera()
         }
     }
 
@@ -188,7 +150,6 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
     private fun openUrl(text: String) {
         val protocols = listOf("http", "https", "rtsp", "ftp")
         val url = if (protocols.none { text.lowercase().startsWith(it) }) {
-            // Default to HTTPS
             "https://$text"
         } else {
             text
@@ -217,8 +178,12 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
     }
 
     private fun deleteResult(text: String) {
-        val idx = history.indexOf(text)
-        history.remove(text)
+        val index = history.indexOf(text)
+        if (index < 0) {
+            return
+        }
+
+        history = history.filterNot { it == text }
         updateHistoryList(false)
         CustomUiUtils.snackbar(
             this@ScanQRFragment,
@@ -226,11 +191,13 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
             action = getString(R.string.undo)
         ) {
             if (!history.contains(text)) {
-                if (idx <= history.size) {
-                    history.add(idx, text)
+                val restored = history.toMutableList()
+                if (index <= restored.size) {
+                    restored.add(index, text)
                 } else {
-                    history.add(text)
+                    restored.add(text)
                 }
+                history = restored
                 updateHistoryList(false)
             }
         }
@@ -241,27 +208,27 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
         updateHistoryList()
         requestCamera { hasPermission ->
             if (hasPermission) {
+                shouldStartCamera = true
                 startCamera()
             } else {
+                shouldStartCamera = false
                 alertNoCameraPermission()
             }
         }
     }
 
     private fun startCamera() {
-        if (!isBound) return
-        binding.camera.start(cameraSize) {
+        cameraView?.start(cameraSize) {
             onCameraUpdate(it)
         }
     }
-
 
     @SuppressLint("UnsafeOptInUsageError")
     private fun onCameraUpdate(
         bitmap: Bitmap,
         isFromGallery: Boolean = false
     ): Boolean = synchronized(scanLock) {
-        if (!isBound) {
+        if (!isAdded || view == null) {
             bitmap.recycle()
             return true
         }
@@ -284,23 +251,24 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
     }
 
     private fun addReading(text: String) {
-        if (history.contains(text)) {
-            history.remove(text)
+        val updated = history.toMutableList()
+        if (updated.contains(text)) {
+            updated.remove(text)
         }
 
-        history.add(0, text)
+        updated.add(0, text)
 
-        while (history.size > 10) {
-            history.removeLastOrNull()
+        while (updated.size > 10) {
+            updated.removeLastOrNull()
         }
 
+        history = updated
         updateHistoryList()
     }
 
     private fun updateHistoryList(scrollToTop: Boolean = true) {
-        qrHistoryList.setData(if (history.isEmpty()) listOf("") else history)
         if (scrollToTop) {
-            qrHistoryList.scrollToPosition(0, true)
+            historyScrollRequest++
         }
     }
 
@@ -312,35 +280,238 @@ class ScanQRFragment : BoundFragment<FragmentScanTextBinding>() {
         }
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentScanTextBinding {
-        return FragmentScanTextBinding.inflate(layoutInflater, container, false)
-    }
-
     override fun onPause() {
         super.onPause()
-        binding.camera.stop()
+        shouldStartCamera = false
+        cameraView?.stop()
         haptics.off()
     }
 
-    private fun isLocation(text: String): Boolean {
-        return GeoUri.from(text.toUri()) != null
-    }
-
-    private fun isURL(text: String): Boolean {
-        return android.util.Patterns.WEB_URL.matcher(text).matches()
-    }
-
-    private enum class ScanType {
-        Text,
-        Url,
-        Geo
+    override fun onDestroyView() {
+        cameraView?.stop()
+        cameraView = null
+        super.onDestroyView()
     }
 
     companion object {
         const val mediaMaxWidth = 500
         const val mediaMaxHeight = 500
     }
+}
+
+@Composable
+private fun QrScannerScreen(
+    history: List<String>,
+    scrollRequest: Int,
+    onCameraReady: (CameraView) -> Unit,
+    onCopy: (String) -> Unit,
+    onCreateNote: (String) -> Unit,
+    onOpenMap: (String) -> Unit,
+    onCreateBeacon: (String) -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+    val results = history.ifEmpty { listOf("") }
+
+    LaunchedEffect(scrollRequest) {
+        listState.animateScrollToItem(0)
+    }
+
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            AndroidView(
+                factory = { context ->
+                    CameraView(context, null).apply {
+                        setBackgroundResource(R.drawable.rounded_rectangle)
+                        onCameraReady(this)
+                    }
+                },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .testTag("camera")
+            )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(results) { text ->
+                    QrResultCard(
+                        text = text,
+                        onCopy = onCopy,
+                        onCreateNote = onCreateNote,
+                        onOpenMap = onOpenMap,
+                        onCreateBeacon = onCreateBeacon,
+                        onOpenUrl = onOpenUrl,
+                        onDelete = onDelete
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QrResultCard(
+    text: String,
+    onCopy: (String) -> Unit,
+    onCreateNote: (String) -> Unit,
+    onOpenMap: (String) -> Unit,
+    onCreateBeacon: (String) -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val type = getScanType(text)
+    ElevatedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("qr_result")
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    painter = painterResource(type.icon),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(20.dp)
+                        .testTag("qr_message_type"),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = text.ifEmpty { stringResource(R.string.no_qr_code_detected) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp)
+                        .testTag("qr_text"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (text.isEmpty()) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+            }
+
+            if (text.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .testTag("qr_actions"),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (type == ScanType.Url) {
+                        QrActionChip(
+                            text = stringResource(R.string.open),
+                            icon = R.drawable.ic_link,
+                            tag = "qr_web",
+                            onClick = { onOpenUrl(text) }
+                        )
+                    }
+
+                    if (type == ScanType.Geo) {
+                        QrActionChip(
+                            text = stringResource(R.string.beacon),
+                            icon = R.drawable.ic_location,
+                            tag = "qr_beacon",
+                            onClick = { onCreateBeacon(text) }
+                        )
+                        QrActionChip(
+                            text = stringResource(R.string.maps),
+                            icon = R.drawable.maps,
+                            tag = "qr_location",
+                            onClick = { onOpenMap(text) }
+                        )
+                    }
+
+                    if (type == ScanType.Text) {
+                        QrActionChip(
+                            text = stringResource(R.string.note),
+                            icon = R.drawable.ic_tool_notes,
+                            tag = "qr_save_note",
+                            onClick = { onCreateNote(text) }
+                        )
+                    }
+
+                    QrActionChip(
+                        text = stringResource(android.R.string.copy),
+                        icon = R.drawable.ic_copy,
+                        tag = "qr_copy",
+                        onClick = { onCopy(text) }
+                    )
+                    QrActionChip(
+                        text = stringResource(R.string.delete),
+                        icon = R.drawable.ic_delete,
+                        tag = "qr_delete",
+                        onClick = { onDelete(text) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QrActionChip(
+    text: String,
+    icon: Int,
+    tag: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AssistChip(
+        onClick = onClick,
+        modifier = modifier.testTag(tag),
+        label = { Text(text) },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    )
+}
+
+private enum class ScanType {
+    Text,
+    Url,
+    Geo
+}
+
+private val ScanType.icon: Int
+    get() = when (this) {
+        ScanType.Text -> R.drawable.ic_tool_notes
+        ScanType.Url -> R.drawable.ic_link
+        ScanType.Geo -> R.drawable.ic_location
+    }
+
+private fun getScanType(text: String): ScanType {
+    return when {
+        isURL(text) -> ScanType.Url
+        isLocation(text) -> ScanType.Geo
+        else -> ScanType.Text
+    }
+}
+
+private fun isLocation(text: String): Boolean {
+    return GeoUri.from(text.toUri()) != null
+}
+
+private fun isURL(text: String): Boolean {
+    return android.util.Patterns.WEB_URL.matcher(text).matches()
 }

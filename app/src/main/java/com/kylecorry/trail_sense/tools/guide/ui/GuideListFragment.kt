@@ -1,14 +1,22 @@
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.layout.Arrangement
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,95 +24,43 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 
-/**
- * Modern Compose port of the Guides list.
- * Inlines search + categorized list (no more child PreferenceFragment or XML container).
- * Expressive cards + search using design system. Navigates using legacy action for compatibility.
- */
-@Composable
-fun Fragment.GuideListContent(modifier: Modifier = Modifier) {
-    val context = requireContext()
-    val navController = findNavController()
+class GuideListFragment : Fragment() {
 
-    val allGuides = remember { Guides.guides(context) }
-
-    var searchQuery by remember { mutableStateOf("") }
-
-    val filtered = remember(searchQuery, allGuides) {
-        if (searchQuery.isBlank()) {
-            allGuides
-        } else {
-            allGuides.mapNotNull { category ->
-                val matching = category.guides.filter { it.name.contains(searchQuery, ignoreCase = true) }
-                if (matching.isNotEmpty()) {
-                    UserGuideCategory(category.name, matching)
-                } else if (category.name.contains(searchQuery, ignoreCase = true)) {
-                    category
-                } else null
-            }
-        }
-    }
-
-    Column(modifier = modifier.fillMaxSize()) {
-        TrailSenseSearchBar(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = "Search guides...",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            filtered.forEach { category ->
-                item {
-                    TrailSenseSectionHeader(title = category.name)
-                }
-                items(category.guides) { guide ->
-                    TrailSenseCard(
-                        onClick = {
-                            navController.navigate(
-                                R.id.action_guideListFragment_to_guideFragment,
-                                Bundle().apply {
-                                    putString("guide_name", guide.name)
-                                    putInt("guide_contents", guide.contents)
-                                }
-                            )
-                        }
-                    ) {
-                        Column(Modifier.padding(4.dp)) {
-                            Text(guide.name, style = MaterialTheme.typography.titleMedium)
-                            if (guide.description != null) {
-                                Text(
-                                    guide.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    GuideListScreen(
+                        guides = Guides.guides(requireContext()),
+                        onOpenGuide = {
+                            tryOrNothing {
+                                findNavController().navigate(
+                                    R.id.action_guideListFragment_to_guideFragment,
+                                    Bundle().apply {
+                                        putString("guide_name", it.name)
+                                        putInt("guide_contents", it.contents)
+                                    }
                                 )
                             }
                         }
-                    }
-                }
-            }
-
-            if (filtered.isEmpty()) {
-                item {
-                    Text(
-                        "No guides match your search.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
                     )
                 }
             }
@@ -112,10 +68,107 @@ fun Fragment.GuideListContent(modifier: Modifier = Modifier) {
     }
 }
 
-class GuideListFragment : TrailSenseComposeFragment() {
+@Composable
+private fun GuideListScreen(
+    guides: List<UserGuideCategory>,
+    onOpenGuide: (UserGuide) -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    val filtered = remember(guides, query) {
+        filterGuides(guides, query)
+    }
 
-    @Composable
-    override fun FragmentContent() {
-        GuideListContent()
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.search)) }
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                filtered.forEach { category ->
+                    item(key = "category-${category.name}") {
+                        Text(
+                            text = category.name,
+                            modifier = Modifier.padding(
+                                start = 16.dp,
+                                top = 16.dp,
+                                end = 16.dp,
+                                bottom = 8.dp
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    items(
+                        items = category.guides,
+                        key = { "${category.name}-${it.name}" }
+                    ) { guide ->
+                        GuideRow(guide = guide, onClick = { onOpenGuide(guide) })
+                    }
+                }
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideRow(guide: UserGuide, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = guide.name,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        guide.description?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    HorizontalDivider()
+}
+
+private fun filterGuides(
+    guides: List<UserGuideCategory>,
+    query: String
+): List<UserGuideCategory> {
+    if (query.isBlank()) {
+        return guides
+    }
+
+    return guides.mapNotNull { category ->
+        if (category.name.contains(query, ignoreCase = true)) {
+            category
+        } else {
+            val matchingGuides = category.guides.filter {
+                it.name.contains(query, ignoreCase = true)
+            }
+            if (matchingGuides.isEmpty()) {
+                null
+            } else {
+                UserGuideCategory(category.name, matchingGuides)
+            }
+        }
     }
 }

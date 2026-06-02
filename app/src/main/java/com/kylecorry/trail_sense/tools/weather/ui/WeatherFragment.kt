@@ -1,24 +1,37 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.core.ui.setCompoundDrawables
+import com.kylecorry.andromeda.fragments.AndromedaFragment
+import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.fragments.observe
+import com.kylecorry.andromeda.views.chart.Chart
+import com.kylecorry.andromeda.views.list.AndromedaListView
+import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ActivityWeatherBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -28,6 +41,8 @@ import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ViewLoadingIndicator
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
+import com.kylecorry.trail_sense.shared.views.PlayBarView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
@@ -55,7 +70,13 @@ import com.kylecorry.trail_sense.tools.weather.ui.fields.TemperatureWeatherField
 import java.time.Duration
 import java.time.Instant
 
-class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
+class WeatherFragment : AndromedaFragment() {
+
+    private var weatherViews: WeatherViews? = null
+    private val binding: WeatherViews
+        get() = weatherViews ?: error("Weather views are not ready")
+    private val isViewReady: Boolean
+        get() = weatherViews != null && view != null
 
     private var useSeaLevelPressure = false
     private var units = PressureUnits.Hpa
@@ -67,12 +88,12 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
 
-    private var history by state<List<WeatherObservation>>(emptyList())
-    private var pressureForecast by state<List<Reading<Pressure>>>(emptyList())
-    private var rawHistory by state<List<Reading<Pressure>>>(emptyList())
+    private var history: List<WeatherObservation> = emptyList()
+    private var pressureForecast: List<Reading<Pressure>> = emptyList()
+    private var rawHistory: List<Reading<Pressure>> = emptyList()
 
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
-    private var weather by state<CurrentWeather?>(null)
+    private var weather: CurrentWeather? = null
     private val loadingIndicator by lazy {
         ResettableLoadingIndicator(
             ViewLoadingIndicator(binding.weatherUpdating)
@@ -92,12 +113,37 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
         Tools.getService(requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createWeatherViews(requireContext())
+        weatherViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    WeatherHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        weatherViews = null
+        super.onDestroyView()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         WeatherQuickActionBinder(
             this,
-            binding,
+            binding.weatherTitle,
             prefs.weather
         ).bind()
 
@@ -125,19 +171,17 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
         updateStatusBar()
 
         Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
-            onMain {
-                updateStatusBar()
-            }
+            updateStatusBar()
+            true
         }
 
         Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
-            onMain {
-                updateStatusBar()
-            }
+            updateStatusBar()
+            true
         }
 
         binding.weatherPlayBar.setOnSubtitleClickListener {
-            ChangeWeatherFrequencyCommand(requireContext()) { onUpdate() }.execute()
+            ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute()
         }
 
         binding.weatherPlayBar.setOnPlayButtonClickListener {
@@ -179,7 +223,7 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
     }
 
     private fun updateList() {
-        if (!isBound) return
+        if (!isViewReady) return
         val weather = weather ?: return
 
         val fields = listOf(
@@ -214,43 +258,35 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
 
     private fun updateWeather() {
         inBackground {
-            onIO {
-                history = weatherSubsystem.getHistory().filter {
+            val nextHistory = onIO {
+                weatherSubsystem.getHistory().filter {
                     Duration.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
                 }
-
-                loadRawWeatherReadings()
-
-                weather = weatherSubsystem.getWeather()
-
-                if (prefs.weather.showPressureForecast) {
-                    pressureForecast = listOfNotNull(
-                        history.lastOrNull()?.pressureReading()
-                    ) + weatherSubsystem.getPressureForecast()
-                }
             }
+
+            val nextRawHistory = loadRawWeatherReadings()
+            val nextWeather = onIO { weatherSubsystem.getWeather() }
+
+            val nextForecast = if (prefs.weather.showPressureForecast) {
+                listOfNotNull(nextHistory.lastOrNull()?.pressureReading()) +
+                        onIO { weatherSubsystem.getPressureForecast() }
+            } else {
+                emptyList()
+            }
+
+            onMain {
+                history = nextHistory
+                rawHistory = nextRawHistory
+                weather = nextWeather
+                pressureForecast = nextForecast
+                displayPressureChart(history, rawHistory, pressureForecast)
+                updateList()
+            }
+            updateForecast()
         }
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
-
-        effect("chart", history, rawHistory, pressureForecast, lifecycleHookTrigger.onResume()) {
-            displayPressureChart(history, rawHistory, pressureForecast)
-        }
-
-        effect("list", weather, lifecycleHookTrigger.onResume()) {
-            updateList()
-        }
-
-        effect("forecast", weather, lifecycleHookTrigger.onResume()) {
-            inBackground {
-                updateForecast()
-            }
-        }
-    }
-
-    private suspend fun loadRawWeatherReadings() {
+    private suspend fun loadRawWeatherReadings(): List<Reading<Pressure>> {
         if (isDebug()) {
             if (prefs.weather.useSeaLevelPressure) {
                 val raw = weatherSubsystem.getRawHistory(true).filter {
@@ -260,11 +296,12 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
                     ) <= prefs.weather.pressureHistory
                 }
                 val useTemperature = prefs.weather.seaLevelFactorInTemp
-                rawHistory = raw.map {
+                return raw.map {
                     Reading(it.value.seaLevel(useTemperature), it.time)
                 }
             }
         }
+        return emptyList()
     }
 
     private fun displayPressureChart(
@@ -285,7 +322,7 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
     }
 
     private suspend fun updateForecast() {
-        if (!isBound) return
+        if (!isViewReady) return
         val weather = weather ?: return
         val prediction = weather.prediction
         onMain {
@@ -369,12 +406,151 @@ class WeatherFragment : BoundFragment<ActivityWeatherBinding>() {
         }
     }
 
+}
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): ActivityWeatherBinding {
-        return ActivityWeatherBinding.inflate(layoutInflater, container, false)
+data class WeatherViews(
+    val root: View,
+    val weatherTitle: Toolbar,
+    val chart: Chart,
+    val pressureMarker: TextView,
+    val weatherList: AndromedaListView,
+    val weatherUpdating: TextView,
+    val weatherPlayBar: PlayBarView
+)
+
+@Composable
+private fun WeatherHost(
+    views: WeatherViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createWeatherViews(context: Context): WeatherViews {
+    val root = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
     }
 
+    val title = Toolbar(context, null).apply {
+        id = R.id.weather_title
+    }
+    root.addView(
+        title,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    val chart = Chart(context).apply {
+        id = R.id.chart
+    }
+    root.addView(
+        chart,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            context.resources.getDimensionPixelSize(R.dimen.chart_height)
+        ).apply {
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+        }
+    )
+
+    val pressureMarker = TextView(context).apply {
+        id = R.id.pressure_marker
+        visibility = View.GONE
+    }
+    root.addView(
+        pressureMarker,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val weatherList = AndromedaListView(context, null).apply {
+        id = R.id.weather_list
+    }
+    root.addView(
+        weatherList,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            0,
+            1f
+        ).apply {
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val updating = TextView(context).apply {
+        id = R.id.weather_updating
+        text = context.getString(R.string.updating_weather)
+        gravity = android.view.Gravity.CENTER
+        compoundDrawablePadding = 8.dp(context)
+        setCompoundDrawables(
+            size = 12.dp(context),
+            left = R.drawable.ic_update
+        )
+        visibility = View.GONE
+    }
+    root.addView(
+        updating,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            topMargin = 8.dp(context)
+        }
+    )
+
+    val playBar = PlayBarView(context, null).apply {
+        id = R.id.weather_play_bar
+        tag = context.getString(R.string.tag_play_bar)
+        setImageResource(R.drawable.ic_weather)
+        this.title = context.getString(R.string.weather_monitor)
+    }
+    root.addView(
+        playBar,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            topMargin = 8.dp(context)
+        }
+    )
+
+    return WeatherViews(
+        root = root,
+        weatherTitle = title,
+        chart = chart,
+        pressureMarker = pressureMarker,
+        weatherList = weatherList,
+        weatherUpdating = updating,
+        weatherPlayBar = playBar
+    )
+}
+
+private fun Int.dp(context: Context): Int {
+    return Resources.dp(context, toFloat()).toInt()
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WeatherHostPreview() {
+    TrailSenseTheme {
+        WeatherHost(
+            views = createWeatherViews(LocalContext.current)
+        )
+    }
 }

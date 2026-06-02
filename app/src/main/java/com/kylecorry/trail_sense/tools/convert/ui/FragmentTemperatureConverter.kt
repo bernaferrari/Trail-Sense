@@ -1,19 +1,20 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import android.content.Context
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
-class FragmentTemperatureConverter :
+class FragmentTemperatureConverter(private val context: Context) :
     SimpleConvertFragment<TemperatureUnits>(TemperatureUnits.Celsius, TemperatureUnits.Fahrenheit) {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     override fun getUnitName(unit: TemperatureUnits): String {
         return when (unit) {
-            TemperatureUnits.Fahrenheit -> getString(R.string.fahrenheit)
-            TemperatureUnits.Celsius -> getString(R.string.celsius)
+            TemperatureUnits.Fahrenheit -> context.getString(R.string.fahrenheit)
+            TemperatureUnits.Celsius -> context.getString(R.string.celsius)
         }
     }
 

@@ -1,15 +1,16 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import android.content.Context
 import com.kylecorry.sol.units.Volume
 import com.kylecorry.sol.units.VolumeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import kotlin.math.absoluteValue
 
-class FragmentVolumeConverter :
+class FragmentVolumeConverter(private val context: Context) :
     SimpleConvertFragment<VolumeUnits>(VolumeUnits.Liters, VolumeUnits.USGallons) {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     override val units = listOf(
         VolumeUnits.Milliliter,
@@ -32,22 +33,22 @@ class FragmentVolumeConverter :
 
     override fun getUnitName(unit: VolumeUnits): String {
         return when (unit) {
-            VolumeUnits.Liters -> getString(R.string.liters)
-            VolumeUnits.Milliliter -> getString(R.string.milliliters)
-            VolumeUnits.USCups -> getString(R.string.us_cups)
-            VolumeUnits.USPints -> getString(R.string.us_pints)
-            VolumeUnits.USQuarts -> getString(R.string.us_quarts)
-            VolumeUnits.USOunces -> getString(R.string.us_ounces_volume)
-            VolumeUnits.USGallons -> getString(R.string.us_gallons)
-            VolumeUnits.ImperialCups -> getString(R.string.imperial_cups)
-            VolumeUnits.ImperialPints -> getString(R.string.imperial_pints)
-            VolumeUnits.ImperialQuarts -> getString(R.string.imperial_quarts)
-            VolumeUnits.ImperialOunces -> getString(R.string.imperial_ounces_volume)
-            VolumeUnits.ImperialGallons -> getString(R.string.imperial_gallons)
-            VolumeUnits.USTeaspoons -> getString(R.string.us_teaspoons)
-            VolumeUnits.USTablespoons -> getString(R.string.us_tablespoons)
-            VolumeUnits.ImperialTeaspoons -> getString(R.string.imperial_teaspoons)
-            VolumeUnits.ImperialTablespoons -> getString(R.string.imperial_tablespoons)
+            VolumeUnits.Liters -> context.getString(R.string.liters)
+            VolumeUnits.Milliliter -> context.getString(R.string.milliliters)
+            VolumeUnits.USCups -> context.getString(R.string.us_cups)
+            VolumeUnits.USPints -> context.getString(R.string.us_pints)
+            VolumeUnits.USQuarts -> context.getString(R.string.us_quarts)
+            VolumeUnits.USOunces -> context.getString(R.string.us_ounces_volume)
+            VolumeUnits.USGallons -> context.getString(R.string.us_gallons)
+            VolumeUnits.ImperialCups -> context.getString(R.string.imperial_cups)
+            VolumeUnits.ImperialPints -> context.getString(R.string.imperial_pints)
+            VolumeUnits.ImperialQuarts -> context.getString(R.string.imperial_quarts)
+            VolumeUnits.ImperialOunces -> context.getString(R.string.imperial_ounces_volume)
+            VolumeUnits.ImperialGallons -> context.getString(R.string.imperial_gallons)
+            VolumeUnits.USTeaspoons -> context.getString(R.string.us_teaspoons)
+            VolumeUnits.USTablespoons -> context.getString(R.string.us_tablespoons)
+            VolumeUnits.ImperialTeaspoons -> context.getString(R.string.imperial_teaspoons)
+            VolumeUnits.ImperialTablespoons -> context.getString(R.string.imperial_tablespoons)
         }
     }
 

@@ -4,15 +4,45 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.LabelFormatter
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.andromeda.sound.ToneGenerator
+import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
@@ -22,18 +52,20 @@ import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentToolMetalDetectorBinding
-import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
+import com.kylecorry.trail_sense.shared.views.Slider
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import kotlinx.coroutines.launch
 import java.time.Duration
 import kotlin.math.absoluteValue
 
-class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding>() {
+class FragmentToolMetalDetector : Fragment() {
     private val sensors by lazy { SensorService(requireContext()) }
     private val magnetometer by lazy { sensors.getMagnetometer() }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -44,10 +76,10 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     private val filter = LowPassFilter(0.2f, 0f)
 
     private var isVibrating = false
-
-    private lateinit var chart: MetalDetectorChart
+    private var chart: MetalDetectorChart? = null
+    private var magnetometerView: MagnetometerView? = null
+    private var thresholdSlider: Slider? = null
     private var lastReadingTime = System.currentTimeMillis() + 1000L
-
     private var threshold = 5f
 
     private val readings = mutableListOf<Float>()
@@ -55,7 +87,7 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     private val throttle = Throttle(20)
     private val prefs by lazy { UserPreferences(requireContext()) }
 
-    private var isHighSensitivity = false
+    private var isHighSensitivity by mutableStateOf(false)
     private var calibratedField = Vector3.zero
     private var calibratedOrientation = Quaternion.zero
     private var referenceMagnitude = 0f
@@ -71,64 +103,66 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     private var audio: ISoundPlayer? = null
     private val audioLock = Any()
 
+    private var title by mutableStateOf("")
+    private var thresholdText by mutableStateOf("")
+    private var audioEnabled by mutableStateOf(false)
+    private var vibrationEnabled by mutableStateOf(true)
+    private var showAudioButton by mutableStateOf(true)
+    private var metalDetected by mutableStateOf(false)
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            keepScreenOn = true
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    MetalDetectorScreen(
+                        title = title,
+                        thresholdText = thresholdText,
+                        isHighSensitivity = isHighSensitivity,
+                        audioEnabled = audioEnabled,
+                        vibrationEnabled = vibrationEnabled,
+                        showAudioButton = showAudioButton,
+                        showMetalDirection = prefs.metalDetector.showMetalDirection,
+                        metalDetected = metalDetected,
+                        onAudioToggle = ::toggleAudio,
+                        onVibrationToggle = ::toggleVibration,
+                        onHighSensitivityChange = ::updateHighSensitivity,
+                        onCalibrate = ::calibrate,
+                        onThresholdCreated = { thresholdSlider = it },
+                        onChartCreated = {
+                            if (chart == null) {
+                                chart = MetalDetectorChart(
+                                    it,
+                                    Resources.getPrimaryColor(requireContext())
+                                )
+                            }
+                        },
+                        onMagnetometerCreated = { magnetometerView = it },
+                        onAccuracyCreated = { accuracyView ->
+                            accuracyView.setSensors(null, magnetometer)
+                            accuracyView.setOnClickListener { displayAccuracyTips() }
+                        }
+                    )
+                }
+            }
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        chart = MetalDetectorChart(
-            binding.metalChart,
-            Resources.getPrimaryColor(requireContext())
-        )
-        binding.calibrateBtn.setOnClickListener {
-            calibrate()
-        }
-        binding.accuracyView.setSensors(null, magnetometer)
-        binding.accuracyView.setOnClickListener { displayAccuracyTips() }
-        binding.magnetometerView.isVisible = prefs.metalDetector.showMetalDirection
-        binding.threshold.valueFrom = 0f
-        binding.threshold.valueTo = 100f
-        binding.threshold.value = 50f
-        binding.threshold.labelBehavior = LabelFormatter.LABEL_GONE
-
-        binding.highSensitivityToggle.setOnCheckedChangeListener { _, isChecked ->
-            isHighSensitivity = isChecked
-            if (isChecked) {
-                isMetalDetected.debounceTime = Duration.ofMillis(50)
-            } else {
-                isMetalDetected.debounceTime = Duration.ofMillis(100)
-            }
-        }
-
-
-        binding.metalDetectorTitle.rightButton.isChecked = prefs.metalDetector.isMetalAudioEnabled
-
-        // Configure button: Metal Audio Toggle
-        binding.metalDetectorTitle.rightButton.setOnClickListener {
-            if (prefs.metalDetector.isMetalAudioEnabled) {
-                prefs.metalDetector.isMetalAudioEnabled = false
-                audio?.off()
-            } else {
-                prefs.metalDetector.isMetalAudioEnabled = true
-                initializeAudio()
-            }
-            binding.metalDetectorTitle.rightButton.isChecked = prefs.metalDetector.isMetalAudioEnabled
-        }
-
-        // Configure button: Metal Vibration Toggle
-        binding.metalDetectorTitle.leftButton.isChecked = !prefs.metalDetector.isMetalVibrationDisabled
-
-        binding.metalDetectorTitle.leftButton.setOnClickListener {
-            if (prefs.metalDetector.isMetalVibrationDisabled) {
-                prefs.metalDetector.isMetalVibrationDisabled = false
-            } else {
-                prefs.metalDetector.isMetalVibrationDisabled = true
-                haptics.off()
-            }
-            binding.metalDetectorTitle.leftButton.isChecked = !prefs.metalDetector.isMetalVibrationDisabled
-        }
+        audioEnabled = prefs.metalDetector.isMetalAudioEnabled
+        vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
+        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
     }
 
     override fun onResume() {
         super.onResume()
-        binding.magnetometerView.setSinglePoleMode(prefs.metalDetector.showSinglePole)
+        magnetometerView?.setSinglePoleMode(prefs.metalDetector.showSinglePole)
         magnetometer.start(this::onMagnetometerUpdate)
         if (prefs.metalDetector.showMetalDirection) {
             lowPassMagnetometer.start(this::onLowPassMagnetometerUpdate)
@@ -137,11 +171,9 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
         }
         calibrateTimer.once(Duration.ofSeconds(2))
 
-
         if (prefs.metalDetector.isMetalAudioEnabled) {
             initializeAudio()
         }
-
     }
 
     override fun onPause() {
@@ -158,9 +190,47 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
         audio?.off()
     }
 
+    override fun onDestroyView() {
+        chart = null
+        magnetometerView = null
+        thresholdSlider = null
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         audio?.release()
+    }
+
+    private fun updateHighSensitivity(isChecked: Boolean) {
+        isHighSensitivity = isChecked
+        isMetalDetected.debounceTime = if (isChecked) {
+            Duration.ofMillis(50)
+        } else {
+            Duration.ofMillis(100)
+        }
+    }
+
+    private fun toggleAudio() {
+        if (prefs.metalDetector.isMetalAudioEnabled) {
+            prefs.metalDetector.isMetalAudioEnabled = false
+            audioEnabled = false
+            audio?.off()
+        } else {
+            prefs.metalDetector.isMetalAudioEnabled = true
+            audioEnabled = true
+            initializeAudio()
+        }
+    }
+
+    private fun toggleVibration() {
+        if (prefs.metalDetector.isMetalVibrationDisabled) {
+            prefs.metalDetector.isMetalVibrationDisabled = false
+        } else {
+            prefs.metalDetector.isMetalVibrationDisabled = true
+            haptics.off()
+        }
+        vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
     }
 
     private fun calibrate() {
@@ -176,63 +246,41 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     }
 
     private fun update() {
-
         if (throttle.isThrottled()) {
             return
         }
 
-        // Update the metal direction dial
         if (prefs.metalDetector.showMetalDirection) {
             val metal = Physics.removeGeomagneticField(
                 lowPassMagnetometer.magneticField,
                 calibratedField,
-                null // TODO: Once a better orientation is calculated, use that
+                null
             )
             val direction = Physics.getMetalDirection(
                 metal,
                 gravity.acceleration
             )
-            binding.magnetometerView.setFieldStrength(metal.magnitude())
-            binding.magnetometerView.setMetalDirection(direction)
-            binding.magnetometerView.setSensitivity(prefs.metalDetector.directionSensitivity)
+            magnetometerView?.setFieldStrength(metal.magnitude())
+            magnetometerView?.setMetalDirection(direction)
+            magnetometerView?.setSensitivity(prefs.metalDetector.directionSensitivity)
         }
 
         val magneticField = getCurrentMagneticFieldStrength()
 
-        // Record the magnetic field
         if (canAddReading(magneticField)) {
             addReading(magneticField)
             updateChart()
         }
 
-
-        // Update the threshold from the slider
         updateThreshold()
 
-        // Update the title
-        binding.metalDetectorTitle.title.text = formatService.formatMagneticField(magneticField)
+        title = formatService.formatMagneticField(magneticField)
 
-        // TODO: Have two methods: onMetalFound and onMetalLost
-        val metalDetected = isMetalDetected(magneticField)
-        binding.metalDetectorTitle.title.setCompoundDrawables(
-            Resources.dp(requireContext(), 24f).toInt(),
-            right = if (metalDetected) R.drawable.metal else null
-        )
-        CustomUiUtils.setImageColor(
-            binding.metalDetectorTitle.title,
-            Resources.androidTextColorSecondary(requireContext())
-        )
-
+        metalDetected = isMetalDetected(magneticField)
         maybeVibrate(metalDetected)
-
         updateMetalSoundIntensity(magneticField)
     }
 
-    /**
-     * [maybeVibrate] turns off vibration (haptics) if vibration is disabled
-     * or there is no metal detected.
-     * Otherwise vibration is triggered.
-     */
     private fun maybeVibrate(metalDetected: Boolean) {
         if (!metalDetected || prefs.metalDetector.isMetalVibrationDisabled) {
             isVibrating = false
@@ -281,9 +329,8 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     }
 
     private fun updateThreshold() {
-        threshold = (binding.threshold.value / 10f).coerceAtLeast(0.1f)
-        binding.thresholdAmount.text =
-            formatService.formatMagneticField(threshold, decimalPlaces = 1)
+        threshold = ((thresholdSlider?.value ?: 50f) / 10f).coerceAtLeast(0.1f)
+        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
     }
 
     private fun addReading(reading: Float) {
@@ -295,7 +342,7 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
     }
 
     private fun updateChart() {
-        chart.plot(readings, referenceMagnitude - threshold, referenceMagnitude + threshold)
+        chart?.plot(readings, referenceMagnitude - threshold, referenceMagnitude + threshold)
     }
 
     private fun onMagnetometerUpdate(): Boolean {
@@ -303,28 +350,25 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
         return true
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentToolMetalDetectorBinding {
-        return FragmentToolMetalDetectorBinding.inflate(layoutInflater, container, false)
-    }
-
     private fun initializeAudio() {
-        inBackground {
-            onDefault {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val initialized = onDefault {
                 try {
                     synchronized(audioLock) {
-                        if (audio != null) {
-                            return@onDefault
+                        if (audio == null) {
+                            audio = SoundPlayer(ToneGenerator().getTone(AUDIO_FREQUENCY))
                         }
-                        audio = SoundPlayer(ToneGenerator().getTone(AUDIO_FREQUENCY))
                     }
+                    true
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    prefs.metalDetector.isMetalAudioEnabled = false
-                    binding.metalDetectorTitle.rightButton.isVisible = false
+                    false
                 }
+            }
+            if (!initialized) {
+                prefs.metalDetector.isMetalAudioEnabled = false
+                audioEnabled = false
+                showAudioButton = false
             }
         }
     }
@@ -339,5 +383,265 @@ class FragmentToolMetalDetector : BoundFragment<FragmentToolMetalDetectorBinding
         private val VIBRATION_DURATION = Duration.ofMillis(200)
         private const val AUDIO_FREQUENCY = 750
     }
+}
 
+@Composable
+private fun MetalDetectorScreen(
+    title: String,
+    thresholdText: String,
+    isHighSensitivity: Boolean,
+    audioEnabled: Boolean,
+    vibrationEnabled: Boolean,
+    showAudioButton: Boolean,
+    showMetalDirection: Boolean,
+    metalDetected: Boolean,
+    onAudioToggle: () -> Unit,
+    onVibrationToggle: () -> Unit,
+    onHighSensitivityChange: (Boolean) -> Unit,
+    onCalibrate: () -> Unit,
+    onThresholdCreated: (Slider) -> Unit,
+    onChartCreated: (Chart) -> Unit,
+    onMagnetometerCreated: (MagnetometerView) -> Unit,
+    onAccuracyCreated: (SensorStatusBadgeView) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            MetalDetectorHeader(
+                title = title,
+                audioEnabled = audioEnabled,
+                vibrationEnabled = vibrationEnabled,
+                showAudioButton = showAudioButton,
+                metalDetected = metalDetected,
+                onAudioToggle = onAudioToggle,
+                onVibrationToggle = onVibrationToggle
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.threshold),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = thresholdText,
+                            modifier = Modifier.testTag("threshold_amount"),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    ThresholdSlider(onThresholdCreated)
+                }
+                Button(onClick = onCalibrate) {
+                    Text(stringResource(R.string.calibrate))
+                }
+            }
+            HighSensitivitySwitch(
+                checked = isHighSensitivity,
+                onCheckedChange = onHighSensitivityChange
+            )
+            AccuracyBadge(onAccuracyCreated)
+            if (showMetalDirection) {
+                MagnetometerDirection(
+                    onMagnetometerCreated = onMagnetometerCreated,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            } else {
+                Box(modifier = Modifier.weight(1f))
+            }
+            MetalChart(onChartCreated)
+            Text(
+                text = stringResource(R.string.metal_detector_disclaimer),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun MetalDetectorHeader(
+    title: String,
+    audioEnabled: Boolean,
+    vibrationEnabled: Boolean,
+    showAudioButton: Boolean,
+    metalDetected: Boolean,
+    onAudioToggle: () -> Unit,
+    onVibrationToggle: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onVibrationToggle,
+                modifier = Modifier
+                    .alpha(if (vibrationEnabled) 1f else 0.38f)
+                    .testTag("metal_vibration_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.vibrate),
+                    contentDescription = null
+                )
+            }
+            Text(
+                text = title,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("metal_detector_title"),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            if (metalDetected) {
+                Icon(
+                    painter = painterResource(R.drawable.metal),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+            if (showAudioButton) {
+                IconButton(
+                    onClick = onAudioToggle,
+                    modifier = Modifier
+                        .alpha(if (audioEnabled) 1f else 0.38f)
+                        .testTag("metal_audio_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.volume_up),
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThresholdSlider(
+    onThresholdCreated: (Slider) -> Unit
+) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("threshold"),
+        factory = { context ->
+            Slider(context, null).apply {
+                id = R.id.threshold
+                contentDescription = context.getString(R.string.threshold)
+                valueFrom = 0f
+                valueTo = 100f
+                value = 50f
+                labelBehavior = LabelFormatter.LABEL_GONE
+                onThresholdCreated(this)
+            }
+        }
+    )
+}
+
+@Composable
+private fun HighSensitivitySwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .testTag("high_sensitivity_toggle"),
+        factory = { context ->
+            MaterialSwitch(context).apply {
+                id = R.id.high_sensitivity_toggle
+                text = context.getString(R.string.high_sensitivity)
+                setOnCheckedChangeListener { _, isChecked ->
+                    onCheckedChange(isChecked)
+                }
+            }
+        },
+        update = {
+            if (it.isChecked != checked) {
+                it.isChecked = checked
+            }
+        }
+    )
+}
+
+@Composable
+private fun AccuracyBadge(
+    onAccuracyCreated: (SensorStatusBadgeView) -> Unit
+) {
+    AndroidView(
+        modifier = Modifier
+            .padding(start = 16.dp, top = 8.dp)
+            .testTag("accuracy_view"),
+        factory = { context ->
+            SensorStatusBadgeView(context).apply {
+                id = R.id.accuracy_view
+                alpha = 0.6f
+                onAccuracyCreated(this)
+            }
+        }
+    )
+}
+
+@Composable
+private fun MagnetometerDirection(
+    onMagnetometerCreated: (MagnetometerView) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.testTag("magnetometerView"),
+        factory = { context ->
+            MagnetometerView(context, null).apply {
+                id = R.id.magnetometerView
+                onMagnetometerCreated(this)
+            }
+        }
+    )
+}
+
+@Composable
+private fun MetalChart(
+    onChartCreated: (Chart) -> Unit
+) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(dimensionResource(R.dimen.chart_height))
+            .padding(horizontal = 16.dp)
+            .testTag("metal_chart"),
+        factory = { context ->
+            Chart(context).apply {
+                id = R.id.metal_chart
+                onChartCreated(this)
+            }
+        }
+    )
 }

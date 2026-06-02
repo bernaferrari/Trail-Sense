@@ -16,9 +16,8 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.closeQuickActions
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.openQuickActions
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.DistanceAlerter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -32,55 +31,39 @@ class ToolPedometerTest : ToolTestBase(Tools.PEDOMETER) {
             return
         }
 
-        hasText(R.id.pedometer_title, string(R.string.pedometer))
-        hasText(R.id.current_session_title, string(R.string.current_session))
-        hasText(R.id.pedometer_steps, "0")
-        hasText(R.id.pedometer_steps, string(R.string.steps))
+        hasText("0 ft")
+        hasText("0", exact = true)
+        hasText(string(R.string.steps))
 
-        hasText(R.id.pedometer_distance, "0 ft")
-        hasText(R.id.pedometer_distance, string(R.string.distance))
+        hasText("-")
+        hasText(string(R.string.current_speed))
 
-        hasText(R.id.pedometer_speed, "-")
-        hasText(R.id.pedometer_speed, string(R.string.current_speed))
+        hasText("-", index = 1)
+        hasText(string(R.string.average_speed))
 
-        hasText(R.id.pedometer_average_speed, "-")
-        hasText(R.id.pedometer_average_speed, string(R.string.average_speed))
+        hasText(string(R.string.off))
 
-        hasText(R.id.pedometer_pace, "-")
-        hasText(R.id.pedometer_pace, string(R.string.current_pace))
-
-        hasText(R.id.pedometer_average_pace, "-")
-        hasText(R.id.pedometer_average_pace, string(R.string.average_pace))
-
-        hasText(R.id.play_bar_title, string(R.string.off))
-
-        click(R.id.play_btn)
-        hasText(R.id.play_bar_title, string(R.string.on))
+        click(id("play_btn"))
+        hasText(string(R.string.on))
         hasNotification(StepCounterService.NOTIFICATION_ID, title = string(R.string.pedometer))
 
-        click(R.id.play_btn)
+        click(id("play_btn"))
         doesNotHaveNotification(StepCounterService.NOTIFICATION_ID)
-        hasText(R.id.play_bar_title, string(R.string.off))
+        hasText(string(R.string.off))
 
-        click(R.id.reset_btn)
+        click(id("reset_btn"))
         clickOk()
 
-        hasText(
-            R.id.current_session_time,
-            Regex(
-                "\\d+:\\d+ [AP]M - ${string(R.string.now)} " +
-                        "\\(${string(R.string.active_duration, ".*")}\\)"
-            )
-        )
+        hasText(Regex("since \\d+:\\d+ [AP]M"))
 
-        click(toolbarButton(R.id.pedometer_title, Side.Right))
+        click(id("pedometer_alert_btn"))
         input(R.id.amount, "0")
         clickOk()
 
-        click(R.id.play_btn)
+        click(id("play_btn"))
         hasNotification(DistanceAlerter.NOTIFICATION_ID, title = string(R.string.distance_alert))
 
-        click(R.id.play_btn)
+        click(id("play_btn"))
 
         verifyHistory()
 

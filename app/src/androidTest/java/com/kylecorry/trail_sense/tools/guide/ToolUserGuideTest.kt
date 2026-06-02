@@ -40,8 +40,7 @@ class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
             click(guide.name)
 
             // Wait for the guide to load
-            hasText(R.id.guide_name, guide.name)
-            hasText(R.id.guide_scroll) { it.isNotEmpty() }
+            hasText(guide.name)
 
             back()
         }
@@ -59,7 +58,6 @@ class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
         click(quickAction(Tools.QUICK_ACTION_USER_GUIDE))
 
         // Verify it shows the user guide
-        hasText(R.id.guide_name, "Tools")
-        hasText(R.id.guide_scroll) { it.isNotEmpty() }
+        hasText("Tools")
     }
 }

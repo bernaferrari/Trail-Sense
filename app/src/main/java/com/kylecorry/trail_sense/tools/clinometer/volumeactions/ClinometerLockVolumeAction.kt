@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.clinometer.volumeactions
 
-import com.kylecorry.andromeda.fragments.AndromedaFragment
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerFragment
 
-class ClinometerLockVolumeAction(fragment: AndromedaFragment) : VolumeAction {
+class ClinometerLockVolumeAction(fragment: Fragment) : VolumeAction {
 
     private val clinometerFragment = fragment as? ClinometerFragment
 
