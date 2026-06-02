@@ -1,30 +1,47 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import androidx.preference.ListPreference
-import androidx.preference.SwitchPreferenceCompat
-import com.kylecorry.andromeda.fragments.asLiveData
-import com.kylecorry.andromeda.fragments.AndromedaPreferenceFragment
+import android.view.ViewGroup
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
+import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunriseAlarmReceiver
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class AstronomySettingsFragment : AndromedaPreferenceFragment() {
+class AstronomySettingsFragment : AndromedaFragment() {
 
-    private lateinit var prefs: UserPreferences
-    private var prefleftButton: ListPreference? = null
-    private var prefrightButton: ListPreference? = null
-    private var prefSunsetAlertsSwitch: SwitchPreferenceCompat? = null
-    private var prefSunriseAlertsSwitch: SwitchPreferenceCompat? = null
+    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
+    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private val sunsetService by lazy {
         Tools.getService(
             requireContext(),
@@ -37,7 +54,364 @@ class AstronomySettingsFragment : AndromedaPreferenceFragment() {
             AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS
         )!!
     }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+
+    private var setSunsetAlertsState: ((Boolean) -> Unit)? = null
+    private var setSunriseAlertsState: ((Boolean) -> Unit)? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    val sunTimeOptions = remember {
+                        options(R.array.sun_times_entries, R.array.sun_times_values)
+                    }
+                    val quickActionOptions = remember {
+                        Tools.getQuickActions(requireContext()).map {
+                            AstronomyOption(it.id.toString(), it.name)
+                        }
+                    }
+                    val sunsetTimeOptions = remember {
+                        timeOptions(listOf(30L, 60L, 90L, 120L, 150L, 180L))
+                    }
+                    val sunriseTimeOptions = remember {
+                        timeOptions(listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L))
+                    }
+                    val showStartCameraIn3D = remember {
+                        Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
+                    }
+
+                    var sunTimeMode by remember {
+                        mutableStateOf(getStringPreference(R.string.pref_sun_time_mode, "actual"))
+                    }
+                    var centerSunAndMoon by remember {
+                        mutableStateOf(getBoolean(R.string.pref_center_sun_and_moon, false))
+                    }
+                    var showAstronomyBands by remember {
+                        mutableStateOf(prefs.astronomy.showAstronomyBands)
+                    }
+                    var leftQuickAction by remember {
+                        mutableStateOf(prefs.astronomy.leftButton.toString())
+                    }
+                    var rightQuickAction by remember {
+                        mutableStateOf(prefs.astronomy.rightButton.toString())
+                    }
+                    var startCameraIn3D by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_start_camera_in_3d_view, true)
+                        )
+                    }
+                    var sunsetAlerts by remember {
+                        mutableStateOf(prefs.astronomy.sendSunsetAlerts)
+                    }
+                    var sunsetAlertTime by remember {
+                        mutableStateOf(
+                            getStringPreference(R.string.pref_sunset_alert_time, "60")
+                        )
+                    }
+                    var useAlarmForSunset by remember {
+                        mutableStateOf(
+                            getBoolean(
+                                R.string.pref_astronomy_use_alarm_for_sunset_alert,
+                                false
+                            )
+                        )
+                    }
+                    var sunriseAlerts by remember {
+                        mutableStateOf(prefs.astronomy.sendSunriseAlerts)
+                    }
+                    var sunriseAlertTime by remember {
+                        mutableStateOf(
+                            getStringPreference(R.string.pref_sunrise_alert_time, "0")
+                        )
+                    }
+                    var useAlarmForSunrise by remember {
+                        mutableStateOf(
+                            getBoolean(
+                                R.string.pref_astronomy_use_alarm_for_sunrise_alert,
+                                false
+                            )
+                        )
+                    }
+                    var meteorAlerts by remember {
+                        mutableStateOf(prefs.astronomy.sendMeteorShowerAlerts)
+                    }
+                    var lunarEclipseAlerts by remember {
+                        mutableStateOf(prefs.astronomy.sendLunarEclipseAlerts)
+                    }
+                    var solarEclipseAlerts by remember {
+                        mutableStateOf(prefs.astronomy.sendSolarEclipseAlerts)
+                    }
+
+                    setSunsetAlertsState = {
+                        sunsetAlerts = prefs.astronomy.sendSunsetAlerts
+                    }
+                    setSunriseAlertsState = {
+                        sunriseAlerts = prefs.astronomy.sendSunriseAlerts
+                    }
+
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = TrailSenseSpacing.lg,
+                                end = TrailSenseSpacing.lg,
+                                top = TrailSenseSpacing.lg,
+                                bottom = TrailSenseSpacing.xxxl
+                            )
+                        ) {
+                            item("general_header") {
+                                TrailSenseSectionHeader(title = stringResource(R.string.general))
+                            }
+                            item("sun_time_mode") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_sun_time_mode_title),
+                                    selected = optionLabel(sunTimeOptions, sunTimeMode),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_sun_time_mode_title),
+                                            sunTimeOptions,
+                                            sunTimeMode
+                                        ) {
+                                            sunTimeMode = it
+                                            putString(R.string.pref_sun_time_mode, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("center_sun_moon") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_center_sun_and_moon_title),
+                                    checked = centerSunAndMoon,
+                                    onCheckedChange = {
+                                        centerSunAndMoon = it
+                                        putBoolean(R.string.pref_center_sun_and_moon, it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("astronomy_bands") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_show_astronomy_bands_title),
+                                    checked = showAstronomyBands,
+                                    onCheckedChange = {
+                                        showAstronomyBands = it
+                                        prefs.astronomy.showAstronomyBands = it
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("left_action") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.left_quick_action),
+                                    selected = optionLabel(quickActionOptions, leftQuickAction),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.left_quick_action),
+                                            quickActionOptions,
+                                            leftQuickAction
+                                        ) {
+                                            leftQuickAction = it
+                                            putString(
+                                                R.string.pref_astronomy_quick_action_left,
+                                                it
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("right_action") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.right_quick_action),
+                                    selected = optionLabel(quickActionOptions, rightQuickAction),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.right_quick_action),
+                                            quickActionOptions,
+                                            rightQuickAction
+                                        ) {
+                                            rightQuickAction = it
+                                            putString(
+                                                R.string.pref_astronomy_quick_action_right,
+                                                it
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            if (showStartCameraIn3D) {
+                                item("start_camera_3d") {
+                                    SettingsSwitchRow(
+                                        label = stringResource(R.string.pref_start_camera_in_3d_view_title),
+                                        summary = stringResource(R.string.pref_start_camera_in_3d_view_summary),
+                                        checked = startCameraIn3D,
+                                        onCheckedChange = {
+                                            startCameraIn3D = it
+                                            putBoolean(
+                                                R.string.pref_start_camera_in_3d_view,
+                                                it
+                                            )
+                                        },
+                                        modifier = Modifier.padding(
+                                            horizontal = TrailSenseSpacing.lg
+                                        )
+                                    )
+                                    TrailSenseDivider()
+                                }
+                            }
+                            item("alerts_header") {
+                                TrailSenseSectionHeader(title = stringResource(R.string.alerts))
+                            }
+                            item("sunset_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.sunset),
+                                    checked = sunsetAlerts,
+                                    onCheckedChange = {
+                                        sunsetAlerts = it
+                                        prefs.astronomy.sendSunsetAlerts = it
+                                        onSunsetAlertsPreferenceChanged(it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("sunset_alert_time") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_sunset_alert_time_title),
+                                    selected = optionLabel(sunsetTimeOptions, sunsetAlertTime),
+                                    enabled = sunsetAlerts,
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_sunset_alert_time_title),
+                                            sunsetTimeOptions,
+                                            sunsetAlertTime
+                                        ) {
+                                            sunsetAlertTime = it
+                                            putString(R.string.pref_sunset_alert_time, it)
+                                            restartSunsetAlerts()
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("sunset_alarm") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.use_alarm_for_sunset_alert),
+                                    summary = stringResource(R.string.alarm_description),
+                                    checked = useAlarmForSunset,
+                                    onCheckedChange = {
+                                        useAlarmForSunset = it
+                                        putBoolean(
+                                            R.string.pref_astronomy_use_alarm_for_sunset_alert,
+                                            it
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("sunrise_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.sunrise),
+                                    checked = sunriseAlerts,
+                                    onCheckedChange = {
+                                        sunriseAlerts = it
+                                        prefs.astronomy.sendSunriseAlerts = it
+                                        onSunriseAlertsPreferenceChanged(it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("sunrise_alert_time") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_sunrise_alert_time_title),
+                                    selected = optionLabel(sunriseTimeOptions, sunriseAlertTime),
+                                    enabled = sunriseAlerts,
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_sunrise_alert_time_title),
+                                            sunriseTimeOptions,
+                                            sunriseAlertTime
+                                        ) {
+                                            sunriseAlertTime = it
+                                            putString(R.string.pref_sunrise_alert_time, it)
+                                            restartSunriseAlerts()
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("sunrise_alarm") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.use_alarm_for_sunrise_alert),
+                                    summary = stringResource(R.string.alarm_description),
+                                    checked = useAlarmForSunrise,
+                                    onCheckedChange = {
+                                        useAlarmForSunrise = it
+                                        putBoolean(
+                                            R.string.pref_astronomy_use_alarm_for_sunrise_alert,
+                                            it
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("meteor_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_meteor_showers_title),
+                                    checked = meteorAlerts,
+                                    onCheckedChange = {
+                                        meteorAlerts = it
+                                        prefs.astronomy.sendMeteorShowerAlerts = it
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("lunar_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.lunar_eclipses),
+                                    checked = lunarEclipseAlerts,
+                                    onCheckedChange = {
+                                        lunarEclipseAlerts = it
+                                        prefs.astronomy.sendLunarEclipseAlerts = it
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("solar_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.solar_eclipses),
+                                    checked = solarEclipseAlerts,
+                                    onCheckedChange = {
+                                        solarEclipseAlerts = it
+                                        prefs.astronomy.sendSolarEclipseAlerts = it
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     override fun onResume() {
         super.onResume()
@@ -79,111 +453,111 @@ class AstronomySettingsFragment : AndromedaPreferenceFragment() {
         )
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.astronomy_preferences, rootKey)
-        val userPrefs = UserPreferences(requireContext())
-        prefs = userPrefs
+    override fun onDestroyView() {
+        setSunsetAlertsState = null
+        setSunriseAlertsState = null
+        super.onDestroyView()
+    }
 
-        prefleftButton = list(R.string.pref_astronomy_quick_action_left)
-        prefrightButton = list(R.string.pref_astronomy_quick_action_right)
-
-        prefSunsetAlertsSwitch = switch(R.string.pref_sunset_alerts)
-        prefSunriseAlertsSwitch = switch(R.string.pref_sunrise_alerts)
-
-        val actions = Tools.getQuickActions(requireContext())
-        val actionNames = actions.map { it.name }
-        val actionValues = actions.map { it.id.toString() }
-
-        prefleftButton?.entries = actionNames.toTypedArray()
-        prefrightButton?.entries = actionNames.toTypedArray()
-
-        prefleftButton?.entryValues = actionValues.toTypedArray()
-        prefrightButton?.entryValues = actionValues.toTypedArray()
-
-        switch(R.string.pref_start_camera_in_3d_view)?.isVisible =
-            Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
-
-        onClick(prefSunsetAlertsSwitch) {
-            inBackground {
-                if (prefs.astronomy.sendSunsetAlerts) {
-                    SunsetAlarmReceiver.enable(this@AstronomySettingsFragment, true)
-                } else {
-                    sunsetService.disable()
-                }
+    private fun onSunsetAlertsPreferenceChanged(enabled: Boolean) {
+        inBackground {
+            if (enabled) {
+                SunsetAlarmReceiver.enable(this@AstronomySettingsFragment, true)
+            } else {
+                sunsetService.disable()
             }
         }
+    }
 
-        onClick(prefSunriseAlertsSwitch) {
-            inBackground {
-                if (prefs.astronomy.sendSunriseAlerts) {
-                    SunriseAlarmReceiver.enable(this@AstronomySettingsFragment, true)
-                } else {
-                    sunriseService.disable()
-                }
+    private fun onSunriseAlertsPreferenceChanged(enabled: Boolean) {
+        inBackground {
+            if (enabled) {
+                SunriseAlarmReceiver.enable(this@AstronomySettingsFragment, true)
+            } else {
+                sunriseService.disable()
             }
         }
+    }
 
-        list(R.string.pref_sunrise_alert_time)?.apply {
-            setTimeEntries(
-                this, listOf(
-                    0L,
-                    15L,
-                    30L,
-                    45L,
-                    60L,
-                    90L,
-                    120L
-                )
+    private fun restartSunsetAlerts() {
+        inBackground {
+            sunsetService.restart()
+        }
+    }
+
+    private fun restartSunriseAlerts() {
+        inBackground {
+            sunriseService.restart()
+        }
+    }
+
+    private fun pickOption(
+        title: String,
+        options: List<AstronomyOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    private fun options(entriesId: Int, valuesId: Int): List<AstronomyOption> {
+        val entries = resources.getStringArray(entriesId)
+        val values = resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            AstronomyOption(value, entries.getOrElse(index) { value })
+        }
+    }
+
+    private fun timeOptions(minutes: List<Long>): List<AstronomyOption> {
+        return minutes.map {
+            AstronomyOption(
+                it.toString(),
+                formatter.formatDuration(Duration.ofMinutes(it))
             )
         }
-
-        list(R.string.pref_sunset_alert_time)?.apply {
-            setTimeEntries(
-                this, listOf(
-                    30L,
-                    60L,
-                    90L,
-                    120L,
-                    150L,
-                    180L
-                )
-            )
-        }
-
     }
 
-    private fun setTimeEntries(pref: ListPreference, minutes: List<Long>) {
-        val entries = minutes.map { formatter.formatDuration(Duration.ofMinutes(it)) }
-            .toTypedArray()
-        val values = minutes.map { it.toString() }.toTypedArray()
-        pref.entries = entries
-        pref.entryValues = values
+    private fun optionLabel(options: List<AstronomyOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
-        val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
-
-        PreferencesSubsystem.getInstance(requireContext()).preferences.onChange.asLiveData()
-            .observe(viewLifecycleOwner) {
-                if (it == sunsetAlertTimeKey) {
-                    inBackground {
-                        sunsetService.restart()
-                    }
-                } else if (it == sunriseAlertTimeKey) {
-                    inBackground {
-                        sunriseService.restart()
-                    }
-                }
-            }
+    private fun getStringPreference(key: Int, default: String): String {
+        return cache.getString(getString(key)) ?: default
     }
 
-    private suspend fun onSunsetAlertsChanged(data: Bundle) = onMain {
-        prefSunsetAlertsSwitch?.isChecked = prefs.astronomy.sendSunsetAlerts
+    private fun getBoolean(key: Int, default: Boolean): Boolean {
+        return cache.getBoolean(getString(key)) ?: default
     }
 
-    private suspend fun onSunriseAlertsChanged(data: Bundle) = onMain {
-        prefSunriseAlertsSwitch?.isChecked = prefs.astronomy.sendSunriseAlerts
+    private fun putString(key: Int, value: String) {
+        cache.putString(getString(key), value)
     }
+
+    private fun putBoolean(key: Int, value: Boolean) {
+        cache.putBoolean(getString(key), value)
+    }
+
+    private fun onSunsetAlertsChanged(data: Bundle): Boolean {
+        setSunsetAlertsState?.invoke(prefs.astronomy.sendSunsetAlerts)
+        return true
+    }
+
+    private fun onSunriseAlertsChanged(data: Bundle): Boolean {
+        setSunriseAlertsState?.invoke(prefs.astronomy.sendSunriseAlerts)
+        return true
+    }
+
+    private data class AstronomyOption(
+        val value: String,
+        val label: String
+    )
 }
