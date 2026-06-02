@@ -360,6 +360,11 @@
     <item name="navigation_eta" type="id" />
     <item name="coordinate_input" type="id" />
     <item name="distance_input" type="id" />
+    <item name="camera_holder" type="id" />
+    <item name="camera_preview" type="id" />
+    <item name="camera_change" type="id" />
+    <item name="camera_torch" type="id" />
+    <item name="camera_zoom" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />

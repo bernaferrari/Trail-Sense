@@ -2,7 +2,9 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Size
 import android.view.GestureDetector
@@ -13,6 +15,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.annotation.ColorInt
 import androidx.camera.view.PreviewView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
@@ -24,6 +27,7 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils.toBitmap
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.trail_sense.R
@@ -275,15 +279,82 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
     }
 
     init {
-        inflate(context, R.layout.view_camera, this)
-        preview = findViewById(R.id.camera_preview)
-        torchBtn = findViewById(R.id.camera_torch)
-        zoomSeek = findViewById(R.id.camera_zoom)
+        val holder = ConstraintLayout(context).apply {
+            id = R.id.camera_holder
+        }
+        addView(
+            holder,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            )
+        )
+
+        preview = PreviewView(context).apply {
+            id = R.id.camera_preview
+        }
+        holder.addView(
+            preview,
+            ConstraintLayout.LayoutParams(0, 0).apply {
+                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+        )
+
+        val buttonSize = Resources.dp(context, 32f).toInt()
+        val buttonMargin = Resources.dp(context, 8f).toInt()
+        changeCameraBtn = ImageButton(context).apply {
+            id = R.id.camera_change
+            background = null
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            isVisible = false
+            setImageResource(R.drawable.camera_flip)
+        }
+        holder.addView(
+            changeCameraBtn,
+            ConstraintLayout.LayoutParams(buttonSize, buttonSize).apply {
+                setMargins(buttonMargin, buttonMargin, buttonMargin, buttonMargin)
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            }
+        )
+
+        torchBtn = ImageButton(context).apply {
+            id = R.id.camera_torch
+            background = null
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            setImageResource(R.drawable.ic_torch_off)
+        }
+        holder.addView(
+            torchBtn,
+            ConstraintLayout.LayoutParams(buttonSize, buttonSize).apply {
+                setMargins(buttonMargin, buttonMargin, buttonMargin, buttonMargin)
+                endToEnd = R.id.camera_preview
+                topToTop = R.id.camera_preview
+            }
+        )
+
+        zoomSeek = Slider(context, null).apply {
+            id = R.id.camera_zoom
+        }
+        holder.addView(
+            zoomSeek,
+            ConstraintLayout.LayoutParams(
+                0,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomToBottom = R.id.camera_preview
+                endToEnd = R.id.camera_preview
+                startToStart = R.id.camera_preview
+            }
+        )
+
         zoomSeek.valueFrom = 0f
         zoomSeek.valueTo = 100f
         zoomSeek.setLabelFormatter(BasicLabelFormatter())
         zoomSeek.applyThinStyling()
-        changeCameraBtn = findViewById(R.id.camera_change)
 
         context.withStyledAttributes(attrs, R.styleable.CameraView) {
             setFlipEnabled(getBoolean(R.styleable.CameraView_flipEnable, false))
