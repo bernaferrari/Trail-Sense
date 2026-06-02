@@ -1,40 +1,58 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.content.Context
-import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
-import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.card.MaterialCardView
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.views.badge.Badge
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TextBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 import kotlinx.coroutines.Job
@@ -43,13 +61,9 @@ import kotlinx.coroutines.launch
 
 class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
 
-    private var guideViews: SurvivalGuideSheetViews? = null
-    private val binding: SurvivalGuideSheetViews
-        get() = guideViews ?: error("Survival guide views are not ready")
-
-    private var query = ""
-    private var searchResults = emptyList<SurvivalGuideSearchResult>()
-    private var summary = ""
+    private var query by mutableStateOf("")
+    private var searchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
+    private var summary by mutableStateOf("")
     private var searchJob: Job? = null
 
     private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
@@ -60,14 +74,18 @@ class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createSurvivalGuideViews(requireContext())
-        guideViews = views
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    SurvivalGuideHost(
-                        views = views,
+                    SurvivalGuideSheetContent(
+                        query = query,
+                        summary = summary,
+                        firstResult = searchResults.firstOrNull(),
+                        markdown = markdown,
+                        onQueryChange = ::updateQuery,
+                        onOpenSearchList = ::openSearchList,
+                        onSummaryClick = ::openSummary,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -75,19 +93,8 @@ class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.title.rightButton.setOnClickListener {
-            openSearchList()
-        }
-        binding.search.setOnSearchListener(::updateQuery)
-        updateSummary()
-    }
-
     override fun onDestroyView() {
         searchJob?.cancel()
-        guideViews?.search?.setOnSearchListener(null)
-        guideViews = null
         super.onDestroyView()
     }
 
@@ -104,7 +111,6 @@ class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
         if (value.isBlank()) {
             searchResults = emptyList()
             summary = ""
-            updateSummary()
             return
         }
 
@@ -127,55 +133,6 @@ class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
 
             searchResults = results
             summary = newSummary
-            updateSummary()
-        }
-    }
-
-    private fun updateSummary() {
-        val views = guideViews ?: return
-        val result = searchResults.firstOrNull()
-        views.summaryHolder.isVisible = summary.isNotBlank()
-        views.emptyDescription.isVisible = summary.isBlank()
-        markdown.setMarkdown(views.summary, summary)
-
-        if (result == null) {
-            views.summaryHolder.setOnClickListener(null)
-            views.summaryTitle.text = ""
-            return
-        }
-
-        views.summaryTitle.text = listOfNotNull(
-            result.heading,
-            if (SurvivalGuideSearch.shouldUseSubsection(result)) {
-                result.bestSubsection?.heading
-            } else {
-                null
-            }
-        ).joinToString(" > ")
-
-        views.summaryChapterTitle.setStatusText(result.chapter.title)
-        ResourceListIcon(
-            result.chapter.icon,
-            size = 12f
-        ).apply(views.summaryChapterTitle.statusImage)
-        val backgroundColor = Resources.androidTextColorSecondary(requireContext())
-        views.summaryChapterTitle.setBackgroundTint(backgroundColor)
-        views.summaryChapterTitle.setForegroundTint(
-            Colors.mostContrastingColor(
-                Color.WHITE,
-                Color.BLACK,
-                backgroundColor
-            )
-        )
-        views.summaryTitle.setCompoundDrawables(
-            size = Resources.dp(requireContext(), 16f).toInt(),
-            right = R.drawable.ic_keyboard_arrow_right
-        )
-        views.summaryHolder.setOnClickListener {
-            openSummary(result)
-        }
-        views.summaryScroll.post {
-            views.summaryScroll.scrollTo(0, 0)
         }
     }
 
@@ -201,195 +158,215 @@ class SurvivalGuideBottomSheetFragment : BottomSheetDialogFragment() {
     }
 }
 
-private data class SurvivalGuideSheetViews(
-    val root: View,
-    val title: Toolbar,
-    val search: SearchView,
-    val emptyDescription: TextView,
-    val summaryHolder: MaterialCardView,
-    val summaryChapterTitle: Badge,
-    val summaryTitle: TextView,
-    val summaryScroll: NestedScrollView,
-    val summary: TextView
-)
+@Composable
+private fun SurvivalGuideSheetContent(
+    query: String,
+    summary: String,
+    firstResult: SurvivalGuideSearchResult?,
+    markdown: MarkdownService,
+    onQueryChange: (String) -> Unit,
+    onOpenSearchList: () -> Unit,
+    onSummaryClick: (SurvivalGuideSearchResult) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            SurvivalGuideToolbar(
+                onOpenSearchList = onOpenSearchList,
+                modifier = Modifier.fillMaxWidth()
+            )
+            SurvivalGuideSearchBox(
+                query = query,
+                onQueryChange = onQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(bottom = TrailSenseSpacing.sm)
+            )
+
+            if (summary.isBlank()) {
+                Text(
+                    text = stringResource(R.string.survival_guide_empty_desc),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.md)
+                        .testTag("empty_view_description"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.weight(1f))
+            } else if (firstResult != null) {
+                SurvivalGuideSummary(
+                    summary = summary,
+                    result = firstResult,
+                    markdown = markdown,
+                    onSummaryClick = onSummaryClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .padding(horizontal = TrailSenseSpacing.sm)
+                        .padding(top = TrailSenseSpacing.md)
+                )
+            }
+
+            Spacer(Modifier.height(TrailSenseSpacing.md))
+        }
+    }
+}
 
 @Composable
-private fun SurvivalGuideHost(
-    views: SurvivalGuideSheetViews,
+private fun SurvivalGuideToolbar(
+    onOpenSearchList: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     AndroidView(
-        modifier = modifier,
-        factory = { views.root }
+        modifier = modifier.testTag("title"),
+        factory = { context ->
+            Toolbar(context, null).apply {
+                id = R.id.title
+                title.text = context.getString(R.string.survival_guide)
+                subtitle.isVisible = false
+                rightButton.setImageResource(R.drawable.survival_guide)
+                rightButton.isVisible = true
+                rightButton.setOnClickListener { onOpenSearchList() }
+            }
+        },
+        update = {
+            it.rightButton.setOnClickListener { onOpenSearchList() }
+        }
     )
 }
 
-private fun createSurvivalGuideViews(context: Context): SurvivalGuideSheetViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val title = Toolbar(context, null).apply {
-        id = R.id.title
-        this.title.text = context.getString(R.string.survival_guide)
-        subtitle.isVisible = false
-        rightButton.setImageResource(R.drawable.survival_guide)
-        rightButton.isVisible = true
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val search = SearchView(context, null).apply {
-        id = R.id.search
-        setPadding(0, 0, 0, Resources.dp(context, 4f).toInt())
-    }
-    root.addView(
-        search,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            leftMargin = Resources.dp(context, 8f).toInt()
-            rightMargin = Resources.dp(context, 8f).toInt()
+@Composable
+private fun SurvivalGuideSearchBox(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.testTag("search"),
+        factory = { context ->
+            SearchView(context, null).apply {
+                id = R.id.search
+                setOnSearchListener(onQueryChange)
+            }
+        },
+        update = { searchView ->
+            searchView.setOnSearchListener(onQueryChange)
+            if (searchView.query != query) {
+                searchView.query = query
+                searchView.setCursorPosition(query.length)
+            }
         }
     )
+}
 
-    val emptyDescription = TextView(context).apply {
-        id = R.id.empty_view_description
-        gravity = Gravity.CENTER
-        text = context.getString(R.string.survival_guide_empty_desc)
-        textSize = 12f
-    }
-    root.addView(
-        emptyDescription,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = Resources.dp(context, 8f).toInt()
-        }
-    )
-
-    val summaryChapterTitle = Badge(context, null).apply {
-        id = R.id.summary_chapter_title
-    }
-    val summaryTitle = TextView(context).apply {
-        id = R.id.summary_title
-        compoundDrawablePadding = Resources.dp(context, 8f).toInt()
-        gravity = Gravity.CENTER_VERTICAL
-        setPadding(0, Resources.dp(context, 4f).toInt(), 0, Resources.dp(context, 8f).toInt())
-        textSize = 16f
-        typeface = Typeface.DEFAULT_BOLD
-    }
-    val summaryScroll = NestedScrollView(context).apply {
-        id = R.id.summary_scroll
-        isScrollbarFadingEnabled = false
-        isVerticalScrollBarEnabled = true
-    }
-    val summary = TextView(context).apply {
-        id = R.id.summary
-        setLineSpacing(Resources.dp(context, 4f), 1f)
-        setPadding(
-            Resources.dp(context, 8f).toInt(),
-            Resources.dp(context, 8f).toInt(),
-            Resources.dp(context, 8f).toInt(),
-            Resources.dp(context, 8f).toInt()
+@Composable
+private fun SurvivalGuideSummary(
+    summary: String,
+    result: SurvivalGuideSearchResult,
+    markdown: MarkdownService,
+    onSummaryClick: (SurvivalGuideSearchResult) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TrailSenseCard(
+        modifier = modifier.testTag("summary_holder"),
+        onClick = { onSummaryClick(result) }
+    ) {
+        TextBadge(
+            text = result.chapter.title,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            textStyle = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.testTag("summary_chapter_title")
         )
-        textSize = 14f
-    }
-    summaryScroll.addView(
-        summary,
-        ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val summaryHolder = MaterialCardView(context).apply {
-        id = R.id.summary_holder
-        radius = Resources.dp(context, 12f)
-        cardElevation = Resources.dp(context, 2f)
-        isVisible = false
-    }
-    val content = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        val padding = Resources.dp(context, 16f).toInt()
-        setPadding(padding, padding, padding, padding)
-    }
-    summaryHolder.addView(
-        content,
-        ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    )
-    content.addView(
-        summaryChapterTitle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-    content.addView(
-        summaryTitle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-    content.addView(
-        summaryScroll,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            0,
-            1f
-        )
-    )
-    root.addView(
-        summaryHolder,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Resources.dp(context, 300f).toInt()
-        ).apply {
-            leftMargin = Resources.dp(context, 8f).toInt()
-            rightMargin = Resources.dp(context, 8f).toInt()
-            topMargin = Resources.dp(context, 12f).toInt()
-        }
-    )
-
-    root.addView(
-        View(context),
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Resources.dp(context, 10f).toInt()
-        ).apply {
-            setMargins(
-                Resources.dp(context, 10f).toInt(),
-                Resources.dp(context, 10f).toInt(),
-                Resources.dp(context, 10f).toInt(),
-                Resources.dp(context, 10f).toInt()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = getSummaryTitle(result),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("summary_title"),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    )
 
-    return SurvivalGuideSheetViews(
-        root,
-        title,
-        search,
-        emptyDescription,
-        summaryHolder,
-        summaryChapterTitle,
-        summaryTitle,
-        summaryScroll,
-        summary
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .testTag("summary_scroll")
+        ) {
+            MarkdownSummaryText(
+                summary = summary,
+                markdown = markdown,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun MarkdownSummaryText(
+    summary: String,
+    markdown: MarkdownService,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.testTag("summary"),
+        factory = { context ->
+            TextView(context).apply {
+                id = R.id.summary
+                setLineSpacing(Resources.dp(context, 4f), 1f)
+                textSize = 14f
+            }
+        },
+        update = {
+            markdown.setMarkdown(it, summary)
+        }
     )
+}
+
+private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
+    return listOfNotNull(
+        result.heading,
+        if (SurvivalGuideSearch.shouldUseSubsection(result)) {
+            result.bestSubsection?.heading
+        } else {
+            null
+        }
+    ).joinToString(" > ")
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SurvivalGuideSheetContentPreview() {
+    val context = LocalContext.current
+    TrailSenseTheme {
+        SurvivalGuideSheetContent(
+            query = "",
+            summary = "",
+            firstResult = null,
+            markdown = MarkdownService(context),
+            onQueryChange = {},
+            onOpenSearchList = {},
+            onSummaryClick = {}
+        )
+    }
 }
