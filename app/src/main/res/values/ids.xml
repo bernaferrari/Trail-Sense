@@ -253,7 +253,12 @@
     <item name="play_btn" type="id" />
     <item name="astronomy_detail_list" type="id" />
     <item name="button_3d" type="id" />
+    <item name="view_camera" type="id" />
+    <item name="view_camera_line" type="id" />
+    <item name="sighting_compass_btn" type="id" />
+    <item name="group_title" type="id" />
     <item name="searchbox" type="id" />
+    <item name="list" type="id" />
     <item name="paths_list" type="id" />
     <item name="waypoints_empty_text" type="id" />
     <item name="map_list_title" type="id" />

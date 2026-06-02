@@ -1,9 +1,13 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewTreeObserver
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.kylecorry.andromeda.core.system.Resources
 import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
 import androidx.core.view.isVisible
@@ -11,14 +15,16 @@ import androidx.fragment.app.findFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ViewLinearSightingCompassBinding
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
+import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassLayer
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 
@@ -32,13 +38,16 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     private var isStarted = false
     private var isResumed = false
     private val lock = Any()
-    private val binding by lazy { ViewLinearSightingCompassBinding.bind(this) }
+    private val viewCamera: CameraView
+    private val viewCameraLine: View
+    private val linearCompass: LinearCompassView
+    private val sightingCompassButton: FloatingActionButton
 
     private val sightingCompass by lazy {
         SightingCompassView(
-            binding.viewCamera,
-            binding.viewCameraLine,
-            binding.linearCompass
+            viewCamera,
+            viewCameraLine,
+            linearCompass
         ) {
             // Forward the click event from the sighting compass
             callOnClick()
@@ -79,9 +88,83 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     }
 
     init {
-        inflate(context, R.layout.view_linear_sighting_compass, this)
+        viewCamera = CameraView(context, null).apply {
+            id = R.id.view_camera
+            keepScreenOn = true
+            isVisible = false
+        }
+        addView(
+            viewCamera,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                resources.getDimensionPixelSize(R.dimen.circular_display_size)
+            ).apply {
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
 
-        binding.sightingCompassBtn.setOnClickListener {
+        viewCameraLine = View(context).apply {
+            id = R.id.view_camera_line
+            setBackgroundColor(Resources.getPrimaryColor(context))
+            isVisible = false
+        }
+        addView(
+            viewCameraLine,
+            LayoutParams(
+                Resources.dp(context, 1f).toInt(),
+                0
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = R.id.view_camera
+                bottomToBottom = R.id.view_camera
+            }
+        )
+
+        linearCompass = LinearCompassView(context, null).apply {
+            id = R.id.linear_compass
+        }
+        addView(
+            linearCompass,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                Resources.dp(context, 100f).toInt()
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = R.id.view_camera
+                bottomToBottom = R.id.view_camera
+            }
+        )
+
+        sightingCompassButton = FloatingActionButton(context).apply {
+            id = R.id.sighting_compass_btn
+            size = FloatingActionButton.SIZE_MINI
+            contentDescription = context.getString(R.string.sighting_compass)
+            isClickable = true
+            isFocusable = true
+            setImageResource(R.drawable.ic_camera)
+            imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+            backgroundTintList = ColorStateList.valueOf(
+                Resources.getAndroidColorAttr(context, android.R.attr.colorBackgroundFloating)
+            )
+        }
+        addView(
+            sightingCompassButton,
+            LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                topToBottom = R.id.linear_compass
+                endToEnd = LayoutParams.PARENT_ID
+                topMargin = Resources.dp(context, 20f).toInt()
+                marginEnd = Resources.dp(context, 16f).toInt()
+            }
+        )
+
+        CustomUiUtils.setButtonState(sightingCompassButton, false)
+        sightingCompassButton.setOnClickListener {
             setSightingCompass(!showSightingCompass)
         }
 
@@ -154,7 +237,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             }
             isStarted = false
             sightingCompass.stop()
-            binding.sightingCompassBtn.isChecked = false
+            CustomUiUtils.setButtonState(sightingCompassButton, false)
             updateTimer.stop()
         }
     }
@@ -163,9 +246,9 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
         showSightingCompass = shouldShow
         if (!shouldShow) {
             sightingCompass.stop()
-            binding.sightingCompassBtn.isChecked = false
+            CustomUiUtils.setButtonState(sightingCompassButton, false)
         } else if (!sightingCompass.isRunning()) {
-            binding.sightingCompassBtn.isChecked = true
+            CustomUiUtils.setButtonState(sightingCompassButton, true)
             val fragment = findFragment<AndromedaFragment>()
             fragment.requestCamera { hasPermission ->
                 if (hasPermission) {
@@ -179,44 +262,44 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     }
 
     override var compassCenter: Coordinate
-        get() = binding.linearCompass.compassCenter
+        get() = linearCompass.compassCenter
         set(value) {
-            binding.linearCompass.compassCenter = value
+            linearCompass.compassCenter = value
         }
     override var useTrueNorth: Boolean
-        get() = binding.linearCompass.useTrueNorth
+        get() = linearCompass.useTrueNorth
         set(value) {
-            binding.linearCompass.useTrueNorth = value
+            linearCompass.useTrueNorth = value
         }
     override var declination: Float
-        get() = binding.linearCompass.declination
+        get() = linearCompass.declination
         set(value) {
-            binding.linearCompass.declination = value
+            linearCompass.declination = value
         }
     override var azimuth: Float
-        get() = binding.linearCompass.azimuth
+        get() = linearCompass.azimuth
         set(value) {
-            binding.linearCompass.azimuth = value
+            linearCompass.azimuth = value
         }
 
     override fun addCompassLayer(layer: ICompassLayer) {
-        binding.linearCompass.addCompassLayer(layer)
+        linearCompass.addCompassLayer(layer)
     }
 
     override fun removeCompassLayer(layer: ICompassLayer) {
-        binding.linearCompass.removeCompassLayer(layer)
+        linearCompass.removeCompassLayer(layer)
     }
 
     override fun setCompassLayers(layers: List<ICompassLayer>) {
-        binding.linearCompass.setCompassLayers(layers)
+        linearCompass.setCompassLayers(layers)
     }
 
     override fun draw(reference: IMappableReferencePoint, size: Int?) {
-        binding.linearCompass.draw(reference, size)
+        linearCompass.draw(reference, size)
     }
 
     override fun draw(bearing: IMappableBearing, stopAt: Coordinate?) {
-        binding.linearCompass.draw(bearing, stopAt)
+        linearCompass.draw(bearing, stopAt)
     }
 
 }
