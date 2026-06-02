@@ -320,6 +320,17 @@
     <item name="time_slider" type="id" />
     <item name="gps_status" type="id" />
     <item name="compass_status" type="id" />
+    <item name="duration" type="id" />
+    <item name="duration_holder" type="id" />
+    <item name="negate_btn" type="id" />
+    <item name="gps_btn" type="id" />
+    <item name="gps_loading" type="id" />
+    <item name="elevation_input" type="id" />
+    <item name="amount_holder" type="id" />
+    <item name="amount" type="id" />
+    <item name="units" type="id" />
+    <item name="secondary_amount_holder" type="id" />
+    <item name="secondary_amount" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />

@@ -1,7 +1,11 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.text.buildSpannedString
@@ -65,10 +69,50 @@ class DurationInputView(context: Context?, attrs: AttributeSet?) : LinearLayout(
 
     init {
         context?.let {
-            inflate(it, R.layout.view_duration_input, this)
-            input = findViewById(R.id.duration)
-            inputHolder = findViewById(R.id.duration_holder)
-            negateButton = findViewById(R.id.negate_btn)
+            orientation = HORIZONTAL
+
+            val buttonSize = Resources.dp(it, 32f).toInt()
+            val buttonPadding = Resources.dp(it, 8f).toInt()
+            negateButton = ImageButton(it).apply {
+                id = R.id.negate_btn
+                elevation = Resources.dp(it, 4f)
+                setPadding(buttonPadding, buttonPadding, buttonPadding, buttonPadding)
+                setImageResource(R.drawable.ic_add)
+                imageTintList = ColorStateList.valueOf(Resources.androidTextColorPrimary(it))
+                background = null
+            }
+            addView(
+                negateButton,
+                LayoutParams(buttonSize, buttonSize).apply {
+                    gravity = Gravity.CENTER
+                    marginEnd = buttonPadding
+                }
+            )
+
+            inputHolder = TextInputLayout(it).apply {
+                id = R.id.duration_holder
+                endIconMode = TextInputLayout.END_ICON_CLEAR_TEXT
+            }
+            input = EndOnlyEditText(it, null).apply {
+                id = R.id.duration
+                isCursorVisible = false
+                inputType = InputType.TYPE_CLASS_NUMBER
+            }
+            inputHolder.addView(
+                input,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+            addView(
+                inputHolder,
+                LayoutParams(
+                    0,
+                    LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
 
             inputHolder.setEndIconOnClickListener {
                 // Clear
@@ -78,7 +122,6 @@ class DurationInputView(context: Context?, attrs: AttributeSet?) : LinearLayout(
             }
 
             negateButton.isVisible = allowNegative
-            negateButton.background = null
             negateButton.setOnClickListener {
                 isNegative = !isNegative
                 onDurationTextChanged()

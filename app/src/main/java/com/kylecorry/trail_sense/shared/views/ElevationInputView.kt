@@ -2,16 +2,20 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.LinearLayout
-import com.google.android.material.button.MaterialButton
+import android.widget.ProgressBar
 import androidx.core.view.isVisible
-import com.google.android.material.loadingindicator.LoadingIndicator
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -59,17 +63,57 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     private var autofillListener: (() -> Unit)? = null
 
     private lateinit var elevationInput: DistanceInputView
-    private lateinit var gpsBtn: MaterialButton
+    private lateinit var gpsBtn: ImageButton
 
     private lateinit var gpsLoadingIndicator: LoadingIndicator
 
     init {
         context?.let {
-            // Load view
-            inflate(it, R.layout.view_elevation_input, this)
-            elevationInput = findViewById(R.id.elevation_input)
-            gpsLoadingIndicator = findViewById(R.id.gps_loading)
-            gpsBtn = findViewById(R.id.gps_btn)
+            orientation = HORIZONTAL
+
+            val iconSize = Resources.dp(it, 32f).toInt()
+            val iconPadding = Resources.dp(it, 8f).toInt()
+            gpsBtn = ImageButton(it).apply {
+                id = R.id.gps_btn
+                elevation = Resources.dp(it, 4f)
+                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+                setImageResource(R.drawable.ic_altitude)
+                setBackgroundResource(R.drawable.rounded_rectangle)
+            }
+            addView(
+                gpsBtn,
+                LayoutParams(iconSize, iconSize).apply {
+                    gravity = Gravity.CENTER
+                    marginEnd = iconPadding
+                }
+            )
+
+            gpsLoadingIndicator = ProgressBar(it, null, android.R.attr.progressBarStyle).apply {
+                id = R.id.gps_loading
+                isIndeterminate = true
+                visibility = View.INVISIBLE
+            }
+            addView(
+                gpsLoadingIndicator,
+                LayoutParams(iconSize, iconSize).apply {
+                    gravity = Gravity.CENTER
+                    marginEnd = iconPadding
+                }
+            )
+
+            elevationInput = DistanceInputView(it).apply {
+                id = R.id.elevation_input
+            }
+            addView(
+                elevationInput,
+                LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
+
+            CustomUiUtils.setButtonState(gpsBtn, true)
 
             // Set up elevation input
             elevationInput.defaultHint = it.getString(R.string.elevation)

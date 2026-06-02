@@ -3,11 +3,15 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
-import com.google.android.material.button.MaterialButton
+import android.widget.LinearLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
@@ -81,7 +85,7 @@ class UnitInputView<Units : Enum<*>>(
 
     private var amountEdit: TextInputEditText
     private var amountEditHolder: TextInputLayout
-    private var unitBtn: MaterialButton
+    private var unitBtn: Button
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
@@ -102,11 +106,53 @@ class UnitInputView<Units : Enum<*>>(
     }
 
     init {
-        inflate(context, R.layout.view_unit_input, this)
-        amountEditHolder = findViewById(R.id.amount_holder)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        addView(
+            root,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
 
-        amountEdit = findViewById(R.id.amount)
-        unitBtn = findViewById(R.id.units)
+        amountEditHolder = TextInputLayout(context).apply {
+            id = R.id.amount_holder
+        }
+        amountEdit = TextInputEditText(context).apply {
+            id = R.id.amount
+            inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        }
+        amountEditHolder.addView(
+            amountEdit,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        root.addView(
+            amountEditHolder,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        )
+
+        unitBtn = Button(context).apply {
+            id = R.id.units
+        }
+        root.addView(
+            unitBtn,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+            }
+        )
 
         unitBtn.isAllCaps = false
         allowNegative = true

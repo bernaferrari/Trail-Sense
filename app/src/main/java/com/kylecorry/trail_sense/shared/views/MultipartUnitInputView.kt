@@ -3,13 +3,17 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
-import com.google.android.material.button.MaterialButton
+import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
@@ -112,7 +116,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
     private var amountEditHolder: TextInputLayout
     private var secondaryAmountEdit: TextInputEditText
     private var secondaryAmountEditHolder: TextInputLayout
-    private var unitBtn: MaterialButton
+    private var unitBtn: Button
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
@@ -145,11 +149,66 @@ class MultipartUnitInputView<Units : Enum<*>>(
     }
 
     init {
-        inflate(context, R.layout.view_multi_unit_input, this)
-        amountEditHolder = findViewById(R.id.amount_holder)
-        amountEdit = findViewById(R.id.amount)
-        secondaryAmountEditHolder = findViewById(R.id.secondary_amount_holder)
-        secondaryAmountEdit = findViewById(R.id.secondary_amount)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        addView(
+            root,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        amountEditHolder = TextInputLayout(context).apply {
+            id = R.id.amount_holder
+        }
+        amountEdit = TextInputEditText(context).apply {
+            id = R.id.amount
+            inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        }
+        amountEditHolder.addView(
+            amountEdit,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        root.addView(
+            amountEditHolder,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        )
+
+        secondaryAmountEditHolder = TextInputLayout(context).apply {
+            id = R.id.secondary_amount_holder
+        }
+        secondaryAmountEdit = TextInputEditText(context).apply {
+            id = R.id.secondary_amount
+            inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        }
+        secondaryAmountEditHolder.addView(
+            secondaryAmountEdit,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        root.addView(
+            secondaryAmountEditHolder,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+            }
+        )
+
         allowNegative = true
 
         secondaryAmountEdit.inputType = InputType.TYPE_CLASS_NUMBER or
@@ -157,7 +216,18 @@ class MultipartUnitInputView<Units : Enum<*>>(
 
         secondaryAmountEditHolder.isVisible = _showSecondary
 
-        unitBtn = findViewById(R.id.units)
+        unitBtn = Button(context).apply {
+            id = R.id.units
+        }
+        root.addView(
+            unitBtn,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+            }
+        )
         unitBtn.isAllCaps = false
 
         amountEdit.addTextChangedListener {
