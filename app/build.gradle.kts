@@ -45,8 +45,6 @@ android {
         generateLocaleConfig = true
     }
     buildFeatures {
-        // Support for view binding
-        viewBinding = true
         buildConfig = true
         compose = true
     }
