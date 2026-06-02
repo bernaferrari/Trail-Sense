@@ -1,62 +1,117 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.text.InputType
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.IdRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import androidx.core.view.isVisible
+import androidx.core.view.setPadding
+import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.trail_sense.shared.extensions.flatten
-import com.kylecorry.andromeda.fragments.BoundFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.list.ListView
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.FragmentCreateTideBinding
-import com.kylecorry.trail_sense.databinding.ListItemTideEntryBinding
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
+import com.kylecorry.trail_sense.shared.views.CoordinateInputView
+import com.kylecorry.trail_sense.shared.views.DurationInputView
+import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.TideTableIsDirtySpecification
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
+class CreateTideFragment : Fragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private var editingId: Long = 0
-    private var editingTide: TideTable? = null
-
-    private lateinit var tideTimesList: ListView<TideEntry>
-    private var tides = mutableListOf<TideEntry>()
-
     private val tideRepo by lazy { TideTableRepo.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
 
+    private var editingId: Long = 0
+    private var editingTide: TideTable? = null
+
+    private var tideLocationView: CoordinateInputView? = null
+
     private var backCallback: OnBackPressedCallback? = null
+    private var nextTideEntryId = 1L
 
-    private val intervalometer = CoroutineTimer {
-        binding.createTideTitle.rightButton.isVisible = formIsValid()
-    }
-
-    private var estimateType by state(EstimateType.Clock)
+    private var name by mutableStateOf("")
+    private var location by mutableStateOf<Coordinate?>(null)
+    private var isSemidiurnal by mutableStateOf(true)
+    private var estimateType by mutableStateOf(EstimateType.Clock)
+    private var lunitidalInterval by mutableStateOf<Duration?>(null)
+    private var tideEntries by mutableStateOf<List<TideEntry>>(emptyList())
+    private var tideEntryScrollRequest by mutableStateOf(0)
 
     private val estimateTypeNameMap by lazy {
         mapOf(
@@ -91,239 +146,122 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
         )
     }
 
-    override fun generateBinding(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?
-    ): FragmentCreateTideBinding {
-        return FragmentCreateTideBinding.inflate(layoutInflater, container, false)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         editingId = arguments?.getLong("edit_tide_id") ?: 0L
     }
 
-    override fun onResume() {
-        super.onResume()
-        intervalometer.interval(20)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    CreateTideScreen(
+                        name = name,
+                        location = location,
+                        isSemidiurnal = isSemidiurnal,
+                        estimateType = estimateType,
+                        estimateTypes = estimateTypes,
+                        estimateTypeNames = estimateTypeNameMap,
+                        estimateTypeDescriptions = estimateTypeDescriptionMap,
+                        lunitidalInterval = lunitidalInterval,
+                        tideEntries = tideEntries,
+                        tideEntryScrollRequest = tideEntryScrollRequest,
+                        canSave = formIsValid(),
+                        isLocationRequired = estimateType == EstimateType.LunitidalIntervalManualLocal,
+                        isDurationVisible = isLunitidalIntervalManual(),
+                        isTideTableRequired = isTideTableRequired(),
+                        formatService = formatService,
+                        onNameChange = { name = it },
+                        onLocationChange = { location = it },
+                        onFrequencyChange = { isSemidiurnal = it },
+                        onEstimateTypeChange = { estimateType = it },
+                        onLunitidalIntervalChange = { lunitidalInterval = it },
+                        onAddTideEntry = ::addTideEntry,
+                        onTideEntryChange = ::updateTideEntry,
+                        onTideEntryDelete = ::deleteTideEntry,
+                        onTideTimeClick = ::pickTideTime,
+                        onTideHeightClick = ::pickTideHeight,
+                        onHelp = {
+                            UserGuideUtils.showGuide(
+                                this@CreateTideFragment,
+                                R.raw.guide_tool_tides
+                            )
+                        },
+                        onSave = ::saveTide,
+                        onLocationCreated = { tideLocationView = it }
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        backCallback = promptIfUnsavedChanges(this::hasChanges)
+
+        if (editingId != 0L) {
+            loadEditingTide()
+        } else if (tideEntries.isEmpty()) {
+            tideEntries = listOf(newTideEntry())
+        }
     }
 
     override fun onPause() {
-        intervalometer.stop()
+        tideLocationView?.pause()
         super.onPause()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onDestroyView() {
+        tideLocationView = null
+        super.onDestroyView()
+    }
 
-        binding.createTideTitle.leftButton.flatten()
-        binding.createTideTitle.leftButton.setOnClickListener {
-            UserGuideUtils.showGuide(this, R.raw.guide_tool_tides)
-        }
-
-        binding.estimateAlgorithmSpinner.setHint(getString(R.string.estimate_method))
-        binding.estimateAlgorithmSpinner.setItems(
-            estimateTypes.map { estimateTypeNameMap[it] ?: "" },
-        )
-        binding.estimateAlgorithmSpinner.setDescriptions(
-            estimateTypes.map { estimateTypeDescriptionMap[it] ?: "" }
-        )
-        binding.estimateAlgorithmSpinner.setSelection(0)
-
-        binding.estimateAlgorithmSpinner.setOnItemSelectedListener { position ->
-            estimateType = if (position == null) {
-                EstimateType.Clock
-            } else {
-                estimateTypes[position]
-            }
-        }
-        binding.lunitidalIntervalDuration.showSeconds = false
-        binding.lunitidalIntervalDuration.allowNegative = true
-        binding.lunitidalIntervalDuration.hint = getString(R.string.lunitidal_interval)
-
-        binding.tideFrequencyDiurnal.text = buildSpannedString {
-            bold {
-                append("1")
-            }
-            append("    ")
-            append(getString(R.string.tide_diurnal))
-        }
-
-        binding.tideFrequencySemidiurnal.text = buildSpannedString {
-            bold {
-                append("2")
-            }
-            append("    ")
-            append(getString(R.string.tide_semidiurnal))
-        }
-
-        binding.tideFrequency.check(R.id.tide_frequency_semidiurnal)
-
-        tideTimesList = ListView(binding.tideTimes, R.layout.list_item_tide_entry) { view, tide ->
-            val itemBinding = ListItemTideEntryBinding.bind(view)
-
-            itemBinding.tideType.text =
-                if (tide.isHigh) getString(R.string.high_tide_letter) else getString(
-                    R.string.low_tide_letter
-                )
-
-            itemBinding.tideType.setOnClickListener {
-                tide.isHigh = !tide.isHigh
-                itemBinding.tideType.text =
-                    if (tide.isHigh) getString(R.string.high_tide_letter) else getString(
-                        R.string.low_tide_letter
-                    )
+    private fun loadEditingTide() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            editingTide = withContext(Dispatchers.IO) {
+                tideRepo.getTideTable(editingId)
             }
 
-            itemBinding.delete.setOnClickListener {
-                tides.remove(tide)
-                tideTimesList.setData(tides)
-                CustomUiUtils.snackbar(
-                    this,
-                    getString(R.string.tide_deleted),
-                    action = getString(R.string.undo)
-                ) {
-                    tides.add(tide)
-                    tideTimesList.setData(tides)
-                }
-            }
-
-            itemBinding.tideTime.text = if (isTideTableRequired()) {
-                getString(R.string.field_required, getString(R.string.time_not_set))
-            } else {
-                getString(R.string.time_not_set)
-            }
-
-            tide.time?.let {
-                itemBinding.tideTime.text = formatService.formatDateTime(
-                    it,
-                    false,
-                    abbreviateMonth = true
-                )
-            }
-
-            itemBinding.tideTime.setOnClickListener {
-                CustomUiUtils.pickDatetime(
-                    requireContext(),
-                    prefs.use24HourTime,
-                    tide.time?.toLocalDateTime() ?: LocalDateTime.now()
-                ) {
-                    if (it != null) {
-                        tide.time = it.toZonedDateTime()
-                        itemBinding.tideTime.text = formatService.formatDateTime(
-                            it.toZonedDateTime(),
-                            false,
-                            abbreviateMonth = true
-                        )
-                    }
-                }
-            }
-
-            val initialHeight = tide.height
-            itemBinding.tideHeight.text = if (initialHeight == null) {
-                getString(R.string.dash)
-            } else {
-                formatService.formatDistance(initialHeight, 2)
-            }
-
-            itemBinding.tideHeight.setOnClickListener {
-                val units = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
-                CustomUiUtils.pickDistance(
-                    requireContext(),
-                    units,
-                    tide.height,
-                    getString(R.string.height)
-                ) { distance, cancelled ->
-                    if (!cancelled) {
-                        tide.height = distance
-                        itemBinding.tideHeight.text = if (distance == null) {
-                            getString(R.string.dash)
-                        } else {
-                            formatService.formatDistance(distance, 2)
-                        }
-                    }
-                }
-            }
-        }
-
-        tideTimesList.addLineSeparator()
-
-        tides.clear()
-        if (editingId != 0L) {
-            inBackground {
-                withContext(Dispatchers.IO) {
-                    editingTide = tideRepo.getTideTable(editingId)
-                }
-                withContext(Dispatchers.Main) {
-                    if (editingTide != null) {
-                        fillExistingTideValues(editingTide!!)
-                    } else {
-                        editingId = 0L
-                    }
-                }
-            }
-        } else {
-            tides.add(TideEntry(true, null, null))
-            tideTimesList.setData(tides)
-        }
-
-        binding.addTideEntry.setOnClickListener {
-            tides.add(TideEntry(true, null, null))
-            tideTimesList.setData(tides)
-            tideTimesList.scrollToPosition(tides.lastIndex)
-        }
-
-        binding.createTideTitle.rightButton.setOnClickListener {
-            val tide = getTide()
+            val tide = editingTide
             if (tide != null) {
-                inBackground {
-                    withContext(Dispatchers.IO) {
-                        tideRepo.addTideTable(tide)
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        backCallback?.remove()
-                        findNavController().navigateUp()
-                    }
+                fillExistingTideValues(tide)
+            } else {
+                editingId = 0L
+                if (tideEntries.isEmpty()) {
+                    tideEntries = listOf(newTideEntry())
                 }
             }
         }
-
-        backCallback = promptIfUnsavedChanges(this::hasChanges)
-
     }
-
-    private fun isTideTableRequired(): Boolean {
-        return estimateType == EstimateType.Clock || estimateType == EstimateType.LunitidalIntervalAuto
-    }
-
 
     private fun fillExistingTideValues(tide: TideTable) {
-        binding.tideName.setText(tide.name)
-        binding.tideLocation.coordinate = tide.location
-        binding.tideFrequency.check(if (tide.isSemidiurnal) R.id.tide_frequency_semidiurnal else R.id.tide_frequency_diurnal)
-        tides.addAll(tide.tides.map {
-            val h = it.height
+        name = tide.name.orEmpty()
+        location = tide.location
+        isSemidiurnal = tide.isSemidiurnal
+        tideEntries = tide.tides.map {
+            val height = it.height
             TideEntry(
+                nextTideEntryId++,
                 it.isHigh,
                 it.time,
-                if (h != null) Distance.meters(h).convertTo(units) else null
+                if (height != null) Distance.meters(height).convertTo(units) else null
             )
-        })
-        tideTimesList.setData(tides)
+        }
 
-        val estimateType = when {
+        estimateType = when {
             tide.estimator == TideEstimator.Clock -> EstimateType.Clock
             tide.estimator == TideEstimator.LunitidalInterval -> {
                 if (tide.lunitidalInterval == null) {
                     EstimateType.LunitidalIntervalAuto
+                } else if (tide.lunitidalIntervalIsUtc) {
+                    EstimateType.LunitidalIntervalManualUTC
                 } else {
-                    if (tide.lunitidalIntervalIsUtc) {
-                        EstimateType.LunitidalIntervalManualUTC
-                    } else {
-                        EstimateType.LunitidalIntervalManualLocal
-                    }
+                    EstimateType.LunitidalIntervalManualLocal
                 }
             }
 
@@ -331,9 +269,80 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
             tide.estimator == TideEstimator.TideModel -> EstimateType.TideModel
             else -> EstimateType.Clock
         }
-        val estimateIndex = estimateTypes.indexOf(estimateType)
-        binding.estimateAlgorithmSpinner.setSelection(if (estimateIndex == -1) 0 else estimateIndex)
-        binding.lunitidalIntervalDuration.updateDuration(tide.lunitidalInterval)
+        lunitidalInterval = tide.lunitidalInterval
+    }
+
+    private fun addTideEntry() {
+        tideEntries = tideEntries + newTideEntry()
+        tideEntryScrollRequest++
+    }
+
+    private fun newTideEntry(): TideEntry {
+        return TideEntry(nextTideEntryId++, true, null, null)
+    }
+
+    private fun updateTideEntry(entry: TideEntry) {
+        tideEntries = tideEntries.map {
+            if (it.id == entry.id) entry else it
+        }
+    }
+
+    private fun deleteTideEntry(entry: TideEntry) {
+        tideEntries = tideEntries.filterNot { it.id == entry.id }
+        CustomUiUtils.snackbar(
+            this,
+            getString(R.string.tide_deleted),
+            action = getString(R.string.undo)
+        ) {
+            tideEntries = tideEntries + entry
+        }
+    }
+
+    private fun pickTideTime(entry: TideEntry) {
+        CustomUiUtils.pickDatetime(
+            requireContext(),
+            prefs.use24HourTime,
+            entry.time?.toLocalDateTime() ?: LocalDateTime.now()
+        ) {
+            if (it != null) {
+                updateTideEntry(entry.copy(time = it.toZonedDateTime()))
+            }
+        }
+    }
+
+    private fun pickTideHeight(entry: TideEntry) {
+        val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
+        CustomUiUtils.pickDistance(
+            requireContext(),
+            distanceUnits,
+            entry.height,
+            getString(R.string.height)
+        ) { distance, cancelled ->
+            if (!cancelled) {
+                updateTideEntry(entry.copy(height = distance))
+            }
+        }
+    }
+
+    private fun saveTide() {
+        val tide = getTide() ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                tideRepo.addTideTable(tide)
+            }
+
+            backCallback?.remove()
+            findNavController().navigateUp()
+        }
+    }
+
+    private fun isTideTableRequired(): Boolean {
+        return estimateType == EstimateType.Clock || estimateType == EstimateType.LunitidalIntervalAuto
+    }
+
+    private fun isLunitidalIntervalManual(): Boolean {
+        return estimateType == EstimateType.LunitidalIntervalManualLocal ||
+            estimateType == EstimateType.LunitidalIntervalManualUTC
     }
 
     private fun formIsValid(): Boolean {
@@ -341,7 +350,6 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
     }
 
     private fun getEstimateAlgorithm(): TideEstimator {
-        val estimateType = estimateTypes[binding.estimateAlgorithmSpinner.selectedItemPosition]
         return when (estimateType) {
             EstimateType.Clock -> TideEstimator.Clock
             EstimateType.LunitidalIntervalAuto -> TideEstimator.LunitidalInterval
@@ -353,7 +361,7 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
     }
 
     private fun getTide(): TideTable? {
-        val tides = tides.mapNotNull {
+        val tides = tideEntries.mapNotNull {
             val time = it.time ?: return@mapNotNull null
             Tide(
                 time,
@@ -368,46 +376,37 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
             return null
         }
 
-        val lunitidalInterval =
-            if (estimateType == EstimateType.LunitidalIntervalManualLocal || estimateType == EstimateType.LunitidalIntervalManualUTC) {
-                binding.lunitidalIntervalDuration.duration
+        val interval =
+            if (estimateType == EstimateType.LunitidalIntervalManualLocal ||
+                estimateType == EstimateType.LunitidalIntervalManualUTC
+            ) {
+                lunitidalInterval
             } else {
                 null
             }
 
         val lunitidalIntervalIsUtc = estimateType == EstimateType.LunitidalIntervalManualUTC
-        val location = binding.tideLocation.coordinate
 
-        // TODO: Eventually this will check for harmonics
         if (
-        // Tide clock requires at least one tide
             (tides.isEmpty() && estimateAlgorithm == TideEstimator.Clock) ||
-            // Manual lunitidal UTC only requires a lunitidal interval is entered
-            (estimateType == EstimateType.LunitidalIntervalManualUTC && lunitidalInterval == null) ||
-            // Manual lunitidal local requires a lunitidal interval and location are entered
-            (estimateType == EstimateType.LunitidalIntervalManualLocal && (lunitidalInterval == null || location == null)) ||
-            // Auto lunitidal interval requires at least one tide
+            (estimateType == EstimateType.LunitidalIntervalManualUTC && interval == null) ||
+            (estimateType == EstimateType.LunitidalIntervalManualLocal && (interval == null || location == null)) ||
             (tides.isEmpty() && estimateType == EstimateType.LunitidalIntervalAuto)
-        // Harmonics doesn't require anything right now
-        // Tide model doesn't require anything right now
         ) {
             return null
         }
 
-        val rawName = binding.tideName.text?.toString()
-        val name = if (rawName.isNullOrBlank()) null else rawName
-
-        val isSemidiurnal = binding.tideFrequency.checkedButtonId == R.id.tide_frequency_semidiurnal
+        val tideName = if (name.isBlank()) null else name
 
         return TideTable(
             editingId,
             tides,
-            name,
+            tideName,
             location,
             isSemidiurnal = isSemidiurnal,
             isVisible = editingTide?.isVisible ?: true,
             estimator = estimateAlgorithm,
-            lunitidalInterval = lunitidalInterval,
+            lunitidalInterval = interval,
             lunitidalIntervalIsUtc = lunitidalIntervalIsUtc
         )
     }
@@ -417,32 +416,634 @@ class CreateTideFragment : BoundFragment<FragmentCreateTideBinding>() {
         return specification.isSatisfiedBy(getTide())
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
-        binding.lunitidalIntervalDuration.isVisible =
-            estimateType == EstimateType.LunitidalIntervalManualLocal || estimateType == EstimateType.LunitidalIntervalManualUTC
-        binding.tideLocation.required = estimateType == EstimateType.LunitidalIntervalManualLocal
+}
 
-        useEffect(estimateType) {
-            tideTimesList.setData(tides)
+private data class TideEntry(
+    val id: Long,
+    val isHigh: Boolean,
+    val time: ZonedDateTime?,
+    val height: Distance?
+)
+
+private enum class EstimateType {
+    Clock,
+    LunitidalIntervalAuto,
+    LunitidalIntervalManualLocal,
+    LunitidalIntervalManualUTC,
+    Harmonic,
+    TideModel
+}
+
+@Composable
+private fun CreateTideScreen(
+    name: String,
+    location: Coordinate?,
+    isSemidiurnal: Boolean,
+    estimateType: EstimateType,
+    estimateTypes: List<EstimateType>,
+    estimateTypeNames: Map<EstimateType, String>,
+    estimateTypeDescriptions: Map<EstimateType, String>,
+    lunitidalInterval: Duration?,
+    tideEntries: List<TideEntry>,
+    tideEntryScrollRequest: Int,
+    canSave: Boolean,
+    isLocationRequired: Boolean,
+    isDurationVisible: Boolean,
+    isTideTableRequired: Boolean,
+    formatService: FormatService,
+    onNameChange: (String) -> Unit,
+    onLocationChange: (Coordinate?) -> Unit,
+    onFrequencyChange: (Boolean) -> Unit,
+    onEstimateTypeChange: (EstimateType) -> Unit,
+    onLunitidalIntervalChange: (Duration?) -> Unit,
+    onAddTideEntry: () -> Unit,
+    onTideEntryChange: (TideEntry) -> Unit,
+    onTideEntryDelete: (TideEntry) -> Unit,
+    onTideTimeClick: (TideEntry) -> Unit,
+    onTideHeightClick: (TideEntry) -> Unit,
+    onHelp: () -> Unit,
+    onSave: () -> Unit,
+    onLocationCreated: (CoordinateInputView) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CreateTideHeader(
+                title = stringResource(R.string.tide_table),
+                canSave = canSave,
+                onHelp = onHelp,
+                onSave = onSave
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .testTag("scroll_view")
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp, bottom = 96.dp)
+            ) {
+                AndroidTextInput(
+                    text = name,
+                    label = stringResource(R.string.name),
+                    inputType = InputType.TYPE_CLASS_TEXT,
+                    viewId = R.id.tide_name,
+                    onTextChange = onNameChange
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.frequency),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.tide_frequency_description),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                TideFrequencyInput(
+                    isSemidiurnal = isSemidiurnal,
+                    onFrequencyChange = onFrequencyChange
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                TideLocationInput(
+                    location = location,
+                    isRequired = isLocationRequired,
+                    onLocationChange = onLocationChange,
+                    onLocationCreated = onLocationCreated
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                EstimateTypeInput(
+                    estimateType = estimateType,
+                    estimateTypes = estimateTypes,
+                    estimateTypeNames = estimateTypeNames,
+                    estimateTypeDescriptions = estimateTypeDescriptions,
+                    onEstimateTypeChange = onEstimateTypeChange
+                )
+                if (isDurationVisible) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    LunitidalIntervalInput(
+                        duration = lunitidalInterval,
+                        onDurationChange = onLunitidalIntervalChange
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TideEntryHeader(onAddTideEntry = onAddTideEntry)
+                TideEntriesList(
+                    entries = tideEntries,
+                    scrollRequest = tideEntryScrollRequest,
+                    isTideTableRequired = isTideTableRequired,
+                    formatService = formatService,
+                    onEntryChange = onTideEntryChange,
+                    onEntryDelete = onTideEntryDelete,
+                    onTimeClick = onTideTimeClick,
+                    onHeightClick = onTideHeightClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreateTideHeader(
+    title: String,
+    canSave: Boolean,
+    onHelp: () -> Unit,
+    onSave: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onHelp,
+                modifier = Modifier.testTag("create_tide_help_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_help),
+                    contentDescription = null
+                )
+            }
+            Text(
+                text = title,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 18.dp)
+                    .testTag("create_tide_title"),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (canSave) {
+                IconButton(
+                    onClick = onSave,
+                    modifier = Modifier.testTag("create_tide_save_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_check),
+                        contentDescription = null
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.size(48.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AndroidTextInput(
+    text: String,
+    label: String,
+    inputType: Int,
+    @IdRes viewId: Int,
+    onTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            TextInputLayout(context).apply {
+                hint = label
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                addView(
+                    TextInputEditText(context).apply {
+                        id = viewId
+                        this.inputType = inputType
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        doAfterTextChanged {
+                            onTextChange(it?.toString().orEmpty())
+                        }
+                    }
+                )
+            }
+        },
+        update = { input ->
+            input.hint = label
+            val editText = input.editText
+            if (editText?.text?.toString() != text) {
+                editText?.setText(text)
+                editText?.setSelection(editText.text?.length ?: 0)
+            }
+        }
+    )
+}
+
+@Composable
+private fun TideFrequencyInput(
+    isSemidiurnal: Boolean,
+    onFrequencyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val diurnal = stringResource(R.string.tide_diurnal)
+    val semidiurnal = stringResource(R.string.tide_semidiurnal)
+
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            MaterialButtonToggleGroup(context).apply {
+                id = R.id.tide_frequency
+                isSingleSelection = true
+                addView(
+                    MaterialButton(context).apply {
+                        id = R.id.tide_frequency_diurnal
+                        isCheckable = true
+                        text = buildSpannedString {
+                            bold { append("1") }
+                            append("    ")
+                            append(diurnal)
+                        }
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
+                )
+                addView(
+                    MaterialButton(context).apply {
+                        id = R.id.tide_frequency_semidiurnal
+                        isCheckable = true
+                        text = buildSpannedString {
+                            bold { append("2") }
+                            append("    ")
+                            append(semidiurnal)
+                        }
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
+                )
+                addOnButtonCheckedListener { _, checkedId, isChecked ->
+                    if (isChecked) {
+                        onFrequencyChange(checkedId == R.id.tide_frequency_semidiurnal)
+                    }
+                }
+            }
+        },
+        update = { group ->
+            val checkedId =
+                if (isSemidiurnal) R.id.tide_frequency_semidiurnal else R.id.tide_frequency_diurnal
+            if (group.checkedButtonId != checkedId) {
+                group.check(checkedId)
+            }
+        }
+    )
+}
+
+@Composable
+private fun TideLocationInput(
+    location: Coordinate?,
+    isRequired: Boolean,
+    onLocationChange: (Coordinate?) -> Unit,
+    onLocationCreated: (CoordinateInputView) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            CoordinateInputView(context).apply {
+                id = R.id.tide_location
+                required = isRequired
+                setOnCoordinateChangeListener {
+                    onLocationChange(it)
+                }
+                onLocationCreated(this)
+            }
+        },
+        update = { input ->
+            input.required = isRequired
+            if (input.coordinate != location) {
+                input.coordinate = location
+            }
+        }
+    )
+}
+
+@Composable
+private fun EstimateTypeInput(
+    estimateType: EstimateType,
+    estimateTypes: List<EstimateType>,
+    estimateTypeNames: Map<EstimateType, String>,
+    estimateTypeDescriptions: Map<EstimateType, String>,
+    onEstimateTypeChange: (EstimateType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val method = stringResource(R.string.estimate_method)
+
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            MaterialSpinnerView(context, null).apply {
+                id = R.id.estimate_algorithm_spinner
+                setHint(method)
+                setItems(estimateTypes.map { estimateTypeNames[it].orEmpty() })
+                setDescriptions(estimateTypes.map { estimateTypeDescriptions[it].orEmpty() })
+                setOnItemSelectedListener { position ->
+                    onEstimateTypeChange(estimateTypes.getOrElse(position ?: 0) { EstimateType.Clock })
+                }
+            }
+        },
+        update = { spinner ->
+            val index = estimateTypes.indexOf(estimateType).coerceAtLeast(0)
+            spinner.setHint(method)
+            spinner.setItems(estimateTypes.map { estimateTypeNames[it].orEmpty() })
+            spinner.setDescriptions(estimateTypes.map { estimateTypeDescriptions[it].orEmpty() })
+            if (spinner.selectedItemPosition != index) {
+                spinner.setSelection(index)
+            }
+        }
+    )
+}
+
+@Composable
+private fun LunitidalIntervalInput(
+    duration: Duration?,
+    onDurationChange: (Duration?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val hint = stringResource(R.string.lunitidal_interval)
+
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            DurationInputView(context, null).apply {
+                id = R.id.lunitidal_interval_duration
+                showSeconds = false
+                allowNegative = true
+                this.hint = hint
+                setOnDurationChangeListener(onDurationChange)
+            }
+        },
+        update = { input ->
+            input.showSeconds = false
+            input.allowNegative = true
+            input.hint = hint
+            if (input.duration != duration) {
+                input.updateDuration(duration)
+            }
+        }
+    )
+}
+
+@Composable
+private fun TideEntryHeader(
+    onAddTideEntry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = { context ->
+            val padding = Resources.dp(context, 16f).toInt()
+            val margin = Resources.dp(context, 8f).toInt()
+            LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                addView(
+                    ImageButton(context).apply {
+                        id = R.id.add_tide_entry
+                        setImageResource(R.drawable.ic_add)
+                        background = null
+                        setOnClickListener { onAddTideEntry() }
+                        layoutParams = LinearLayout.LayoutParams(
+                            Resources.dp(context, 48f).toInt(),
+                            Resources.dp(context, 48f).toInt()
+                        )
+                    }
+                )
+                addView(
+                    TextView(context).apply {
+                        id = R.id.tide_time
+                        text = context.getString(R.string.time)
+                        setPadding(padding)
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            2f
+                        )
+                    }
+                )
+                addView(
+                    TextView(context).apply {
+                        id = R.id.tide_height
+                        text = context.getString(R.string.height)
+                        setPadding(padding)
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        ).apply {
+                            marginStart = margin
+                        }
+                    }
+                )
+                addView(
+                    View(context).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            Resources.dp(context, 24f).toInt(),
+                            Resources.dp(context, 24f).toInt()
+                        ).apply {
+                            marginStart = margin
+                        }
+                    }
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun TideEntriesList(
+    entries: List<TideEntry>,
+    scrollRequest: Int,
+    isTideTableRequired: Boolean,
+    formatService: FormatService,
+    onEntryChange: (TideEntry) -> Unit,
+    onEntryDelete: (TideEntry) -> Unit,
+    onTimeClick: (TideEntry) -> Unit,
+    onHeightClick: (TideEntry) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(scrollRequest) {
+        if (scrollRequest > 0 && entries.isNotEmpty()) {
+            listState.animateScrollToItem(entries.lastIndex)
+        }
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .testTag("tide_times"),
+        state = listState
+    ) {
+        items(entries, key = { it.id }) { entry ->
+            TideEntryRow(
+                entry = entry,
+                isTideTableRequired = isTideTableRequired,
+                formatService = formatService,
+                onEntryChange = onEntryChange,
+                onEntryDelete = onEntryDelete,
+                onTimeClick = onTimeClick,
+                onHeightClick = onHeightClick
+            )
+            HorizontalDivider()
+        }
+    }
+}
+
+@Composable
+private fun TideEntryRow(
+    entry: TideEntry,
+    isTideTableRequired: Boolean,
+    formatService: FormatService,
+    onEntryChange: (TideEntry) -> Unit,
+    onEntryDelete: (TideEntry) -> Unit,
+    onTimeClick: (TideEntry) -> Unit,
+    onHeightClick: (TideEntry) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tideType =
+        if (entry.isHigh) {
+            stringResource(R.string.high_tide_letter)
+        } else {
+            stringResource(R.string.low_tide_letter)
         }
 
+    val defaultTimeText = if (isTideTableRequired) {
+        stringResource(R.string.field_required, stringResource(R.string.time_not_set))
+    } else {
+        stringResource(R.string.time_not_set)
     }
 
+    val timeText = entry.time?.let {
+        formatService.formatDateTime(
+            it,
+            false,
+            abbreviateMonth = true
+        )
+    } ?: defaultTimeText
 
-    private data class TideEntry(
-        var isHigh: Boolean,
-        var time: ZonedDateTime?,
-        var height: Distance?
-    )
+    val heightText = entry.height?.let {
+        formatService.formatDistance(it, 2)
+    } ?: stringResource(R.string.dash)
 
-    private enum class EstimateType {
-        Clock,
-        LunitidalIntervalAuto,
-        LunitidalIntervalManualLocal,
-        LunitidalIntervalManualUTC,
-        Harmonic,
-        TideModel
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .testTag("tide_entry_${entry.id}"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clickable { onEntryChange(entry.copy(isHigh = !entry.isHigh)) }
+                .testTag("tide_type"),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = tideType,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+        }
+        Text(
+            text = timeText,
+            modifier = Modifier
+                .weight(2f)
+                .clickable { onTimeClick(entry) }
+                .padding(16.dp)
+                .testTag("tide_time"),
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text(
+            text = heightText,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+                .clickable { onHeightClick(entry) }
+                .padding(16.dp)
+                .testTag("tide_height"),
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        IconButton(
+            modifier = Modifier
+                .size(24.dp)
+                .testTag("delete"),
+            onClick = { onEntryDelete(entry) }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_cancel),
+                contentDescription = stringResource(R.string.delete),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
+}
 
+@Preview(showBackground = true)
+@Composable
+private fun CreateTideScreenPreview() {
+    TrailSenseTheme {
+        CreateTideScreen(
+            name = "Harbor",
+            location = null,
+            isSemidiurnal = true,
+            estimateType = EstimateType.Clock,
+            estimateTypes = listOf(
+                EstimateType.Clock,
+                EstimateType.LunitidalIntervalAuto,
+                EstimateType.TideModel
+            ),
+            estimateTypeNames = mapOf(
+                EstimateType.Clock to "Tide clock",
+                EstimateType.LunitidalIntervalAuto to "Lunitidal interval",
+                EstimateType.TideModel to "Tide model"
+            ),
+            estimateTypeDescriptions = emptyMap(),
+            lunitidalInterval = null,
+            tideEntries = emptyList(),
+            tideEntryScrollRequest = 0,
+            canSave = false,
+            isLocationRequired = false,
+            isDurationVisible = false,
+            isTideTableRequired = true,
+            formatService = FormatService.getInstance(androidx.compose.ui.platform.LocalContext.current),
+            onNameChange = {},
+            onLocationChange = {},
+            onFrequencyChange = {},
+            onEstimateTypeChange = {},
+            onLunitidalIntervalChange = {},
+            onAddTideEntry = {},
+            onTideEntryChange = {},
+            onTideEntryDelete = {},
+            onTideTimeClick = {},
+            onTideHeightClick = {},
+            onHelp = {},
+            onSave = {},
+            onLocationCreated = {}
+        )
+    }
 }

@@ -27,6 +27,10 @@
     <item name="add_tide_entry" type="id" />
     <item name="tide_times" type="id" />
     <item name="time" type="id" />
+    <item name="tide_type" type="id" />
+    <item name="tide_time" type="id" />
+    <item name="tide_height" type="id" />
+    <item name="delete" type="id" />
     <item name="coordinator" type="id" />
     <item name="color_filter" type="id" />
     <item name="error_banner" type="id" />

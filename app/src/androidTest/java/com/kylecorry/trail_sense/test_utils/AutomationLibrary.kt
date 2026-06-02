@@ -63,6 +63,24 @@ object AutomationLibrary {
     }
 
     fun hasText(
+        viewLookup: () -> TestView,
+        text: String,
+        ignoreCase: Boolean = false,
+        checkDescendants: Boolean = true,
+        exact: Boolean = false,
+        waitForTime: Long? = null
+    ) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            viewLookup().hasText(
+                text,
+                ignoreCase = ignoreCase,
+                checkDescendants = checkDescendants,
+                contains = !exact
+            )
+        }
+    }
+
+    fun hasText(
         id: Int,
         checkDescendants: Boolean = true,
         message: String? = null,
@@ -72,6 +90,22 @@ object AutomationLibrary {
     ) {
         waitFor(resolveWaitForTime(waitForTime)) {
             view(id, index = index, packageName = packageName).hasText(
+                checkDescendants = checkDescendants,
+                message = message,
+                predicate = predicate
+            )
+        }
+    }
+
+    fun hasText(
+        viewLookup: () -> TestView,
+        checkDescendants: Boolean = true,
+        message: String? = null,
+        waitForTime: Long? = null,
+        predicate: (String) -> Boolean
+    ) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            viewLookup().hasText(
                 checkDescendants = checkDescendants,
                 message = message,
                 predicate = predicate
