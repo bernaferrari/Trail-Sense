@@ -147,6 +147,8 @@
     <item name="clinometer_mode_btn" type="id" />
     <item name="clinometer_measure_btn" type="id" />
     <item name="clinometer" type="id" />
+    <item name="capture_button" type="id" />
+    <item name="loading_indicator" type="id" />
     <item name="camera_view_holder" type="id" />
     <item name="camera" type="id" />
     <item name="ar_view" type="id" />

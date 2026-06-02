@@ -1,149 +1,290 @@
 package com.kylecorry.trail_sense.shared.camera
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.DialogInterface
+import android.os.Bundle
+import android.view.Gravity
 import android.view.KeyEvent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
+import androidx.camera.view.PreviewView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
+import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.views.toolbar.Toolbar
+import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.extensions.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.shared.views.compose.Toolbar
+import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.navigation.ui.LinearCompassView
+import kotlinx.coroutines.Dispatchers
 
-/**
- * Compose migration of sighting compass capture sheet (Field Guide / bearing sighting related).
- * Uses AndroidView for the heavy CameraView + LinearCompassView (custom repo views with other consumers).
- * Volume key + bearing display + capture replicated.
- * Full live FOV sync and camera lifecycle preserved via effects.
- * Note: For complete expressive camera UI overhaul this can become pure Compose camera in future.
- */
 class SightingCompassBottomSheetFragment(
     private val onSelect: (bearing: Float?) -> Unit
-) : TrailSenseComposeFragment() {
+) : FullscreenDialogFragment() {
 
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    private var compassViews: SightingCompassViews? = null
+    private val binding: SightingCompassViews
+        get() = compassViews ?: error("Sighting compass views are not ready")
 
-    // Bearing can be driven externally (setter was public API); keep for compatibility
     var bearing: Float? = null
         set(value) {
             field = value
-            // In pure compose the state flows via recomposition in content
+            if (compassViews != null) {
+                updateUI()
+            }
         }
 
-    @Composable
-    override fun FragmentContent() {
-        var currentBearing by remember { mutableStateOf(bearing) }
+    private val fovRunner = CoroutineQueueRunner(1, dispatcher = Dispatchers.Default)
 
-        // Volume keys for capture (effect)
-        LaunchedEffect(Unit) {
-            // Note: dialog key listener is activity level; in practice parent or andromeda handles.
-            // For full fidelity the host activity can forward volume.
-        }
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            Toolbar(
-                title = currentBearing?.let { formatter.formatDegrees(it) } ?: "Sighting Compass",
-                rightButtonIcon = com.kylecorry.trail_sense.R.drawable.ic_cancel,
-                isRightButtonVisible = true,
-                modifier = Modifier.fillMaxWidth()
-            ) { /* right clicked */ 
-                onSelect(null)
-                // dismiss handled by caller or nav
-            }
-
-            // Camera + overlays + compass stack - using AndroidView for the complex legacy custom views
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                // CameraView (the main live preview from shared.views.CameraView)
-                AndroidView(
-                    factory = { ctx ->
-                        com.kylecorry.trail_sense.shared.views.CameraView(ctx, null).apply {
-                            setScaleType(androidx.camera.view.PreviewView.ScaleType.FIT_CENTER)
-                            start(
-                                lifecycleOwner = this@SightingCompassBottomSheetFragment,
-                                readFrames = false,
-                                shouldStabilizePreview = false
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Center reticle line (simple)
-                androidx.compose.foundation.layout.Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .height(2.dp)
-                ) {
-                    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                        drawLine(
-                            color = androidx.compose.ui.graphics.Color(context.getColor(com.kylecorry.trail_sense.R.color.colorPrimary)),
-                            start = androidx.compose.ui.geometry.Offset(0f, size.height / 2),
-                            end = androidx.compose.ui.geometry.Offset(size.width, size.height / 2),
-                            strokeWidth = 3f
-                        )
-                    }
-                }
-
-                // Linear compass overlay (the sighting one or LinearCompassView)
-                AndroidView(
-                    factory = { ctx ->
-                        LinearCompassView(ctx, null).apply {
-                            // initial
-                            azimuth = currentBearing ?: 0f
-                        }
-                    },
-                    update = { view ->
-                        view.azimuth = currentBearing ?: 0f
-                        // FOV sync would require exposing camera fov; left as TODO for expressive sweep
-                    },
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .fillMaxWidth()
-                        .height(100.dp)
-                )
-            }
-
-            // Capture button area
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(onClick = {
-                    onSelect(currentBearing)
-                    // Dismiss responsibility on caller (dialog or nav)
-                }) {
-                    Text("Capture Bearing")
+    @SuppressLint("UnsafeOptInUsageError")
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val views = createSightingCompassViews(requireContext())
+        compassViews = views
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    SightingCompassHost(
+                        views = views,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }
     }
 
-    // Keep public API for existing BearingInputView callers
-    fun setBearing(value: Float?) {
-        bearing = value
+    @SuppressLint("UnsafeOptInUsageError")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val volumeKeys = listOf(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP)
+        dialog?.setOnKeyListener { _, keyCode, event ->
+            if (!volumeKeys.contains(keyCode) || event.action != KeyEvent.ACTION_DOWN) {
+                return@setOnKeyListener false
+            }
+            confirmBearing()
+            true
+        }
+
+        dialog?.setOnCancelListener { onSelect(null) }
+
+        // TODO: Width should always match parent, height can be cropped
+        binding.camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
+        binding.camera.start(
+            lifecycleOwner = this,
+            readFrames = false,
+            shouldStabilizePreview = false
+        )
+
+        binding.toolTitle.rightButton.setOnClickListener {
+            onSelect(null)
+            dismiss()
+        }
+
+        binding.captureButton.setOnClickListener {
+            confirmBearing()
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+                bottomMargin = insets.bottom
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            windowInsets
+        }
+
+        updateUI()
     }
+
+    private fun updateUI() {
+        val views = compassViews ?: return
+        inBackground {
+            fovRunner.enqueue {
+                if (compassViews == null) {
+                    return@enqueue
+                }
+                val minimumFOV = 5f
+                val range = views.camera.fov.first.coerceAtLeast(minimumFOV)
+                onMain {
+                    compassViews?.linearCompass?.range = range
+                }
+            }
+        }
+
+        views.toolTitle.title.text = bearing?.let { formatter.formatDegrees(it) } ?: ""
+        views.linearCompass.azimuth = bearing ?: 0f
+    }
+
+    private fun confirmBearing() {
+        onSelect(bearing)
+        dismiss()
+    }
+
+    override fun onDestroyView() {
+        compassViews?.camera?.stop()
+        fovRunner.cancel()
+        compassViews = null
+        super.onDestroyView()
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        compassViews?.camera?.stop()
+    }
+}
+
+private data class SightingCompassViews(
+    val root: View,
+    val toolTitle: Toolbar,
+    val camera: CameraView,
+    val linearCompass: LinearCompassView,
+    val captureButton: ShutterButton,
+    val loadingIndicator: CircularProgressIndicator
+)
+
+@Composable
+private fun SightingCompassHost(
+    views: SightingCompassViews,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { views.root }
+    )
+}
+
+private fun createSightingCompassViews(context: Context): SightingCompassViews {
+    val root = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    val title = Toolbar(context, null).apply {
+        id = R.id.tool_title
+        subtitle.isVisible = false
+        rightButton.setImageResource(R.drawable.ic_cancel)
+        rightButton.isVisible = true
+    }
+    root.addView(
+        title,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    val camera = CameraView(context, null).apply {
+        id = R.id.camera
+    }
+    val linearCompass = LinearCompassView(context, null).apply {
+        id = R.id.linear_compass
+    }
+    val cameraFrame = FrameLayout(context)
+    cameraFrame.addView(
+        camera,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    )
+    cameraFrame.addView(
+        View(context).apply {
+            id = R.id.view_camera_line
+            setBackgroundColor(Resources.getPrimaryColor(context))
+        },
+        FrameLayout.LayoutParams(
+            Resources.dp(context, 1f).toInt(),
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        )
+    )
+    cameraFrame.addView(
+        linearCompass,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Resources.dp(context, 100f).toInt(),
+            Gravity.CENTER
+        )
+    )
+    root.addView(
+        cameraFrame,
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            0,
+            1f
+        )
+    )
+
+    val captureButton = ShutterButton(context).apply {
+        id = R.id.capture_button
+        contentDescription = context.getString(R.string.camera_capture)
+    }
+    val loadingIndicator = CircularProgressIndicator(context).apply {
+        id = R.id.loading_indicator
+        isIndeterminate = true
+        isInvisible = true
+    }
+    val captureFrame = FrameLayout(context).apply {
+        foregroundGravity = Gravity.CENTER
+    }
+    captureFrame.addView(
+        captureButton,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        )
+    )
+    captureFrame.addView(
+        loadingIndicator,
+        FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER
+        )
+    )
+    root.addView(
+        captureFrame,
+        LinearLayout.LayoutParams(
+            Resources.dp(context, 64f).toInt(),
+            Resources.dp(context, 64f).toInt()
+        ).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            topMargin = Resources.dp(context, 16f).toInt()
+            bottomMargin = Resources.dp(context, 16f).toInt()
+        }
+    )
+
+    return SightingCompassViews(root, title, camera, linearCompass, captureButton, loadingIndicator)
 }
