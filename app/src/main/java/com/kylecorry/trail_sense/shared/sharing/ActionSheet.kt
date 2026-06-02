@@ -1,32 +1,34 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.isVisible
-import androidx.core.view.setMargins
-import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.FlexboxLayout
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.JustifyContent
+import androidx.compose.ui.unit.dp
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.TileButton
 
 class ActionSheet(
     private val title: String,
@@ -35,63 +37,26 @@ class ActionSheet(
     private val onAction: (action: ActionItem?, sheet: ActionSheet) -> Unit
 ) : BottomSheetDialogFragment() {
 
-    private var actionSheetViews: ActionSheetViews? = null
-    private val binding: ActionSheetViews
-        get() = actionSheetViews ?: error("Action sheet views are not ready")
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createActionSheetViews(requireContext())
-        actionSheetViews = views
         return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
             setContent {
                 TrailSenseTheme {
-                    ActionSheetHost(
-                        views = views,
+                    ActionSheetContent(
+                        title = title,
+                        subtitle = subtitle,
+                        actions = actions,
+                        onAction = { onAction(it, this@ActionSheet) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
-        }
-    }
-
-    override fun onDestroyView() {
-        actionSheetViews = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.shareSheetTitle.title.text = title
-        binding.shareSheetTitle.subtitle.isVisible = subtitle != null
-        binding.shareSheetTitle.subtitle.text = subtitle
-
-        // Insert custom view between toolbar and action buttons if provided
-        customView?.let { cv ->
-            (cv.parent as? ViewGroup)?.removeView(cv)
-            val idx = binding.root.indexOfChild(binding.shareSheetItems)
-            binding.root.addView(cv, idx)
-        }
-
-        actions.forEach { action ->
-            val tile = TileButton(requireContext(), null)
-            tile.setText(action.name)
-            tile.setImageResource(action.icon)
-            tile.setTilePadding(Resources.dp(requireContext(), 32f).toInt())
-            tile.layoutParams = FlexboxLayout.LayoutParams(
-                Resources.dp(requireContext(), 90f).toInt(),
-                Resources.dp(requireContext(), 90f).toInt()
-            ).also {
-                it.setMargins(Resources.dp(requireContext(), 8f).toInt())
-            }
-            tile.setOnClickListener {
-                onAction(action, this)
-            }
-            binding.shareSheetItems.addView(tile)
         }
     }
 
@@ -101,72 +66,100 @@ class ActionSheet(
     }
 }
 
-private data class ActionSheetViews(
-    val root: View,
-    val shareSheetTitle: Toolbar,
-    val shareSheetItems: FlexboxLayout
-)
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ActionSheetHost(
-    views: ActionSheetViews,
+private fun ActionSheetContent(
+    title: String,
+    subtitle: String?,
+    actions: List<ActionItem>,
+    onAction: (ActionItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createActionSheetViews(context: Context): ActionSheetViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
-    }
-
-    val title = Toolbar(context, null).apply {
-        id = R.id.share_sheet_title
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = 16.dp(context)
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
-    )
-
-    val items = FlexboxLayout(context).apply {
-        id = R.id.share_sheet_items
-        alignItems = AlignItems.CENTER
-        flexWrap = FlexWrap.WRAP
-        justifyContent = JustifyContent.CENTER
+        FlowRow(
+            modifier = Modifier.padding(top = 16.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Center,
+            maxItemsInEachRow = 4
+        ) {
+            actions.forEach { action ->
+                ActionTile(
+                    action = action,
+                    onClick = { onAction(action) },
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+        }
     }
-    root.addView(
-        items,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    return ActionSheetViews(root, title, items)
 }
 
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
+@Composable
+private fun ActionTile(
+    action: ActionItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .size(90.dp)
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(action.icon),
+                contentDescription = action.name,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(28.dp)
+            )
+            Text(
+                text = action.name,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ActionSheetHostPreview() {
+private fun ActionSheetContentPreview() {
     TrailSenseTheme {
-        ActionSheetHost(
-            views = createActionSheetViews(LocalContext.current)
+        ActionSheetContent(
+            title = "Share",
+            subtitle = "Choose a format",
+            actions = listOf(
+                ActionItem("Text", R.drawable.ic_altitude, {}),
+                ActionItem("QR", R.drawable.ic_qr_code, {}),
+                ActionItem("Map", R.drawable.ic_map_group, {})
+            ),
+            onAction = {}
         )
     }
 }
