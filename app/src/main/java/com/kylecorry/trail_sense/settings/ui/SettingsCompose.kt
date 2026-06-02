@@ -129,3 +129,20 @@ fun SettingsActionRow(
     )
     TrailSenseDivider()
 }
+
+@Composable
+fun SettingsPickerRow(
+    label: String,
+    selected: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    SettingsActionRow(
+        label = label,
+        summary = selected,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled
+    )
+}
