@@ -331,6 +331,18 @@
     <item name="units" type="id" />
     <item name="secondary_amount_holder" type="id" />
     <item name="secondary_amount" type="id" />
+    <item name="location_edit_holder" type="id" />
+    <item name="utm" type="id" />
+    <item name="coordinate_input_help_btn" type="id" />
+    <item name="compass_autofill_holder" type="id" />
+    <item name="compass_btn" type="id" />
+    <item name="compass_bearing" type="id" />
+    <item name="bearing" type="id" />
+    <item name="north_reference_badge" type="id" />
+    <item name="manual_bearing" type="id" />
+    <item name="clear_btn" type="id" />
+    <item name="camera_btn" type="id" />
+    <item name="true_north" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />

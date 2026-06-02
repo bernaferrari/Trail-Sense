@@ -1,18 +1,22 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.loadingindicator.LoadingIndicator
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.luna.time.CoroutineTimer
@@ -72,19 +76,82 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
     private val mapPicker = MapLocationPicker()
     private lateinit var locationEdit: EditText
     private lateinit var locationEditHolder: TextInputLayout
-    private lateinit var gpsBtn: MaterialButton
+    private lateinit var gpsBtn: ImageButton
     private lateinit var helpBtn: ImageButton
     private lateinit var gpsLoadingIndicator: LoadingIndicator
 
     init {
         context?.let {
-            inflate(it, R.layout.view_coordinate_input, this)
+            orientation = HORIZONTAL
+
+            val iconSize = Resources.dp(it, 32f).toInt()
+            val iconPadding = Resources.dp(it, 8f).toInt()
+            gpsBtn = ImageButton(it).apply {
+                id = R.id.gps_btn
+                elevation = Resources.dp(it, 4f)
+                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
+                setImageResource(R.drawable.ic_location)
+                setBackgroundResource(R.drawable.rounded_rectangle)
+            }
+            addView(
+                gpsBtn,
+                LayoutParams(iconSize, iconSize).apply {
+                    gravity = Gravity.CENTER
+                    marginEnd = iconPadding
+                }
+            )
+
+            gpsLoadingIndicator = ProgressBar(it, null, android.R.attr.progressBarStyle).apply {
+                id = R.id.gps_loading
+                isIndeterminate = true
+                visibility = View.INVISIBLE
+            }
+            addView(
+                gpsLoadingIndicator,
+                LayoutParams(iconSize, iconSize).apply {
+                    gravity = Gravity.CENTER
+                    marginEnd = iconPadding
+                }
+            )
+
+            locationEditHolder = TextInputLayout(it).apply {
+                id = R.id.location_edit_holder
+                hint = it.getString(R.string.location)
+            }
+            locationEdit = TextInputEditText(it).apply {
+                id = R.id.utm
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            }
+            locationEditHolder.addView(
+                locationEdit,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+            addView(
+                locationEditHolder,
+                LayoutParams(
+                    0,
+                    LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
+
+            helpBtn = ImageButton(it).apply {
+                id = R.id.coordinate_input_help_btn
+                background = null
+                setImageResource(R.drawable.ic_help)
+                imageTintList = ColorStateList.valueOf(Resources.androidTextColorPrimary(it))
+            }
+            addView(
+                helpBtn,
+                LayoutParams(iconSize, iconSize).apply {
+                    gravity = Gravity.CENTER
+                }
+            )
+
             gps = sensorService.getGPS()
-            locationEdit = findViewById(R.id.utm)
-            gpsLoadingIndicator = findViewById(R.id.gps_loading)
-            helpBtn = findViewById(R.id.coordinate_input_help_btn)
-            gpsBtn = findViewById(R.id.gps_btn)
-            locationEditHolder = findViewById(R.id.location_edit_holder)
 
             gpsBtn.visibility = View.VISIBLE
             gpsLoadingIndicator.visibility = View.GONE
