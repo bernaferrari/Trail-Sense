@@ -307,6 +307,8 @@
     <item name="fab_menu" type="id" />
     <item name="fab_text" type="id" />
     <item name="fab" type="id" />
+    <item name="material_spinner_holder" type="id" />
+    <item name="material_spinner_edittext" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />
