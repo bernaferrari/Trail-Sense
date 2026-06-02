@@ -32,7 +32,6 @@ import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
@@ -344,7 +343,7 @@ class PedometerSettingsFragment : Fragment() {
     }
 
     private fun formatStrideLength(distance: Distance): String {
-        return formatter.formatDistance(distance, 2.coerceAtLeast(Units.getDecimalPlaces(distance.units)))
+        return formatter.formatDistance(distance, 2)
     }
 
     private fun isPermissionRequestVisible(enabled: Boolean): Boolean {
