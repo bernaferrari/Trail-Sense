@@ -1,67 +1,92 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.isVisible
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
 
 class LocationBottomSheet : BottomSheetDialogFragment() {
 
     var gps: ISatelliteGPS? = null
-    private var locationViews: LocationViews? = null
-    private val binding: LocationViews?
-        get() = locationViews
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private var format = BuiltInCoordinateFormat.DecimalDegrees
-
-    private val intervalometer = CoroutineTimer {
-        updateUI()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createLocationViews(requireContext())
-        locationViews = views
+        format = prefs.navigation.coordinateFormat
+
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    LocationHost(
-                        views = views,
+                    LocationSheet(
+                        initialFormat = format,
+                        getState = ::getState,
+                        onFormatSelected = { format = it },
+                        onPickFormat = ::pickFormat,
+                        onShare = share@{
+                            val location = gps?.location ?: return@share
+                            Share.shareLocation(this@LocationBottomSheet, location, format)
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -69,188 +94,268 @@ class LocationBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    override fun onDestroyView() {
-        locationViews = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val views = binding ?: return
-
-        format = prefs.navigation.coordinateFormat
-
-        views.locationTitle.subtitle.setCompoundDrawables(
-            Resources.dp(requireContext(), 24f).toInt(),
-            right = R.drawable.ic_drop_down
-        )
-        CustomUiUtils.setImageColor(
-            views.locationTitle.subtitle,
-            Resources.androidTextColorSecondary(requireContext())
-        )
-        views.locationTitle.subtitle.text = formatService.formatCoordinateType(format)
-
-        views.locationTitle.subtitle.setOnClickListener {
-            val formats = BuiltInCoordinateFormat.entries
-            val formatStrings = formats.map { formatService.formatCoordinateType(it) }
-            Pickers.item(
-                requireContext(),
-                getString(R.string.pref_coordinate_format_title),
-                formatStrings,
-                defaultSelectedIndex = formats.indexOf(format)
-            ) {
-                if (it != null) {
-                    format = formats[it]
-                    views.locationTitle.subtitle.text = formatStrings[it]
-                    updateUI()
-                }
+    private fun pickFormat(
+        currentFormat: BuiltInCoordinateFormat,
+        onSelected: (BuiltInCoordinateFormat) -> Unit
+    ) {
+        val formats = BuiltInCoordinateFormat.entries
+        val formatStrings = formats.map { formatService.formatCoordinateType(it) }
+        Pickers.item(
+            requireContext(),
+            getString(R.string.pref_coordinate_format_title),
+            formatStrings,
+            defaultSelectedIndex = formats.indexOf(currentFormat)
+        ) {
+            if (it != null) {
+                onSelected(formats[it])
             }
         }
+    }
 
-        views.locationTitle.rightButton.setOnClickListener {
-            Share.shareLocation(
-                this,
-                gps?.location ?: return@setOnClickListener,
-                format
+    private fun getState(format: BuiltInCoordinateFormat): LocationSheetState {
+        val gps = this.gps
+        if (gps == null) {
+            return LocationSheetState(
+                location = "",
+                coordinateFormat = formatService.formatCoordinateType(format),
+                datum = getString(R.string.wgs84)
             )
         }
-    }
 
-    override fun onResume() {
-        super.onResume()
-        intervalometer.interval(100)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        intervalometer.stop()
-    }
-
-    private fun updateUI() {
-        val views = binding ?: return
-
-        val gps = this.gps ?: return
-
-        views.locationTitle.title.text = formatService.formatLocation(gps.location, format)
-        views.satellites.text = getString(R.string.num_satellites, gps.satellites ?: 0)
-
-        val accuracy = gps.horizontalAccuracy
-        views.accuracy.isVisible = accuracy != null
-        if (accuracy != null) {
+        val accuracy = gps.horizontalAccuracy?.let {
             val accuracyStr = formatService.formatDistance(
-                Distance.meters(accuracy).convertTo(prefs.baseDistanceUnits)
+                Distance.meters(it).convertTo(prefs.baseDistanceUnits)
             )
-            views.accuracy.text = getString(R.string.accuracy_distance_format, accuracyStr)
+            getString(R.string.accuracy_distance_format, accuracyStr)
         }
 
         val timeAgo = Duration.between(gps.time, Instant.now())
-        views.time.text = getString(R.string.time_ago, formatService.formatDuration(timeAgo))
+        return LocationSheetState(
+            location = formatService.formatLocation(gps.location, format),
+            coordinateFormat = formatService.formatCoordinateType(format),
+            accuracy = accuracy,
+            satellites = getString(R.string.num_satellites, gps.satellites ?: 0),
+            time = getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+            datum = getString(R.string.wgs84)
+        )
     }
 }
 
-private data class LocationViews(
-    val root: View,
-    val locationTitle: Toolbar,
-    val accuracy: TextView,
-    val satellites: TextView,
-    val time: TextView,
-    val datum: TextView
+private data class LocationSheetState(
+    val location: String,
+    val coordinateFormat: String,
+    val accuracy: String? = null,
+    val satellites: String? = null,
+    val time: String? = null,
+    val datum: String
 )
 
 @Composable
-private fun LocationHost(
-    views: LocationViews,
+private fun LocationSheet(
+    initialFormat: BuiltInCoordinateFormat,
+    getState: (BuiltInCoordinateFormat) -> LocationSheetState,
+    onFormatSelected: (BuiltInCoordinateFormat) -> Unit,
+    onPickFormat: (BuiltInCoordinateFormat, (BuiltInCoordinateFormat) -> Unit) -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var selectedFormat by remember(initialFormat) { mutableStateOf(initialFormat) }
+    var state by remember(selectedFormat) { mutableStateOf(getState(selectedFormat)) }
+    var isResumed by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> isResumed = true
+                Lifecycle.Event.ON_PAUSE -> isResumed = false
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(isResumed, selectedFormat) {
+        state = getState(selectedFormat)
+        if (!isResumed) {
+            return@LaunchedEffect
+        }
+
+        while (isActive) {
+            delay(100)
+            state = getState(selectedFormat)
+        }
+    }
+
+    LocationSheetContent(
+        state = state,
+        onFormatClick = {
+            onPickFormat(selectedFormat) {
+                selectedFormat = it
+                onFormatSelected(it)
+                state = getState(it)
+            }
+        },
+        onShare = onShare,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun LocationSheetContent(
+    state: LocationSheetState,
+    onFormatClick: () -> Unit,
+    onShare: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
         modifier = modifier,
-        factory = { views.root }
-    )
-}
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 48.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = state.location,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.testTag("location_title")
+                    )
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clickable(onClick = onFormatClick)
+                            .testTag("location_format"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = state.coordinateFormat,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = onShare,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .testTag("location_share")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
-private fun createLocationViews(context: Context): LocationViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
+            LocationStats(state)
 
-    val title = Toolbar(context, null).apply {
-        id = R.id.location_title
-        rightButton.setImageResource(R.drawable.ic_share)
-        rightButton.isVisible = true
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val stats = LinearLayout(context).apply {
-        orientation = LinearLayout.HORIZONTAL
-    }
-    root.addView(
-        stats,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = 8.dp(context)
+            Row(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .testTag("datum"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_datum),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = state.datum,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun LocationStats(state: LocationSheetState) {
+    val stats = listOfNotNull(
+        state.accuracy?.let { "accuracy" to it },
+        state.satellites?.let { "satellites" to it },
+        state.time?.let { "time" to it }
     )
 
-    val accuracy = createCenteredStat(context, R.id.accuracy)
-    stats.addView(accuracy, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-
-    val satellites = createCenteredStat(context, R.id.satellites)
-    stats.addView(satellites, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-
-    val time = createCenteredStat(context, R.id.time)
-    stats.addView(time, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-
-    val datum = TextView(context).apply {
-        id = R.id.datum
-        text = context.getString(R.string.wgs84)
-        gravity = android.view.Gravity.CENTER_VERTICAL
-        compoundDrawablePadding = 8.dp(context)
-        setCompoundDrawables(24.dp(context), left = R.drawable.ic_datum)
-        CustomUiUtils.setImageColor(this, Resources.androidTextColorSecondary(context))
+    if (stats.isEmpty()) {
+        return
     }
-    root.addView(
-        datum,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = android.view.Gravity.CENTER_HORIZONTAL
-            topMargin = 16.dp(context)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        stats.forEach { (tag, text) ->
+            LocationStat(
+                text = text,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(tag)
+            )
         }
-    )
-
-    return LocationViews(root, title, accuracy, satellites, time, datum)
-}
-
-private fun createCenteredStat(context: Context, id: Int): TextView {
-    return TextView(context).apply {
-        this.id = id
-        textAlignment = View.TEXT_ALIGNMENT_CENTER
     }
 }
 
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
+@Composable
+private fun LocationStat(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center,
+        modifier = modifier.padding(horizontal = 4.dp)
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun LocationHostPreview() {
+private fun LocationSheetContentPreview() {
     TrailSenseTheme {
-        LocationHost(
-            views = createLocationViews(LocalContext.current)
+        LocationSheetContent(
+            state = LocationSheetState(
+                location = "40.7128, -74.0060",
+                coordinateFormat = "Decimal degrees",
+                accuracy = "5 m accuracy",
+                satellites = "8 satellites",
+                time = "1 min ago",
+                datum = stringResource(R.string.wgs84)
+            ),
+            onFormatClick = {},
+            onShare = {}
         )
     }
 }
