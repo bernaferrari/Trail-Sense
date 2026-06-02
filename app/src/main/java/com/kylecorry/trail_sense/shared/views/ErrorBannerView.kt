@@ -1,17 +1,27 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ViewErrorBannerBinding
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 class ErrorBannerView(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
-    private val binding: ViewErrorBannerBinding
+    private val errorIcon: ImageView
+    private val errorText: TextView
+    private val errorAction: Button
+    private val errorClose: ImageButton
 
     private val errors: MutableList<UserError> = mutableListOf()
 
@@ -21,15 +31,95 @@ class ErrorBannerView(context: Context, attrs: AttributeSet?) : ConstraintLayout
     private var overallAction: (() -> Unit)? = null
 
     init {
-        inflate(context, R.layout.view_error_banner, this)
-        binding = ViewErrorBannerBinding.bind(this)
-        binding.errorBanner.setOnClickListener {
+        setBackgroundColor(context.getColor(R.color.red))
+        minHeight = Resources.dp(context, 64f).toInt()
+        setPadding(
+            Resources.dp(context, 4f).toInt(),
+            Resources.dp(context, 4f).toInt(),
+            Resources.dp(context, 4f).toInt(),
+            Resources.dp(context, 4f).toInt()
+        )
+
+        errorIcon = ImageView(context).apply {
+            id = R.id.error_icon
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setImageResource(R.drawable.satellite)
+            setColorFilter(Color.BLACK)
+        }
+        addView(
+            errorIcon,
+            LayoutParams(
+                Resources.dp(context, 16f).toInt(),
+                Resources.dp(context, 16f).toInt()
+            ).apply {
+                marginStart = Resources.dp(context, 12f).toInt()
+                startToStart = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
+        errorClose = ImageButton(context).apply {
+            id = R.id.error_close
+            background = AppCompatResources.getDrawable(context, android.R.color.transparent)
+            setImageResource(R.drawable.ic_cancel)
+            setColorFilter(Color.BLACK)
+        }
+        addView(
+            errorClose,
+            LayoutParams(
+                Resources.dp(context, 32f).toInt(),
+                Resources.dp(context, 32f).toInt()
+            ).apply {
+                marginEnd = Resources.dp(context, 12f).toInt()
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
+        errorAction = Button(context).apply {
+            id = R.id.error_action
+        }
+        addView(
+            errorAction,
+            LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = Resources.dp(context, 12f).toInt()
+                endToStart = R.id.error_close
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
+        errorText = TextView(context).apply {
+            id = R.id.error_text
+            setTextColor(Color.BLACK)
+        }
+        addView(
+            errorText,
+            LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = Resources.dp(context, 8f).toInt()
+                marginEnd = Resources.dp(context, 8f).toInt()
+                startToEnd = R.id.error_icon
+                endToStart = R.id.error_action
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
+        )
+
+        setOnClickListener {
             overallAction?.invoke()
         }
-        binding.errorAction.setOnClickListener {
+        errorAction.setOnClickListener {
             onAction?.invoke()
         }
-        binding.errorClose.setOnClickListener {
+        errorClose.setOnClickListener {
             val reason = synchronized(this) {
                 errors.firstOrNull()?.reason
             }
@@ -79,11 +169,11 @@ class ErrorBannerView(context: Context, attrs: AttributeSet?) : ConstraintLayout
     }
 
     private fun displayError(error: UserError) {
-        binding.errorText.text = error.title
-        binding.errorAction.text = error.action
-        binding.errorIcon.setImageResource(error.icon)
+        errorText.text = error.title
+        errorAction.text = error.action
+        errorIcon.setImageResource(error.icon)
         onAction = error.onAction
-        binding.errorAction.isVisible = !error.action.isNullOrEmpty()
+        errorAction.isVisible = !error.action.isNullOrEmpty()
         overallAction = if (error.action == null) {
             error.onAction
         } else {

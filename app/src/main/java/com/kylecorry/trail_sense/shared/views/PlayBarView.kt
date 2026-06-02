@@ -2,29 +2,35 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.Gravity
 import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.databinding.ViewPlayBarBinding
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import java.time.Duration
 
 class PlayBarView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
-    private val binding: ViewPlayBarBinding
+    private val playBarTitle: DataPointView
+    private val playButton: ImageButton
 
     var title: String
-        get() = binding.playBarTitle.title
+        get() = playBarTitle.title
         set(value) {
-            binding.playBarTitle.title = value
+            playBarTitle.title = value
         }
 
     var subtitle: String
-        get() = binding.playBarTitle.description
+        get() = playBarTitle.description
         set(value) {
             useDefaultSubtitle = false
-            binding.playBarTitle.description = value
+            playBarTitle.description = value
         }
 
     private val formatter = FormatService.getInstance(context)
@@ -32,8 +38,64 @@ class PlayBarView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
     private var useDefaultSubtitle: Boolean = true
 
     init {
-        inflate(context, R.layout.view_play_bar, this)
-        binding = ViewPlayBarBinding.bind(findViewById(R.id.play_bar))
+        val playBar = LinearLayout(context).apply {
+            id = R.id.play_bar
+            background = AppCompatResources.getDrawable(context, R.drawable.rounded_rectangle)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                Resources.getAndroidColorAttr(
+                    context,
+                    com.google.android.material.R.attr.colorSurfaceContainer
+                )
+            )
+            gravity = Gravity.CENTER
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(
+                Resources.dp(context, 16f).toInt(),
+                Resources.dp(context, 16f).toInt(),
+                Resources.dp(context, 16f).toInt(),
+                Resources.dp(context, 16f).toInt()
+            )
+        }
+        addView(
+            playBar,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        playBarTitle = DataPointView(context, null).apply {
+            id = R.id.play_bar_title
+        }
+        playBar.addView(
+            playBarTitle,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        )
+
+        playButton = ImageButton(context).apply {
+            id = R.id.play_btn
+            background = AppCompatResources.getDrawable(context, R.drawable.rounded_rectangle)
+            elevation = Resources.dp(context, 2f)
+        }
+        playBar.addView(
+            playButton,
+            LinearLayout.LayoutParams(
+                Resources.dp(context, 40f).toInt(),
+                Resources.dp(context, 40f).toInt()
+            ).apply {
+                setMargins(
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt(),
+                    Resources.dp(context, 2f).toInt()
+                )
+            }
+        )
+
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.PlayBarView, 0, 0)
         val icon = a.getResourceId(R.styleable.PlayBarView_playBarIcon, -1)
         setImageResource(if (icon == -1) null else icon)
@@ -47,11 +109,11 @@ class PlayBarView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
     }
 
     fun setImageResource(@DrawableRes res: Int?) {
-        binding.playBarTitle.setImageResource(res)
+        playBarTitle.setImageResource(res)
     }
 
     fun setShowSubtitle(showSubtitle: Boolean) {
-        binding.playBarTitle.setShowDescription(showSubtitle)
+        playBarTitle.setShowDescription(showSubtitle)
     }
 
     fun setState(state: FeatureState, frequency: Duration? = null) {
@@ -59,10 +121,9 @@ class PlayBarView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
     }
 
     fun setState(isOn: Boolean, frequency: Duration? = null) {
-        binding.playBtn.setIconResource(if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24)
-        binding.playBtn.isChecked = isOn
+        playButton.setImageResource(if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24)
         if (useDefaultSubtitle) {
-            binding.playBarTitle.description = if (isOn) {
+            playBarTitle.description = if (isOn) {
                 context.getString(R.string.on)
             } else {
                 context.getString(R.string.off)
@@ -76,14 +137,15 @@ class PlayBarView(context: Context, attrs: AttributeSet?) : FrameLayout(context,
                 }"
             } ?: "")
         }
+        CustomUiUtils.setButtonState(playButton, true)
     }
 
     fun setOnSubtitleClickListener(action: (() -> Unit)?) {
-        binding.playBarTitle.setOnDescriptionClickListener(action)
+        playBarTitle.setOnDescriptionClickListener(action)
     }
 
     fun setOnPlayButtonClickListener(action: () -> Unit) {
-        binding.playBtn.setOnClickListener { action() }
+        playButton.setOnClickListener { action() }
     }
 
 }

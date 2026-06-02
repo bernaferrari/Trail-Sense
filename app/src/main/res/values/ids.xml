@@ -30,6 +30,10 @@
     <item name="coordinator" type="id" />
     <item name="color_filter" type="id" />
     <item name="error_banner" type="id" />
+    <item name="error_icon" type="id" />
+    <item name="error_text" type="id" />
+    <item name="error_action" type="id" />
+    <item name="error_close" type="id" />
     <item name="fragment_holder" type="id" />
     <item name="quick_actions_sheet" type="id" />
     <item name="bottom_navigation" type="id" />
@@ -214,6 +218,8 @@
     <item name="weather_list" type="id" />
     <item name="weather_updating" type="id" />
     <item name="weather_play_bar" type="id" />
+    <item name="search_view_text_input_layout" type="id" />
+    <item name="search_view_edit_text" type="id" />
     <item name="camera_toggle" type="id" />
     <item name="calibrate_btn" type="id" />
     <item name="layers_btn" type="id" />
@@ -238,6 +244,13 @@
     <item name="time_seeker" type="id" />
     <item name="sun_position_text" type="id" />
     <item name="moon_position_text" type="id" />
+    <item name="data_point" type="id" />
+    <item name="data_point_image" type="id" />
+    <item name="data_point_title" type="id" />
+    <item name="data_point_desc" type="id" />
+    <item name="play_bar" type="id" />
+    <item name="play_bar_title" type="id" />
+    <item name="play_btn" type="id" />
     <item name="astronomy_detail_list" type="id" />
     <item name="button_3d" type="id" />
     <item name="searchbox" type="id" />
