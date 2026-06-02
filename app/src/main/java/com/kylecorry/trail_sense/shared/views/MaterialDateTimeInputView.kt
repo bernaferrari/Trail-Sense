@@ -1,7 +1,9 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
+import android.text.InputType
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
@@ -25,9 +27,29 @@ class MaterialDateTimeInputView(context: Context, attrs: AttributeSet?) :
         private set
 
     init {
-        inflate(context, R.layout.view_date_time_input, this)
-        edittext = findViewById(R.id.datetime_input)
-        holder = findViewById(R.id.datetime_input_holder)
+        holder = TextInputLayout(context).apply {
+            id = R.id.datetime_input_holder
+        }
+        edittext = TextInputEditText(context).apply {
+            id = R.id.datetime_input
+            inputType = InputType.TYPE_NULL or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            isCursorVisible = false
+            isFocusable = false
+        }
+        holder.addView(
+            edittext,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+        addView(
+            holder,
+            LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
 
         setValue(datetime)
 
