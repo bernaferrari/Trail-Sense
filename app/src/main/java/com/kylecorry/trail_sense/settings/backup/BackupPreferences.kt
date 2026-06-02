@@ -16,7 +16,7 @@ class BackupPreferences(context: Context) : PreferenceRepo(context) {
         false
     )
 
-    val includeMapsforgeMaps by BooleanPreference(
+    var includeMapsforgeMaps by BooleanPreference(
         cache,
         getString(R.string.pref_include_mapsforge_backups),
         true
