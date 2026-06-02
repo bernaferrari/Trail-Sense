@@ -1,19 +1,15 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,16 +20,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
@@ -59,6 +53,9 @@ import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.chart.label.HourChartLabelFormatter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import java.time.Duration
@@ -71,7 +68,7 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private var chart: Chart? = null
-    private var updateHistoryLengthText: ((String) -> Unit)? = null
+    private var setHistorySummary: ((String) -> Unit)? = null
     private var units = DistanceUnits.Meters
     private var backtrackReadings = listOf<Reading<Float>>()
     private var weatherReadings = listOf<Reading<Float>>()
@@ -103,20 +100,24 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    var historyLengthText by remember { mutableStateOf(getHistoryLengthText()) }
+                    var historySummary by remember {
+                        mutableStateOf(formatHistoryDuration())
+                    }
+
                     DisposableEffect(Unit) {
-                        updateHistoryLengthText = { historyLengthText = it }
+                        setHistorySummary = { historySummary = it }
                         onDispose {
-                            updateHistoryLengthText = null
+                            setHistorySummary = null
                             chart = null
                         }
                     }
-                    AltitudeSheetContent(
-                        historyLengthText = historyLengthText,
-                        onHistoryLengthClick = ::pickHistoryDuration,
+
+                    AltitudeContent(
+                        historySummary = historySummary,
+                        onHistoryClick = ::pickHistoryDuration,
                         onChartReady = {
                             chart = it
-                            configureChart(it)
+                            configureChart(requireContext(), it)
                             updateChart()
                         },
                         modifier = Modifier.fillMaxSize()
@@ -124,12 +125,6 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
                 }
             }
         }
-    }
-
-    override fun onDestroyView() {
-        chart = null
-        updateHistoryLengthText = null
-        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -146,20 +141,10 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun configureChart(chart: Chart) {
-        chart.configureYAxis(
-            labelCount = 5,
-            drawGridLines = true
-        )
-
-        chart.configureXAxis(
-            labelCount = 7,
-            drawGridLines = true,
-            labelFormatter = HourChartLabelFormatter(requireContext()) { startTime }
-        )
-
-        chart.emptyText = requireContext().getString(R.string.no_data)
-        chart.plot(elevationLine)
+    override fun onDestroyView() {
+        setHistorySummary = null
+        chart = null
+        super.onDestroyView()
     }
 
     private fun pickHistoryDuration() {
@@ -173,6 +158,22 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
                 updateChart()
             }
         }
+    }
+
+    private fun configureChart(context: Context, chart: Chart) {
+        chart.configureYAxis(
+            labelCount = 5,
+            drawGridLines = true
+        )
+
+        chart.configureXAxis(
+            labelCount = 7,
+            drawGridLines = true,
+            labelFormatter = HourChartLabelFormatter(context) { startTime }
+        )
+
+        chart.emptyText = context.getString(R.string.no_data)
+        chart.plot(elevationLine)
     }
 
     private fun updateChart(readings: List<Reading<Float>>) {
@@ -196,7 +197,8 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
 
         elevationLine.data = data
         elevationLine.fillTo = range.start
-        updateHistoryLengthText?.invoke(getHistoryLengthText())
+
+        setHistorySummary?.invoke(formatHistoryDuration())
     }
 
     private fun updateChart() {
@@ -226,7 +228,7 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun getHistoryLengthText(): String {
+    private fun formatHistoryDuration(): String {
         return getString(R.string.last_duration, formatService.formatDuration(historyDuration))
     }
 
@@ -249,9 +251,9 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
 }
 
 @Composable
-private fun AltitudeSheetContent(
-    historyLengthText: String,
-    onHistoryLengthClick: () -> Unit,
+private fun AltitudeContent(
+    historySummary: String,
+    onHistoryClick: () -> Unit,
     onChartReady: (Chart) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -260,57 +262,72 @@ private fun AltitudeSheetContent(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(TrailSenseSpacing.lg)
         ) {
             Text(
                 text = stringResource(R.string.elevation_history),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.sm
+                )
             )
-            Row(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .clickable(onClick = onHistoryLengthClick)
-                    .testTag("altitude_history_length"),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = historyLengthText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            AndroidView(
+
+            TrailSenseListItem(
+                title = historySummary,
+                trailing = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_drop_down),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                onClick = onHistoryClick,
+                animateEntrance = false,
+                modifier = Modifier.testTag("altitude_history_length")
+            )
+            TrailSenseDivider()
+
+            AltitudeChartView(
+                onChartReady = onChartReady,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
                     .height(dimensionResource(R.dimen.chart_height))
-                    .testTag("chart"),
-                factory = { context ->
-                    Chart(context).apply {
-                        id = R.id.chart
-                        onChartReady(this)
-                    }
-                }
+                    .padding(top = TrailSenseSpacing.lg)
+                    .testTag("chart")
             )
         }
     }
 }
 
+@Composable
+private fun AltitudeChartView(
+    onChartReady: (Chart) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { context ->
+            Chart(context).apply {
+                id = R.id.chart
+                onChartReady(this)
+            }
+        },
+        modifier = modifier
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
-private fun AltitudeSheetContentPreview() {
+private fun AltitudeContentPreview() {
     TrailSenseTheme {
-        AltitudeSheetContent(
-            historyLengthText = "Last 24 hours",
-            onHistoryLengthClick = {},
+        AltitudeContent(
+            historySummary = "Last 24 hours",
+            onHistoryClick = {},
             onChartReady = {}
         )
     }
