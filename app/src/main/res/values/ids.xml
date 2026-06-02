@@ -27,6 +27,16 @@
     <item name="add_tide_entry" type="id" />
     <item name="tide_times" type="id" />
     <item name="time" type="id" />
+    <item name="coordinator" type="id" />
+    <item name="page_name" type="id" />
+    <item name="page_image" type="id" />
+    <item name="page_contents" type="id" />
+    <item name="page_settings" type="id" />
+    <item name="next_button" type="id" />
+    <item name="root" type="id" />
+    <item name="configure_widget_title" type="id" />
+    <item name="theme" type="id" />
+    <item name="button_save" type="id" />
     <item name="tool_title" type="id" />
     <item name="location_title" type="id" />
     <item name="accuracy" type="id" />
