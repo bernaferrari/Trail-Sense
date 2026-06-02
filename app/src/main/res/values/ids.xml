@@ -304,6 +304,9 @@
     <item name="summary_scroll" type="id" />
     <item name="summary" type="id" />
     <item name="overlay_mask" type="id" />
+    <item name="fab_menu" type="id" />
+    <item name="fab_text" type="id" />
+    <item name="fab" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />

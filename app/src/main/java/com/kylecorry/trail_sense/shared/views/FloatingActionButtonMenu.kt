@@ -7,9 +7,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.annotation.MenuRes
 import androidx.core.view.isVisible
-import androidx.core.view.updateMargins
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
@@ -23,6 +22,7 @@ class FloatingActionButtonMenu(context: Context, attrs: AttributeSet?) : FrameLa
     private var onHideAction: (() -> Unit)? = null
     private var onShowAction: (() -> Unit)? = null
     private var overlay: View? = null
+    private val fabMenu: LinearLayout
 
     var fab: FloatingActionButton? = null
         set(value) {
@@ -37,8 +37,18 @@ class FloatingActionButtonMenu(context: Context, attrs: AttributeSet?) : FrameLa
     var hideOnMenuOptionSelected = false
 
     init {
-        inflate(context, R.layout.view_floating_action_button_menu, this)
-        val fabMenu = findViewById<LinearLayout>(R.id.fab_menu)
+        fabMenu = LinearLayout(context).apply {
+            id = R.id.fab_menu
+            gravity = Gravity.END
+            orientation = LinearLayout.VERTICAL
+        }
+        addView(
+            fabMenu,
+            LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+        )
 
         var menuId = -1
         parse(attrs, R.styleable.FloatingActionButtonMenu) {
@@ -46,29 +56,29 @@ class FloatingActionButtonMenu(context: Context, attrs: AttributeSet?) : FrameLa
         }
 
         if (menuId != -1) {
-            val items = Resources.menuItems(context, menuId)
-            val itemSpacing = Resources.dp(context, 12f).toInt()
-            for (menuItem in items) {
-                val item = ExtendedFloatingActionButton(context).apply {
-                    text = menuItem.title
-                    icon = menuItem.icon
-                    setOnClickListener {
-                        if (hideOnMenuOptionSelected) {
-                            this@FloatingActionButtonMenu.hide()
-                        }
-                        onMenuItemClick?.onMenuItemClick(menuItem)
-                    }
-                }
-                val params = LinearLayout.LayoutParams(
-                    LayoutParams.WRAP_CONTENT,
-                    LayoutParams.WRAP_CONTENT
-                ).apply {
-                    updateMargins(bottom = itemSpacing)
-                }
-                fabMenu.addView(item, params)
-            }
-            fabMenu.gravity = Gravity.END
+            setMenu(menuId)
         }
+    }
+
+    fun setMenu(@MenuRes menuId: Int) {
+        fabMenu.removeAllViews()
+        val items = Resources.menuItems(context, menuId)
+        for (menuItem in items) {
+            val text = menuItem.title
+            val icon = menuItem.icon
+
+            val fab = FloatingActionButtonMenuItem(context, null)
+            fab.setText(text.toString())
+            fab.setImageDrawable(icon)
+            fab.setItemOnClickListener {
+                if (hideOnMenuOptionSelected) {
+                    hide()
+                }
+                onMenuItemClick?.onMenuItemClick(menuItem)
+            }
+            fabMenu.addView(fab)
+        }
+        fabMenu.gravity = Gravity.END
     }
 
     fun setOverlay(overlay: View) {
