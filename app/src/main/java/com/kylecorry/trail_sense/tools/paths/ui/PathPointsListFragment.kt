@@ -1,35 +1,35 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
 class PathPointsListFragment : BottomSheetDialogFragment() {
 
     private var points: List<PathPoint> = emptyList()
-    private var adapter: PathPointAdapter? = null
-    private var pathPointViews: PathPointViews? = null
-    private val binding: PathPointViews
-        get() = pathPointViews ?: error("Path point views are not ready")
+    private var updatePoints: ((List<PathPoint>) -> Unit)? = null
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     var onCreateBeaconListener: (point: PathPoint) -> Unit = {}
     var onDeletePointListener: (point: PathPoint) -> Unit = {}
@@ -38,7 +38,7 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
 
     fun setPoints(points: List<PathPoint>) {
         this.points = points
-        adapter?.setData(points)
+        updatePoints?.invoke(points)
     }
 
     override fun onCreateView(
@@ -46,14 +46,20 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createPathPointViews(requireContext())
-        pathPointViews = views
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    PathPointHost(
-                        views = views,
+                    var displayedPoints by remember { mutableStateOf(points) }
+                    DisposableEffect(Unit) {
+                        updatePoints = { displayedPoints = it }
+                        onDispose {
+                            updatePoints = null
+                        }
+                    }
+                    PathPointsContent(
+                        points = displayedPoints,
+                        drawWaypointListItem = ::drawWaypointListItem,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -62,21 +68,8 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
-        adapter = null
-        pathPointViews = null
+        updatePoints = null
         super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        adapter = PathPointAdapter().also {
-            binding.pathPointsList.layoutManager = LinearLayoutManager(requireContext())
-            binding.pathPointsList.adapter = it
-            binding.pathPointsList.addItemDecoration(
-                DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
-            )
-            it.setData(points)
-        }
     }
 
     private fun drawWaypointListItem(itemView: WaypointListItemView, item: PathPoint) {
@@ -100,77 +93,38 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
 
         itemStrategy.display(itemView, item)
     }
-
-    private inner class PathPointAdapter : RecyclerView.Adapter<PathPointViewHolder>() {
-        private var data = emptyList<PathPoint>()
-
-        fun setData(points: List<PathPoint>) {
-            data = points
-            notifyDataSetChanged()
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PathPointViewHolder {
-            return PathPointViewHolder(WaypointListItemView(parent.context))
-        }
-
-        override fun onBindViewHolder(holder: PathPointViewHolder, position: Int) {
-            drawWaypointListItem(holder.view, data[position])
-        }
-
-        override fun getItemCount(): Int {
-            return data.size
-        }
-    }
-
-    private class PathPointViewHolder(
-        val view: WaypointListItemView
-    ) : RecyclerView.ViewHolder(view)
 }
-
-private data class PathPointViews(
-    val root: View,
-    val pathPointsList: RecyclerView
-)
 
 @Composable
-private fun PathPointHost(
-    views: PathPointViews,
+private fun PathPointsContent(
+    points: List<PathPoint>,
+    drawWaypointListItem: (WaypointListItemView, PathPoint) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createPathPointViews(context: Context): PathPointViews {
-    val root = FrameLayout(context).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+    LazyColumn(
+        modifier = modifier.testTag("path_points_list")
+    ) {
+        items(
+            items = points,
+            key = { it.id }
+        ) { point ->
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = { WaypointListItemView(it) },
+                update = { drawWaypointListItem(it, point) }
+            )
+            TrailSenseDivider()
+        }
     }
-
-    val list = RecyclerView(context).apply {
-        id = R.id.path_points_list
-    }
-    root.addView(
-        list,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    )
-
-    return PathPointViews(root, list)
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PathPointHostPreview() {
+private fun PathPointsContentPreview() {
     TrailSenseTheme {
-        PathPointHost(
-            views = createPathPointViews(LocalContext.current)
+        PathPointsContent(
+            points = emptyList(),
+            drawWaypointListItem = { _, _ -> }
         )
     }
 }
