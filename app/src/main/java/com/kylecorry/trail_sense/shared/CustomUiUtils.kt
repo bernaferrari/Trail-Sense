@@ -8,10 +8,14 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Size
-import android.view.MotionEvent
+import android.view.Gravity
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
@@ -28,6 +32,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.andromeda.core.ui.setState
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.dismissOnPause
 import com.kylecorry.andromeda.fragments.show
@@ -64,47 +69,24 @@ import kotlin.coroutines.suspendCoroutine
 
 object CustomUiUtils {
 
-    @SuppressLint("ClickableViewAccessibility")
-    fun setRepeatingLongPressAction(view: View, action: () -> Unit) {
-        val repeatHandler = Handler(Looper.getMainLooper())
-        var repeatAction: Runnable? = null
+    fun setButtonState(button: ImageButton, state: Boolean) {
+        button.setState(
+            state,
+            Resources.getPrimaryColor(button.context),
+            Resources.getColorOnPrimary(button.context)
+        )
+    }
 
-        fun stopRepeating() {
-            repeatAction?.let {
-                repeatHandler.removeCallbacks(it)
-            }
-            repeatAction = null
-        }
 
-        fun startRepeating() {
-            stopRepeating()
-            val repeatDelay = ViewConfiguration.getTapTimeout().toLong()
-            repeatAction = object : Runnable {
-                override fun run() {
-                    action()
-                    repeatHandler.postDelayed(this, repeatDelay)
-                }
-            }
-            repeatAction?.run()
-        }
-
-        view.setOnLongClickListener {
-            startRepeating()
-            true
-        }
-        view.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-                stopRepeating()
-            }
-            false
-        }
-        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) = Unit
-
-            override fun onViewDetachedFromWindow(v: View) {
-                stopRepeating()
-            }
-        })
+    fun setButtonState(
+        button: Button,
+        isOn: Boolean
+    ) {
+        button.setState(
+            isOn,
+            Resources.getPrimaryColor(button.context),
+            Resources.getColorOnPrimary(button.context)
+        )
     }
 
     @ColorInt
@@ -128,21 +110,24 @@ object CustomUiUtils {
         description: String? = null,
         onDistancePick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_distance_entry_prompt, null)
+        val view = createPromptContainer(context)
         var distance: Distance? = default
-        val distanceInput = view.findViewById<DistanceInputView>(R.id.prompt_distance)
-        distanceInput?.defaultHint = hint
-        distanceInput?.setOnValueChangeListener {
+        val distanceInput = DistanceInputView(context).apply {
+            id = R.id.prompt_distance
+        }
+        view.addPromptContent(distanceInput)
+        distanceInput.defaultHint = hint
+        distanceInput.setOnValueChangeListener {
             distance = it
         }
-        distanceInput?.units = units
-        distanceInput?.value = default
+        distanceInput.units = units
+        distanceInput.value = default
         if (default == null) {
-            distanceInput?.unit = units.firstOrNull()
+            distanceInput.unit = units.firstOrNull()
         }
 
-        distanceInput?.showFeetAndInches = showFeetAndInches
-        distanceInput?.allowNegative = allowNegative
+        distanceInput.showFeetAndInches = showFeetAndInches
+        distanceInput.allowNegative = allowNegative
 
         Alerts.dialog(
             context,
@@ -165,14 +150,17 @@ object CustomUiUtils {
         hint: String = context.getString(R.string.elevation),
         onElevationPick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_elevation_entry_prompt, null)
+        val view = createPromptContainer(context)
         var elevation: Distance? = default
-        val elevationInputView = view.findViewById<ElevationInputView>(R.id.prompt_elevation)
-        elevationInputView?.hint = hint
-        elevationInputView?.setOnElevationChangeListener {
+        val elevationInputView = ElevationInputView(context).apply {
+            id = R.id.prompt_elevation
+        }
+        view.addPromptContent(elevationInputView)
+        elevationInputView.hint = hint
+        elevationInputView.setOnElevationChangeListener {
             elevation = it
         }
-        elevationInputView?.elevation = default
+        elevationInputView.elevation = default
 
         Alerts.dialog(
             context,
@@ -194,13 +182,16 @@ object CustomUiUtils {
         title: String,
         onColorPick: (color: AppColor?) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_color_picker_prompt, null)
-        val colorPicker = view.findViewById<ColorPickerView>(R.id.prompt_color_picker)
+        val view = createPromptContainer(context)
+        val colorPicker = ColorPickerView(context, null).apply {
+            id = R.id.prompt_color_picker
+        }
+        view.addPromptContent(colorPicker)
         var color = default
-        colorPicker?.setOnColorChangeListener {
+        colorPicker.setOnColorChangeListener {
             color = it
         }
-        colorPicker?.color = color
+        colorPicker.color = color
 
         Alerts.dialog(
             context,
@@ -222,13 +213,16 @@ object CustomUiUtils {
         title: String,
         onIconPick: (icon: BeaconIcon?) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_beacon_icon_picker_prompt, null)
-        val iconPicker = view.findViewById<BeaconIconPickerView>(R.id.prompt_icon_picker)
+        val view = createPromptContainer(context)
+        val iconPicker = BeaconIconPickerView(context, null).apply {
+            id = R.id.prompt_icon_picker
+        }
+        view.addPromptContent(iconPicker)
         var icon = default
-        iconPicker?.setOnIconChangeListener {
+        iconPicker.setOnIconChangeListener {
             icon = it
         }
-        iconPicker?.icon = icon
+        iconPicker.icon = icon
 
         Alerts.dialog(
             context,
@@ -252,7 +246,7 @@ object CustomUiUtils {
         showSeconds: Boolean = false,
         onDurationPick: (duration: Duration?) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_duration_entry_prompt, null)
+        val view = createDurationPrompt(context)
         var duration: Duration? = default
         val durationMessage = view.findViewById<TextView>(R.id.prompt_duration_message)
         val durationInput = view.findViewById<DurationInputView>(R.id.prompt_duration)
@@ -266,10 +260,10 @@ object CustomUiUtils {
             durationInput.hint = hint
         }
 
-        durationInput?.setOnDurationChangeListener {
+        durationInput.setOnDurationChangeListener {
             duration = it
         }
-        durationInput?.updateDuration(default)
+        durationInput.updateDuration(default)
 
         Alerts.dialog(
             context,
@@ -543,7 +537,7 @@ object CustomUiUtils {
         content: CharSequence? = null,
         populateFn: (Chart) -> Unit
     ) {
-        val chartView = View.inflate(fragment.requireContext(), R.layout.view_chart_prompt, null)
+        val chartView = createChartPrompt(fragment.requireContext())
 
         if (content != null) {
             chartView.findViewById<TextView>(R.id.content).text = content
@@ -567,7 +561,7 @@ object CustomUiUtils {
         emptyText: String? = null,
         okText: String = context.getString(android.R.string.ok)
     ): AlertDialog {
-        val view = View.inflate(context, R.layout.view_list_dialog, null)
+        val view = createListDialog(context)
         val list = view.findViewById<AndromedaListView>(R.id.list)
         val empty = view.findViewById<TextView>(R.id.empty_text)
 
@@ -584,6 +578,133 @@ object CustomUiUtils {
             cancelText = null,
             okText = okText
         )
+    }
+
+    private fun createPromptContainer(context: Context): FrameLayout {
+        val padding = Resources.dp(context, 16f).toInt()
+        return FrameLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setPadding(padding, padding, padding, padding)
+        }
+    }
+
+    private fun FrameLayout.addPromptContent(view: View) {
+        addView(
+            view,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+    }
+
+    private fun createDurationPrompt(context: Context): LinearLayout {
+        val padding = Resources.dp(context, 16f).toInt()
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+        }
+
+        root.addView(
+            TextView(context).apply {
+                id = R.id.prompt_duration_message
+                visibility = View.GONE
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = padding
+            }
+        )
+
+        root.addView(
+            DurationInputView(context, null).apply {
+                id = R.id.prompt_duration
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        return root
+    }
+
+    private fun createChartPrompt(context: Context): LinearLayout {
+        val padding = Resources.dp(context, 24f).toInt()
+        val spacing = Resources.dp(context, 16f).toInt()
+        val chartHeight = context.resources.getDimensionPixelSize(R.dimen.chart_height)
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+        }
+
+        root.addView(
+            TextView(context).apply {
+                id = R.id.content
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = spacing
+            }
+        )
+
+        root.addView(
+            Chart(context).apply {
+                id = R.id.chart
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                chartHeight
+            )
+        )
+
+        return root
+    }
+
+    private fun createListDialog(context: Context): LinearLayout {
+        val topPadding = Resources.dp(context, 32f).toInt()
+        val listTopMargin = Resources.dp(context, 16f).toInt()
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        root.addView(
+            TextView(context).apply {
+                id = R.id.empty_text
+                gravity = Gravity.CENTER
+                setPadding(0, topPadding, 0, 0)
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
+                visibility = View.GONE
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER
+            }
+        )
+
+        root.addView(
+            AndromedaListView(context, null).apply {
+                id = R.id.list
+                setPadding(paddingLeft, paddingTop, paddingRight, 0)
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = listTopMargin
+            }
+        )
+
+        return root
     }
 
     fun Resources.getPrimaryColor(context: Context): Int {

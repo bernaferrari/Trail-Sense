@@ -1,11 +1,10 @@
 package com.kylecorry.trail_sense.shared.grouping.picker
 
 import android.content.Context
-import android.view.View
 import android.widget.FrameLayout
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.views.list.ListItemMapper
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 
@@ -22,7 +21,7 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (item: T?) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_alert_dialog, null) as FrameLayout
+        val view = createAlertContent(context)
         val selector = GroupableSelectView(
             context,
             null,
@@ -60,7 +59,7 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (cancelled: Boolean, item: T?) -> Unit
     ) {
-        val view = View.inflate(context, R.layout.view_alert_dialog, null) as FrameLayout
+        val view = createAlertContent(context)
         val selector = GroupableSelectView(
             context,
             null,
@@ -74,6 +73,13 @@ object GroupablePickers {
         view.addView(selector)
         Alerts.dialog(context, title ?: "", contentView = view, okText = okText) {
             onPick.invoke(it, selector.root)
+        }
+    }
+
+    private fun createAlertContent(context: Context): FrameLayout {
+        val padding = Resources.dp(context, 16f).toInt()
+        return FrameLayout(context).apply {
+            setPadding(padding, padding, padding, padding)
         }
     }
 

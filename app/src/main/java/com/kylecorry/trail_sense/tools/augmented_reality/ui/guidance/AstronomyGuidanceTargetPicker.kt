@@ -1,9 +1,13 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
-import android.graphics.drawable.BitmapDrawable
+import android.content.Context
+import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.views.list.AndromedaListView
@@ -153,7 +157,7 @@ class AstronomyGuidanceTargetPicker(
         view: AugmentedRealityView,
         options: List<AstronomyGuidanceOption>
     ): AstronomyGuidanceOption? = suspendCoroutine { cont ->
-        val dialogView = View.inflate(view.context, R.layout.view_search_list_dialog, null)
+        val dialogView = createSearchListDialog(view.context)
         val search = dialogView.findViewById<SearchView>(R.id.search)
         val list = dialogView.findViewById<AndromedaListView>(R.id.list)
         val empty = dialogView.findViewById<TextView>(R.id.empty_text)
@@ -216,6 +220,59 @@ class AstronomyGuidanceTargetPicker(
         }
 
         renderOptions(options)
+    }
+
+    private fun createSearchListDialog(context: Context): View {
+        val horizontalMargin = Resources.dp(context, 16f).toInt()
+        val emptyTopPadding = Resources.dp(context, 32f).toInt()
+        val listTopMargin = Resources.dp(context, 16f).toInt()
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        root.addView(
+            SearchView(context, null).apply {
+                id = R.id.search
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = horizontalMargin
+                marginEnd = horizontalMargin
+            }
+        )
+
+        root.addView(
+            TextView(context).apply {
+                id = R.id.empty_text
+                gravity = Gravity.CENTER
+                setPadding(0, emptyTopPadding, 0, 0)
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
+                isVisible = false
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER
+            }
+        )
+
+        root.addView(
+            AndromedaListView(context, null).apply {
+                id = R.id.list
+                setPadding(paddingLeft, paddingTop, paddingRight, 0)
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = listTopMargin
+            }
+        )
+
+        return root
     }
 
     private data class AstronomyGuidanceOption(

@@ -343,6 +343,14 @@
     <item name="clear_btn" type="id" />
     <item name="camera_btn" type="id" />
     <item name="true_north" type="id" />
+    <item name="prompt_distance" type="id" />
+    <item name="prompt_elevation" type="id" />
+    <item name="prompt_color_picker" type="id" />
+    <item name="prompt_icon_picker" type="id" />
+    <item name="prompt_duration_message" type="id" />
+    <item name="prompt_duration" type="id" />
+    <item name="content" type="id" />
+    <item name="search" type="id" />
     <item name="add_menu" type="id" />
     <item name="add_btn" type="id" />
     <item name="create_menu" type="id" />
