@@ -21,7 +21,7 @@ class FlashlightPreferenceRepo(context: Context) : PreferenceRepo(context) {
         false
     )
 
-    val shouldTimeout by BooleanPreference(
+    var shouldTimeout by BooleanPreference(
         cache,
         context.getString(R.string.pref_flashlight_should_timeout),
         false

@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -16,7 +19,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
@@ -93,4 +98,31 @@ fun SettingsSwitchRow(
             onCheckedChange = onCheckedChange
         )
     }
+}
+
+@Composable
+fun SettingsActionRow(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    enabled: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null
+) {
+    TrailSenseListItem(
+        title = label,
+        subtitle = summary,
+        trailing = trailing ?: {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        onClick = if (enabled) onClick else null,
+        animateEntrance = false,
+        modifier = modifier
+            .alpha(if (enabled) 1f else 0.5f)
+    )
+    TrailSenseDivider()
 }
