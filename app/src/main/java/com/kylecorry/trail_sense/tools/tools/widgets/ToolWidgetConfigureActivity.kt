@@ -3,70 +3,55 @@ package com.kylecorry.trail_sense.tools.tools.widgets
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.fragments.ColorTheme
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.trail_sense.shared.views.Toolbar
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class ToolWidgetConfigureActivity : AndromedaActivity() {
 
     private var appWidgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
-    private lateinit var configureViews: ToolWidgetConfigureViews
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setColorTheme(ColorTheme.System, true)
         enableEdgeToEdge()
 
         super.onCreate(savedInstanceState)
-
-        configureViews = createToolWidgetConfigureViews(this)
-        setContentView(
-            ComposeView(this).apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-                setContent {
-                    TrailSenseTheme {
-                        ToolWidgetConfigureHost(
-                            views = configureViews,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
-            }
-        )
-
-        // Apply insets
-        ViewCompat.setOnApplyWindowInsetsListener(configureViews.root) { v, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-                bottomMargin = insets.bottom
-                leftMargin = insets.left
-                rightMargin = insets.right
-            }
-            windowInsets
-        }
 
         appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -80,6 +65,7 @@ class ToolWidgetConfigureActivity : AndromedaActivity() {
             finish()
             return
         }
+
         val widget = Tools.getWidgetFromAppWidgetId(this, appWidgetId)
         if (widget == null) {
             finish()
@@ -87,122 +73,198 @@ class ToolWidgetConfigureActivity : AndromedaActivity() {
         }
 
         val prefs = WidgetPreferences(this, widget, appWidgetId)
-        val title = configureViews.title
-        val spinner = configureViews.spinner
-        val save = configureViews.saveButton
+        val themeItems = getThemeItems()
 
-        title.title.text = widget.name
-        spinner.setHint(getString(R.string.pref_theme_title))
+        setContentView(
+            ComposeView(this).apply {
+                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+                setContent {
+                    TrailSenseTheme {
+                        var selectedTheme by remember { mutableStateOf(prefs.getTheme()) }
+                        ToolWidgetConfigureScreen(
+                            title = widget.name,
+                            themeItems = themeItems,
+                            selectedTheme = selectedTheme,
+                            onThemeSelected = { selectedTheme = it },
+                            onSave = {
+                                saveWidgetTheme(widget, prefs, selectedTheme)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            }
+        )
+    }
 
-        val items = listOf(
-            WidgetTheme.System to getString(R.string.theme_system),
-            WidgetTheme.TransparentBlack to getString(
-                R.string.theme_transparent_type,
-                getString(R.string.widget_theme_black_text)
+    private fun getThemeItems(): List<WidgetThemeItem> {
+        return listOf(
+            WidgetThemeItem(WidgetTheme.System, getString(R.string.theme_system)),
+            WidgetThemeItem(
+                WidgetTheme.TransparentBlack,
+                getString(
+                    R.string.theme_transparent_type,
+                    getString(R.string.widget_theme_black_text)
+                )
             ),
-            WidgetTheme.TransparentWhite to getString(
-                R.string.theme_transparent_type,
-                getString(R.string.widget_theme_white_text)
+            WidgetThemeItem(
+                WidgetTheme.TransparentWhite,
+                getString(
+                    R.string.theme_transparent_type,
+                    getString(R.string.widget_theme_white_text)
+                )
             )
         )
+    }
 
-        spinner.setItems(items.map { it.second })
-        spinner.setSelection(items.indexOfFirst { it.first == prefs.getTheme() })
+    private fun saveWidgetTheme(
+        widget: ToolWidget,
+        prefs: WidgetPreferences,
+        theme: WidgetTheme
+    ) {
+        prefs.setTheme(theme)
+        inBackground {
+            val widgetProvider =
+                widget.widgetClass.getConstructor().newInstance() as? AppWidgetBase
+            widgetProvider?.let {
+                AppWidgetBase.forceUpdate(
+                    this@ToolWidgetConfigureActivity,
+                    it,
+                    appWidgetId
+                )
+            }
 
-        save.setOnClickListener {
-            val theme = items.getOrElse(spinner.selectedItemPosition) { items[0] }.first
-            prefs.setTheme(theme)
-            inBackground {
-                val widgetProvider =
-                    widget.widgetClass.getConstructor().newInstance() as? AppWidgetBase
-                widgetProvider?.let {
-                    AppWidgetBase.forceUpdate(
-                        this@ToolWidgetConfigureActivity,
-                        it,
-                        appWidgetId
+            val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            setResult(RESULT_OK, resultValue)
+            finish()
+        }
+    }
+}
+
+private data class WidgetThemeItem(
+    val theme: WidgetTheme,
+    val label: String
+)
+
+@Composable
+private fun ToolWidgetConfigureScreen(
+    title: String,
+    themeItems: List<WidgetThemeItem>,
+    selectedTheme: WidgetTheme,
+    onThemeSelected: (WidgetTheme) -> Unit,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(TrailSenseSpacing.lg)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                    .testTag("configure_widget_title")
+            )
+
+            ThemeDropdown(
+                label = stringResource(R.string.pref_theme_title),
+                items = themeItems,
+                selectedTheme = selectedTheme,
+                onThemeSelected = onThemeSelected,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("theme")
+            )
+
+            TrailSenseButton(
+                text = stringResource(R.string.save),
+                onClick = onSave,
+                modifier = Modifier
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg
                     )
-                }
+                    .widthIn(min = 96.dp)
+                    .testTag("button_save")
+            )
+        }
+    }
+}
 
-                // Report the result
-                val resultValue =
-                    Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                setResult(RESULT_OK, resultValue)
-                finish()
+@Composable
+private fun ThemeDropdown(
+    label: String,
+    items: List<WidgetThemeItem>,
+    selectedTheme: WidgetTheme,
+    onThemeSelected: (WidgetTheme) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val selectedLabel = items.firstOrNull { it.theme == selectedTheme }?.label
+        ?: items.firstOrNull()?.label
+        ?: ""
+
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = TrailSenseSpacing.xs)
+        )
+        OutlinedButton(
+            onClick = { isExpanded = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = selectedLabel,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
+        }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false }
+        ) {
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(item.label) },
+                    onClick = {
+                        onThemeSelected(item.theme)
+                        isExpanded = false
+                    }
+                )
             }
         }
     }
 }
 
-private data class ToolWidgetConfigureViews(
-    val root: View,
-    val title: Toolbar,
-    val spinner: MaterialSpinnerView,
-    val saveButton: Button
-)
-
+@Preview(showBackground = true)
 @Composable
-private fun ToolWidgetConfigureHost(
-    views: ToolWidgetConfigureViews,
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-private fun createToolWidgetConfigureViews(activity: ToolWidgetConfigureActivity): ToolWidgetConfigureViews {
-    val root = LinearLayout(activity).apply {
-        id = R.id.root
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.MarginLayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+private fun ToolWidgetConfigureScreenPreview() {
+    TrailSenseTheme {
+        ToolWidgetConfigureScreen(
+            title = "Weather",
+            themeItems = listOf(
+                WidgetThemeItem(WidgetTheme.System, "System"),
+                WidgetThemeItem(WidgetTheme.TransparentBlack, "Transparent black"),
+                WidgetThemeItem(WidgetTheme.TransparentWhite, "Transparent white")
+            ),
+            selectedTheme = WidgetTheme.System,
+            onThemeSelected = {},
+            onSave = {}
         )
     }
-
-    val title = Toolbar(activity, null).apply {
-        id = R.id.configure_widget_title
-        subtitle.isVisible = false
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val spinner = MaterialSpinnerView(activity, null).apply {
-        id = R.id.theme
-    }
-    root.addView(
-        spinner,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            leftMargin = Resources.dp(activity, 16f).toInt()
-            rightMargin = Resources.dp(activity, 16f).toInt()
-        }
-    )
-
-    val saveButton = Button(activity).apply {
-        id = R.id.button_save
-        text = activity.getString(R.string.save)
-    }
-    root.addView(
-        saveButton,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.START
-            leftMargin = Resources.dp(activity, 16f).toInt()
-            topMargin = Resources.dp(activity, 16f).toInt()
-            rightMargin = Resources.dp(activity, 16f).toInt()
-        }
-    )
-
-    return ToolWidgetConfigureViews(root, title, spinner, saveButton)
 }
