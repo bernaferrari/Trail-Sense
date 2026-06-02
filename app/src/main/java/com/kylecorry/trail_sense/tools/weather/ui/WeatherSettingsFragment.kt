@@ -1,30 +1,51 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.SwitchPreferenceCompat
+import android.view.ViewGroup
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.fragments.AndromedaPreferenceFragment
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.fragments.inBackground
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
+import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
+import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
-import com.kylecorry.trail_sense.shared.preferences.setupNotificationSetting
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
@@ -39,18 +60,11 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 
-class WeatherSettingsFragment : AndromedaPreferenceFragment() {
+class WeatherSettingsFragment : Fragment() {
 
-    private var prefMonitorWeather: SwitchPreferenceCompat? = null
-    private var prefWeatherUpdateFrequency: Preference? = null
-    private var prefShowDailyWeatherNotification: SwitchPreferenceCompat? = null
-    private var prefShowPressureInNotification: SwitchPreferenceCompat? = null
-    private var prefShowTemperatureInNotification: SwitchPreferenceCompat? = null
-    private var prefleftButton: ListPreference? = null
-    private var prefrightButton: ListPreference? = null
-    private var prefDailyWeatherTime: Preference? = null
-    private var prefStormAlerts: SwitchPreferenceCompat? = null
-    private var prefMuteStormAlarmAtNight: SwitchPreferenceCompat? = null
+    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
+    private val userPrefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { userPrefs.weather }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
 
     private val weatherMonitorService by lazy {
@@ -60,161 +74,484 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
         )!!
     }
 
-    private lateinit var prefs: UserPreferences
+    private var setMonitorWeatherState: ((Boolean, Boolean) -> Unit)? = null
+    private var refreshNotificationSummary: ((String) -> Unit)? = null
 
-    private fun bindPreferences() {
-        prefMonitorWeather = switch(R.string.pref_monitor_weather)
-        prefWeatherUpdateFrequency = preference(R.string.pref_weather_update_frequency)
-        prefShowDailyWeatherNotification = switch(R.string.pref_daily_weather_notification)
-        prefShowPressureInNotification = switch(R.string.pref_show_pressure_in_notification)
-        prefShowTemperatureInNotification = switch(R.string.pref_show_temperature_in_notification)
-        prefStormAlerts = switch(R.string.pref_send_storm_alert)
-        prefDailyWeatherTime = preference(R.string.pref_daily_weather_time_holder)
-        prefleftButton = list(R.string.pref_weather_quick_action_left)
-        prefrightButton = list(R.string.pref_weather_quick_action_right)
-        prefMuteStormAlarmAtNight = switch(R.string.pref_weather_mute_storm_alarm_at_night)
-    }
-
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.weather_preferences, rootKey)
-        val userPrefs = UserPreferences(requireContext())
-        prefs = userPrefs
-        bindPreferences()
-
-        val actions = Tools.getQuickActions(requireContext())
-        val actionNames = actions.map { it.name }
-        val actionValues = actions.map { it.id.toString() }
-
-        prefleftButton?.entries = actionNames.toTypedArray()
-        prefrightButton?.entries = actionNames.toTypedArray()
-
-        prefleftButton?.entryValues = actionValues.toTypedArray()
-        prefrightButton?.entryValues = actionValues.toTypedArray()
-
-        prefMonitorWeather?.isEnabled = !weatherMonitorService.isBlocked()
-        prefMonitorWeather?.setOnPreferenceClickListener {
-            inBackground {
-                if (prefs.weather.shouldMonitorWeather) {
-                    weatherMonitorService.enable()
-                    RequestRemoveBatteryRestrictionCommand(this@WeatherSettingsFragment).execute()
-                } else {
-                    weatherMonitorService.disable()
-                }
-            }
-            true
-        }
-        prefShowDailyWeatherNotification?.setOnPreferenceClickListener {
-            restartWeatherMonitor()
-            true
-        }
-
-        prefWeatherUpdateFrequency?.summary =
-            formatService.formatDuration(prefs.weather.weatherUpdateFrequency)
-        prefWeatherUpdateFrequency?.setOnPreferenceClickListener {
-            ChangeWeatherFrequencyCommand(requireContext()) {
-                prefWeatherUpdateFrequency?.summary = formatService.formatDuration(it)
-            }.execute()
-            true
-        }
-
-        prefShowPressureInNotification?.setOnPreferenceClickListener {
-            restartWeatherMonitor()
-            true
-        }
-
-        prefShowTemperatureInNotification?.setOnPreferenceClickListener {
-            restartWeatherMonitor()
-            true
-        }
-
-        prefDailyWeatherTime?.summary =
-            formatService.formatTime(prefs.weather.dailyForecastTime, false)
-        prefDailyWeatherTime?.setOnPreferenceClickListener {
-            Pickers.time(
-                requireContext(),
-                prefs.use24HourTime,
-                prefs.weather.dailyForecastTime
-            ) { time ->
-                if (time != null) {
-                    prefs.weather.dailyForecastTime = time
-                    it.summary = formatService.formatTime(time, false)
-                    restartWeatherMonitor()
-                }
-            }
-            true
-        }
-
-        val forecastSensitivity =
-            preferenceScreen.findPreference<ListPreference>(getString(R.string.pref_forecast_sensitivity))
-        forecastSensitivity?.entries = getForecastSensitivities(userPrefs.pressureUnits)
-
-        val stormSensitivity =
-            preferenceScreen.findPreference<ListPreference>(getString(R.string.pref_storm_alert_sensitivity))
-        stormSensitivity?.entries = getStormSensitivities(userPrefs.pressureUnits)
-
-        onClick(preference(R.string.pref_export_weather_csv)) {
-            exportWeatherData()
-        }
-
-        setupNotificationSetting(
-            getString(R.string.pref_weather_monitor_notification_link),
-            CurrentWeatherAlerter.WEATHER_CHANNEL_ID,
-            getString(R.string.weather_monitor)
-        )
-
-        if (isDebug()) {
-            val timingPref = preference(R.string.pref_debug_weather_timing)
-            timingPref?.isVisible = true
-
-            inBackground {
-                onDefault {
-                    val readings = WeatherRepo.getInstance(requireContext()).getAll()
-                        .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
-
-                    if (readings.isEmpty()) {
-                        return@onDefault
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                TrailSenseTheme {
+                    val quickActionOptions = remember {
+                        Tools.getQuickActions(requireContext()).map {
+                            WeatherOption(it.id.toString(), it.name)
+                        }
+                    }
+                    val pressureHistoryOptions = remember {
+                        options(R.array.pressure_history_entries, R.array.pressure_history_values)
+                    }
+                    val forecastSensitivityOptions = remember {
+                        options(
+                            getForecastSensitivities(userPrefs.pressureUnits),
+                            R.array.forecast_sensitivity_values
+                        )
+                    }
+                    val stormSensitivityOptions = remember {
+                        options(
+                            getStormSensitivities(userPrefs.pressureUnits),
+                            R.array.storm_alert_sensitivity_values
+                        )
+                    }
+                    val muteStormAlarmSummary = remember {
+                        getString(
+                            R.string.alarm_time_range,
+                            formatService.formatTime(
+                                LocalTime.of(8, 0),
+                                includeSeconds = false,
+                                includeMinutes = false
+                            ),
+                            formatService.formatTime(
+                                LocalTime.of(20, 0),
+                                includeSeconds = false,
+                                includeMinutes = false
+                            )
+                        )
                     }
 
-                    val mean = Statistics.mean(readings).safeRoundToInt()
-                    val stdev = Statistics.stdev(readings, mean = mean.toFloat()).safeRoundToInt()
-                    val max = readings.maxOrNull()?.safeRoundToInt() ?: 0
-                    val median = Statistics.median(readings).safeRoundToInt()
-                    val quantile75 = Statistics.quantile(readings, 0.75f).safeRoundToInt()
-                    val quantile90 = Statistics.quantile(readings, 0.9f).safeRoundToInt()
-                    onMain {
-                        timingPref?.summary = "Mean: $mean\n" +
-                                "Stdev: $stdev\n" +
-                                "Max: $max\n" +
-                                "Median: $median\n" +
-                                "75th: $quantile75\n" +
-                                "90th: $quantile90"
+                    var leftQuickAction by remember {
+                        mutableStateOf(prefs.leftButton.toString())
+                    }
+                    var rightQuickAction by remember {
+                        mutableStateOf(prefs.rightButton.toString())
+                    }
+                    var pressureHistory by remember {
+                        mutableStateOf(getStringPreference(R.string.pref_pressure_history, "48"))
+                    }
+                    var monitorWeather by remember {
+                        mutableStateOf(getBoolean(R.string.pref_monitor_weather, true))
+                    }
+                    var monitorWeatherEnabled by remember {
+                        mutableStateOf(!weatherMonitorService.isBlocked())
+                    }
+                    var forecastSensitivity by remember {
+                        mutableStateOf(
+                            getStringPreference(R.string.pref_forecast_sensitivity, "medium")
+                        )
+                    }
+                    var notificationSummary by remember {
+                        mutableStateOf(notificationSummary())
+                    }
+                    var showPressureInNotification by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_show_pressure_in_notification, false)
+                        )
+                    }
+                    var showTemperatureInNotification by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_show_temperature_in_notification, true)
+                        )
+                    }
+                    var dailyWeatherNotification by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_daily_weather_notification, true)
+                        )
+                    }
+                    var dailyWeatherTime by remember {
+                        mutableStateOf(prefs.dailyForecastTime)
+                    }
+                    var stormAlerts by remember {
+                        mutableStateOf(getBoolean(R.string.pref_send_storm_alert, true))
+                    }
+                    var stormSensitivity by remember {
+                        mutableStateOf(
+                            getStringPreference(R.string.pref_storm_alert_sensitivity, "medium")
+                        )
+                    }
+                    var useAlarmForStormAlert by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_weather_use_alarm_for_storm_alert, false)
+                        )
+                    }
+                    var muteStormAlarmAtNight by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_weather_mute_storm_alarm_at_night, true)
+                        )
+                    }
+                    var updateFrequency by remember {
+                        mutableStateOf(prefs.weatherUpdateFrequency)
+                    }
+                    var showDetailedIcon by remember {
+                        mutableStateOf(
+                            getBoolean(R.string.pref_weather_show_detailed_icon, true)
+                        )
+                    }
+                    var debugTimingSummary by remember { mutableStateOf<String?>(null) }
+
+                    setMonitorWeatherState = { enabled, available ->
+                        monitorWeather = enabled
+                        monitorWeatherEnabled = available
+                    }
+                    refreshNotificationSummary = {
+                        notificationSummary = it
+                    }
+
+                    if (isDebug()) {
+                        LaunchedEffect(Unit) {
+                            debugTimingSummary = getDebugTimingSummary()
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = TrailSenseSpacing.lg,
+                                end = TrailSenseSpacing.lg,
+                                top = TrailSenseSpacing.lg,
+                                bottom = TrailSenseSpacing.xxxl
+                            )
+                        ) {
+                            item("general_header") {
+                                TrailSenseSectionHeader(title = stringResource(R.string.general))
+                            }
+                            item("left_action") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.left_quick_action),
+                                    selected = optionLabel(quickActionOptions, leftQuickAction),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.left_quick_action),
+                                            quickActionOptions,
+                                            leftQuickAction
+                                        ) {
+                                            leftQuickAction = it
+                                            putString(R.string.pref_weather_quick_action_left, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("right_action") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.right_quick_action),
+                                    selected = optionLabel(quickActionOptions, rightQuickAction),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.right_quick_action),
+                                            quickActionOptions,
+                                            rightQuickAction
+                                        ) {
+                                            rightQuickAction = it
+                                            putString(R.string.pref_weather_quick_action_right, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("pressure_history") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_pressure_history_title),
+                                    selected = optionLabel(pressureHistoryOptions, pressureHistory),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_pressure_history_title),
+                                            pressureHistoryOptions,
+                                            pressureHistory
+                                        ) {
+                                            pressureHistory = it
+                                            putString(R.string.pref_pressure_history, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("forecast_header") {
+                                TrailSenseSectionHeader(
+                                    title = stringResource(R.string.forecasts_category)
+                                )
+                            }
+                            item("monitor_weather") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_monitor_weather_title),
+                                    summary = stringResource(R.string.pref_monitor_weather_summary),
+                                    checked = monitorWeather,
+                                    enabled = monitorWeatherEnabled,
+                                    onCheckedChange = {
+                                        monitorWeather = it
+                                        prefs.shouldMonitorWeather = it
+                                        onMonitorWeatherChanged(it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("forecast_sensitivity") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_forecast_sensitivity_title),
+                                    selected = optionLabel(
+                                        forecastSensitivityOptions,
+                                        forecastSensitivity
+                                    ),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_forecast_sensitivity_title),
+                                            forecastSensitivityOptions,
+                                            forecastSensitivity
+                                        ) {
+                                            forecastSensitivity = it
+                                            putString(R.string.pref_forecast_sensitivity, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("notifications") {
+                                SettingsActionRow(
+                                    label = getString(
+                                        R.string.notifications_channel,
+                                        getString(R.string.weather_monitor)
+                                    ),
+                                    summary = notificationSummary,
+                                    onClick = {
+                                        startActivity(
+                                            Intents.notificationSettings(
+                                                requireContext(),
+                                                CurrentWeatherAlerter.WEATHER_CHANNEL_ID
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("show_pressure") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_show_pressure_in_notification_title),
+                                    checked = showPressureInNotification,
+                                    onCheckedChange = {
+                                        showPressureInNotification = it
+                                        putBoolean(
+                                            R.string.pref_show_pressure_in_notification,
+                                            it
+                                        )
+                                        restartWeatherMonitor()
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("show_temperature") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_show_temperature_in_notification_title),
+                                    checked = showTemperatureInNotification,
+                                    onCheckedChange = {
+                                        showTemperatureInNotification = it
+                                        putBoolean(
+                                            R.string.pref_show_temperature_in_notification,
+                                            it
+                                        )
+                                        restartWeatherMonitor()
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("daily_weather") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_daily_weather_notification_title),
+                                    checked = dailyWeatherNotification,
+                                    enabled = monitorWeather,
+                                    onCheckedChange = {
+                                        dailyWeatherNotification = it
+                                        putBoolean(
+                                            R.string.pref_daily_weather_notification,
+                                            it
+                                        )
+                                        restartWeatherMonitor()
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("daily_weather_time") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_daily_weather_time_title),
+                                    selected = formatService.formatTime(dailyWeatherTime, false),
+                                    enabled = dailyWeatherNotification,
+                                    onClick = {
+                                        Pickers.time(
+                                            requireContext(),
+                                            userPrefs.use24HourTime,
+                                            dailyWeatherTime
+                                        ) { time ->
+                                            if (time != null) {
+                                                dailyWeatherTime = time
+                                                prefs.dailyForecastTime = time
+                                                restartWeatherMonitor()
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("storm_header") {
+                                TrailSenseSectionHeader(
+                                    title = stringResource(R.string.weather_storm)
+                                )
+                            }
+                            item("storm_alerts") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.storm_alerts),
+                                    checked = stormAlerts,
+                                    enabled = monitorWeather,
+                                    onCheckedChange = {
+                                        stormAlerts = it
+                                        putBoolean(R.string.pref_send_storm_alert, it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("storm_sensitivity") {
+                                SettingsPickerRow(
+                                    label = stringResource(R.string.pref_storm_alert_sensitivity_title),
+                                    selected = optionLabel(stormSensitivityOptions, stormSensitivity),
+                                    onClick = {
+                                        pickOption(
+                                            getString(R.string.pref_storm_alert_sensitivity_title),
+                                            stormSensitivityOptions,
+                                            stormSensitivity
+                                        ) {
+                                            stormSensitivity = it
+                                            putString(R.string.pref_storm_alert_sensitivity, it)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("storm_alarm") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.use_alarm_for_storm_alert),
+                                    summary = stringResource(R.string.alarm_description),
+                                    checked = useAlarmForStormAlert,
+                                    enabled = stormAlerts,
+                                    onCheckedChange = {
+                                        useAlarmForStormAlert = it
+                                        putBoolean(
+                                            R.string.pref_weather_use_alarm_for_storm_alert,
+                                            it
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("mute_storm_alarm") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.mute_alarm_at_night),
+                                    summary = muteStormAlarmSummary,
+                                    checked = muteStormAlarmAtNight,
+                                    enabled = useAlarmForStormAlert,
+                                    onCheckedChange = {
+                                        muteStormAlarmAtNight = it
+                                        putBoolean(
+                                            R.string.pref_weather_mute_storm_alarm_at_night,
+                                            it
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("advanced_header") {
+                                TrailSenseSectionHeader(title = stringResource(R.string.advanced))
+                            }
+                            item("update_frequency") {
+                                SettingsActionRow(
+                                    label = stringResource(R.string.pref_weather_update_frequency_title),
+                                    summary = formatService.formatDuration(updateFrequency),
+                                    enabled = monitorWeather,
+                                    onClick = {
+                                        ChangeWeatherFrequencyCommand(requireContext()) {
+                                            updateFrequency = it
+                                        }.execute()
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            item("detailed_icon") {
+                                SettingsSwitchRow(
+                                    label = stringResource(R.string.pref_weather_show_detailed_icon_title),
+                                    checked = showDetailedIcon,
+                                    enabled = monitorWeather,
+                                    onCheckedChange = {
+                                        showDetailedIcon = it
+                                        putBoolean(R.string.pref_weather_show_detailed_icon, it)
+                                    },
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                                TrailSenseDivider()
+                            }
+                            item("export_csv") {
+                                SettingsActionRow(
+                                    label = stringResource(R.string.pref_export_weather_csv_title),
+                                    onClick = ::exportWeatherData,
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                )
+                            }
+                            if (isDebug()) {
+                                item("debug_timing") {
+                                    SettingsActionRow(
+                                        label = "Timing (Debug)",
+                                        summary = debugTimingSummary,
+                                        onClick = {},
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
-
         }
-
-        prefMuteStormAlarmAtNight?.summary = getString(
-            R.string.alarm_time_range,
-            formatService.formatTime(
-                LocalTime.of(8, 0),
-                includeSeconds = false,
-                includeMinutes = false
-            ),
-            formatService.formatTime(
-                LocalTime.of(20, 0),
-                includeSeconds = false,
-                includeMinutes = false
-            )
-        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
-            prefMonitorWeather?.isEnabled = !weatherMonitorService.isBlocked()
-            prefMonitorWeather?.isChecked = weatherMonitorService.isEnabled()
+            setMonitorWeatherState?.invoke(
+                weatherMonitorService.isEnabled(),
+                !weatherMonitorService.isBlocked()
+            )
             true
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshNotificationSummary?.invoke(notificationSummary())
+    }
+
+    override fun onDestroyView() {
+        setMonitorWeatherState = null
+        refreshNotificationSummary = null
+        super.onDestroyView()
+    }
+
+    private fun onMonitorWeatherChanged(enabled: Boolean) {
+        inBackground {
+            if (enabled && prefs.shouldMonitorWeather) {
+                weatherMonitorService.enable()
+                RequestRemoveBatteryRestrictionCommand(this@WeatherSettingsFragment).execute()
+            } else {
+                weatherMonitorService.disable()
+            }
         }
     }
 
@@ -224,7 +561,40 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
         }
     }
 
-    private fun getForecastSensitivities(units: PressureUnits): Array<CharSequence> {
+    private fun pickOption(
+        title: String,
+        options: List<WeatherOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    private fun options(entriesId: Int, valuesId: Int): List<WeatherOption> {
+        return options(resources.getStringArray(entriesId).toList(), valuesId)
+    }
+
+    private fun options(entries: List<CharSequence>, valuesId: Int): List<WeatherOption> {
+        val values = resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            WeatherOption(value, entries.getOrElse(index) { value }.toString())
+        }
+    }
+
+    private fun optionLabel(options: List<WeatherOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
+    }
+
+    private fun getForecastSensitivities(units: PressureUnits): List<CharSequence> {
         val hpa = listOf(
             Pressure.from(WeatherPreferences.HPA_FORECAST_LOW, PressureUnits.Hpa),
             Pressure.from(WeatherPreferences.HPA_FORECAST_MEDIUM, PressureUnits.Hpa),
@@ -233,7 +603,8 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
 
         val stringValues = hpa.map {
             getString(
-                R.string.pressure_tendency_format_2, formatService.formatPressure(
+                R.string.pressure_tendency_format_2,
+                formatService.formatPressure(
                     it.convertTo(units),
                     Units.getDecimalPlaces(units) + 1,
                     false
@@ -241,14 +612,14 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
             )
         }
 
-        return arrayOf(
+        return listOf(
             getString(R.string.low_amount, stringValues[0]),
             getString(R.string.medium_amount, stringValues[1]),
             getString(R.string.high_amount, stringValues[2])
         )
     }
 
-    private fun getStormSensitivities(units: PressureUnits): Array<CharSequence> {
+    private fun getStormSensitivities(units: PressureUnits): List<CharSequence> {
         val hpa = listOf(
             Pressure.from(WeatherPreferences.HPA_STORM_LOW, PressureUnits.Hpa),
             Pressure.from(WeatherPreferences.HPA_STORM_MEDIUM, PressureUnits.Hpa),
@@ -257,7 +628,8 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
 
         val stringValues = hpa.map {
             getString(
-                R.string.pressure_tendency_format_2, formatService.formatPressure(
+                R.string.pressure_tendency_format_2,
+                formatService.formatPressure(
                     it.convertTo(units),
                     Units.getDecimalPlaces(units) + 1,
                     false
@@ -265,11 +637,36 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
             )
         }
 
-        return arrayOf(
+        return listOf(
             getString(R.string.low_amount, stringValues[0]),
             getString(R.string.medium_amount, stringValues[1]),
             getString(R.string.high_amount, stringValues[2])
         )
+    }
+
+    private suspend fun getDebugTimingSummary(): String? {
+        return withContext(Dispatchers.Default) {
+            val readings = WeatherRepo.getInstance(requireContext()).getAll()
+                .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
+
+            if (readings.isEmpty()) {
+                return@withContext null
+            }
+
+            val mean = Statistics.mean(readings).safeRoundToInt()
+            val stdev = Statistics.stdev(readings, mean = mean.toFloat()).safeRoundToInt()
+            val max = readings.maxOrNull()?.safeRoundToInt() ?: 0
+            val median = Statistics.median(readings).safeRoundToInt()
+            val quantile75 = Statistics.quantile(readings, 0.75f).safeRoundToInt()
+            val quantile90 = Statistics.quantile(readings, 0.9f).safeRoundToInt()
+
+            "Mean: $mean\n" +
+                    "Stdev: $stdev\n" +
+                    "Max: $max\n" +
+                    "Median: $median\n" +
+                    "75th: $quantile75\n" +
+                    "90th: $quantile90"
+        }
     }
 
     private fun exportWeatherData() {
@@ -288,4 +685,33 @@ class WeatherSettingsFragment : AndromedaPreferenceFragment() {
             }
         }
     }
+
+    private fun notificationSummary(): String {
+        val isBlocked = Notify.isChannelBlocked(
+            requireContext(),
+            CurrentWeatherAlerter.WEATHER_CHANNEL_ID
+        )
+        return if (isBlocked) getString(R.string.off) else getString(R.string.on)
+    }
+
+    private fun getStringPreference(key: Int, default: String): String {
+        return cache.getString(getString(key)) ?: default
+    }
+
+    private fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
+        return cache.getBoolean(getString(key)) ?: defaultValue
+    }
+
+    private fun putString(key: Int, value: String) {
+        cache.putString(getString(key), value)
+    }
+
+    private fun putBoolean(key: Int, value: Boolean) {
+        cache.putBoolean(getString(key), value)
+    }
+
+    private data class WeatherOption(
+        val value: String,
+        val label: String
+    )
 }
