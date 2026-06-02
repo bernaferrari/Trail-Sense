@@ -1,49 +1,63 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.DialogInterface
 import android.net.Uri
 import android.os.Bundle
 import android.util.Size
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import androidx.exifinterface.media.ExifInterface
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
+import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 class PhotoImportBottomSheetFragment(
     private val resolution: Size? = null,
@@ -51,28 +65,39 @@ class PhotoImportBottomSheetFragment(
     private val onCapture: (uri: Uri?) -> Unit
 ) : FullscreenDialogFragment() {
 
-    private var isCapturing = false
-    private var photoViews: PhotoImportViews? = null
-    private val binding: PhotoImportViews
-        get() = photoViews ?: error("Photo import views are not ready")
+    private var isCapturing by mutableStateOf(false)
+    private var camera: CameraView? = null
+    private var isViewCreated = false
+    private var isCameraStarted = false
 
     private var orientation = DeviceOrientation.Orientation.Portrait
 
-    @SuppressLint("UnsafeOptInUsageError")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createPhotoImportViews(requireContext())
-        photoViews = views
+        isCapturing = false
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    PhotoImportHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
+                    PhotoImportContent(
+                        isCapturing = isCapturing,
+                        onClose = {
+                            onCapture(null)
+                            dismiss()
+                        },
+                        onCapture = ::takePhoto,
+                        onCameraReady = {
+                            camera = it
+                            if (isViewCreated) {
+                                startCamera(it)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(WindowInsets.systemBars)
                     )
                 }
             }
@@ -82,6 +107,7 @@ class PhotoImportBottomSheetFragment(
     @SuppressLint("UnsafeOptInUsageError")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        isViewCreated = true
 
         val orientationSensor = SensorService(requireContext()).getDeviceOrientationSensor()
         orientation = DeviceOrientation.Orientation.Portrait
@@ -104,9 +130,18 @@ class PhotoImportBottomSheetFragment(
         }
 
         dialog?.setOnCancelListener { onCapture(null) }
+        camera?.let(::startCamera)
+    }
 
-        binding.camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
-        binding.camera.start(
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun startCamera(camera: CameraView) {
+        if (isCameraStarted) {
+            return
+        }
+
+        isCameraStarted = true
+        camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
+        camera.start(
             resolution,
             lifecycleOwner = this,
             readFrames = false,
@@ -120,42 +155,19 @@ class PhotoImportBottomSheetFragment(
                 }
             )
         )
-
-        binding.toolTitle.rightButton.setOnClickListener {
-            onCapture(null)
-            dismiss()
-        }
-
-        binding.captureButton.setOnClickListener {
-            takePhoto()
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-                bottomMargin = insets.bottom
-                leftMargin = insets.left
-                rightMargin = insets.right
-            }
-            windowInsets
-        }
     }
 
     private fun takePhoto() {
-        val views = photoViews ?: return
+        val camera = camera ?: return
         if (isCapturing) {
             return
         }
         isCapturing = true
-        views.captureButton.isInvisible = true
-        views.loadingIndicator.isVisible = true
         inBackground {
             val file = FileSubsystem.getInstance(requireContext()).createTemp("jpg")
             val success = onIO {
-                val saved = views.camera.capture(file)
+                val saved = camera.capture(file)
 
-                // Set the orientation EXIF
                 tryOrLog {
                     if (orientation != DeviceOrientation.Orientation.Portrait) {
                         val exif = ExifInterface(file)
@@ -174,7 +186,7 @@ class PhotoImportBottomSheetFragment(
                 saved
             }
             onMain {
-                if (photoViews == null) {
+                if (this@PhotoImportBottomSheetFragment.camera == null) {
                     file.delete()
                     return@onMain
                 }
@@ -190,112 +202,129 @@ class PhotoImportBottomSheetFragment(
     }
 
     override fun onDestroyView() {
-        photoViews?.camera?.stop()
-        photoViews = null
+        camera?.stop()
+        camera = null
+        isCameraStarted = false
+        isViewCreated = false
         super.onDestroyView()
     }
 
-    override fun onDismiss(dialog: DialogInterface) {
+    override fun onDismiss(dialog: android.content.DialogInterface) {
         super.onDismiss(dialog)
-        photoViews?.camera?.stop()
+        camera?.stop()
     }
 }
-
-private data class PhotoImportViews(
-    val root: View,
-    val toolTitle: Toolbar,
-    val camera: CameraView,
-    val captureButton: ShutterButton,
-    val loadingIndicator: CircularProgressIndicator
-)
 
 @Composable
-private fun PhotoImportHost(
-    views: PhotoImportViews,
+private fun PhotoImportContent(
+    isCapturing: Boolean,
+    onClose: () -> Unit,
+    onCapture: () -> Unit,
+    onCameraReady: (CameraView) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val isPreview = LocalInspectionMode.current
+    Surface(
         modifier = modifier,
-        factory = { views.root }
-    )
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            PhotoImportToolbar(
+                onClose = onClose,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (!isPreview) {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .testTag("camera"),
+                    factory = { context ->
+                        CameraView(context, null).apply {
+                            id = R.id.camera
+                            setFlipEnabled(true)
+                            onCameraReady(this)
+                        }
+                    }
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .testTag("camera")
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = TrailSenseSpacing.lg),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isCapturing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .testTag("loading_indicator")
+                    )
+                } else {
+                    AndroidView(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .testTag("capture_button"),
+                        factory = { context ->
+                            ShutterButton(context).apply {
+                                id = R.id.capture_button
+                                contentDescription = context.getString(R.string.camera_capture)
+                                setOnClickListener { onCapture() }
+                            }
+                        },
+                        update = {
+                            it.setOnClickListener { onCapture() }
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
 
-private fun createPhotoImportViews(context: Context): PhotoImportViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
+@Composable
+private fun PhotoImportToolbar(
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .padding(start = TrailSenseSpacing.xl, end = TrailSenseSpacing.sm)
+            .padding(vertical = TrailSenseSpacing.sm)
+            .testTag("tool_title"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.take_photo),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
         )
-    }
-
-    val title = Toolbar(context, null).apply {
-        id = R.id.tool_title
-        this.title.text = context.getString(R.string.take_photo)
-        subtitle.isVisible = false
-        rightButton.setImageResource(R.drawable.ic_cancel)
-        rightButton.isVisible = true
-    }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val camera = CameraView(context, null).apply {
-        id = R.id.camera
-        setFlipEnabled(true)
-    }
-    root.addView(
-        camera,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            0,
-            1f
-        )
-    )
-
-    val captureButton = ShutterButton(context).apply {
-        id = R.id.capture_button
-        contentDescription = context.getString(R.string.camera_capture)
-    }
-    val loadingIndicator = CircularProgressIndicator(context).apply {
-        id = R.id.loading_indicator
-        isIndeterminate = true
-        isInvisible = true
-    }
-    val captureFrame = FrameLayout(context).apply {
-        foregroundGravity = Gravity.CENTER
-    }
-    captureFrame.addView(
-        captureButton,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER
-        )
-    )
-    captureFrame.addView(
-        loadingIndicator,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER
-        )
-    )
-    root.addView(
-        captureFrame,
-        LinearLayout.LayoutParams(
-            Resources.dp(context, 64f).toInt(),
-            Resources.dp(context, 64f).toInt()
-        ).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
-            topMargin = Resources.dp(context, 16f).toInt()
-            bottomMargin = Resources.dp(context, 16f).toInt()
+        IconButton(onClick = onClose) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(android.R.string.cancel)
+            )
         }
-    )
+    }
+}
 
-    return PhotoImportViews(root, title, camera, captureButton, loadingIndicator)
+@Preview(showBackground = true)
+@Composable
+private fun PhotoImportContentPreview() {
+    TrailSenseTheme {
+        PhotoImportContent(
+            isCapturing = false,
+            onClose = {},
+            onCapture = {},
+            onCameraReady = {}
+        )
+    }
 }
