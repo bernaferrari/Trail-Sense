@@ -6,12 +6,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
@@ -25,7 +23,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
     @Test
     fun verifyBasicFunctionality() {
         hasText(string(R.string.clouds))
-        hasText(R.id.cloud_empty_text, string(R.string.no_clouds))
+        hasText(id("cloud_empty_text"), string(R.string.no_clouds))
 
         canScanCloudFromCamera()
         canScanCloudFromFile()
@@ -34,7 +32,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
     }
 
     private fun canScanCloudFromCamera() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
 
         click(string(R.string.camera))
 
@@ -48,7 +46,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         click(id("cloud_save_btn"))
 
         // Back on cloud log
-        isVisible(R.id.add_btn)
+        isVisible(id("add_btn"))
         click(com.kylecorry.andromeda.views.R.id.title)
         clickOk()
         isVisible(com.kylecorry.andromeda.views.R.id.title)
@@ -56,22 +54,25 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         // Delete all cloud results
         try {
             while (true) {
-                clickListItemMenu(string(R.string.delete))
+                click(id("cloud_item_menu"))
+                click(string(R.string.delete))
                 clickOk()
             }
         } catch (e: Throwable) {
             // Do nothing
         }
 
-        hasText(R.id.cloud_empty_text, string(R.string.no_clouds))
+        hasText(id("cloud_empty_text"), string(R.string.no_clouds))
     }
 
     private fun canScanCloudFromFile() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.file))
 
         // The file picker is opened
-        isNotVisible(R.id.add_btn)
+        waitFor {
+            TestUtils.not { id("add_btn")() }
+        }
 
         backUntil {
             hasText(string(R.string.clouds))
@@ -79,7 +80,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
     }
 
     private fun canManuallyEnterCloud() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
 
         click(string(R.string.manual))
 
@@ -94,10 +95,11 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         click(id("cloud_save_btn"))
 
         // Delete the cloud result
-        clickListItemMenu(string(R.string.delete))
+        click(id("cloud_item_menu"))
+        click(string(R.string.delete))
         clickOk()
 
-        hasText(R.id.cloud_empty_text, string(R.string.no_clouds))
+        hasText(id("cloud_empty_text"), string(R.string.no_clouds))
     }
 
     private fun verifyQuickAction() {
@@ -114,7 +116,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         click(id("cloud_save_btn"))
 
         // Back on cloud log
-        isVisible(R.id.add_btn)
+        isVisible(id("add_btn"))
         isVisible(com.kylecorry.andromeda.views.R.id.title)
     }
 }

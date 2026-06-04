@@ -1,48 +1,67 @@
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
-import androidx.core.net.toUri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.views.list.AndromedaListView
+import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -52,27 +71,25 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
-import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import java.time.Duration
 import java.time.Instant
 
 class CloudFragment : AndromedaFragment() {
 
-    private val mapper by lazy { CloudReadingListItemMapper(requireContext(), this::handleAction) }
     private val repo by lazy { CloudRepo.getInstance(requireContext()) }
     private val cloudDetailsService by lazy { CloudDetailsService(requireContext()) }
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(requireContext()) }
 
-    private var clouds = emptyList<Reading<CloudObservation>>()
+    private var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
     private var subtitle by mutableStateOf("")
-    private var cloudViews: CloudViews? = null
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
@@ -85,8 +102,14 @@ class CloudFragment : AndromedaFragment() {
                 TrailSenseTheme {
                     CloudScreen(
                         subtitle = subtitle,
+                        clouds = clouds,
                         onGuideClick = ::showGuide,
-                        onViewsReady = ::onViewsReady,
+                        onCameraClick = ::addFromCamera,
+                        onFileClick = ::addFromFile,
+                        onManualClick = ::addManual,
+                        onCloudClick = ::showCloudDetails,
+                        onCloudImageClick = ::showCloudImage,
+                        onDeleteCloud = ::delete,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -108,7 +131,6 @@ class CloudFragment : AndromedaFragment() {
             val since = Instant.now().minus(Duration.ofHours(48))
             clouds = it.sortedByDescending { cloud -> cloud.time }
                 .filter { cloud -> cloud.time >= since }
-            updateCloudList()
         }
 
         val shouldOpenScanner = requireArguments().getBoolean("open_scanner", false)
@@ -117,43 +139,16 @@ class CloudFragment : AndromedaFragment() {
         }
     }
 
-    override fun onDestroyView() {
-        cloudViews = null
-        super.onDestroyView()
-    }
-
     private fun showGuide() {
         UserGuideUtils.showGuide(this, R.raw.guide_tool_clouds)
     }
 
-    private fun onViewsReady(views: CloudViews) {
-        if (cloudViews != null) {
-            return
-        }
-
-        cloudViews = views
-        views.cloudList.emptyView = views.emptyText
-        setupCreateMenu()
-        updateCloudList()
+    private fun showCloudDetails(reading: Reading<CloudObservation>) {
+        CloudDetailsModal(requireContext()).show(reading.value.genus)
     }
 
-    private fun updateCloudList() {
-        cloudViews?.cloudList?.setItems(clouds, mapper)
-    }
-
-    private fun setupCreateMenu() {
-        val views = cloudViews ?: return
-        views.addMenu.setOverlay(views.overlay)
-        views.addMenu.fab = views.addButton
-        views.addMenu.hideOnMenuOptionSelected = true
-        views.addMenu.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_cloud_camera -> addFromCamera()
-                R.id.action_cloud_file -> addFromFile()
-                R.id.action_cloud_manual -> addManual()
-            }
-            true
-        }
+    private fun showCloudImage(reading: Reading<CloudObservation>) {
+        CloudImageModal(requireContext()).show(reading.value.genus)
     }
 
     private fun addFromCamera() {
@@ -200,12 +195,6 @@ class CloudFragment : AndromedaFragment() {
         findNavController().navigate(R.id.action_cloud_to_cloud_picker)
     }
 
-    private fun handleAction(action: CloudReadingAction, reading: Reading<CloudObservation>) {
-        when (action) {
-            CloudReadingAction.Delete -> delete(reading)
-        }
-    }
-
     private fun delete(reading: Reading<CloudObservation>) {
         inBackground {
             val cancelled = onMain {
@@ -222,34 +211,101 @@ class CloudFragment : AndromedaFragment() {
     }
 }
 
-private data class CloudViews(
-    val cloudList: AndromedaListView,
-    val emptyText: TextView,
-    val overlay: View,
-    val addMenu: FloatingActionButtonMenu,
-    val addButton: FloatingActionButton
-)
-
 @Composable
 private fun CloudScreen(
     subtitle: String,
+    clouds: List<Reading<CloudObservation>>,
     onGuideClick: () -> Unit,
-    onViewsReady: (CloudViews) -> Unit,
+    onCameraClick: () -> Unit,
+    onFileClick: () -> Unit,
+    onManualClick: () -> Unit,
+    onCloudClick: (Reading<CloudObservation>) -> Unit,
+    onCloudImageClick: (Reading<CloudObservation>) -> Unit,
+    onDeleteCloud: (Reading<CloudObservation>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    var isCreateMenuOpen by remember { mutableStateOf(false) }
+
+    Scaffold(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        topBar = {
             CloudHeader(
                 subtitle = subtitle,
                 onGuideClick = onGuideClick
             )
-            CloudListHost(
-                onViewsReady = onViewsReady,
-                modifier = Modifier.fillMaxSize()
-            )
+        },
+        floatingActionButton = {
+            Box {
+                FloatingActionButton(
+                    onClick = { isCreateMenuOpen = true },
+                    modifier = Modifier.testTag("add_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add)
+                    )
+                }
+                DropdownMenu(
+                    expanded = isCreateMenuOpen,
+                    onDismissRequest = { isCreateMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.camera)) },
+                        onClick = {
+                            isCreateMenuOpen = false
+                            onCameraClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.file)) },
+                        onClick = {
+                            isCreateMenuOpen = false
+                            onFileClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.manual)) },
+                        onClick = {
+                            isCreateMenuOpen = false
+                            onManualClick()
+                        }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (clouds.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.no_clouds),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .testTag("cloud_empty_text"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("cloud_list"),
+                    contentPadding = PaddingValues(bottom = 96.dp)
+                ) {
+                    items(clouds) { reading ->
+                        CloudReadingListItem(
+                            reading = reading,
+                            onCloudClick = onCloudClick,
+                            onCloudImageClick = onCloudImageClick,
+                            onDeleteCloud = onDeleteCloud
+                        )
+                        HorizontalDivider()
+                    }
+                }
+            }
         }
     }
 }
@@ -298,105 +354,113 @@ private fun CloudHeader(
 }
 
 @Composable
-private fun CloudListHost(
-    onViewsReady: (CloudViews) -> Unit,
-    modifier: Modifier = Modifier
+private fun CloudReadingListItem(
+    reading: Reading<CloudObservation>,
+    onCloudClick: (Reading<CloudObservation>) -> Unit,
+    onCloudImageClick: (Reading<CloudObservation>) -> Unit,
+    onDeleteCloud: (Reading<CloudObservation>) -> Unit
 ) {
-    AndroidView(
-        modifier = modifier.testTag("cloud_list"),
-        factory = { context ->
-            FrameLayout(context).apply {
-                val margin = Resources.dp(context, 16f).toInt()
-                val fabBottomMargin = Resources.dp(context, 56f + 32f).toInt()
+    val context = LocalContext.current
+    val details = remember(context) { CloudDetailsService(context) }
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    val cloud = reading.value.genus
+    var isMenuOpen by remember { mutableStateOf(false) }
 
-                val list = AndromedaListView(context, null).apply {
-                    id = R.id.cloud_list
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCloudClick(reading) }
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CloudThumbnail(
+            drawable = details.getCloudImage(context, cloud),
+            onClick = { onCloudImageClick(reading) }
+        )
 
-                val empty = TextView(context).apply {
-                    id = R.id.cloud_empty_text
-                    text = context.getString(R.string.no_clouds)
-                    gravity = Gravity.CENTER
-                }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = details.getCloudName(cloud),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = details.getCloudForecast(cloud),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = formatter.formatDateTime(
+                    reading.time.toZonedDateTime(),
+                    relative = true,
+                    abbreviateMonth = true
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
-                val overlay = View(context).apply {
-                    id = R.id.overlay_mask
-                    alpha = 0.86f
-                    setBackgroundColor(
-                        Resources.getAndroidColorAttr(context, android.R.attr.colorBackground)
-                    )
-                    isClickable = true
-                    visibility = View.GONE
-                }
-
-                val addButton = FloatingActionButton(context).apply {
-                    id = R.id.add_btn
-                    setImageResource(R.drawable.ic_add)
-                    isClickable = true
-                    isFocusable = true
-                }
-
-                val addMenu = FloatingActionButtonMenu(context, null).apply {
-                    id = R.id.add_menu
-                    setMenu(R.menu.add_cloud_menu)
-                    visibility = View.GONE
-                }
-
-                addView(list)
-                addView(
-                    empty,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER
-                    )
+        Box {
+            IconButton(
+                onClick = { isMenuOpen = true },
+                modifier = Modifier.testTag("cloud_item_menu")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null
                 )
-                addView(
-                    overlay,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                )
-                addView(
-                    addMenu,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.END
-                    ).apply {
-                        marginEnd = margin
-                        bottomMargin = fabBottomMargin
+            }
+            DropdownMenu(
+                expanded = isMenuOpen,
+                onDismissRequest = { isMenuOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onDeleteCloud(reading)
                     }
-                )
-                addView(
-                    addButton,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.END
-                    ).apply {
-                        marginEnd = margin
-                        bottomMargin = margin
-                    }
-                )
-
-                onViewsReady(
-                    CloudViews(
-                        cloudList = list,
-                        emptyText = empty,
-                        overlay = overlay,
-                        addMenu = addMenu,
-                        addButton = addButton
-                    )
                 )
             }
         }
-    )
+    }
+}
+
+@Composable
+private fun CloudThumbnail(
+    drawable: Drawable?,
+    onClick: () -> Unit
+) {
+    val bitmap = remember(drawable) {
+        drawable?.toBitmap(112, 112)
+    }
+    val modifier = Modifier
+        .size(56.dp)
+        .clip(RoundedCornerShape(8.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant)
+        .clickable(onClick = onClick)
+        .testTag("cloud_image")
+
+    if (bitmap == null) {
+        Box(modifier)
+    } else {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -405,8 +469,14 @@ private fun CloudScreenPreview() {
     TrailSenseTheme {
         CloudScreen(
             subtitle = "Last 48h",
+            clouds = emptyList(),
             onGuideClick = {},
-            onViewsReady = {}
+            onCameraClick = {},
+            onFileClick = {},
+            onManualClick = {},
+            onCloudClick = {},
+            onCloudImageClick = {},
+            onDeleteCloud = {}
         )
     }
 }
