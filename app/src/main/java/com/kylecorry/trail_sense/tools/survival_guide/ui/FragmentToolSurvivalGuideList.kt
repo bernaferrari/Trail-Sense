@@ -11,18 +11,27 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
@@ -38,15 +47,13 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.views.badge.Badge
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ListItemTag
 import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
@@ -168,40 +175,29 @@ class FragmentToolSurvivalGuideList : Fragment() {
         }
     }
 
-    private fun getListItems(): List<ListItem> {
+    private fun getListItems(): List<SurvivalGuideListItem> {
         val context = requireContext()
-        val textColor = Resources.androidTextColorSecondary(context)
         return if (query.isBlank() || searchResults.isEmpty()) {
             chapters.map {
-                ListItem(
-                    it.chapter.resource.toLong(),
-                    it.chapter.title,
-                    it.sections.firstOrNull()?.summary,
-                    icon = ResourceListIcon(
-                        it.chapter.icon,
-                        textColor
-                    )
-                ) {
-                    openChapter(it.chapter.resource)
-                }
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.chapter.title,
+                    subtitle = it.sections.firstOrNull()?.summary,
+                    icon = it.chapter.icon,
+                    tag = null,
+                    onClick = { openChapter(it.chapter.resource) }
+                )
             }
         } else {
             searchResults.map {
-                ListItem(
-                    it.chapter.resource.toLong(),
-                    it.heading ?: getString(R.string.overview),
-                    it.summary,
-                    icon = ResourceListIcon(it.chapter.icon, textColor),
-                    tags = listOf(
-                        ListItemTag(
-                            it.chapter.title,
-                            ResourceListIcon(it.chapter.icon, size = 12f),
-                            textColor
-                        )
-                    )
-                ) {
-                    openSearchResult(it)
-                }
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.heading ?: getString(R.string.overview),
+                    subtitle = it.summary,
+                    icon = it.chapter.icon,
+                    tag = it.chapter.title,
+                    onClick = { openSearchResult(it) }
+                )
             }
         }
     }
@@ -226,10 +222,19 @@ class FragmentToolSurvivalGuideList : Fragment() {
     }
 }
 
+private data class SurvivalGuideListItem(
+    val id: Long,
+    val title: String,
+    val subtitle: String?,
+    val icon: Int,
+    val tag: String?,
+    val onClick: () -> Unit
+)
+
 @Composable
 private fun SurvivalGuideListScreen(
     query: String,
-    listItems: List<ListItem>,
+    listItems: List<SurvivalGuideListItem>,
     summary: String,
     firstResult: SurvivalGuideSearchResult?,
     markdown: MarkdownService,
@@ -316,20 +321,63 @@ private fun SurvivalGuideSummary(
 
 @Composable
 private fun SurvivalGuideChapterList(
-    listItems: List<ListItem>,
+    listItems: List<SurvivalGuideListItem>,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag("list"),
-        factory = { context ->
-            AndromedaListView(context, null).apply {
-                id = R.id.list
-            }
-        },
-        update = {
-            it.setItems(listItems)
+    LazyColumn(
+        modifier = modifier.testTag("list")
+    ) {
+        items(listItems, key = { it.id }) { item ->
+            SurvivalGuideChapterRow(item)
         }
-    )
+    }
+}
+
+@Composable
+private fun SurvivalGuideChapterRow(item: SurvivalGuideListItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("guide_item")
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+            .clickable { item.onClick() },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(item.icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = TrailSenseSpacing.md)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                modifier = Modifier.testTag("guide_item_title"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (item.subtitle != null) {
+                Text(
+                    text = item.subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (item.tag != null) {
+                Text(
+                    text = item.tag,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
 }
 
 private class SurvivalGuideSummaryView(context: Context) : MaterialCardView(context) {
