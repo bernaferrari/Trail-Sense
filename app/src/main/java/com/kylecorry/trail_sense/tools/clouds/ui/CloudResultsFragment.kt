@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.clouds.ui
 
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +17,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,16 +32,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
@@ -47,7 +59,6 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.pickers.CoroutinePickers
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
@@ -59,9 +70,11 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
+import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import kotlinx.coroutines.launch
@@ -75,21 +88,9 @@ class CloudResultsFragment : Fragment() {
     private var selection by mutableStateOf<List<CloudSelection>>(emptyList())
     private var isLoading by mutableStateOf(false)
     private var time by mutableStateOf(Instant.now())
-    private var cloudList: AndromedaListView? = null
 
     private val repo by lazy { CloudRepo.getInstance(requireContext()) }
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val mapper by lazy {
-        CloudSelectionListItemMapper(requireContext()) { genus, selected ->
-            selection = selection.map {
-                if (genus == it.genus) {
-                    it.copy(isSelected = selected)
-                } else {
-                    it
-                }
-            }
-        }
-    }
 
     private var uri: Uri? = null
 
@@ -110,7 +111,6 @@ class CloudResultsFragment : Fragment() {
                     CloudResultsScreen(
                         image = image,
                         selection = selection,
-                        mapper = mapper,
                         title = stringResource(R.string.clouds),
                         subtitle = formatter.formatDateTime(
                             time.toZonedDateTime(),
@@ -121,7 +121,7 @@ class CloudResultsFragment : Fragment() {
                         canSave = selection.any { it.isSelected },
                         onDateClick = ::pickTime,
                         onSave = ::save,
-                        onListCreated = { cloudList = it }
+                        onSelectionChanged = ::setSelection
                     )
                 }
             }
@@ -143,11 +143,6 @@ class CloudResultsFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        cloudList = null
-        super.onDestroyView()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         image?.recycle()
@@ -164,6 +159,16 @@ class CloudResultsFragment : Fragment() {
             )
             if (newTime != null) {
                 time = newTime.toZonedDateTime().toInstant()
+            }
+        }
+    }
+
+    private fun setSelection(genus: CloudGenus?, selected: Boolean) {
+        selection = selection.map {
+            if (genus == it.genus) {
+                it.copy(isSelected = selected)
+            } else {
+                it
             }
         }
     }
@@ -236,7 +241,6 @@ class CloudResultsFragment : Fragment() {
                 abs(it.confidence - maxConfidence) <= threshold
             )
         }
-        cloudList?.scrollToPosition(0, false)
     }
 }
 
@@ -244,14 +248,13 @@ class CloudResultsFragment : Fragment() {
 private fun CloudResultsScreen(
     image: Bitmap?,
     selection: List<CloudSelection>,
-    mapper: CloudSelectionListItemMapper,
     title: String,
     subtitle: String,
     isLoading: Boolean,
     canSave: Boolean,
     onDateClick: () -> Unit,
     onSave: () -> Unit,
-    onListCreated: (AndromedaListView) -> Unit
+    onSelectionChanged: (CloudGenus?, Boolean) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -276,8 +279,7 @@ private fun CloudResultsScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 CloudSelectionList(
                     selection = selection,
-                    mapper = mapper,
-                    onListCreated = onListCreated,
+                    onSelectionChanged = onSelectionChanged,
                     modifier = Modifier.fillMaxSize()
                 )
                 if (isLoading) {
@@ -348,41 +350,138 @@ private fun CloudImage(
     image: Bitmap,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Image(
+        bitmap = image.asImageBitmap(),
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
         modifier = modifier
             .size(100.dp)
-            .testTag("cloud_image"),
-        factory = { context ->
-            ImageView(context).apply {
-                id = R.id.cloud_image
-                clipToOutline = true
-                setBackgroundResource(R.drawable.rounded_rectangle)
-                scaleType = ImageView.ScaleType.FIT_CENTER
-            }
-        },
-        update = {
-            it.setImageBitmap(image)
-        }
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .testTag("cloud_image")
     )
 }
 
 @Composable
 private fun CloudSelectionList(
     selection: List<CloudSelection>,
-    mapper: CloudSelectionListItemMapper,
-    onListCreated: (AndromedaListView) -> Unit,
+    onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag("cloud_list"),
-        factory = { context ->
-            AndromedaListView(context, null).apply {
-                id = R.id.cloud_list
-                onListCreated(this)
-            }
-        },
-        update = {
-            it.setItems(selection, mapper)
+    LazyColumn(
+        modifier = modifier.testTag("cloud_list")
+    ) {
+        items(selection, key = { it.genus?.ordinal ?: -1 }) { cloud ->
+            CloudSelectionRow(
+                selection = cloud,
+                onSelectionChanged = onSelectionChanged
+            )
         }
-    )
+    }
+}
+
+@Composable
+private fun CloudSelectionRow(
+    selection: CloudSelection,
+    onSelectionChanged: (CloudGenus?, Boolean) -> Unit
+) {
+    val context = LocalContext.current
+    val details = remember(context) { CloudDetailsService(context) }
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    val imageModal = remember(context) { CloudImageModal(context) }
+    val detailsModal = remember(context) { CloudDetailsModal(context) }
+    val unreliable = remember {
+        listOf(
+            CloudGenus.Cumulonimbus,
+            CloudGenus.Altostratus,
+            CloudGenus.Stratus,
+            CloudGenus.Cirrostratus,
+            null
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { detailsModal.show(selection.genus) }
+            .padding(start = 8.dp, top = 10.dp, bottom = 10.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = selection.isSelected,
+            onCheckedChange = { onSelectionChanged(selection.genus, it) },
+            modifier = Modifier.testTag("cloud_selection_checkbox")
+        )
+        CloudSelectionThumbnail(
+            drawable = details.getCloudImage(context, selection.genus),
+            onClick = { imageModal.show(selection.genus) }
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = details.getCloudName(selection.genus),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = details.getCloudDescription(selection.genus),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (selection.confidence != null || unreliable.contains(selection.genus)) {
+                Row(
+                    modifier = Modifier.padding(top = 2.dp),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(
+                        TrailSenseSpacing.md
+                    )
+                ) {
+                    selection.confidence?.let {
+                        Text(
+                            text = formatter.formatPercentage(it * 100, 0),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (unreliable.contains(selection.genus)) {
+                        Text(
+                            text = stringResource(R.string.experimental),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CloudSelectionThumbnail(
+    drawable: Drawable?,
+    onClick: () -> Unit
+) {
+    val bitmap = remember(drawable) { drawable?.toBitmap(96, 96) }
+    val modifier = Modifier
+        .size(48.dp)
+        .clip(RoundedCornerShape(8.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant)
+        .clickable(onClick = onClick)
+
+    if (bitmap == null) {
+        Box(modifier)
+    } else {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+        )
+    }
 }

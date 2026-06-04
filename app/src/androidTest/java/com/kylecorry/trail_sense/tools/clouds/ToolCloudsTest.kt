@@ -41,7 +41,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         hasText(string(R.string.clouds))
 
         // Verify a cloud is selected (the top one)
-        isChecked(com.kylecorry.andromeda.views.R.id.checkbox)
+        isChecked(id("cloud_selection_checkbox"))
 
         click(id("cloud_save_btn"))
 
@@ -87,10 +87,10 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         hasText(string(R.string.clouds))
 
         // Select the first cloud type
-        click(com.kylecorry.andromeda.views.R.id.checkbox)
+        click(id("cloud_selection_checkbox"))
 
         // Verify it is selected
-        isChecked(com.kylecorry.andromeda.views.R.id.checkbox)
+        isChecked(id("cloud_selection_checkbox"))
 
         click(id("cloud_save_btn"))
 
@@ -111,7 +111,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
         hasText(string(R.string.clouds))
 
         // Verify a cloud is selected (the top one)
-        isChecked(com.kylecorry.andromeda.views.R.id.checkbox)
+        isChecked(id("cloud_selection_checkbox"))
 
         click(id("cloud_save_btn"))
 
