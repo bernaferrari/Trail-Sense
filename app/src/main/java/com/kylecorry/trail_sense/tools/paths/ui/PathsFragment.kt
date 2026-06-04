@@ -13,12 +13,32 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -33,13 +53,17 @@ import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.onBackPressed
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.lists.bind
 import com.kylecorry.trail_sense.shared.io.IOFactory
@@ -48,8 +72,12 @@ import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
 import com.kylecorry.trail_sense.shared.views.PlayBarView
 import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
+import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.domain.pathsort.ClosestPathSortStrategy
@@ -105,18 +133,12 @@ class PathsFragment : AndromedaFragment() {
 
     private var sort = PathSortMethod.MostRecent
 
-    private val listMapper by lazy {
-        IPathListItemMapper(
-            requireContext(),
-            this::handleAction,
-            this::handleGroupAction
-        )
-    }
-
     private val pathLoader by lazy { PathGroupLoader(pathService) }
     private lateinit var manager: GroupListManager<IPath>
 
     private var lastRoot: IPath? = null
+    private var pathItems by mutableStateOf<List<IPath>>(emptyList())
+    private var pathListResetKey by mutableIntStateOf(0)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -141,7 +163,6 @@ class PathsFragment : AndromedaFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.pathsList.emptyView = binding.waypointsEmptyText
         manager = GroupListManager(
             lifecycleScope,
             pathLoader,
@@ -150,8 +171,29 @@ class PathsFragment : AndromedaFragment() {
         )
 
         manager.bind(binding.searchbox)
-        manager.bind(binding.pathsList, binding.pathsTitle.title, listMapper) {
-            (it as PathGroup?)?.name ?: getString(R.string.paths)
+        binding.pathsList.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.pathsList.setContent {
+            TrailSenseTheme {
+                PathsList(
+                    items = pathItems,
+                    resetKey = pathListResetKey,
+                    formatService = FormatService.getInstance(requireContext()),
+                    baseDistanceUnits = prefs.baseDistanceUnits,
+                    onPathAction = ::handleAction,
+                    onGroupAction = ::handleGroupAction,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        manager.onChange = { root, items, rootChanged ->
+            pathItems = items
+            binding.waypointsEmptyText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+            if (rootChanged) {
+                pathListResetKey++
+            }
+            binding.pathsTitle.title.text = (root as PathGroup?)?.name ?: getString(R.string.paths)
         }
 
         sort = prefs.navigation.pathSort
@@ -452,7 +494,7 @@ private data class PathsViews(
     val root: View,
     val pathsTitle: PathsTitle,
     val searchbox: SearchView,
-    val pathsList: AndromedaListView,
+    val pathsList: ComposeView,
     val waypointsEmptyText: TextView,
     val overlayMask: ImageView,
     val addMenu: FloatingActionButtonMenu,
@@ -475,6 +517,240 @@ private fun PathsHost(
         modifier = modifier,
         factory = { views.root }
     )
+}
+
+@Composable
+private fun PathsList(
+    items: List<IPath>,
+    resetKey: Int,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    onPathAction: (Path, PathAction) -> Unit,
+    onGroupAction: (PathGroup, PathGroupAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier.testTag("paths_list")
+    ) {
+        items(items, key = { item ->
+            if (item is PathGroup) {
+                -item.id
+            } else {
+                item.id
+            }
+        }) { item ->
+            when (item) {
+                is Path -> PathRow(
+                    path = item,
+                    formatService = formatService,
+                    baseDistanceUnits = baseDistanceUnits,
+                    onAction = { onPathAction(item, it) }
+                )
+
+                is PathGroup -> PathGroupRow(
+                    group = item,
+                    onAction = { onGroupAction(item, it) }
+                )
+            }
+            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun PathRow(
+    path: Path,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    onAction: (PathAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val nameFactory = PathNameFactory(LocalContext.current)
+    val title = nameFactory.getName(path)
+    val distance = path.metadata.distance.convertTo(baseDistanceUnits).toRelativeDistance()
+    val distanceString = formatService.formatDistance(
+        distance,
+        Units.getDecimalPlaces(distance.units),
+        false
+    )
+    val subtitle = if (path.temporary) {
+        "${stringResource(R.string.temporary)}    $distanceString"
+    } else {
+        distanceString
+    }
+
+    TrailSenseListItem(
+        title = title,
+        subtitle = subtitle,
+        icon = painterResource(getPathIcon(path)),
+        iconTint = androidx.compose.ui.graphics.Color(path.style.color),
+        onClick = { onAction(PathAction.Show) },
+        trailing = {
+            PathRowActions(
+                path = path,
+                title = title,
+                menuOpen = menuOpen,
+                onMenuOpenChange = { menuOpen = it },
+                onAction = onAction
+            )
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun PathRowActions(
+    path: Path,
+    title: String,
+    menuOpen: Boolean,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (PathAction) -> Unit
+) {
+    Box {
+        IconButton(
+            onClick = { onAction(PathAction.ToggleVisibility) },
+            modifier = Modifier.testTag("path_visibility_toggle_$title")
+        ) {
+            Icon(
+                painter = painterResource(
+                    if (path.style.visible) {
+                        R.drawable.ic_visible
+                    } else {
+                        R.drawable.ic_not_visible
+                    }
+                ),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    Box {
+        IconButton(
+            onClick = { onMenuOpenChange(true) },
+            modifier = Modifier.testTag("path_item_menu_$title")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_menu_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { onMenuOpenChange(false) }
+        ) {
+            PathMenuItem(R.string.rename, onMenuOpenChange, onAction, PathAction.Rename)
+            if (path.temporary) {
+                PathMenuItem(R.string.keep_forever, onMenuOpenChange, onAction, PathAction.Keep)
+            }
+            PathMenuItem(R.string.export, onMenuOpenChange, onAction, PathAction.Export)
+            PathMenuItem(R.string.merge, onMenuOpenChange, onAction, PathAction.Merge)
+            PathMenuItem(R.string.delete, onMenuOpenChange, onAction, PathAction.Delete)
+            PathMenuItem(R.string.simplify, onMenuOpenChange, onAction, PathAction.Simplify)
+            PathMenuItem(R.string.move_to, onMenuOpenChange, onAction, PathAction.Move)
+        }
+    }
+}
+
+@Composable
+private fun PathMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (PathAction) -> Unit,
+    action: PathAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+@Composable
+private fun PathGroupRow(
+    group: PathGroup,
+    onAction: (PathGroupAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val count = group.count ?: 0
+
+    TrailSenseListItem(
+        title = group.name,
+        subtitle = stringResource(R.plurals.path_group_summary, count, count),
+        icon = painterResource(R.drawable.ic_path_group),
+        iconTint = androidx.compose.ui.graphics.Color(AppColor.Gray.color),
+        onClick = { onAction(PathGroupAction.Open) },
+        trailing = {
+            Box {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier.testTag("path_group_menu_${group.name}")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu_dots),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    PathGroupMenuItem(R.string.show_all, { menuOpen = it }, onAction, PathGroupAction.ShowAll)
+                    PathGroupMenuItem(R.string.hide_all, { menuOpen = it }, onAction, PathGroupAction.HideAll)
+                    PathGroupMenuItem(R.string.rename, { menuOpen = it }, onAction, PathGroupAction.Rename)
+                    PathGroupMenuItem(R.string.export, { menuOpen = it }, onAction, PathGroupAction.Export)
+                    PathGroupMenuItem(R.string.delete, { menuOpen = it }, onAction, PathGroupAction.Delete)
+                    PathGroupMenuItem(R.string.move_to, { menuOpen = it }, onAction, PathGroupAction.Move)
+                }
+            }
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun PathGroupMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (PathGroupAction) -> Unit,
+    action: PathGroupAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+private fun getPathIcon(path: Path): Int {
+    if (!path.style.visible) {
+        return R.drawable.ic_not_visible
+    }
+
+    return when (path.style.line) {
+        LineStyle.Solid -> R.drawable.path_solid
+        LineStyle.Dotted -> R.drawable.path_dotted
+        LineStyle.Arrow -> R.drawable.path_arrow
+        LineStyle.Dashed -> R.drawable.path_dashed
+        LineStyle.Square -> R.drawable.path_square
+        LineStyle.Diamond -> R.drawable.path_diamond
+        LineStyle.Cross -> R.drawable.path_cross
+    }
 }
 
 private fun createPathsViews(context: Context): PathsViews {
@@ -533,7 +809,7 @@ private fun createPathsViews(context: Context): PathsViews {
         }
     )
 
-    val list = AndromedaListView(context, null).apply {
+    val list = ComposeView(context).apply {
         id = R.id.paths_list
     }
     root.addView(

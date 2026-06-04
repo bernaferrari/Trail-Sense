@@ -17,11 +17,11 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -88,7 +88,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
         // Rename group "Test Group" -> "Test Group 2"
         hasText("Test Group")
-        clickListItemMenu(string(R.string.rename), index = 2)
+        click(id("path_group_menu_Test Group"))
+        click(string(R.string.rename))
         input("Test Group", "Test Group 2")
         clickOk()
         hasText("Test Group 2")
@@ -102,7 +103,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
         // Move group into Dest Group
         hasText("Test Group 2")
-        clickListItemMenu(string(R.string.move_to), index = 2)
+        click(id("path_group_menu_Test Group 2"))
+        click(string(R.string.move_to))
         click("Dest Group")
         click(string(R.string.move))
         optional { hasText(string(R.string.moved_to, "Dest Group")) }
@@ -110,7 +112,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         // Delete moved group (open Dest Group first)
         click("Dest Group")
         hasText("Test Group 2")
-        clickListItemMenu(string(R.string.delete))
+        click(id("path_group_menu_Test Group 2"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Test Group 2") }
         back(false)
@@ -126,38 +129,44 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         backUntil { isVisible(R.id.paths_title) }
 
         // Rename
-        clickListItemMenu(string(R.string.rename))
+        click(id("path_item_menu_Second Path"))
+        click(string(R.string.rename))
         input("Second Path", "Empty Path 2")
         clickOk()
         hasText("Empty Path 2")
 
         // Hide / Show
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
+        click(id("path_visibility_toggle_Empty Path 2"))
+        click(id("path_visibility_toggle_Empty Path 2"))
 
         // Export
-        clickListItemMenu(string(R.string.export))
+        click(id("path_item_menu_Empty Path 2"))
+        click(string(R.string.export))
         optional { hasText("trail-sense-") }
         backUntil { isVisible(R.id.paths_title) }
 
         // Merge "Empty Path 2" into "Empty Path"
-        clickListItemMenu(string(R.string.merge))
+        click(id("path_item_menu_Empty Path 2"))
+        click(string(R.string.merge))
         click("Empty Path", exact = true)
         optional { hasText(string(R.string.merging)) }
         not { hasText("Empty Path 2") }
 
         // Simplify path
-        clickListItemMenu(string(R.string.simplify))
+        click(id("path_item_menu_Empty Path"))
+        click(string(R.string.simplify))
         click("High")
         clickOk()
 
         // Move Empty Path to Dest Group
-        clickListItemMenu(string(R.string.move_to))
+        click(id("path_item_menu_Empty Path"))
+        click(string(R.string.move_to))
         click("Dest Group")
         click(string(R.string.move))
 
         // Delete path
-        clickListItemMenu(string(R.string.delete), index = 1)
+        click(id("path_item_menu_Empty Path"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Empty Path 2") }
     }
@@ -182,7 +191,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
     private fun canViewPathDetails() {
         // Open the path
-        click(com.kylecorry.andromeda.views.R.id.title)
+        click("Test Path")
 
         // Wait for the path to open
         hasText(R.id.path_title, "Test Path")
@@ -265,28 +274,6 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         hasText("Today")
 
         // TODO: This isn't working on the emulator
-//        clickListItemMenu("Navigate")
-//        isVisible(R.id.navigation_title)
-//        hasText("Test Path")
-//        back()
-//
-//        click(toolbarButton(R.id.path_title, Side.Right))
-//        click("Points")
-//        clickListItemMenu("Create beacon")
-//        isVisible(R.id.create_beacon_title)
-//        hasText("Test Path")
-//        back()
-//        click("Leave")
-//        back()
-//        isVisible(R.id.path_title)
-//
-//        click(toolbarButton(R.id.path_title, Side.Right))
-//        click("Points")
-//        clickListItemMenu("Delete")
-//        clickOk()
-//        back()
-//
-//        hasText("1")
         back()
 
         // Simplify
@@ -338,10 +325,11 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
     }
 
     private fun canRenamePath() {
-        clickListItemMenu(string(R.string.rename))
+        click(id("path_item_menu_Today"))
+        click(string(R.string.rename))
         input(string(R.string.name), "Test Path")
         clickOk()
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test Path")
+        hasText("Test Path")
     }
 
     private fun canUseBacktrack() {
@@ -368,7 +356,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         hasText(R.id.play_bar_title, "On - 15m")
 
         // Wait for the path to be created
-        isVisible(com.kylecorry.andromeda.views.R.id.title, waitForTime = GPS_WAIT_FOR_TIMEOUT)
+        hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
         // Stop backtrack
         click(R.id.play_btn)
@@ -391,11 +379,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         }
 
         // Wait for the path to be created
-        isVisible(
-            com.kylecorry.andromeda.views.R.id.title,
-            index = 1,
-            waitForTime = GPS_WAIT_FOR_TIMEOUT
-        )
+        hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
         click(quickAction(Tools.QUICK_ACTION_BACKTRACK))
 
