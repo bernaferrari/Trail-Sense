@@ -40,8 +40,6 @@ import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.andromeda.pickers.material.MaterialPickers
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Pressure
@@ -554,32 +552,6 @@ object CustomUiUtils {
         )
     }
 
-    fun showList(
-        context: Context,
-        title: String,
-        listItems: List<ListItem>,
-        emptyText: String? = null,
-        okText: String = context.getString(android.R.string.ok)
-    ): AlertDialog {
-        val view = createListDialog(context)
-        val list = view.findViewById<AndromedaListView>(R.id.list)
-        val empty = view.findViewById<TextView>(R.id.empty_text)
-
-        if (emptyText != null) {
-            empty.text = emptyText
-        }
-
-        list.setItems(listItems)
-
-        return Alerts.dialog(
-            context,
-            title,
-            contentView = view,
-            cancelText = null,
-            okText = okText
-        )
-    }
-
     private fun createPromptContainer(context: Context): FrameLayout {
         val padding = Resources.dp(context, 16f).toInt()
         return FrameLayout(context).apply {
@@ -663,45 +635,6 @@ object CustomUiUtils {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 chartHeight
             )
-        )
-
-        return root
-    }
-
-    private fun createListDialog(context: Context): LinearLayout {
-        val topPadding = Resources.dp(context, 32f).toInt()
-        val listTopMargin = Resources.dp(context, 16f).toInt()
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
-        root.addView(
-            TextView(context).apply {
-                id = R.id.empty_text
-                gravity = Gravity.CENTER
-                setPadding(0, topPadding, 0, 0)
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
-                visibility = View.GONE
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-        )
-
-        root.addView(
-            AndromedaListView(context, null).apply {
-                id = R.id.list
-                setPadding(paddingLeft, paddingTop, paddingRight, 0)
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = listTopMargin
-            }
         )
 
         return root
