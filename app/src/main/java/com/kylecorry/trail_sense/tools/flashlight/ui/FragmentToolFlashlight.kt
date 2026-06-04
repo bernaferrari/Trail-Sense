@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -42,22 +46,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.DialSelectView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
@@ -426,6 +426,8 @@ private fun FlashlightDial(
     onSelectionChanged: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val haptics = remember { HapticSubsystem.getInstance(context) }
     val options = listOf(
         "0",
         "1",
@@ -440,30 +442,60 @@ private fun FlashlightDial(
         "200",
         stringResource(R.string.sos)
     )
-    AndroidView(
-        factory = { context ->
-            DialSelectView(context).apply {
-                this.options = options
-                range = 180f
-                alignToTop = true
-                selectedColor = Resources.getPrimaryColor(context)
-                background = Resources.androidBackgroundColorSecondary(context)
-                foreground = Resources.androidTextColorPrimary(context)
-                this.areHapticsEnabled = areHapticsEnabled
-                selectionChangeListener = onSelectionChanged
+    val selectedIndex = getDialIndex(selectedMode)
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedIndex) {
+        listState.animateScrollToItem(selectedIndex.coerceIn(options.indices))
+    }
+
+    LazyRow(
+        state = listState,
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        itemsIndexed(options) { index, option ->
+            val selected = index == selectedIndex
+            Surface(
+                modifier = Modifier
+                    .width(48.dp)
+                    .height(48.dp)
+                    .testTag("flashlight_dial_$index")
+                    .clickable {
+                        if (areHapticsEnabled) {
+                            haptics.click()
+                        }
+                        if (!selected) {
+                            onSelectionChanged(index)
+                        }
+                    },
+                shape = RoundedCornerShape(8.dp),
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                contentColor = if (selected) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = option,
+                        style = MaterialTheme.typography.labelLarge,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
-        },
-        update = {
-            it.options = options
-            val index = getDialIndex(selectedMode)
-            if (it.selected != index) {
-                it.selected = index
-                it.scrollToOption(index)
-            }
-            it.areHapticsEnabled = areHapticsEnabled
-        },
-        modifier = modifier
-    )
+        }
+    }
 }
 
 private fun getDialIndex(mode: FlashlightMode): Int {
