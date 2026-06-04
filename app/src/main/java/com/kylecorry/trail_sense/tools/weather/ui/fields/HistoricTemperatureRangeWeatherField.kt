@@ -2,8 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -16,7 +14,7 @@ class HistoricTemperatureRangeWeatherField(
     private val high: Temperature?,
     private val onClick: () -> Unit
 ) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         low ?: return null
         high ?: return null
         val formatter = FormatService.getInstance(context)
@@ -42,11 +40,12 @@ class HistoricTemperatureRangeWeatherField(
             }
         }
 
-        return ListItem(
-            9,
-            context.getString(R.string.temperature_high_low),
+        return WeatherListItem(
+            id = 9,
+            title = context.getString(R.string.temperature_high_low),
             subtitle = context.getString(R.string.historic_temperature_years, 30),
-            icon = ResourceListIcon(R.drawable.ic_temperature_range, color),
+            icon = R.drawable.ic_temperature_range,
+            iconTint = color,
             trailingText = context.getString(R.string.slash_separated_pair, highValue, lowValue)
         ) {
             onClick()

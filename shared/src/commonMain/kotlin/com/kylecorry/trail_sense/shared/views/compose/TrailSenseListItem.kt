@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -36,6 +37,7 @@ fun TrailSenseListItem(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: Painter? = null,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     animateEntrance: Boolean = true
@@ -70,7 +72,7 @@ fun TrailSenseListItem(
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))

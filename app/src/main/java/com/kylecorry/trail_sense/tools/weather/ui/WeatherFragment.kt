@@ -5,15 +5,31 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.dialog
@@ -26,7 +42,6 @@ import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
@@ -43,6 +58,9 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.views.PlayBarView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
@@ -67,6 +85,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.fields.PressureSystemWeatherFi
 import com.kylecorry.trail_sense.tools.weather.ui.fields.PressureTendencyWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.PressureWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.TemperatureWeatherField
+import com.kylecorry.trail_sense.tools.weather.ui.fields.WeatherListItem
 import java.time.Duration
 import java.time.Instant
 
@@ -91,6 +110,7 @@ class WeatherFragment : AndromedaFragment() {
     private var history: List<WeatherObservation> = emptyList()
     private var pressureForecast: List<Reading<Pressure>> = emptyList()
     private var rawHistory: List<Reading<Pressure>> = emptyList()
+    private var weatherItems by mutableStateOf<List<WeatherListItem>>(emptyList())
 
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
     private var weather: CurrentWeather? = null
@@ -126,6 +146,7 @@ class WeatherFragment : AndromedaFragment() {
                 TrailSenseTheme {
                     WeatherHost(
                         views = views,
+                        weatherItems = weatherItems,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -250,9 +271,7 @@ class WeatherFragment : AndromedaFragment() {
             FrontWeatherField(weather.prediction.front),
         )
 
-        val items = fields.mapNotNull { it.getListItem(requireContext()) }
-
-        binding.weatherList.setItems(items)
+        weatherItems = fields.mapNotNull { it.getListItem(requireContext()) }
     }
 
 
@@ -409,11 +428,9 @@ class WeatherFragment : AndromedaFragment() {
 }
 
 data class WeatherViews(
-    val root: View,
     val weatherTitle: Toolbar,
     val chart: Chart,
     val pressureMarker: TextView,
-    val weatherList: AndromedaListView,
     val weatherUpdating: TextView,
     val weatherPlayBar: PlayBarView
 )
@@ -421,76 +438,103 @@ data class WeatherViews(
 @Composable
 private fun WeatherHost(
     views: WeatherViews,
+    weatherItems: List<WeatherListItem>,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Surface(
         modifier = modifier,
-        factory = { views.root }
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            AndroidView(
+                modifier = Modifier.fillMaxWidth(),
+                factory = { views.weatherTitle }
+            )
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+                    .padding(horizontal = 16.dp)
+                    .testTag("chart"),
+                factory = { views.chart }
+            )
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                factory = { views.pressureMarker }
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 8.dp)
+                    .testTag("weather_list")
+            ) {
+                items(weatherItems, key = { it.id }) { item ->
+                    WeatherListItemRow(item)
+                    TrailSenseDivider()
+                }
+            }
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                factory = { views.weatherUpdating }
+            )
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                factory = { views.weatherPlayBar }
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeatherListItemRow(item: WeatherListItem) {
+    TrailSenseListItem(
+        title = item.title,
+        subtitle = item.subtitle,
+        icon = item.icon?.let { painterResource(it) },
+        iconTint = item.iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.primary,
+        trailing = item.trailingText?.let {
+            {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        onClick = item.onClick,
+        animateEntrance = false,
+        modifier = Modifier
+            .padding(horizontal = TrailSenseSpacing.lg)
+            .testTag("weather_item_${item.id}")
     )
 }
 
 private fun createWeatherViews(context: Context): WeatherViews {
-    val root = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
     val title = Toolbar(context, null).apply {
         id = R.id.weather_title
     }
-    root.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
 
     val chart = Chart(context).apply {
         id = R.id.chart
     }
-    root.addView(
-        chart,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            context.resources.getDimensionPixelSize(R.dimen.chart_height)
-        ).apply {
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
 
     val pressureMarker = TextView(context).apply {
         id = R.id.pressure_marker
+        gravity = android.view.Gravity.CENTER
         visibility = View.GONE
     }
-    root.addView(
-        pressureMarker,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = android.view.Gravity.CENTER_HORIZONTAL
-            topMargin = 8.dp(context)
-        }
-    )
-
-    val weatherList = AndromedaListView(context, null).apply {
-        id = R.id.weather_list
-    }
-    root.addView(
-        weatherList,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            0,
-            1f
-        ).apply {
-            topMargin = 8.dp(context)
-        }
-    )
 
     val updating = TextView(context).apply {
         id = R.id.weather_updating
@@ -503,16 +547,6 @@ private fun createWeatherViews(context: Context): WeatherViews {
         )
         visibility = View.GONE
     }
-    root.addView(
-        updating,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = android.view.Gravity.CENTER_HORIZONTAL
-            topMargin = 8.dp(context)
-        }
-    )
 
     val playBar = PlayBarView(context, null).apply {
         id = R.id.weather_play_bar
@@ -520,22 +554,11 @@ private fun createWeatherViews(context: Context): WeatherViews {
         setImageResource(R.drawable.ic_weather)
         this.title = context.getString(R.string.weather_monitor)
     }
-    root.addView(
-        playBar,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = 8.dp(context)
-        }
-    )
 
     return WeatherViews(
-        root = root,
         weatherTitle = title,
         chart = chart,
         pressureMarker = pressureMarker,
-        weatherList = weatherList,
         weatherUpdating = updating,
         weatherPlayBar = playBar
     )
@@ -550,7 +573,8 @@ private fun Int.dp(context: Context): Int {
 private fun WeatherHostPreview() {
     TrailSenseTheme {
         WeatherHost(
-            views = createWeatherViews(LocalContext.current)
+            views = createWeatherViews(LocalContext.current),
+            weatherItems = emptyList()
         )
     }
 }

@@ -1,13 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.science.meteorology.WeatherFront
 import com.kylecorry.trail_sense.R
 
 class FrontWeatherField(private val front: WeatherFront?) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         front ?: return null
 
         val frontName: String
@@ -24,10 +22,10 @@ class FrontWeatherField(private val front: WeatherFront?) : WeatherField {
             }
         }
 
-        return ListItem(
-            4,
-            context.getString(R.string.weather_front),
-            icon = ResourceListIcon(icon),
+        return WeatherListItem(
+            id = 4,
+            title = context.getString(R.string.weather_front),
+            icon = icon,
             trailingText = frontName
         )
     }

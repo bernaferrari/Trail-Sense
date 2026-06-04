@@ -2,8 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -13,7 +11,7 @@ class HumidityWeatherField(
     private val humidity: Float?,
     private val onClick: () -> Unit
 ) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         humidity ?: return null
         if (!Sensors.hasHygrometer(context)) {
             return null
@@ -22,10 +20,11 @@ class HumidityWeatherField(
         val formatter = FormatService.getInstance(context)
         val value = formatter.formatPercentage(humidity)
 
-        return ListItem(
-            6,
-            context.getString(R.string.humidity),
-            icon = ResourceListIcon(R.drawable.ic_category_water, AppColor.Blue.color),
+        return WeatherListItem(
+            id = 6,
+            title = context.getString(R.string.humidity),
+            icon = R.drawable.ic_category_water,
+            iconTint = AppColor.Blue.color,
             trailingText = value
         ) {
             onClick()

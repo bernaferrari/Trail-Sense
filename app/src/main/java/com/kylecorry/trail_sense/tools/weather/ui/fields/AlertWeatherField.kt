@@ -2,14 +2,12 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherAlert
 
 class AlertWeatherField(private val alerts: List<WeatherAlert>) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         if (alerts.isEmpty()) {
             return null
         }
@@ -19,10 +17,11 @@ class AlertWeatherField(private val alerts: List<WeatherAlert>) : WeatherField {
         val moreDescription =
             alerts.joinToString("\n\n") { formatWeatherAlertDescription(context, it) }
 
-        return ListItem(
-            6293,
-            title,
-            icon = ResourceListIcon(R.drawable.ic_alert, AppColor.Yellow.color),
+        return WeatherListItem(
+            id = 6293,
+            title = title,
+            icon = R.drawable.ic_alert,
+            iconTint = AppColor.Yellow.color,
             trailingText = description
         ) {
             Alerts.dialog(

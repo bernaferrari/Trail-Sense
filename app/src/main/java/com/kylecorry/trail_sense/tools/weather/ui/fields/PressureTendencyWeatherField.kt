@@ -2,8 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
@@ -13,7 +11,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.weather.ui.PressureCharacteristicImageMapper
 
 class PressureTendencyWeatherField(private val tendency: PressureTendency) : WeatherField {
-    override fun getListItem(context: Context): ListItem {
+    override fun getListItem(context: Context): WeatherListItem {
         val formatter = FormatService.getInstance(context)
         val units = UserPreferences(context).pressureUnits
         val color = Resources.androidTextColorSecondary(context)
@@ -25,10 +23,11 @@ class PressureTendencyWeatherField(private val tendency: PressureTendency) : Wea
         )
         val icon = PressureCharacteristicImageMapper().getImageResource(tendency.characteristic)
 
-        return ListItem(
-            2,
-            context.getString(R.string.pressure_tendency),
-            icon = ResourceListIcon(icon, color),
+        return WeatherListItem(
+            id = 2,
+            title = context.getString(R.string.pressure_tendency),
+            icon = icon,
+            iconTint = color,
             trailingText = value
         )
     }

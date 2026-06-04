@@ -2,15 +2,13 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.weather.domain.isHigh
 import com.kylecorry.trail_sense.tools.weather.domain.isLow
 
 class PressureSystemWeatherField(private val pressure: Pressure?) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         pressure ?: return null
         val name: String
         val description: String
@@ -27,10 +25,10 @@ class PressureSystemWeatherField(private val pressure: Pressure?) : WeatherField
             return null
         }
 
-        return ListItem(
-            3,
-            context.getString(R.string.pressure_system),
-            icon = ResourceListIcon(icon),
+        return WeatherListItem(
+            id = 3,
+            title = context.getString(R.string.pressure_system),
+            icon = icon,
             trailingText = name
         ) {
             Alerts.dialog(context, name, description, cancelText = null)

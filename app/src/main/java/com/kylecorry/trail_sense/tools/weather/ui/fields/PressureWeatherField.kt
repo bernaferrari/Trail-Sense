@@ -2,8 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -11,7 +9,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 class PressureWeatherField(private val pressure: Pressure?) : WeatherField {
-    override fun getListItem(context: Context): ListItem? {
+    override fun getListItem(context: Context): WeatherListItem? {
         pressure ?: return null
         val formatter = FormatService.getInstance(context)
         val units = UserPreferences(context).pressureUnits
@@ -21,10 +19,11 @@ class PressureWeatherField(private val pressure: Pressure?) : WeatherField {
             Units.getDecimalPlaces(units)
         )
 
-        return ListItem(
-            1,
-            context.getString(R.string.pressure),
-            icon = ResourceListIcon(R.drawable.ic_barometer, color),
+        return WeatherListItem(
+            id = 1,
+            title = context.getString(R.string.pressure),
+            icon = R.drawable.ic_barometer,
+            iconTint = color,
             trailingText = value
         )
     }
