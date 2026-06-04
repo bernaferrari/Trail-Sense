@@ -258,8 +258,6 @@
     <item name="play_bar" type="id" />
     <item name="play_bar_title" type="id" />
     <item name="play_btn" type="id" />
-    <item name="tile_btn" type="id" />
-    <item name="tile_text" type="id" />
     <item name="text_input_holder" type="id" />
     <item name="text_input" type="id" />
     <item name="color_btn_background" type="id" />
