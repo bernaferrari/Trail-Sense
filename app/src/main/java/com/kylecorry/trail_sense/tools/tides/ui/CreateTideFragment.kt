@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,14 +50,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.bold
-import androidx.core.text.buildSpannedString
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -623,59 +620,51 @@ private fun TideFrequencyInput(
     val diurnal = stringResource(R.string.tide_diurnal)
     val semidiurnal = stringResource(R.string.tide_semidiurnal)
 
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialButtonToggleGroup(context).apply {
-                id = R.id.tide_frequency
-                isSingleSelection = true
-                addView(
-                    MaterialButton(context).apply {
-                        id = R.id.tide_frequency_diurnal
-                        isCheckable = true
-                        text = buildSpannedString {
-                            bold { append("1") }
-                            append("    ")
-                            append(diurnal)
-                        }
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        )
-                    }
-                )
-                addView(
-                    MaterialButton(context).apply {
-                        id = R.id.tide_frequency_semidiurnal
-                        isCheckable = true
-                        text = buildSpannedString {
-                            bold { append("2") }
-                            append("    ")
-                            append(semidiurnal)
-                        }
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        )
-                    }
-                )
-                addOnButtonCheckedListener { _, checkedId, isChecked ->
-                    if (isChecked) {
-                        onFrequencyChange(checkedId == R.id.tide_frequency_semidiurnal)
-                    }
-                }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("tide_frequency")
+    ) {
+        TideFrequencyButton(
+            text = "1    $diurnal",
+            selected = !isSemidiurnal,
+            onClick = { onFrequencyChange(false) },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("tide_frequency_diurnal")
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        TideFrequencyButton(
+            text = "2    $semidiurnal",
+            selected = isSemidiurnal,
+            onClick = { onFrequencyChange(true) },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("tide_frequency_semidiurnal")
+        )
+    }
+}
+
+@Composable
+private fun TideFrequencyButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
             }
-        },
-        update = { group ->
-            val checkedId =
-                if (isSemidiurnal) R.id.tide_frequency_semidiurnal else R.id.tide_frequency_diurnal
-            if (group.checkedButtonId != checkedId) {
-                group.check(checkedId)
-            }
-        }
-    )
+        )
+    }
 }
 
 @Composable

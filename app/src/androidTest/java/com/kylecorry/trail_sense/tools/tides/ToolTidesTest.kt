@@ -77,7 +77,7 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         // Enter the tide details
         hasText(string(R.string.tide_table))
         input(id("tide_name")(), "Tide 1")
-        isChecked(R.id.tide_frequency_semidiurnal)
+        hasText(id("tide_frequency_semidiurnal"), string(R.string.tide_semidiurnal))
         input(R.id.utm, "42, -72")
 
         click(R.id.estimate_algorithm_spinner)
