@@ -16,7 +16,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,8 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.materialswitch.MaterialSwitch
-import com.google.android.material.slider.LabelFormatter
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
@@ -58,7 +58,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
-import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import kotlinx.coroutines.launch
@@ -78,7 +77,6 @@ class FragmentToolMetalDetector : Fragment() {
     private var isVibrating = false
     private var chart: MetalDetectorChart? = null
     private var magnetometerView: MagnetometerView? = null
-    private var thresholdSlider: Slider? = null
     private var lastReadingTime = System.currentTimeMillis() + 1000L
     private var threshold = 5f
 
@@ -109,6 +107,7 @@ class FragmentToolMetalDetector : Fragment() {
     private var vibrationEnabled by mutableStateOf(true)
     private var showAudioButton by mutableStateOf(true)
     private var metalDetected by mutableStateOf(false)
+    private var thresholdSliderValue by mutableStateOf(50f)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -133,7 +132,8 @@ class FragmentToolMetalDetector : Fragment() {
                         onVibrationToggle = ::toggleVibration,
                         onHighSensitivityChange = ::updateHighSensitivity,
                         onCalibrate = ::calibrate,
-                        onThresholdCreated = { thresholdSlider = it },
+                        thresholdSliderValue = thresholdSliderValue,
+                        onThresholdChange = { thresholdSliderValue = it },
                         onChartCreated = {
                             if (chart == null) {
                                 chart = MetalDetectorChart(
@@ -193,7 +193,6 @@ class FragmentToolMetalDetector : Fragment() {
     override fun onDestroyView() {
         chart = null
         magnetometerView = null
-        thresholdSlider = null
         super.onDestroyView()
     }
 
@@ -329,7 +328,7 @@ class FragmentToolMetalDetector : Fragment() {
     }
 
     private fun updateThreshold() {
-        threshold = ((thresholdSlider?.value ?: 50f) / 10f).coerceAtLeast(0.1f)
+        threshold = (thresholdSliderValue / 10f).coerceAtLeast(0.1f)
         thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
     }
 
@@ -399,7 +398,8 @@ private fun MetalDetectorScreen(
     onVibrationToggle: () -> Unit,
     onHighSensitivityChange: (Boolean) -> Unit,
     onCalibrate: () -> Unit,
-    onThresholdCreated: (Slider) -> Unit,
+    thresholdSliderValue: Float,
+    onThresholdChange: (Float) -> Unit,
     onChartCreated: (Chart) -> Unit,
     onMagnetometerCreated: (MagnetometerView) -> Unit,
     onAccuracyCreated: (SensorStatusBadgeView) -> Unit
@@ -443,7 +443,10 @@ private fun MetalDetectorScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    ThresholdSlider(onThresholdCreated)
+                    ThresholdSlider(
+                        value = thresholdSliderValue,
+                        onValueChange = onThresholdChange
+                    )
                 }
                 Button(onClick = onCalibrate) {
                     Text(stringResource(R.string.calibrate))
@@ -546,23 +549,16 @@ private fun MetalDetectorHeader(
 
 @Composable
 private fun ThresholdSlider(
-    onThresholdCreated: (Slider) -> Unit
+    value: Float,
+    onValueChange: (Float) -> Unit
 ) {
-    AndroidView(
+    Slider(
+        value = value.coerceIn(0f, 100f),
+        onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("threshold"),
-        factory = { context ->
-            Slider(context, null).apply {
-                id = R.id.threshold
-                contentDescription = context.getString(R.string.threshold)
-                valueFrom = 0f
-                valueTo = 100f
-                value = 50f
-                labelBehavior = LabelFormatter.LABEL_GONE
-                onThresholdCreated(this)
-            }
-        }
+        valueRange = 0f..100f
     )
 }
 
@@ -571,26 +567,24 @@ private fun HighSensitivitySwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    AndroidView(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .testTag("high_sensitivity_toggle"),
-        factory = { context ->
-            MaterialSwitch(context).apply {
-                id = R.id.high_sensitivity_toggle
-                text = context.getString(R.string.high_sensitivity)
-                setOnCheckedChangeListener { _, isChecked ->
-                    onCheckedChange(isChecked)
-                }
-            }
-        },
-        update = {
-            if (it.isChecked != checked) {
-                it.isChecked = checked
-            }
-        }
-    )
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.high_sensitivity),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag("high_sensitivity_toggle")
+        )
+    }
 }
 
 @Composable

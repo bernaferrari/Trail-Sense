@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.mute
@@ -29,12 +28,12 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
         isVisible(R.id.metal_chart)
 
         // Can turn on high sensitivity
-        isNotChecked(R.id.high_sensitivity_toggle)
-        click(R.id.high_sensitivity_toggle)
-        isChecked(R.id.high_sensitivity_toggle)
+        isChecked(id("high_sensitivity_toggle"), isChecked = false)
+        click(id("high_sensitivity_toggle"))
+        isChecked(id("high_sensitivity_toggle"))
 
         // Can adjust threshold (just verify it is set)
-        isVisible(R.id.threshold)
+        isVisible(id("threshold"))
         hasText("5.0 uT")
 
         // Can play sound
