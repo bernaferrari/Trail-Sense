@@ -20,7 +20,6 @@
     <item name="tide_frequency" type="id" />
     <item name="tide_frequency_diurnal" type="id" />
     <item name="tide_frequency_semidiurnal" type="id" />
-    <item name="tide_location" type="id" />
     <item name="estimate_algorithm_spinner" type="id" />
     <item name="add_tide_entry" type="id" />
     <item name="tide_times" type="id" />

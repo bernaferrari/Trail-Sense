@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
@@ -31,15 +33,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -49,10 +54,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -64,8 +69,12 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.TideTableIsDirtySpecification
@@ -87,8 +96,6 @@ class CreateTideFragment : Fragment() {
 
     private var editingId: Long = 0
     private var editingTide: TideTable? = null
-
-    private var tideLocationView: CoordinateInputView? = null
 
     private var backCallback: OnBackPressedCallback? = null
     private var nextTideEntryId = 1L
@@ -180,8 +187,7 @@ class CreateTideFragment : Fragment() {
                                 R.raw.guide_tool_tides
                             )
                         },
-                        onSave = ::saveTide,
-                        onLocationCreated = { tideLocationView = it }
+                        onSave = ::saveTide
                     )
                 }
             }
@@ -197,16 +203,6 @@ class CreateTideFragment : Fragment() {
         } else if (tideEntries.isEmpty()) {
             tideEntries = listOf(newTideEntry())
         }
-    }
-
-    override fun onPause() {
-        tideLocationView?.pause()
-        super.onPause()
-    }
-
-    override fun onDestroyView() {
-        tideLocationView = null
-        super.onDestroyView()
     }
 
     private fun loadEditingTide() {
@@ -451,7 +447,6 @@ private fun CreateTideScreen(
     onTideHeightClick: (TideEntry) -> Unit,
     onHelp: () -> Unit,
     onSave: () -> Unit,
-    onLocationCreated: (CoordinateInputView) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -501,8 +496,7 @@ private fun CreateTideScreen(
                 TideLocationInput(
                     location = location,
                     isRequired = isLocationRequired,
-                    onLocationChange = onLocationChange,
-                    onLocationCreated = onLocationCreated
+                    onLocationChange = onLocationChange
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 EstimateTypeInput(
@@ -668,28 +662,133 @@ private fun TideLocationInput(
     location: Coordinate?,
     isRequired: Boolean,
     onLocationChange: (Coordinate?) -> Unit,
-    onLocationCreated: (CoordinateInputView) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val scope = rememberCoroutineScope()
+    var locationText by remember(location, formatter) {
+        mutableStateOf(location?.let { formatter.formatLocation(it) }.orEmpty())
+    }
+    val parsedCoordinate = remember(locationText) {
+        Coordinate.parse(locationText)
+    }
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
+
+    LaunchedEffect(location) {
+        val formatted = location?.let { formatter.formatLocation(it) }.orEmpty()
+        if (locationText != formatted) {
+            locationText = formatted
+        }
+    }
+
+    Row(
         modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            CoordinateInputView(context).apply {
-                id = R.id.tide_location
-                required = isRequired
-                setOnCoordinateChangeListener {
-                    onLocationChange(it)
-                }
-                onLocationCreated(this)
-            }
-        },
-        update = { input ->
-            input.required = isRequired
-            if (input.coordinate != location) {
-                input.coordinate = location
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isLoadingLocation) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("gps_loading")
+            )
+        } else {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.gps),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> scope.launch {
+                                isLoadingLocation = true
+                                val updated = withContext(Dispatchers.IO) {
+                                    sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                                }
+                                locationText = formatter.formatLocation(updated)
+                                onLocationChange(updated)
+                                isLoadingLocation = false
+                            }
+
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                ) ?: return@launch
+                                locationText = formatter.formatLocation(beacon.coordinate)
+                                onLocationChange(beacon.coordinate)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_location),
+                    contentDescription = stringResource(R.string.gps)
+                )
             }
         }
-    )
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlinedTextField(
+            value = locationText,
+            onValueChange = {
+                locationText = it
+                onLocationChange(Coordinate.parse(it))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("utm"),
+            label = {
+                Text(
+                    if (isRequired) {
+                        stringResource(R.string.field_required, stringResource(R.string.location))
+                    } else {
+                        stringResource(R.string.location)
+                    }
+                )
+            },
+            isError = locationText.isNotBlank() && parsedCoordinate == null,
+            supportingText = {
+                if (locationText.isNotBlank() && parsedCoordinate == null) {
+                    Text(stringResource(R.string.coordinate_input_invalid_location))
+                }
+            },
+            singleLine = true,
+            enabled = !isLoadingLocation
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        IconButton(
+            onClick = { showHelp = true },
+            modifier = Modifier.testTag("coordinate_input_help_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.location_input_help_title)
+            )
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.location_input_help_title)) },
+            text = { Text(stringResource(R.string.location_input_help)) }
+        )
+    }
 }
 
 @Composable
@@ -1071,8 +1170,7 @@ private fun CreateTideScreenPreview() {
             onTideTimeClick = {},
             onTideHeightClick = {},
             onHelp = {},
-            onSave = {},
-            onLocationCreated = {}
+            onSave = {}
         )
     }
 }
