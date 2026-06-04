@@ -2,10 +2,8 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
@@ -21,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
@@ -40,13 +40,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.os.BundleCompat
 import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.materialswitch.MaterialSwitch
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
@@ -339,8 +336,7 @@ private fun PlaceBeaconScreen(
                 TextInput(
                     text = data.name,
                     label = stringResource(R.string.name),
-                    viewId = R.id.beacon_name,
-                    inputType = InputType.TYPE_CLASS_TEXT,
+                    tag = "beacon_name",
                     errorText = stringResource(R.string.beacon_invalid_name),
                     validateOnBlur = { it.isNotBlank() },
                     onTextChange = onNameChange
@@ -405,10 +401,8 @@ private fun PlaceBeaconScreen(
                 TextInput(
                     text = data.notes,
                     label = stringResource(R.string.beacon_comment),
-                    viewId = R.id.comment,
-                    inputType = InputType.TYPE_CLASS_TEXT or
-                        InputType.TYPE_TEXT_FLAG_MULTI_LINE or
-                        InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS,
+                    tag = "comment",
+                    singleLine = false,
                     onTextChange = onNotesChange
                 )
             }
@@ -460,48 +454,40 @@ private fun PlaceBeaconHeader(
 private fun TextInput(
     text: String,
     label: String,
-    viewId: Int,
-    inputType: Int,
+    tag: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
     errorText: String? = null,
     validateOnBlur: ((String) -> Boolean)? = null
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            TextInputLayout(context).apply {
-                hint = label
-                addView(
-                    TextInputEditText(context).apply {
-                        id = viewId
-                        this.inputType = inputType
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.WRAP_CONTENT
-                        )
-                        doAfterTextChanged {
-                            onTextChange(it?.toString().orEmpty())
-                        }
-                        setOnFocusChangeListener { _, hasFocus ->
-                            if (!hasFocus && validateOnBlur != null && !validateOnBlur(this.text?.toString().orEmpty())) {
-                                error = errorText
-                            } else if (!hasFocus) {
-                                error = null
-                            }
-                        }
-                    }
-                )
+    var hasError by androidx.compose.runtime.remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = {
+            onTextChange(it)
+            if (hasError && validateOnBlur?.invoke(it) != false) {
+                hasError = false
             }
         },
-        update = { holder ->
-            holder.hint = label
-            val editText = holder.editText
-            if (editText?.text?.toString() != text) {
-                editText?.setText(text)
-                editText?.setSelection(editText.text?.length ?: 0)
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(tag)
+            .onFocusChanged {
+                if (!it.isFocused && validateOnBlur != null) {
+                    hasError = !validateOnBlur(text)
+                }
+            },
+        label = { Text(label) },
+        isError = hasError,
+        supportingText = {
+            if (hasError && errorText != null) {
+                Text(errorText)
             }
-        }
+        },
+        singleLine = singleLine,
+        minLines = if (singleLine) 1 else 4
     )
 }
 

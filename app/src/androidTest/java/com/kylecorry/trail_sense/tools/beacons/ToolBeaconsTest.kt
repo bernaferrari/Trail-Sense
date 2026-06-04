@@ -47,7 +47,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         hasText(string(R.string.create_beacon))
 
-        input(R.id.beacon_name, "Test beacon")
+        input(id("beacon_name")(), "Test beacon")
         input(R.id.beacon_location, "42, -72")
         input(R.id.beacon_elevation, "1000")
 
@@ -59,7 +59,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText(R.id.beacon_color_picker, string(R.string.color))
         hasText(R.id.beacon_icon_picker, string(R.string.icon))
 
-        input(R.id.comment, "Test notes")
+        input(id("comment")(), "Test notes")
 
         click(id("create_beacon_save_btn"))
 
@@ -106,18 +106,18 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     private fun editBeacon() {
         click(id("edit_btn"))
         hasText(string(R.string.create_beacon))
-        hasText(R.id.beacon_name, "Test beacon")
+        hasText(id("beacon_name"), "Test beacon")
         hasText(R.id.beacon_location, "42.000000°,  -72.000000°")
         hasText(R.id.beacon_elevation, "1000")
         isNotChecked(R.id.create_at_distance)
 
         scrollToEnd(id("create_beacon_scroll"))
-        hasText(R.id.comment, "Test notes")
+        hasText(id("comment"), "Test notes")
         hasText(R.id.beacon_group_picker, string(R.string.no_group))
         hasText(R.id.beacon_color_picker, string(R.string.color))
         hasText(R.id.beacon_icon_picker, string(R.string.icon))
 
-        input(R.id.comment, "Test notes 2")
+        input(id("comment")(), "Test notes 2")
 
         click(id("create_beacon_save_btn"))
 
@@ -174,7 +174,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         click(R.id.create_btn)
         click(string(R.string.beacon))
 
-        input(R.id.beacon_name, "Test beacon 2")
+        input(id("beacon_name")(), "Test beacon 2")
         input(R.id.beacon_location, "42, -72")
 
         scrollToEnd(id("create_beacon_scroll"))
