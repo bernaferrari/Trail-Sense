@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -51,7 +53,6 @@ import com.kylecorry.andromeda.views.badge.Badge
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
@@ -68,7 +69,6 @@ class FragmentToolSurvivalGuideList : Fragment() {
     private var chapters by mutableStateOf(emptyList<GuideDetails>())
     private var searchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
     private var summary by mutableStateOf("")
-    private var searchView: SearchView? = null
     private var searchJob: Job? = null
 
     private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
@@ -95,7 +95,6 @@ class FragmentToolSurvivalGuideList : Fragment() {
                         firstResult = searchResults.firstOrNull(),
                         markdown = markdown,
                         onQueryChange = ::updateQuery,
-                        onSearchViewCreated = { searchView = it },
                         onSummaryClick = ::openSearchResult
                     )
                 }
@@ -118,7 +117,6 @@ class FragmentToolSurvivalGuideList : Fragment() {
                 override fun handleOnBackPressed() {
                     if (query.isNotBlank()) {
                         updateQuery("")
-                        searchView?.query = ""
                     } else {
                         isEnabled = false
                         requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -134,7 +132,6 @@ class FragmentToolSurvivalGuideList : Fragment() {
 
     override fun onDestroyView() {
         searchJob?.cancel()
-        searchView = null
         super.onDestroyView()
     }
 
@@ -239,7 +236,6 @@ private fun SurvivalGuideListScreen(
     firstResult: SurvivalGuideSearchResult?,
     markdown: MarkdownService,
     onQueryChange: (String) -> Unit,
-    onSearchViewCreated: (SearchView) -> Unit,
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit
 ) {
     Surface(
@@ -249,8 +245,7 @@ private fun SurvivalGuideListScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             SurvivalGuideSearchBox(
                 query = query,
-                onQueryChange = onQueryChange,
-                onSearchViewCreated = onSearchViewCreated
+                onQueryChange = onQueryChange
             )
             if (summary.isNotBlank()) {
                 SurvivalGuideSummary(
@@ -278,27 +273,17 @@ private fun SurvivalGuideListScreen(
 @Composable
 private fun SurvivalGuideSearchBox(
     query: String,
-    onQueryChange: (String) -> Unit,
-    onSearchViewCreated: (SearchView) -> Unit
+    onQueryChange: (String) -> Unit
 ) {
-    AndroidView(
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        singleLine = true,
+        placeholder = { Text(text = stringResource(R.string.search)) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .testTag("search"),
-        factory = { context ->
-            SearchView(context, null).apply {
-                id = R.id.search
-                setOnSearchListener(onQueryChange)
-                onSearchViewCreated(this)
-            }
-        },
-        update = { searchView ->
-            if (searchView.query != query) {
-                searchView.query = query
-                searchView.setCursorPosition(query.length)
-            }
-        }
+            .testTag("search")
     )
 }
 
