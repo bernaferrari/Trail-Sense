@@ -162,6 +162,7 @@ dependencies {
     implementation(libs.work.runtime.ktx)
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.ui.ktx)
+    implementation(libs.androidx.fragment.compose)
     // Navigation 3 (pure Compose navigation) - added for the terminal zero-Fragment migration
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)

@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -19,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,9 +32,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
+import androidx.fragment.compose.AndroidFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -67,11 +67,10 @@ class PhotoMapsFragment : AndromedaFragment() {
     private var autoLockLocation = false
     private var map: PhotoMap? = null
     private var currentFragment: Fragment? = null
-    private var pendingFragment: Fragment? = null
-    private var isMapHostReady = false
     private var title by mutableStateOf("")
     private var subtitle by mutableStateOf<String?>(null)
     private var showRecenter by mutableStateOf(false)
+    private var childSpec by mutableStateOf<PhotoMapChildSpec?>(null)
 
     private val exportService by lazy { FragmentMapExportService(this) }
 
@@ -96,7 +95,10 @@ class PhotoMapsFragment : AndromedaFragment() {
                         showRecenter = showRecenter,
                         onRecenter = ::recenter,
                         onMenuClick = ::showMenu,
-                        onMapHostReady = ::onMapHostReady,
+                        childSpec = childSpec,
+                        onWarpFragment = ::onWarpFragment,
+                        onCalibrationFragment = ::onCalibrationFragment,
+                        onViewFragment = ::onViewFragment,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -113,8 +115,7 @@ class PhotoMapsFragment : AndromedaFragment() {
     }
 
     override fun onDestroyView() {
-        isMapHostReady = false
-        pendingFragment = null
+        currentFragment = null
         super.onDestroyView()
     }
 
@@ -376,26 +377,36 @@ class PhotoMapsFragment : AndromedaFragment() {
     }
 
     private fun setFragment(fragment: Fragment) {
-        currentFragment = fragment
-        if (!isMapHostReady) {
-            pendingFragment = fragment
-            return
-        }
-
-        pendingFragment = null
-        val fragmentManager = childFragmentManager
-        fragmentManager.commit {
-            replace(R.id.map_fragment, fragment)
+        childSpec = when (fragment) {
+            is WarpMapFragment -> PhotoMapChildSpec.Warp(mapId)
+            is PhotoMapCalibrationFragment -> PhotoMapChildSpec.Calibration(mapId)
+            is ViewPhotoMapFragment -> PhotoMapChildSpec.View(mapId, autoLockLocation)
+            else -> null
         }
     }
 
-    private fun onMapHostReady() {
-        if (isMapHostReady) {
-            return
+    private fun onWarpFragment(fragment: WarpMapFragment) {
+        currentFragment = fragment
+        fragment.setOnCompleteListener {
+            inBackground {
+                loadMap()
+            }
         }
+    }
 
-        isMapHostReady = true
-        pendingFragment?.let(::setFragment)
+    private fun onCalibrationFragment(fragment: PhotoMapCalibrationFragment) {
+        currentFragment = fragment
+        fragment.setOnRotationListener(::showRotation)
+        fragment.setOnCompleteListener {
+            inBackground {
+                autoRotate()
+                loadMap()
+            }
+        }
+    }
+
+    private fun onViewFragment(fragment: ViewPhotoMapFragment) {
+        currentFragment = fragment
     }
 }
 
@@ -406,7 +417,10 @@ private fun PhotoMapsScreen(
     showRecenter: Boolean,
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
-    onMapHostReady: () -> Unit,
+    childSpec: PhotoMapChildSpec?,
+    onWarpFragment: (WarpMapFragment) -> Unit,
+    onCalibrationFragment: (PhotoMapCalibrationFragment) -> Unit,
+    onViewFragment: (ViewPhotoMapFragment) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -421,21 +435,42 @@ private fun PhotoMapsScreen(
                 onRecenter = onRecenter,
                 onMenuClick = onMenuClick
             )
-            AndroidView(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .testTag("map_fragment"),
-                factory = { context ->
-                    FrameLayout(context).apply {
-                        id = R.id.map_fragment
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        onMapHostReady()
+                    .testTag("map_fragment")
+            ) {
+                childSpec?.let { spec ->
+                    key(spec.key) {
+                        when (spec) {
+                            is PhotoMapChildSpec.Warp -> AndroidFragment<WarpMapFragment>(
+                                modifier = Modifier.fillMaxSize(),
+                                arguments = Bundle().apply {
+                                    putLong("mapId", spec.mapId)
+                                },
+                                onUpdate = onWarpFragment
+                            )
+
+                            is PhotoMapChildSpec.Calibration -> AndroidFragment<PhotoMapCalibrationFragment>(
+                                modifier = Modifier.fillMaxSize(),
+                                arguments = Bundle().apply {
+                                    putLong("mapId", spec.mapId)
+                                },
+                                onUpdate = onCalibrationFragment
+                            )
+
+                            is PhotoMapChildSpec.View -> AndroidFragment<ViewPhotoMapFragment>(
+                                modifier = Modifier.fillMaxSize(),
+                                arguments = Bundle().apply {
+                                    putLong("mapId", spec.mapId)
+                                    putBoolean("autoLockLocation", spec.autoLockLocation)
+                                },
+                                onUpdate = onViewFragment
+                            )
+                        }
                     }
                 }
-            )
+            }
         }
     }
 }
@@ -523,6 +558,13 @@ private fun HeaderImageButton(
     }
 }
 
+private sealed class PhotoMapChildSpec(val key: String) {
+    data class Warp(val mapId: Long) : PhotoMapChildSpec("warp-$mapId")
+    data class Calibration(val mapId: Long) : PhotoMapChildSpec("calibration-$mapId")
+    data class View(val mapId: Long, val autoLockLocation: Boolean) :
+        PhotoMapChildSpec("view-$mapId-$autoLockLocation")
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun PhotoMapsScreenPreview() {
@@ -533,7 +575,10 @@ private fun PhotoMapsScreenPreview() {
             showRecenter = true,
             onRecenter = {},
             onMenuClick = {},
-            onMapHostReady = {}
+            childSpec = null,
+            onWarpFragment = {},
+            onCalibrationFragment = {},
+            onViewFragment = {}
         )
     }
 }
