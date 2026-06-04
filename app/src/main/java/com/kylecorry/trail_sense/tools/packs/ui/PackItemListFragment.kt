@@ -1,50 +1,64 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.TextView
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.domain.PackService
@@ -53,8 +67,9 @@ import com.kylecorry.trail_sense.tools.packs.domain.sort.PackedPercentPackItemSo
 import com.kylecorry.trail_sense.tools.packs.domain.sort.WeightPackItemSort
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.PackItemAction
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.PackItemListItemMapper
+import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryColorMapper
+import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
+import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import java.lang.Double.max
 import kotlin.math.floor
 import kotlinx.coroutines.Dispatchers
@@ -66,16 +81,15 @@ class PackItemListFragment : AndromedaFragment() {
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val packService = PackService()
     private val prefs by lazy { UserPreferences(requireContext()) }
-    private val listMapper by lazy { PackItemListItemMapper(requireContext(), this::handleAction) }
 
     private var items = emptyList<PackItem>()
+    private var sortedItems by mutableStateOf(emptyList<PackItem>())
     private var pack: Pack? = null
     private var packId: Long = 0L
     private var title by mutableStateOf("")
     private var totalPercentPacked by mutableStateOf("")
     private var totalPackedWeight by mutableStateOf("")
     private var showWeightOverview by mutableStateOf(false)
-    private var packItemViews: PackItemViews? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,12 +107,22 @@ class PackItemListFragment : AndromedaFragment() {
                 TrailSenseTheme {
                     PackItemScreen(
                         title = title,
+                        items = sortedItems,
                         totalPercentPacked = totalPercentPacked,
                         totalPackedWeight = totalPackedWeight,
                         showWeightOverview = showWeightOverview,
-                        onMenuClick = ::showMenu,
+                        onSort = ::changeSort,
+                        onRename = { pack?.let { current -> renamePack(current) } },
+                        onExport = { pack?.let { current -> exportPack(current) } },
+                        onDeletePack = { pack?.let { current -> deletePack(current) } },
+                        onClearAmounts = ::clearAmounts,
                         onAddItem = ::addItem,
-                        onViewsReady = ::onViewsReady,
+                        onItemClick = ::editItem,
+                        onItemCheckedChange = ::onItemCheckboxClicked,
+                        onAddAmount = ::add,
+                        onSubtractAmount = ::subtract,
+                        onEditItem = ::editItem,
+                        onDeleteItem = ::deleteItem,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -112,21 +136,6 @@ class PackItemListFragment : AndromedaFragment() {
         inBackground {
             loadPack(packId)
         }
-    }
-
-    override fun onDestroyView() {
-        packItemViews = null
-        super.onDestroyView()
-    }
-
-    private fun onViewsReady(views: PackItemViews) {
-        if (packItemViews != null) {
-            return
-        }
-
-        packItemViews = views
-        views.inventoryList.emptyView = views.emptyText
-        updateItems()
     }
 
     private suspend fun loadPack(packId: Long) {
@@ -155,44 +164,24 @@ class PackItemListFragment : AndromedaFragment() {
         )
     }
 
-    private fun showMenu(anchor: View) {
-        Pickers.menu(
-            anchor,
-            listOf(
-                getString(R.string.sort),
-                getString(R.string.rename),
-                getString(R.string.export),
-                getString(R.string.delete),
-                getString(R.string.clear_amounts)
-            )
-        ) {
-            when (it) {
-                0 -> changeSort()
-                1 -> pack?.let { current -> renamePack(current) }
-                2 -> pack?.let { current -> exportPack(current) }
-                3 -> pack?.let { current -> deletePack(current) }
-                4 -> pack?.let {
-                    Alerts.dialog(
-                        requireContext(),
-                        getString(R.string.clear_amounts),
-                        getString(R.string.action_inventory_clear_confirm)
-                    ) { cancelled ->
-                        if (!cancelled) {
-                            inBackground {
-                                withContext(Dispatchers.IO) {
-                                    itemRepo.clearPackedAmounts(packId)
-                                }
-                            }
-                        }
+    private fun clearAmounts() {
+        Alerts.dialog(
+            requireContext(),
+            getString(R.string.clear_amounts),
+            getString(R.string.action_inventory_clear_confirm)
+        ) { cancelled ->
+            if (!cancelled) {
+                inBackground {
+                    withContext(Dispatchers.IO) {
+                        itemRepo.clearPackedAmounts(packId)
                     }
                 }
             }
-            true
         }
     }
 
     private fun onSortChange(newSort: String) {
-        packItemViews?.inventoryList?.setItems(sorts[newSort]?.sort(items) ?: items, listMapper)
+        sortedItems = sorts[newSort]?.sort(items) ?: items
         prefs.packs.packSort = newSort
     }
 
@@ -268,16 +257,6 @@ class PackItemListFragment : AndromedaFragment() {
             putLong("pack_id", packId)
         }
         findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
-    }
-
-    private fun handleAction(item: PackItem, action: PackItemAction) {
-        when (action) {
-            PackItemAction.Check -> onItemCheckboxClicked(item)
-            PackItemAction.Add -> add(item)
-            PackItemAction.Subtract -> subtract(item)
-            PackItemAction.Edit -> editItem(item)
-            PackItemAction.Delete -> deleteItem(item)
-        }
     }
 
     private fun add(item: PackItem) {
@@ -378,48 +357,97 @@ class PackItemListFragment : AndromedaFragment() {
         }
         totalPercentPacked =
             getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
-        packItemViews?.inventoryList?.setItems(
-            sorts[prefs.packs.packSort]?.sort(items) ?: items,
-            listMapper
-        )
+        sortedItems = sorts[prefs.packs.packSort]?.sort(items) ?: items
     }
 }
-
-private data class PackItemViews(
-    val inventoryList: AndromedaListView,
-    val emptyText: TextView
-)
 
 @Composable
 private fun PackItemScreen(
     title: String,
+    items: List<PackItem>,
     totalPercentPacked: String,
     totalPackedWeight: String,
     showWeightOverview: Boolean,
-    onMenuClick: (View) -> Unit,
+    onSort: () -> Unit,
+    onRename: () -> Unit,
+    onExport: () -> Unit,
+    onDeletePack: () -> Unit,
+    onClearAmounts: () -> Unit,
     onAddItem: () -> Unit,
-    onViewsReady: (PackItemViews) -> Unit,
+    onItemClick: (PackItem) -> Unit,
+    onItemCheckedChange: (PackItem) -> Unit,
+    onAddAmount: (PackItem) -> Unit,
+    onSubtractAmount: (PackItem) -> Unit,
+    onEditItem: (PackItem) -> Unit,
+    onDeleteItem: (PackItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Scaffold(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        topBar = {
             PackItemHeader(
                 title = title,
-                onMenuClick = onMenuClick
+                onSort = onSort,
+                onRename = onRename,
+                onExport = onExport,
+                onDeletePack = onDeletePack,
+                onClearAmounts = onClearAmounts
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddItem,
+                modifier = Modifier.testTag("add_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add)
+                )
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             PackDetails(
                 totalPercentPacked = totalPercentPacked,
                 totalPackedWeight = totalPackedWeight,
                 showWeightOverview = showWeightOverview
             )
-            PackItemListHost(
-                onAddItem = onAddItem,
-                onViewsReady = onViewsReady,
-                modifier = Modifier.fillMaxSize()
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (items.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.inventory_empty_text),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .testTag("inventory_empty_text"),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("inventory_list"),
+                        contentPadding = PaddingValues(bottom = 96.dp)
+                    ) {
+                        items(items, key = { it.id }) { item ->
+                            PackItemRow(
+                                item = item,
+                                onClick = { onItemClick(item) },
+                                onCheckedChange = { onItemCheckedChange(item) },
+                                onAddAmount = { onAddAmount(item) },
+                                onSubtractAmount = { onSubtractAmount(item) },
+                                onEditItem = { onEditItem(item) },
+                                onDeleteItem = { onDeleteItem(item) }
+                            )
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -427,8 +455,14 @@ private fun PackItemScreen(
 @Composable
 private fun PackItemHeader(
     title: String,
-    onMenuClick: (View) -> Unit
+    onSort: () -> Unit,
+    onRename: () -> Unit,
+    onExport: () -> Unit,
+    onDeletePack: () -> Unit,
+    onClearAmounts: () -> Unit
 ) {
+    var isMenuOpen by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface
@@ -445,30 +479,48 @@ private fun PackItemHeader(
                     .weight(1f)
                     .testTag("inventory_list_title"),
                 color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            HeaderMenuButton(onMenuClick)
+            Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("inventory_menu_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.sort)) }, onClick = {
+                        isMenuOpen = false
+                        onSort()
+                    })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = {
+                        isMenuOpen = false
+                        onRename()
+                    })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.export)) }, onClick = {
+                        isMenuOpen = false
+                        onExport()
+                    })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = {
+                        isMenuOpen = false
+                        onDeletePack()
+                    })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.clear_amounts)) }, onClick = {
+                        isMenuOpen = false
+                        onClearAmounts()
+                    })
+                }
+            }
         }
     }
-}
-
-@Composable
-private fun HeaderMenuButton(onMenuClick: (View) -> Unit) {
-    val tint = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    AndroidView(
-        modifier = Modifier.testTag("inventory_menu_btn"),
-        factory = { context ->
-            ImageButton(context).apply {
-                id = R.id.inventory_menu_btn
-                background = null
-                setImageResource(R.drawable.ic_menu_dots)
-            }
-        },
-        update = {
-            it.setColorFilter(tint)
-            it.setOnClickListener { view -> onMenuClick(view) }
-        }
-    )
 }
 
 @Composable
@@ -487,14 +539,14 @@ private fun PackDetails(
         PackDetailStat(
             icon = R.drawable.ic_tool_pack,
             text = totalPercentPacked,
-            id = R.id.total_percent_packed,
+            tag = "total_percent_packed",
             modifier = Modifier.weight(1f)
         )
         if (showWeightOverview) {
             PackDetailStat(
                 icon = R.drawable.ic_weight,
                 text = totalPackedWeight,
-                id = R.id.total_packed_weight,
+                tag = "total_packed_weight",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -505,7 +557,7 @@ private fun PackDetails(
 private fun PackDetailStat(
     icon: Int,
     text: String,
-    id: Int,
+    tag: String,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -518,84 +570,156 @@ private fun PackDetailStat(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        AndroidView(
-            modifier = Modifier.padding(start = 8.dp),
-            factory = { context ->
-                TextView(context).apply {
-                    this.id = id
-                }
-            },
-            update = {
-                it.text = text
-            }
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .testTag(tag),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
 
 @Composable
-private fun PackItemListHost(
-    onAddItem: () -> Unit,
-    onViewsReady: (PackItemViews) -> Unit,
-    modifier: Modifier = Modifier
+private fun PackItemRow(
+    item: PackItem,
+    onClick: () -> Unit,
+    onCheckedChange: () -> Unit,
+    onAddAmount: () -> Unit,
+    onSubtractAmount: () -> Unit,
+    onEditItem: () -> Unit,
+    onDeleteItem: () -> Unit
 ) {
-    AndroidView(
-        modifier = modifier.testTag("inventory_list"),
-        factory = { context ->
-            FrameLayout(context).apply {
-                val margin = Resources.dp(context, 16f).toInt()
+    val context = LocalContext.current
+    val categoryTextMapper = remember(context) { ItemCategoryStringMapper(context) }
+    val iconMapper = remember { ItemCategoryIconMapper() }
+    val colorMapper = remember { ItemCategoryColorMapper() }
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    var isMenuOpen by remember { mutableStateOf(false) }
+    val count = formatItemCount(item)
+    val packedWeight = item.weight?.let {
+        item.packedWeight?.let { weight ->
+            formatService.formatWeight(weight, Units.getDecimalPlaces(weight.units), false)
+        }
+    }
 
-                val list = AndromedaListView(context, null).apply {
-                    id = R.id.inventory_list
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 8.dp, top = 10.dp, bottom = 10.dp)
+            .testTag("inventory_item"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = item.isFullyPacked,
+            onCheckedChange = { onCheckedChange() },
+            modifier = Modifier.testTag("item_checkbox")
+        )
+        Icon(
+            painter = painterResource(iconMapper.getIcon(item.category)),
+            contentDescription = null,
+            tint = ComposeColor(colorMapper.map(item.category).color),
+            modifier = Modifier.size(24.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = item.name,
+                modifier = Modifier.testTag("item_title"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(
+                modifier = Modifier.padding(top = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = categoryTextMapper.getString(item.category),
+                    modifier = Modifier.testTag("item_category"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (item.isOptional) {
+                    Text(
+                        text = stringResource(R.string.packing_list_optional),
+                        modifier = Modifier.testTag("item_optional"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-                val empty = TextView(context).apply {
-                    id = R.id.inventory_empty_text
-                    text = context.getString(R.string.inventory_empty_text)
-                    gravity = Gravity.CENTER
-                }
-
-                val addButton = FloatingActionButton(context).apply {
-                    id = R.id.add_btn
-                    setImageResource(R.drawable.ic_add)
-                    isClickable = true
-                    isFocusable = true
-                    setOnClickListener { onAddItem() }
-                }
-
-                addView(list)
-                addView(
-                    empty,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER
+            }
+            Row(
+                modifier = Modifier.padding(top = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                Text(
+                    text = count,
+                    modifier = Modifier.testTag("item_count"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (packedWeight != null) {
+                    Text(
+                        text = packedWeight,
+                        modifier = Modifier.testTag("item_weight"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                )
-                addView(
-                    addButton,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.END
-                    ).apply {
-                        marginEnd = margin
-                        bottomMargin = margin
-                    }
-                )
-
-                onViewsReady(
-                    PackItemViews(
-                        inventoryList = list,
-                        emptyText = empty
-                    )
-                )
+                }
             }
         }
-    )
+        Box {
+            IconButton(
+                onClick = { isMenuOpen = true },
+                modifier = Modifier.testTag("item_menu")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null
+                )
+            }
+            DropdownMenu(
+                expanded = isMenuOpen,
+                onDismissRequest = { isMenuOpen = false }
+            ) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.add)) }, onClick = {
+                    isMenuOpen = false
+                    onAddAmount()
+                })
+                DropdownMenuItem(text = { Text(stringResource(R.string.subtract)) }, onClick = {
+                    isMenuOpen = false
+                    onSubtractAmount()
+                })
+                DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, onClick = {
+                    isMenuOpen = false
+                    onEditItem()
+                })
+                DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = {
+                    isMenuOpen = false
+                    onDeleteItem()
+                })
+            }
+        }
+    }
+}
+
+private fun formatItemCount(item: PackItem): String {
+    val currentAmount = DecimalFormatter.format(item.amount, 4, false)
+    return if (item.desiredAmount != 0.0) {
+        "$currentAmount / ${DecimalFormatter.format(item.desiredAmount, 4, false)}"
+    } else {
+        currentAmount
+    }
 }
 
 @Preview(showBackground = true)
@@ -604,12 +728,22 @@ private fun PackItemScreenPreview() {
     TrailSenseTheme {
         PackItemScreen(
             title = "Weekend Kit",
+            items = emptyList(),
             totalPercentPacked = "50% packed",
             totalPackedWeight = "8 lb",
             showWeightOverview = true,
-            onMenuClick = {},
+            onSort = {},
+            onRename = {},
+            onExport = {},
+            onDeletePack = {},
+            onClearAmounts = {},
             onAddItem = {},
-            onViewsReady = {}
+            onItemClick = {},
+            onItemCheckedChange = {},
+            onAddAmount = {},
+            onSubtractAmount = {},
+            onEditItem = {},
+            onDeleteItem = {}
         )
     }
 }

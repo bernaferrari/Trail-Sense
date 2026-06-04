@@ -13,7 +13,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
@@ -71,12 +70,12 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             "1.1 lb",
             false
         )
-        hasText(R.id.total_percent_packed, "50% packed")
-        hasText(R.id.total_packed_weight, "1.1 lb")
+        hasText(id("total_percent_packed"), "50% packed")
+        hasText(id("total_packed_weight"), "1.1 lb")
     }
 
     private fun canCheckAnItem() {
-        click(com.kylecorry.andromeda.views.R.id.checkbox)
+        click(id("item_checkbox"))
         hasItem(
             "Test Item 1",
             2,
@@ -85,12 +84,12 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             "2.2 lb",
             true
         )
-        hasText(R.id.total_percent_packed, "100% packed")
-        hasText(R.id.total_packed_weight, "2.2 lb")
+        hasText(id("total_percent_packed"), "100% packed")
+        hasText(id("total_packed_weight"), "2.2 lb")
     }
 
     private fun canEditAnItemOnClick() {
-        click(com.kylecorry.andromeda.views.R.id.title)
+        click(id("item_title"))
         hasText(string(R.string.edit_item_title))
         hasItemForm("Test Item 1", 2, 2, string(R.string.category_food), 1.1f)
         click(id("create_btn"))
@@ -105,7 +104,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun canEditAnItemFromMenu() {
-        clickListItemMenu(string(R.string.edit), 1)
+        clickItemMenu(string(R.string.edit), 1)
         hasText(string(R.string.edit_item_title))
         hasItemForm("Test Item 1", 2, 2, string(R.string.category_food), 1.1f)
         click(id("create_btn"))
@@ -141,12 +140,12 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             true,
             1
         )
-        hasText(R.id.total_percent_packed, "75% packed")
-        hasText(R.id.total_packed_weight, "2.7 lb")
+        hasText(id("total_percent_packed"), "75% packed")
+        hasText(id("total_packed_weight"), "2.7 lb")
     }
 
     private fun canIncrementItem() {
-        clickListItemMenu(string(R.string.add), 0)
+        clickItemMenu(string(R.string.add), 0)
         input(string(R.string.dialog_item_amount), "1")
         clickOk()
         hasItem(
@@ -161,7 +160,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun canDecrementItem() {
-        clickListItemMenu(string(R.string.subtract), 0)
+        clickItemMenu(string(R.string.subtract), 0)
         input(string(R.string.dialog_item_amount), "2")
         clickOk()
         hasItem(
@@ -176,7 +175,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun canDeleteAnItem() {
-        clickListItemMenu(string(R.string.delete), 0)
+        clickItemMenu(string(R.string.delete), 0)
         not {
             hasItem(
                 "Test Item 2",
@@ -252,7 +251,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         clickOk()
         hasText(string(R.string.packing_lists))
         not {
-            hasText(com.kylecorry.andromeda.views.R.id.title, "Copied Pack")
+            hasText(id("pack_list_item_title"), "Copied Pack")
         }
     }
 
@@ -300,19 +299,20 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         isChecked: Boolean,
         index: Int = 0
     ) {
-        hasText(com.kylecorry.andromeda.views.R.id.title, name, index = index)
-        hasText(com.kylecorry.andromeda.views.R.id.tags, category, index = index)
-        hasText(
-            com.kylecorry.andromeda.views.R.id.data_1,
-            "$amount / $desiredAmount",
-            index = index
-        )
-        hasText(com.kylecorry.andromeda.views.R.id.data_2, weight, index = index)
-        isChecked(com.kylecorry.andromeda.views.R.id.checkbox, isChecked, index = index)
+        hasText(id("item_title", index), name)
+        hasText(id("item_category", index), category)
+        hasText(id("item_count", index), "$amount / $desiredAmount")
+        hasText(id("item_weight", index), weight)
+        isChecked(id("item_checkbox", index), isChecked)
     }
 
     private fun clickToolbarMenuItem(label: String) {
         click(id("inventory_menu_btn"))
+        click(label)
+    }
+
+    private fun clickItemMenu(label: String, index: Int = 0) {
+        click(id("item_menu", index))
         click(label)
     }
 
@@ -323,7 +323,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         category: String,
         weight: Float
     ) {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         hasText(string(R.string.create_item_title))
 
         input(R.id.name_edit, name)
@@ -348,6 +348,6 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
         // Verify the new pack is created
         hasText(name)
-        hasText(R.id.inventory_empty_text, string(R.string.inventory_empty_text))
+        hasText(id("inventory_empty_text"), string(R.string.inventory_empty_text))
     }
 }
