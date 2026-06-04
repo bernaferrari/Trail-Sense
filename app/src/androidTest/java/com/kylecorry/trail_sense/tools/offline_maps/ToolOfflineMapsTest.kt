@@ -226,7 +226,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canCreateMapFromCamera(goBack: Boolean = true) {
         click(R.id.add_btn)
         click("Camera")
-        click(R.id.capture_button)
+        click(id("capture_button"))
         input(string(R.string.name), "Test Map", index = 1)
         clickOk()
 

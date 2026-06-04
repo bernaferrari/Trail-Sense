@@ -22,8 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,11 +37,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -273,23 +278,38 @@ private fun SightingCompassContent(
                     .padding(vertical = TrailSenseSpacing.lg),
                 contentAlignment = Alignment.Center
             ) {
-                AndroidView(
+                CaptureButton(
+                    onClick = onCapture,
                     modifier = Modifier
                         .size(64.dp)
-                        .testTag("capture_button"),
-                    factory = { context ->
-                        ShutterButton(context).apply {
-                            id = R.id.capture_button
-                            contentDescription = context.getString(R.string.camera_capture)
-                            setOnClickListener { onCapture() }
-                        }
-                    },
-                    update = {
-                        it.setOnClickListener { onCapture() }
-                    }
+                        .testTag("capture_button")
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CaptureButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val contentDescription = stringResource(R.string.camera_capture)
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier.semantics {
+            this.contentDescription = contentDescription
+        },
+        shape = CircleShape,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.primary
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
     }
 }
 

@@ -36,7 +36,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
 
         click(string(R.string.camera))
 
-        click(R.id.capture_button)
+        click(id("capture_button"))
 
         hasText(string(R.string.clouds))
 

@@ -24,6 +24,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.clearAppData
 import com.kylecorry.trail_sense.test_utils.TestUtils.closeApp
 import com.kylecorry.trail_sense.test_utils.TestUtils.grantPermission
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.viewWithResourceId
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Rule
@@ -150,7 +151,7 @@ class SmokeTest {
 
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click({ viewWithResourceId("$packageName:id/capture_button") })
+        click(id("capture_button"))
         input("Name", "Test Map", index = 1)
         clickOk()
 
@@ -179,7 +180,7 @@ class SmokeTest {
     private fun smokeTestClouds() {
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click({ viewWithResourceId("$packageName:id/capture_button") })
+        click(id("capture_button"))
         // Verify a cloud is selected (the top one)
         isChecked({ viewWithResourceId("$packageName:id/checkbox") })
         back()

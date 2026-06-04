@@ -187,7 +187,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         scrollToStart(R.id.scroll_view)
         click("Take photo")
-        click(R.id.capture_button)
+        click(id("capture_button"))
 
         isVisible(R.id.image)
 
