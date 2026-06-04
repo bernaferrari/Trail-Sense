@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,10 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -459,7 +461,6 @@ private fun PhotoMapHeader(
         ) {
             if (showRecenter) {
                 HeaderImageButton(
-                    id = R.id.map_recenter_btn,
                     icon = R.drawable.ic_recenter,
                     tag = "map_recenter_btn",
                     onClick = { _ -> onRecenter() }
@@ -493,7 +494,6 @@ private fun PhotoMapHeader(
             }
 
             HeaderImageButton(
-                id = R.id.map_menu_btn,
                 icon = R.drawable.ic_menu_dots,
                 tag = "map_menu_btn",
                 onClick = onMenuClick
@@ -504,28 +504,23 @@ private fun PhotoMapHeader(
 
 @Composable
 private fun HeaderImageButton(
-    id: Int,
     icon: Int,
     tag: String,
     onClick: (View) -> Unit
 ) {
-    val tint = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    AndroidView(
+    val anchor = LocalView.current
+    IconButton(
+        onClick = { onClick(anchor) },
         modifier = Modifier
             .size(48.dp)
-            .testTag(tag),
-        factory = { context ->
-            ImageButton(context).apply {
-                this.id = id
-                background = null
-                setImageResource(icon)
-            }
-        },
-        update = {
-            it.setColorFilter(tint)
-            it.setOnClickListener { view -> onClick(view) }
-        }
-    )
+            .testTag(tag)
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Preview(showBackground = true)
