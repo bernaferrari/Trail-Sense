@@ -7,12 +7,6 @@ import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -24,20 +18,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.signal.CellNetwork
-import com.kylecorry.sol.time.Time.toZonedDateTime
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
 class PathPointsListFragment : BottomSheetDialogFragment() {
@@ -106,7 +93,7 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
 private fun PathPointsContent(
     points: List<PathPoint>,
     formatService: FormatService,
-    baseDistanceUnits: com.kylecorry.sol.units.DistanceUnits,
+    baseDistanceUnits: DistanceUnits,
     onCreateBeacon: (PathPoint) -> Unit,
     onDelete: (PathPoint) -> Unit,
     onNavigate: (PathPoint) -> Unit,
@@ -131,93 +118,6 @@ private fun PathPointsContent(
             )
             TrailSenseDivider()
         }
-    }
-}
-
-@Composable
-private fun PathPointRow(
-    point: PathPoint,
-    formatService: FormatService,
-    baseDistanceUnits: com.kylecorry.sol.units.DistanceUnits,
-    onCreateBeacon: (PathPoint) -> Unit,
-    onDelete: (PathPoint) -> Unit,
-    onNavigate: (PathPoint) -> Unit,
-    onView: (PathPoint) -> Unit
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-    val title = point.time?.toZonedDateTime()?.let { date ->
-        stringResource(
-            R.string.waypoint_time_format,
-            formatService.formatRelativeDate(date.toLocalDate()),
-            formatService.formatTime(date.toLocalTime(), false)
-        )
-    } ?: stringResource(R.string.waypoint)
-    val subtitle = point.elevation?.let {
-        val elevation = Distance.meters(it).convertTo(baseDistanceUnits)
-        val slope = stringResource(R.string.slope_amount, formatService.formatPercentage(point.slope))
-        "${formatService.formatDistance(elevation, Units.getDecimalPlaces(elevation.units), false)}    $slope"
-    }
-    val cellNetwork = point.cellSignal?.network?.id?.let { id ->
-        CellNetwork.values().firstOrNull { it.id == id }
-    }
-
-    TrailSenseListItem(
-        title = title,
-        subtitle = subtitle,
-        icon = point.cellSignal?.let {
-            painterResource(com.kylecorry.trail_sense.shared.sensors.CellSignalUtils.getCellQualityImage(it.quality))
-        },
-        iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-        trailing = {
-            IconButton(
-                onClick = { menuOpen = true },
-                modifier = Modifier.testTag("waypoint_menu_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.navigate)) },
-                    onClick = {
-                        menuOpen = false
-                        onNavigate(point)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.create_beacon)) },
-                    onClick = {
-                        menuOpen = false
-                        onCreateBeacon(point)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        menuOpen = false
-                        onDelete(point)
-                    }
-                )
-            }
-        },
-        onClick = { onView(point) },
-        animateEntrance = false,
-        modifier = Modifier.testTag("waypoint_time")
-    )
-
-    if (cellNetwork != null) {
-        Text(
-            text = formatService.formatCellNetwork(cellNetwork),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.testTag("signal_strength")
-        )
     }
 }
 

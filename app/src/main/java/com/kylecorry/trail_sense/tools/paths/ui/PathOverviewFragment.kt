@@ -684,19 +684,6 @@ class PathOverviewFragment : AndromedaFragment() {
     }
 
     // Waypoints
-    private fun drawWaypointListItem(itemView: WaypointListItemView, item: PathPoint) {
-        val itemStrategy = WaypointListItem(
-            requireContext(),
-            formatService,
-            { createBeacon(it) },
-            { deleteWaypoint(it) },
-            { navigateToWaypoint(it) },
-            { /* Do nothing */ }
-        )
-
-        itemStrategy.display(itemView, item)
-    }
-
     private fun viewPoints() {
         binding.root.scrollTo(0, 0)
         pointSheet = PathPointsListFragment()
@@ -720,15 +707,28 @@ class PathOverviewFragment : AndromedaFragment() {
         if (selectedPointId != null) {
             binding.pathSelectedPoint.isVisible = true
             chart.highlight(point)
-            val itemView = WaypointListItemView(requireContext())
             binding.pathSelectedPoint.addView(
-                itemView,
+                ComposeView(requireContext()).apply {
+                    setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+                    setContent {
+                        TrailSenseTheme {
+                            PathPointRow(
+                                point = point,
+                                formatService = formatService,
+                                baseDistanceUnits = prefs.baseDistanceUnits,
+                                onCreateBeacon = { createBeacon(it) },
+                                onDelete = { deleteWaypoint(it) },
+                                onNavigate = { navigateToWaypoint(it) },
+                                onView = {}
+                            )
+                        }
+                    }
+                },
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
             )
-            drawWaypointListItem(itemView, point)
         } else {
             deselectPoint()
         }
