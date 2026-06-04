@@ -225,10 +225,7 @@
     <item name="add_point_btn" type="id" />
     <item name="paths_timing" type="id" />
     <item name="weather_title" type="id" />
-    <item name="pressure_marker" type="id" />
     <item name="weather_list" type="id" />
-    <item name="weather_updating" type="id" />
-    <item name="weather_play_bar" type="id" />
     <item name="search_view_text_input_layout" type="id" />
     <item name="search_view_edit_text" type="id" />
     <item name="camera_toggle" type="id" />

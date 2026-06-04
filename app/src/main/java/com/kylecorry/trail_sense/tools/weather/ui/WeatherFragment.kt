@@ -5,14 +5,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
@@ -28,6 +34,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -52,11 +60,10 @@ import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
-import com.kylecorry.trail_sense.shared.alerts.ViewLoadingIndicator
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
-import com.kylecorry.trail_sense.shared.views.PlayBarView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -111,12 +118,16 @@ class WeatherFragment : AndromedaFragment() {
     private var pressureForecast: List<Reading<Pressure>> = emptyList()
     private var rawHistory: List<Reading<Pressure>> = emptyList()
     private var weatherItems by mutableStateOf<List<WeatherListItem>>(emptyList())
+    private var pressureMarkerText by mutableStateOf<String?>(null)
+    private var isWeatherUpdating by mutableStateOf(false)
+    private var weatherMonitorState by mutableStateOf(FeatureState.Off)
+    private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
 
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
     private var weather: CurrentWeather? = null
     private val loadingIndicator by lazy {
         ResettableLoadingIndicator(
-            ViewLoadingIndicator(binding.weatherUpdating)
+            StateLoadingIndicator { isWeatherUpdating = it }
         )
     }
 
@@ -147,6 +158,13 @@ class WeatherFragment : AndromedaFragment() {
                     WeatherHost(
                         views = views,
                         weatherItems = weatherItems,
+                        pressureMarkerText = pressureMarkerText,
+                        isWeatherUpdating = isWeatherUpdating,
+                        monitorState = weatherMonitorState,
+                        monitorFrequency = weatherMonitorFrequency,
+                        formatService = formatService,
+                        onChangeMonitorFrequency = ::changeWeatherFrequency,
+                        onToggleMonitor = ::toggleWeatherMonitor,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -170,18 +188,17 @@ class WeatherFragment : AndromedaFragment() {
 
         chart = PressureChart(binding.chart) { timeAgo, pressure ->
             if (timeAgo == null || pressure == null) {
-                binding.pressureMarker.isVisible = false
+                pressureMarkerText = null
             } else {
                 val formatted = formatService.formatPressure(
                     Pressure.from(pressure, units),
                     Units.getDecimalPlaces(units)
                 )
-                binding.pressureMarker.text = getString(
+                pressureMarkerText = getString(
                     R.string.pressure_reading_time_ago,
                     formatted,
                     formatService.formatDuration(timeAgo, false)
                 )
-                binding.pressureMarker.isVisible = true
             }
         }
 
@@ -201,30 +218,29 @@ class WeatherFragment : AndromedaFragment() {
             true
         }
 
-        binding.weatherPlayBar.setOnSubtitleClickListener {
-            ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute()
-        }
-
-        binding.weatherPlayBar.setOnPlayButtonClickListener {
-            inBackground {
-                when (weatherMonitorService.getFeatureState()) {
-                    FeatureState.On -> weatherMonitorService.disable()
-                    FeatureState.Off -> {
-                        weatherMonitorService.enable()
-                        RequestRemoveBatteryRestrictionCommand(this@WeatherFragment).execute()
-                    }
-
-                    FeatureState.Unavailable -> toast(getString(R.string.weather_monitoring_disabled))
-                }
-            }
-        }
     }
 
     private fun updateStatusBar() {
-        binding.weatherPlayBar.setState(
-            weatherMonitorService.getFeatureState(),
-            weatherMonitorService.getFrequency()
-        )
+        weatherMonitorState = weatherMonitorService.getFeatureState()
+        weatherMonitorFrequency = weatherMonitorService.getFrequency()
+    }
+
+    private fun changeWeatherFrequency() {
+        ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute()
+    }
+
+    private fun toggleWeatherMonitor() {
+        inBackground {
+            when (weatherMonitorService.getFeatureState()) {
+                FeatureState.On -> weatherMonitorService.disable()
+                FeatureState.Off -> {
+                    weatherMonitorService.enable()
+                    RequestRemoveBatteryRestrictionCommand(this@WeatherFragment).execute()
+                }
+
+                FeatureState.Unavailable -> toast(getString(R.string.weather_monitoring_disabled))
+            }
+        }
     }
 
     override fun onResume() {
@@ -429,16 +445,20 @@ class WeatherFragment : AndromedaFragment() {
 
 data class WeatherViews(
     val weatherTitle: Toolbar,
-    val chart: Chart,
-    val pressureMarker: TextView,
-    val weatherUpdating: TextView,
-    val weatherPlayBar: PlayBarView
+    val chart: Chart
 )
 
 @Composable
 private fun WeatherHost(
     views: WeatherViews,
     weatherItems: List<WeatherListItem>,
+    pressureMarkerText: String?,
+    isWeatherUpdating: Boolean,
+    monitorState: FeatureState,
+    monitorFrequency: Duration?,
+    formatService: FormatService,
+    onChangeMonitorFrequency: () -> Unit,
+    onToggleMonitor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -460,12 +480,18 @@ private fun WeatherHost(
                 factory = { views.chart }
             )
 
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                factory = { views.pressureMarker }
-            )
+            if (pressureMarkerText != null) {
+                Text(
+                    text = pressureMarkerText,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .testTag("pressure_marker"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             LazyColumn(
                 modifier = Modifier
@@ -480,19 +506,113 @@ private fun WeatherHost(
                 }
             }
 
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                factory = { views.weatherUpdating }
-            )
+            if (isWeatherUpdating) {
+                UpdatingWeather(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                )
+            }
 
-            AndroidView(
+            WeatherMonitorPlayBar(
+                state = monitorState,
+                frequency = monitorFrequency,
+                formatService = formatService,
+                onSubtitleClick = onChangeMonitorFrequency,
+                onPlayClick = onToggleMonitor,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                factory = { views.weatherPlayBar }
+                    .padding(top = 8.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun UpdatingWeather(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.testTag("weather_updating"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_update),
+            contentDescription = null,
+            modifier = Modifier.size(12.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.updating_weather),
+            modifier = Modifier.padding(start = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun WeatherMonitorPlayBar(
+    state: FeatureState,
+    frequency: Duration?,
+    formatService: FormatService,
+    onSubtitleClick: () -> Unit,
+    onPlayClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isOn = state == FeatureState.On
+    val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
+        " ${stringResource(R.string.dash)} ${
+            formatService.formatDuration(
+                it,
+                short = true,
+                includeSeconds = true
+            )
+        }"
+    } ?: "")
+
+    Surface(
+        modifier = modifier.testTag("weather_play_bar"),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_weather),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
+                    .testTag("play_bar_title")
+            ) {
+                Text(
+                    text = stringResource(R.string.weather_monitor),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    modifier = Modifier.clickable(onClick = onSubtitleClick),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onPlayClick,
+                modifier = Modifier.testTag("play_btn")
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
+                    ),
+                    contentDescription = null
+                )
+            }
         }
     }
 }
@@ -530,37 +650,9 @@ private fun createWeatherViews(context: Context): WeatherViews {
         id = R.id.chart
     }
 
-    val pressureMarker = TextView(context).apply {
-        id = R.id.pressure_marker
-        gravity = android.view.Gravity.CENTER
-        visibility = View.GONE
-    }
-
-    val updating = TextView(context).apply {
-        id = R.id.weather_updating
-        text = context.getString(R.string.updating_weather)
-        gravity = android.view.Gravity.CENTER
-        compoundDrawablePadding = 8.dp(context)
-        setCompoundDrawables(
-            size = 12.dp(context),
-            left = R.drawable.ic_update
-        )
-        visibility = View.GONE
-    }
-
-    val playBar = PlayBarView(context, null).apply {
-        id = R.id.weather_play_bar
-        tag = context.getString(R.string.tag_play_bar)
-        setImageResource(R.drawable.ic_weather)
-        this.title = context.getString(R.string.weather_monitor)
-    }
-
     return WeatherViews(
         weatherTitle = title,
-        chart = chart,
-        pressureMarker = pressureMarker,
-        weatherUpdating = updating,
-        weatherPlayBar = playBar
+        chart = chart
     )
 }
 
@@ -574,7 +666,26 @@ private fun WeatherHostPreview() {
     TrailSenseTheme {
         WeatherHost(
             views = createWeatherViews(LocalContext.current),
-            weatherItems = emptyList()
+            weatherItems = emptyList(),
+            pressureMarkerText = null,
+            isWeatherUpdating = false,
+            monitorState = FeatureState.Off,
+            monitorFrequency = Duration.ofMinutes(15),
+            formatService = FormatService.getInstance(LocalContext.current),
+            onChangeMonitorFrequency = {},
+            onToggleMonitor = {}
         )
+    }
+}
+
+private class StateLoadingIndicator(
+    private val setLoading: (Boolean) -> Unit
+) : ILoadingIndicator {
+    override fun show() {
+        setLoading(true)
+    }
+
+    override fun hide() {
+        setLoading(false)
     }
 }

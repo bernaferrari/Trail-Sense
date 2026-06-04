@@ -14,6 +14,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
@@ -74,8 +75,8 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     }
 
     private fun canUseWeatherMonitor() {
-        hasText(R.id.play_bar_title, "Off - 15m")
-        click(R.id.play_btn)
+        hasText(id("play_bar_title"), "Off - 15m")
+        click(id("play_btn"))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -91,9 +92,9 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        hasText(R.id.play_bar_title, "On - 15m")
+        hasText(id("play_bar_title"), "On - 15m")
 
-        click(R.id.play_btn)
+        click(id("play_btn"))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
