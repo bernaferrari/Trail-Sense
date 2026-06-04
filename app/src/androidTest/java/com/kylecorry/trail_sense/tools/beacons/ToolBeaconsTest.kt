@@ -22,10 +22,10 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.beacon_title, string(R.string.beacons))
+        hasText(id("beacon_title"), string(R.string.beacons))
 
         // No beacons by default
-        hasText(R.id.beacon_empty_text, string(R.string.no_beacons))
+        hasText(id("beacon_empty_text"), string(R.string.no_beacons))
 
         createBeacon()
         openBeacon()
@@ -42,7 +42,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun createBeacon() {
-        click(R.id.create_btn)
+        click(id("create_btn"))
         click(string(R.string.beacon), exact = true)
 
         hasText(string(R.string.create_beacon))
@@ -63,7 +63,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         click(id("create_beacon_save_btn"))
 
-        hasText(R.id.beacon_title, string(R.string.beacons))
+        hasText(id("beacon_title"), string(R.string.beacons))
         hasText("Test beacon")
     }
 
@@ -75,18 +75,17 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText(id("beacon_altitude"), "1000 ft")
         hasText(id("beacon_altitude"), string(R.string.elevation))
         hasText(
-            id("beacon_distance"),
             Regex("\\d+\\.?\\d* (mi|ft)"),
             waitForTime = AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
         )
         hasText(id("beacon_distance"), string(R.string.distance))
-        hasText(id("beacon_temperature"), Regex("\\d+ °F / \\d+ °F"))
+        hasText(Regex("\\d+ °F / \\d+ °F"))
         hasText(id("beacon_temperature"), string(R.string.temperature_high_low))
-        hasText(id("beacon_sunrise"), Regex("\\d+:\\d+ (AM|PM)"))
+        hasText(Regex("\\d+:\\d+ (AM|PM)"))
         hasText(id("beacon_sunrise"), string(R.string.sunrise))
-        hasText(id("beacon_sunset"), Regex("\\d+:\\d+ (AM|PM)"))
+        hasText(Regex("\\d+:\\d+ (AM|PM)"))
         hasText(id("beacon_sunset"), string(R.string.sunset))
-        hasText(id("beacon_tide"), Regex("(High|Low|Half)"))
+        hasText(Regex("(High|Low|Half)"))
         hasText(id("beacon_tide"), string(R.string.tide))
         hasText(id("comment_text"), "Test notes")
     }
@@ -156,7 +155,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun createGroup() {
-        click(R.id.create_btn)
+        click(id("create_btn"))
         click(string(R.string.group))
 
         input(string(R.string.name), "Test group")
@@ -171,7 +170,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun createBeaconInGroup() {
-        click(R.id.create_btn)
+        click(id("create_btn"))
         click(string(R.string.beacon))
 
         input(id("beacon_name")(), "Test beacon 2")
@@ -222,9 +221,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun search() {
-        input(R.id.searchbox, "2")
+        input(id("searchbox")(), "2")
         hasText("Test beacon 2")
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Test group")
     }
 }

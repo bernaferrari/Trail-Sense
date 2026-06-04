@@ -16,6 +16,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
@@ -71,7 +72,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         click(R.id.beaconBtn)
 
         // Create a beacon
-        click(R.id.create_btn)
+        click(id("create_btn"))
         click("Beacon", exact = true)
         input("Name", "Test Beacon")
         input("Location", "1.0, -1.0")
@@ -80,7 +81,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         click(toolbarButton(R.id.create_beacon_title, Side.Right))
 
         // Navigate to it
-        isVisible(R.id.beacon_recycler)
+        isVisible(id("beacon_list"))
         click("Test Beacon")
         delay(200)
         click(string(R.string.navigate))
@@ -101,7 +102,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         clickOk()
 
         click("Test Beacon")
-        hasText(R.id.beacon_title, "Test Beacon")
+        hasText(id("beacon_title"), "Test Beacon")
         back()
 
         click(toolbarButton(R.id.navigation_sheet_title, Side.Right))
