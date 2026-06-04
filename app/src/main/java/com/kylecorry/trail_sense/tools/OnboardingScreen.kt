@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.onboarding
 
-import android.widget.TextView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -27,12 +26,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.method.LinkMovementMethodCompat
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -113,23 +111,20 @@ private fun OnboardingPageContents(
     modifier: Modifier = Modifier
 ) {
     val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
-    AndroidView(
-        modifier = modifier.testTag("page_contents"),
-        factory = { context ->
-            TextView(context).apply {
-                id = R.id.page_contents
-                setLineSpacing(0f, 1.5f)
-                movementMethod = LinkMovementMethodCompat.getInstance()
-                textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            }
-        },
-        update = {
-            if (contents is String) {
-                markdown.setMarkdown(it, contents)
-            } else {
-                it.text = contents
-            }
+    val parsed = remember(contents, markdown) {
+        if (contents is String) {
+            markdown.toMarkdown(contents)
+        } else {
+            contents
         }
+    }
+    TrailSenseLinkedText(
+        text = parsed,
+        modifier = modifier.testTag("page_contents"),
+        style = MaterialTheme.typography.bodyMedium.copy(
+            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5f
+        ),
+        textAlign = TextAlign.Center
     )
 }
 

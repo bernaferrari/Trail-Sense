@@ -50,7 +50,6 @@
     <item name="bottom_navigation" type="id" />
     <item name="page_name" type="id" />
     <item name="page_image" type="id" />
-    <item name="page_contents" type="id" />
     <item name="page_settings" type="id" />
     <item name="next_button" type="id" />
     <item name="root" type="id" />
