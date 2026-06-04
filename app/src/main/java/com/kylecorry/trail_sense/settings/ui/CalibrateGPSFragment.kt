@@ -6,24 +6,41 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.luna.time.Throttle
@@ -36,12 +53,15 @@ import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
+import kotlinx.coroutines.launch
 
 class CalibrateGPSFragment : Fragment() {
 
@@ -52,7 +72,8 @@ class CalibrateGPSFragment : Fragment() {
 
     private lateinit var gps: IGPS
     private lateinit var realGps: IGPS
-    private var coordinateInput: CoordinateInputView? = null
+    private var locationOverride by mutableStateOf(Coordinate.zero)
+    private var isOverrideLocationLoading by mutableStateOf(false)
 
     private var wasUsingRealGPS = false
     private var wasUsingCachedGPS = false
@@ -71,6 +92,7 @@ class CalibrateGPSFragment : Fragment() {
         wasUsingCachedGPS = shouldUseCachedGPS()
         gps = sensorService.getGPS()
         realGps = getRealGPS()
+        locationOverride = prefs.locationOverride
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -185,23 +207,13 @@ class CalibrateGPSFragment : Fragment() {
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    AndroidView(
-                                        factory = { context ->
-                                            CoordinateInputView(context).apply {
-                                                gps = realGps
-                                                coordinate = prefs.locationOverride
-                                                isEnabled = overrideEnabled
-                                                setOnCoordinateChangeListener {
-                                                    prefs.locationOverride = it ?: Coordinate.zero
-                                                    resetGPS()
-                                                    update()
-                                                }
-                                                coordinateInput = this
-                                            }
-                                        },
-                                        update = {
-                                            it.isEnabled = overrideEnabled
-                                        },
+                                    GPSOverrideCoordinateInput(
+                                        coordinate = locationOverride,
+                                        enabled = overrideEnabled,
+                                        isLoading = isOverrideLocationLoading,
+                                        locationProvider = { realGps.location },
+                                        onCoordinateChange = ::setLocationOverride,
+                                        onAutoFill = ::autofillOverrideLocation,
                                         modifier = Modifier.padding(top = TrailSenseSpacing.sm)
                                     )
                                 }
@@ -225,11 +237,10 @@ class CalibrateGPSFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         stopGPS()
-        coordinateInput?.pause()
+        stopOverrideLocationAutofill()
     }
 
     override fun onDestroyView() {
-        coordinateInput = null
         setLocationSummary = null
         setPermissionVisible = null
         setAutoLocationEnabled = null
@@ -257,9 +268,8 @@ class CalibrateGPSFragment : Fragment() {
     }
 
     private fun resetRealGPS() {
-        coordinateInput?.pause()
+        stopOverrideLocationAutofill()
         realGps = getRealGPS()
-        coordinateInput?.gps = realGps
     }
 
     private fun getRealGPS(): IGPS {
@@ -295,6 +305,35 @@ class CalibrateGPSFragment : Fragment() {
         cache.remove(CustomGPS.LAST_LATITUDE)
     }
 
+    private fun setLocationOverride(coordinate: Coordinate?) {
+        val updated = coordinate ?: Coordinate.zero
+        locationOverride = updated
+        prefs.locationOverride = updated
+        resetGPS()
+        update()
+    }
+
+    private fun autofillOverrideLocation() {
+        if (isOverrideLocationLoading) {
+            return
+        }
+        isOverrideLocationLoading = true
+        realGps.start(this::onOverrideLocationUpdate)
+    }
+
+    private fun onOverrideLocationUpdate(): Boolean {
+        setLocationOverride(realGps.location)
+        isOverrideLocationLoading = false
+        return false
+    }
+
+    private fun stopOverrideLocationAutofill() {
+        if (::realGps.isInitialized) {
+            realGps.stop(this::onOverrideLocationUpdate)
+        }
+        isOverrideLocationLoading = false
+    }
+
     private fun update() {
         if (throttle.isThrottled()) {
             return
@@ -320,6 +359,126 @@ class CalibrateGPSFragment : Fragment() {
         PreferencesSubsystem.getInstance(requireContext()).preferences.putBoolean(
             getString(key),
             value
+        )
+    }
+}
+
+@Composable
+private fun GPSOverrideCoordinateInput(
+    coordinate: Coordinate,
+    enabled: Boolean,
+    isLoading: Boolean,
+    locationProvider: () -> Coordinate,
+    onCoordinateChange: (Coordinate?) -> Unit,
+    onAutoFill: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val scope = rememberCoroutineScope()
+    var coordinateText by remember {
+        mutableStateOf(formatter.formatLocation(coordinate))
+    }
+    val parsedCoordinate = remember(coordinateText) {
+        Coordinate.parse(coordinateText)
+    }
+    var showHelp by remember { mutableStateOf(false) }
+
+    LaunchedEffect(coordinate) {
+        if (coordinate != Coordinate.zero && coordinate != parsedCoordinate) {
+            coordinateText = formatter.formatLocation(coordinate)
+        }
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("gps_loading")
+            )
+        } else {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.gps),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> onAutoFill()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(
+                                        BeaconService(context),
+                                        locationProvider
+                                    )
+                                ) ?: return@launch
+                                onCoordinateChange(beacon.coordinate)
+                            }
+                        }
+                    }
+                },
+                enabled = enabled,
+                modifier = Modifier.testTag("gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_location),
+                    contentDescription = stringResource(R.string.gps)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.size(8.dp))
+        OutlinedTextField(
+            value = coordinateText,
+            onValueChange = {
+                coordinateText = it
+                onCoordinateChange(Coordinate.parse(it))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("coordinate_input"),
+            label = { Text(stringResource(R.string.location)) },
+            isError = coordinateText.isNotBlank() && parsedCoordinate == null,
+            supportingText = {
+                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
+                    Text(stringResource(R.string.coordinate_input_invalid_location))
+                }
+            },
+            singleLine = true,
+            enabled = enabled && !isLoading
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        IconButton(
+            onClick = { showHelp = true },
+            enabled = enabled,
+            modifier = Modifier.testTag("coordinate_input_help_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.location_input_help_title)
+            )
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.location_input_help_title)) },
+            text = { Text(stringResource(R.string.location_input_help)) }
         )
     }
 }
