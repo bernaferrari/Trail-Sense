@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.IdRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -38,12 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
@@ -274,27 +271,27 @@ private fun CreateItemScreen(
                         .padding(horizontal = 16.dp)
                         .padding(top = 16.dp, bottom = 96.dp)
                 ) {
-                    AndroidTextInput(
+                    PackTextInput(
                         text = name,
                         label = stringResource(R.string.name),
                         inputType = InputType.TYPE_CLASS_TEXT,
-                        viewId = R.id.name_edit,
+                        tag = "name_edit",
                         onTextChange = onNameChange
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    AndroidTextInput(
+                    PackTextInput(
                         text = amount,
                         label = stringResource(R.string.packed_amount),
                         inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
-                        viewId = R.id.count_edit,
+                        tag = "count_edit",
                         onTextChange = onAmountChange
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    AndroidTextInput(
+                    PackTextInput(
                         text = desiredAmount,
                         label = stringResource(R.string.desired_amount),
                         inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
-                        viewId = R.id.desired_amount_edit,
+                        tag = "desired_amount_edit",
                         onTextChange = onDesiredAmountChange
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -358,46 +355,30 @@ private fun CreateItemHeader(title: String) {
 }
 
 @Composable
-private fun AndroidTextInput(
+private fun PackTextInput(
     text: String,
     label: String,
     inputType: Int,
-    @IdRes viewId: Int,
+    tag: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            TextInputLayout(context).apply {
-                hint = label
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                addView(
-                    TextInputEditText(context).apply {
-                        id = viewId
-                        this.inputType = inputType
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.WRAP_CONTENT
-                        )
-                        doAfterTextChanged {
-                            onTextChange(it?.toString().orEmpty())
-                        }
-                    }
-                )
-            }
-        },
-        update = { input ->
-            input.hint = label
-            val editText = input.editText
-            if (editText?.text?.toString() != text) {
-                editText?.setText(text)
-                editText?.setSelection(editText.text?.length ?: 0)
-            }
+    val keyboardType = when {
+        inputType and InputType.TYPE_CLASS_NUMBER == InputType.TYPE_CLASS_NUMBER -> {
+            androidx.compose.ui.text.input.KeyboardType.Decimal
         }
+
+        else -> androidx.compose.ui.text.input.KeyboardType.Text
+    }
+    OutlinedTextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(tag),
+        label = { Text(label) },
+        singleLine = true,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType)
     )
 }
 

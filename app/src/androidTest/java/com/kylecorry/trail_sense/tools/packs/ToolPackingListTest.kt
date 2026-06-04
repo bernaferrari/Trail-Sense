@@ -269,9 +269,9 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         category: String,
         weight: Float
     ) {
-        hasText(R.id.name_edit) { it.startsWith(name) }
-        hasText(R.id.count_edit) { it.startsWith(amount.toString()) }
-        hasText(R.id.desired_amount_edit) { it.startsWith(desiredAmount.toString()) }
+        hasText(id("name_edit")) { it.startsWith(name) }
+        hasText(id("count_edit")) { it.startsWith(amount.toString()) }
+        hasText(id("desired_amount_edit")) { it.startsWith(desiredAmount.toString()) }
         hasText(R.id.category_spinner) { it.startsWith(category) }
 
         if (weight % 1 != 0f){
@@ -326,9 +326,9 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         click(id("add_btn"))
         hasText(string(R.string.create_item_title))
 
-        input(R.id.name_edit, name)
-        input(R.id.count_edit, amount.toString())
-        input(R.id.desired_amount_edit, desiredAmount.toString())
+        input(id("name_edit")(), name)
+        input(id("count_edit")(), amount.toString())
+        input(id("desired_amount_edit")(), desiredAmount.toString())
         click(R.id.category_spinner)
 
         scrollUntil(direction = Direction.UP) {
