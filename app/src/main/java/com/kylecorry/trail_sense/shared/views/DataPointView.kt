@@ -4,139 +4,169 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.annotation.DrawableRes
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setTextDistinct
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 
 class DataPointView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
-    private val dataPoint: ConstraintLayout
-    private val dataPointImage: ImageView
-    private val dataPointTitle: TextView
-    private val dataPointDescription: TextView
-    private var tint: Int
+    private var icon by mutableStateOf<Int?>(null)
+    private var titleText by mutableStateOf("")
+    private var descriptionText by mutableStateOf("")
+    private var showDescriptionState by mutableStateOf(true)
+    private var descriptionClickListener by mutableStateOf<(() -> Unit)?>(null)
+    private var contentGravityState by mutableIntStateOf(Gravity.START)
+    private var tint by mutableIntStateOf(0)
+    private val contentView = ComposeView(context)
 
     var title: String
-        get() = dataPointTitle.text.toString()
+        get() = titleText
         set(value) {
-            dataPointTitle.setTextDistinct(value)
+            titleText = value
         }
 
     var description: String
-        get() = dataPointDescription.text.toString()
+        get() = descriptionText
         set(value) {
-            dataPointDescription.setTextDistinct(value)
+            descriptionText = value
         }
 
     init {
-        dataPoint = ConstraintLayout(context).apply {
-            id = R.id.data_point
-        }
-        addView(
-            dataPoint,
-            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        )
-
-        dataPointImage = ImageView(context).apply {
-            id = R.id.data_point_image
-            alpha = 0.75f
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-        dataPoint.addView(
-            dataPointImage,
-            ConstraintLayout.LayoutParams(
-                Resources.dp(context, 20f).toInt(),
-                Resources.dp(context, 20f).toInt()
-            ).apply {
-                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            }
-        )
-
-        dataPointTitle = TextView(context).apply {
-            id = R.id.data_point_title
-        }
-        dataPoint.addView(
-            dataPointTitle,
-            ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = Resources.dp(context, 16f).toInt()
-                goneStartMargin = 0
-                startToEnd = R.id.data_point_image
-                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            }
-        )
-
-        dataPointDescription = TextView(context).apply {
-            id = R.id.data_point_desc
-        }
-        dataPoint.addView(
-            dataPointDescription,
-            ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = R.id.data_point_title
-                topToBottom = R.id.data_point_title
-            }
-        )
-
         val a = context.theme.obtainStyledAttributes(attrs, R.styleable.DataPointView, 0, 0)
         tint = a.getColor(
             R.styleable.DataPointView_dataPointTint,
-            Resources.androidTextColorPrimary(context)
+            0
         )
-        val icon = a.getResourceId(R.styleable.DataPointView_dataPointIcon, -1)
-        setImageResource(if (icon == -1) null else icon)
+        val initialIcon = a.getResourceId(R.styleable.DataPointView_dataPointIcon, -1)
+        setImageResource(if (initialIcon == -1) null else initialIcon)
         title = a.getString(R.styleable.DataPointView_dataPointText) ?: ""
         description = a.getString(R.styleable.DataPointView_dataPointDescription) ?: ""
-        dataPoint.layoutParams =
-            LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).also {
-                it.gravity = a.getInt(R.styleable.DataPointView_android_gravity, Gravity.START)
-            }
+        contentGravityState = a.getInt(R.styleable.DataPointView_android_gravity, Gravity.START)
         a.recycle()
+
+        addView(
+            contentView.apply {
+                setContent {
+                    TrailSenseTheme {
+                        DataPointContent(
+                            title = titleText,
+                            description = descriptionText,
+                            icon = icon,
+                            tint = tint.takeUnless { it == 0 }?.let { Color(it) }
+                                ?: MaterialTheme.colorScheme.onSurface,
+                            showDescription = showDescriptionState,
+                            gravity = contentGravityState,
+                            onDescriptionClick = descriptionClickListener
+                        )
+                    }
+                }
+            },
+            createContentLayoutParams(contentGravityState)
+        )
     }
 
 
     fun setImageResource(@DrawableRes res: Int?) {
-        if (res != null) {
-            dataPointImage.setImageResource(res)
-            Colors.setImageColor(
-                dataPointImage,
-                if (tint == -1) Resources.androidTextColorPrimary(context) else tint
-            )
-        }
-        dataPointImage.isVisible = res != null
+        icon = res
     }
 
     fun setContentGravity(gravity: Int) {
-        dataPoint.layoutParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
-        ).also {
-            it.gravity = gravity
-        }
+        contentGravityState = gravity
+        contentView.layoutParams = createContentLayoutParams(gravity)
     }
 
     fun setShowDescription(showDescription: Boolean) {
-        dataPointDescription.isVisible = showDescription
+        showDescriptionState = showDescription
     }
 
     fun setOnDescriptionClickListener(listener: (() -> Unit)?) {
-        if (listener != null) {
-            dataPointDescription.setOnClickListener { listener() }
-        } else {
-            dataPointDescription.setOnClickListener(null)
-        }
+        descriptionClickListener = listener
     }
 
+}
+
+private fun createContentLayoutParams(gravity: Int): FrameLayout.LayoutParams {
+    return FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.WRAP_CONTENT,
+        FrameLayout.LayoutParams.WRAP_CONTENT
+    ).also {
+        it.gravity = gravity
+    }
+}
+
+@Composable
+private fun DataPointContent(
+    title: String,
+    description: String,
+    @DrawableRes icon: Int?,
+    tint: Color,
+    showDescription: Boolean,
+    gravity: Int,
+    onDescriptionClick: (() -> Unit)?
+) {
+    Row(
+        modifier = Modifier
+            .wrapContentSize(gravity.toAlignment())
+            .testTag("data_point"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = tint.copy(alpha = 0.75f),
+                modifier = Modifier.testTag("data_point_image")
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+        }
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.testTag("data_point_title")
+            )
+            if (showDescription) {
+                val descriptionModifier = if (onDescriptionClick != null) {
+                    Modifier.clickable { onDescriptionClick() }
+                } else {
+                    Modifier
+                }
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = descriptionModifier.testTag("data_point_desc")
+                )
+            }
+        }
+    }
+}
+
+private fun Int.toAlignment(): Alignment {
+    return when {
+        this and Gravity.CENTER_HORIZONTAL == Gravity.CENTER_HORIZONTAL -> Alignment.Center
+        this and Gravity.RIGHT == Gravity.RIGHT || this and Gravity.END == Gravity.END -> Alignment.CenterEnd
+        else -> Alignment.CenterStart
+    }
 }
