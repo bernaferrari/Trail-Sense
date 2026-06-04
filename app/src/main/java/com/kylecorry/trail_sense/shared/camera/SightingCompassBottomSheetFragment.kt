@@ -2,12 +2,14 @@ package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
 import android.content.DialogInterface
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,15 +40,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
 import com.kylecorry.andromeda.fragments.inBackground
@@ -57,8 +66,10 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.navigation.ui.LinearCompassView
+import com.kylecorry.sol.units.CompassDirection
 import kotlinx.coroutines.Dispatchers
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class SightingCompassBottomSheetFragment(
     private val onSelect: (bearing: Float?) -> Unit
@@ -66,10 +77,10 @@ class SightingCompassBottomSheetFragment(
 
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private var camera: CameraView? = null
-    private var linearCompass: LinearCompassView? = null
     private var isViewCreated = false
     private var isCameraStarted = false
     private var bearingState by mutableStateOf<Float?>(null)
+    private var compassRange by mutableStateOf(180f)
 
     var bearing: Float?
         get() = bearingState
@@ -104,10 +115,7 @@ class SightingCompassBottomSheetFragment(
                             }
                             updateCompass()
                         },
-                        onCompassReady = {
-                            linearCompass = it
-                            updateCompass()
-                        },
+                        compassRange = compassRange,
                         modifier = Modifier
                             .fillMaxSize()
                             .windowInsetsPadding(WindowInsets.systemBars)
@@ -153,28 +161,21 @@ class SightingCompassBottomSheetFragment(
     }
 
     private fun updateCompass() {
-        linearCompass?.azimuth = bearing ?: 0f
         updateCompassRange()
     }
 
     private fun updateCompassRange() {
         val camera = camera ?: return
-        if (linearCompass == null) {
-            return
-        }
 
         inBackground {
             fovRunner.enqueue {
-                if (
-                    this@SightingCompassBottomSheetFragment.camera == null ||
-                    this@SightingCompassBottomSheetFragment.linearCompass == null
-                ) {
+                if (this@SightingCompassBottomSheetFragment.camera == null) {
                     return@enqueue
                 }
                 val minimumFOV = 5f
                 val range = camera.fov.first.coerceAtLeast(minimumFOV)
                 onMain {
-                    linearCompass?.range = range
+                    compassRange = range
                 }
             }
         }
@@ -188,7 +189,6 @@ class SightingCompassBottomSheetFragment(
     override fun onDestroyView() {
         camera?.stop()
         camera = null
-        linearCompass = null
         isCameraStarted = false
         isViewCreated = false
         fovRunner.cancel()
@@ -208,7 +208,7 @@ private fun SightingCompassContent(
     onClose: () -> Unit,
     onCapture: () -> Unit,
     onCameraReady: (CameraView) -> Unit,
-    onCompassReady: (LinearCompassView) -> Unit,
+    compassRange: Float,
     modifier: Modifier = Modifier
 ) {
     val isPreview = LocalInspectionMode.current
@@ -254,22 +254,14 @@ private fun SightingCompassContent(
                         .background(MaterialTheme.colorScheme.primary)
                         .testTag("view_camera_line")
                 )
-                AndroidView(
+                SightingCompassStrip(
+                    bearing = bearing,
+                    range = compassRange,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp)
                         .align(Alignment.Center)
-                        .testTag("linear_compass"),
-                    factory = { context ->
-                        LinearCompassView(context, null).apply {
-                            id = R.id.linear_compass
-                            azimuth = bearing
-                            onCompassReady(this)
-                        }
-                    },
-                    update = {
-                        it.azimuth = bearing
-                    }
+                        .testTag("linear_compass")
                 )
             }
             Box(
@@ -284,6 +276,83 @@ private fun SightingCompassContent(
                         .size(64.dp)
                         .testTag("capture_button")
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SightingCompassStrip(
+    bearing: Float,
+    range: Float,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val formatter = FormatService.getInstance(context)
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val labelColor = onSurface.toArgb()
+    val north = formatter.formatDirection(CompassDirection.North)
+    val south = formatter.formatDirection(CompassDirection.South)
+    val east = formatter.formatDirection(CompassDirection.East)
+    val west = formatter.formatDirection(CompassDirection.West)
+
+    Box(modifier = modifier) {
+        Icon(
+            painter = painterResource(R.drawable.ic_arrow_target),
+            contentDescription = null,
+            modifier = Modifier
+                .size(25.dp)
+                .align(Alignment.TopCenter),
+            tint = onSurface
+        )
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val rawMinimum = bearing - range / 2f
+            val rawMaximum = bearing + range / 2f
+            val start = floor(rawMinimum / 5f).toInt() * 5
+            val end = ceil(rawMaximum / 5f).toInt() * 5
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = labelColor
+                textAlign = Paint.Align.CENTER
+                textSize = 15.sp.toPx()
+            }
+
+            fun toPixel(value: Float): Float {
+                val difference = ((value - bearing + 540f) % 360f) - 180f
+                return ((difference / range) + 0.5f) * size.width
+            }
+
+            for (value in start..end step 5) {
+                val x = toPixel(value.toFloat())
+                if (x < 0f || x > size.width) {
+                    continue
+                }
+                val normalized = ((value % 360) + 360) % 360
+                val isCardinal = normalized % 45 == 0
+                val isMajor = normalized % 90 == 0
+                val lineHeight = when {
+                    isMajor -> 0.5f * size.height
+                    normalized % 15 == 0 -> 0.75f * size.height
+                    else -> 10 / 12f * size.height
+                }
+                drawLine(
+                    color = if (isCardinal) primary else onSurface,
+                    start = Offset(x, size.height),
+                    end = Offset(x, lineHeight),
+                    strokeWidth = 4.dp.toPx()
+                )
+                if (isMajor) {
+                    val label = when (normalized) {
+                        0 -> north
+                        90 -> east
+                        180 -> south
+                        270 -> west
+                        else -> ""
+                    }
+                    drawIntoCanvas {
+                        it.nativeCanvas.drawText(label, x, 5 / 12f * size.height, textPaint)
+                    }
+                }
             }
         }
     }
@@ -351,7 +420,7 @@ private fun SightingCompassContentPreview() {
             onClose = {},
             onCapture = {},
             onCameraReady = {},
-            onCompassReady = {}
+            compassRange = 60f
         )
     }
 }
