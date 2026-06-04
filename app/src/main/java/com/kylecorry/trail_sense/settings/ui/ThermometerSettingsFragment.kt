@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,11 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -35,7 +39,6 @@ import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Reading
@@ -46,6 +49,7 @@ import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
@@ -62,9 +66,10 @@ import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillHistoricalTemperaturesCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class ThermometerSettingsFragment : Fragment() {
@@ -688,19 +693,78 @@ private fun TemperatureChartView(
     raw: List<Reading<Float>>,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        factory = { context ->
-            Chart(context).apply {
-                tag = TemperatureChart(this, false)
-            }
-        },
-        update = {
-            (it.tag as TemperatureChart).plot(data, raw)
-        },
+    val primary = MaterialTheme.colorScheme.primary
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val rawColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height))
-    )
+            .height(dimensionResource(R.dimen.chart_height)),
+        contentAlignment = Alignment.Center
+    ) {
+        if (data.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val startTime = data.firstOrNull()?.time ?: raw.firstOrNull()?.time ?: Instant.now()
+            val points = data.map {
+                Duration.between(startTime, it.time).toMillis() / 3_600_000f to it.value
+            }
+            val rawPoints = raw.map {
+                Duration.between(startTime, it.time).toMillis() / 3_600_000f to it.value
+            }
+            val allPoints = points + rawPoints
+            val minX = allPoints.minOfOrNull { it.first } ?: 0f
+            val maxX = allPoints.maxOfOrNull { it.first } ?: 1f
+            val minYValue = allPoints.minOfOrNull { it.second } ?: 0f
+            val maxYValue = allPoints.maxOfOrNull { it.second } ?: 1f
+            val yMargin = 5f
+            val yMinimum = minYValue - yMargin
+            val yMaximum = max(maxYValue + yMargin, yMinimum + 10f)
+            val xRange = (maxX - minX).takeIf { it > 0f } ?: 1f
+            val yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
+
+            fun x(value: Float): Float {
+                return ((value - minX) / xRange).coerceIn(0f, 1f) * size.width
+            }
+
+            fun y(value: Float): Float {
+                return size.height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * size.height
+            }
+
+            repeat(5) { index ->
+                val y = index / 4f * size.height
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            fun drawSeries(points: List<Pair<Float, Float>>, color: Color, strokeWidth: Float) {
+                points.zipWithNext().forEach { (start, end) ->
+                    drawLine(
+                        color = color,
+                        start = androidx.compose.ui.geometry.Offset(x(start.first), y(start.second)),
+                        end = androidx.compose.ui.geometry.Offset(x(end.first), y(end.second)),
+                        strokeWidth = strokeWidth
+                    )
+                }
+            }
+
+            drawSeries(rawPoints, rawColor, 2.dp.toPx())
+            drawSeries(points, primary, 2.dp.toPx())
+        }
+    }
 }
 
 @Composable
