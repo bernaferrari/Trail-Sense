@@ -1,29 +1,27 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Typeface
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
@@ -32,6 +30,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -40,24 +39,21 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.onBackPressed
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
@@ -65,12 +61,8 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
-import com.kylecorry.trail_sense.shared.grouping.lists.bind
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
-import com.kylecorry.trail_sense.shared.views.PlayBarView
-import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -105,12 +97,9 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCom
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ViewPathCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
+import java.time.Duration
 
 class PathsFragment : AndromedaFragment() {
-
-    private var pathViews: PathsViews? = null
-    private val binding: PathsViews
-        get() = pathViews ?: error("Path views are not ready")
 
     private val service by lazy {
         Tools.getService(
@@ -139,20 +128,46 @@ class PathsFragment : AndromedaFragment() {
     private var lastRoot: IPath? = null
     private var pathItems by mutableStateOf<List<IPath>>(emptyList())
     private var pathListResetKey by mutableIntStateOf(0)
+    private var title by mutableStateOf("")
+    private var searchText by mutableStateOf("")
+    private var backtrackState by mutableStateOf(FeatureState.Off)
+    private var backtrackFrequency by mutableStateOf<Duration?>(null)
+    private var sortMenuText by mutableStateOf("")
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val views = createPathsViews(requireContext())
-        pathViews = views
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 TrailSenseTheme {
-                    PathsHost(
-                        views = views,
+                    PathsScreen(
+                        title = title.ifBlank { stringResource(R.string.paths) },
+                        sortMenuText = sortMenuText.ifBlank {
+                            stringResource(R.string.sort_by, stringResource(R.string.most_recent))
+                        },
+                        searchText = searchText,
+                        items = pathItems,
+                        isEmpty = pathItems.isEmpty(),
+                        resetKey = pathListResetKey,
+                        backtrackState = backtrackState,
+                        backtrackFrequency = backtrackFrequency,
+                        formatService = FormatService.getInstance(requireContext()),
+                        baseDistanceUnits = prefs.baseDistanceUnits,
+                        onSearchChange = {
+                            searchText = it
+                            manager.search(it)
+                        },
+                        onMenuAction = ::handleToolbarAction,
+                        onPathAction = ::handleAction,
+                        onGroupAction = ::handleGroupAction,
+                        onImportPath = ::importPaths,
+                        onCreateGroup = ::createGroup,
+                        onCreatePath = ::createPath,
+                        onBacktrackFrequencyClick = ::changeBacktrackFrequency,
+                        onBacktrackToggleClick = ::toggleBacktrack,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -170,33 +185,16 @@ class PathsFragment : AndromedaFragment() {
             this::sortPaths
         )
 
-        manager.bind(binding.searchbox)
-        binding.pathsList.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-        )
-        binding.pathsList.setContent {
-            TrailSenseTheme {
-                PathsList(
-                    items = pathItems,
-                    resetKey = pathListResetKey,
-                    formatService = FormatService.getInstance(requireContext()),
-                    baseDistanceUnits = prefs.baseDistanceUnits,
-                    onPathAction = ::handleAction,
-                    onGroupAction = ::handleGroupAction,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
         manager.onChange = { root, items, rootChanged ->
             pathItems = items
-            binding.waypointsEmptyText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
             if (rootChanged) {
                 pathListResetKey++
             }
-            binding.pathsTitle.title.text = (root as PathGroup?)?.name ?: getString(R.string.paths)
+            title = (root as PathGroup?)?.name ?: getString(R.string.paths)
         }
 
         sort = prefs.navigation.pathSort
+        sortMenuText = getString(R.string.sort_by, getSortString(sort))
 
         // TODO: See if it is possible to get notified of changes without loading all paths
         observeFlow(pathService.getPaths()) {
@@ -210,37 +208,7 @@ class PathsFragment : AndromedaFragment() {
             }
         }
 
-
-        binding.pathsTitle.rightButton.setOnClickListener {
-            val defaultSort = prefs.navigation.pathSort
-            Pickers.menu(
-                it,
-                listOf(
-                    getString(R.string.sort_by, getSortString(defaultSort)),
-                    getString(R.string.export)
-                )
-            ) { selected ->
-                when (selected) {
-                    0 -> changeSort()
-                    1 -> exportCurrentGroup()
-                }
-                true
-            }
-        }
-
-        binding.backtrackPlayBar.setOnSubtitleClickListener {
-            ChangeBacktrackFrequencyCommand(
-                requireContext(),
-                lifecycleScope
-            ) { updateStatusBar() }.execute()
-        }
-
-        binding.backtrackPlayBar.setOnPlayButtonClickListener {
-            val command = ToggleBacktrackCommand(this)
-            command.execute()
-        }
-
-        setupCreateMenu()
+        title = getString(R.string.paths)
     }
 
     override fun onResume() {
@@ -273,24 +241,27 @@ class PathsFragment : AndromedaFragment() {
 
     private fun updateStatusBar() {
         val service = service ?: return
-        binding.backtrackPlayBar.setState(
-            service.getFeatureState(),
-            service.getFrequency()
-        )
+        backtrackState = service.getFeatureState()
+        backtrackFrequency = service.getFrequency()
     }
 
-    private fun setupCreateMenu() {
-        binding.addMenu.setOverlay(binding.overlayMask)
-        binding.addMenu.fab = binding.addBtn
-        binding.addMenu.hideOnMenuOptionSelected = true
-        binding.addMenu.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_import_path_gpx -> importPaths()
-                R.id.action_create_path_group -> createGroup()
-                R.id.action_create_path -> createPath()
-            }
-            true
+    private fun handleToolbarAction(action: PathsToolbarAction) {
+        when (action) {
+            PathsToolbarAction.Sort -> changeSort()
+            PathsToolbarAction.Export -> exportCurrentGroup()
         }
+    }
+
+    private fun changeBacktrackFrequency() {
+        ChangeBacktrackFrequencyCommand(
+            requireContext(),
+            lifecycleScope
+        ) { updateStatusBar() }.execute()
+    }
+
+    private fun toggleBacktrack() {
+        val command = ToggleBacktrackCommand(this)
+        command.execute()
     }
 
     private fun changeSort() {
@@ -304,6 +275,7 @@ class PathsFragment : AndromedaFragment() {
             if (newSort != null) {
                 prefs.navigation.pathSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
+                sortMenuText = getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -490,33 +462,271 @@ class PathsFragment : AndromedaFragment() {
 
 }
 
-private data class PathsViews(
-    val root: View,
-    val pathsTitle: PathsTitle,
-    val searchbox: SearchView,
-    val pathsList: ComposeView,
-    val waypointsEmptyText: TextView,
-    val overlayMask: ImageView,
-    val addMenu: FloatingActionButtonMenu,
-    val addBtn: FloatingActionButton,
-    val backtrackPlayBar: PlayBarView
-)
-
-private data class PathsTitle(
-    val root: View,
-    val title: TextView,
-    val rightButton: ImageButton
-)
-
 @Composable
-private fun PathsHost(
-    views: PathsViews,
+private fun PathsScreen(
+    title: String,
+    sortMenuText: String,
+    searchText: String,
+    items: List<IPath>,
+    isEmpty: Boolean,
+    resetKey: Int,
+    backtrackState: FeatureState,
+    backtrackFrequency: Duration?,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    onSearchChange: (String) -> Unit,
+    onMenuAction: (PathsToolbarAction) -> Unit,
+    onPathAction: (Path, PathAction) -> Unit,
+    onGroupAction: (PathGroup, PathGroupAction) -> Unit,
+    onImportPath: () -> Unit,
+    onCreateGroup: () -> Unit,
+    onCreatePath: () -> Unit,
+    onBacktrackFrequencyClick: () -> Unit,
+    onBacktrackToggleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Surface(
         modifier = modifier,
-        factory = { views.root }
-    )
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            PathsHeader(
+                title = title,
+                sortMenuText = sortMenuText,
+                onMenuAction = onMenuAction,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = onSearchChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("searchbox"),
+                label = { Text(stringResource(R.string.search)) },
+                singleLine = true
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = TrailSenseSpacing.lg)
+            ) {
+                PathsList(
+                    items = items,
+                    resetKey = resetKey,
+                    formatService = formatService,
+                    baseDistanceUnits = baseDistanceUnits,
+                    onPathAction = onPathAction,
+                    onGroupAction = onGroupAction,
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (isEmpty) {
+                    Text(
+                        text = stringResource(R.string.no_paths),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .testTag("waypoints_empty_text"),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                PathsCreateButton(
+                    onImportPath = onImportPath,
+                    onCreateGroup = onCreateGroup,
+                    onCreatePath = onCreatePath,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(TrailSenseSpacing.lg)
+                )
+            }
+            BacktrackPlayBar(
+                state = backtrackState,
+                frequency = backtrackFrequency,
+                formatService = formatService,
+                onSubtitleClick = onBacktrackFrequencyClick,
+                onPlayClick = onBacktrackToggleClick,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun PathsHeader(
+    title: String,
+    sortMenuText: String,
+    onMenuAction: (PathsToolbarAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isMenuOpen by remember { mutableStateOf(false) }
+    Row(
+        modifier = modifier
+            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(vertical = TrailSenseSpacing.sm)
+            .testTag("paths_title"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Box {
+            IconButton(
+                onClick = { isMenuOpen = true },
+                modifier = Modifier.testTag("paths_menu_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = stringResource(R.string.sort)
+                )
+            }
+            DropdownMenu(
+                expanded = isMenuOpen,
+                onDismissRequest = { isMenuOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(sortMenuText) },
+                    onClick = {
+                        isMenuOpen = false
+                        onMenuAction(PathsToolbarAction.Sort)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.export)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onMenuAction(PathsToolbarAction.Export)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PathsCreateButton(
+    onImportPath: () -> Unit,
+    onCreateGroup: () -> Unit,
+    onCreatePath: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isOpen by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 72.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            DropdownMenu(
+                expanded = isOpen,
+                onDismissRequest = { isOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.import_gpx)) },
+                    onClick = {
+                        isOpen = false
+                        onImportPath()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.group)) },
+                    onClick = {
+                        isOpen = false
+                        onCreateGroup()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.path)) },
+                    onClick = {
+                        isOpen = false
+                        onCreatePath()
+                    }
+                )
+            }
+        }
+        FloatingActionButton(
+            onClick = { isOpen = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .testTag("add_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_add),
+                contentDescription = stringResource(R.string.add)
+            )
+        }
+    }
+}
+
+@Composable
+private fun BacktrackPlayBar(
+    state: FeatureState,
+    frequency: Duration?,
+    formatService: FormatService,
+    onSubtitleClick: () -> Unit,
+    onPlayClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isOn = state == FeatureState.On
+    val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
+        " ${stringResource(R.string.dash)} ${
+            formatService.formatDuration(
+                it,
+                short = true,
+                includeSeconds = true
+            )
+        }"
+    } ?: "")
+
+    Surface(
+        modifier = modifier.testTag("backtrack_play_bar"),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_tool_backtrack),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = TrailSenseSpacing.lg)
+                    .testTag("play_bar_title")
+            ) {
+                Text(
+                    text = stringResource(R.string.backtrack),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    modifier = Modifier.clickable(onClick = onSubtitleClick),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = onPlayClick,
+                modifier = Modifier.testTag("play_btn")
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
+                    ),
+                    contentDescription = null
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -753,215 +963,35 @@ private fun getPathIcon(path: Path): Int {
     }
 }
 
-private fun createPathsViews(context: Context): PathsViews {
-    val root = ConstraintLayout(context).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val title = createPathsTitle(context)
-    root.addView(
-        title.root,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val searchbox = SearchView(context, null).apply {
-        id = R.id.searchbox
-    }
-    root.addView(
-        searchbox,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.paths_title
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val playBar = PlayBarView(context, null).apply {
-        id = R.id.backtrack_play_bar
-        tag = context.getString(R.string.tag_play_bar)
-        setImageResource(R.drawable.ic_tool_backtrack)
-        this.title = context.getString(R.string.backtrack)
-    }
-    root.addView(
-        playBar,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val list = ComposeView(context).apply {
-        id = R.id.paths_list
-    }
-    root.addView(
-        list,
-        ConstraintLayout.LayoutParams(
-            0,
-            0
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.searchbox
-            bottomToTop = R.id.backtrack_play_bar
-            topMargin = 16.dp(context)
-        }
-    )
-
-    val emptyText = TextView(context).apply {
-        id = R.id.waypoints_empty_text
-        text = context.getString(R.string.no_paths)
-        textSize = 18f
-        visibility = View.GONE
-        setTextColor(Resources.androidTextColorPrimary(context))
-    }
-    root.addView(
-        emptyText,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = R.id.paths_list
-            bottomToBottom = R.id.paths_list
-            topMargin = 16.dp(context)
-        }
-    )
-
-    val overlay = ImageView(context).apply {
-        id = R.id.overlay_mask
-        alpha = 0.86f
-        setBackgroundColor(resolveThemeColor(context, android.R.attr.colorBackground))
-        isClickable = true
-        visibility = View.GONE
-    }
-    root.addView(
-        overlay,
-        ConstraintLayout.LayoutParams(
-            0,
-            0
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val addButton = FloatingActionButton(context).apply {
-        id = R.id.add_btn
-        setImageResource(R.drawable.ic_add)
-        isClickable = true
-        isFocusable = true
-    }
-    root.addView(
-        addButton,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.backtrack_play_bar
-            marginEnd = 16.dp(context)
-            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
-        }
-    )
-
-    val addMenu = FloatingActionButtonMenu(context, null).apply {
-        id = R.id.add_menu
-        visibility = View.GONE
-        setMenu(R.menu.add_path_menu)
-    }
-    root.addView(
-        addMenu,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = R.id.add_btn
-            bottomToTop = R.id.add_btn
-            bottomMargin = 16.dp(context)
-        }
-    )
-
-    return PathsViews(
-        root = root,
-        pathsTitle = title,
-        searchbox = searchbox,
-        pathsList = list,
-        waypointsEmptyText = emptyText,
-        overlayMask = overlay,
-        addMenu = addMenu,
-        addBtn = addButton,
-        backtrackPlayBar = playBar
-    )
-}
-
-private fun createPathsTitle(context: Context): PathsTitle {
-    val root = LinearLayout(context).apply {
-        id = R.id.paths_title
-        gravity = Gravity.CENTER_VERTICAL
-        orientation = LinearLayout.HORIZONTAL
-        setPadding(16.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
-    }
-    val title = TextView(context).apply {
-        text = context.getString(R.string.paths)
-        textSize = 20f
-        typeface = Typeface.DEFAULT_BOLD
-        setTextColor(Resources.androidTextColorPrimary(context))
-    }
-    val menu = ImageButton(context).apply {
-        id = R.id.paths_menu_btn
-        contentDescription = context.getString(R.string.sort)
-        setImageResource(R.drawable.ic_menu_dots)
-        backgroundTintList = ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
-        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-    }
-    root.addView(title, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-    root.addView(menu, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
-
-    return PathsTitle(root, title, menu)
-}
-
-private fun resolveThemeColor(context: Context, attr: Int): Int {
-    val value = TypedValue()
-    context.theme.resolveAttribute(attr, value, true)
-    return if (value.resourceId != 0) {
-        ContextCompat.getColor(context, value.resourceId)
-    } else {
-        value.data
-    }
-}
-
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
+private enum class PathsToolbarAction {
+    Sort,
+    Export
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PathsHostPreview() {
+private fun PathsScreenPreview() {
     TrailSenseTheme {
-        PathsHost(
-            views = createPathsViews(LocalContext.current)
+        PathsScreen(
+            title = "Paths",
+            sortMenuText = "Sort by Most recent",
+            searchText = "",
+            items = emptyList(),
+            isEmpty = true,
+            resetKey = 0,
+            backtrackState = FeatureState.Off,
+            backtrackFrequency = Duration.ofMinutes(15),
+            formatService = FormatService.getInstance(LocalContext.current),
+            baseDistanceUnits = DistanceUnits.Meters,
+            onSearchChange = {},
+            onMenuAction = {},
+            onPathAction = { _, _ -> },
+            onGroupAction = { _, _ -> },
+            onImportPath = {},
+            onCreateGroup = {},
+            onCreatePath = {},
+            onBacktrackFrequencyClick = {},
+            onBacktrackToggleClick = {}
         )
     }
 }

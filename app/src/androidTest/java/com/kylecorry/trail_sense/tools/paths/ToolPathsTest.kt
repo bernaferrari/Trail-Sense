@@ -21,8 +21,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
+import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
+import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
@@ -31,7 +33,7 @@ import org.junit.Test
 class ToolPathsTest : ToolTestBase(Tools.PATHS) {
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.paths_title, string(R.string.paths))
+        hasText(id("paths_title"), string(R.string.paths))
 
         canUseBacktrack()
         canRenamePath()
@@ -48,7 +50,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
     }
 
     private fun addPathGroup() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.group))
         input(string(R.string.name), "Test Group")
         clickOk()
@@ -61,26 +63,26 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
     private fun importPath() {
         // Open import and verify the picker opens, then back out
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.import_gpx))
         optional { hasText(string(R.string.pick_file)) }
         back(false)
-        hasText(R.id.paths_title, string(R.string.paths))
+        hasText(id("paths_title"), string(R.string.paths))
     }
 
     private fun createEmptyPath() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.path), exact = true)
         input(string(R.string.name), "Empty Path")
         clickOk()
         isVisible(R.id.path_title)
         hasText("Empty Path")
-        backUntil { isVisible(R.id.paths_title) }
+        backUntil { isVisible(id("paths_title")) }
     }
 
     private fun groupOperations() {
         // Ensure there is a second group to move into
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.group), exact = true)
         input(string(R.string.name), "Dest Group")
         clickOk()
@@ -95,11 +97,11 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         hasText("Test Group 2")
 
         // Export current group via toolbar menu
-        click(R.id.paths_menu_btn)
+        click(id("paths_menu_btn"))
         click(string(R.string.export))
         clickOk()
         optional { hasText("trail-sense-") }
-        backUntil { isVisible(R.id.paths_title) }
+        backUntil { isVisible(id("paths_title")) }
 
         // Move group into Dest Group
         hasText("Test Group 2")
@@ -121,12 +123,12 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
     private fun pathOperations() {
         // Create another path
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.path), exact = true)
         input(string(R.string.name), "Second Path")
         clickOk()
         hasText("Second Path")
-        backUntil { isVisible(R.id.paths_title) }
+        backUntil { isVisible(id("paths_title")) }
 
         // Rename
         click(id("path_item_menu_Second Path"))
@@ -143,7 +145,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         click(id("path_item_menu_Empty Path 2"))
         click(string(R.string.export))
         optional { hasText("trail-sense-") }
-        backUntil { isVisible(R.id.paths_title) }
+        backUntil { isVisible(id("paths_title")) }
 
         // Merge "Empty Path 2" into "Empty Path"
         click(id("path_item_menu_Empty Path 2"))
@@ -172,19 +174,19 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
     }
 
     private fun searchPath() {
-        input(R.id.searchbox, "Path")
+        input(id("searchbox")(), "Path")
         hasText("Empty Path")
         not { hasText("Dest Group") }
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Dest Group")
     }
 
     private fun changeSort() {
-        click(R.id.paths_menu_btn)
+        click(id("paths_menu_btn"))
         click(string(R.string.sort_by, string(R.string.most_recent)))
         click(string(R.string.name))
         clickOk()
-        click(R.id.paths_menu_btn)
+        click(id("paths_menu_btn"))
         hasText(string(R.string.sort_by, string(R.string.name)))
         back(false)
     }
@@ -303,7 +305,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
         click(toolbarButton(R.id.path_title, Side.Right))
         not { hasText("Keep forever") }
 
-        backUntil { isVisible(R.id.paths_title) }
+        backUntil { isVisible(id("paths_title")) }
     }
 
     private fun changePointStyle(previousStyle: String, newStyle: String) {
@@ -334,10 +336,10 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
 
     private fun canUseBacktrack() {
         // Verify it will run every 15 minutes by default
-        hasText(R.id.play_bar_title, "Off - 15m")
+        hasText(id("play_bar_title"), "Off - 15m")
 
         // Click the start button
-        click(R.id.play_btn)
+        click(id("play_btn"))
 
 
         // TODO: Figure out how to check this on staging builds
@@ -353,13 +355,13 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        hasText(R.id.play_bar_title, "On - 15m")
+        hasText(id("play_bar_title"), "On - 15m")
 
         // Wait for the path to be created
         hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
         // Stop backtrack
-        click(R.id.play_btn)
+        click(id("play_btn"))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
