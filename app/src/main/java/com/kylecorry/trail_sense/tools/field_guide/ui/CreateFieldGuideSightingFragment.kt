@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +26,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -54,12 +60,19 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 class CreateFieldGuideSightingFragment : Fragment() {
@@ -79,8 +92,8 @@ class CreateFieldGuideSightingFragment : Fragment() {
     private var harvested by mutableStateOf(false)
     private var showOnMap by mutableStateOf(true)
 
-    private var coordinateView: CoordinateInputView? = null
     private var elevationView: ElevationInputView? = null
+    private var locationAutofillRequest by mutableStateOf(0)
     private var backCallback: OnBackPressedCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,10 +125,13 @@ class CreateFieldGuideSightingFragment : Fragment() {
                         onHarvestedChange = { harvested = it },
                         onShowOnMapChange = { showOnMap = it },
                         onSave = ::save,
-                        onCoordinateCreated = {
-                            coordinateView = it
-                            bindCoordinateAndElevationViews()
+                        locationAutofillRequest = locationAutofillRequest,
+                        onAutoLocationClick = {
+                            if (this@CreateFieldGuideSightingFragment.elevation == null) {
+                                elevationView?.autofill()
+                            }
                         },
+                        onBeaconSelected = ::onCoordinateBeaconSelected,
                         onElevationCreated = {
                             elevationView = it
                             bindCoordinateAndElevationViews()
@@ -135,13 +151,11 @@ class CreateFieldGuideSightingFragment : Fragment() {
     }
 
     override fun onPause() {
-        coordinateView?.pause()
         elevationView?.pause()
         super.onPause()
     }
 
     override fun onDestroyView() {
-        coordinateView = null
         elevationView = null
         super.onDestroyView()
     }
@@ -190,25 +204,18 @@ class CreateFieldGuideSightingFragment : Fragment() {
     }
 
     private fun bindCoordinateAndElevationViews() {
-        val coordinate = coordinateView ?: return
         val elevation = elevationView ?: return
 
-        coordinate.setOnAutoLocationClickListener {
-            if (elevation.elevation == null) {
-                elevation.autofill()
-            }
-        }
-
         elevation.setOnAutoElevationClickListener {
-            if (coordinate.coordinate == null) {
-                coordinate.autofill()
+            if (location == null) {
+                locationAutofillRequest++
             }
         }
+    }
 
-        coordinate.setOnBeaconSelectedListener {
-            it.elevation?.let { beaconElevation ->
-                elevation.elevation = Distance.meters(beaconElevation).convertTo(prefs.baseDistanceUnits)
-            }
+    private fun onCoordinateBeaconSelected(beacon: Beacon) {
+        beacon.elevation?.let { beaconElevation ->
+            elevation = Distance.meters(beaconElevation).convertTo(prefs.baseDistanceUnits)
         }
     }
 
@@ -247,7 +254,9 @@ private fun CreateFieldGuideSightingScreen(
     onHarvestedChange: (Boolean) -> Unit,
     onShowOnMapChange: (Boolean) -> Unit,
     onSave: () -> Unit,
-    onCoordinateCreated: (CoordinateInputView) -> Unit,
+    locationAutofillRequest: Int,
+    onAutoLocationClick: () -> Unit,
+    onBeaconSelected: (Beacon) -> Unit,
     onElevationCreated: (ElevationInputView) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -277,7 +286,9 @@ private fun CreateFieldGuideSightingScreen(
                 CoordinateInput(
                     location = location,
                     onLocationChange = onLocationChange,
-                    onCoordinateCreated = onCoordinateCreated
+                    autoFillRequest = locationAutofillRequest,
+                    onAutoLocationClick = onAutoLocationClick,
+                    onBeaconSelected = onBeaconSelected
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 ElevationInput(
@@ -390,24 +401,139 @@ private fun DateTimeInput(
 private fun CoordinateInput(
     location: Coordinate?,
     onLocationChange: (Coordinate?) -> Unit,
-    onCoordinateCreated: (CoordinateInputView) -> Unit,
+    autoFillRequest: Int,
+    onAutoLocationClick: () -> Unit,
+    onBeaconSelected: (Beacon) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            CoordinateInputView(context).apply {
-                id = R.id.location
-                setOnCoordinateChangeListener(onLocationChange)
-                onCoordinateCreated(this)
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val scope = rememberCoroutineScope()
+    var locationText by remember(location, formatter) {
+        mutableStateOf(location?.let { formatter.formatLocation(it) }.orEmpty())
+    }
+    val parsedCoordinate = remember(locationText) {
+        Coordinate.parse(locationText)
+    }
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
+
+    fun autofillFromGps() {
+        onAutoLocationClick()
+        scope.launch {
+            isLoadingLocation = true
+            val updated = withContext(Dispatchers.IO) {
+                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
             }
-        },
-        update = { input ->
-            if (input.coordinate != location) {
-                input.coordinate = location
+            locationText = formatter.formatLocation(updated)
+            onLocationChange(updated)
+            isLoadingLocation = false
+        }
+    }
+
+    LaunchedEffect(location) {
+        val formatted = location?.let { formatter.formatLocation(it) }.orEmpty()
+        if (locationText != formatted) {
+            locationText = formatted
+        }
+    }
+
+    LaunchedEffect(autoFillRequest) {
+        if (autoFillRequest > 0) {
+            autofillFromGps()
+        }
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isLoadingLocation) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("gps_loading")
+            )
+        } else {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.gps),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> autofillFromGps()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                ) ?: return@launch
+                                locationText = formatter.formatLocation(beacon.coordinate)
+                                onLocationChange(beacon.coordinate)
+                                onBeaconSelected(beacon)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_location),
+                    contentDescription = stringResource(R.string.gps)
+                )
             }
         }
-    )
+        Spacer(modifier = Modifier.size(8.dp))
+        OutlinedTextField(
+            value = locationText,
+            onValueChange = {
+                locationText = it
+                onLocationChange(Coordinate.parse(it))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("location"),
+            label = { Text(stringResource(R.string.location)) },
+            isError = locationText.isNotBlank() && parsedCoordinate == null,
+            supportingText = {
+                if (locationText.isNotBlank() && parsedCoordinate == null) {
+                    Text(stringResource(R.string.coordinate_input_invalid_location))
+                }
+            },
+            singleLine = true,
+            enabled = !isLoadingLocation
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        IconButton(
+            onClick = { showHelp = true },
+            modifier = Modifier.testTag("coordinate_input_help_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.location_input_help_title)
+            )
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.location_input_help_title)) },
+            text = { Text(stringResource(R.string.location_input_help)) }
+        )
+    }
 }
 
 @Composable
@@ -500,7 +626,9 @@ private fun CreateFieldGuideSightingScreenPreview() {
             onHarvestedChange = {},
             onShowOnMapChange = {},
             onSave = {},
-            onCoordinateCreated = {},
+            locationAutofillRequest = 0,
+            onAutoLocationClick = {},
+            onBeaconSelected = {},
             onElevationCreated = {}
         )
     }
