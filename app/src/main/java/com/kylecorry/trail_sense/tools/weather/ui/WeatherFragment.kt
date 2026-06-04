@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,10 +27,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -37,20 +44,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.andromeda.views.toolbar.Toolbar
+import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
@@ -62,6 +69,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -79,7 +87,6 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWea
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder
 import com.kylecorry.trail_sense.tools.weather.ui.charts.HumidityChart
-import com.kylecorry.trail_sense.tools.weather.ui.charts.PressureChart
 import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
@@ -95,6 +102,8 @@ import com.kylecorry.trail_sense.tools.weather.ui.fields.TemperatureWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.WeatherListItem
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.abs
+import kotlin.math.max
 
 class WeatherFragment : AndromedaFragment() {
 
@@ -110,14 +119,13 @@ class WeatherFragment : AndromedaFragment() {
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val temperatureUnits by lazy { prefs.temperatureUnits }
 
-    private lateinit var chart: PressureChart
-
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
 
     private var history: List<WeatherObservation> = emptyList()
     private var pressureForecast: List<Reading<Pressure>> = emptyList()
     private var rawHistory: List<Reading<Pressure>> = emptyList()
     private var weatherItems by mutableStateOf<List<WeatherListItem>>(emptyList())
+    private var pressureChartData by mutableStateOf(WeatherPressureChartData())
     private var pressureMarkerText by mutableStateOf<String?>(null)
     private var isWeatherUpdating by mutableStateOf(false)
     private var weatherMonitorState by mutableStateOf(FeatureState.Off)
@@ -158,12 +166,14 @@ class WeatherFragment : AndromedaFragment() {
                     WeatherHost(
                         views = views,
                         weatherItems = weatherItems,
+                        pressureChartData = pressureChartData,
                         pressureMarkerText = pressureMarkerText,
                         isWeatherUpdating = isWeatherUpdating,
                         monitorState = weatherMonitorState,
                         monitorFrequency = weatherMonitorFrequency,
                         formatService = formatService,
                         onChangeMonitorFrequency = ::changeWeatherFrequency,
+                        onPressureMarkerSelected = ::onPressureMarkerSelected,
                         onToggleMonitor = ::toggleWeatherMonitor,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -185,22 +195,6 @@ class WeatherFragment : AndromedaFragment() {
             binding.weatherTitle,
             prefs.weather
         ).bind()
-
-        chart = PressureChart(binding.chart) { timeAgo, pressure ->
-            if (timeAgo == null || pressure == null) {
-                pressureMarkerText = null
-            } else {
-                val formatted = formatService.formatPressure(
-                    Pressure.from(pressure, units),
-                    Units.getDecimalPlaces(units)
-                )
-                pressureMarkerText = getString(
-                    R.string.pressure_reading_time_ago,
-                    formatted,
-                    formatService.formatDuration(timeAgo, false)
-                )
-            }
-        }
 
         observe(weatherSubsystem.weatherChanged) {
             updateWeather()
@@ -346,12 +340,26 @@ class WeatherFragment : AndromedaFragment() {
     ) {
         val displayReadings =
             readings.map { it.pressureReading() }.map { it.copy(value = it.value.convertTo(units)) }
-        if (displayReadings.isNotEmpty()) {
-            val displayForecast = forecast.map { it.copy(value = it.value.convertTo(units)) }
-            chart.plot(
-                displayReadings,
-                rawReadings.map { it.copy(value = it.value.convertTo(units)) }.ifEmpty { null },
-                displayForecast
+        val displayForecast = forecast.map { it.copy(value = it.value.convertTo(units)) }
+        pressureChartData = WeatherPressureChartData(
+            data = displayReadings,
+            raw = rawReadings.map { it.copy(value = it.value.convertTo(units)) },
+            forecast = displayForecast
+        )
+    }
+
+    private fun onPressureMarkerSelected(timeAgo: Duration?, pressure: Float?) {
+        pressureMarkerText = if (timeAgo == null || pressure == null) {
+            null
+        } else {
+            val formatted = formatService.formatPressure(
+                Pressure.from(pressure, units),
+                Units.getDecimalPlaces(units)
+            )
+            getString(
+                R.string.pressure_reading_time_ago,
+                formatted,
+                formatService.formatDuration(timeAgo, false)
             )
         }
     }
@@ -444,20 +452,21 @@ class WeatherFragment : AndromedaFragment() {
 }
 
 data class WeatherViews(
-    val weatherTitle: Toolbar,
-    val chart: Chart
+    val weatherTitle: Toolbar
 )
 
 @Composable
 private fun WeatherHost(
     views: WeatherViews,
     weatherItems: List<WeatherListItem>,
+    pressureChartData: WeatherPressureChartData,
     pressureMarkerText: String?,
     isWeatherUpdating: Boolean,
     monitorState: FeatureState,
     monitorFrequency: Duration?,
     formatService: FormatService,
     onChangeMonitorFrequency: () -> Unit,
+    onPressureMarkerSelected: (Duration?, Float?) -> Unit,
     onToggleMonitor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -471,13 +480,16 @@ private fun WeatherHost(
                 factory = { views.weatherTitle }
             )
 
-            AndroidView(
+            WeatherPressureChart(
+                data = pressureChartData.data,
+                raw = pressureChartData.raw,
+                forecast = pressureChartData.forecast,
+                onMarkerSelected = onPressureMarkerSelected,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.chart_height))
                     .padding(horizontal = 16.dp)
-                    .testTag("chart"),
-                factory = { views.chart }
+                    .testTag("chart")
             )
 
             if (pressureMarkerText != null) {
@@ -524,6 +536,112 @@ private fun WeatherHost(
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun WeatherPressureChart(
+    data: List<Reading<Pressure>>,
+    raw: List<Reading<Pressure>>,
+    forecast: List<Reading<Pressure>>,
+    onMarkerSelected: (Duration?, Float?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    val forecastColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+    val rawColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.onSurface
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    var selected by remember { mutableStateOf<WeatherPressureChartPoint?>(null) }
+    var chartSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        if (data.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        val chartPoints = weatherPressureChartPoints(data, raw, forecast)
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .onSizeChanged { chartSize = it }
+                .pointerInput(data, chartSize) {
+                    detectTapGestures { tap ->
+                        val points = weatherPressureChartPoints(data, raw, forecast)
+                        val primaryPoints = points.data
+                        if (primaryPoints.isEmpty() || chartSize.width <= 0) {
+                            selected = null
+                            onMarkerSelected(null, null)
+                            return@detectTapGestures
+                        }
+
+                        val selectedPoint = primaryPoints.minByOrNull {
+                            abs(points.x(it.x, chartSize.width.toFloat()) - tap.x)
+                        }
+                        selected = selectedPoint
+                        if (selectedPoint == null) {
+                            onMarkerSelected(null, null)
+                        } else {
+                            val timeAgo = Duration.between(
+                                points.startTime.plusSeconds((selectedPoint.x * 60 * 60).toLong()),
+                                Instant.now()
+                            )
+                            onMarkerSelected(timeAgo, selectedPoint.pressure)
+                        }
+                    }
+                }
+        ) {
+            repeat(5) { index ->
+                val y = index / 4f * size.height
+                drawLine(
+                    color = grid,
+                    start = Offset(0f, y),
+                    end = Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            fun drawSeries(points: List<WeatherPressureChartPoint>, color: Color, strokeWidth: Float) {
+                points.zipWithNext().forEach { (start, end) ->
+                    drawLine(
+                        color = color,
+                        start = Offset(
+                            chartPoints.x(start.x, size.width),
+                            chartPoints.y(start.pressure, size.height)
+                        ),
+                        end = Offset(
+                            chartPoints.x(end.x, size.width),
+                            chartPoints.y(end.pressure, size.height)
+                        ),
+                        strokeWidth = strokeWidth
+                    )
+                }
+            }
+
+            drawSeries(chartPoints.raw, rawColor, 2.dp.toPx())
+            drawSeries(chartPoints.forecast, forecastColor, 2.dp.toPx())
+            drawSeries(chartPoints.data, primary, 2.dp.toPx())
+
+            selected?.let {
+                drawCircle(
+                    color = highlightColor,
+                    radius = 4.dp.toPx(),
+                    center = Offset(
+                        chartPoints.x(it.x, size.width),
+                        chartPoints.y(it.pressure, size.height)
+                    )
+                )
+            }
         }
     }
 }
@@ -646,18 +764,52 @@ private fun createWeatherViews(context: Context): WeatherViews {
         id = R.id.weather_title
     }
 
-    val chart = Chart(context).apply {
-        id = R.id.chart
-    }
-
     return WeatherViews(
-        weatherTitle = title,
-        chart = chart
+        weatherTitle = title
     )
 }
 
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
+private fun weatherPressureChartPoints(
+    data: List<Reading<Pressure>>,
+    raw: List<Reading<Pressure>>,
+    forecast: List<Reading<Pressure>>
+): WeatherPressureChartPoints {
+    val startTime = data.firstOrNull()?.time
+        ?: raw.firstOrNull()?.time
+        ?: forecast.firstOrNull()?.time
+        ?: Instant.now()
+    fun toPoints(readings: List<Reading<Pressure>>): List<WeatherPressureChartPoint> {
+        return readings.map {
+            WeatherPressureChartPoint(
+                Duration.between(startTime, it.time).toMillis() / 3_600_000f,
+                it.value.value
+            )
+        }
+    }
+
+    val points = toPoints(data)
+    val rawPoints = toPoints(raw)
+    val forecastPoints = toPoints(forecast)
+    val allPoints = points + rawPoints + forecastPoints
+    val units = data.firstOrNull()?.value?.units ?: raw.firstOrNull()?.value?.units ?: PressureUnits.Hpa
+    val margin = Pressure.hpa(1f).convertTo(units).value
+    val minRange = Pressure.hpa(40f).convertTo(units).value
+    val minX = allPoints.minOfOrNull { it.x } ?: 0f
+    val maxX = allPoints.maxOfOrNull { it.x } ?: 1f
+    val minYValue = allPoints.minOfOrNull { it.pressure } ?: 0f
+    val maxYValue = allPoints.maxOfOrNull { it.pressure } ?: 1f
+    val yMinimum = minYValue - margin
+    val yMaximum = max(maxYValue + margin, yMinimum + minRange)
+    return WeatherPressureChartPoints(
+        startTime = startTime,
+        data = points,
+        raw = rawPoints,
+        forecast = forecastPoints,
+        minX = minX,
+        xRange = (maxX - minX).takeIf { it > 0f } ?: 1f,
+        yMinimum = yMinimum,
+        yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
+    )
 }
 
 @Preview(showBackground = true)
@@ -667,14 +819,46 @@ private fun WeatherHostPreview() {
         WeatherHost(
             views = createWeatherViews(LocalContext.current),
             weatherItems = emptyList(),
+            pressureChartData = WeatherPressureChartData(),
             pressureMarkerText = null,
             isWeatherUpdating = false,
             monitorState = FeatureState.Off,
             monitorFrequency = Duration.ofMinutes(15),
             formatService = FormatService.getInstance(LocalContext.current),
             onChangeMonitorFrequency = {},
+            onPressureMarkerSelected = { _, _ -> },
             onToggleMonitor = {}
         )
+    }
+}
+
+private data class WeatherPressureChartData(
+    val data: List<Reading<Pressure>> = emptyList(),
+    val raw: List<Reading<Pressure>> = emptyList(),
+    val forecast: List<Reading<Pressure>> = emptyList()
+)
+
+private data class WeatherPressureChartPoint(
+    val x: Float,
+    val pressure: Float
+)
+
+private data class WeatherPressureChartPoints(
+    val startTime: Instant,
+    val data: List<WeatherPressureChartPoint>,
+    val raw: List<WeatherPressureChartPoint>,
+    val forecast: List<WeatherPressureChartPoint>,
+    val minX: Float,
+    val xRange: Float,
+    val yMinimum: Float,
+    val yRange: Float
+) {
+    fun x(value: Float, width: Float): Float {
+        return ((value - minX) / xRange).coerceIn(0f, 1f) * width
+    }
+
+    fun y(value: Float, height: Float): Float {
+        return height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * height
     }
 }
 

@@ -60,7 +60,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         }
 
         // Pressure chart
-        isVisible(R.id.chart)
+        isVisible(id("chart"))
 
         // High / low chart
         optional {
