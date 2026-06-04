@@ -285,11 +285,6 @@
     <item name="override_reason" type="id" />
     <item name="preferences_fragment" type="id" />
     <item name="empty_view_description" type="id" />
-    <item name="summary_holder" type="id" />
-    <item name="summary_chapter_title" type="id" />
-    <item name="summary_title" type="id" />
-    <item name="summary_scroll" type="id" />
-    <item name="summary" type="id" />
     <item name="overlay_mask" type="id" />
     <item name="fab_menu" type="id" />
     <item name="fab_text" type="id" />

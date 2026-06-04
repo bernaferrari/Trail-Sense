@@ -1,17 +1,11 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -38,22 +34,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.card.MaterialCardView
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.views.badge.Badge
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TextBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
@@ -295,13 +289,59 @@ private fun SurvivalGuideSummary(
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    if (result == null) {
+        return
+    }
+
+    TrailSenseCard(
         modifier = modifier.testTag("summary_holder"),
-        factory = { context -> SurvivalGuideSummaryView(context) },
-        update = {
-            it.bind(summary, result, markdown, onSummaryClick)
+        onClick = { onSummaryClick(result) }
+    ) {
+        TextBadge(
+            text = result.chapter.title,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            textStyle = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.testTag("summary_chapter_title")
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = getSummaryTitle(result),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("summary_title"),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-    )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .testTag("summary_scroll")
+        ) {
+            TrailSenseLinkedText(
+                text = markdown.toMarkdown(summary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("summary"),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
 }
 
 @Composable
@@ -365,119 +405,13 @@ private fun SurvivalGuideChapterRow(item: SurvivalGuideListItem) {
     }
 }
 
-private class SurvivalGuideSummaryView(context: Context) : MaterialCardView(context) {
-
-    private val badge = Badge(context, null).apply {
-        id = R.id.summary_chapter_title
-    }
-    private val title = TextView(context).apply {
-        id = R.id.summary_title
-        textSize = 14f
-        typeface = Typeface.DEFAULT_BOLD
-        compoundDrawablePadding = Resources.dp(context, 8f).toInt()
-        setPadding(0, Resources.dp(context, 4f).toInt(), 0, 0)
-    }
-    private val scroll = ScrollView(context).apply {
-        id = R.id.summary_scroll
-    }
-    private val summary = TextView(context).apply {
-        id = R.id.summary
-    }
-
-    init {
-        id = R.id.summary_holder
-        radius = Resources.dp(context, 12f)
-        cardElevation = Resources.dp(context, 2f)
-        minimumHeight = Resources.dp(context, 150f).toInt()
-
-        val padding = Resources.dp(context, 16f).toInt()
-        val container = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(padding, padding, padding, padding)
+private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
+    return listOfNotNull(
+        result.heading,
+        if (SurvivalGuideSearch.shouldUseSubsection(result)) {
+            result.bestSubsection?.heading
+        } else {
+            null
         }
-        addView(
-            container,
-            ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        )
-        container.addView(
-            badge,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-        container.addView(
-            title,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-        scroll.addView(
-            summary,
-            ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
-        container.addView(
-            scroll,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            ).apply {
-                topMargin = Resources.dp(context, 4f).toInt()
-            }
-        )
-    }
-
-    fun bind(
-        markdownText: String,
-        result: SurvivalGuideSearchResult?,
-        markdown: MarkdownService,
-        onSummaryClick: (SurvivalGuideSearchResult) -> Unit
-    ) {
-        markdown.setMarkdown(summary, markdownText)
-        if (result == null) {
-            setOnClickListener(null)
-            return
-        }
-
-        title.text = listOfNotNull(
-            result.heading,
-            if (SurvivalGuideSearch.shouldUseSubsection(result)) {
-                result.bestSubsection?.heading
-            } else {
-                null
-            }
-        ).joinToString(" > ")
-        badge.setStatusText(result.chapter.title)
-        badge.statusImage.setImageResource(result.chapter.icon)
-        badge.statusImage.imageTintList = ColorStateList.valueOf(
-            Resources.androidTextColorSecondary(context)
-        )
-        val backgroundColor = Resources.androidTextColorSecondary(context)
-        badge.setBackgroundTint(backgroundColor)
-        badge.setForegroundTint(
-            Colors.mostContrastingColor(
-                Color.WHITE,
-                Color.BLACK,
-                backgroundColor
-            )
-        )
-        title.setCompoundDrawables(
-            size = Resources.dp(context, 16f).toInt(),
-            right = R.drawable.ic_keyboard_arrow_right
-        )
-        setOnClickListener {
-            onSummaryClick(result)
-        }
-        scroll.post {
-            scroll.scrollTo(0, 0)
-        }
-    }
+    ).joinToString(" > ")
 }
