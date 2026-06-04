@@ -1,54 +1,66 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.sol.science.oceanography.TideType
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.ToggleTideTableVisibilityCommand
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
-import com.kylecorry.trail_sense.tools.tides.ui.mappers.TideTableAction
-import com.kylecorry.trail_sense.tools.tides.ui.mappers.TideTableListItemMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -61,12 +73,6 @@ class TideListFragment : Fragment() {
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val sensorService by lazy { SensorService(requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
-    private val mapper by lazy {
-        TideTableListItemMapper(
-            requireContext(),
-            this::onTideTableAction
-        )
-    }
     private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(requireContext())) }
 
     private var refreshJob: Job? = null
@@ -83,8 +89,11 @@ class TideListFragment : Fragment() {
                 TrailSenseTheme {
                     TideListScreen(
                         tides = tides,
-                        mapper = mapper,
-                        onCreate = ::createTide
+                        onCreate = ::createTide,
+                        onSelect = ::selectTide,
+                        onEdit = ::editTide,
+                        onDelete = ::deleteTide,
+                        onToggleVisibility = ::toggleVisibility
                     )
                 }
             }
@@ -115,15 +124,6 @@ class TideListFragment : Fragment() {
                     refreshTides()
                 }
             }
-        }
-    }
-
-    private fun onTideTableAction(tide: TideTable, action: TideTableAction) {
-        when (action) {
-            TideTableAction.Select -> selectTide(tide)
-            TideTableAction.Edit -> editTide(tide)
-            TideTableAction.Delete -> deleteTide(tide)
-            TideTableAction.ToggleVisibility -> toggleVisibility(tide)
         }
     }
 
@@ -191,8 +191,11 @@ class TideListFragment : Fragment() {
 @Composable
 private fun TideListScreen(
     tides: List<Pair<TideTable, TideType?>>,
-    mapper: TideTableListItemMapper,
-    onCreate: () -> Unit
+    onCreate: () -> Unit,
+    onSelect: (TideTable) -> Unit,
+    onEdit: (TideTable) -> Unit,
+    onDelete: (TideTable) -> Unit,
+    onToggleVisibility: (TideTable) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -201,9 +204,12 @@ private fun TideListScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TideListHeader()
-                TideListView(
+                TideTableList(
                     tides = tides,
-                    mapper = mapper,
+                    onSelect = onSelect,
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onToggleVisibility = onToggleVisibility,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -242,43 +248,182 @@ private fun TideListHeader() {
 }
 
 @Composable
-private fun TideListView(
+private fun TideTableList(
     tides: List<Pair<TideTable, TideType?>>,
-    mapper: TideTableListItemMapper,
+    onSelect: (TideTable) -> Unit,
+    onEdit: (TideTable) -> Unit,
+    onDelete: (TideTable) -> Unit,
+    onToggleVisibility: (TideTable) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag("tide_list"),
-        factory = { context ->
-            FrameLayout(context).apply {
-                val list = AndromedaListView(context, null).apply {
-                    id = R.id.tide_list
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
+    Box(modifier = modifier.testTag("tide_list")) {
+        if (tides.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_tides),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .testTag("tide_empty_text"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 96.dp)
+            ) {
+                items(tides, key = { it.first.id }) { tide ->
+                    TideTableRow(
+                        tide = tide.first,
+                        tideType = tide.second,
+                        onSelect = onSelect,
+                        onEdit = onEdit,
+                        onDelete = onDelete,
+                        onToggleVisibility = onToggleVisibility
                     )
+                    HorizontalDivider()
                 }
-                val empty = TextView(context).apply {
-                    id = View.generateViewId()
-                    text = context.getString(R.string.no_tides)
-                    gravity = Gravity.CENTER
-                    visibility = View.GONE
-                }
-                list.emptyView = empty
-                addView(list)
-                addView(
-                    empty,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER
-                    )
-                )
             }
-        },
-        update = { container ->
-            container.findViewById<AndromedaListView>(R.id.tide_list)
-                .setItems(tides, mapper)
         }
+    }
+}
+
+@Composable
+private fun TideTableRow(
+    tide: TideTable,
+    tideType: TideType?,
+    onSelect: (TideTable) -> Unit,
+    onEdit: (TideTable) -> Unit,
+    onDelete: (TideTable) -> Unit,
+    onToggleVisibility: (TideTable) -> Unit
+) {
+    val context = LocalContext.current
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    var isMenuOpen by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(tide) }
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
+            .testTag("tide_table_item"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(getTideIcon(if (tide.isVisible) tideType else null)),
+            contentDescription = null,
+            tint = if (tide.isVisible) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                ComposeColor.Gray
+            },
+            modifier = Modifier.size(24.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = getTideTitle(tide, formatter),
+                modifier = Modifier.testTag("tide_table_title"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = getTideDescription(tide),
+                modifier = Modifier.testTag("tide_table_description"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (tide.isEditable) {
+            Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("tide_table_menu")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.edit)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onEdit(tide)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    if (tide.isVisible) R.string.hide else R.string.show
+                                )
+                            )
+                        },
+                        onClick = {
+                            isMenuOpen = false
+                            onToggleVisibility(tide)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onDelete(tide)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@DrawableRes
+private fun getTideIcon(tide: TideType?): Int {
+    return when (tide) {
+        TideType.High -> R.drawable.ic_tide_high
+        TideType.Low -> R.drawable.ic_tide_low
+        null -> R.drawable.ic_tide_half
+    }
+}
+
+@Composable
+private fun getTideDescription(tide: TideTable): String {
+    if (!tide.isEditable) {
+        return stringResource(R.string.tide_model_auto)
+    }
+
+    return LocalContext.current.resources.getQuantityString(
+        R.plurals.tides_entered_count,
+        tide.tides.size,
+        tide.tides.size
     )
+}
+
+private fun getTideTitle(tide: TideTable, formatter: FormatService): String {
+    return tide.name
+        ?: if (tide.location != null) formatter.formatLocation(tide.location) else ""
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TideListScreenPreview() {
+    TrailSenseTheme {
+        TideListScreen(
+            tides = emptyList(),
+            onCreate = {},
+            onSelect = {},
+            onEdit = {},
+            onDelete = {},
+            onToggleVisibility = {}
+        )
+    }
 }

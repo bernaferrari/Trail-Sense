@@ -10,7 +10,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -39,7 +38,8 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
     }
 
     private fun canEditTide() {
-        clickListItemMenu(string(R.string.edit))
+        click(id("tide_table_menu", index = 1))
+        click(string(R.string.edit))
 
         hasText(string(R.string.tide_table))
 
@@ -61,10 +61,10 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         click(id("create_tide_save_btn"))
 
         hasText(id("tide_list_title"), string(R.string.tides))
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Tide 1", index = 1)
+        hasText(id("tide_table_title", index = 1), "Tide 1")
 
         // Open the tide
-        click(com.kylecorry.andromeda.views.R.id.title, index = 1)
+        click(id("tide_table_title", index = 1))
 
         // Verify it is now using the lunitidal interval (just check times are shown)
         hasText(string(R.string.high_tide))
@@ -118,12 +118,12 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         click(id("create_tide_save_btn"))
 
         hasText(id("tide_list_title"), string(R.string.tides))
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Tide 1", index = 1)
-        hasText(com.kylecorry.andromeda.views.R.id.description, "1 tide", index = 1)
+        hasText(id("tide_table_title", index = 1), "Tide 1")
+        hasText(id("tide_table_description", index = 1), "1 tide")
     }
 
     private fun canViewTide() {
-        click(com.kylecorry.andromeda.views.R.id.title, index = 1)
+        click(id("tide_table_title", index = 1))
         hasText(string(R.string.high_tide))
         hasText("Tide 1")
 
@@ -155,6 +155,6 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         click(id("tide_table_btn"))
 
         hasText(id("tide_list_title"), string(R.string.tides))
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Tide 1", index = 1)
+        hasText(id("tide_table_title", index = 1), "Tide 1")
     }
 }
