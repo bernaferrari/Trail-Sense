@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -56,10 +59,12 @@ import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.physics.Physics
+import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -69,6 +74,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.Duration
 import kotlin.math.absoluteValue
+import kotlin.math.min
 
 class FragmentToolMetalDetector : Fragment() {
     private val sensors by lazy { SensorService(requireContext()) }
@@ -82,7 +88,6 @@ class FragmentToolMetalDetector : Fragment() {
 
     private var isVibrating = false
     private var chart: MetalDetectorChart? = null
-    private var magnetometerView: MagnetometerView? = null
     private var lastReadingTime = System.currentTimeMillis() + 1000L
     private var threshold = 5f
 
@@ -114,6 +119,10 @@ class FragmentToolMetalDetector : Fragment() {
     private var showAudioButton by mutableStateOf(true)
     private var metalDetected by mutableStateOf(false)
     private var thresholdSliderValue by mutableStateOf(50f)
+    private var metalDirectionFieldStrength by mutableStateOf(0f)
+    private var metalDirection by mutableStateOf(Bearing.from(0f) to Bearing.from(180f))
+    private var showSinglePoleDirection by mutableStateOf(false)
+    private var metalDirectionSensitivity by mutableStateOf(1f)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -148,7 +157,10 @@ class FragmentToolMetalDetector : Fragment() {
                                 )
                             }
                         },
-                        onMagnetometerCreated = { magnetometerView = it },
+                        metalDirectionFieldStrength = metalDirectionFieldStrength,
+                        metalDirection = metalDirection,
+                        showSinglePoleDirection = showSinglePoleDirection,
+                        metalDirectionSensitivity = metalDirectionSensitivity,
                         magnetometer = magnetometer,
                         onAccuracyClick = ::displayAccuracyTips
                     )
@@ -166,7 +178,7 @@ class FragmentToolMetalDetector : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        magnetometerView?.setSinglePoleMode(prefs.metalDetector.showSinglePole)
+        showSinglePoleDirection = prefs.metalDetector.showSinglePole
         magnetometer.start(this::onMagnetometerUpdate)
         if (prefs.metalDetector.showMetalDirection) {
             lowPassMagnetometer.start(this::onLowPassMagnetometerUpdate)
@@ -196,7 +208,6 @@ class FragmentToolMetalDetector : Fragment() {
 
     override fun onDestroyView() {
         chart = null
-        magnetometerView = null
         super.onDestroyView()
     }
 
@@ -263,9 +274,9 @@ class FragmentToolMetalDetector : Fragment() {
                 metal,
                 gravity.acceleration
             )
-            magnetometerView?.setFieldStrength(metal.magnitude())
-            magnetometerView?.setMetalDirection(direction)
-            magnetometerView?.setSensitivity(prefs.metalDetector.directionSensitivity)
+            metalDirectionFieldStrength = metal.magnitude()
+            metalDirection = direction
+            metalDirectionSensitivity = prefs.metalDetector.directionSensitivity
         }
 
         val magneticField = getCurrentMagneticFieldStrength()
@@ -405,7 +416,10 @@ private fun MetalDetectorScreen(
     thresholdSliderValue: Float,
     onThresholdChange: (Float) -> Unit,
     onChartCreated: (Chart) -> Unit,
-    onMagnetometerCreated: (MagnetometerView) -> Unit,
+    metalDirectionFieldStrength: Float,
+    metalDirection: Pair<Bearing, Bearing>,
+    showSinglePoleDirection: Boolean,
+    metalDirectionSensitivity: Float,
     magnetometer: ISensor,
     onAccuracyClick: () -> Unit
 ) {
@@ -467,7 +481,10 @@ private fun MetalDetectorScreen(
             )
             if (showMetalDirection) {
                 MagnetometerDirection(
-                    onMagnetometerCreated = onMagnetometerCreated,
+                    fieldStrength = metalDirectionFieldStrength,
+                    direction = metalDirection,
+                    singlePole = showSinglePoleDirection,
+                    sensitivity = metalDirectionSensitivity,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -654,18 +671,75 @@ private fun AccuracyBadge(
 
 @Composable
 private fun MagnetometerDirection(
-    onMagnetometerCreated: (MagnetometerView) -> Unit,
+    fieldStrength: Float,
+    direction: Pair<Bearing, Bearing>,
+    singlePole: Boolean,
+    sensitivity: Float,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val formatter = androidx.compose.runtime.remember {
+        FormatService.getInstance(context)
+    }
+    val lineColor = MaterialTheme.colorScheme.onSurface
+
+    Box(
         modifier = modifier.testTag("magnetometerView"),
-        factory = { context ->
-            MagnetometerView(context, null).apply {
-                id = R.id.magnetometerView
-                onMagnetometerCreated(this)
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val radius = min(size.height / 2f * 0.75f, size.width / 2f * 0.75f)
+            val indicatorSize = 20.dp.toPx()
+
+            drawCircle(
+                color = lineColor,
+                radius = radius,
+                center = center,
+                style = Stroke(width = 4.dp.toPx())
+            )
+
+            if (fieldStrength >= sensitivity) {
+                rotate(-direction.first.value, pivot = center) {
+                    if (singlePole) {
+                        rotate(
+                            if (direction.first.value in 90f..270f) 180f else 0f,
+                            pivot = center
+                        ) {
+                            drawCircle(
+                                color = Color(AppColor.Green.color),
+                                radius = indicatorSize,
+                                center = androidx.compose.ui.geometry.Offset(
+                                    center.x,
+                                    center.y - radius
+                                )
+                            )
+                        }
+                    } else {
+                        drawCircle(
+                            color = Color(AppColor.Red.color),
+                            radius = indicatorSize,
+                            center = androidx.compose.ui.geometry.Offset(center.x, center.y - radius)
+                        )
+                        rotate(180f, pivot = center) {
+                            drawCircle(
+                                color = Color(AppColor.Blue.color),
+                                radius = indicatorSize,
+                                center = androidx.compose.ui.geometry.Offset(
+                                    center.x,
+                                    center.y - radius
+                                )
+                            )
+                        }
+                    }
+                }
             }
         }
-    )
+        Text(
+            text = formatter.formatMagneticField(fieldStrength),
+            style = MaterialTheme.typography.titleMedium,
+            color = lineColor
+        )
+    }
 }
 
 @Composable

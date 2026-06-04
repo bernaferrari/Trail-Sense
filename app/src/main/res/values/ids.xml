@@ -13,7 +13,6 @@
     <item name="threshold" type="id" />
     <item name="threshold_amount" type="id" />
     <item name="high_sensitivity_toggle" type="id" />
-    <item name="magnetometerView" type="id" />
     <item name="create_tide_title" type="id" />
     <item name="scroll_view" type="id" />
     <item name="tide_name" type="id" />
