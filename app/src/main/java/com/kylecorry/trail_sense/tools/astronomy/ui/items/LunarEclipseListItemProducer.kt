@@ -3,11 +3,6 @@ package com.kylecorry.trail_sense.tools.astronomy.ui.items
 import android.content.Context
 import androidx.core.graphics.drawable.toDrawable
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.views.list.DrawableListIcon
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
-import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
@@ -22,7 +17,7 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         date: LocalDate,
         location: Coordinate,
         declination: Float
-    ): ListItem? = onDefault {
+    ): AstronomyListItem? = onDefault {
         val eclipse = astronomyService.getLunarEclipse(location, date) ?: return@onDefault null
 
         // Advanced
@@ -38,7 +33,13 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
             4,
             context.getString(R.string.lunar_eclipse),
             EclipseFormatter.type(context, eclipse),
-            getIcon(moon, shadow, moonTilt),
+            icon(
+                if (eclipse.isTotal) {
+                    R.drawable.ic_moon_total_eclipse
+                } else {
+                    R.drawable.ic_moon_partial_eclipse
+                }
+            ),
             data = times(eclipse.start, eclipse.peak, eclipse.end, date)
         ) {
             val advancedData = listOf(

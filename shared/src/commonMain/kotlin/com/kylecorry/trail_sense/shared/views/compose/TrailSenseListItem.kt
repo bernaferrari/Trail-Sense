@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ fun TrailSenseListItem(
     subtitle: String? = null,
     icon: Painter? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
+    iconRotation: Float = 0f,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     animateEntrance: Boolean = true
@@ -73,7 +75,9 @@ fun TrailSenseListItem(
                 painter = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .rotate(iconRotation)
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
         }

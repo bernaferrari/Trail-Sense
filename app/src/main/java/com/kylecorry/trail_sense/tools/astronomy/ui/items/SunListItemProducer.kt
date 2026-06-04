@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Coordinate
@@ -17,7 +15,7 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
         date: LocalDate,
         location: Coordinate,
         declination: Float
-    ): ListItem = onDefault {
+    ): AstronomyListItem = onDefault {
         // At a glance
         val times = astronomyService.getSunTimes(location, prefs.astronomy.sunTimesMode, date)
         val daylight = astronomyService.getLengthOfDay(location, prefs.astronomy.sunTimesMode, date)
@@ -44,7 +42,7 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
                 R.string.daylight_duration,
                 formatter.formatDuration(daylight, false)
             ),
-            ResourceListIcon(R.drawable.ic_sun),
+            icon(R.drawable.ic_sun),
             data = riseSetTransit(times)
         ) {
             val advancedData = listOf(

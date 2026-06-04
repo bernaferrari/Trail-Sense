@@ -10,13 +10,28 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -34,7 +49,6 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
@@ -62,6 +76,9 @@ import com.kylecorry.trail_sense.shared.views.DatePickerView
 import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstroPositions
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyEvent
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
@@ -69,6 +86,8 @@ import com.kylecorry.trail_sense.tools.astronomy.quickactions.AstronomyQuickActi
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.AstroChartData
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.CenteredAstroChartDataProvider
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.DailyAstroChartDataProvider
+import com.kylecorry.trail_sense.tools.astronomy.ui.items.AstronomyListItem
+import com.kylecorry.trail_sense.tools.astronomy.ui.items.AstronomyListItemData
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.LunarEclipseListItemProducer
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.MeteorShowerListItemProducer
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.MoonListItemProducer
@@ -134,6 +153,7 @@ class AstronomyFragment : AndromedaFragment() {
     }
 
     private var data = AstroChartData(emptyList(), emptyList())
+    private var astronomyItems by mutableStateOf<List<AstronomyListItem>>(emptyList())
 
     private val producers by lazy {
         listOf(
@@ -152,6 +172,14 @@ class AstronomyFragment : AndromedaFragment() {
     ): View {
         val views = createAstronomyViews(requireContext())
         astronomyViews = views
+        views.astronomyDetailList.setContent {
+            TrailSenseTheme {
+                AstronomyDetailList(
+                    items = astronomyItems,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -503,7 +531,7 @@ class AstronomyFragment : AndromedaFragment() {
             val items = producers.map { it.getListItem(displayDate, location, declination) }
 
             onMain {
-                binding.astronomyDetailList.setItems(items.filterNotNull())
+                astronomyItems = items.filterNotNull()
             }
 
         }
@@ -613,7 +641,7 @@ private data class AstronomyViews(
     val timeSeeker: Slider,
     val sunPositionText: TextView,
     val moonPositionText: TextView,
-    val astronomyDetailList: AndromedaListView,
+    val astronomyDetailList: ComposeView,
     val button3d: Button
 )
 
@@ -626,6 +654,60 @@ private fun AstronomyHost(
         modifier = modifier,
         factory = { views.root }
     )
+}
+
+@Composable
+private fun AstronomyDetailList(
+    items: List<AstronomyListItem>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.testTag("astronomy_detail_list")
+    ) {
+        items(items, key = { it.id }) { item ->
+            AstronomyDetailRow(item)
+            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun AstronomyDetailRow(item: AstronomyListItem) {
+    TrailSenseListItem(
+        title = item.title,
+        subtitle = item.subtitle,
+        icon = item.icon?.let { painterResource(it.resource) },
+        iconTint = item.icon?.tint?.let { Color(it) } ?: MaterialTheme.colorScheme.primary,
+        iconRotation = item.icon?.rotation ?: 0f,
+        trailing = {
+            AstronomyDataRow(item.data)
+        },
+        onClick = item.onClick,
+        animateEntrance = false,
+        modifier = Modifier
+            .padding(horizontal = TrailSenseSpacing.lg)
+            .testTag("astronomy_detail_title")
+    )
+}
+
+@Composable
+private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        data.forEach {
+            Text(
+                text = if (it.label == null) {
+                    it.value
+                } else {
+                    "${it.value}\n${it.label}"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("astronomy_detail_data")
+            )
+        }
+    }
 }
 
 private fun createAstronomyViews(context: Context): AstronomyViews {
@@ -795,10 +877,9 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     )
 
-    val list = AndromedaListView(context, null).apply {
+    val list = ComposeView(context).apply {
         id = R.id.astronomy_detail_list
-        clipToPadding = false
-        setPadding(0, 0, 0, 16.dp(context))
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     }
     root.addView(
         list,

@@ -1,24 +1,14 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
-import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import androidx.core.text.color
 import androidx.core.text.scale
-import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.JustifyContent
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.views.list.ListIcon
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ListItemData
-import com.kylecorry.andromeda.views.list.ListItemDataAlignment
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
@@ -29,28 +19,10 @@ import java.time.ZonedDateTime
 abstract class BaseAstroListItemProducer(protected val context: Context) :
     AstronomyListItemProducer {
 
-    private val subtitleScale = 0.7f
-    private val textScale = 1.2f
-    protected val imageSize = Resources.dp(context, 24f).toInt()
     protected val secondaryColor = Resources.androidTextColorSecondary(context)
     protected val formatter = FormatService.getInstance(context)
     protected val astronomyService = AstronomyService()
     protected val prefs = UserPreferences(context)
-
-
-    private fun title(title: CharSequence, subtitle: CharSequence?): CharSequence {
-        return buildSpannedString {
-            append(title)
-            if (subtitle != null) {
-                color(secondaryColor.withAlpha(220)) {
-                    scale(subtitleScale) {
-                        append("  •  ")
-                        append(subtitle)
-                    }
-                }
-            }
-        }
-    }
 
     private fun formatTime(time: ZonedDateTime?): String {
         if (time == null) {
@@ -63,17 +35,10 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
     private fun datapoint(
         value: CharSequence,
         label: CharSequence? = null
-    ): ListItemData {
-        return ListItemData(
-            buildSpannedString {
-                bold {
-                    append(value)
-                }
-                if (label != null) {
-                    append("\n")
-                    append(label)
-                }
-            }, null, basisPercentage = 0f, shrink = 1f, grow = 1f
+    ): AstronomyListItemData {
+        return AstronomyListItemData(
+            value = value.toString(),
+            label = label?.toString()
         )
     }
 
@@ -85,64 +50,79 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         id: Long,
         title: CharSequence,
         subtitle: CharSequence? = null,
-        icon: ListIcon? = null,
-        data: List<ListItemData> = listOf(),
+        icon: AstronomyListIcon? = null,
+        data: List<AstronomyListItemData> = listOf(),
         onClick: (() -> Unit)? = null
-    ): ListItem {
-        return ListItem(
-            id,
-            title(title, subtitle),
-            null,
+    ): AstronomyListItem {
+        return AstronomyListItem(
+            id = id,
+            title = title.toString(),
+            subtitle = subtitle?.toString(),
             icon = icon,
-            trailingIcon = onClick?.let { ResourceListIcon(R.drawable.ic_keyboard_arrow_right) { onClick() } },
             data = data,
-            dataAlignment = ListItemDataAlignment(
-                justifyContent = JustifyContent.SPACE_BETWEEN, alignItems = AlignItems.CENTER
-            )
-        ) {
-            onClick?.invoke()
-        }
+            onClick = onClick
+        )
+    }
+
+    protected fun icon(resource: Int, tint: Int? = null, rotation: Float = 0f): AstronomyListIcon {
+        return AstronomyListIcon(resource, tint, rotation)
     }
 
     protected fun showAdvancedData(
         title: String,
-        advancedData: List<Pair<CharSequence, List<ListItemData>?>>
+        advancedData: List<Pair<CharSequence, List<AstronomyListItemData>?>>
     ) {
-        CustomUiUtils.showList(
+        val description = advancedData
+            .filter { it.second != null }
+            .joinToString("\n\n") { (section, data) ->
+                val lines = data.orEmpty().joinToString("\n") {
+                    if (it.label == null) {
+                        it.value
+                    } else {
+                        "${it.label}: ${it.value}"
+                    }
+                }
+                if (lines.isBlank()) {
+                    section.toString()
+                } else {
+                    "${section}\n$lines"
+                }
+            }
+
+        Alerts.dialog(
             context,
             title,
-            advancedData.filter { it.second != null }.mapIndexed { index, (title, data) ->
-                list(index.toLong(), title, data = data ?: emptyList())
-            }
+            description,
+            cancelText = null
         )
     }
 
     // COMMON DATA POINT FIELDS
-    protected fun data(value: CharSequence, label: CharSequence? = null): List<ListItemData> {
+    protected fun data(value: CharSequence, label: CharSequence? = null): List<AstronomyListItemData> {
         return listOf(datapoint(value, label))
     }
 
-    protected fun degrees(value: Float): List<ListItemData> {
+    protected fun degrees(value: Float): List<AstronomyListItemData> {
         return data(formatter.formatDegrees(value))
     }
 
-    protected fun direction(bearing: Bearing): List<ListItemData> {
+    protected fun direction(bearing: Bearing): List<AstronomyListItemData> {
         return data(formatter.formatDirection(bearing.direction))
     }
 
-    protected fun decimal(value: Float, places: Int): List<ListItemData> {
+    protected fun decimal(value: Float, places: Int): List<AstronomyListItemData> {
         return data(DecimalFormatter.format(value, places))
     }
 
-    protected fun percent(value: Float): List<ListItemData> {
+    protected fun percent(value: Float): List<AstronomyListItemData> {
         return data(formatter.formatPercentage(value))
     }
 
-    protected fun duration(value: Duration): List<ListItemData> {
+    protected fun duration(value: Duration): List<AstronomyListItemData> {
         return data(formatter.formatDuration(value, false))
     }
 
-    protected fun riseSetTransit(times: RiseSetTransitTimes): List<ListItemData> {
+    protected fun riseSetTransit(times: RiseSetTransitTimes): List<AstronomyListItemData> {
         return listOf(
             context.getString(R.string.astronomy_rise) to times.rise,
             context.getString(R.string.noon) to times.transit,
@@ -157,7 +137,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         peak: ZonedDateTime?,
         end: ZonedDateTime?,
         displayDate: LocalDate? = start?.toLocalDate()
-    ): List<ListItemData> {
+    ): List<AstronomyListItemData> {
         val reserveHeaderSpace = listOf(start, peak, end).any { it != null && it.toLocalDate() != displayDate }
         return listOf(
             context.getString(R.string.start_time) to start,
@@ -173,7 +153,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         displayDate: LocalDate? = time?.toLocalDate(),
         label: CharSequence? = null,
         reserveHeaderSpace: Boolean = false
-    ): List<ListItemData> {
+    ): List<AstronomyListItemData> {
 
         val value = buildSpannedString {
             scale(0.75f) {

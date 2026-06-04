@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
-import androidx.core.graphics.drawable.toDrawable
-import com.kylecorry.andromeda.views.list.DrawableListIcon
-import com.kylecorry.andromeda.views.list.ListItem
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -18,7 +15,7 @@ class SolarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         date: LocalDate,
         location: Coordinate,
         declination: Float
-    ): ListItem? = onDefault {
+    ): AstronomyListItem? = onDefault {
         val eclipse = astronomyService.getSolarEclipse(location, date) ?: return@onDefault null
 
         // Advanced
@@ -33,14 +30,12 @@ class SolarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
             5,
             context.getString(R.string.solar_eclipse),
             EclipseFormatter.type(context, eclipse),
-            DrawableListIcon(
-                SolarEclipseImageMapper(context).getEclipseImage(
-                    sun,
-                    moon,
-                    eclipse.isTotal,
-                    imageSize,
-                    imageSize
-                ).toDrawable(context.resources)
+            icon(
+                if (eclipse.isTotal) {
+                    R.drawable.ic_total_solar_eclipse
+                } else {
+                    R.drawable.ic_partial_solar_eclipse
+                }
             ),
             data = times(eclipse.start, eclipse.peak, eclipse.end, date)
         ) {

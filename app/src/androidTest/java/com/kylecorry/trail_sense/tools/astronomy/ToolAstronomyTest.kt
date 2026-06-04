@@ -17,6 +17,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.handleExactAlarmsDialog
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Assert.assertTrue
@@ -41,11 +42,11 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY) {
         hasText(R.id.display_date, string(R.string.today))
 
         // Verify the list of astronomy events is displayed
-        hasText(R.id.astronomy_detail_list) {
+        hasText(id("astronomy_detail_title")) {
             it.startsWith(string(R.string.sun))
         }
 
-        hasText(R.id.astronomy_detail_list) {
+        hasText(id("astronomy_detail_title", index = 1)) {
             it.startsWith(string(R.string.moon))
         }
 

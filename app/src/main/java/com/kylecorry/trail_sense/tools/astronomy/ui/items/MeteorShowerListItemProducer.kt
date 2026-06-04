@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -16,7 +14,7 @@ class MeteorShowerListItemProducer(context: Context) : BaseAstroListItemProducer
         date: LocalDate,
         location: Coordinate,
         declination: Float
-    ): ListItem? = onDefault {
+    ): AstronomyListItem? = onDefault {
         val shower = astronomyService.getMeteorShower(location, date) ?: return@onDefault null
 
         // Advanced
@@ -31,7 +29,7 @@ class MeteorShowerListItemProducer(context: Context) : BaseAstroListItemProducer
             3,
             context.getString(R.string.meteor_shower),
             context.getString(R.string.meteors_per_hour, shower.shower.rate),
-            ResourceListIcon(R.drawable.ic_meteor, secondaryColor),
+            icon(R.drawable.ic_meteor, secondaryColor),
             data = times(shower.start, shower.peak, shower.end, date)
         ) {
 
