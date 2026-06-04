@@ -3,18 +3,14 @@ package com.kylecorry.trail_sense.tools.comms.talk.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.core.system.Package
-import androidx.fragment.app.Fragment
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import androidx.compose.runtime.Composable
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 
-class FragmentToolLocalTalk : Fragment() {
+class FragmentToolLocalTalk : TrailSenseComposeFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -25,22 +21,12 @@ class FragmentToolLocalTalk : Fragment() {
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    Text(
-                        text = "",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        Text(
+            text = "",
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 
     private fun openApp(context: Context, packageName: String, tool: String) {

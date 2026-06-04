@@ -3,53 +3,38 @@ package com.kylecorry.trail_sense.tools.tools.ui
 import android.app.PendingIntent
 import android.graphics.drawable.Icon
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.runtime.Composable
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 
-class ToolsFragment : Fragment() {
+class ToolsFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { com.kylecorry.trail_sense.shared.UserPreferences(requireContext()) }
     private val pinnedToolManager by lazy { PinnedToolManager(prefs) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ToolsScreen(
-                        onToolClick = { tool ->
-                            findNavController().navigateWithAnimation(tool.navAction)
-                        },
-                        onToolLongClick = { tool ->
-                            showToolActions(tool)
-                        },
-                        onSettingsClick = {
-                            findNavController().navigate(R.id.action_settings)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        ToolsScreen(
+            onToolClick = { tool ->
+                findNavController().navigateWithAnimation(tool.navAction)
+            },
+            onToolLongClick = { tool ->
+                showToolActions(tool)
+            },
+            onSettingsClick = {
+                findNavController().navigate(R.id.action_settings)
             }
-        }
+        )
     }
 
     private fun showToolActions(tool: Tool) {

@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,47 +21,34 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 
-class GuideListFragment : Fragment() {
+class GuideListFragment : TrailSenseComposeFragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    GuideListScreen(
-                        guides = Guides.guides(requireContext()),
-                        onOpenGuide = {
-                            tryOrNothing {
-                                findNavController().navigate(
-                                    R.id.action_guideListFragment_to_guideFragment,
-                                    Bundle().apply {
-                                        putString("guide_name", it.name)
-                                        putInt("guide_contents", it.contents)
-                                    }
-                                )
-                            }
+    @Composable
+    override fun FragmentContent() {
+        GuideListScreen(
+            guides = Guides.guides(requireContext()),
+            onOpenGuide = {
+                tryOrNothing {
+                    findNavController().navigate(
+                        R.id.action_guideListFragment_to_guideFragment,
+                        Bundle().apply {
+                            putString("guide_name", it.name)
+                            putInt("guide_contents", it.contents)
                         }
                     )
                 }
             }
-        }
+        )
     }
 }
 
