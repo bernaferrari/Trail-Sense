@@ -55,9 +55,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         scrollToEnd(id("create_beacon_scroll"))
 
-        hasText(R.id.beacon_group_picker, string(R.string.no_group))
-        hasText(R.id.beacon_color_picker, string(R.string.color))
-        hasText(R.id.beacon_icon_picker, string(R.string.icon))
+        hasText(id("beacon_group_picker"), string(R.string.no_group))
+        hasText(id("beacon_color_picker"), string(R.string.color))
+        hasText(id("beacon_icon_picker"), string(R.string.icon))
 
         input(id("comment")(), "Test notes")
 
@@ -113,9 +113,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
         scrollToEnd(id("create_beacon_scroll"))
         hasText(id("comment"), "Test notes")
-        hasText(R.id.beacon_group_picker, string(R.string.no_group))
-        hasText(R.id.beacon_color_picker, string(R.string.color))
-        hasText(R.id.beacon_icon_picker, string(R.string.icon))
+        hasText(id("beacon_group_picker"), string(R.string.no_group))
+        hasText(id("beacon_color_picker"), string(R.string.color))
+        hasText(id("beacon_icon_picker"), string(R.string.icon))
 
         input(id("comment")(), "Test notes 2")
 

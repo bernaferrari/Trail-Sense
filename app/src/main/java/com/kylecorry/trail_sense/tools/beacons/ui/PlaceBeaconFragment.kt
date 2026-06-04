@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
@@ -39,14 +41,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.os.BundleCompat
-import androidx.core.view.setPadding
-import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -375,7 +373,7 @@ private fun PlaceBeaconScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 PickerRow(
-                    id = R.id.beacon_group_picker,
+                    tag = "beacon_group_picker",
                     text = groupName,
                     icon = R.drawable.ic_beacon_group,
                     iconTint = AppColor.Gray.color,
@@ -383,7 +381,7 @@ private fun PlaceBeaconScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 PickerRow(
-                    id = R.id.beacon_color_picker,
+                    tag = "beacon_color_picker",
                     text = stringResource(R.string.color),
                     icon = R.drawable.bubble,
                     iconTint = data.color.color,
@@ -391,7 +389,7 @@ private fun PlaceBeaconScreen(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 PickerRow(
-                    id = R.id.beacon_icon_picker,
+                    tag = "beacon_icon_picker",
                     text = stringResource(R.string.icon),
                     icon = data.icon?.icon ?: R.drawable.bubble,
                     iconTint = null,
@@ -615,36 +613,34 @@ private fun BearingInput(
 
 @Composable
 private fun PickerRow(
-    id: Int,
+    tag: String,
     text: String,
     @DrawableRes icon: Int,
     iconTint: Int?,
     onClick: () -> Unit
 ) {
-    AndroidView(
-        factory = { context ->
-            TextView(context).apply {
-                this.id = id
-                isClickable = true
-                isFocusable = true
-                setPadding(Resources.dp(context, 4f).toInt())
-                compoundDrawablePadding = Resources.dp(context, 8f).toInt()
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
-                setOnClickListener { onClick() }
-            }
-        },
-        update = { view ->
-            view.text = text
-            view.setCompoundDrawables(
-                Resources.dp(view.context, 24f).toInt(),
-                left = icon
-            )
-            TextViewCompat.setCompoundDrawableTintList(
-                view,
-                iconTint?.let { ColorStateList.valueOf(it) }
-            )
-        }
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(4.dp)
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .size(24.dp),
+            tint = iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
 @Preview(showBackground = true)
