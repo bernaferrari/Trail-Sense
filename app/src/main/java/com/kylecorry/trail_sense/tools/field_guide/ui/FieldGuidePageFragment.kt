@@ -5,9 +5,9 @@ import android.text.util.Linkify.WEB_URLS
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -42,8 +41,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.fragment.app.Fragment
@@ -54,6 +51,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
@@ -269,22 +267,18 @@ private fun LinkifiedNotes(
     notes: String,
     modifier: Modifier = Modifier
 ) {
-    val textColor = MaterialTheme.colorScheme.onBackground.toArgb()
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            TextView(context).apply {
-                movementMethod = LinkMovementMethodCompat.getInstance()
-                setTextIsSelectable(true)
-            }
-        },
-        update = { textView ->
-            val noteText = notes.toSpannable()
-            LinkifyCompat.addLinks(noteText, WEB_URLS)
-            textView.setTextColor(textColor)
-            textView.text = noteText
-        }
-    )
+    val noteText = remember(notes) {
+        val noteText = notes.toSpannable()
+        LinkifyCompat.addLinks(noteText, WEB_URLS)
+        noteText
+    }
+    SelectionContainer(modifier = modifier) {
+        TrailSenseLinkedText(
+            text = noteText,
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
