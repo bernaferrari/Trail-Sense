@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +18,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -27,12 +31,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -45,18 +51,21 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.GeoUri
+import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.views.BearingInputView
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
-import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
@@ -563,24 +572,92 @@ private fun CreateAtDistanceSwitch(
 @Composable
 private fun DistanceInput(
     distance: Distance?,
-    units: List<com.kylecorry.sol.units.DistanceUnits>,
+    units: List<DistanceUnits>,
     onDistanceChange: (Distance?) -> Unit
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    var unit by remember(units) {
+        mutableStateOf(distance?.units ?: units.firstOrNull() ?: DistanceUnits.Meters)
+    }
+    var distanceText by remember {
+        mutableStateOf(formatDistanceAmount(distance, unit))
+    }
+    var isUnitOpen by remember { mutableStateOf(false) }
+
+    fun publish(text: String = distanceText, newUnit: DistanceUnits = unit) {
+        onDistanceChange(parseDistance(text, newUnit))
+    }
+
+    androidx.compose.runtime.LaunchedEffect(distance) {
+        val current = parseDistance(distanceText, unit)
+        if (current != distance) {
+            val newUnit = distance?.units ?: unit
+            unit = newUnit
+            distanceText = formatDistanceAmount(distance, newUnit)
+        }
+    }
+
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        factory = { context ->
-            DistanceInputView(context).apply {
-                id = R.id.distance_away
-                this.units = units
-                setOnValueChangeListener(onDistanceChange)
+        verticalAlignment = Alignment.Top
+    ) {
+        OutlinedTextField(
+            value = distanceText,
+            onValueChange = {
+                distanceText = it
+                publish(text = it)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("distance_away"),
+            label = { Text(stringResource(R.string.distance)) },
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Box(modifier = Modifier.weight(1f)) {
+            OutlinedButton(
+                onClick = { isUnitOpen = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("distance_away_unit")
+            ) {
+                Text(formatter.getDistanceUnitName(unit))
             }
-        },
-        update = {
-            it.units = units
-            if (it.value != distance) {
-                it.value = distance
+            DropdownMenu(
+                expanded = isUnitOpen,
+                onDismissRequest = { isUnitOpen = false }
+            ) {
+                units.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(formatter.getDistanceUnitName(option)) },
+                        onClick = {
+                            isUnitOpen = false
+                            val converted = parseDistance(distanceText, unit)?.convertTo(option)
+                            unit = option
+                            distanceText = formatDistanceAmount(converted, option)
+                            publish(text = distanceText, newUnit = option)
+                        }
+                    )
+                }
             }
         }
+    }
+}
+
+private fun parseDistance(text: String, unit: DistanceUnits): Distance? {
+    return text.toDoubleCompat()?.let {
+        Distance.from(it.toFloat(), unit)
+    }
+}
+
+private fun formatDistanceAmount(distance: Distance?, unit: DistanceUnits): String {
+    val converted = distance?.convertTo(unit) ?: return ""
+    return DecimalFormatter.format(
+        converted.value,
+        Units.getDecimalPlaces(converted.units),
+        strict = false
     )
 }
 
