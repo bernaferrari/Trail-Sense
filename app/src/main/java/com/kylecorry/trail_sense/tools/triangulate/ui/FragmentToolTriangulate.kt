@@ -21,16 +21,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +62,7 @@ import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
 import com.kylecorry.luna.time.CoroutineTimer
@@ -80,17 +88,24 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.Configurabl
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.BearingInputView
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FragmentToolTriangulate : Fragment() {
 
@@ -114,17 +129,17 @@ class FragmentToolTriangulate : Fragment() {
     private var location2Complete by mutableStateOf(false)
     private var location1Expanded by mutableStateOf(true)
     private var location2Expanded by mutableStateOf(false)
+    private var location1Coordinate by mutableStateOf<Coordinate?>(null)
+    private var location2Coordinate by mutableStateOf<Coordinate?>(null)
 
     private var map: MapView? = null
-    private var location1: CoordinateInputView? = null
-    private var location2: CoordinateInputView? = null
     private var bearing1: BearingInputView? = null
     private var bearing2: BearingInputView? = null
     private var isViewCreated = false
     private var isSetup = false
 
     private val isBound: Boolean
-        get() = map != null && location1 != null && location2 != null && bearing1 != null && bearing2 != null
+        get() = map != null && bearing1 != null && bearing2 != null
 
     private val layer = ConfigurableGeoJsonLayer()
     private val scaleBarLayer = ScaleBarLayer()
@@ -166,6 +181,8 @@ class FragmentToolTriangulate : Fragment() {
                         location2Complete = location2Complete,
                         location1Expanded = location1Expanded,
                         location2Expanded = location2Expanded,
+                        location1 = location1Coordinate,
+                        location2 = location2Coordinate,
                         onModeChanged = {
                             shouldCalculateMyLocation = it
                             update()
@@ -178,16 +195,8 @@ class FragmentToolTriangulate : Fragment() {
                             map = it
                             maybeSetup()
                         },
-                        onLocation1Ready = {
-                            location1 = it
-                            it.setOnCoordinateChangeListener { update() }
-                            maybeSetup()
-                        },
-                        onLocation2Ready = {
-                            location2 = it
-                            it.setOnCoordinateChangeListener { update() }
-                            maybeSetup()
-                        },
+                        onLocation1Change = ::updateLocation1Coordinate,
+                        onLocation2Change = ::updateLocation2Coordinate,
                         onBearing1Ready = {
                             bearing1 = it
                             it.setOnBearingChangeListener { _, _ -> update() }
@@ -252,10 +261,20 @@ class FragmentToolTriangulate : Fragment() {
         }
     }
 
+    private fun updateLocation1Coordinate(coordinate: Coordinate?) {
+        location1Coordinate = coordinate
+        update()
+    }
+
+    private fun updateLocation2Coordinate(coordinate: Coordinate?) {
+        location2Coordinate = coordinate
+        update()
+    }
+
     private fun updateMap() {
         val map = map ?: return
-        val location1 = location1?.coordinate
-        val location2 = location2?.coordinate
+        val location1 = location1Coordinate
+        val location2 = location2Coordinate
         val destination = location
 
         val fences = listOfNotNull(
@@ -368,7 +387,7 @@ class FragmentToolTriangulate : Fragment() {
 
     private fun getDistanceToDestination(locationIdx: Int): Distance? {
         val start =
-            (if (locationIdx == 1) location1?.coordinate else location2?.coordinate)
+            (if (locationIdx == 1) location1Coordinate else location2Coordinate)
                 ?: return null
         val destination = location ?: return null
         return Distance.meters(start.distanceTo(destination)).convertTo(prefs.baseDistanceUnits)
@@ -377,7 +396,7 @@ class FragmentToolTriangulate : Fragment() {
 
     private fun getPath(locationIdx: Int): GeoJsonFeature? {
         val destination = location
-        val start = if (locationIdx == 1) location1?.coordinate else location2?.coordinate
+        val start = if (locationIdx == 1) location1Coordinate else location2Coordinate
         val direction = if (locationIdx == 1) bearing1?.bearing else bearing2?.bearing
         val trueNorth = if (locationIdx == 1) bearing1?.trueNorth else bearing2?.trueNorth
 
@@ -418,15 +437,11 @@ class FragmentToolTriangulate : Fragment() {
         updateTimer.stop()
         bearing1?.stop()
         bearing2?.stop()
-        location1?.pause()
-        location2?.pause()
         saveState()
     }
 
     override fun onDestroyView() {
         map = null
-        location1 = null
-        location2 = null
         bearing1 = null
         bearing2 = null
         isViewCreated = false
@@ -442,8 +457,8 @@ class FragmentToolTriangulate : Fragment() {
         updateInstructions()
         updateCompletionState()
 
-        val location1 = location1?.coordinate
-        val location2 = location2?.coordinate
+        val location1 = location1Coordinate
+        val location2 = location2Coordinate
         val direction1 = bearing1?.bearing
         val direction2 = bearing2?.bearing
 
@@ -495,11 +510,11 @@ class FragmentToolTriangulate : Fragment() {
         preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2?.bearing)
         preferences.putOrRemoveCoordinate(
             "state_triangulate_location1",
-            location1?.coordinate
+            location1Coordinate
         )
         preferences.putOrRemoveCoordinate(
             "state_triangulate_location2",
-            location2?.coordinate
+            location2Coordinate
         )
         preferences.putBoolean("state_triangulate_true_north1", bearing1?.trueNorth == true)
         preferences.putBoolean("state_triangulate_true_north2", bearing2?.trueNorth == true)
@@ -518,14 +533,14 @@ class FragmentToolTriangulate : Fragment() {
             preferences.getBoolean("state_triangulate_true_north1") ?: false
         bearing2?.trueNorth =
             preferences.getBoolean("state_triangulate_true_north2") ?: false
-        location1?.coordinate = preferences.getCoordinate("state_triangulate_location1")
-        location2?.coordinate = preferences.getCoordinate("state_triangulate_location2")
+        location1Coordinate = preferences.getCoordinate("state_triangulate_location1")
+        location2Coordinate = preferences.getCoordinate("state_triangulate_location2")
         update()
     }
 
     private fun reset() {
-        location1?.coordinate = null
-        location2?.coordinate = null
+        location1Coordinate = null
+        location2Coordinate = null
         bearing1?.bearing = null
         bearing2?.bearing = null
         bearing1?.trueNorth = false
@@ -545,7 +560,7 @@ class FragmentToolTriangulate : Fragment() {
 
     private fun isComplete(locationIdx: Int): Boolean {
         val location =
-            if (locationIdx == 1) location1?.coordinate else location2?.coordinate
+            if (locationIdx == 1) location1Coordinate else location2Coordinate
         val bearing = if (locationIdx == 1) bearing1?.bearing else bearing2?.bearing
         return location != null && bearing != null
     }
@@ -567,14 +582,16 @@ private fun TriangulateScreen(
     location2Complete: Boolean,
     location1Expanded: Boolean,
     location2Expanded: Boolean,
+    location1: Coordinate?,
+    location2: Coordinate?,
     onModeChanged: (Boolean) -> Unit,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
     onShareLocation: () -> Unit,
     onUpdateGpsOverride: () -> Unit,
     onMapReady: (MapView) -> Unit,
-    onLocation1Ready: (CoordinateInputView) -> Unit,
-    onLocation2Ready: (CoordinateInputView) -> Unit,
+    onLocation1Change: (Coordinate?) -> Unit,
+    onLocation2Change: (Coordinate?) -> Unit,
     onBearing1Ready: (BearingInputView) -> Unit,
     onBearing2Ready: (BearingInputView) -> Unit,
     onLocation1ExpandedChange: (Boolean) -> Unit,
@@ -647,9 +664,10 @@ private fun TriangulateScreen(
                 isComplete = location1Complete,
                 isExpanded = location1Expanded,
                 onExpandedChange = onLocation1ExpandedChange,
+                coordinate = location1,
                 coordinateTag = "location_1",
                 bearingTag = "bearing_1",
-                onCoordinateReady = onLocation1Ready,
+                onCoordinateChange = onLocation1Change,
                 onBearingReady = onBearing1Ready,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -663,9 +681,10 @@ private fun TriangulateScreen(
                 isComplete = location2Complete,
                 isExpanded = location2Expanded,
                 onExpandedChange = onLocation2ExpandedChange,
+                coordinate = location2,
                 coordinateTag = "location_2",
                 bearingTag = "bearing_2",
-                onCoordinateReady = onLocation2Ready,
+                onCoordinateChange = onLocation2Change,
                 onBearingReady = onBearing2Ready,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -797,9 +816,10 @@ private fun TriangulateLocationCard(
     isComplete: Boolean,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    coordinate: Coordinate?,
     coordinateTag: String,
     bearingTag: String,
-    onCoordinateReady: (CoordinateInputView) -> Unit,
+    onCoordinateChange: (Coordinate?) -> Unit,
     onBearingReady: (BearingInputView) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -848,8 +868,9 @@ private fun TriangulateLocationCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 CoordinateInput(
+                    coordinate = coordinate,
+                    onCoordinateChange = onCoordinateChange,
                     tag = coordinateTag,
-                    onReady = onCoordinateReady,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = TrailSenseSpacing.xl)
@@ -868,19 +889,131 @@ private fun TriangulateLocationCard(
 
 @Composable
 private fun CoordinateInput(
+    coordinate: Coordinate?,
+    onCoordinateChange: (Coordinate?) -> Unit,
     tag: String,
-    onReady: (CoordinateInputView) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag(tag),
-        factory = { context ->
-            CoordinateInputView(context).apply {
-                id = if (tag == "location_1") R.id.location_1 else R.id.location_2
-                onReady(this)
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val scope = rememberCoroutineScope()
+    var coordinateText by remember(coordinate, formatter) {
+        mutableStateOf(coordinate?.let { formatter.formatLocation(it) }.orEmpty())
+    }
+    val parsedCoordinate = remember(coordinateText) {
+        Coordinate.parse(coordinateText)
+    }
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
+
+    fun autofillFromGps() {
+        scope.launch {
+            isLoadingLocation = true
+            val updated = withContext(Dispatchers.IO) {
+                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+            }
+            coordinateText = formatter.formatLocation(updated)
+            onCoordinateChange(updated)
+            isLoadingLocation = false
+        }
+    }
+
+    LaunchedEffect(coordinate) {
+        val formatted = coordinate?.let { formatter.formatLocation(it) }.orEmpty()
+        if (coordinateText != formatted) {
+            coordinateText = formatted
+        }
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isLoadingLocation) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("gps_loading")
+            )
+        } else {
+            androidx.compose.material3.IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.gps),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> autofillFromGps()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                ) ?: return@launch
+                                coordinateText = formatter.formatLocation(beacon.coordinate)
+                                onCoordinateChange(beacon.coordinate)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_location),
+                    contentDescription = stringResource(R.string.gps)
+                )
             }
         }
-    )
+        Spacer(modifier = Modifier.size(8.dp))
+        OutlinedTextField(
+            value = coordinateText,
+            onValueChange = {
+                coordinateText = it
+                onCoordinateChange(Coordinate.parse(it))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag(tag),
+            label = { Text(stringResource(R.string.location)) },
+            isError = coordinateText.isNotBlank() && parsedCoordinate == null,
+            supportingText = {
+                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
+                    Text(stringResource(R.string.coordinate_input_invalid_location))
+                }
+            },
+            singleLine = true,
+            enabled = !isLoadingLocation
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        androidx.compose.material3.IconButton(
+            onClick = { showHelp = true },
+            modifier = Modifier.testTag("coordinate_input_help_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.location_input_help_title)
+            )
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.location_input_help_title)) },
+            text = { Text(stringResource(R.string.location_input_help)) }
+        )
+    }
 }
 
 @Composable
@@ -922,14 +1055,16 @@ private fun TriangulateScreenPreview() {
             location2Complete = true,
             location1Expanded = true,
             location2Expanded = false,
+            location1 = null,
+            location2 = null,
             onModeChanged = {},
             onCreateBeacon = {},
             onNavigate = {},
             onShareLocation = {},
             onUpdateGpsOverride = {},
             onMapReady = {},
-            onLocation1Ready = {},
-            onLocation2Ready = {},
+            onLocation1Change = {},
+            onLocation2Change = {},
             onBearing1Ready = {},
             onBearing2Ready = {},
             onLocation1ExpandedChange = {},

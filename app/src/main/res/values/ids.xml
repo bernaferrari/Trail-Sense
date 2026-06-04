@@ -157,13 +157,11 @@
     <item name="location_1_title" type="id" />
     <item name="location_1_dropdown_icon" type="id" />
     <item name="location_1_instructions" type="id" />
-    <item name="location_1" type="id" />
     <item name="bearing_1" type="id" />
     <item name="location_2_expansion" type="id" />
     <item name="location_2_title" type="id" />
     <item name="location_2_dropdown_icon" type="id" />
     <item name="location_2_instructions" type="id" />
-    <item name="location_2" type="id" />
     <item name="bearing_2" type="id" />
     <item name="reset_btn" type="id" />
     <item name="incline_container" type="id" />
