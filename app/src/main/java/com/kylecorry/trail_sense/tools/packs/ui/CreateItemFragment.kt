@@ -18,9 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -50,7 +53,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.WeightInputView
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
@@ -389,29 +391,33 @@ private fun CategoryInput(
     onCategoryChange: (ItemCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialSpinnerView(context, null).apply {
-                id = R.id.category_spinner
-                setHint(context.getString(R.string.category))
-                setItems(categories.map { it.second })
-                setOnItemSelectedListener { position ->
-                    val selected = categories.getOrNull(position ?: return@setOnItemSelectedListener)
-                    if (selected != null) {
-                        onCategoryChange(selected.first)
+    var isOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    val selected = categories.firstOrNull { it.first == category }?.second.orEmpty()
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { isOpen = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("category_spinner")
+        ) {
+            Text(selected.ifBlank { stringResource(R.string.category) })
+        }
+        DropdownMenu(
+            expanded = isOpen,
+            onDismissRequest = { isOpen = false }
+        ) {
+            categories.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option.second) },
+                    onClick = {
+                        isOpen = false
+                        onCategoryChange(option.first)
                     }
-                }
-            }
-        },
-        update = { spinner ->
-            val index = categories.indexOfFirst { it.first == category }.coerceAtLeast(0)
-            spinner.setItems(categories.map { it.second })
-            if (spinner.selectedItemPosition != index) {
-                spinner.setSelection(index)
+                )
             }
         }
-    )
+    }
 }
 
 @Composable

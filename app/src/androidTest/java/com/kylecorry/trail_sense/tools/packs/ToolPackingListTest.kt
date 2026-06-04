@@ -272,7 +272,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         hasText(id("name_edit")) { it.startsWith(name) }
         hasText(id("count_edit")) { it.startsWith(amount.toString()) }
         hasText(id("desired_amount_edit")) { it.startsWith(desiredAmount.toString()) }
-        hasText(R.id.category_spinner) { it.startsWith(category) }
+        hasText(id("category_spinner")) { it.startsWith(category) }
 
         if (weight % 1 != 0f){
             val pounds = (weight - weight % 1).roundToInt()
@@ -329,7 +329,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         input(id("name_edit")(), name)
         input(id("count_edit")(), amount.toString())
         input(id("desired_amount_edit")(), desiredAmount.toString())
-        click(R.id.category_spinner)
+        click(id("category_spinner"))
 
         scrollUntil(direction = Direction.UP) {
             click(category)
