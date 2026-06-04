@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
 import android.widget.ImageButton
-import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -470,21 +470,19 @@ private fun DataPoint(
 
 @Composable
 private fun CommentText(comment: String) {
-    AndroidView(
+    SelectionContainer(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 16.dp),
-        factory = { context ->
-            TextView(context).apply {
-                id = R.id.comment_text
-                setTextIsSelectable(true)
-            }
-        },
-        update = {
-            it.text = comment
-        }
-    )
+            .padding(top = 16.dp)
+            .testTag("comment_text")
+    ) {
+        Text(
+            text = comment,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
 }
 
 @Composable

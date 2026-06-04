@@ -88,7 +88,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText(R.id.beacon_sunset, string(R.string.sunset))
         hasText(R.id.beacon_tide, Regex("(High|Low|Half)"))
         hasText(R.id.beacon_tide, string(R.string.tide))
-        hasText(R.id.comment_text, "Test notes")
+        hasText(id("comment_text"), "Test notes")
     }
 
     private fun shareBeacon() {
@@ -122,7 +122,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         click(id("create_beacon_save_btn"))
 
         hasText("Test beacon")
-        hasText(R.id.comment_text, "Test notes 2")
+        hasText(id("comment_text"), "Test notes 2")
     }
 
     private fun navigate() {
