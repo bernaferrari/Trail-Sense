@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -50,13 +54,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.Range
@@ -75,6 +77,7 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
@@ -95,6 +98,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.Month
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 class ClimateFragment : Fragment() {
 
@@ -1025,25 +1031,121 @@ private fun TemperatureChart(
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val data = temperatures.orEmpty()
+    val lowColor = Color(AppColor.Blue.color)
+    val highColor = Color(AppColor.Red.color)
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.onSurface
+    val freezingColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val year = data.firstOrNull()?.first?.year ?: selectedDate.year
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .padding(top = 8.dp),
-        factory = { context ->
-            Chart(context).apply {
-                id = R.id.temperature_chart
-                tag = YearlyTemperatureRangeChart(this, onDateSelected)
+            .padding(top = 8.dp)
+            .testTag("temperature_chart")
+            .pointerInput(data, year) {
+                detectTapGestures { offset ->
+                    if (data.isEmpty() || size.width == 0) {
+                        return@detectTapGestures
+                    }
+                    val day = ((offset.x / size.width) * 365f)
+                        .roundToInt()
+                        .coerceIn(1, if (LocalDate.of(year, 12, 31).isLeapYear) 366 else 365)
+                    onDateSelected(LocalDate.ofYearDay(year, day))
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (data.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val lows = data.map {
+                it.first.dayOfYear.toFloat() to it.second.start.convertTo(units).value
             }
-        },
-        update = { chart ->
-            val temperatureChart = chart.tag as? YearlyTemperatureRangeChart ?: return@AndroidView
-            temperatures?.let {
-                temperatureChart.plot(it, units)
-                temperatureChart.highlight(selectedDate)
+            val highs = data.map {
+                it.first.dayOfYear.toFloat() to it.second.end.convertTo(units).value
+            }
+            val values = lows + highs
+            val freezing = Temperature.celsius(0f).convertTo(units).value
+            val minYValue = values.minOfOrNull { it.second } ?: freezing
+            val maxYValue = values.maxOfOrNull { it.second } ?: freezing
+            val yMinimum = min(minYValue - 5f, freezing)
+            val yMaximum = max(maxYValue + 5f, yMinimum + 10f)
+            val yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
+            val maxDay = if (LocalDate.of(year, 12, 31).isLeapYear) 366f else 365f
+
+            fun x(day: Float): Float = ((day - 1f) / (maxDay - 1f)).coerceIn(0f, 1f) * size.width
+            fun y(value: Float): Float {
+                return size.height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * size.height
+            }
+
+            repeat(5) { index ->
+                val x = index / 4f * size.width
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(x, 0f),
+                    end = androidx.compose.ui.geometry.Offset(x, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+            repeat(5) { index ->
+                val y = index / 4f * size.height
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            drawRect(
+                color = freezingColor,
+                topLeft = androidx.compose.ui.geometry.Offset(0f, y(freezing)),
+                size = androidx.compose.ui.geometry.Size(
+                    size.width,
+                    (size.height - y(freezing)).coerceAtLeast(0f)
+                )
+            )
+
+            fun drawSeries(points: List<Pair<Float, Float>>, color: Color) {
+                points.zipWithNext().forEach { (start, end) ->
+                    drawLine(
+                        color = color,
+                        start = androidx.compose.ui.geometry.Offset(x(start.first), y(start.second)),
+                        end = androidx.compose.ui.geometry.Offset(x(end.first), y(end.second)),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+            }
+
+            drawSeries(lows, lowColor)
+            drawSeries(highs, highColor)
+
+            listOf(lows, highs).forEach { points ->
+                val selected = points.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }
+                if (selected != null) {
+                    drawCircle(
+                        color = highlightColor,
+                        radius = 4.dp.toPx(),
+                        center = androidx.compose.ui.geometry.Offset(
+                            x(selected.first),
+                            y(selected.second)
+                        )
+                    )
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -1054,25 +1156,85 @@ private fun PrecipitationChart(
     onMonthSelected: (Month) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val data = precipitation.orEmpty()
+    val barColor = Color(AppColor.Blue.color)
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.onSurface
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .padding(top = 8.dp),
-        factory = { context ->
-            Chart(context).apply {
-                id = R.id.precipitation_chart
-                tag = MonthlyPrecipitationChart(this, onMonthSelected)
+            .padding(top = 8.dp)
+            .testTag("precipitation_chart")
+            .pointerInput(data) {
+                detectTapGestures { offset ->
+                    if (data.isEmpty() || size.width == 0) {
+                        return@detectTapGestures
+                    }
+                    val month = ((offset.x / size.width) * 12f).toInt().coerceIn(0, 11) + 1
+                    onMonthSelected(Month.of(month))
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (data.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val values = data.map {
+                it.key.value.toFloat() to it.value.convertTo(units).value
+            }.sortedBy { it.first }
+            val margin = Distance.from(0.5f, DistanceUnits.Inches).convertTo(units).value
+            val minRange = Distance.from(1f, DistanceUnits.Inches).convertTo(units).value
+            val maxValue = values.maxOfOrNull { it.second } ?: 0f
+            val yMaximum = max(maxValue + margin, minRange)
+
+            fun x(month: Float): Float = (month / 13f).coerceIn(0f, 1f) * size.width
+            fun y(value: Float): Float {
+                return size.height - (value / yMaximum).coerceIn(0f, 1f) * size.height
             }
-        },
-        update = { chart ->
-            val precipitationChart = chart.tag as? MonthlyPrecipitationChart ?: return@AndroidView
-            precipitation?.let {
-                precipitationChart.plot(it, units)
-                precipitationChart.highlight(selectedMonth)
+
+            repeat(5) { index ->
+                val y = index / 4f * size.height
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            values.forEach { (month, value) ->
+                val centerX = x(month)
+                val barWidth = size.width / 13f * 0.6f
+                val top = y(value)
+                drawRect(
+                    color = barColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, top),
+                    size = androidx.compose.ui.geometry.Size(barWidth, size.height - top)
+                )
+            }
+
+            values.firstOrNull { it.first.toInt() == selectedMonth.value }?.let { selected ->
+                drawCircle(
+                    color = highlightColor,
+                    radius = 4.dp.toPx(),
+                    center = androidx.compose.ui.geometry.Offset(
+                        x(selected.first),
+                        y(selected.second)
+                    )
+                )
             }
         }
-    )
+    }
 }
 
 @Preview(showBackground = true)

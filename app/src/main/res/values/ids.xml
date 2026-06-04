@@ -66,9 +66,7 @@
     <item name="climate_scroll" type="id" />
     <item name="display_date" type="id" />
     <item name="temperature_title" type="id" />
-    <item name="temperature_chart" type="id" />
     <item name="precipitation_title" type="id" />
-    <item name="precipitation_chart" type="id" />
     <item name="climate_zone_title" type="id" />
     <item name="climate_zone_description" type="id" />
     <item name="ecology" type="id" />
