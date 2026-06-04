@@ -19,7 +19,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
@@ -123,8 +122,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canToggleOfflineMapVisibility() {
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
+        click(id("map_visibility_toggle_Test Map"))
+        click(id("map_visibility_toggle_Test Map"))
     }
 
     private fun canViewOfflineMap() {
@@ -136,7 +135,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canRenameOfflineMapGroup() {
-        clickListItemMenu(string(R.string.rename), index = 2)
+        click(id("map_group_menu_Test Group"))
+        click(string(R.string.rename))
         input("Test Group", "Test Group 2")
         clickOk()
         hasText("Test Group 2")
@@ -155,7 +155,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canRenameOfflineMap() {
         input(R.id.searchbox, "Test Map")
         hasText("Test Map")
-        clickListItemMenu(string(R.string.rename))
+        click(id("vector_map_menu_Test Map"))
+        click(string(R.string.rename))
         input("Test Map", "Test Map 2")
         clickOk()
         hasText("Test Map 2")
@@ -164,7 +165,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canEditOfflineMapAttribution() {
         input(R.id.searchbox, "Test Map 2")
         hasText("Test Map 2")
-        clickListItemMenu(string(R.string.attribution))
+        click(id("vector_map_menu_Test Map 2"))
+        click(string(R.string.attribution))
         input(string(R.string.attribution), "Test Attribution")
         clickOk()
     }
@@ -172,7 +174,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canMoveOfflineMap() {
         input(R.id.searchbox, "Test Map 2")
         hasText("Test Map 2")
-        clickListItemMenu(string(R.string.move_to))
+        click(id("vector_map_menu_Test Map 2"))
+        click(string(R.string.move_to))
         click("Test Group 2")
         click(string(R.string.move))
         input(R.id.searchbox, "")
@@ -182,7 +185,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canDeleteOfflineMapGroup() {
-        clickListItemMenu(string(R.string.delete), index = 0)
+        click(id("map_group_menu_Test Group 2"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Test Group 2") }
     }
@@ -190,7 +194,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canDeleteOfflineMap() {
         input(R.id.searchbox, "Second")
         hasText("Second Map")
-        clickListItemMenu(string(R.string.delete))
+        click(id("vector_map_menu_Second Map"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Second Map") }
         input(R.id.searchbox, "")
@@ -312,13 +317,15 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canDeleteGroup() {
-        clickListItemMenu(string(R.string.delete), index = 0)
+        click(id("map_group_menu_Test Group 2"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Test Group 2") }
     }
 
     private fun canRenameGroup() {
-        clickListItemMenu(string(R.string.rename), index = 0)
+        click(id("map_group_menu_Test Group"))
+        click(string(R.string.rename))
         input("Test Group", "Test Group 2")
         clickOk()
         hasText("Test Group 2")
@@ -326,8 +333,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canToggleVisibility() {
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
+        click(id("map_visibility_toggle_Test Map"))
+        click(id("map_visibility_toggle_Test Map"))
     }
 
     private fun canViewMap() {
@@ -487,14 +494,16 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canRenameMap() {
-        clickListItemMenu(string(R.string.rename), index = 2)
+        click(id("photo_map_menu_Test Map"))
+        click(string(R.string.rename))
         input("Test Map", "Test Map 2")
         clickOk()
         hasText("Test Map 2")
     }
 
     private fun canMoveMap() {
-        clickListItemMenu(string(R.string.move_to), index = 2)
+        click(id("photo_map_menu_Test Map 2"))
+        click(string(R.string.move_to))
         click("Test Group 2")
         click("Move")
         hasText("2 maps")
@@ -505,14 +514,16 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canChangeMapResolution() {
-        clickListItemMenu(string(R.string.change_resolution), index = 1)
+        click(id("photo_map_menu_Blank Map"))
+        click(string(R.string.change_resolution))
         click("Moderate")
         clickOk()
         waitFor { hasText("Blank Map") }
     }
 
     private fun canExportMap() {
-        clickListItemMenu(string(R.string.export), index = 1)
+        click(id("photo_map_menu_Blank Map"))
+        click(string(R.string.export))
         // Pressing back is needed sometimes to close the drive selector
         backUntil {
             hasText("blank-map.pdf")
@@ -523,7 +534,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canPrintMap() {
-        clickListItemMenu(string(R.string.print), index = 1)
+        click(id("photo_map_menu_Blank Map"))
+        click(string(R.string.print))
         hasText("Copies")
         backUntil {
             isVisible(R.id.map_list_title)
@@ -531,7 +543,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canDeleteMap() {
-        clickListItemMenu(string(R.string.delete))
+        click(id("photo_map_menu_Blank Map"))
+        click(string(R.string.delete))
         clickOk()
         not { hasText("Blank Map") }
     }

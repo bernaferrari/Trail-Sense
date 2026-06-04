@@ -15,12 +15,33 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -37,19 +58,21 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.andromeda.print.Printer
+import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.andromeda_temp.map
-import com.kylecorry.trail_sense.shared.andromeda_temp.unwrap
-import com.kylecorry.trail_sense.shared.andromeda_temp.unwrapError
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.lists.bind
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
@@ -81,12 +104,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ResizeMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ShowMapsDisclaimerCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ToggleVisibilityMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create.CreateBlankMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create.CreateMapFromCameraCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create.CreateMapFromFileCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create.CreateMapFromUriCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create.ICreateMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.IMapMapper
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.TrailMapAction
@@ -103,13 +120,14 @@ class OfflineMapListFragment : AndromedaFragment() {
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val mapService by lazy { getAppService<OfflineMapService>() }
     private val mapLoader by lazy { MapGroupLoader(mapService.loader) }
-    private lateinit var manager: GroupListManager<OfflineMapCatalogItem>
-    private lateinit var mapper: IMapMapper
+    private lateinit var manager: GroupListManager<IMap>
 
     private var sort = MapSortMethod.Closest
 
     private var lastRoot: OfflineMapCatalogItem? = null
     private var backPressedCallback: OnBackPressedCallback? = null
+    private var mapItems by mutableStateOf<List<IMap>>(emptyList())
+    private var mapListResetKey by mutableIntStateOf(0)
 
     private val uriPicker by lazy { IntentUriPicker(this, requireContext()) }
     private val mapImportingIndicator by lazy {
@@ -150,15 +168,6 @@ class OfflineMapListFragment : AndromedaFragment() {
             this::sortMaps
         )
 
-        mapper = IMapMapper(
-            gps,
-            requireContext(),
-            this,
-            this::onPhotoMapAction,
-            this::onTrailMapAction,
-            this::onMapGroupAction
-        )
-
         val mapIntentUri =
             BundleCompat.getParcelable(arguments ?: Bundle(), "map_intent_uri", Uri::class.java)
         arguments?.remove("map_intent_uri")
@@ -172,8 +181,6 @@ class OfflineMapListFragment : AndromedaFragment() {
         }
 
         ShowMapsDisclaimerCommand(this).execute()
-
-        binding.mapList.emptyView = binding.mapEmptyText
 
         binding.mapListTitle.leftButton.setOnClickListener {
             UserGuideUtils.showGuide(this, R.raw.guide_tool_offline_maps)
@@ -194,8 +201,35 @@ class OfflineMapListFragment : AndromedaFragment() {
         }
 
         manager.bind(binding.searchbox)
-        manager.bind(binding.mapList, binding.mapListTitle.title, mapper) {
-            (it as MapGroup?)?.name ?: getString(R.string.offline_maps)
+        binding.mapList.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.mapList.setContent {
+            TrailSenseTheme {
+                OfflineMapList(
+                    items = mapItems,
+                    resetKey = mapListResetKey,
+                    gpsLocationOnMap = { map ->
+                        when (map) {
+                            is PhotoMap -> map.boundary()?.contains(gps.location) ?: false
+                            is VectorMap -> map.bounds?.contains(gps.location) ?: false
+                            else -> false
+                        }
+                    },
+                    onPhotoMapAction = ::onPhotoMapAction,
+                    onVectorMapAction = ::onVectorMapAction,
+                    onMapGroupAction = ::onMapGroupAction,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        manager.onChange = { root, items, rootChanged ->
+            mapItems = items
+            binding.mapEmptyText.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+            if (rootChanged) {
+                mapListResetKey++
+            }
+            binding.mapListTitle.title.text = (root as MapGroup?)?.name ?: getString(R.string.offline_maps)
         }
 
         backPressedCallback = onBackPressed {
@@ -526,7 +560,7 @@ private data class OfflineMapListViews(
     val root: View,
     val mapListTitle: OfflineMapListTitle,
     val searchbox: SearchView,
-    val mapList: AndromedaListView,
+    val mapList: ComposeView,
     val mapEmptyText: TextView,
     val overlayMask: ImageView,
     val addMenu: FloatingActionButtonMenu,
@@ -549,6 +583,322 @@ private fun OfflineMapListHost(
         modifier = modifier,
         factory = { views.root }
     )
+}
+
+@Composable
+private fun OfflineMapList(
+    items: List<IMap>,
+    resetKey: Int,
+    gpsLocationOnMap: (IMap) -> Boolean,
+    onPhotoMapAction: (PhotoMap, MapAction) -> Unit,
+    onVectorMapAction: (VectorMap, VectorMapAction) -> Unit,
+    onMapGroupAction: (MapGroup, MapGroupAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier.testTag("map_list")
+    ) {
+        items(items, key = { item ->
+            when (item) {
+                is PhotoMap -> item.id
+                is VectorMap -> item.id + 10000
+                is MapGroup -> -item.id
+                else -> item.id
+            }
+        }) { item ->
+            when (item) {
+                is PhotoMap -> PhotoMapRow(
+                    map = item,
+                    onMap = gpsLocationOnMap(item),
+                    onAction = { onPhotoMapAction(item, it) }
+                )
+
+                is VectorMap -> VectorMapRow(
+                    map = item,
+                    onMap = gpsLocationOnMap(item),
+                    onAction = { onVectorMapAction(item, it) }
+                )
+
+                is MapGroup -> MapGroupRow(
+                    group = item,
+                    onAction = { onMapGroupAction(item, it) }
+                )
+            }
+            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun PhotoMapRow(
+    map: PhotoMap,
+    onMap: Boolean,
+    onAction: (MapAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val formatter = getAppService<FormatService>()
+    val subtitle = formatter.join(
+        map.createdOn?.let { formatter.formatDate(it.toZonedDateTime(), includeWeekDay = false) },
+        formatter.formatFileSize(map.metadata.fileSize),
+        separator = FormatService.Separator.Dot
+    )
+
+    TrailSenseListItem(
+        title = map.name,
+        subtitle = mapTypeSubtitle(subtitle, R.string.map_type_photo, onMap),
+        icon = painterResource(R.drawable.maps),
+        iconTint = Color(AppColor.Gray.color),
+        onClick = { onAction(MapAction.View) },
+        trailing = {
+            MapVisibilityButton(
+                visible = map.visible,
+                tag = "map_visibility_toggle_${map.name}",
+                onClick = { onAction(MapAction.ToggleVisibility) }
+            )
+            PhotoMapMenu(
+                map = map,
+                menuOpen = menuOpen,
+                onMenuOpenChange = { menuOpen = it },
+                onAction = onAction
+            )
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun PhotoMapMenu(
+    map: PhotoMap,
+    menuOpen: Boolean,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (MapAction) -> Unit
+) {
+    Box {
+        IconButton(
+            onClick = { onMenuOpenChange(true) },
+            modifier = Modifier.testTag("photo_map_menu_${map.name}")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_menu_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { onMenuOpenChange(false) }
+        ) {
+            PhotoMapMenuItem(R.string.rename, onMenuOpenChange, onAction, MapAction.Rename)
+            PhotoMapMenuItem(R.string.move_to, onMenuOpenChange, onAction, MapAction.Move)
+            PhotoMapMenuItem(R.string.change_resolution, onMenuOpenChange, onAction, MapAction.Resize)
+            PhotoMapMenuItem(R.string.export, onMenuOpenChange, onAction, MapAction.Export)
+            if (Printer.canPrint()) {
+                PhotoMapMenuItem(R.string.print, onMenuOpenChange, onAction, MapAction.Print)
+            }
+            PhotoMapMenuItem(R.string.delete, onMenuOpenChange, onAction, MapAction.Delete)
+        }
+    }
+}
+
+@Composable
+private fun PhotoMapMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (MapAction) -> Unit,
+    action: MapAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+@Composable
+private fun VectorMapRow(
+    map: VectorMap,
+    onMap: Boolean,
+    onAction: (VectorMapAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val formatter = getAppService<FormatService>()
+    val subtitle = formatter.join(
+        formatter.formatDate(map.createdOn.toZonedDateTime(), includeWeekDay = false),
+        formatter.formatFileSize(map.sizeBytes),
+        separator = FormatService.Separator.Dot
+    )
+
+    TrailSenseListItem(
+        title = map.name,
+        subtitle = mapTypeSubtitle(subtitle, R.string.map_type_trail, onMap),
+        icon = painterResource(R.drawable.maps),
+        iconTint = Color(AppColor.Gray.color),
+        onClick = { onAction(VectorMapAction.View) },
+        trailing = {
+            MapVisibilityButton(
+                visible = map.visible,
+                tag = "map_visibility_toggle_${map.name}",
+                onClick = { onAction(VectorMapAction.ToggleVisibility) }
+            )
+            VectorMapMenu(
+                map = map,
+                menuOpen = menuOpen,
+                onMenuOpenChange = { menuOpen = it },
+                onAction = onAction
+            )
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun VectorMapMenu(
+    map: VectorMap,
+    menuOpen: Boolean,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (VectorMapAction) -> Unit
+) {
+    Box {
+        IconButton(
+            onClick = { onMenuOpenChange(true) },
+            modifier = Modifier.testTag("vector_map_menu_${map.name}")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_menu_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { onMenuOpenChange(false) }
+        ) {
+            VectorMapMenuItem(R.string.rename, onMenuOpenChange, onAction, VectorMapAction.Rename)
+            VectorMapMenuItem(R.string.attribution, onMenuOpenChange, onAction, VectorMapAction.EditAttribution)
+            VectorMapMenuItem(R.string.move_to, onMenuOpenChange, onAction, VectorMapAction.Move)
+            VectorMapMenuItem(R.string.delete, onMenuOpenChange, onAction, VectorMapAction.Delete)
+        }
+    }
+}
+
+@Composable
+private fun VectorMapMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (VectorMapAction) -> Unit,
+    action: VectorMapAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+@Composable
+private fun MapVisibilityButton(
+    visible: Boolean,
+    tag: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.testTag(tag)
+    ) {
+        Icon(
+            painter = painterResource(
+                if (visible) {
+                    R.drawable.ic_visible
+                } else {
+                    R.drawable.ic_not_visible
+                }
+            ),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun MapGroupRow(
+    group: MapGroup,
+    onAction: (MapGroupAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val count = group.count ?: 0
+
+    TrailSenseListItem(
+        title = group.name,
+        subtitle = stringResource(R.plurals.map_group_summary, count, count),
+        icon = painterResource(R.drawable.ic_map_group),
+        iconTint = Color(AppColor.Gray.color),
+        onClick = { onAction(MapGroupAction.View) },
+        trailing = {
+            Box {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier.testTag("map_group_menu_${group.name}")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu_dots),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    MapGroupMenuItem(R.string.show_all, { menuOpen = it }, onAction, MapGroupAction.ShowAll)
+                    MapGroupMenuItem(R.string.hide_all, { menuOpen = it }, onAction, MapGroupAction.HideAll)
+                    MapGroupMenuItem(R.string.rename, { menuOpen = it }, onAction, MapGroupAction.Rename)
+                    MapGroupMenuItem(R.string.move_to, { menuOpen = it }, onAction, MapGroupAction.Move)
+                    MapGroupMenuItem(R.string.delete, { menuOpen = it }, onAction, MapGroupAction.Delete)
+                }
+            }
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun MapGroupMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (MapGroupAction) -> Unit,
+    action: MapGroupAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+@Composable
+private fun mapTypeSubtitle(metadata: String, typeLabel: Int, onMap: Boolean): String {
+    val type = stringResource(typeLabel)
+    return if (onMap) {
+        "$metadata · ${stringResource(R.string.on_map)} · $type"
+    } else {
+        "$metadata · $type"
+    }
 }
 
 private fun createOfflineMapListViews(context: Context): OfflineMapListViews {
@@ -589,7 +939,7 @@ private fun createOfflineMapListViews(context: Context): OfflineMapListViews {
         }
     )
 
-    val list = AndromedaListView(context, null).apply {
+    val list = ComposeView(context).apply {
         id = R.id.map_list
     }
     root.addView(
