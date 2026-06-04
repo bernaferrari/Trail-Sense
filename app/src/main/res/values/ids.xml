@@ -313,9 +313,6 @@
     <item name="date" type="id" />
     <item name="date_btn" type="id" />
     <item name="next_date" type="id" />
-    <item name="date_picker" type="id" />
-    <item name="time_text" type="id" />
-    <item name="time_slider" type="id" />
     <item name="gps_status" type="id" />
     <item name="compass_status" type="id" />
     <item name="duration" type="id" />
