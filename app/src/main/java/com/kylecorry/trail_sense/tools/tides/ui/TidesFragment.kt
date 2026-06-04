@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,12 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -38,9 +44,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -54,7 +60,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.DailyTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadTideTableCommand
-import com.kylecorry.trail_sense.tools.tides.ui.mappers.TideListItemMapper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -69,7 +74,6 @@ class TidesFragment : Fragment() {
     private val tideService by lazy { TideService(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
-    private val mapper by lazy { TideListItemMapper(requireContext()) }
     private val currentTideCommand by lazy { CurrentTideCommand(tideService) }
     private val dailyTideCommand by lazy { DailyTideCommand(tideService) }
     private val loadTideCommand by lazy { LoadTideTableCommand(requireContext()) }
@@ -101,7 +105,6 @@ class TidesFragment : Fragment() {
                         displayDate = displayDate,
                         daily = daily,
                         tides = getDisplayTides(),
-                        mapper = mapper,
                         onDateChange = ::onDisplayDateSelected,
                         onOpenTideList = ::openTideList
                     )
@@ -250,7 +253,6 @@ private fun TidesScreen(
     displayDate: LocalDate,
     daily: DailyTideData?,
     tides: List<Tide>,
-    mapper: TideListItemMapper,
     onDateChange: (LocalDate) -> Unit,
     onOpenTideList: () -> Unit,
     modifier: Modifier = Modifier
@@ -280,7 +282,6 @@ private fun TidesScreen(
             Spacer(modifier = Modifier.height(16.dp))
             TideList(
                 tides = tides,
-                mapper = mapper,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -424,20 +425,78 @@ private fun TideChartView(
 @Composable
 private fun TideList(
     tides: List<Tide>,
-    mapper: TideListItemMapper,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            AndromedaListView(context, null).apply {
-                id = R.id.tide_list
-            }
-        },
-        update = {
-            it.setItems(tides, mapper)
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("tide_list")
+    ) {
+        items(tides, key = { it.time.toInstant().toEpochMilli() }) { tide ->
+            TideRow(tide)
+            HorizontalDivider()
         }
-    )
+    }
+}
+
+@Composable
+private fun TideRow(tide: Tide) {
+    val context = LocalContext.current
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    val units = remember(context) { UserPreferences(context).baseDistanceUnits }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (tide.height == null) {
+                    Alerts.dialog(
+                        context,
+                        context.getString(R.string.disclaimer_estimated_tide_title),
+                        context.getString(R.string.disclaimer_estimated_tide),
+                        cancelText = null
+                    )
+                }
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp)
+        ) {
+            Text(
+                text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+                modifier = Modifier.testTag("tide_event_title"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = if (tide.height == null) {
+                    stringResource(R.string.estimated)
+                } else {
+                    formatter.formatDistance(
+                        Distance.meters(tide.height!!).convertTo(units),
+                        2,
+                        true
+                    )
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -452,7 +511,6 @@ private fun TidesScreenPreview() {
             displayDate = LocalDate.now(),
             daily = null,
             tides = emptyList(),
-            mapper = TideListItemMapper(androidx.compose.ui.platform.LocalContext.current),
             onDateChange = {},
             onOpenTideList = {}
         )

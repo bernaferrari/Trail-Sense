@@ -132,19 +132,19 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
 
         // Verify at least one high and low tide is shown
         var isHighFirst = false
-        hasText(com.kylecorry.andromeda.views.R.id.title) {
+        hasText(id("tide_event_title")) {
             isHighFirst = it == string(R.string.high_tide)
             it == string(R.string.high_tide) || it == string(R.string.low_tide)
         }
 
         hasText(
-            com.kylecorry.andromeda.views.R.id.title, string(
+            id("tide_event_title", index = 1), string(
                 if (isHighFirst) {
                     R.string.low_tide
                 } else {
                     R.string.high_tide
                 }
-            ), index = 1
+            )
         )
 
         // TODO: Verify the times are correct
