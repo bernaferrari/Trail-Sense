@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -34,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -44,19 +47,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
@@ -446,30 +448,102 @@ private fun TideChartView(
     displayDate: LocalDate,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val dailyData = daily
+    val levelColor = if (UserPreferences(LocalContext.current).useDynamicColors) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        Color(AppColor.Blue.color)
+    }
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.onSurface
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height)),
-        factory = { context ->
-            Chart(context).apply {
-                id = R.id.chart
-                tag = TideChart(this)
+            .height(dimensionResource(R.dimen.chart_height))
+            .testTag("chart"),
+        contentAlignment = Alignment.Center
+    ) {
+        if (dailyData == null || dailyData.waterLevels.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val startTime = dailyData.waterLevels.firstOrNull()?.time ?: Instant.now()
+            val totalRange = dailyData.waterLevelRange.end - dailyData.waterLevelRange.start
+            val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
+            val minimum = dailyData.waterLevelRange.start - rangeDelta
+            val maximum = dailyData.waterLevelRange.end + rangeDelta
+            val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
+
+            fun x(time: Instant): Float {
+                val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
+                val totalHours = 24f
+                return (hours / totalHours).coerceIn(0f, 1f) * size.width
             }
-        },
-        update = { chart ->
-            val tideChart = chart.tag as? TideChart ?: return@AndroidView
-            val dailyData = daily ?: return@AndroidView
-            tideChart.plot(dailyData.waterLevels, dailyData.waterLevelRange)
+
+            fun y(value: Float): Float {
+                val normalized = ((value - minimum) / valueRange).coerceIn(0f, 1f)
+                return size.height - normalized * size.height
+            }
+
+            repeat(7) { index ->
+                val x = index / 6f * size.width
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(x, 0f),
+                    end = androidx.compose.ui.geometry.Offset(x, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            val path = Path()
+            dailyData.waterLevels.forEachIndexed { index, reading ->
+                val pointX = x(reading.time)
+                val pointY = y(reading.value)
+                if (index == 0) {
+                    path.moveTo(pointX, size.height)
+                    path.lineTo(pointX, pointY)
+                } else {
+                    path.lineTo(pointX, pointY)
+                }
+            }
+            val last = dailyData.waterLevels.last()
+            path.lineTo(x(last.time), size.height)
+            path.close()
+
+            drawPath(path, levelColor.copy(alpha = 0.2f))
+
+            dailyData.waterLevels.zipWithNext().forEach { (start, end) ->
+                drawLine(
+                    color = levelColor,
+                    start = androidx.compose.ui.geometry.Offset(x(start.time), y(start.value)),
+                    end = androidx.compose.ui.geometry.Offset(x(end.time), y(end.value)),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+
             val currentLevel = dailyData.waterLevels.minByOrNull {
                 Duration.between(Instant.now(), it.time).abs()
             }
             if (currentLevel != null && displayDate == LocalDate.now()) {
-                tideChart.highlight(currentLevel, dailyData.waterLevelRange)
-            } else {
-                tideChart.removeHighlight()
+                drawCircle(
+                    color = highlightColor,
+                    radius = 4.dp.toPx(),
+                    center = androidx.compose.ui.geometry.Offset(
+                        x(currentLevel.time),
+                        y(currentLevel.value)
+                    )
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
