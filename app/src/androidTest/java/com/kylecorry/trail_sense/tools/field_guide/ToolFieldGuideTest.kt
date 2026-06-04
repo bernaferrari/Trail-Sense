@@ -90,13 +90,15 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     }
 
     private fun canDeletePage() {
-        clickListItemMenu("Delete")
+        click(id("field_guide_page_menu"))
+        click("Delete")
         clickOk()
         not { hasText("A Test 3") }
     }
 
     private fun canEditPage() {
-        clickListItemMenu("Edit")
+        click(id("field_guide_page_menu"))
+        click("Edit")
         hasText(R.id.name, "A Test")
         input(R.id.name, "A Test 2")
         click(R.id.create_field_guide_page_save_btn)
