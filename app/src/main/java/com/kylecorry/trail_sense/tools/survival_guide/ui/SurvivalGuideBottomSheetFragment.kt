@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,18 +38,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TextBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
@@ -333,18 +331,10 @@ private fun MarkdownSummaryText(
     markdown: MarkdownService,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    TrailSenseLinkedText(
+        text = markdown.toMarkdown(summary),
         modifier = modifier.testTag("summary"),
-        factory = { context ->
-            TextView(context).apply {
-                id = R.id.summary
-                setLineSpacing(Resources.dp(context, 4f), 1f)
-                textSize = 14f
-            }
-        },
-        update = {
-            markdown.setMarkdown(it, summary)
-        }
+        style = MaterialTheme.typography.bodyMedium
     )
 }
 
