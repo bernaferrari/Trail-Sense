@@ -260,8 +260,6 @@
     <item name="play_btn" type="id" />
     <item name="text_input_holder" type="id" />
     <item name="text_input" type="id" />
-    <item name="color_btn_background" type="id" />
-    <item name="color_btn_foreground" type="id" />
     <item name="color_picker_flex" type="id" />
     <item name="astronomy_detail_list" type="id" />
     <item name="button_3d" type="id" />

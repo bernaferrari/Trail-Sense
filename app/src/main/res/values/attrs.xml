@@ -51,10 +51,6 @@
         <attr name="menu" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="ColorButton">
-        <attr name="buttonColor" format="color" />
-    </declare-styleable>
-
     <declare-styleable name="MaskedProgressView">
         <attr name="android:drawable" />
         <attr name="android:drawableTint" />
