@@ -126,7 +126,7 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         hasText("Tide 1")
 
         // Verify that today is selected
-        hasText(R.id.tide_list_date, string(R.string.today))
+        hasText(id("tide_list_date"), string(R.string.today))
 
         // Verify at least one high and low tide is shown
         var isHighFirst = false

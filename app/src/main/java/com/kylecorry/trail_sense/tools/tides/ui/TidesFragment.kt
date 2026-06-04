@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -50,10 +54,10 @@ import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.views.DatePickerView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -367,27 +371,73 @@ private fun TidesHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DatePickerInput(
     date: LocalDate,
     onDateChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val formatter = remember(context) { FormatService.getInstance(context) }
+
+    Row(
         modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            DatePickerView(context, null).apply {
-                id = R.id.tide_list_date
-                this.date = date
-                setOnDateChangeListener(onDateChange)
-            }
-        },
-        update = { input ->
-            if (input.date != date) {
-                input.date = date
-            }
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = { onDateChange(date.minusDays(1)) },
+            modifier = Modifier.testTag("prev_date")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.rotate(180f)
+            )
         }
-    )
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = formatter.formatRelativeDate(date),
+            modifier = Modifier.testTag("tide_list_date"),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Box(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(48.dp)
+                .combinedClickable(
+                    onClick = {
+                        CustomUiUtils.pickDate(context, date, null) {
+                            if (it != null) {
+                                onDateChange(it)
+                            }
+                        }
+                    },
+                    onLongClick = { onDateChange(LocalDate.now()) }
+                )
+                .testTag("date_btn"),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_date),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        IconButton(
+            onClick = { onDateChange(date.plusDays(1)) },
+            modifier = Modifier.testTag("next_date")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 @Composable
