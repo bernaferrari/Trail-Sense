@@ -1,11 +1,9 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
@@ -42,12 +40,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.setPadding
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.card.MaterialCardView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.luna.concurrency.onMain
@@ -61,7 +56,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.shared.views.Notepad
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
@@ -475,42 +469,16 @@ private fun NotesInput(
 ) {
     val hint = stringResource(R.string.tool_notes_title)
 
-    AndroidView(
+    OutlinedTextField(
+        value = notes.orEmpty(),
+        onValueChange = { onNotesChange(it.ifBlank { null }) },
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp),
-        factory = { context ->
-            MaterialCardView(context).apply {
-                setCardBackgroundColor(Color.TRANSPARENT)
-                addView(
-                    Notepad(context, null).apply {
-                        id = R.id.notes
-                        this.hint = hint
-                        imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_NONE
-                        setLineSpacing(0f, 1.5f)
-                        setPadding(
-                            com.kylecorry.andromeda.core.system.Resources.dp(context, 16f).toInt()
-                        )
-                        doAfterTextChanged {
-                            onNotesChange(it?.toString())
-                        }
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.MATCH_PARENT
-                        )
-                    }
-                )
-            }
-        },
-        update = { card ->
-            val notepad = card.findViewById<Notepad>(R.id.notes)
-            notepad.hint = hint
-            val text = notes.orEmpty()
-            if (notepad.text?.toString() != text) {
-                notepad.setText(text)
-                notepad.setSelection(notepad.text?.length ?: 0)
-            }
-        }
+            .height(200.dp)
+            .testTag("notes"),
+        label = { Text(hint) },
+        minLines = 6,
+        maxLines = 8
     )
 }
 
