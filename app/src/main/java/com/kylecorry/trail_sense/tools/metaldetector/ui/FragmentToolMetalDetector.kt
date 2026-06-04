@@ -42,15 +42,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.andromeda.sound.ToneGenerator
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
@@ -61,7 +58,6 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -74,6 +70,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.Duration
 import kotlin.math.absoluteValue
+import kotlin.math.max
 import kotlin.math.min
 
 class FragmentToolMetalDetector : Fragment() {
@@ -87,7 +84,6 @@ class FragmentToolMetalDetector : Fragment() {
     private val filter = LowPassFilter(0.2f, 0f)
 
     private var isVibrating = false
-    private var chart: MetalDetectorChart? = null
     private var lastReadingTime = System.currentTimeMillis() + 1000L
     private var threshold = 5f
 
@@ -123,6 +119,9 @@ class FragmentToolMetalDetector : Fragment() {
     private var metalDirection by mutableStateOf(Bearing.from(0f) to Bearing.from(180f))
     private var showSinglePoleDirection by mutableStateOf(false)
     private var metalDirectionSensitivity by mutableStateOf(1f)
+    private var chartReadings by mutableStateOf<List<Float>>(emptyList())
+    private var lowerThreshold by mutableStateOf(0f)
+    private var upperThreshold by mutableStateOf(0f)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -149,14 +148,9 @@ class FragmentToolMetalDetector : Fragment() {
                         onCalibrate = ::calibrate,
                         thresholdSliderValue = thresholdSliderValue,
                         onThresholdChange = { thresholdSliderValue = it },
-                        onChartCreated = {
-                            if (chart == null) {
-                                chart = MetalDetectorChart(
-                                    it,
-                                    Resources.getPrimaryColor(requireContext())
-                                )
-                            }
-                        },
+                        chartReadings = chartReadings,
+                        lowerThreshold = lowerThreshold,
+                        upperThreshold = upperThreshold,
                         metalDirectionFieldStrength = metalDirectionFieldStrength,
                         metalDirection = metalDirection,
                         showSinglePoleDirection = showSinglePoleDirection,
@@ -207,7 +201,6 @@ class FragmentToolMetalDetector : Fragment() {
     }
 
     override fun onDestroyView() {
-        chart = null
         super.onDestroyView()
     }
 
@@ -356,7 +349,9 @@ class FragmentToolMetalDetector : Fragment() {
     }
 
     private fun updateChart() {
-        chart?.plot(readings, referenceMagnitude - threshold, referenceMagnitude + threshold)
+        chartReadings = readings.toList()
+        lowerThreshold = referenceMagnitude - threshold
+        upperThreshold = referenceMagnitude + threshold
     }
 
     private fun onMagnetometerUpdate(): Boolean {
@@ -415,7 +410,9 @@ private fun MetalDetectorScreen(
     onCalibrate: () -> Unit,
     thresholdSliderValue: Float,
     onThresholdChange: (Float) -> Unit,
-    onChartCreated: (Chart) -> Unit,
+    chartReadings: List<Float>,
+    lowerThreshold: Float,
+    upperThreshold: Float,
     metalDirectionFieldStrength: Float,
     metalDirection: Pair<Bearing, Bearing>,
     showSinglePoleDirection: Boolean,
@@ -492,7 +489,11 @@ private fun MetalDetectorScreen(
             } else {
                 Box(modifier = Modifier.weight(1f))
             }
-            MetalChart(onChartCreated)
+            MetalChart(
+                data = chartReadings,
+                lowerThreshold = lowerThreshold,
+                upperThreshold = upperThreshold
+            )
             Text(
                 text = stringResource(R.string.metal_detector_disclaimer),
                 modifier = Modifier
@@ -744,19 +745,75 @@ private fun MagnetometerDirection(
 
 @Composable
 private fun MetalChart(
-    onChartCreated: (Chart) -> Unit
+    data: List<Float>,
+    lowerThreshold: Float,
+    upperThreshold: Float
 ) {
-    AndroidView(
+    val primary = MaterialTheme.colorScheme.primary
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
             .padding(horizontal = 16.dp)
             .testTag("metal_chart"),
-        factory = { context ->
-            Chart(context).apply {
-                id = R.id.metal_chart
-                onChartCreated(this)
+        contentAlignment = Alignment.Center
+    ) {
+        if (data.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Box
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val minimum = min(30f, data.minOrNull() ?: 30f)
+            val maximum = max(70f, data.maxOrNull() ?: 70f)
+            val range = (maximum - minimum).takeIf { it > 0f } ?: 1f
+
+            fun x(index: Int): Float {
+                return if (data.size <= 1) {
+                    size.width
+                } else {
+                    index.toFloat() / (data.size - 1).toFloat() * size.width
+                }
+            }
+
+            fun y(value: Float): Float {
+                return size.height - ((value - minimum) / range).coerceIn(0f, 1f) * size.height
+            }
+
+            repeat(5) { index ->
+                val y = index / 4f * size.height
+                drawLine(
+                    color = grid,
+                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            drawRect(
+                color = Color(AppColor.Gray.color).copy(alpha = 0.2f),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, y(upperThreshold)),
+                size = androidx.compose.ui.geometry.Size(
+                    size.width,
+                    (y(lowerThreshold) - y(upperThreshold)).coerceAtLeast(0f)
+                )
+            )
+
+            data.zipWithNext().forEachIndexed { index, (start, end) ->
+                drawLine(
+                    color = primary,
+                    start = androidx.compose.ui.geometry.Offset(x(index), y(start)),
+                    end = androidx.compose.ui.geometry.Offset(x(index + 1), y(end)),
+                    strokeWidth = 2.dp.toPx()
+                )
             }
         }
-    )
+    }
 }

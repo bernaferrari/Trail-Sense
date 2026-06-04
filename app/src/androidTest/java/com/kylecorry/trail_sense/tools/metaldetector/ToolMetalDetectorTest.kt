@@ -25,7 +25,7 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
         hasText(Regex("\\d+ uT"))
 
         // Make sure the chart is visible
-        isVisible(R.id.metal_chart)
+        isVisible(id("metal_chart"))
 
         // Can turn on high sensitivity
         isChecked(id("high_sensitivity_toggle"), isChecked = false)
