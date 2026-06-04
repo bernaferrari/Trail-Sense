@@ -49,10 +49,10 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canSearch() {
         back(false)
-        input(R.id.search, "Rabbit")
+        input(id("search"), "Rabbit")
         hasText("Rabbit")
 
-        input(R.id.search, "Insect")
+        input(id("search"), "Insect")
         hasText("Ant")
 
         back(false)

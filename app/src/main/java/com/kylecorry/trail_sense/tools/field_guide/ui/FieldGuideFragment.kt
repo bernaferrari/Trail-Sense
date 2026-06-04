@@ -30,6 +30,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +63,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -327,22 +327,15 @@ private fun FieldGuideSearch(
     query: String,
     onQueryChange: (String) -> Unit
 ) {
-    AndroidView(
-        modifier = Modifier.testTag("search"),
-        factory = { context ->
-            SearchView(context, null).apply {
-                id = R.id.search
-                val padding = Resources.dp(context, 16f).toInt()
-                setPadding(padding, padding, padding, padding)
-            }
-        },
-        update = {
-            it.setOnSearchListener(onQueryChange)
-            if (it.query != query) {
-                it.query = query
-                it.setCursorPosition(query.length)
-            }
-        }
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        singleLine = true,
+        placeholder = { Text(stringResource(R.string.search)) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .testTag("search")
     )
 }
 
