@@ -84,8 +84,6 @@
     <item name="create_beacon_title" type="id" />
     <item name="create_beacon_scroll" type="id" />
     <item name="beacon_name" type="id" />
-    <item name="beacon_location" type="id" />
-    <item name="beacon_elevation" type="id" />
     <item name="create_at_distance" type="id" />
     <item name="distance_away" type="id" />
     <item name="bearing_to" type="id" />

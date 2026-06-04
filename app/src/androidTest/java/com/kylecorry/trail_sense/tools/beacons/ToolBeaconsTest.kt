@@ -48,8 +48,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText(string(R.string.create_beacon))
 
         input(id("beacon_name")(), "Test beacon")
-        input(R.id.beacon_location, "42, -72")
-        input(R.id.beacon_elevation, "1000")
+        input(id("beacon_location")(), "42, -72")
+        input(id("beacon_elevation")(), "1000")
 
         isChecked(id("create_at_distance"), false)
 
@@ -107,8 +107,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         click(id("edit_btn"))
         hasText(string(R.string.create_beacon))
         hasText(id("beacon_name"), "Test beacon")
-        hasText(R.id.beacon_location, "42.000000°,  -72.000000°")
-        hasText(R.id.beacon_elevation, "1000")
+        hasText(id("beacon_location"), "42.000000°,  -72.000000°")
+        hasText(id("beacon_elevation"), "1000")
         isChecked(id("create_at_distance"), false)
 
         scrollToEnd(id("create_beacon_scroll"))
@@ -175,7 +175,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         click(string(R.string.beacon))
 
         input(id("beacon_name")(), "Test beacon 2")
-        input(R.id.beacon_location, "42, -72")
+        input(id("beacon_location")(), "42, -72")
 
         scrollToEnd(id("create_beacon_scroll"))
         hasText("Test group")
