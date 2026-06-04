@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,16 +22,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -44,16 +49,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.card.MaterialCardView
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.shared.views.MaterialDateTimeInputView
 import com.kylecorry.trail_sense.shared.views.Notepad
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
@@ -351,20 +358,37 @@ private fun DateTimeInput(
     onDatetimeChange: (LocalDateTime?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialDateTimeInputView(context, null).apply {
-                id = R.id.time
-                setOnItemSelectedListener(onDatetimeChange)
+    val context = LocalContext.current
+    val formatter = remember { AppServiceRegistry.get<FormatService>() }
+    val prefs = remember { AppServiceRegistry.get<UserPreferences>() }
+    val selected = datetime ?: LocalDateTime.now()
+    val text = formatter.formatDateTime(selected.toZonedDateTime(), relative = true)
+
+    OutlinedTextField(
+        value = text,
+        onValueChange = {},
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable {
+                val supportFragmentManager =
+                    (context as? AppCompatActivity)?.supportFragmentManager
+                if (supportFragmentManager != null) {
+                    CustomUiUtils.pickMaterialDatetime(
+                        supportFragmentManager,
+                        prefs.use24HourTime,
+                        selected
+                    ) {
+                        onDatetimeChange(it)
+                    }
+                } else {
+                    CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
+                        onDatetimeChange(it)
+                    }
+                }
             }
-        },
-        update = { input ->
-            val current = datetime
-            if (current != null && input.datetime != current) {
-                input.setValue(current)
-            }
-        }
+            .testTag("time"),
+        readOnly = true,
+        singleLine = true
     )
 }
 

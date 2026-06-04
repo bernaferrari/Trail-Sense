@@ -224,7 +224,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Sightings (0)")
         hasText("No sightings")
         click(id("create_btn"))
-        click(R.id.time)
+        click(id("time"))
         pickDate(2025, 1, 1)
         pickTime(6, 0, true)
         hasText("January 1, 2025 6:00 AM")
