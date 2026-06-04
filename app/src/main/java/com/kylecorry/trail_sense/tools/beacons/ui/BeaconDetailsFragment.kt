@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 import android.os.Bundle
 import android.widget.ImageButton
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -46,7 +48,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
-import com.kylecorry.trail_sense.shared.views.DataPointView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
@@ -383,7 +384,7 @@ private fun BeaconDataGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             altitude?.let {
                 DataPoint(
-                    id = R.id.beacon_altitude,
+                    tag = "beacon_altitude",
                     title = it,
                     description = stringResource(R.string.elevation),
                     icon = R.drawable.ic_altitude,
@@ -391,7 +392,7 @@ private fun BeaconDataGrid(
                 )
             }
             DataPoint(
-                id = R.id.beacon_distance,
+                tag = "beacon_distance",
                 title = distance,
                 description = stringResource(R.string.distance),
                 icon = R.drawable.ruler,
@@ -400,7 +401,7 @@ private fun BeaconDataGrid(
         }
         Row(modifier = Modifier.fillMaxWidth()) {
             DataPoint(
-                id = R.id.beacon_temperature,
+                tag = "beacon_temperature",
                 title = temperature,
                 description = stringResource(R.string.temperature_high_low),
                 icon = R.drawable.ic_temperature_range,
@@ -409,7 +410,7 @@ private fun BeaconDataGrid(
             )
             sunrise?.let {
                 DataPoint(
-                    id = R.id.beacon_sunrise,
+                    tag = "beacon_sunrise",
                     title = it,
                     description = stringResource(R.string.sunrise),
                     icon = R.drawable.ic_sunrise_notification,
@@ -420,7 +421,7 @@ private fun BeaconDataGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             sunset?.let {
                 DataPoint(
-                    id = R.id.beacon_sunset,
+                    tag = "beacon_sunset",
                     title = it,
                     description = stringResource(R.string.sunset),
                     icon = R.drawable.ic_sunset_notification,
@@ -429,7 +430,7 @@ private fun BeaconDataGrid(
             }
             tide?.let {
                 DataPoint(
-                    id = R.id.beacon_tide,
+                    tag = "beacon_tide",
                     title = it,
                     description = stringResource(R.string.tide),
                     icon = tideIcon,
@@ -442,30 +443,41 @@ private fun BeaconDataGrid(
 
 @Composable
 private fun DataPoint(
-    id: Int,
+    tag: String,
     title: String,
     description: String,
     @DrawableRes icon: Int,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    AndroidView(
-        modifier = modifier.padding(8.dp),
-        factory = { context ->
-            DataPointView(context, null).apply {
-                this.id = id
-                setImageResource(icon)
-                this.description = description
-                setOnClickListener { onClick?.invoke() }
-            }
-        },
-        update = {
-            it.title = title
-            it.description = description
-            it.setImageResource(icon)
-            it.setOnClickListener { onClick?.invoke() }
+    Row(
+        modifier = modifier
+            .padding(8.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-    )
+    }
 }
 
 @Composable

@@ -72,22 +72,22 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText("Test beacon")
         hasText("42.000000°,  -72.000000°")
 
-        hasText(R.id.beacon_altitude, "1000 ft")
-        hasText(R.id.beacon_altitude, string(R.string.elevation))
+        hasText(id("beacon_altitude"), "1000 ft")
+        hasText(id("beacon_altitude"), string(R.string.elevation))
         hasText(
-            R.id.beacon_distance,
+            id("beacon_distance"),
             Regex("\\d+\\.?\\d* (mi|ft)"),
             waitForTime = AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
         )
-        hasText(R.id.beacon_distance, string(R.string.distance))
-        hasText(R.id.beacon_temperature, Regex("\\d+ °F / \\d+ °F"))
-        hasText(R.id.beacon_temperature, string(R.string.temperature_high_low))
-        hasText(R.id.beacon_sunrise, Regex("\\d+:\\d+ (AM|PM)"))
-        hasText(R.id.beacon_sunrise, string(R.string.sunrise))
-        hasText(R.id.beacon_sunset, Regex("\\d+:\\d+ (AM|PM)"))
-        hasText(R.id.beacon_sunset, string(R.string.sunset))
-        hasText(R.id.beacon_tide, Regex("(High|Low|Half)"))
-        hasText(R.id.beacon_tide, string(R.string.tide))
+        hasText(id("beacon_distance"), string(R.string.distance))
+        hasText(id("beacon_temperature"), Regex("\\d+ °F / \\d+ °F"))
+        hasText(id("beacon_temperature"), string(R.string.temperature_high_low))
+        hasText(id("beacon_sunrise"), Regex("\\d+:\\d+ (AM|PM)"))
+        hasText(id("beacon_sunrise"), string(R.string.sunrise))
+        hasText(id("beacon_sunset"), Regex("\\d+:\\d+ (AM|PM)"))
+        hasText(id("beacon_sunset"), string(R.string.sunset))
+        hasText(id("beacon_tide"), Regex("(High|Low|Half)"))
+        hasText(id("beacon_tide"), string(R.string.tide))
         hasText(id("comment_text"), "Test notes")
     }
 
