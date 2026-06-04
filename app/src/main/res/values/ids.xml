@@ -4,7 +4,6 @@
     <item name="count_edit" type="id" />
     <item name="desired_amount_edit" type="id" />
     <item name="category_spinner" type="id" />
-    <item name="item_weight_input" type="id" />
     <item name="optional_switch" type="id" />
     <item name="cloud_image" type="id" />
     <item name="cloud_list" type="id" />

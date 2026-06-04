@@ -277,14 +277,14 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         if (weight % 1 != 0f){
             val pounds = (weight - weight % 1).roundToInt()
             val ounces = (weight - pounds).roundPlaces(1) * 16
-            hasText(R.id.item_weight_input){
+            hasText(id("item_weight_input")){
                 it.startsWith(pounds.toString())
             }
-            hasText(R.id.item_weight_input){
+            hasText(id("item_weight_ounces_input")){
                 it.startsWith(ounces.toString())
             }
         } else {
-            hasText(R.id.item_weight_input) {
+            hasText(id("item_weight_input")) {
                 it.startsWith(weight.toString())
             }
         }
@@ -335,7 +335,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             click(category)
         }
         clickOk()
-        input(R.id.item_weight_input, weight.toString())
+        input(id("item_weight_input")(), weight.toString())
         click(id("create_btn"))
     }
 

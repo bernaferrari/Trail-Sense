@@ -4,7 +4,6 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,18 +28,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -54,7 +55,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.WeightInputView
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -62,6 +62,7 @@ import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.floor
 
 class CreateItemFragment : Fragment() {
 
@@ -428,36 +429,150 @@ private fun WeightInput(
     onWeightChange: (Weight?, WeightUnits?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            WeightInputView(context).apply {
-                id = R.id.item_weight_input
-                this.units = units
-                showPoundsAndOunces = true
-                selectedUnit?.let { unit = it }
-                setOnValueChangeListener {
-                    onWeightChange(it, unit)
-                }
-            }
-        },
-        update = { input ->
-            input.units = units
-            input.showPoundsAndOunces = true
-            val fallbackUnit = selectedUnit ?: input.unit ?: units.firstOrNull()
+    val context = LocalContext.current
+    val formatService = remember { FormatService.getInstance(context) }
+    var unit by remember(units) {
+        mutableStateOf(selectedUnit ?: weight?.units ?: units.firstOrNull())
+    }
+    var amountText by remember {
+        mutableStateOf(formatWeightAmount(weight, unit, false))
+    }
+    var ouncesText by remember {
+        mutableStateOf(formatWeightAmount(weight, unit, true))
+    }
 
-            if (weight == null) {
-                if (input.value != null) {
-                    input.value = null
+    fun publish(valueText: String = amountText, secondaryText: String = ouncesText, newUnit: WeightUnits? = unit) {
+        onWeightChange(parseWeight(valueText, secondaryText, newUnit), newUnit)
+    }
+
+    LaunchedEffect(weight, selectedUnit) {
+        val newUnit = selectedUnit ?: weight?.units ?: unit ?: units.firstOrNull()
+        val currentWeight = parseWeight(amountText, ouncesText, unit)
+        if (newUnit != unit) {
+            unit = newUnit
+        }
+        if (weight != currentWeight) {
+            amountText = formatWeightAmount(weight, newUnit, false)
+            ouncesText = formatWeightAmount(weight, newUnit, true)
+        }
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        OutlinedTextField(
+            value = amountText,
+            onValueChange = {
+                amountText = it
+                publish(valueText = it)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("item_weight_input"),
+            label = {
+                Text(
+                    if (unit == WeightUnits.Pounds) {
+                        stringResource(R.string.pounds)
+                    } else {
+                        stringResource(R.string.weight)
+                    }
+                )
+            },
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+            )
+        )
+
+        if (unit == WeightUnits.Pounds) {
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedTextField(
+                value = ouncesText,
+                onValueChange = {
+                    ouncesText = it
+                    publish(secondaryText = it)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("item_weight_ounces_input"),
+                label = { Text(stringResource(R.string.ounces_weight)) },
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(modifier = Modifier.weight(1f)) {
+            var isOpen by remember { mutableStateOf(false) }
+            OutlinedButton(
+                onClick = { isOpen = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("item_weight_unit")
+            ) {
+                Text(unit?.let { formatService.getWeightUnitName(it) }.orEmpty())
+            }
+            DropdownMenu(
+                expanded = isOpen,
+                onDismissRequest = { isOpen = false }
+            ) {
+                units.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(formatService.getWeightUnitName(option)) },
+                        onClick = {
+                            isOpen = false
+                            unit = option
+                            publish(newUnit = option)
+                        }
+                    )
                 }
-                if (fallbackUnit != null && input.unit != fallbackUnit) {
-                    input.unit = fallbackUnit
-                }
-            } else if (input.value != weight) {
-                input.value = weight
             }
         }
-    )
+    }
+}
+
+private fun parseWeight(
+    amountText: String,
+    ouncesText: String,
+    unit: WeightUnits?
+): Weight? {
+    unit ?: return null
+    val amount = amountText.toDoubleCompat()
+    val ounces = ouncesText.toDoubleCompat()
+    val value = if (unit == WeightUnits.Pounds) {
+        val pounds = amount ?: 0.0
+        if (amount == null && ounces == null) {
+            null
+        } else {
+            pounds + (ounces ?: 0.0) / 16.0
+        }
+    } else {
+        amount
+    } ?: return null
+    return Weight.from(value.coerceAtLeast(0.0).toFloat(), unit)
+}
+
+private fun formatWeightAmount(weight: Weight?, unit: WeightUnits?, ounces: Boolean): String {
+    weight ?: return ""
+    if (weight.units != unit) {
+        return ""
+    }
+    if (unit == WeightUnits.Pounds) {
+        return if (ounces) {
+            DecimalFormatter.format((weight.value % 1f) * 16f, 4, false)
+        } else {
+            DecimalFormatter.format(floor(weight.value), 4, false)
+        }
+    }
+    return if (ounces) {
+        ""
+    } else {
+        DecimalFormatter.format(weight.value, 4, false)
+    }
 }
 
 @Composable
