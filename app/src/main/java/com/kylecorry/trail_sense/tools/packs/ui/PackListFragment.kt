@@ -1,60 +1,69 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
-import androidx.core.view.isVisible
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
 import com.kylecorry.trail_sense.tools.packs.ui.commands.ImportPackingListCommand
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.PackAction
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.PackListItemMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class PackListFragment : AndromedaFragment() {
 
     private val packRepo by lazy { PackRepo.getInstance(requireContext()) }
-    private val listMapper by lazy { PackListItemMapper(requireContext(), this::handlePackAction) }
 
-    private var packs = emptyList<Pack>()
-    private var packViews: PackListViews? = null
+    private var packs by mutableStateOf(emptyList<Pack>())
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
@@ -66,7 +75,14 @@ class PackListFragment : AndromedaFragment() {
             setContent {
                 TrailSenseTheme {
                     PackListScreen(
-                        onViewsReady = ::onViewsReady,
+                        packs = packs,
+                        onImportPack = ::importPack,
+                        onCreatePack = ::createPack,
+                        onOpenPack = { openPack(it.id) },
+                        onRenamePack = ::renamePack,
+                        onCopyPack = ::copyPack,
+                        onExportPack = ::exportPack,
+                        onDeletePack = ::deletePack,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -79,36 +95,9 @@ class PackListFragment : AndromedaFragment() {
         loadPacks()
     }
 
-    override fun onDestroyView() {
-        packViews = null
-        super.onDestroyView()
-    }
-
-    private fun onViewsReady(views: PackListViews) {
-        if (packViews != null) {
-            return
-        }
-
-        packViews = views
-        views.packList.emptyView = views.emptyText
-        bindCreateMenu()
-        updatePackList()
-    }
-
-    private fun handlePackAction(pack: Pack, action: PackAction) {
-        when (action) {
-            PackAction.Rename -> renamePack(pack)
-            PackAction.Copy -> copyPack(pack)
-            PackAction.Delete -> deletePack(pack)
-            PackAction.Open -> openPack(pack.id)
-            PackAction.Export -> exportPack(pack)
-        }
-    }
-
     private fun loadPacks() {
         observe(packRepo.getPacks()) {
-            packs = it.sortedWith(compareBy { -it.id })
-            updatePackList()
+            packs = it.sortedWith(compareBy { pack -> -pack.id })
         }
     }
 
@@ -159,6 +148,10 @@ class PackListFragment : AndromedaFragment() {
         }
     }
 
+    private fun importPack() {
+        ImportPackingListCommand(this).execute()
+    }
+
     private fun createPack() {
         Pickers.text(
             requireContext(),
@@ -203,82 +196,92 @@ class PackListFragment : AndromedaFragment() {
         }
     }
 
-    private fun bindCreateMenu() {
-        val views = packViews ?: return
-        views.createMenu.setOverlay(views.overlay)
-        views.createMenu.fab = views.addButton
-        views.createMenu.hideOnMenuOptionSelected = true
-        views.createMenu.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.action_import_packing_list -> {
-                    setCreateMenuVisibility(false)
-                    ImportPackingListCommand(this).execute()
-                }
-
-                R.id.action_create_packing_list -> {
-                    setCreateMenuVisibility(false)
-                    createPack()
-                }
-            }
-            true
-        }
-
-        onBackPressed {
-            when {
-                isCreateMenuOpen() -> {
-                    setCreateMenuVisibility(false)
-                }
-
-                else -> {
-                    remove()
-                    findNavController().navigateUp()
-                }
-            }
-        }
-    }
-
-    private fun setCreateMenuVisibility(isShowing: Boolean) {
-        val createMenu = packViews?.createMenu ?: return
-        if (isShowing) {
-            createMenu.show()
-        } else {
-            createMenu.hide()
-        }
-    }
-
-    private fun isCreateMenuOpen(): Boolean {
-        return packViews?.createMenu?.isVisible == true
-    }
-
-    private fun updatePackList() {
-        packViews?.packList?.setItems(packs, listMapper)
-    }
-
 }
-
-private data class PackListViews(
-    val packList: AndromedaListView,
-    val emptyText: TextView,
-    val overlay: View,
-    val createMenu: FloatingActionButtonMenu,
-    val addButton: FloatingActionButton
-)
 
 @Composable
 private fun PackListScreen(
-    onViewsReady: (PackListViews) -> Unit,
+    packs: List<Pack>,
+    onImportPack: () -> Unit,
+    onCreatePack: () -> Unit,
+    onOpenPack: (Pack) -> Unit,
+    onRenamePack: (Pack) -> Unit,
+    onCopyPack: (Pack) -> Unit,
+    onExportPack: (Pack) -> Unit,
+    onDeletePack: (Pack) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    var isCreateMenuOpen by remember { mutableStateOf(false) }
+
+    Scaffold(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            PackListHeader()
-            PackListHost(
-                onViewsReady = onViewsReady,
-                modifier = Modifier.fillMaxSize()
-            )
+        topBar = { PackListHeader() },
+        floatingActionButton = {
+            Box {
+                FloatingActionButton(
+                    onClick = { isCreateMenuOpen = true },
+                    modifier = Modifier.testTag("add_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add)
+                    )
+                }
+                DropdownMenu(
+                    expanded = isCreateMenuOpen,
+                    onDismissRequest = { isCreateMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.import_packing_list)) },
+                        onClick = {
+                            isCreateMenuOpen = false
+                            onImportPack()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.new_packing_list)) },
+                        onClick = {
+                            isCreateMenuOpen = false
+                            onCreatePack()
+                        }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (packs.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.no_packing_lists),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .testTag("empty_text"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("pack_list"),
+                    contentPadding = PaddingValues(bottom = 96.dp)
+                ) {
+                    items(packs, key = { it.id }) { pack ->
+                        PackListItem(
+                            pack = pack,
+                            onOpenPack = onOpenPack,
+                            onRenamePack = onRenamePack,
+                            onCopyPack = onCopyPack,
+                            onExportPack = onExportPack,
+                            onDeletePack = onDeletePack
+                        )
+                        HorizontalDivider()
+                    }
+                }
+            }
         }
     }
 }
@@ -306,112 +309,104 @@ private fun PackListHeader() {
 }
 
 @Composable
-private fun PackListHost(
-    onViewsReady: (PackListViews) -> Unit,
-    modifier: Modifier = Modifier
+private fun PackListItem(
+    pack: Pack,
+    onOpenPack: (Pack) -> Unit,
+    onRenamePack: (Pack) -> Unit,
+    onCopyPack: (Pack) -> Unit,
+    onExportPack: (Pack) -> Unit,
+    onDeletePack: (Pack) -> Unit
 ) {
-    AndroidView(
-        modifier = modifier.testTag("pack_list"),
-        factory = { context ->
-            FrameLayout(context).apply {
-                val margin = Resources.dp(context, 16f).toInt()
-                val fabBottomMargin = Resources.dp(context, 56f + 32f).toInt()
+    var isMenuOpen by remember { mutableStateOf(false) }
 
-                val list = AndromedaListView(context, null).apply {
-                    id = R.id.pack_list
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
-
-                val empty = TextView(context).apply {
-                    id = R.id.empty_text
-                    text = context.getString(R.string.no_packing_lists)
-                    gravity = Gravity.CENTER
-                }
-
-                val overlay = View(context).apply {
-                    id = R.id.overlay_mask
-                    alpha = 0.86f
-                    setBackgroundColor(
-                        Resources.getAndroidColorAttr(context, android.R.attr.colorBackground)
-                    )
-                    isClickable = true
-                    visibility = View.GONE
-                }
-
-                val addButton = FloatingActionButton(context).apply {
-                    id = R.id.add_btn
-                    contentDescription = context.getString(R.string.add)
-                    setImageResource(R.drawable.ic_add)
-                    isClickable = true
-                    isFocusable = true
-                }
-
-                val createMenu = FloatingActionButtonMenu(context, null).apply {
-                    id = R.id.create_menu
-                    setMenu(R.menu.add_pack_menu)
-                    visibility = View.GONE
-                }
-
-                addView(list)
-                addView(
-                    empty,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER
-                    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onOpenPack(pack) }
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
+            .testTag("pack_list_item"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_tool_pack),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = pack.name,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = TrailSenseSpacing.md)
+                .testTag("pack_list_item_title"),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Box {
+            IconButton(
+                onClick = { isMenuOpen = true },
+                modifier = Modifier.testTag("pack_list_item_menu")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null
                 )
-                addView(
-                    overlay,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                )
-                addView(
-                    createMenu,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.END
-                    ).apply {
-                        marginEnd = margin
-                        bottomMargin = fabBottomMargin
+            }
+            DropdownMenu(
+                expanded = isMenuOpen,
+                onDismissRequest = { isMenuOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.rename)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onRenamePack(pack)
                     }
                 )
-                addView(
-                    addButton,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.BOTTOM or Gravity.END
-                    ).apply {
-                        marginEnd = margin
-                        bottomMargin = margin
+                DropdownMenuItem(
+                    text = { Text(stringResource(androidx.preference.R.string.copy)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onCopyPack(pack)
                     }
                 )
-
-                onViewsReady(
-                    PackListViews(
-                        packList = list,
-                        emptyText = empty,
-                        overlay = overlay,
-                        createMenu = createMenu,
-                        addButton = addButton
-                    )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.export)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onExportPack(pack)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onDeletePack(pack)
+                    }
                 )
             }
         }
-    )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PackListScreenPreview() {
     TrailSenseTheme {
-        PackListScreen(onViewsReady = {})
+        PackListScreen(
+            packs = listOf(
+                Pack(1, "Weekend camping"),
+                Pack(2, "Day hike")
+            ),
+            onImportPack = {},
+            onCreatePack = {},
+            onOpenPack = {},
+            onRenamePack = {},
+            onCopyPack = {},
+            onExportPack = {},
+            onDeletePack = {}
+        )
     }
 }

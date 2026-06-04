@@ -54,7 +54,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun shouldHaveNoPacks() {
-        hasText(R.id.empty_text, string(R.string.no_packing_lists))
+        hasText(id("empty_text"), string(R.string.no_packing_lists))
     }
 
     private fun canCreateAPack() {
@@ -228,11 +228,12 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
             TestUtils.back()
         }
         hasText(string(R.string.packing_lists))
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test Pack 2")
+        hasText(id("pack_list_item_title"), "Test Pack 2")
     }
 
     private fun canCopyPack() {
-        clickListItemMenu(string(android.R.string.copy))
+        click(id("pack_list_item_menu"))
+        click(string(android.R.string.copy))
         input(string(R.string.name), "Copied Pack")
         clickOk()
         hasText("Copied Pack")
@@ -256,7 +257,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
     }
 
     private fun canImportPack() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.import_packing_list))
         // TODO: Actually import a pack and verify it
     }
@@ -340,7 +341,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
     private fun createPackingList(name: String) {
         // Create a new packing list
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.new_packing_list))
         input(string(R.string.name), name)
         clickOk()
