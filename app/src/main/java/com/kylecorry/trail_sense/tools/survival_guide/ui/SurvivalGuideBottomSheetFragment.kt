@@ -18,7 +18,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,24 +33,22 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TextBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
@@ -223,22 +223,36 @@ private fun SurvivalGuideToolbar(
     onOpenSearchList: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Surface(
         modifier = modifier.testTag("title"),
-        factory = { context ->
-            Toolbar(context, null).apply {
-                id = R.id.title
-                title.text = context.getString(R.string.survival_guide)
-                subtitle.isVisible = false
-                rightButton.setImageResource(R.drawable.survival_guide)
-                rightButton.isVisible = true
-                rightButton.setOnClickListener { onOpenSearchList() }
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.survival_guide),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = TrailSenseSpacing.lg),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            IconButton(
+                onClick = onOpenSearchList,
+                modifier = Modifier.testTag("survival_guide_search_list_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.survival_guide),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        },
-        update = {
-            it.rightButton.setOnClickListener { onOpenSearchList() }
         }
-    )
+    }
 }
 
 @Composable
@@ -247,21 +261,12 @@ private fun SurvivalGuideSearchBox(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
         modifier = modifier.testTag("search"),
-        factory = { context ->
-            SearchView(context, null).apply {
-                id = R.id.search
-                setOnSearchListener(onQueryChange)
-            }
-        },
-        update = { searchView ->
-            searchView.setOnSearchListener(onQueryChange)
-            if (searchView.query != query) {
-                searchView.query = query
-                searchView.setCursorPosition(query.length)
-            }
-        }
+        placeholder = { Text(stringResource(R.string.search)) },
+        singleLine = true
     )
 }
 

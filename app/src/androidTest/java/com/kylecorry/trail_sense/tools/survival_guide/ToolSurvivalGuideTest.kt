@@ -12,10 +12,8 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
@@ -45,7 +43,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         }
 
         // Search
-        input(id("search"), "Eating fish")
+        input(id("search")(), "Eating fish")
         hasText("fishing gear")
         click("Fish")
 
@@ -61,7 +59,8 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         TestUtils.openQuickActions()
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
-        input(id("search"), "Eating fish", closeKeyboardOnCompletion = true)
+        input(id("search")(), "Eating fish")
+        back(false)
         hasText("fishing gear")
         click("Fish")
 
@@ -72,10 +71,13 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         TestUtils.openQuickActions()
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
-        input(id("search"), "Eating fish", closeKeyboardOnCompletion = Build.VERSION.SDK_INT == 23)
+        input(id("search")(), "Eating fish")
+        if (Build.VERSION.SDK_INT == 23) {
+            back(false)
+        }
 
         // Continue search on survival guide list
-        click(toolbarButton(R.id.title, Side.Right))
+        click(id("survival_guide_search_list_btn"))
 
         isVisible(R.id.list)
         hasText(id("search"), "Eating fish")
