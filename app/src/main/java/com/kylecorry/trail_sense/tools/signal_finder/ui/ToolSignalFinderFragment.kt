@@ -6,7 +6,6 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,9 +34,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -60,6 +58,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -413,20 +412,13 @@ private fun SignalDisclaimer(
     disclaimer: CharSequence,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        factory = { context ->
-            TextView(context).apply {
-                textAlignment = View.TEXT_ALIGNMENT_CENTER
-                textSize = 10f
-                movementMethod = LinkMovementMethodCompat.getInstance()
-                setPadding(16, 0, 16, 16)
-            }
-        },
-        update = {
-            it.text = disclaimer
-        },
+    TrailSenseLinkedText(
+        text = disclaimer,
         modifier = modifier
             .fillMaxWidth()
-            .testTag("disclaimer")
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .testTag("disclaimer"),
+        style = MaterialTheme.typography.labelSmall,
+        textAlign = TextAlign.Center
     )
 }
