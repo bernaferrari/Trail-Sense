@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +48,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.slider.BasicLabelFormatter
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -58,7 +58,6 @@ import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.DialSelectView
-import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
@@ -410,30 +409,13 @@ private fun BrightnessSlider(
     onValueChanged: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        factory = { context ->
-            Slider(context, null).apply {
-                contentDescription = context.getString(R.string.brightness)
-                valueFrom = 0f
-                valueTo = maxBrightness.toFloat()
-                stepSize = 1f
-                val basicFormatter = BasicLabelFormatter()
-                setLabelFormatter {
-                    basicFormatter.getFormattedValue(100 * it / maxBrightness.coerceAtLeast(1))
-                }
-                addOnChangeListener { _, sliderValue, fromUser ->
-                    if (fromUser) {
-                        onValueChanged(sliderValue)
-                    }
-                }
-            }
-        },
-        update = {
-            if (it.value != value) {
-                it.value = value
-            }
-        },
-        modifier = modifier
+    val brightnessMax = maxBrightness.coerceAtLeast(1)
+    Slider(
+        value = value.coerceIn(0f, brightnessMax.toFloat()),
+        onValueChange = onValueChanged,
+        modifier = modifier,
+        valueRange = 0f..brightnessMax.toFloat(),
+        steps = (brightnessMax - 1).coerceAtLeast(0)
     )
 }
 
