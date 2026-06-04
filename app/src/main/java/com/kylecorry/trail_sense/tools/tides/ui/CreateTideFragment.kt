@@ -1,13 +1,9 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,11 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -780,65 +774,42 @@ private fun TideEntryHeader(
     onAddTideEntry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            val padding = Resources.dp(context, 16f).toInt()
-            val margin = Resources.dp(context, 8f).toInt()
-            LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-                addView(
-                    ImageButton(context).apply {
-                        id = R.id.add_tide_entry
-                        setImageResource(R.drawable.ic_add)
-                        background = null
-                        setOnClickListener { onAddTideEntry() }
-                        layoutParams = LinearLayout.LayoutParams(
-                            Resources.dp(context, 48f).toInt(),
-                            Resources.dp(context, 48f).toInt()
-                        )
-                    }
-                )
-                addView(
-                    TextView(context).apply {
-                        id = R.id.tide_time
-                        text = context.getString(R.string.time)
-                        setPadding(padding)
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            2f
-                        )
-                    }
-                )
-                addView(
-                    TextView(context).apply {
-                        id = R.id.tide_height
-                        text = context.getString(R.string.height)
-                        setPadding(padding)
-                        layoutParams = LinearLayout.LayoutParams(
-                            0,
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            1f
-                        ).apply {
-                            marginStart = margin
-                        }
-                    }
-                )
-                addView(
-                    View(context).apply {
-                        layoutParams = LinearLayout.LayoutParams(
-                            Resources.dp(context, 24f).toInt(),
-                            Resources.dp(context, 24f).toInt()
-                        ).apply {
-                            marginStart = margin
-                        }
-                    }
-                )
-            }
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onAddTideEntry,
+            modifier = Modifier
+                .size(48.dp)
+                .testTag("add_tide_entry")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_add),
+                contentDescription = null
+            )
         }
-    )
+        Text(
+            text = stringResource(R.string.time),
+            modifier = Modifier
+                .weight(2f)
+                .padding(16.dp)
+                .testTag("tide_time"),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = stringResource(R.string.height),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+                .padding(16.dp)
+                .testTag("tide_height"),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(32.dp))
+    }
 }
 
 @Composable

@@ -104,7 +104,7 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
 
         hasText(id("tide_height", index = 1), "1.00 ft")
 
-        click(R.id.add_tide_entry)
+        click(id("add_tide_entry"))
 
         hasText(id("tide_type", index = 1), string(R.string.high_tide_letter))
         click(id("delete", index = 1))
