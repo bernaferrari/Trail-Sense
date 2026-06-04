@@ -60,6 +60,7 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.pickers.Pickers
@@ -88,11 +89,14 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.Configurabl
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.camera.SightingCompassBottomSheetFragment
+import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
-import com.kylecorry.trail_sense.shared.views.BearingInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -131,15 +135,23 @@ class FragmentToolTriangulate : Fragment() {
     private var location2Expanded by mutableStateOf(false)
     private var location1Coordinate by mutableStateOf<Coordinate?>(null)
     private var location2Coordinate by mutableStateOf<Coordinate?>(null)
+    private var bearing1Value by mutableStateOf<Float?>(null)
+    private var bearing2Value by mutableStateOf<Float?>(null)
+    private var bearing1TrueNorth by mutableStateOf(false)
+    private var bearing2TrueNorth by mutableStateOf(false)
+    private var compassBearingText by mutableStateOf("")
 
     private var map: MapView? = null
-    private var bearing1: BearingInputView? = null
-    private var bearing2: BearingInputView? = null
     private var isViewCreated = false
     private var isSetup = false
 
     private val isBound: Boolean
-        get() = map != null && bearing1 != null && bearing2 != null
+        get() = map != null
+
+    private val compass by lazy { SensorService(requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
+    private var cameraSheet: SightingCompassBottomSheetFragment? = null
+    private var cameraBearingIndex: Int? = null
 
     private val layer = ConfigurableGeoJsonLayer()
     private val scaleBarLayer = ScaleBarLayer()
@@ -183,6 +195,12 @@ class FragmentToolTriangulate : Fragment() {
                         location2Expanded = location2Expanded,
                         location1 = location1Coordinate,
                         location2 = location2Coordinate,
+                        bearing1 = bearing1Value,
+                        bearing2 = bearing2Value,
+                        bearing1TrueNorth = bearing1TrueNorth,
+                        bearing2TrueNorth = bearing2TrueNorth,
+                        compassBearingText = compassBearingText,
+                        hasCompass = hasCompass,
                         onModeChanged = {
                             shouldCalculateMyLocation = it
                             update()
@@ -197,16 +215,12 @@ class FragmentToolTriangulate : Fragment() {
                         },
                         onLocation1Change = ::updateLocation1Coordinate,
                         onLocation2Change = ::updateLocation2Coordinate,
-                        onBearing1Ready = {
-                            bearing1 = it
-                            it.setOnBearingChangeListener { _, _ -> update() }
-                            maybeSetup()
-                        },
-                        onBearing2Ready = {
-                            bearing2 = it
-                            it.setOnBearingChangeListener { _, _ -> update() }
-                            maybeSetup()
-                        },
+                        onBearing1Change = { bearing, trueNorth -> updateBearing(1, bearing, trueNorth) },
+                        onBearing2Change = { bearing, trueNorth -> updateBearing(2, bearing, trueNorth) },
+                        onCompassBearing1Click = { setBearingFromCompass(1) },
+                        onCompassBearing2Click = { setBearingFromCompass(2) },
+                        onCameraBearing1Click = { setBearingFromCamera(1) },
+                        onCameraBearing2Click = { setBearingFromCamera(2) },
                         onLocation1ExpandedChange = { location1Expanded = it },
                         onLocation2ExpandedChange = { location2Expanded = it },
                         onReset = ::reset,
@@ -269,6 +283,39 @@ class FragmentToolTriangulate : Fragment() {
     private fun updateLocation2Coordinate(coordinate: Coordinate?) {
         location2Coordinate = coordinate
         update()
+    }
+
+    private fun updateBearing(index: Int, bearing: Float?, trueNorth: Boolean) {
+        if (index == 1) {
+            bearing1Value = bearing
+            bearing1TrueNorth = trueNorth
+        } else {
+            bearing2Value = bearing
+            bearing2TrueNorth = trueNorth
+        }
+        update()
+    }
+
+    private fun setBearingFromCompass(index: Int) {
+        updateBearing(index, compass.rawBearing, false)
+    }
+
+    private fun setBearingFromCamera(index: Int) {
+        requestCamera { hasPermission ->
+            if (hasPermission) {
+                cameraBearingIndex = index
+                if (cameraSheet == null) {
+                    cameraSheet = SightingCompassBottomSheetFragment {
+                        cameraBearingIndex?.let { selectedIndex ->
+                            updateBearing(selectedIndex, it, false)
+                        }
+                    }
+                }
+                cameraSheet?.show(this)
+            } else {
+                alertNoCameraPermission()
+            }
+        }
     }
 
     private fun updateMap() {
@@ -397,8 +444,8 @@ class FragmentToolTriangulate : Fragment() {
     private fun getPath(locationIdx: Int): GeoJsonFeature? {
         val destination = location
         val start = if (locationIdx == 1) location1Coordinate else location2Coordinate
-        val direction = if (locationIdx == 1) bearing1?.bearing else bearing2?.bearing
-        val trueNorth = if (locationIdx == 1) bearing1?.trueNorth else bearing2?.trueNorth
+        val direction = if (locationIdx == 1) bearing1Value else bearing2Value
+        val trueNorth = if (locationIdx == 1) bearing1TrueNorth else bearing2TrueNorth
 
         val end = if (start != null && direction != null) {
             val declination = if (trueNorth == true) 0f else Geophysics.getGeomagneticDeclination(start)
@@ -426,8 +473,12 @@ class FragmentToolTriangulate : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        bearing1?.start()
-        bearing2?.start()
+        compass.start {
+            val bearing = compass.rawBearing
+            compassBearingText = formatService.formatDegrees(bearing, replace360 = true)
+            cameraSheet?.bearing = bearing
+            true
+        }
         restoreState()
         updateTimer.once(500)
     }
@@ -435,15 +486,14 @@ class FragmentToolTriangulate : Fragment() {
     override fun onPause() {
         super.onPause()
         updateTimer.stop()
-        bearing1?.stop()
-        bearing2?.stop()
+        compass.stop(null)
         saveState()
     }
 
     override fun onDestroyView() {
         map = null
-        bearing1 = null
-        bearing2 = null
+        cameraSheet = null
+        cameraBearingIndex = null
         isViewCreated = false
         isSetup = false
         super.onDestroyView()
@@ -459,8 +509,8 @@ class FragmentToolTriangulate : Fragment() {
 
         val location1 = location1Coordinate
         val location2 = location2Coordinate
-        val direction1 = bearing1?.bearing
-        val direction2 = bearing2?.bearing
+        val direction1 = bearing1Value
+        val direction2 = bearing2Value
 
         if (location1 == null || location2 == null || direction1 == null || direction2 == null) {
             setLocation(null)
@@ -468,9 +518,9 @@ class FragmentToolTriangulate : Fragment() {
         }
 
         val declination1 =
-            if (bearing1?.trueNorth == true) 0f else Geophysics.getGeomagneticDeclination(location1)
+            if (bearing1TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location1)
         val declination2 =
-            if (bearing2?.trueNorth == true) 0f else Geophysics.getGeomagneticDeclination(location2)
+            if (bearing2TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location2)
         val bearing1 = Bearing.from(direction1).withDeclination(declination1)
         val bearing2 = Bearing.from(direction2).withDeclination(declination2)
 
@@ -506,8 +556,8 @@ class FragmentToolTriangulate : Fragment() {
 
         val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
         preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
-        preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1?.bearing)
-        preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2?.bearing)
+        preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1Value)
+        preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2Value)
         preferences.putOrRemoveCoordinate(
             "state_triangulate_location1",
             location1Coordinate
@@ -516,8 +566,8 @@ class FragmentToolTriangulate : Fragment() {
             "state_triangulate_location2",
             location2Coordinate
         )
-        preferences.putBoolean("state_triangulate_true_north1", bearing1?.trueNorth == true)
-        preferences.putBoolean("state_triangulate_true_north2", bearing2?.trueNorth == true)
+        preferences.putBoolean("state_triangulate_true_north1", bearing1TrueNorth)
+        preferences.putBoolean("state_triangulate_true_north2", bearing2TrueNorth)
     }
 
     private fun restoreState() {
@@ -527,12 +577,10 @@ class FragmentToolTriangulate : Fragment() {
 
         val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
         shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
-        bearing1?.bearing = preferences.getFloat("state_triangulate_bearing1")
-        bearing2?.bearing = preferences.getFloat("state_triangulate_bearing2")
-        bearing1?.trueNorth =
-            preferences.getBoolean("state_triangulate_true_north1") ?: false
-        bearing2?.trueNorth =
-            preferences.getBoolean("state_triangulate_true_north2") ?: false
+        bearing1Value = preferences.getFloat("state_triangulate_bearing1")
+        bearing2Value = preferences.getFloat("state_triangulate_bearing2")
+        bearing1TrueNorth = preferences.getBoolean("state_triangulate_true_north1") ?: false
+        bearing2TrueNorth = preferences.getBoolean("state_triangulate_true_north2") ?: false
         location1Coordinate = preferences.getCoordinate("state_triangulate_location1")
         location2Coordinate = preferences.getCoordinate("state_triangulate_location2")
         update()
@@ -541,10 +589,10 @@ class FragmentToolTriangulate : Fragment() {
     private fun reset() {
         location1Coordinate = null
         location2Coordinate = null
-        bearing1?.bearing = null
-        bearing2?.bearing = null
-        bearing1?.trueNorth = false
-        bearing2?.trueNorth = false
+        bearing1Value = null
+        bearing2Value = null
+        bearing1TrueNorth = false
+        bearing2TrueNorth = false
 
         val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
         preferences.remove("state_triangulate_self")
@@ -561,7 +609,7 @@ class FragmentToolTriangulate : Fragment() {
     private fun isComplete(locationIdx: Int): Boolean {
         val location =
             if (locationIdx == 1) location1Coordinate else location2Coordinate
-        val bearing = if (locationIdx == 1) bearing1?.bearing else bearing2?.bearing
+        val bearing = if (locationIdx == 1) bearing1Value else bearing2Value
         return location != null && bearing != null
     }
 
@@ -584,6 +632,12 @@ private fun TriangulateScreen(
     location2Expanded: Boolean,
     location1: Coordinate?,
     location2: Coordinate?,
+    bearing1: Float?,
+    bearing2: Float?,
+    bearing1TrueNorth: Boolean,
+    bearing2TrueNorth: Boolean,
+    compassBearingText: String,
+    hasCompass: Boolean,
     onModeChanged: (Boolean) -> Unit,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
@@ -592,8 +646,12 @@ private fun TriangulateScreen(
     onMapReady: (MapView) -> Unit,
     onLocation1Change: (Coordinate?) -> Unit,
     onLocation2Change: (Coordinate?) -> Unit,
-    onBearing1Ready: (BearingInputView) -> Unit,
-    onBearing2Ready: (BearingInputView) -> Unit,
+    onBearing1Change: (Float?, Boolean) -> Unit,
+    onBearing2Change: (Float?, Boolean) -> Unit,
+    onCompassBearing1Click: () -> Unit,
+    onCompassBearing2Click: () -> Unit,
+    onCameraBearing1Click: () -> Unit,
+    onCameraBearing2Click: () -> Unit,
     onLocation1ExpandedChange: (Boolean) -> Unit,
     onLocation2ExpandedChange: (Boolean) -> Unit,
     onReset: () -> Unit,
@@ -665,10 +723,16 @@ private fun TriangulateScreen(
                 isExpanded = location1Expanded,
                 onExpandedChange = onLocation1ExpandedChange,
                 coordinate = location1,
+                bearing = bearing1,
+                trueNorth = bearing1TrueNorth,
+                compassBearingText = compassBearingText,
+                hasCompass = hasCompass,
                 coordinateTag = "location_1",
                 bearingTag = "bearing_1",
                 onCoordinateChange = onLocation1Change,
-                onBearingReady = onBearing1Ready,
+                onBearingChange = onBearing1Change,
+                onCompassBearingClick = onCompassBearing1Click,
+                onCameraBearingClick = onCameraBearing1Click,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.sm)
@@ -682,10 +746,16 @@ private fun TriangulateScreen(
                 isExpanded = location2Expanded,
                 onExpandedChange = onLocation2ExpandedChange,
                 coordinate = location2,
+                bearing = bearing2,
+                trueNorth = bearing2TrueNorth,
+                compassBearingText = compassBearingText,
+                hasCompass = hasCompass,
                 coordinateTag = "location_2",
                 bearingTag = "bearing_2",
                 onCoordinateChange = onLocation2Change,
-                onBearingReady = onBearing2Ready,
+                onBearingChange = onBearing2Change,
+                onCompassBearingClick = onCompassBearing2Click,
+                onCameraBearingClick = onCameraBearing2Click,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.sm)
@@ -817,10 +887,16 @@ private fun TriangulateLocationCard(
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     coordinate: Coordinate?,
+    bearing: Float?,
+    trueNorth: Boolean,
+    compassBearingText: String,
+    hasCompass: Boolean,
     coordinateTag: String,
     bearingTag: String,
     onCoordinateChange: (Coordinate?) -> Unit,
-    onBearingReady: (BearingInputView) -> Unit,
+    onBearingChange: (Float?, Boolean) -> Unit,
+    onCompassBearingClick: () -> Unit,
+    onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier) {
@@ -876,8 +952,14 @@ private fun TriangulateLocationCard(
                         .padding(top = TrailSenseSpacing.xl)
                 )
                 BearingInput(
+                    bearing = bearing,
+                    trueNorth = trueNorth,
+                    compassBearingText = compassBearingText,
+                    hasCompass = hasCompass,
                     tag = bearingTag,
-                    onReady = onBearingReady,
+                    onBearingChange = onBearingChange,
+                    onCompassBearingClick = onCompassBearingClick,
+                    onCameraBearingClick = onCameraBearingClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = TrailSenseSpacing.xl)
@@ -1018,18 +1100,26 @@ private fun CoordinateInput(
 
 @Composable
 private fun BearingInput(
+    bearing: Float?,
+    trueNorth: Boolean,
+    compassBearingText: String,
+    hasCompass: Boolean,
     tag: String,
-    onReady: (BearingInputView) -> Unit,
+    onBearingChange: (Float?, Boolean) -> Unit,
+    onCompassBearingClick: () -> Unit,
+    onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag(tag),
-        factory = { context ->
-            BearingInputView(context).apply {
-                id = if (tag == "bearing_1") R.id.bearing_1 else R.id.bearing_2
-                onReady(this)
-            }
-        }
+    ComposeBearingInput(
+        bearing = bearing,
+        trueNorth = trueNorth,
+        compassBearingText = compassBearingText,
+        hasCompass = hasCompass,
+        onBearingChange = onBearingChange,
+        onCompassClick = onCompassBearingClick,
+        onCameraClick = onCameraBearingClick,
+        modifier = modifier,
+        tag = tag
     )
 }
 
@@ -1057,6 +1147,12 @@ private fun TriangulateScreenPreview() {
             location2Expanded = false,
             location1 = null,
             location2 = null,
+            bearing1 = null,
+            bearing2 = 135f,
+            bearing1TrueNorth = false,
+            bearing2TrueNorth = false,
+            compassBearingText = "120 deg",
+            hasCompass = true,
             onModeChanged = {},
             onCreateBeacon = {},
             onNavigate = {},
@@ -1065,8 +1161,12 @@ private fun TriangulateScreenPreview() {
             onMapReady = {},
             onLocation1Change = {},
             onLocation2Change = {},
-            onBearing1Ready = {},
-            onBearing2Ready = {},
+            onBearing1Change = { _, _ -> },
+            onBearing2Change = { _, _ -> },
+            onCompassBearing1Click = {},
+            onCompassBearing2Click = {},
+            onCameraBearing1Click = {},
+            onCameraBearing2Click = {},
             onLocation1ExpandedChange = {},
             onLocation2ExpandedChange = {},
             onReset = {}

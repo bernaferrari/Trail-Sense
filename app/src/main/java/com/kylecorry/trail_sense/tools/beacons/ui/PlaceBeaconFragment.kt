@@ -50,13 +50,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
@@ -70,10 +70,13 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
+import com.kylecorry.trail_sense.shared.camera.SightingCompassBottomSheetFragment
+import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.BearingInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -105,8 +108,11 @@ class PlaceBeaconFragment : Fragment() {
     private var groupName by mutableStateOf("")
     private var locationAutofillRequest by mutableStateOf(0)
     private var elevationAutofillRequest by mutableStateOf(0)
+    private var compassBearingText by mutableStateOf("")
 
-    private var bearingView: BearingInputView? = null
+    private val compass by lazy { SensorService(requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
+    private var cameraSheet: SightingCompassBottomSheetFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -168,7 +174,10 @@ class PlaceBeaconFragment : Fragment() {
                             }
                         },
                         elevationAutofillRequest = elevationAutofillRequest,
-                        onBearingCreated = { bearingView = it }
+                        compassBearingText = compassBearingText,
+                        hasCompass = hasCompass,
+                        onCompassBearingClick = ::setBearingFromCompass,
+                        onCameraBearingClick = ::setBearingFromCamera
                     )
                 }
             }
@@ -198,16 +207,21 @@ class PlaceBeaconFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        bearingView?.start()
+        compass.start {
+            val bearing = compass.rawBearing
+            compassBearingText = formatter.formatDegrees(bearing, replace360 = true)
+            cameraSheet?.bearing = bearing
+            true
+        }
     }
 
     override fun onPause() {
-        bearingView?.stop()
+        compass.stop(null)
         super.onPause()
     }
 
     override fun onDestroyView() {
-        bearingView = null
+        cameraSheet = null
         super.onDestroyView()
     }
 
@@ -264,6 +278,35 @@ class PlaceBeaconFragment : Fragment() {
         }
     }
 
+    private fun setBearingFromCompass() {
+        updateData(
+            data.copy(
+                bearingTo = compass.rawBearing,
+                bearingIsTrueNorth = false
+            )
+        )
+    }
+
+    private fun setBearingFromCamera() {
+        requestCamera { hasPermission ->
+            if (hasPermission) {
+                if (cameraSheet == null) {
+                    cameraSheet = SightingCompassBottomSheetFragment {
+                        updateData(
+                            data.copy(
+                                bearingTo = it,
+                                bearingIsTrueNorth = false
+                            )
+                        )
+                    }
+                }
+                cameraSheet?.show(this)
+            } else {
+                alertNoCameraPermission()
+            }
+        }
+    }
+
     private fun updateBeaconGroupName() {
         val parent = data.groupId
         viewLifecycleOwner.lifecycleScope.launch {
@@ -311,7 +354,10 @@ private fun PlaceBeaconScreen(
     onAutoLocationClick: () -> Unit,
     onCoordinateBeaconSelected: (Beacon) -> Unit,
     elevationAutofillRequest: Int,
-    onBearingCreated: (BearingInputView) -> Unit,
+    compassBearingText: String,
+    hasCompass: Boolean,
+    onCompassBearingClick: () -> Unit,
+    onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -372,7 +418,10 @@ private fun PlaceBeaconScreen(
                         bearing = data.bearingTo,
                         trueNorth = data.bearingIsTrueNorth,
                         onBearingChange = onBearingChange,
-                        onBearingCreated = onBearingCreated
+                        compassBearingText = compassBearingText,
+                        hasCompass = hasCompass,
+                        onCompassClick = onCompassBearingClick,
+                        onCameraClick = onCameraBearingClick
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -900,25 +949,21 @@ private fun BearingInput(
     bearing: Float?,
     trueNorth: Boolean,
     onBearingChange: (Float?, Boolean) -> Unit,
-    onBearingCreated: (BearingInputView) -> Unit
+    compassBearingText: String,
+    hasCompass: Boolean,
+    onCompassClick: () -> Unit,
+    onCameraClick: () -> Unit
 ) {
-    AndroidView(
+    ComposeBearingInput(
+        bearing = bearing,
+        trueNorth = trueNorth,
+        compassBearingText = compassBearingText,
+        hasCompass = hasCompass,
+        onBearingChange = onBearingChange,
+        onCompassClick = onCompassClick,
+        onCameraClick = onCameraClick,
         modifier = Modifier.fillMaxWidth(),
-        factory = { context ->
-            BearingInputView(context).apply {
-                id = R.id.bearing_to
-                setOnBearingChangeListener(onBearingChange)
-                onBearingCreated(this)
-            }
-        },
-        update = {
-            if (it.bearing != bearing) {
-                it.bearing = bearing
-            }
-            if (it.trueNorth != trueNorth) {
-                it.trueNorth = trueNorth
-            }
-        }
+        tag = "bearing_to"
     )
 }
 
@@ -978,7 +1023,10 @@ private fun PlaceBeaconScreenPreview() {
             onAutoLocationClick = {},
             onCoordinateBeaconSelected = {},
             elevationAutofillRequest = 0,
-            onBearingCreated = {}
+            compassBearingText = "120 deg",
+            hasCompass = true,
+            onCompassBearingClick = {},
+            onCameraBearingClick = {}
         )
     }
 }
