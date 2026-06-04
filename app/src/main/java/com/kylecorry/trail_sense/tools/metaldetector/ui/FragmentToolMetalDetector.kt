@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -38,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
@@ -57,10 +62,11 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.time.Duration
 import kotlin.math.absoluteValue
 
@@ -143,10 +149,8 @@ class FragmentToolMetalDetector : Fragment() {
                             }
                         },
                         onMagnetometerCreated = { magnetometerView = it },
-                        onAccuracyCreated = { accuracyView ->
-                            accuracyView.setSensors(null, magnetometer)
-                            accuracyView.setOnClickListener { displayAccuracyTips() }
-                        }
+                        magnetometer = magnetometer,
+                        onAccuracyClick = ::displayAccuracyTips
                     )
                 }
             }
@@ -402,7 +406,8 @@ private fun MetalDetectorScreen(
     onThresholdChange: (Float) -> Unit,
     onChartCreated: (Chart) -> Unit,
     onMagnetometerCreated: (MagnetometerView) -> Unit,
-    onAccuracyCreated: (SensorStatusBadgeView) -> Unit
+    magnetometer: ISensor,
+    onAccuracyClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -456,7 +461,10 @@ private fun MetalDetectorScreen(
                 checked = isHighSensitivity,
                 onCheckedChange = onHighSensitivityChange
             )
-            AccuracyBadge(onAccuracyCreated)
+            AccuracyBadge(
+                magnetometer = magnetometer,
+                onClick = onAccuracyClick
+            )
             if (showMetalDirection) {
                 MagnetometerDirection(
                     onMagnetometerCreated = onMagnetometerCreated,
@@ -589,20 +597,59 @@ private fun HighSensitivitySwitch(
 
 @Composable
 private fun AccuracyBadge(
-    onAccuracyCreated: (SensorStatusBadgeView) -> Unit
+    magnetometer: ISensor,
+    onClick: () -> Unit
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val hasCompass = androidx.compose.runtime.remember {
+        SensorService(context).hasCompass()
+    }
+    if (!hasCompass) {
+        return
+    }
+
+    val provider = androidx.compose.runtime.remember(magnetometer, context) {
+        SensorStatusBadgeProvider(magnetometer, context, R.drawable.ic_compass_icon)
+    }
+    var badge by androidx.compose.runtime.remember {
+        mutableStateOf(provider.getBadge())
+    }
+
+    androidx.compose.runtime.LaunchedEffect(provider) {
+        while (true) {
+            badge = provider.getBadge()
+            delay(1000)
+        }
+    }
+
+    Surface(
         modifier = Modifier
             .padding(start = 16.dp, top = 8.dp)
+            .alpha(0.6f)
+            .clickable(onClick = onClick)
             .testTag("accuracy_view"),
-        factory = { context ->
-            SensorStatusBadgeView(context).apply {
-                id = R.id.accuracy_view
-                alpha = 0.6f
-                onAccuracyCreated(this)
-            }
+        shape = RoundedCornerShape(4.dp),
+        color = Color(badge.color),
+        contentColor = Color.Black
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(badge.icon),
+                contentDescription = null,
+                modifier = Modifier.height(16.dp),
+                tint = Color.Black
+            )
+            Text(
+                text = badge.name,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Black
+            )
         }
-    )
+    }
 }
 
 @Composable
