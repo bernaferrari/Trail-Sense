@@ -13,7 +13,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -141,7 +140,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
     private fun deleteBeacon() {
         click("Test group")
-        clickListItemMenu("Delete")
+        click(id("beacon_item_menu"))
+        click("Delete")
         clickOk()
         hasText("Test beacon 2")
         not { hasText("Test beacon", exact = true) }
@@ -150,8 +150,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
 
     private fun toggleVisibility() {
         click("Test group")
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
-        click(com.kylecorry.andromeda.views.R.id.trailing_icon_btn)
+        click(id("beacon_visibility_toggle"))
+        click(id("beacon_visibility_toggle"))
         back(false)
     }
 
@@ -191,7 +191,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun moveBeacon() {
-        clickListItemMenu("Move to")
+        click(id("beacon_item_menu"))
+        click("Move to")
         click("Test group")
         click("Move")
         hasText("2 beacons")
@@ -204,14 +205,16 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     }
 
     private fun deleteGroup() {
-        clickListItemMenu("Delete")
+        click(id("beacon_group_menu"))
+        click("Delete")
         clickOk()
         hasText("No beacons")
         not { hasText("Test group", exact = true) }
     }
 
     private fun renameGroup() {
-        clickListItemMenu("Rename")
+        click(id("beacon_group_menu"))
+        click("Rename")
         input("Test group", "Test group 2")
         clickOk()
         hasText("Test group 2")

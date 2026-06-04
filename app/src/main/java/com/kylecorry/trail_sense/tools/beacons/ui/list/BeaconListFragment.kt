@@ -13,11 +13,40 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -40,12 +69,14 @@ import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.list.AndromedaListView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
+import com.kylecorry.trail_sense.shared.Units
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.from
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.lists.bind
@@ -53,10 +84,20 @@ import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.FloatingActionButtonMenu
 import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.andromeda.core.sensors.Quality
+import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.CreateBeaconGroupCommand
@@ -75,6 +116,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.MostRecentBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.NameBeaconSort
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import java.time.Instant
 
@@ -94,16 +136,9 @@ class BeaconListFragment : AndromedaFragment() {
     private val beaconLoader by lazy { BeaconLoader(beaconService, prefs.beacons) }
     private var sort = BeaconSortMethod.Closest
 
-    private val listMapper by lazy {
-        IBeaconListItemMapper(
-            requireContext(),
-            gps,
-            this::handleBeaconAction,
-            this::handleBeaconGroupAction
-        )
-    }
-
     private var initialLocation: GeoUri? = null
+    private var beaconItems by mutableStateOf<List<IBeacon>>(emptyList())
+    private var beaconListResetKey by mutableIntStateOf(0)
 
     private val gpxService by lazy {
         IOFactory().createGpxService(this)
@@ -149,7 +184,6 @@ class BeaconListFragment : AndromedaFragment() {
 
         sort = prefs.beacons.beaconSort
 
-        binding.beaconRecycler.emptyView = binding.beaconEmptyText
         manager = GroupListManager(
             lifecycleScope,
             beaconLoader,
@@ -158,8 +192,30 @@ class BeaconListFragment : AndromedaFragment() {
         )
 
         manager.bind(binding.searchbox)
-        manager.bind(binding.beaconRecycler, binding.beaconTitle.title, listMapper) {
-            it?.name ?: getString(R.string.beacons)
+        binding.beaconRecycler.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.beaconRecycler.setContent {
+            TrailSenseTheme {
+                BeaconList(
+                    items = beaconItems,
+                    resetKey = beaconListResetKey,
+                    formatService = formatService,
+                    baseDistanceUnits = prefs.baseDistanceUnits,
+                    currentLocation = gps.location,
+                    onBeaconAction = ::handleBeaconAction,
+                    onGroupAction = ::handleBeaconGroupAction,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        manager.onChange = { root, items, rootChanged ->
+            beaconItems = items
+            binding.beaconEmptyText.isVisible = items.isEmpty()
+            if (rootChanged) {
+                beaconListResetKey++
+            }
+            binding.beaconTitle.title.text = root?.name ?: getString(R.string.beacons)
         }
 
         initialLocation?.let {
@@ -614,7 +670,7 @@ private data class BeaconListViews(
     val root: View,
     val beaconTitle: BeaconListTitle,
     val searchbox: SearchView,
-    val beaconRecycler: AndromedaListView,
+    val beaconRecycler: ComposeView,
     val beaconEmptyText: TextView,
     val overlayMask: ImageView,
     val createMenu: FloatingActionButtonMenu,
@@ -636,6 +692,254 @@ private fun BeaconListHost(
         modifier = modifier,
         factory = { views.root }
     )
+}
+
+@Composable
+private fun BeaconList(
+    items: List<IBeacon>,
+    resetKey: Int,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    currentLocation: Coordinate,
+    onBeaconAction: (Beacon, BeaconAction) -> Unit,
+    onGroupAction: (BeaconGroup, BeaconGroupAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier.testTag("beacon_list")
+    ) {
+        items(items, key = { item ->
+            if (item is BeaconGroup) {
+                -item.id
+            } else {
+                item.id
+            }
+        }) { item ->
+            when (item) {
+                is Beacon -> BeaconRow(
+                    beacon = item,
+                    formatService = formatService,
+                    baseDistanceUnits = baseDistanceUnits,
+                    currentLocation = currentLocation,
+                    onAction = { onBeaconAction(item, it) }
+                )
+
+                is BeaconGroup -> BeaconGroupRow(
+                    group = item,
+                    onAction = { onGroupAction(item, it) }
+                )
+            }
+            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun BeaconRow(
+    beacon: Beacon,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    currentLocation: Coordinate,
+    onAction: (BeaconAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val distance = remember(beacon.coordinate, currentLocation, baseDistanceUnits) {
+        val meters = NavigationService().navigate(beacon.coordinate, currentLocation, 0f).distance
+        Distance.meters(meters).convertTo(baseDistanceUnits).toRelativeDistance()
+    }
+
+    TrailSenseListItem(
+        title = beacon.name,
+        subtitle = formatService.formatDistance(
+            distance,
+            Units.getDecimalPlaces(distance.units),
+            false
+        ),
+        icon = painterResource(getBeaconIcon(beacon, formatService)),
+        iconTint = Color(getBeaconIconTint(beacon, formatService)),
+        onClick = { onAction(BeaconAction.View) },
+        trailing = {
+            BeaconRowActions(
+                beacon = beacon,
+                menuOpen = menuOpen,
+                onMenuOpenChange = { menuOpen = it },
+                onAction = onAction
+            )
+        },
+        animateEntrance = false,
+        modifier = Modifier
+            .combinedClickable(
+                onClick = { onAction(BeaconAction.View) },
+                onLongClick = { onAction(BeaconAction.Navigate) }
+            )
+            .padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun BeaconRowActions(
+    beacon: Beacon,
+    menuOpen: Boolean,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (BeaconAction) -> Unit
+) {
+    Column(horizontalAlignment = Alignment.End) {
+        if (!beacon.temporary) {
+            IconButton(
+                onClick = { onAction(BeaconAction.ToggleVisibility) },
+                modifier = Modifier.testTag("beacon_visibility_toggle")
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (beacon.visible) {
+                            R.drawable.ic_visible
+                        } else {
+                            R.drawable.ic_not_visible
+                        }
+                    ),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Box {
+            IconButton(
+                onClick = { onMenuOpenChange(true) },
+                modifier = Modifier.testTag("beacon_item_menu")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { onMenuOpenChange(false) }
+            ) {
+                BeaconMenuItem(R.string.navigate, onMenuOpenChange, onAction, BeaconAction.Navigate)
+                BeaconMenuItem(R.string.share_ellipsis, onMenuOpenChange, onAction, BeaconAction.Share)
+                if (!beacon.temporary) {
+                    BeaconMenuItem(R.string.edit, onMenuOpenChange, onAction, BeaconAction.Edit)
+                    BeaconMenuItem(R.string.move_to, onMenuOpenChange, onAction, BeaconAction.Move)
+                    BeaconMenuItem(R.string.delete, onMenuOpenChange, onAction, BeaconAction.Delete)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BeaconMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (BeaconAction) -> Unit,
+    action: BeaconAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+@Composable
+private fun BeaconGroupRow(
+    group: BeaconGroup,
+    onAction: (BeaconGroupAction) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    TrailSenseListItem(
+        title = group.name,
+        subtitle = stringResource(R.plurals.beacon_group_summary, group.count, group.count),
+        icon = painterResource(R.drawable.ic_beacon_group),
+        iconTint = Color(AppColor.Gray.color),
+        onClick = { onAction(BeaconGroupAction.Open) },
+        trailing = {
+            Box {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier.testTag("beacon_group_menu")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu_dots),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    BeaconGroupMenuItem(R.string.show_all, { menuOpen = it }, onAction, BeaconGroupAction.ShowAll)
+                    BeaconGroupMenuItem(R.string.hide_all, { menuOpen = it }, onAction, BeaconGroupAction.HideAll)
+                    BeaconGroupMenuItem(R.string.rename, { menuOpen = it }, onAction, BeaconGroupAction.Edit)
+                    BeaconGroupMenuItem(R.string.move_to, { menuOpen = it }, onAction, BeaconGroupAction.Move)
+                    BeaconGroupMenuItem(R.string.delete, { menuOpen = it }, onAction, BeaconGroupAction.Delete)
+                }
+            }
+        },
+        animateEntrance = false,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
+}
+
+@Composable
+private fun BeaconGroupMenuItem(
+    label: Int,
+    onMenuOpenChange: (Boolean) -> Unit,
+    onAction: (BeaconGroupAction) -> Unit,
+    action: BeaconGroupAction
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(label)) },
+        onClick = {
+            onMenuOpenChange(false)
+            onAction(action)
+        }
+    )
+}
+
+private fun getBeaconIcon(beacon: Beacon, formatService: FormatService): Int {
+    if (beacon.owner == BeaconOwner.User) {
+        return beacon.icon?.icon ?: R.drawable.bubble
+    }
+
+    return CellSignalUtils.getCellQualityImage(getCellSignalQuality(beacon, formatService))
+}
+
+private fun getBeaconIconTint(beacon: Beacon, formatService: FormatService): Int {
+    if (beacon.owner == BeaconOwner.User) {
+        return if (beacon.icon == null) {
+            beacon.color
+        } else {
+            val background = Color(beacon.color)
+            if (background.luminance() > 0.5f) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        }
+    }
+
+    val backgroundColor = CustomUiUtils.getQualityColor(getCellSignalQuality(beacon, formatService))
+    return Colors.mostContrastingColor(android.graphics.Color.WHITE, android.graphics.Color.BLACK, backgroundColor)
+}
+
+private fun getCellSignalQuality(beacon: Beacon, formatService: FormatService): Quality {
+    return when {
+        beacon.name.contains(formatService.formatQuality(Quality.Poor)) -> Quality.Poor
+        beacon.name.contains(formatService.formatQuality(Quality.Moderate)) -> Quality.Moderate
+        beacon.name.contains(formatService.formatQuality(Quality.Good)) -> Quality.Good
+        else -> Quality.Unknown
+    }
 }
 
 private fun createBeaconListViews(context: Context): BeaconListViews {
@@ -679,7 +983,7 @@ private fun createBeaconListViews(context: Context): BeaconListViews {
         }
     )
 
-    val list = AndromedaListView(context, null).apply {
+    val list = ComposeView(context).apply {
         id = R.id.beacon_recycler
     }
     content.addView(
