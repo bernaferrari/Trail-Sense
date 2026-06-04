@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +43,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -286,14 +286,14 @@ private fun CreateFieldGuideSightingScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SightingSwitch(
-                    id = R.id.harvested,
+                    tag = "harvested",
                     text = stringResource(R.string.harvested),
                     checked = harvested,
                     onCheckedChange = onHarvestedChange
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SightingSwitch(
-                    id = R.id.show_on_map,
+                    tag = "show_on_map",
                     text = stringResource(R.string.show_on_map),
                     checked = showOnMap,
                     onCheckedChange = onShowOnMapChange
@@ -418,31 +418,29 @@ private fun ElevationInput(
 
 @Composable
 private fun SightingSwitch(
-    id: Int,
+    tag: String,
     text: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialSwitch(context).apply {
-                this.id = id
-                this.text = text
-                isChecked = checked
-                setOnCheckedChangeListener { _, isChecked ->
-                    onCheckedChange(isChecked)
-                }
-            }
-        },
-        update = { switch ->
-            switch.text = text
-            if (switch.isChecked != checked) {
-                switch.isChecked = checked
-            }
-        }
-    )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
 }
 
 @Composable
