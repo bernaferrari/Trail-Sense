@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
@@ -51,7 +51,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         input(R.id.beacon_location, "42, -72")
         input(R.id.beacon_elevation, "1000")
 
-        isNotChecked(R.id.create_at_distance)
+        isChecked(id("create_at_distance"), false)
 
         scrollToEnd(id("create_beacon_scroll"))
 
@@ -109,7 +109,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         hasText(id("beacon_name"), "Test beacon")
         hasText(R.id.beacon_location, "42.000000°,  -72.000000°")
         hasText(R.id.beacon_elevation, "1000")
-        isNotChecked(R.id.create_at_distance)
+        isChecked(id("create_at_distance"), false)
 
         scrollToEnd(id("create_beacon_scroll"))
         hasText(id("comment"), "Test notes")

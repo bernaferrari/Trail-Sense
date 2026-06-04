@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,7 +44,6 @@ import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
@@ -543,24 +543,23 @@ private fun CreateAtDistanceSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    AndroidView(
-        modifier = Modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialSwitch(context).apply {
-                id = R.id.create_at_distance
-                text = context.getString(R.string.create_at_distance)
-                isChecked = checked
-                setOnCheckedChangeListener { _, isChecked ->
-                    onCheckedChange(isChecked)
-                }
-            }
-        },
-        update = {
-            if (it.isChecked != checked) {
-                it.isChecked = checked
-            }
-        }
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("create_at_distance"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.create_at_distance),
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
 }
 
 @Composable
