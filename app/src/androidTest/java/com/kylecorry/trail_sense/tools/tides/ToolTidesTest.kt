@@ -6,7 +6,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
@@ -47,12 +46,11 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         hasText(id("tide_name")) { it.startsWith("Tide 1") }
 
         // Select lunitidal interval
-        click(R.id.estimate_algorithm_spinner)
+        click(id("estimate_algorithm_spinner"))
         click(string(R.string.lunitidal_interval_auto))
-        clickOk()
 
         // Verify the fields are set
-        hasText(R.id.estimate_algorithm_spinner, string(R.string.lunitidal_interval_auto)
+        hasText(id("estimate_algorithm_spinner"), string(R.string.lunitidal_interval_auto)
         )
 
         // TODO: Manual lunitidal interval
@@ -80,10 +78,10 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         hasText(id("tide_frequency_semidiurnal"), string(R.string.tide_semidiurnal))
         input(R.id.utm, "42, -72")
 
-        click(R.id.estimate_algorithm_spinner)
-        isChecked(string(R.string.tide_clock))
+        click(id("estimate_algorithm_spinner"))
+        hasText(string(R.string.tide_clock))
         hasText(string(R.string.lunitidal_interval_auto))
-        clickOk()
+        click(string(R.string.tide_clock))
 
         scrollToEnd(id("scroll_view"))
 

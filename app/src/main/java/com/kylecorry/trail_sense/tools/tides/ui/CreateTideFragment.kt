@@ -29,6 +29,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -68,7 +70,6 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.DurationInputView
-import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -706,30 +707,42 @@ private fun EstimateTypeInput(
     modifier: Modifier = Modifier
 ) {
     val method = stringResource(R.string.estimate_method)
+    var isOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    val selected = estimateTypeNames[estimateType].orEmpty()
 
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            MaterialSpinnerView(context, null).apply {
-                id = R.id.estimate_algorithm_spinner
-                setHint(method)
-                setItems(estimateTypes.map { estimateTypeNames[it].orEmpty() })
-                setDescriptions(estimateTypes.map { estimateTypeDescriptions[it].orEmpty() })
-                setOnItemSelectedListener { position ->
-                    onEstimateTypeChange(estimateTypes.getOrElse(position ?: 0) { EstimateType.Clock })
-                }
-            }
-        },
-        update = { spinner ->
-            val index = estimateTypes.indexOf(estimateType).coerceAtLeast(0)
-            spinner.setHint(method)
-            spinner.setItems(estimateTypes.map { estimateTypeNames[it].orEmpty() })
-            spinner.setDescriptions(estimateTypes.map { estimateTypeDescriptions[it].orEmpty() })
-            if (spinner.selectedItemPosition != index) {
-                spinner.setSelection(index)
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { isOpen = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("estimate_algorithm_spinner")
+        ) {
+            Text(selected.ifBlank { method })
+        }
+        DropdownMenu(
+            expanded = isOpen,
+            onDismissRequest = { isOpen = false }
+        ) {
+            estimateTypes.forEach { type ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(estimateTypeNames[type].orEmpty())
+                            Text(
+                                text = estimateTypeDescriptions[type].orEmpty(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        isOpen = false
+                        onEstimateTypeChange(type)
+                    }
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
