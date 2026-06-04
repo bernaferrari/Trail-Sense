@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.domain.pathsort.IPathSortStrategy
 import com.kylecorry.trail_sense.tools.paths.domain.pathsort.NamePathSortStrategy
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import com.kylecorry.trail_sense.tools.paths.ui.IPathListItemMapper
+import com.kylecorry.trail_sense.tools.paths.ui.PathNameFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.resume
@@ -34,7 +34,6 @@ object PathPickers {
             null,
             augment = { sort.sort(filter(it.filterIsInstance<PathGroup>())) }
         )
-        val mapper = IPathListItemMapper(context, { _, _ -> }, { _, _ -> })
         val titleProvider = { path: IPath? ->
             if (path is PathGroup) {
                 path.name
@@ -47,8 +46,8 @@ object PathPickers {
             title,
             okText,
             manager,
-            mapper,
             titleProvider,
+            { (it as PathGroup).name },
             context.getString(R.string.no_groups),
             initialGroup,
             searchEnabled = false
@@ -72,7 +71,6 @@ object PathPickers {
             null,
             augment = { sort.sort(filter(it)) }
         )
-        val mapper = IPathListItemMapper(context, { _, _ -> }, { _, _ -> })
         val titleProvider = { path: IPath? ->
             if (path is PathGroup) {
                 path.name
@@ -84,8 +82,14 @@ object PathPickers {
             context,
             title,
             manager,
-            mapper,
             titleProvider,
+            {
+                when (it) {
+                    is PathGroup -> it.name
+                    is Path -> PathNameFactory(context).getName(it)
+                    else -> ""
+                }
+            },
             context.getString(R.string.no_paths),
             initialGroup,
             searchEnabled = false

@@ -4,7 +4,6 @@ import android.content.Context
 import android.widget.FrameLayout
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.ListItemMapper
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 
@@ -14,8 +13,8 @@ object GroupablePickers {
         context: Context,
         title: String?,
         manager: GroupListManager<T>,
-        mapper: ListItemMapper<T>,
         titleProvider: (T?) -> String,
+        itemTitleProvider: (T) -> String,
         emptyText: String,
         initialGroup: Long? = null,
         searchEnabled: Boolean = true,
@@ -26,8 +25,8 @@ object GroupablePickers {
             context,
             null,
             manager,
-            mapper,
             titleProvider,
+            itemTitleProvider,
             emptyText,
             initialGroup,
             searchEnabled
@@ -52,8 +51,8 @@ object GroupablePickers {
         title: String?,
         okText: String = context.getString(android.R.string.ok),
         manager: GroupListManager<T>,
-        mapper: ListItemMapper<T>,
         titleProvider: (T?) -> String,
+        itemTitleProvider: (T) -> String,
         emptyText: String,
         initialGroup: Long? = null,
         searchEnabled: Boolean = true,
@@ -64,8 +63,8 @@ object GroupablePickers {
             context,
             null,
             manager,
-            mapper,
             titleProvider,
+            itemTitleProvider,
             emptyText,
             initialGroup,
             searchEnabled

@@ -5,7 +5,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.picker.GroupablePickers
-import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
@@ -13,7 +12,6 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.loading.BeaconLoad
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.IBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.NameBeaconSort
-import com.kylecorry.trail_sense.tools.beacons.ui.list.IBeaconListItemMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.resume
@@ -36,11 +34,6 @@ object BeaconPickers {
             null,
             augment = { sort.sort(filter(it)) }
         )
-        val mapper = IBeaconListItemMapper(
-            context,
-            SensorService(context).getGPS(),
-            { _, _ -> },
-            { _, _ -> })
         val titleProvider = { beacon: IBeacon? ->
             beacon?.name ?: context.getString(R.string.beacons)
         }
@@ -48,8 +41,8 @@ object BeaconPickers {
             context,
             title,
             manager,
-            mapper,
             titleProvider,
+            { it.name },
             context.getString(R.string.no_beacons),
             initialGroup,
             searchEnabled = true
@@ -74,11 +67,6 @@ object BeaconPickers {
             null,
             augment = { sort.sort(filter(it.filterIsInstance<BeaconGroup>())) }
         )
-        val mapper = IBeaconListItemMapper(
-            context,
-            SensorService(context).getGPS(),
-            { _, _ -> },
-            { _, _ -> })
         val titleProvider = { beacon: IBeacon? ->
             beacon?.name ?: context.getString(R.string.beacons)
         }
@@ -87,8 +75,8 @@ object BeaconPickers {
             title,
             okText,
             manager,
-            mapper,
             titleProvider,
+            { it.name },
             context.getString(R.string.no_groups),
             initialGroup,
             searchEnabled = false

@@ -6,9 +6,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.picker.GroupablePickers
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
-import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroupLoader
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupMapper
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.resume
@@ -32,15 +30,14 @@ object MapPickers {
             null,
             augment = { filter(it.filterIsInstance<MapGroup>()) }
         )
-        val mapper = MapGroupMapper(context) { _, _ -> }
         GroupablePickers.group(
             context,
             title,
             okText,
             manager,
-            mapper,
-            { it?.name ?: context.getString(com.kylecorry.trail_sense.R.string.photo_maps) },
-            context.getString(com.kylecorry.trail_sense.R.string.no_groups),
+            { it?.name ?: context.getString(R.string.photo_maps) },
+            { it.name },
+            context.getString(R.string.no_groups),
             initialGroup,
             searchEnabled = false
         ) { cancelled, item ->

@@ -3,26 +3,44 @@ package com.kylecorry.trail_sense.shared.grouping.picker
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.view.Gravity
 import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItemMapper
 import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.views.SearchView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
 @SuppressLint("ViewConstructor")
 class GroupableSelectView<T : Groupable>(
     context: Context,
     attrs: AttributeSet?,
     private val manager: GroupListManager<T>,
-    private val mapper: ListItemMapper<T>,
     private val titleProvider: (T?) -> String,
+    private val itemTitleProvider: (T) -> String,
     emptyText: String,
     initialGroup: Long? = null,
     searchEnabled: Boolean = true
@@ -30,12 +48,13 @@ class GroupableSelectView<T : Groupable>(
 
     private val groupTitle: Toolbar
     private val searchbox: SearchView
-    private val emptyTextView: TextView
-    private val list: AndromedaListView
+    private val list: ComposeView
 
     var onItemClick: (item: T) -> Unit = {}
     var root: T? = null
         private set
+    private var items by mutableStateOf<List<T>>(emptyList())
+    private var resetKey by mutableIntStateOf(0)
 
     init {
         orientation = VERTICAL
@@ -68,25 +87,25 @@ class GroupableSelectView<T : Groupable>(
             }
         )
 
-        emptyTextView = TextView(context).apply {
-            id = R.id.empty_text
-            gravity = Gravity.CENTER
-            setPadding(0, Resources.dp(context, 32f).toInt(), 0, 0)
-            isVisible = false
-        }
-        addView(
-            emptyTextView,
-            LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            }
-        )
-
-        list = AndromedaListView(context, null).apply {
+        list = ComposeView(context).apply {
             id = R.id.list
-            setPadding(0, 0, 0, 0)
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            setContent {
+                TrailSenseTheme {
+                    GroupableSelectList(
+                        items = items,
+                        emptyText = emptyText,
+                        resetKey = resetKey,
+                        itemTitleProvider = itemTitleProvider,
+                        onClick = {
+                            if (it.isGroup) {
+                                manager.open(it.id)
+                            }
+                            onItemClick(it)
+                        }
+                    )
+                }
+            }
         }
         addView(
             list,
@@ -105,24 +124,13 @@ class GroupableSelectView<T : Groupable>(
         }
 
         // List items
-        list.emptyView = emptyTextView
-        emptyTextView.text = emptyText
         manager.onChange = { root, items, rootChanged ->
             this.root = root
             groupTitle.leftButton.isVisible = root != null
             groupTitle.title.text = titleProvider(root)
-            val mapped = items.map {
-                // TODO: Don't override anything, just intercept the click action to open folders (let the caller decide what to do on click)
-                mapper.map(it).copy(menu = emptyList(), trailingIcon = null, action = {
-                    if (it.isGroup) {
-                        manager.open(it.id)
-                    }
-                    onItemClick(it)
-                })
-            }
-            list.setItems(mapped)
+            this.items = items
             if (rootChanged) {
-                list.scrollToPosition(0, false)
+                resetKey++
             }
         }
 
@@ -133,5 +141,47 @@ class GroupableSelectView<T : Groupable>(
         }
 
         manager.open(initialGroup)
+    }
+}
+
+@Composable
+private fun <T : Groupable> GroupableSelectList(
+    items: List<T>,
+    emptyText: String,
+    resetKey: Int,
+    itemTitleProvider: (T) -> String,
+    onClick: (T) -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+
+    if (items.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 120.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = emptyText,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
+    LazyColumn(state = listState) {
+        items(items, key = { if (it.isGroup) -it.id else it.id }) { item ->
+            TrailSenseListItem(
+                title = itemTitleProvider(item),
+                onClick = { onClick(item) },
+                animateEntrance = false
+            )
+            TrailSenseDivider()
+        }
     }
 }
