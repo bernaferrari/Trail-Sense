@@ -1,46 +1,47 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ListItemTag
-import com.kylecorry.andromeda.views.list.ListMenuItem
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -48,6 +49,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
@@ -98,47 +101,26 @@ class SightingListFragment : Fragment() {
         }
     }
 
-    private fun getSightingListItems(): List<ListItem> {
+    private fun getSightingListItems(): List<SightingListItem> {
         val currentPage = page
         val sightings = currentPage?.sightings?.sortedByDescending { it.time } ?: emptyList()
         return sightings.map {
-            ListItem(
-                it.id,
-                it.time?.let { time ->
+            SightingListItem(
+                sighting = it,
+                title = it.time?.let { time ->
                     formatter.formatRelativeDateTime(
                         time.toZonedDateTime(),
                         includeSeconds = false
                     )
                 } ?: getString(R.string.sighting),
-                it.notes,
-                tags = listOfNotNull(
-                    if (it.harvested == true) {
-                        ListItemTag(
-                            getString(R.string.harvested),
-                            null,
-                            Resources.androidTextColorSecondary(requireContext())
-                        )
-                    } else {
-                        null
-                    }
-                ),
-                menu = listOfNotNull(
-                    if (it.location != null) ListMenuItem(getString(R.string.navigate)) {
-                        navigateToSighting(it)
-                    } else null,
-                    if (it.location != null) ListMenuItem(getString(R.string.create_beacon)) {
-                        createBeacon(it)
-                    } else null,
-                    ListMenuItem(getString(R.string.edit)) {
-                        editSighting(it)
-                    },
-                    ListMenuItem(getString(R.string.delete)) {
-                        deleteSighting(it)
-                    }
-                )
-            ) {
-                editSighting(it)
-            }
+                subtitle = it.notes ?: "",
+                isHarvested = it.harvested == true,
+                hasLocation = it.location != null,
+                onEdit = { editSighting(it) },
+                onNavigate = { navigateToSighting(it) },
+                onCreateBeacon = { createBeacon(it) },
+                onDelete = { deleteSighting(it) }
+            )
         }
     }
 
@@ -210,7 +192,7 @@ class SightingListFragment : Fragment() {
 
 @Composable
 private fun SightingListScreen(
-    items: List<ListItem>,
+    items: List<SightingListItem>,
     onCreate: () -> Unit
 ) {
     Surface(
@@ -258,40 +240,132 @@ private fun SightingListHeader() {
 
 @Composable
 private fun SightingListView(
-    items: List<ListItem>,
+    items: List<SightingListItem>,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.testTag("list"),
-        factory = { context ->
-            FrameLayout(context).apply {
-                val list = AndromedaListView(context, null).apply {
-                    id = R.id.list
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
-                val empty = TextView(context).apply {
-                    text = context.getString(R.string.no_sightings)
-                    gravity = Gravity.CENTER
-                    visibility = View.GONE
-                }
-                list.emptyView = empty
-                addView(list)
-                addView(
-                    empty,
-                    FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        Gravity.CENTER
-                    )
+    if (items.isEmpty()) {
+        Box(
+            modifier = modifier.testTag("list"),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.no_sightings),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
+    LazyColumn(modifier = modifier.testTag("list")) {
+        items(items, key = { it.sighting.id }) { item ->
+            SightingRow(item)
+            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun SightingRow(item: SightingListItem) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { item.onEdit() }
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (item.subtitle.isNotBlank()) {
+                Text(
+                    text = item.subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        },
-        update = { container ->
-            container.findViewById<AndromedaListView>(R.id.list)
-                .setItems(items)
+            if (item.isHarvested) {
+                Text(
+                    text = stringResource(R.string.harvested),
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.shapes.extraSmall
+                        )
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-    )
+
+        Box {
+            IconButton(
+                onClick = { menuOpen = true },
+                modifier = Modifier.testTag("field_guide_sighting_menu")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = null
+                )
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false }
+            ) {
+                if (item.hasLocation) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.navigate)) },
+                        onClick = {
+                            menuOpen = false
+                            item.onNavigate()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.create_beacon)) },
+                        onClick = {
+                            menuOpen = false
+                            item.onCreateBeacon()
+                        }
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.edit)) },
+                    onClick = {
+                        menuOpen = false
+                        item.onEdit()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete)) },
+                    onClick = {
+                        menuOpen = false
+                        item.onDelete()
+                    }
+                )
+            }
+        }
+    }
 }
+
+private data class SightingListItem(
+    val sighting: Sighting,
+    val title: String,
+    val subtitle: String,
+    val isHarvested: Boolean,
+    val hasLocation: Boolean,
+    val onEdit: () -> Unit,
+    val onNavigate: () -> Unit,
+    val onCreateBeacon: () -> Unit,
+    val onDelete: () -> Unit
+)

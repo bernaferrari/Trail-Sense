@@ -15,7 +15,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToStart
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickDate
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickTime
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
@@ -256,7 +255,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Test 2")
 
         // Edit via menu
-        clickListItemMenu("Edit")
+        click(id("field_guide_sighting_menu"))
+        click("Edit")
         hasText("January 1, 2025 6:00 AM")
         hasText("42.000000°,  72.000000°")
         hasText("100")
@@ -269,13 +269,15 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Test 3")
 
         // Navigate
-        clickListItemMenu("Navigate")
+        click(id("field_guide_sighting_menu"))
+        click("Navigate")
         hasText(Regex("\\s*\\d+°\\s+[NSEW]+"))
         hasText("Ant")
         back()
 
         // Create beacon
-        clickListItemMenu("Create beacon")
+        click(id("field_guide_sighting_menu"))
+        click("Create beacon")
         hasText("Ant")
         hasText("42.000000°,  72.000000°")
         hasText("100")
@@ -288,7 +290,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         }
 
         // Delete
-        clickListItemMenu("Delete")
+        click(id("field_guide_sighting_menu"))
+        click("Delete")
         clickOk()
 
         hasText("No sightings")
