@@ -309,10 +309,6 @@
     <item name="fab" type="id" />
     <item name="material_spinner_holder" type="id" />
     <item name="material_spinner_edittext" type="id" />
-    <item name="prev_date" type="id" />
-    <item name="date" type="id" />
-    <item name="date_btn" type="id" />
-    <item name="next_date" type="id" />
     <item name="gps_status" type="id" />
     <item name="compass_status" type="id" />
     <item name="duration" type="id" />

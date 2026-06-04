@@ -1,18 +1,31 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.util.AttributeSet
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.core.view.isVisible
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -21,27 +34,26 @@ import java.time.LocalDate
 
 class DatePickerView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
-    var date: LocalDate = LocalDate.now()
+    private var selectedDate by mutableStateOf(LocalDate.now())
+    private var searchEnabledState by mutableStateOf(false)
+    private val formatter = FormatService.getInstance(context)
+
+    var date: LocalDate
+        get() = selectedDate
         set(value) {
-            val changed = field != value
-            field = value
+            val changed = selectedDate != value
+            selectedDate = value
             if (changed) {
-                calendar.text = formatter.formatRelativeDate(value)
                 onDateChange(value)
             }
         }
 
-    var searchEnabled: Boolean = false
+    var searchEnabled: Boolean
+        get() = searchEnabledState
         set(value) {
-            field = value
-            search.isVisible = value
+            searchEnabledState = value
         }
 
-    private val formatter = FormatService.getInstance(context)
-    private val calendar: MaterialButton
-    private val search: MaterialButton
-    private val next: MaterialButton
-    private val previous: MaterialButton
     private var onDateChange: (LocalDate) -> Unit = {}
     private var onCalendarLongPress: () -> Unit = {
         date = LocalDate.now()
@@ -50,98 +62,34 @@ class DatePickerView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
     private var dayViewDecorator: AndromedaDayViewDecorator? = null
 
     init {
-        val root = LinearLayout(context).apply {
-            gravity = Gravity.CENTER
-            orientation = LinearLayout.HORIZONTAL
-        }
         addView(
-            root,
+            ComposeView(context).apply {
+                setContent {
+                    TrailSenseTheme {
+                        DatePickerContent(
+                            date = selectedDate,
+                            formatter = formatter,
+                            searchEnabled = searchEnabledState,
+                            onPrevious = { date = selectedDate.minusDays(1) },
+                            onNext = { date = selectedDate.plusDays(1) },
+                            onPickDate = {
+                                CustomUiUtils.pickDate(context, selectedDate, dayViewDecorator) {
+                                    if (it != null) {
+                                        date = it
+                                    }
+                                }
+                            },
+                            onCalendarLongPress = onCalendarLongPress,
+                            onSearch = onSearch
+                        )
+                    }
+                }
+            },
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT
             )
         )
-
-        previous = createButton(R.id.prev_date, R.drawable.ic_keyboard_arrow_right).apply {
-            rotation = 180f
-        }
-        root.addView(previous)
-
-        root.addView(createSpacer(context))
-
-        dateText = TextView(context).apply {
-            id = R.id.date
-        }
-        root.addView(
-            dateText,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        calendar = createButton(R.id.date_btn, R.drawable.ic_date)
-        root.addView(
-            calendar,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = Resources.dp(context, 16f).toInt()
-            }
-        )
-
-        search = createButton(R.id.search_btn, R.drawable.ic_search).apply {
-            visibility = View.GONE
-        }
-        root.addView(
-            search,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = Resources.dp(context, 16f).toInt()
-            }
-        )
-
-        root.addView(createSpacer(context))
-
-        next = createButton(R.id.next_date, R.drawable.ic_keyboard_arrow_right)
-        root.addView(next)
-
-        calendar.text = formatter.formatRelativeDate(date)
-
-        calendar.setOnClickListener {
-            CustomUiUtils.pickDate(context, date, dayViewDecorator) {
-                if (it != null) {
-                    date = it
-                }
-            }
-        }
-
-        calendar.setOnLongClickListener {
-            onCalendarLongPress()
-            true
-        }
-
-        next.setOnClickListener {
-            date = date.plusDays(1)
-        }
-        CustomUiUtils.setRepeatingLongPressAction(next) {
-            date = date.plusDays(1)
-        }
-
-        previous.setOnClickListener {
-            date = date.minusDays(1)
-        }
-        CustomUiUtils.setRepeatingLongPressAction(previous) {
-            date = date.minusDays(1)
-        }
-
-        search.setOnClickListener {
-            onSearch()
-        }
-
     }
 
     fun setOnDateChangeListener(listener: (LocalDate) -> Unit) {
@@ -163,24 +111,83 @@ class DatePickerView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
     fun reset() {
         date = LocalDate.now()
     }
+}
 
-    private fun createButton(id: Int, icon: Int): ImageButton {
-        return ImageButton(context).apply {
-            this.id = id
-            setBackgroundColor(Color.TRANSPARENT)
-            setImageResource(icon)
-            imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DatePickerContent(
+    date: LocalDate,
+    formatter: FormatService,
+    searchEnabled: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onPickDate: () -> Unit,
+    onCalendarLongPress: () -> Unit,
+    onSearch: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onPrevious,
+            modifier = Modifier.testTag("prev_date")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.rotate(180f)
+            )
         }
-    }
-
-    private fun createSpacer(context: Context): View {
-        return View(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                1f
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = formatter.formatRelativeDate(date),
+            modifier = Modifier.testTag("date"),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Box(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(48.dp)
+                .combinedClickable(
+                    onClick = onPickDate,
+                    onLongClick = onCalendarLongPress
+                )
+                .testTag("date_btn"),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_date),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (searchEnabled) {
+            IconButton(
+                onClick = onSearch,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .testTag("search_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        IconButton(
+            onClick = onNext,
+            modifier = Modifier.testTag("next_date")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
-
 }
