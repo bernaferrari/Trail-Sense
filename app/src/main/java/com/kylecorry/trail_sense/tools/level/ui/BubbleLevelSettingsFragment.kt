@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.level.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.NumberPicker
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,73 +7,61 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class BubbleLevelSettingsFragment : Fragment() {
+class BubbleLevelSettingsFragment : TrailSenseComposeFragment() {
 
     private val prefs = DependencyRegistry.get<UserPreferences>().bubbleLevel
     private val formatter = DependencyRegistry.get<FormatService>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
-                    val title = stringResource(R.string.pref_bubble_level_threshold_title)
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            )
-                        ) {
-                            item("header") {
-                                TrailSenseSectionHeader(
-                                    title = stringResource(R.string.tool_bubble_level_title)
-                                )
+    @Composable
+    override fun FragmentContent() {
+        var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
+        val title = stringResource(R.string.pref_bubble_level_threshold_title)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                )
+            ) {
+                item("header") {
+                    TrailSenseSectionHeader(
+                        title = stringResource(R.string.tool_bubble_level_title)
+                    )
+                }
+                item("threshold") {
+                    SettingsActionRow(
+                        label = title,
+                        summary = formatter.formatDegrees(threshold.toFloat()),
+                        onClick = {
+                            pickThreshold(title, threshold) {
+                                threshold = it
                             }
-                            item("threshold") {
-                                SettingsActionRow(
-                                    label = title,
-                                    summary = formatter.formatDegrees(threshold.toFloat()),
-                                    onClick = {
-                                        pickThreshold(title, threshold) {
-                                            threshold = it
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                        }
-                    }
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
                 }
             }
         }
