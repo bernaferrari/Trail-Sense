@@ -49,10 +49,10 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canSearch() {
         back(false)
-        input(id("search"), "Rabbit")
+        input(id("search")(), "Rabbit")
         hasText("Rabbit")
 
-        input(id("search"), "Insect")
+        input(id("search")(), "Insect")
         hasText("Ant")
 
         back(false)
@@ -98,9 +98,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     private fun canEditPage() {
         click(id("field_guide_page_menu"))
         click("Edit")
-        hasText(R.id.name, "A Test")
-        input(R.id.name, "A Test 2")
-        click(R.id.create_field_guide_page_save_btn)
+        hasText(id("name"), "A Test")
+        input(id("name")(), "A Test 2")
+        click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
         hasText("A Test 2")
@@ -108,9 +108,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // Open it an edit
         click("A Test 2")
         click(id("field_guide_page_edit_btn"))
-        hasText(R.id.name, "A Test 2")
-        input(R.id.name, "A Test 3")
-        click(R.id.create_field_guide_page_save_btn)
+        hasText(id("name"), "A Test 2")
+        input(id("name")(), "A Test 3")
+        click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
         hasText("A Test 3")
@@ -156,42 +156,42 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canCreatePage() {
         click(id("add_btn"))
-        input(R.id.name, "A Test")
-        click(R.id.tag_classifications)
+        input(id("name")(), "A Test")
+        click(id("tag_classifications"))
         click("Bird")
         clickOk()
-        hasText(R.id.tag_classifications, "Animal, Bird")
-        input(R.id.notes, "Notes")
-        scrollToEnd(R.id.scroll_view)
+        hasText(id("tag_classifications"), "Animal, Bird")
+        input(id("notes")(), "Notes")
+        scrollToEnd(id("scroll_view"))
 
-        click(R.id.tag_locations)
+        click(id("tag_locations"))
         click("North America")
         clickOk()
-        hasText(R.id.tag_locations, "North America")
+        hasText(id("tag_locations"), "North America")
 
-        click(R.id.tag_habitats)
+        click(id("tag_habitats"))
         click("Forest")
         clickOk()
-        hasText(R.id.tag_habitats, "Forest")
+        hasText(id("tag_habitats"), "Forest")
 
-        click(R.id.tag_human_interactions)
+        click(id("tag_human_interactions"))
         click("Edible")
         click("Inedible")
         clickOk()
-        hasText(R.id.tag_human_interactions, "Edible, Inedible")
+        hasText(id("tag_human_interactions"), "Edible, Inedible")
 
-        click(R.id.tag_activity_patterns)
+        click(id("tag_activity_patterns"))
         click("Diurnal (day)")
         clickOk()
-        hasText(R.id.tag_activity_patterns, "Diurnal (day)")
+        hasText(id("tag_activity_patterns"), "Diurnal (day)")
 
-        scrollToStart(R.id.scroll_view)
+        scrollToStart(id("scroll_view"))
         click("Take photo")
         click(id("capture_button"))
 
-        isVisible(R.id.image)
+        isVisible(id("image"))
 
-        click(R.id.create_field_guide_page_save_btn)
+        click(id("create_field_guide_page_save_btn"))
 
         // Verify it shows up in the list
         hasText("A Test")
