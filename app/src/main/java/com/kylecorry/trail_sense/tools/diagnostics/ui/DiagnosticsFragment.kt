@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,18 +30,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
@@ -53,28 +46,18 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiag
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 import kotlinx.coroutines.launch
 
-class DiagnosticsFragment : Fragment() {
+class DiagnosticsFragment : TrailSenseComposeFragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    DiagnosticsScreen(
-                        onShowSensorDetails = {
-                            findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
-                        },
-                        onShowDiagnostic = {
-                            DiagnosticAlerter(this@DiagnosticsFragment).alert(it)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        DiagnosticsScreen(
+            onShowSensorDetails = {
+                findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
+            },
+            onShowDiagnostic = {
+                DiagnosticAlerter(this@DiagnosticsFragment).alert(it)
             }
-        }
+        )
     }
 }
 
