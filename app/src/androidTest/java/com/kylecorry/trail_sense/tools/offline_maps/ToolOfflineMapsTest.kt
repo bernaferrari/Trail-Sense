@@ -39,7 +39,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         // Disclaimer
         clickOk()
 
-        hasText(R.id.map_list_title, string(R.string.offline_maps))
+        hasText(id("map_list_title"), string(R.string.offline_maps))
 
         // No maps by default
         hasText(string(R.string.no_maps))
@@ -71,7 +71,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         // Offline maps disclaimer
         optional { clickOk() }
 
-        hasText(R.id.map_list_title, string(R.string.offline_maps))
+        hasText(id("map_list_title"), string(R.string.offline_maps))
         hasText(string(R.string.no_maps))
 
         canOpenOfflineMapFilePicker()
@@ -79,11 +79,11 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
         seedOfflineMap("Second Map")
         seedOfflineMap("Test Map")
-        input(R.id.searchbox, "Test")
+        input(id("searchbox")(), "Test")
         waitFor { hasText("Test Map") }
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Second Map")
-        hasText(R.id.map_list_title, string(R.string.offline_maps))
+        hasText(id("map_list_title"), string(R.string.offline_maps))
 
         canToggleOfflineMapVisibility()
         canViewOfflineMap()
@@ -97,22 +97,22 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canOpenOfflineMapFilePicker() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.map_file))
 
         // The file picker is opened
-        isNotVisible(R.id.add_btn)
+        not { isVisible(id("add_btn")) }
 
         waitFor {
             waitFor {
                 back()
             }
-            isVisible(R.id.map_list_title)
+            isVisible(id("map_list_title"))
         }
     }
 
     private fun canCreateOfflineMapGroup() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.group))
 
         input(string(R.string.name), "Test Group", index = 1)
@@ -144,16 +144,16 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canSearchOfflineMaps() {
-        input(R.id.searchbox, "Second")
+        input(id("searchbox")(), "Second")
         hasText("Second Map")
         not { hasText("Test Map") }
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Test Group 2")
         hasText("Test Map")
     }
 
     private fun canRenameOfflineMap() {
-        input(R.id.searchbox, "Test Map")
+        input(id("searchbox")(), "Test Map")
         hasText("Test Map")
         click(id("vector_map_menu_Test Map"))
         click(string(R.string.rename))
@@ -163,7 +163,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canEditOfflineMapAttribution() {
-        input(R.id.searchbox, "Test Map 2")
+        input(id("searchbox")(), "Test Map 2")
         hasText("Test Map 2")
         click(id("vector_map_menu_Test Map 2"))
         click(string(R.string.attribution))
@@ -172,13 +172,13 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canMoveOfflineMap() {
-        input(R.id.searchbox, "Test Map 2")
+        input(id("searchbox")(), "Test Map 2")
         hasText("Test Map 2")
         click(id("vector_map_menu_Test Map 2"))
         click(string(R.string.move_to))
         click("Test Group 2")
         click(string(R.string.move))
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Second Map")
         hasText("Test Group 2")
         hasText("1 map")
@@ -192,13 +192,13 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canDeleteOfflineMap() {
-        input(R.id.searchbox, "Second")
+        input(id("searchbox")(), "Second")
         hasText("Second Map")
         click(id("vector_map_menu_Second Map"))
         click(string(R.string.delete))
         clickOk()
         not { hasText("Second Map") }
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText(string(R.string.no_maps))
     }
 
@@ -224,7 +224,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
 
     private fun canCreateMapFromCamera(goBack: Boolean = true) {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click("Camera")
         click(id("capture_button"))
         input(string(R.string.name), "Test Map", index = 1)
@@ -258,22 +258,22 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canCreateMapFromFile() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.map_file))
 
         // The file picker is opened
-        isNotVisible(R.id.add_btn)
+        not { isVisible(id("add_btn")) }
 
         waitFor {
             waitFor {
                 back()
             }
-            isVisible(R.id.map_list_title)
+            isVisible(id("map_list_title"))
         }
     }
 
     private fun canCreateBlankMap(name: String, goBack: Boolean = true) {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.blank))
 
         clickOk()
@@ -287,7 +287,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canCreateGroup() {
-        click(R.id.add_btn)
+        click(id("add_btn"))
         click(string(R.string.group))
 
         input("Name", "Test Group", index = 1)
@@ -308,11 +308,11 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canSearch() {
-        input(R.id.searchbox, "Blank")
+        input(id("searchbox")(), "Blank")
         hasText("Blank Map")
         hasText("Blank Map", index = 1)
         not { hasText("Test Map") }
-        input(R.id.searchbox, "")
+        input(id("searchbox")(), "")
         hasText("Test Group 2")
     }
 
@@ -486,7 +486,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(string(R.string.delete))
         clickOk()
 
-        isVisible(R.id.map_list_title)
+        isVisible(id("map_list_title"))
         not { hasText("Test Map 2") }
 
         // Recreate the map
@@ -529,7 +529,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
             hasText("blank-map.pdf")
         }
         backUntil {
-            isVisible(R.id.map_list_title)
+            isVisible(id("map_list_title"))
         }
     }
 
@@ -538,7 +538,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(string(R.string.print))
         hasText("Copies")
         backUntil {
-            isVisible(R.id.map_list_title)
+            isVisible(id("map_list_title"))
         }
     }
 
