@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
-import android.widget.ImageButton
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -16,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,12 +36,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -108,7 +108,8 @@ class BeaconDetailsFragment : Fragment() {
                         sunset = sunset,
                         tide = tide,
                         tideIcon = tideIcon,
-                        onMenuClick = ::showMenu,
+                        onShare = ::shareBeacon,
+                        onDelete = ::confirmDelete,
                         onNavigate = ::navigateToBeacon,
                         onEdit = ::editBeacon,
                         onTemperatureClick = ::showTemperatureDetails
@@ -232,21 +233,13 @@ class BeaconDetailsFragment : Fragment() {
         findNavController().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
     }
 
-    private fun showMenu(anchor: android.view.View) {
+    private fun shareBeacon() {
         val currentBeacon = beacon ?: return
-        Pickers.menu(
-            anchor,
-            listOf(getString(R.string.share_ellipsis), getString(R.string.delete))
-        ) { idx ->
-            when (idx) {
-                0 -> BeaconSender(this).send(currentBeacon)
-                1 -> confirmDelete(currentBeacon)
-            }
-            true
-        }
+        BeaconSender(this).send(currentBeacon)
     }
 
-    private fun confirmDelete(beacon: Beacon) {
+    private fun confirmDelete() {
+        val beacon = beacon ?: return
         Alerts.dialog(
             requireContext(),
             getString(R.string.delete),
@@ -274,7 +267,8 @@ private fun BeaconDetailsScreen(
     sunset: String?,
     tide: String?,
     @DrawableRes tideIcon: Int,
-    onMenuClick: (android.view.View) -> Unit,
+    onShare: () -> Unit,
+    onDelete: () -> Unit,
     onNavigate: () -> Unit,
     onEdit: () -> Unit,
     onTemperatureClick: () -> Unit,
@@ -291,7 +285,8 @@ private fun BeaconDetailsScreen(
                     FormatService.getInstance(androidx.compose.ui.platform.LocalContext.current)
                         .formatLocation(it)
                 }.orEmpty(),
-                onMenuClick = onMenuClick
+                onShare = onShare,
+                onDelete = onDelete
             )
             Column(
                 modifier = Modifier
@@ -324,8 +319,11 @@ private fun BeaconDetailsScreen(
 private fun BeaconHeader(
     title: String,
     subtitle: String,
-    onMenuClick: (android.view.View) -> Unit
+    onShare: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    var isMenuOpen by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface
@@ -351,16 +349,34 @@ private fun BeaconHeader(
                     )
                 }
             }
-            AndroidView(
-                factory = { context ->
-                    ImageButton(context).apply {
-                        id = R.id.beacon_menu_btn
-                        background = null
-                        setImageResource(R.drawable.ic_menu_dots)
-                        setOnClickListener { onMenuClick(this) }
+            IconButton(
+                onClick = { isMenuOpen = true },
+                modifier = Modifier.testTag("beacon_menu_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = null
+                )
+            }
+            DropdownMenu(
+                expanded = isMenuOpen,
+                onDismissRequest = { isMenuOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.share_ellipsis)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onShare()
                     }
-                }
-            )
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete)) },
+                    onClick = {
+                        isMenuOpen = false
+                        onDelete()
+                    }
+                )
+            }
         }
     }
 }
@@ -546,7 +562,8 @@ private fun BeaconDetailsScreenPreview() {
             sunset = "7:30 PM",
             tide = "High",
             tideIcon = R.drawable.ic_tide_high,
-            onMenuClick = {},
+            onShare = {},
+            onDelete = {},
             onNavigate = {},
             onEdit = {},
             onTemperatureClick = {}
