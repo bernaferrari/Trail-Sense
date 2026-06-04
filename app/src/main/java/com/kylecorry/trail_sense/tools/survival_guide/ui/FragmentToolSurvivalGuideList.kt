@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -47,7 +48,6 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.views.badge.Badge
-import com.kylecorry.andromeda.views.list.ResourceListIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -471,10 +471,10 @@ private class SurvivalGuideSummaryView(context: Context) : MaterialCardView(cont
             }
         ).joinToString(" > ")
         badge.setStatusText(result.chapter.title)
-        ResourceListIcon(
-            result.chapter.icon,
-            size = 12f
-        ).apply(badge.statusImage)
+        badge.statusImage.setImageResource(result.chapter.icon)
+        badge.statusImage.imageTintList = ColorStateList.valueOf(
+            Resources.androidTextColorSecondary(context)
+        )
         val backgroundColor = Resources.androidTextColorSecondary(context)
         badge.setBackgroundTint(backgroundColor)
         badge.setForegroundTint(
