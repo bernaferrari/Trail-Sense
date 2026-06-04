@@ -121,6 +121,7 @@ object Tools {
         MagnifierToolRegistration
     )
     private val topics = mutableMapOf<String, Topic<Bundle>>()
+    private val topicCallbacks = mutableMapOf<String, MutableMap<(Bundle) -> Unit, (Bundle) -> Boolean>>()
     private val broadcastScope = CoroutineScope(Dispatchers.Main)
 
 
@@ -179,16 +180,24 @@ object Tools {
         }
     }
 
-    fun subscribe(toolBroadcastId: String, callback: (Bundle) -> Boolean) {
+    fun subscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
         val topic = topics.getOrPut(toolBroadcastId) {
             Topic()
         }
-        topic.subscribe(callback)
+        val callbacks = topicCallbacks.getOrPut(toolBroadcastId) { mutableMapOf() }
+        val wrapped = callbacks.getOrPut(callback) {
+            { bundle ->
+                callback(bundle)
+                true
+            }
+        }
+        topic.subscribe(wrapped)
     }
 
-    fun unsubscribe(toolBroadcastId: String, callback: (Bundle) -> Boolean) {
+    fun unsubscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
         val topic = topics[toolBroadcastId]
-        topic?.unsubscribe(callback)
+        val wrapped = topicCallbacks[toolBroadcastId]?.remove(callback) ?: return
+        topic?.unsubscribe(wrapped)
     }
 
     fun getService(context: Context, serviceId: String): ToolService? {

@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
 import android.view.ViewGroup
-import android.widget.ImageButton
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -18,12 +17,13 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerCanvas
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionRuler(
-    btn: ImageButton,
+    btn: QuickActionButtonView,
     fragment: Fragment,
 ) : QuickActionButton(btn, fragment) {
     private val prefs by lazy { UserPreferences(context) }

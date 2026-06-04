@@ -9,6 +9,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.quickactions.ImageButtonQuickActionView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -71,12 +72,12 @@ class MainActivityQuickActionBinder(
         val factory = QuickActionFactory()
 
         recommended.distinct().forEach {
-            val action = factory.create(it, createButton(true), fragment)
+            val action = factory.create(it, ImageButtonQuickActionView(createButton(true)), fragment)
             action.bind(fragment.viewLifecycleOwner)
         }
 
         selected.forEach {
-            val action = factory.create(it, createButton(false), fragment)
+            val action = factory.create(it, ImageButtonQuickActionView(createButton(false)), fragment)
             action.bind(fragment.viewLifecycleOwner)
         }
     }

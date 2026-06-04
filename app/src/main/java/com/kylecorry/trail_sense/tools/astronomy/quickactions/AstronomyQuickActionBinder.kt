@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
 import com.kylecorry.andromeda.views.toolbar.Toolbar
+import com.kylecorry.trail_sense.shared.quickactions.ImageButtonQuickActionView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyPreferences
@@ -14,8 +15,16 @@ class AstronomyQuickActionBinder(
 
     override fun bind() {
         val factory = QuickActionFactory()
-        val left = factory.create(prefs.leftButton, astronomyTitle.leftButton, fragment)
-        val right = factory.create(prefs.rightButton, astronomyTitle.rightButton, fragment)
+        val left = factory.create(
+            prefs.leftButton,
+            ImageButtonQuickActionView(astronomyTitle.leftButton),
+            fragment
+        )
+        val right = factory.create(
+            prefs.rightButton,
+            ImageButtonQuickActionView(astronomyTitle.rightButton),
+            fragment
+        )
         left.bind(fragment)
         right.bind(fragment)
     }

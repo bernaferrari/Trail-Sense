@@ -5,9 +5,12 @@ import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.automations.Automation
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object Automations {
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     fun setup(context: Context) {
         val tools = Tools.getTools(context, false)
@@ -18,20 +21,22 @@ object Automations {
             // TODO: Should there be a way to unregister? Maybe only register when something is listening? When to cancel queue?
             Tools.subscribe(broadcastId) { data ->
 //                Log.d("Tool Broadcast", broadcastId)
-                queue.enqueue {
-                    val automationsToRun = getAutomations(context, broadcastId)
-                    val actionsToRun = automationsToRun.flatMap { it.actions }
+                scope.launch {
+                    queue.enqueue {
+                        val automationsToRun = getAutomations(context, broadcastId)
+                        val actionsToRun = automationsToRun.flatMap { it.actions }
 
-                    val availableActions = tools
-                        .flatMap { it.actions }
-                        .filter { actionsToRun.contains(it.id) && it.isEnabled(context) }
+                        val availableActions = tools
+                            .flatMap { it.actions }
+                            .filter { actionsToRun.contains(it.id) && it.isEnabled(context) }
 
-                    automationsToRun.forEach {
-                        for (action in it.actions) {
-                            val toolAction =
-                                availableActions.firstOrNull { r -> r.id == action } ?: continue
+                        automationsToRun.forEach {
+                            for (action in it.actions) {
+                                val toolAction =
+                                    availableActions.firstOrNull { r -> r.id == action } ?: continue
 
-                            toolAction.action.onReceive(context, data)
+                                toolAction.action.onReceive(context, data)
+                            }
                         }
                     }
                 }

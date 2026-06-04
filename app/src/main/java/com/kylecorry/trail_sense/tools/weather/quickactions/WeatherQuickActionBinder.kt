@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.quickactions
 
 import com.kylecorry.andromeda.views.toolbar.Toolbar
+import com.kylecorry.trail_sense.shared.quickactions.ImageButtonQuickActionView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherPreferences
@@ -14,8 +15,16 @@ class WeatherQuickActionBinder(
 
     override fun bind() {
         val factory = QuickActionFactory()
-        val left = factory.create(prefs.leftButton, weatherTitle.leftButton, fragment)
-        val right = factory.create(prefs.rightButton, weatherTitle.rightButton, fragment)
+        val left = factory.create(
+            prefs.leftButton,
+            ImageButtonQuickActionView(weatherTitle.leftButton),
+            fragment
+        )
+        val right = factory.create(
+            prefs.rightButton,
+            ImageButtonQuickActionView(weatherTitle.rightButton),
+            fragment
+        )
         left.bind(fragment)
         right.bind(fragment)
     }

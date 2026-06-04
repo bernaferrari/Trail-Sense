@@ -84,8 +84,8 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
 
         toolbar = Toolbar(context, null).apply {
             id = R.id.navigation_sheet_title
-            leftButton.setImageResource(R.drawable.ic_tool_notes)
-            rightButton.setImageResource(R.drawable.ic_cancel)
+            leftButton.setIconResource(R.drawable.ic_tool_notes)
+            rightButton.setIconResource(R.drawable.ic_cancel)
         }
         root.addView(
             toolbar,
