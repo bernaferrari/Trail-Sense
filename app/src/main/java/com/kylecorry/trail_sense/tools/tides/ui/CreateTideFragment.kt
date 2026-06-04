@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,7 +65,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
-import com.kylecorry.trail_sense.shared.views.DurationInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -745,28 +746,114 @@ private fun LunitidalIntervalInput(
     onDurationChange: (Duration?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val hint = stringResource(R.string.lunitidal_interval)
+    val absoluteDuration = duration?.abs()
+    var isNegative by remember {
+        mutableStateOf(duration?.isNegative == true)
+    }
+    var hoursText by remember {
+        mutableStateOf(formatDurationHours(absoluteDuration))
+    }
+    var minutesText by remember {
+        mutableStateOf(formatDurationMinutes(absoluteDuration))
+    }
 
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            DurationInputView(context, null).apply {
-                id = R.id.lunitidal_interval_duration
-                showSeconds = false
-                allowNegative = true
-                this.hint = hint
-                setOnDurationChangeListener(onDurationChange)
-            }
-        },
-        update = { input ->
-            input.showSeconds = false
-            input.allowNegative = true
-            input.hint = hint
-            if (input.duration != duration) {
-                input.updateDuration(duration)
-            }
+    fun publish(
+        hours: String = hoursText,
+        minutes: String = minutesText,
+        negative: Boolean = isNegative
+    ) {
+        onDurationChange(parseLunitidalInterval(hours, minutes, negative))
+    }
+
+    LaunchedEffect(duration) {
+        val parsed = parseLunitidalInterval(hoursText, minutesText, isNegative)
+        if (parsed != duration) {
+            isNegative = duration?.isNegative == true
+            hoursText = formatDurationHours(absoluteDuration)
+            minutesText = formatDurationMinutes(absoluteDuration)
         }
-    )
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("lunitidal_interval_duration"),
+        verticalAlignment = Alignment.Top
+    ) {
+        IconButton(
+            onClick = {
+                isNegative = !isNegative
+                publish(negative = isNegative)
+            },
+            modifier = Modifier.testTag("negate_btn")
+        ) {
+            Icon(
+                painter = painterResource(if (isNegative) R.drawable.ic_minus else R.drawable.ic_add),
+                contentDescription = null
+            )
+        }
+        OutlinedTextField(
+            value = hoursText,
+            onValueChange = {
+                hoursText = it.filter(Char::isDigit).take(2)
+                publish(hours = hoursText)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("duration_hours"),
+            label = { Text(stringResource(R.string.hours)) },
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlinedTextField(
+            value = minutesText,
+            onValueChange = {
+                minutesText = it.filter(Char::isDigit).take(2)
+                publish(minutes = minutesText)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("duration_minutes"),
+            label = { Text(stringResource(R.string.minutes)) },
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+    }
+}
+
+private fun parseLunitidalInterval(
+    hours: String,
+    minutes: String,
+    isNegative: Boolean
+): Duration? {
+    val parsedHours = hours.toLongOrNull()
+    val parsedMinutes = minutes.toLongOrNull()
+    if (parsedHours == null && parsedMinutes == null) {
+        return null
+    }
+
+    val duration = Duration
+        .ofHours((parsedHours ?: 0L).coerceIn(0L, 99L))
+        .plusMinutes((parsedMinutes ?: 0L).coerceIn(0L, 99L))
+
+    return if (isNegative) {
+        duration.negated()
+    } else {
+        duration
+    }
+}
+
+private fun formatDurationHours(duration: Duration?): String {
+    return duration?.toHours()?.coerceIn(0L, 99L)?.toString() ?: ""
+}
+
+private fun formatDurationMinutes(duration: Duration?): String {
+    return duration?.toMinutes()?.rem(60)?.coerceIn(0L, 99L)?.toString() ?: ""
 }
 
 @Composable
