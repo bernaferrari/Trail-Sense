@@ -18,15 +18,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +54,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.views.chart.Chart
+import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateGroup
@@ -59,20 +71,28 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
-import com.kylecorry.trail_sense.shared.views.ElevationInputView
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.climate.domain.BiologicalActivityType
 import com.kylecorry.trail_sense.tools.climate.domain.PhenologyService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.Month
 
@@ -103,9 +123,9 @@ class ClimateFragment : Fragment() {
     private var precipitation by mutableStateOf<Map<Month, Distance>?>(null)
     private var climateClassification by mutableStateOf<Pair<String, String>?>(null)
     private var activityPatterns by mutableStateOf<Map<BiologicalActivityType, List<Range<LocalDate>>>?>(null)
+    private var locationAutofillRequest by mutableStateOf(0)
+    private var elevationAutofillRequest by mutableStateOf(0)
 
-    private var locationInputView: CoordinateInputView? = null
-    private var elevationInputView: ElevationInputView? = null
     private var loadJob: Job? = null
 
     override fun onCreateView(
@@ -138,13 +158,24 @@ class ClimateFragment : Fragment() {
                         onPrecipitationMonthSelected = ::setMonthFromChart,
                         onLocationChange = ::setLocationFromInput,
                         onElevationChange = ::setElevationFromInput,
-                        onLocationCreated = {
-                            locationInputView = it
-                            bindCoordinateAndElevationViews()
+                        locationAutofillRequest = locationAutofillRequest,
+                        onAutoLocationClick = {
+                            if (this@ClimateFragment.elevation == null) {
+                                elevationAutofillRequest++
+                            }
                         },
-                        onElevationCreated = {
-                            elevationInputView = it
-                            bindCoordinateAndElevationViews()
+                        onLocationBeaconSelected = {
+                            it.elevation?.let { beaconElevation ->
+                                setElevationFromInput(
+                                    Distance.meters(beaconElevation).convertTo(distanceUnits)
+                                )
+                            }
+                        },
+                        elevationAutofillRequest = elevationAutofillRequest,
+                        onAutoElevationClick = {
+                            if (this@ClimateFragment.location == null) {
+                                locationAutofillRequest++
+                            }
                         },
                         onEcologyClick = ::showEcologyDetails
                     )
@@ -160,16 +191,8 @@ class ClimateFragment : Fragment() {
         loadClimateData()
     }
 
-    override fun onPause() {
-        locationInputView?.pause()
-        elevationInputView?.pause()
-        super.onPause()
-    }
-
     override fun onDestroyView() {
         loadJob?.cancel()
-        locationInputView = null
-        elevationInputView = null
         super.onDestroyView()
     }
 
@@ -236,29 +259,6 @@ class ClimateFragment : Fragment() {
             precipitation = result.second
             activityPatterns = result.third
             climateClassification = getClimateDescription(result.first, result.second)
-        }
-    }
-
-    private fun bindCoordinateAndElevationViews() {
-        val coordinate = locationInputView ?: return
-        val elevation = elevationInputView ?: return
-
-        coordinate.setOnAutoLocationClickListener {
-            if (elevation.elevation == null) {
-                elevation.autofill()
-            }
-        }
-
-        elevation.setOnAutoElevationClickListener {
-            if (coordinate.coordinate == null) {
-                coordinate.autofill()
-            }
-        }
-
-        coordinate.setOnBeaconSelectedListener {
-            it.elevation?.let { beaconElevation ->
-                elevation.elevation = Distance.meters(beaconElevation).convertTo(distanceUnits)
-            }
         }
     }
 
@@ -505,8 +505,11 @@ private fun ClimateScreen(
     onPrecipitationMonthSelected: (Month) -> Unit,
     onLocationChange: (Coordinate?) -> Unit,
     onElevationChange: (Distance?) -> Unit,
-    onLocationCreated: (CoordinateInputView) -> Unit,
-    onElevationCreated: (ElevationInputView) -> Unit,
+    locationAutofillRequest: Int,
+    onAutoLocationClick: () -> Unit,
+    onLocationBeaconSelected: (Beacon) -> Unit,
+    elevationAutofillRequest: Int,
+    onAutoElevationClick: () -> Unit,
     onEcologyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -533,13 +536,16 @@ private fun ClimateScreen(
                 CoordinateInput(
                     location = location,
                     onLocationChange = onLocationChange,
-                    onLocationCreated = onLocationCreated
+                    autoFillRequest = locationAutofillRequest,
+                    onAutoLocationClick = onAutoLocationClick,
+                    onBeaconSelected = onLocationBeaconSelected
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 ElevationInput(
                     elevation = elevation,
                     onElevationChange = onElevationChange,
-                    onElevationCreated = onElevationCreated
+                    autoFillRequest = elevationAutofillRequest,
+                    onAutoElevationClick = onAutoElevationClick
                 )
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.default_bottom_margin)))
                 SectionTitle(text = temperatureTitle)
@@ -708,47 +714,306 @@ private fun DatePickerInput(
 private fun CoordinateInput(
     location: Coordinate?,
     onLocationChange: (Coordinate?) -> Unit,
-    onLocationCreated: (CoordinateInputView) -> Unit,
+    autoFillRequest: Int,
+    onAutoLocationClick: () -> Unit,
+    onBeaconSelected: (Beacon) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            CoordinateInputView(context).apply {
-                id = R.id.location
-                setOnCoordinateChangeListener(onLocationChange)
-                onLocationCreated(this)
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val scope = rememberCoroutineScope()
+    var locationText by remember(location, formatter) {
+        mutableStateOf(location?.let { formatter.formatLocation(it) }.orEmpty())
+    }
+    val parsedCoordinate = remember(locationText) {
+        Coordinate.parse(locationText)
+    }
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
+
+    fun autofillFromGps(triggerLinkedAutofill: Boolean = true) {
+        if (triggerLinkedAutofill) {
+            onAutoLocationClick()
+        }
+        scope.launch {
+            isLoadingLocation = true
+            val updated = withContext(Dispatchers.IO) {
+                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
             }
-        },
-        update = { input ->
-            if (input.coordinate != location) {
-                input.coordinate = location
+            locationText = formatter.formatLocation(updated)
+            onLocationChange(updated)
+            isLoadingLocation = false
+        }
+    }
+
+    LaunchedEffect(location) {
+        val formatted = location?.let { formatter.formatLocation(it) }.orEmpty()
+        if (locationText != formatted) {
+            locationText = formatted
+        }
+    }
+
+    LaunchedEffect(autoFillRequest) {
+        if (autoFillRequest > 0) {
+            autofillFromGps(triggerLinkedAutofill = false)
+        }
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isLoadingLocation) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("gps_loading")
+            )
+        } else {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.gps),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> autofillFromGps()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                ) ?: return@launch
+                                locationText = formatter.formatLocation(beacon.coordinate)
+                                onLocationChange(beacon.coordinate)
+                                onBeaconSelected(beacon)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_location),
+                    contentDescription = stringResource(R.string.gps)
+                )
             }
         }
-    )
+        Spacer(modifier = Modifier.size(8.dp))
+        OutlinedTextField(
+            value = locationText,
+            onValueChange = {
+                locationText = it
+                onLocationChange(Coordinate.parse(it))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("utm"),
+            label = { Text(stringResource(R.string.location)) },
+            isError = locationText.isNotBlank() && parsedCoordinate == null,
+            supportingText = {
+                if (locationText.isNotBlank() && parsedCoordinate == null) {
+                    Text(stringResource(R.string.coordinate_input_invalid_location))
+                }
+            },
+            singleLine = true,
+            enabled = !isLoadingLocation
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        IconButton(
+            onClick = { showHelp = true },
+            modifier = Modifier.testTag("coordinate_input_help_btn")
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_help),
+                contentDescription = stringResource(R.string.location_input_help_title)
+            )
+        }
+    }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.location_input_help_title)) },
+            text = { Text(stringResource(R.string.location_input_help)) }
+        )
+    }
 }
 
 @Composable
 private fun ElevationInput(
     elevation: Distance?,
     onElevationChange: (Distance?) -> Unit,
-    onElevationCreated: (ElevationInputView) -> Unit,
+    autoFillRequest: Int,
+    onAutoElevationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val scope = rememberCoroutineScope()
+    val units = remember {
+        formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
+    }
+    var unit by remember(units) {
+        mutableStateOf(elevation?.units ?: UserPreferences(context).baseDistanceUnits)
+    }
+    var elevationText by remember {
+        mutableStateOf(formatElevationAmount(elevation, unit))
+    }
+    var isLoadingElevation by remember { mutableStateOf(false) }
+    var isUnitOpen by remember { mutableStateOf(false) }
+
+    fun publish(text: String = elevationText, newUnit: DistanceUnits = unit) {
+        onElevationChange(parseElevation(text, newUnit))
+    }
+
+    fun autofillFromAltimeter(triggerLinkedAutofill: Boolean = true) {
+        if (triggerLinkedAutofill) {
+            onAutoElevationClick()
+        }
+        scope.launch {
+            isLoadingElevation = true
+            val updated = withContext(Dispatchers.IO) {
+                sensors.getElevation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+            }.convertTo(unit)
+            elevationText = formatElevationAmount(updated, unit)
+            onElevationChange(updated)
+            isLoadingElevation = false
+        }
+    }
+
+    LaunchedEffect(elevation) {
+        val current = parseElevation(elevationText, unit)
+        if (current != elevation) {
+            val newUnit = elevation?.units ?: unit
+            unit = newUnit
+            elevationText = formatElevationAmount(elevation, newUnit)
+        }
+    }
+
+    LaunchedEffect(autoFillRequest) {
+        if (autoFillRequest > 0) {
+            autofillFromAltimeter(triggerLinkedAutofill = false)
+        }
+    }
+
+    Row(
         modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            ElevationInputView(context).apply {
-                id = R.id.elevation
-                setOnElevationChangeListener(onElevationChange)
-                onElevationCreated(this)
-            }
-        },
-        update = { input ->
-            if (input.elevation != elevation) {
-                input.elevation = elevation
+        verticalAlignment = Alignment.Top
+    ) {
+        if (isLoadingElevation) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("elevation_loading")
+            )
+        } else {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.pref_altimeter_calibration_title),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) { selection ->
+                        when (selection) {
+                            0 -> autofillFromAltimeter()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                ) { beacons: List<IBeacon> ->
+                                    beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
+                                } ?: return@launch
+                                val updated = Distance.meters(beacon.elevation!!).convertTo(unit)
+                                elevationText = formatElevationAmount(updated, unit)
+                                onElevationChange(updated)
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("elevation_gps_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_altitude),
+                    contentDescription = stringResource(R.string.elevation)
+                )
             }
         }
+        Spacer(modifier = Modifier.size(8.dp))
+        OutlinedTextField(
+            value = elevationText,
+            onValueChange = {
+                elevationText = it
+                publish(text = it)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .testTag("elevation_input"),
+            label = { Text(stringResource(R.string.elevation)) },
+            singleLine = true,
+            enabled = !isLoadingElevation
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Box(modifier = Modifier.weight(1f)) {
+            OutlinedButton(
+                onClick = { isUnitOpen = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("elevation_unit")
+            ) {
+                Text(formatter.getDistanceUnitName(unit))
+            }
+            DropdownMenu(
+                expanded = isUnitOpen,
+                onDismissRequest = { isUnitOpen = false }
+            ) {
+                units.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(formatter.getDistanceUnitName(option)) },
+                        onClick = {
+                            isUnitOpen = false
+                            val converted = parseElevation(elevationText, unit)?.convertTo(option)
+                            unit = option
+                            elevationText = formatElevationAmount(converted, option)
+                            publish(text = elevationText, newUnit = option)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun parseElevation(text: String, unit: DistanceUnits): Distance? {
+    return text.toDoubleCompat()?.let {
+        Distance.from(it.toFloat(), unit)
+    }
+}
+
+private fun formatElevationAmount(elevation: Distance?, unit: DistanceUnits): String {
+    val converted = elevation?.convertTo(unit) ?: return ""
+    return DecimalFormatter.format(
+        converted.value,
+        Units.getDecimalPlaces(converted.units),
+        strict = false
     )
 }
 
@@ -835,8 +1100,11 @@ private fun ClimateScreenPreview() {
             onPrecipitationMonthSelected = {},
             onLocationChange = {},
             onElevationChange = {},
-            onLocationCreated = {},
-            onElevationCreated = {},
+            locationAutofillRequest = 0,
+            onAutoLocationClick = {},
+            onLocationBeaconSelected = {},
+            elevationAutofillRequest = 0,
+            onAutoElevationClick = {},
             onEcologyClick = {}
         )
     }

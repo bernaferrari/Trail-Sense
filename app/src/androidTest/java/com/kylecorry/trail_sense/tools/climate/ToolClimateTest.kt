@@ -18,8 +18,8 @@ class ToolClimateTest : ToolTestBase(Tools.CLIMATE) {
     fun verifyBasicFunctionality() {
         // Verify today is selected by default
         hasText(string(R.string.today))
-        input(R.id.utm, "42, -72")
-        input(R.id.elevation_input, "1000")
+        input(id("utm")(), "42, -72")
+        input(id("elevation_input")(), "1000")
 
         // Change the date
         click(id("date_btn"))
