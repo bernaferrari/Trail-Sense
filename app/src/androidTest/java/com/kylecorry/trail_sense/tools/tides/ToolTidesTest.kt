@@ -44,7 +44,7 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         hasText(string(R.string.tide_table))
 
         // Verify the fields are set
-        hasText(R.id.tide_name) { it.startsWith("Tide 1") }
+        hasText(id("tide_name")) { it.startsWith("Tide 1") }
 
         // Select lunitidal interval
         click(R.id.estimate_algorithm_spinner)
@@ -76,7 +76,7 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
 
         // Enter the tide details
         hasText(string(R.string.tide_table))
-        input(R.id.tide_name, "Tide 1")
+        input(id("tide_name")(), "Tide 1")
         isChecked(R.id.tide_frequency_semidiurnal)
         input(R.id.utm, "42, -72")
 

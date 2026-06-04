@@ -1,17 +1,14 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
-import android.text.InputType
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.IdRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -54,14 +52,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.view.setPadding
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -486,11 +481,10 @@ private fun CreateTideScreen(
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp, bottom = 96.dp)
             ) {
-                AndroidTextInput(
+                TideTextInput(
                     text = name,
                     label = stringResource(R.string.name),
-                    inputType = InputType.TYPE_CLASS_TEXT,
-                    viewId = R.id.tide_name,
+                    tag = "tide_name",
                     onTextChange = onNameChange
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -602,46 +596,21 @@ private fun CreateTideHeader(
 }
 
 @Composable
-private fun AndroidTextInput(
+private fun TideTextInput(
     text: String,
     label: String,
-    inputType: Int,
-    @IdRes viewId: Int,
+    tag: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier.fillMaxWidth(),
-        factory = { context ->
-            TextInputLayout(context).apply {
-                hint = label
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                addView(
-                    TextInputEditText(context).apply {
-                        id = viewId
-                        this.inputType = inputType
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.WRAP_CONTENT
-                        )
-                        doAfterTextChanged {
-                            onTextChange(it?.toString().orEmpty())
-                        }
-                    }
-                )
-            }
-        },
-        update = { input ->
-            input.hint = label
-            val editText = input.editText
-            if (editText?.text?.toString() != text) {
-                editText?.setText(text)
-                editText?.setSelection(editText.text?.length ?: 0)
-            }
-        }
+    OutlinedTextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(tag),
+        label = { Text(label) },
+        singleLine = true
     )
 }
 
