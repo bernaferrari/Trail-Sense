@@ -5,21 +5,31 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.views.list.AndromedaListView
-import com.kylecorry.andromeda.views.list.DrawableListIcon
-import com.kylecorry.andromeda.views.list.ListItem
-import com.kylecorry.andromeda.views.list.ResourceListIcon
-import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.SearchView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
@@ -159,13 +169,14 @@ class AstronomyGuidanceTargetPicker(
     ): AstronomyGuidanceOption? = suspendCoroutine { cont ->
         val dialogView = createSearchListDialog(view.context)
         val search = dialogView.findViewById<SearchView>(R.id.search)
-        val list = dialogView.findViewById<AndromedaListView>(R.id.list)
+        val list = dialogView.findViewById<ComposeView>(R.id.list)
         val empty = dialogView.findViewById<TextView>(R.id.empty_text)
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
+        var filteredOptions by mutableStateOf(options)
 
-        list.emptyView = empty
         empty.text = view.context.getString(R.string.no_results)
+        empty.isVisible = options.isEmpty()
 
         val alert = Alerts.dialog(
             view.context,
@@ -179,33 +190,34 @@ class AstronomyGuidanceTargetPicker(
             }
         }
 
-        fun renderOptions(filtered: List<AstronomyGuidanceOption>) {
-            list.setItems(filtered.mapIndexed { index, option ->
-                ListItem(
-                    index.toLong(),
-                    option.name,
-                    option.subtitle,
-                    icon = option.iconBitmap?.let {
-                        DrawableListIcon(
-                            BitmapDrawable(view.context.resources, it),
-                            tint = option.iconTint,
-                            rotation = option.iconRotation
+        list.setContent {
+            TrailSenseTheme {
+                LazyColumn(
+                    modifier = Modifier.testTag("astronomy_guidance_target_list")
+                ) {
+                    items(filteredOptions, key = { it.name }) { option ->
+                        TrailSenseListItem(
+                            title = option.name,
+                            subtitle = option.subtitle,
+                            icon = painterResource(option.icon),
+                            iconTint = option.iconTint?.let { Color(it) }
+                                ?: MaterialTheme.colorScheme.primary,
+                            iconRotation = option.iconRotation,
+                            onClick = {
+                                selected = option
+                                if (!resumed) {
+                                    resumed = true
+                                    cont.resume(option)
+                                }
+                                alert.dismiss()
+                            },
+                            animateEntrance = false,
+                            modifier = Modifier.testTag("astronomy_guidance_target")
                         )
-                    } ?: ResourceListIcon(
-                        option.icon,
-                        tint = option.iconTint,
-                        rotation = option.iconRotation
-                    ),
-                    action = {
-                        selected = option
-                        if (!resumed) {
-                            resumed = true
-                            cont.resume(option)
-                        }
-                        alert.dismiss()
+                        TrailSenseDivider()
                     }
-                )
-            })
+                }
+            }
         }
 
         search.setOnSearchListener { query ->
@@ -216,10 +228,9 @@ class AstronomyGuidanceTargetPicker(
                     listOfNotNull(it.name, it.subtitle)
                 }
             }
-            renderOptions(filtered)
+            filteredOptions = filtered
+            empty.isVisible = filtered.isEmpty()
         }
-
-        renderOptions(options)
     }
 
     private fun createSearchListDialog(context: Context): View {
@@ -260,9 +271,9 @@ class AstronomyGuidanceTargetPicker(
         )
 
         root.addView(
-            AndromedaListView(context, null).apply {
+            ComposeView(context).apply {
                 id = R.id.list
-                setPadding(paddingLeft, paddingTop, paddingRight, 0)
+                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             },
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
