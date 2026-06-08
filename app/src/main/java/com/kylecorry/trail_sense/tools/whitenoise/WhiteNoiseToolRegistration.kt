@@ -40,7 +40,7 @@ object WhiteNoiseToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { _, isToolOpen, _ -> isToolOpen || WhiteNoiseService.isRunning },
-                    ::SystemVolumeAction
+                    { SystemVolumeAction() }
                 )
             ),
             notificationChannelGroups = listOf(

@@ -28,7 +28,7 @@ object AugmentedRealityToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.Normal,
                     { _, isOpen, _ -> isOpen },
-                    ::SystemVolumeAction
+                    { SystemVolumeAction() }
                 )
             ),
             diagnostics = listOf(

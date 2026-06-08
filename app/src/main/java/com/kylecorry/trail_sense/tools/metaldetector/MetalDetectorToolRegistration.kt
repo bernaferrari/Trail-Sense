@@ -26,7 +26,7 @@ object MetalDetectorToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.Normal,
                     { context, isToolOpen, _ -> isToolOpen && UserPreferences(context).metalDetector.isMetalAudioEnabled },
-                    ::SystemVolumeAction
+                    { SystemVolumeAction() }
                 )
             ),
             isAvailable = { SensorService(it).hasCompass() },

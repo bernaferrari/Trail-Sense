@@ -32,7 +32,7 @@ object WhistleToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { _, isToolOpen, _ -> isToolOpen || QuickActionWhistle.isRunning },
-                    ::SystemVolumeAction
+                    { SystemVolumeAction() }
                 )
             )
         )
