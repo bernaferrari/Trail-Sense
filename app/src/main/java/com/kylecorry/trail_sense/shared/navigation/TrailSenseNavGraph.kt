@@ -1212,15 +1212,23 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mirrorCameraFragment
-            setClassName("com.kylecorry.trail_sense.tools.mirror.ui.ToolMirrorCameraFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolMirrorCameraFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MIRROR_CAMERA)
+                .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.magnifierFragment
-            setClassName("com.kylecorry.trail_sense.tools.magnifier.ui.ToolMagnifierFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolMagnifierFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MAGNIFIER)
+                .build())
             graph.addDestination(this)
         }
 

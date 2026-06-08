@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import android.content.Context
 import android.content.Intent
+import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
@@ -50,6 +51,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.CurrentApp
@@ -58,8 +60,10 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -84,6 +88,8 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -102,6 +108,8 @@ import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
+import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
@@ -177,7 +185,21 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                     UserGuideUtils.showGuide(this, R.raw.guide_tool_cliff_height)
                 }
             )
+            DESTINATION_MAGNIFIER -> MagnifierScreen(
+                onRequestCamera = ::requestCameraForMagnifier
+            )
+            DESTINATION_MIRROR_CAMERA -> MirrorCamera()
         }
+    }
+
+    @Composable
+    private fun MirrorCamera() {
+        val flashlight = remember { ScreenTorch(requireActivity().window) }
+        MirrorCameraScreen(
+            onRequestCamera = ::requestCameraForMirror,
+            onResumeScreen = { flashlight.on() },
+            onPauseScreen = { flashlight.off() }
+        )
     }
 
     @Composable
@@ -1270,6 +1292,26 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         layerSheet?.show(this)
     }
 
+    private fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+            val isAvailable = Camera.isAvailable(requireContext())
+            if (!isAvailable) {
+                alertNoCameraPermission()
+            }
+            action(isAvailable)
+        }
+    }
+
+    private fun requestCameraForMirror(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+            val isAvailable = Permissions.isCameraEnabled(requireContext())
+            if (!isAvailable) {
+                alertNoCameraPermission()
+            }
+            action(isAvailable)
+        }
+    }
+
     private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSettingsState {
         return PluginSettingsState(
             connected = pluginSubsystem.getConnectedPlugins().sortedPlugins(),
@@ -1436,5 +1478,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_PLUGINS_SETTINGS = "plugins_settings"
         const val DESTINATION_MAP_SETTINGS = "map_settings"
         const val DESTINATION_CLIFF_HEIGHT = "cliff_height"
+        const val DESTINATION_MAGNIFIER = "magnifier"
+        const val DESTINATION_MIRROR_CAMERA = "mirror_camera"
     }
 }

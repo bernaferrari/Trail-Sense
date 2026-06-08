@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.mirror.ui
 
-import android.Manifest
 import android.graphics.Color
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -24,38 +25,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.torch.ScreenTorch
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
-import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
-
-class ToolMirrorCameraFragment : TrailSenseComposeFragment() {
-    private val flashlight by lazy { ScreenTorch(requireActivity().window) }
-
-    @Composable
-    override fun FragmentContent() {
-        MirrorCameraScreen(
-            onRequestCamera = ::requestCameraPermission,
-            onResumeScreen = { flashlight.on() },
-            onPauseScreen = { flashlight.off() }
-        )
-    }
-
-    private fun requestCameraPermission(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            val isAvailable = Permissions.isCameraEnabled(requireContext())
-            if (!isAvailable) {
-                alertNoCameraPermission()
-            }
-            action(isAvailable)
-        }
-    }
-}
 
 @Composable
-private fun MirrorCameraScreen(
+internal fun MirrorCameraScreen(
     onRequestCamera: ((Boolean) -> Unit) -> Unit,
     onResumeScreen: () -> Unit,
     onPauseScreen: () -> Unit,

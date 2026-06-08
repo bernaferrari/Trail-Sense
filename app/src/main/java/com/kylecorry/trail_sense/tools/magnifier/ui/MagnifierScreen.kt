@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.magnifier.ui
 
-import android.Manifest
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -35,35 +36,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.camera.Camera
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
-import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
-
-class ToolMagnifierFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        MagnifierScreen(
-            onRequestCamera = ::requestCameraPermission
-        )
-    }
-
-    private fun requestCameraPermission(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            val isAvailable = Camera.isAvailable(requireContext())
-            if (!isAvailable) {
-                alertNoCameraPermission()
-            }
-            action(isAvailable)
-        }
-    }
-}
 
 @Composable
-private fun MagnifierScreen(
+internal fun MagnifierScreen(
     onRequestCamera: ((Boolean) -> Unit) -> Unit,
     modifier: Modifier = Modifier
 ) {
