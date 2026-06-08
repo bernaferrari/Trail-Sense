@@ -702,7 +702,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
     )
     root.addView(
-        zoomInBtn,
+        zoomInBtn.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -714,7 +714,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
     )
     root.addView(
-        zoomOutBtn,
+        zoomOutBtn.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -726,7 +726,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
     )
     root.addView(
-        lockBtn,
+        lockBtn.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT

@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,7 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -21,10 +23,52 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 class PhotoMapIconButton(
     context: Context,
     icon: Int
-) : AbstractComposeView(context) {
+) {
 
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var alpha: Float
+        get() = view.alpha
+        set(value) {
+            view.alpha = value
+        }
+
+    var isClickable: Boolean
+        get() = view.isClickable
+        set(value) {
+            view.isClickable = value
+        }
+
+    var isFocusable: Boolean
+        get() = view.isFocusable
+        set(value) {
+            view.isFocusable = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
 
     fun setImageResource(icon: Int) {
         iconRes = icon
@@ -35,7 +79,7 @@ class PhotoMapIconButton(
     }
 
     @Composable
-    override fun Content() {
+    private fun Content() {
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -47,21 +91,19 @@ class PhotoMapIconButton(
             MaterialTheme.colorScheme.onSurfaceVariant
         }
 
-        TrailSenseTheme {
-            Surface(
-                modifier = Modifier.size(40.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = background,
-                shadowElevation = 6.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(iconRes),
-                        contentDescription = null,
-                        tint = foreground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            color = background,
+            shadowElevation = 6.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
