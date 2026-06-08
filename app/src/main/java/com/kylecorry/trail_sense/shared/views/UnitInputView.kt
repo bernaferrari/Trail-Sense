@@ -5,7 +5,6 @@ import android.text.InputType
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.widget.addTextChangedListener
@@ -85,7 +84,7 @@ class UnitInputView<Units : Enum<*>>(
 
     private var amountEdit: TextInputEditText
     private var amountEditHolder: TextInputLayout
-    private var unitBtn: Button
+    private var unitBtn: UnitPickerButton
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
@@ -141,7 +140,7 @@ class UnitInputView<Units : Enum<*>>(
             )
         )
 
-        unitBtn = Button(context).apply {
+        unitBtn = UnitPickerButton(context).apply {
             id = R.id.units
         }
         root.addView(
@@ -153,8 +152,6 @@ class UnitInputView<Units : Enum<*>>(
                 marginStart = Resources.dp(context, 8f).toInt()
             }
         )
-
-        unitBtn.isAllCaps = false
         allowNegative = true
 
         amountEdit.addTextChangedListener {

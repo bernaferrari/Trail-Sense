@@ -5,7 +5,6 @@ import android.text.InputType
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
@@ -116,7 +115,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
     private var amountEditHolder: TextInputLayout
     private var secondaryAmountEdit: TextInputEditText
     private var secondaryAmountEditHolder: TextInputLayout
-    private var unitBtn: Button
+    private var unitBtn: UnitPickerButton
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
@@ -216,7 +215,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
 
         secondaryAmountEditHolder.isVisible = _showSecondary
 
-        unitBtn = Button(context).apply {
+        unitBtn = UnitPickerButton(context).apply {
             id = R.id.units
         }
         root.addView(
@@ -228,8 +227,6 @@ class MultipartUnitInputView<Units : Enum<*>>(
                 marginStart = Resources.dp(context, 8f).toInt()
             }
         )
-        unitBtn.isAllCaps = false
-
         amountEdit.addTextChangedListener {
             _amount = it?.toString()?.toDoubleCompat()
             onChange?.invoke(amount, secondaryAmount, unit)

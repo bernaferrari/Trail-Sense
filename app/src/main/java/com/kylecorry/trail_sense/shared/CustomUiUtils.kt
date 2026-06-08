@@ -12,7 +12,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -41,7 +40,6 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setState
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.dismissOnPause
 import com.kylecorry.andromeda.fragments.show
@@ -77,17 +75,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 object CustomUiUtils {
-    fun setButtonState(
-        button: Button,
-        isOn: Boolean
-    ) {
-        button.setState(
-            isOn,
-            Resources.getPrimaryColor(button.context),
-            Resources.getColorOnPrimary(button.context)
-        )
-    }
-
     @ColorInt
     fun getQualityColor(quality: Quality): Int {
         return when (quality) {
