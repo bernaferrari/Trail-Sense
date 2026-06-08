@@ -52,7 +52,6 @@ import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
-import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
@@ -78,7 +77,7 @@ class MainActivity : AndromedaActivity() {
         get() = mainViews!!
 
     private val navController: NavController?
-        get() = findNavController()
+        get() = rootNavController
 
     val errorBanner: ErrorBannerState
         get() = views.errorBanner
@@ -87,6 +86,7 @@ class MainActivity : AndromedaActivity() {
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
 
     private val themeProvider = ThemeProvider()
+    private var rootNavController: NavController? = null
 
     private val permissions = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -165,7 +165,10 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun setupNavHost() {
-        if (supportFragmentManager.findFragmentById(R.id.fragment_holder) != null) {
+        val existingNavHost =
+            supportFragmentManager.findFragmentById(R.id.fragment_holder) as? NavHostFragment
+        if (existingNavHost != null) {
+            rootNavController = existingNavHost.navController
             return
         }
 
@@ -174,6 +177,11 @@ class MainActivity : AndromedaActivity() {
             replace(R.id.fragment_holder, navHost)
             setPrimaryNavigationFragment(navHost)
         }
+        rootNavController = navHost.navController
+    }
+
+    fun getRootNavController(): NavController? {
+        return rootNavController
     }
 
     /**
