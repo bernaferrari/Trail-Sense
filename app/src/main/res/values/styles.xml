@@ -115,6 +115,23 @@
         <item name="dialogCornerRadius">@dimen/rounded_corner_size</item>
     </style>
 
+    <style name="SnackBarButtonTheme" parent="Widget.Material3Expressive.Button.TextButton.Snackbar">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="Widget.App.FloatingActionButton" parent="Widget.Material3Expressive.FloatingActionButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FloatingActionButton</item>
+    </style>
+
+    <style name="Widget.App.FloatingActionButtonSmall" parent="Widget.Material3.FloatingActionButton.Small.Primary">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FloatingActionButton</item>
+    </style>
+
+    <style name="ThemeOverlay.App.FloatingActionButton" parent="ThemeOverlay.Material3Expressive.FloatingActionButton.Primary">
+        <item name="colorContainer">?attr/colorPrimary</item>
+        <item name="colorOnContainer">?attr/colorOnPrimary</item>
+    </style>
+
     <style name="Widget.App.QuickActionButton" parent="Widget.Material3Expressive.Button.IconButton.Tonal">
         <item name="materialSizeOverlay">
             @style/SizeOverlay.Material3Expressive.Button.IconButton.Small.Square
