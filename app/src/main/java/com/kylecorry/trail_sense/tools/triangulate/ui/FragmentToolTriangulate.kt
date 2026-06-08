@@ -84,7 +84,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.Configurabl
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.camera.SightingCompassBottomSheetFragment
+import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -146,7 +146,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
 
     private val compass by lazy { SensorService(requireContext()).getCompass() }
     private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
-    private var cameraSheet: SightingCompassBottomSheetFragment? = null
+    private var cameraSheet: SightingCompassDialog? = null
     private var cameraBearingIndex: Int? = null
 
     private val layer = ConfigurableGeoJsonLayer()
@@ -291,13 +291,13 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             if (hasPermission) {
                 cameraBearingIndex = index
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassBottomSheetFragment {
+                    cameraSheet = SightingCompassDialog(this) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
                         }
                     }
                 }
-                cameraSheet?.show(this)
+                cameraSheet?.show()
             } else {
                 alertNoCameraPermission()
             }

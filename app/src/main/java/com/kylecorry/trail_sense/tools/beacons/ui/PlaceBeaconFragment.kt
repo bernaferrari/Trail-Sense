@@ -64,7 +64,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
-import com.kylecorry.trail_sense.shared.camera.SightingCompassBottomSheetFragment
+import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -109,7 +109,7 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
 
     private val compass by lazy { SensorService(requireContext()).getCompass() }
     private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
-    private var cameraSheet: SightingCompassBottomSheetFragment? = null
+    private var cameraSheet: SightingCompassDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -293,7 +293,7 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
         requestCamera { hasPermission ->
             if (hasPermission) {
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassBottomSheetFragment {
+                    cameraSheet = SightingCompassDialog(this) {
                         updateData(
                             data.copy(
                                 bearingTo = it,
@@ -302,7 +302,7 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
                         )
                     }
                 }
-                cameraSheet?.show(this)
+                cameraSheet?.show()
             } else {
                 alertNoCameraPermission()
             }

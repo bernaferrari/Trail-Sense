@@ -1,12 +1,15 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
-import android.content.DialogInterface
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.Paint
-import android.os.Bundle
 import android.view.KeyEvent
-import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import androidx.camera.view.PreviewView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -54,6 +57,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
@@ -62,21 +66,22 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseFullscreenComposeDialogFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.sol.units.CompassDirection
 import kotlinx.coroutines.Dispatchers
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class SightingCompassBottomSheetFragment(
+class SightingCompassDialog(
+    private val fragment: Fragment,
     private val onSelect: (bearing: Float?) -> Unit
-) : TrailSenseFullscreenComposeDialogFragment() {
+) {
 
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private var camera: CameraState? = null
-    private var isViewCreated = false
     private var isCameraStarted = false
+    private var dialog: Dialog? = null
     private var bearingState by mutableStateOf<Float?>(null)
     private var compassRange by mutableStateOf(180f)
 
@@ -89,37 +94,42 @@ class SightingCompassBottomSheetFragment(
 
     private val fovRunner = CoroutineQueueRunner(1, dispatcher = Dispatchers.Default)
 
-    @Composable
-    override fun FragmentContent() {
-        SightingCompassContent(
-            bearingText = bearingState?.let { formatter.formatDegrees(it) } ?: "",
-            bearing = bearingState ?: 0f,
-            onClose = {
-                onSelect(null)
-                dismiss()
-            },
-            onCapture = ::confirmBearing,
-            onCameraReady = {
-                camera = it
-                if (isViewCreated) {
-                    startCamera(it)
-                }
-                updateCompass()
-            },
-            compassRange = compassRange,
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
+    fun show(): Dialog {
+        val context = fragment.requireContext()
+        val newDialog = Dialog(context)
+        dialog = newDialog
+        newDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        newDialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                SightingCompassContent(
+                    bearingText = bearingState?.let { formatter.formatDegrees(it) } ?: "",
+                    bearing = bearingState ?: 0f,
+                    onClose = {
+                        onSelect(null)
+                        dismiss()
+                    },
+                    onCapture = ::confirmBearing,
+                    onCameraReady = {
+                        camera = it
+                        startCamera(it)
+                        updateCompass()
+                    },
+                    compassRange = compassRange,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                )
+            }
         )
-    }
-
-    @SuppressLint("UnsafeOptInUsageError")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        isViewCreated = true
-
+        newDialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+        }
         val volumeKeys = listOf(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP)
-        dialog?.setOnKeyListener { _, keyCode, event ->
+        newDialog.setOnKeyListener { _, keyCode, event ->
             if (!volumeKeys.contains(keyCode) || event.action != KeyEvent.ACTION_DOWN) {
                 return@setOnKeyListener false
             }
@@ -127,9 +137,16 @@ class SightingCompassBottomSheetFragment(
             true
         }
 
-        dialog?.setOnCancelListener { onSelect(null) }
-        camera?.let(::startCamera)
-        updateCompass()
+        newDialog.setOnCancelListener { onSelect(null) }
+        newDialog.setOnDismissListener {
+            stopCamera()
+        }
+        newDialog.show()
+        newDialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
+        return newDialog
     }
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -141,7 +158,7 @@ class SightingCompassBottomSheetFragment(
         isCameraStarted = true
         camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
         camera.start(
-            lifecycleOwner = this,
+            lifecycleOwner = fragment.viewLifecycleOwner,
             readFrames = false,
             shouldStabilizePreview = false
         )
@@ -155,9 +172,9 @@ class SightingCompassBottomSheetFragment(
     private fun updateCompassRange() {
         val camera = camera ?: return
 
-        inBackground {
+        fragment.inBackground {
             fovRunner.enqueue {
-                if (this@SightingCompassBottomSheetFragment.camera == null) {
+                if (this@SightingCompassDialog.camera == null) {
                     return@enqueue
                 }
                 val minimumFOV = 5f
@@ -174,18 +191,16 @@ class SightingCompassBottomSheetFragment(
         dismiss()
     }
 
-    override fun onDestroyView() {
+    fun dismiss() {
+        dialog?.dismiss()
+    }
+
+    private fun stopCamera() {
         camera?.stop()
         camera = null
         isCameraStarted = false
-        isViewCreated = false
         fovRunner.cancel()
-        super.onDestroyView()
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        camera?.stop()
+        dialog = null
     }
 }
 
