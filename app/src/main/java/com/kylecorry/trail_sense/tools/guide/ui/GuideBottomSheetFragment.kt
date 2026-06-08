@@ -1,16 +1,11 @@
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import androidx.compose.runtime.Composable
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 
-class GuideBottomSheetFragment : BottomSheetDialogFragment() {
+class GuideBottomSheetFragment : TrailSenseBottomSheetComposeFragment() {
 
     private val guide: UserGuide by lazy {
         UserGuide(
@@ -19,19 +14,9 @@ class GuideBottomSheetFragment : BottomSheetDialogFragment() {
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    GuideScreen(name = guide.name, resource = guide.contents)
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        GuideScreen(name = guide.name, resource = guide.contents)
     }
 
     companion object {

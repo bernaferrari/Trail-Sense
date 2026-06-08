@@ -2,10 +2,6 @@ package com.kylecorry.trail_sense.tools.mirror.ui
 
 import android.Manifest
 import android.graphics.Color
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,13 +17,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,28 +29,18 @@ import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.views.CameraView
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 
-class ToolMirrorCameraFragment : Fragment() {
+class ToolMirrorCameraFragment : TrailSenseComposeFragment() {
     private val flashlight by lazy { ScreenTorch(requireActivity().window) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    MirrorCameraScreen(
-                        onRequestCamera = ::requestCameraPermission,
-                        onResumeScreen = { flashlight.on() },
-                        onPauseScreen = { flashlight.off() }
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        MirrorCameraScreen(
+            onRequestCamera = ::requestCameraPermission,
+            onResumeScreen = { flashlight.on() },
+            onPauseScreen = { flashlight.off() }
+        )
     }
 
     private fun requestCameraPermission(action: (hasPermission: Boolean) -> Unit) {

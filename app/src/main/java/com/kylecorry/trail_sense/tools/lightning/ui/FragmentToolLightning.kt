@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.lightning.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,15 +26,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -48,7 +41,7 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import kotlinx.coroutines.Dispatchers
@@ -57,37 +50,27 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class FragmentToolLightning : Fragment() {
+class FragmentToolLightning : TrailSenseComposeFragment() {
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val repo by lazy { LightningRepo.getInstance(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    LightningScreen(
-                        formatService = formatService,
-                        prefs = prefs,
-                        loadLastStrike = {
-                            withContext(Dispatchers.IO) {
-                                repo.getLast()
-                            }
-                        },
-                        saveStrike = {
-                            withContext(Dispatchers.IO) {
-                                repo.add(it)
-                            }
-                        }
-                    )
+    @Composable
+    override fun FragmentContent() {
+        LightningScreen(
+            formatService = formatService,
+            prefs = prefs,
+            loadLastStrike = {
+                withContext(Dispatchers.IO) {
+                    repo.getLast()
+                }
+            },
+            saveStrike = {
+                withContext(Dispatchers.IO) {
+                    repo.add(it)
                 }
             }
-        }
+        )
     }
 }
 

@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,16 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -58,7 +51,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.delay
@@ -66,31 +59,21 @@ import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
 
-class FragmentToolFlashlight : Fragment() {
+class FragmentToolFlashlight : TrailSenseComposeFragment() {
 
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
     private val flashlight by lazy { FlashlightSubsystem.getInstance(requireContext()) }
     private var selectedMode = FlashlightMode.Torch
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    FlashlightScreen(
-                        initialSelectedMode = selectedMode,
-                        onSelectedModeChanged = { selectedMode = it },
-                        onOpenScreenFlashlight = {
-                            findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        FlashlightScreen(
+            initialSelectedMode = selectedMode,
+            onSelectedModeChanged = { selectedMode = it },
+            onOpenScreenFlashlight = {
+                findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
             }
-        }
+        )
     }
 
     fun toggle() {
