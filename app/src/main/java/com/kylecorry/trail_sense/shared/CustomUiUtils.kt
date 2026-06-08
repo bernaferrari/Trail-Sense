@@ -48,7 +48,6 @@ import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
-import com.kylecorry.trail_sense.tools.qr.ui.ScanQRBottomSheet
 import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -259,14 +258,6 @@ object CustomUiUtils {
         qr: String
     ): BottomSheetDialog {
         return ViewQRBottomSheet(fragment, title, qr).show()
-    }
-
-    fun scanQR(
-        fragment: Fragment,
-        title: String,
-        onScan: (text: String?) -> Boolean
-    ): BottomSheetDialog {
-        return ScanQRBottomSheet(fragment, title, onScan).show()
     }
 
     suspend fun takePhoto(fragment: AndromedaFragment, size: Size? = null): Uri? =

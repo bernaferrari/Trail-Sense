@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import android.os.Bundle
+import android.graphics.Bitmap
+import android.util.Size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -20,7 +22,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,6 +67,7 @@ import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
@@ -72,11 +77,13 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.from
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
+import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -108,6 +115,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.NameBeaconSor
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
+import com.kylecorry.trail_sense.tools.qr.ui.QRImportContent
 import java.time.Instant
 
 interface BeaconListControllerHost {
@@ -166,15 +174,20 @@ private class BeaconListController(private val fragment: Fragment) : BeaconListC
     private var searchText by mutableStateOf("")
     private var sortMenuText by mutableStateOf("")
     private var isCreateMenuOpen by mutableStateOf(false)
+    private var showQrImport by mutableStateOf(false)
+    private var qrImportCamera: CameraState? = null
+    private var qrImportLastMessage: String? = null
 
     private val gpxService by lazy {
         IOFactory().createGpxService(fragment as AndromedaFragment)
     }
+    private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
 
     private lateinit var manager: GroupListManager<IBeacon>
     private var lastRoot: IBeacon? = null
     private var isInitialized = false
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         BeaconListScreen(
@@ -201,6 +214,22 @@ private class BeaconListController(private val fragment: Fragment) : BeaconListC
             onGroupAction = ::handleBeaconGroupAction,
             modifier = modifier
         )
+        if (showQrImport) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    hideQrImport()
+                }
+            ) {
+                QRImportContent(
+                    title = fragment.getString(R.string.beacon_qr_import_instructions),
+                    onClose = {
+                        hideQrImport()
+                    },
+                    onCameraReady = ::onQrImportCameraReady,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 
     fun onCreate() {
@@ -339,6 +368,7 @@ private class BeaconListController(private val fragment: Fragment) : BeaconListC
             return
         }
         gps.stop(this::onLocationUpdate)
+        hideQrImport()
         tryOrNothing {
             lastRoot = manager.root
         }
@@ -354,14 +384,50 @@ private class BeaconListController(private val fragment: Fragment) : BeaconListC
     }
 
     private fun importBeaconFromQR() {
-        val encoder = BeaconQREncoder()
-        CustomUiUtils.scanQR(fragment, fragment.getString(R.string.beacon_qr_import_instructions)) {
-            if (it != null) {
-                val beacon = encoder.decode(it) ?: return@scanQR true
-                createBeacon(group = manager.root?.id, initialLocation = GeoUri.from(beacon))
-            }
-            false
+        showQrImport = true
+        qrImportLastMessage = null
+    }
+
+    private fun onQrImportCameraReady(camera: CameraState) {
+        qrImportCamera = camera
+        camera.clipToOutline = true
+        camera.start(QR_IMPORT_CAMERA_SIZE) { bitmap ->
+            onQrImportCameraUpdate(bitmap)
         }
+    }
+
+    private fun onQrImportCameraUpdate(bitmap: Bitmap) {
+        if (qrImportCamera == null) {
+            bitmap.recycle()
+            return
+        }
+
+        var message: String? = null
+        tryOrNothing {
+            message = QR.decode(bitmap)
+            bitmap.recycle()
+        }
+
+        if (message == null || qrImportLastMessage == message) {
+            return
+        }
+
+        haptics.click()
+        qrImportLastMessage = message
+        val beacon = BeaconQREncoder().decode(message) ?: return
+        createBeacon(group = manager.root?.id, initialLocation = GeoUri.from(beacon))
+        hideQrImport()
+    }
+
+    private fun hideQrImport() {
+        if (!showQrImport && qrImportCamera == null) {
+            return
+        }
+        showQrImport = false
+        qrImportCamera?.stop()
+        qrImportCamera = null
+        qrImportLastMessage = null
+        haptics.off()
     }
 
     private fun changeSort() {
@@ -1112,6 +1178,8 @@ private enum class BeaconCreateAction {
     CreateGroup,
     CreateBeacon
 }
+
+private val QR_IMPORT_CAMERA_SIZE = Size(200, 200)
 
 @Preview(showBackground = true)
 @Composable
