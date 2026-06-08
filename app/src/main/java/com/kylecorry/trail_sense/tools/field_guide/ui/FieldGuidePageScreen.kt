@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuidePageToolScreen(fragment: Fragment) {
+fun FieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { FieldGuidePageController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -87,7 +87,7 @@ fun FieldGuidePageToolScreen(fragment: Fragment) {
     )
 }
 
-private class FieldGuidePageController(private val fragment: Fragment) {
+private class FieldGuidePageController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }

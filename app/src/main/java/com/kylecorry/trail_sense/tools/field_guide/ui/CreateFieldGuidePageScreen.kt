@@ -46,7 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.lifecycleScope
@@ -78,7 +78,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun CreateFieldGuidePageToolScreen(fragment: Fragment) {
+fun CreateFieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CreateFieldGuidePageController(fragment) }
 
     DisposableEffect(controller) {
@@ -105,7 +105,7 @@ fun CreateFieldGuidePageToolScreen(fragment: Fragment) {
     controller.PhotoImportContent()
 }
 
-private class CreateFieldGuidePageController(private val fragment: Fragment) {
+private class CreateFieldGuidePageController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
@@ -238,7 +238,7 @@ private class CreateFieldGuidePageController(private val fragment: Fragment) {
         }
     }
 
-    private suspend fun takePhoto(fragment: Fragment): Uri? {
+    private suspend fun takePhoto(fragment: TrailSenseComposeDestinationFragment): Uri? {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
             fragment.requireActivity().runOnUiThread {

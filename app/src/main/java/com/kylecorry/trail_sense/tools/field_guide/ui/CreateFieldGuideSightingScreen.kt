@@ -46,7 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -81,7 +81,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 @Composable
-fun CreateFieldGuideSightingToolScreen(fragment: Fragment) {
+fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CreateFieldGuideSightingController(fragment) }
 
     DisposableEffect(controller) {
@@ -121,7 +121,7 @@ fun CreateFieldGuideSightingToolScreen(fragment: Fragment) {
     )
 }
 
-private class CreateFieldGuideSightingController(private val fragment: Fragment) {
+private class CreateFieldGuideSightingController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }

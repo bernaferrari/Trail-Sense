@@ -48,7 +48,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuideToolScreen(fragment: Fragment) {
+fun FieldGuideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { FieldGuideController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -103,7 +103,7 @@ fun FieldGuideToolScreen(fragment: Fragment) {
     )
 }
 
-private class FieldGuideController(private val fragment: Fragment) {
+private class FieldGuideController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }

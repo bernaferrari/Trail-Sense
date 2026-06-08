@@ -35,7 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SightingListToolScreen(fragment: Fragment) {
+fun SightingListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { SightingListController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -85,7 +85,7 @@ fun SightingListToolScreen(fragment: Fragment) {
     )
 }
 
-private class SightingListController(private val fragment: Fragment) {
+private class SightingListController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
