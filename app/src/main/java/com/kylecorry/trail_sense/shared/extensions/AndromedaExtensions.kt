@@ -6,15 +6,19 @@ import android.content.Context
 import android.graphics.Path
 import android.os.Build
 import android.util.Log
-import android.view.Gravity
-import android.widget.FrameLayout
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AlertDialog
-import com.google.android.material.loadingindicator.LoadingIndicator
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.safeRoundToInt
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
 inline fun Alerts.withCancelableLoading(
     context: Context,
@@ -38,24 +42,18 @@ fun Alerts.cancelableLoading(
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
 ): AlertDialog {
-    val view = FrameLayout(context)
-    val params = FrameLayout.LayoutParams(
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-        Gravity.CENTER
-    )
-    view.layoutParams = params
-    val loading = LoadingIndicator(context)
-
-    val loadingParams = FrameLayout.LayoutParams(
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-        Gravity.CENTER
-    )
-    loadingParams.bottomMargin = Resources.dp(context, 16f).toInt()
-    loadingParams.topMargin = Resources.dp(context, 16f).toInt()
-    loading.layoutParams = loadingParams
-    view.addView(loading)
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Box(
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
 
     return dialog(
         context,

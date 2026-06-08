@@ -12,9 +12,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
@@ -28,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -64,6 +62,7 @@ import com.kylecorry.trail_sense.shared.views.DurationInput
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRBottomSheet
 import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
@@ -371,7 +370,7 @@ object CustomUiUtils {
         }
     }
 
-    fun setImageColor(textView: TextView, @ColorInt color: Int?) {
+    fun setImageColor(textView: android.widget.TextView, @ColorInt color: Int?) {
         textView.compoundDrawables.forEach {
             it?.let { Colors.setImageColor(it, color) }
         }
@@ -555,9 +554,9 @@ object CustomUiUtils {
         val chartView = createChartPrompt(fragment.requireContext())
 
         if (content != null) {
-            chartView.findViewById<TextView>(R.id.content).text = content
+            chartView.findViewById<TrailSenseTextView>(R.id.content).text = content
         } else {
-            chartView.findViewById<TextView>(R.id.content).isVisible = false
+            chartView.findViewById<TrailSenseTextView>(R.id.content).isVisible = false
         }
 
         populateFn(chartView.findViewById(R.id.chart))
@@ -569,9 +568,9 @@ object CustomUiUtils {
         )
     }
 
-    private fun createPromptContainer(context: Context): FrameLayout {
+    private fun createPromptContainer(context: Context): ConstraintLayout {
         val padding = Resources.dp(context, 16f).toInt()
-        return FrameLayout(context).apply {
+        return ConstraintLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -580,34 +579,40 @@ object CustomUiUtils {
         }
     }
 
-    private fun FrameLayout.addPromptContent(view: View) {
+    private fun ConstraintLayout.addPromptContent(view: View) {
         addView(
             view,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            )
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            }
         )
     }
 
-    private fun createChartPrompt(context: Context): LinearLayout {
+    private fun createChartPrompt(context: Context): ConstraintLayout {
         val padding = Resources.dp(context, 24f).toInt()
         val spacing = Resources.dp(context, 16f).toInt()
         val chartHeight = context.resources.getDimensionPixelSize(R.dimen.chart_height)
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        val root = ConstraintLayout(context).apply {
             setPadding(padding, padding, padding, padding)
         }
 
         root.addView(
-            TextView(context).apply {
+            TrailSenseTextView(context).apply {
                 id = R.id.content
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomMargin = spacing
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
             }
         )
 
@@ -615,10 +620,16 @@ object CustomUiUtils {
             Chart(context).apply {
                 id = R.id.chart
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+            ConstraintLayout.LayoutParams(
+                0,
                 chartHeight
-            )
+            ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToBottom = R.id.content
+                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                topMargin = spacing
+            }
         )
 
         return root
