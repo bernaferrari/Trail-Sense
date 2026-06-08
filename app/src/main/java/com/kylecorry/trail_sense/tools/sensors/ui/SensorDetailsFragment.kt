@@ -6,9 +6,6 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column
@@ -32,14 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.sensors.ISensor
@@ -72,7 +66,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.MockHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
@@ -80,7 +74,7 @@ import java.time.ZonedDateTime
 import java.time.format.TextStyle
 import java.util.Locale
 
-class SensorDetailsFragment : Fragment() {
+class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -137,22 +131,12 @@ class SensorDetailsFragment : Fragment() {
         )
     }
 
-    override fun onCreateView(
-        layoutInflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SensorDetailsScreen(
-                        sensors = sensorDetails,
-                        onShowSensorList = ::showSensorList
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        SensorDetailsScreen(
+            sensors = sensorDetails,
+            onShowSensorList = ::showSensorList
+        )
     }
 
     override fun onResume() {

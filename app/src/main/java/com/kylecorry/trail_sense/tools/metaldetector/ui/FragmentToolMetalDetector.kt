@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,16 +31,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.sound.ISoundPlayer
@@ -63,7 +59,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 import kotlinx.coroutines.launch
@@ -73,7 +69,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
-class FragmentToolMetalDetector : Fragment() {
+class FragmentToolMetalDetector : TrailSenseComposeFragment() {
     private val sensors by lazy { SensorService(requireContext()) }
     private val magnetometer by lazy { sensors.getMagnetometer() }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -123,44 +119,34 @@ class FragmentToolMetalDetector : Fragment() {
     private var lowerThreshold by mutableStateOf(0f)
     private var upperThreshold by mutableStateOf(0f)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            keepScreenOn = true
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    MetalDetectorScreen(
-                        title = title,
-                        thresholdText = thresholdText,
-                        isHighSensitivity = isHighSensitivity,
-                        audioEnabled = audioEnabled,
-                        vibrationEnabled = vibrationEnabled,
-                        showAudioButton = showAudioButton,
-                        showMetalDirection = prefs.metalDetector.showMetalDirection,
-                        metalDetected = metalDetected,
-                        onAudioToggle = ::toggleAudio,
-                        onVibrationToggle = ::toggleVibration,
-                        onHighSensitivityChange = ::updateHighSensitivity,
-                        onCalibrate = ::calibrate,
-                        thresholdSliderValue = thresholdSliderValue,
-                        onThresholdChange = { thresholdSliderValue = it },
-                        chartReadings = chartReadings,
-                        lowerThreshold = lowerThreshold,
-                        upperThreshold = upperThreshold,
-                        metalDirectionFieldStrength = metalDirectionFieldStrength,
-                        metalDirection = metalDirection,
-                        showSinglePoleDirection = showSinglePoleDirection,
-                        metalDirectionSensitivity = metalDirectionSensitivity,
-                        magnetometer = magnetometer,
-                        onAccuracyClick = ::displayAccuracyTips
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        LocalView.current.keepScreenOn = true
+        MetalDetectorScreen(
+            title = title,
+            thresholdText = thresholdText,
+            isHighSensitivity = isHighSensitivity,
+            audioEnabled = audioEnabled,
+            vibrationEnabled = vibrationEnabled,
+            showAudioButton = showAudioButton,
+            showMetalDirection = prefs.metalDetector.showMetalDirection,
+            metalDetected = metalDetected,
+            onAudioToggle = ::toggleAudio,
+            onVibrationToggle = ::toggleVibration,
+            onHighSensitivityChange = ::updateHighSensitivity,
+            onCalibrate = ::calibrate,
+            thresholdSliderValue = thresholdSliderValue,
+            onThresholdChange = { thresholdSliderValue = it },
+            chartReadings = chartReadings,
+            lowerThreshold = lowerThreshold,
+            upperThreshold = upperThreshold,
+            metalDirectionFieldStrength = metalDirectionFieldStrength,
+            metalDirection = metalDirection,
+            showSinglePoleDirection = showSinglePoleDirection,
+            metalDirectionSensitivity = metalDirectionSensitivity,
+            magnetometer = magnetometer,
+            onAccuracyClick = ::displayAccuracyTips
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

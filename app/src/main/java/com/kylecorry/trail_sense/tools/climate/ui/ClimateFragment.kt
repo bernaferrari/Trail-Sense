@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.climate.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -44,9 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -54,7 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -82,6 +77,7 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
@@ -102,7 +98,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-class ClimateFragment : Fragment() {
+class ClimateFragment : TrailSenseComposeFragment() {
 
     private val locationSubsystem by lazy { LocationSubsystem.getInstance(requireContext()) }
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
@@ -134,60 +130,50 @@ class ClimateFragment : Fragment() {
 
     private var loadJob: Job? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ClimateScreen(
-                        title = stringResource(R.string.tool_climate),
-                        subtitle = stringResource(R.string.historic_temperature_years, 30),
-                        date = date,
-                        location = location,
-                        elevation = this@ClimateFragment.elevation,
-                        temperatureTitle = getTemperatureTitle(),
-                        precipitationTitle = getPrecipitationTitle(),
-                        climateZoneTitle = climateClassification?.first.orEmpty(),
-                        climateZoneDescription = climateClassification?.second.orEmpty(),
-                        ecologyDescription = getEcologySummary(),
-                        showEcology = getActiveActivityEntries().isNotEmpty(),
-                        temperatures = temperatures,
-                        precipitation = precipitation,
-                        temperatureUnits = temperatureUnits,
-                        precipitationDistanceUnits = precipitationDistanceUnits,
-                        onDateChange = ::onDateSelected,
-                        onTemperatureDateSelected = ::onDateSelected,
-                        onPrecipitationMonthSelected = ::setMonthFromChart,
-                        onLocationChange = ::setLocationFromInput,
-                        onElevationChange = ::setElevationFromInput,
-                        locationAutofillRequest = locationAutofillRequest,
-                        onAutoLocationClick = {
-                            if (this@ClimateFragment.elevation == null) {
-                                elevationAutofillRequest++
-                            }
-                        },
-                        onLocationBeaconSelected = {
-                            it.elevation?.let { beaconElevation ->
-                                setElevationFromInput(
-                                    Distance.meters(beaconElevation).convertTo(distanceUnits)
-                                )
-                            }
-                        },
-                        elevationAutofillRequest = elevationAutofillRequest,
-                        onAutoElevationClick = {
-                            if (this@ClimateFragment.location == null) {
-                                locationAutofillRequest++
-                            }
-                        },
-                        onEcologyClick = ::showEcologyDetails
+    @Composable
+    override fun FragmentContent() {
+        ClimateScreen(
+            title = stringResource(R.string.tool_climate),
+            subtitle = stringResource(R.string.historic_temperature_years, 30),
+            date = date,
+            location = location,
+            elevation = this@ClimateFragment.elevation,
+            temperatureTitle = getTemperatureTitle(),
+            precipitationTitle = getPrecipitationTitle(),
+            climateZoneTitle = climateClassification?.first.orEmpty(),
+            climateZoneDescription = climateClassification?.second.orEmpty(),
+            ecologyDescription = getEcologySummary(),
+            showEcology = getActiveActivityEntries().isNotEmpty(),
+            temperatures = temperatures,
+            precipitation = precipitation,
+            temperatureUnits = temperatureUnits,
+            precipitationDistanceUnits = precipitationDistanceUnits,
+            onDateChange = ::onDateSelected,
+            onTemperatureDateSelected = ::onDateSelected,
+            onPrecipitationMonthSelected = ::setMonthFromChart,
+            onLocationChange = ::setLocationFromInput,
+            onElevationChange = ::setElevationFromInput,
+            locationAutofillRequest = locationAutofillRequest,
+            onAutoLocationClick = {
+                if (this@ClimateFragment.elevation == null) {
+                    elevationAutofillRequest++
+                }
+            },
+            onLocationBeaconSelected = {
+                it.elevation?.let { beaconElevation ->
+                    setElevationFromInput(
+                        Distance.meters(beaconElevation).convertTo(distanceUnits)
                     )
                 }
-            }
-        }
+            },
+            elevationAutofillRequest = elevationAutofillRequest,
+            onAutoElevationClick = {
+                if (this@ClimateFragment.location == null) {
+                    locationAutofillRequest++
+                }
+            },
+            onEcologyClick = ::showEcologyDetails
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
