@@ -1,20 +1,25 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
+import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.view.isVisible
-import com.kylecorry.andromeda.canvas.ArcMode
-import com.kylecorry.andromeda.canvas.ImageMode
-import com.kylecorry.andromeda.canvas.TextMode
-import com.kylecorry.andromeda.canvas.TextStyle
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.sol.math.Vector2
-import com.kylecorry.sol.math.geometry.Circle
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -24,12 +29,17 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toPixel
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.map.ui.MapView
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
-class RadarCompassView : BaseCompassView {
-    private var centerPixel: PixelCoordinate = PixelCoordinate(0f, 0f)
-    private lateinit var compassCircle: Circle
+class RadarCompassView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : BaseCompassView(context, attrs, defStyleAttr) {
 
     @ColorInt
     private var primaryColor: Int = Color.WHITE
@@ -41,79 +51,149 @@ class RadarCompassView : BaseCompassView {
     private var textColor: Int = Color.WHITE
 
     private val formatService by lazy { FormatService.getInstance(context) }
-
-    private var mapView: MapView? = null
-
-    private var iconSize = 0
-    private var radarSize = 0
-    private var directionSize = 0
-    private var compassSize = 0
-    private lateinit var compassPath: Path
-    private var distanceSize = 0f
-    private var cardinalSize = 0f
-    private var locationStrokeWeight = 0f
-    private var dialTickRadius = 0f
     private val drawDialBezel = prefs.navigation.drawDialBezel
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val arcRect = RectF()
+    private var mapView: MapView? = null
+    private var canvas: AndroidCanvas? = null
+    private var canvasWidth = 0f
+    private var canvasHeight = 0f
+    private var centerPixel = PixelCoordinate(0f, 0f)
+    private var compassPath = Path()
+    private var iconSize = Resources.dp(context, 24f).toInt()
+    private var compassSize = 0
+    private var distanceSize = Resources.sp(context, 10f)
+    private var cardinalSize = Resources.sp(context, 20f)
+    private var dialTickRadius = 0f
     private var maxDistanceBaseUnits: Distance = Distance.meters(0f)
     private var maxDistanceMeters: Distance = Distance.meters(0f)
-    private var north = ""
-    private var south = ""
-    private var east = ""
-    private var west = ""
-
+    private var north = context.getString(R.string.direction_north)
+    private var south = context.getString(R.string.direction_south)
+    private var east = context.getString(R.string.direction_east)
+    private var west = context.getString(R.string.direction_west)
     private var distanceText: String? = null
 
-    private lateinit var dial: CompassDial
-    private var lastWidth = 0
-    private var lastHeight = 0
-
     var shouldDrawDial: Boolean = true
+        set(value) {
+            field = value
+            requestRedraw()
+        }
+
     var shouldDrawAzimuthIndicator: Boolean = true
+        set(value) {
+            field = value
+            requestRedraw()
+        }
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
-
-    private fun drawAzimuth() {
-        fill(Color.WHITE)
-        tint(
-            if (drawDialBezel) Color.WHITE.withAlpha(220) else Resources.androidTextColorPrimary(
-                context
-            )
-        )
-        imageMode(ImageMode.Corner)
-        image(
-            getBitmap(R.drawable.ic_arrow_target, iconSize),
-            width / 2f - iconSize / 2f,
-            0f
-        )
-        noTint()
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                renderVersion
+                if (!isVisible) {
+                    return@Canvas
+                }
+                canvas = drawContext.canvas.nativeCanvas
+                canvasWidth = size.width
+                canvasHeight = size.height
+                updateGeometry()
+                drawRadar()
+                canvas = null
+            }
+        }
     }
 
-    private fun drawCompass() {
-        imageMode(ImageMode.Center)
+    fun setRadiusDistance(distance: Distance) {
+        maxDistanceMeters = distance.meters()
+        maxDistanceBaseUnits = maxDistanceMeters.convertTo(prefs.baseDistanceUnits)
+        distanceText = null
+        requestRedraw()
+    }
 
-        dial.draw(drawer, shouldDrawDial, false)
+    fun bindMapView(view: MapView) {
+        mapView = view
+        updateGeometry()
+        requestRedraw()
+    }
 
-        noFill()
-        stroke(Color.WHITE)
-        opacity(30)
-        strokeWeight(3f)
-        push()
-        rotate(azimuth)
-        if (shouldDrawDial && shouldDrawAzimuthIndicator) {
-            line(width / 2f, height / 2f, width / 2f, iconSize + dp(2f))
+    private fun updateGeometry() {
+        if (canvasWidth <= 0f || canvasHeight <= 0f) {
+            return
         }
-        circle(width / 2f, height / 2f, compassSize.toFloat())
-        circle(width / 2f, height / 2f, compassSize / 2f)
-        circle(width / 2f, height / 2f, 3 * compassSize / 4f)
-        circle(width / 2f, height / 2f, compassSize / 4f)
+        iconSize = dp(24f).toInt()
+        compassSize = min(canvasHeight, canvasWidth).toInt() - 2 * iconSize - 2 * dp(2f).toInt()
+        centerPixel = PixelCoordinate(canvasWidth / 2f, canvasHeight / 2f)
+        compassPath = Path().apply {
+            addCircle(centerPixel.x, centerPixel.y, compassSize / 2f, Path.Direction.CW)
+        }
+        primaryColor = Resources.getCardinalDirectionColor(context)
+        secondaryColor = Resources.color(context, R.color.colorSecondary)
+        textColor = Resources.androidTextColorSecondary(context)
+        distanceSize = sp(10f)
+        cardinalSize = sp(20f)
+        dialTickRadius = if (drawDialBezel) {
+            compassSize / 2f + iconSize / 2f + dp(2f)
+        } else {
+            (compassSize / 2f) * 0.9f
+        }
+        mapView?.clipPath = compassPath
+    }
 
-        // Distance Text
+    private fun drawRadar() {
+        val nativeCanvas = canvas ?: return
+        nativeCanvas.save()
+        nativeCanvas.rotate(-azimuth, centerPixel.x, centerPixel.y)
+        drawDial(nativeCanvas, drawTicks = false, drawBackground = true)
+        if (shouldDrawAzimuthIndicator) {
+            nativeCanvas.save()
+            nativeCanvas.rotate(azimuth, centerPixel.x, centerPixel.y)
+            drawAzimuth(nativeCanvas)
+            nativeCanvas.restore()
+        }
+        drawCompassLayers()
+        drawCompass(nativeCanvas)
+        nativeCanvas.restore()
+    }
+
+    private fun drawAzimuth(nativeCanvas: AndroidCanvas) {
+        val bitmap = getBitmap(R.drawable.ic_arrow_target, iconSize)
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.isFilterBitmap = true
+        paint.colorFilter = PorterDuffColorFilter(
+            if (drawDialBezel) Color.WHITE.withAlpha(220) else Resources.androidTextColorPrimary(context),
+            PorterDuff.Mode.SRC_IN
+        )
+        nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, 0f, paint)
+        paint.colorFilter = null
+    }
+
+    private fun drawCompass(nativeCanvas: AndroidCanvas) {
+        drawDial(nativeCanvas, drawTicks = shouldDrawDial, drawBackground = false)
+
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.color = Color.WHITE
+        paint.alpha = 30
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 3f
+
+        nativeCanvas.save()
+        nativeCanvas.rotate(azimuth, centerPixel.x, centerPixel.y)
+        if (shouldDrawDial && shouldDrawAzimuthIndicator) {
+            nativeCanvas.drawLine(
+                centerPixel.x,
+                centerPixel.y,
+                centerPixel.x,
+                iconSize + dp(2f),
+                paint
+            )
+        }
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize.toFloat(), paint)
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize / 2f, paint)
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, 3 * compassSize / 4f, paint)
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize / 4f, paint)
+
         if (distanceText == null) {
             val distance = maxDistanceBaseUnits.toRelativeDistance()
             distanceText = formatService.formatDistance(
@@ -123,197 +203,183 @@ class RadarCompassView : BaseCompassView {
             )
         }
 
-        textSize(distanceSize)
-        fill(textColor)
-        noStroke()
-        textMode(TextMode.Corner)
-        opacity(200)
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.color = textColor
+        paint.alpha = 200
+        paint.textSize = distanceSize
+        paint.textAlign = Paint.Align.LEFT
         distanceText?.let {
-            text(
+            nativeCanvas.drawText(
                 it,
-                (width - compassSize) / 2f + 16,
-                height - (height - compassSize) / 2f + 16
+                (canvasWidth - compassSize) / 2f + 16,
+                canvasHeight - (canvasHeight - compassSize) / 2f + 16,
+                paint
             )
         }
-        pop()
+        nativeCanvas.restore()
 
-
-        // Directions
         if (shouldDrawDial) {
-            drawCardinalDirections()
+            drawCardinalDirections(nativeCanvas)
+        }
+    }
+
+    private fun drawCardinalDirections(nativeCanvas: AndroidCanvas) {
+        drawDirection(nativeCanvas, 0f, north, primaryColor)
+        drawDirection(nativeCanvas, 90f, east, Color.WHITE)
+        drawDirection(nativeCanvas, 180f, south, Color.WHITE)
+        drawDirection(nativeCanvas, 270f, west, Color.WHITE)
+    }
+
+    private fun drawDirection(
+        nativeCanvas: AndroidCanvas,
+        degrees: Float,
+        text: String,
+        @ColorInt color: Int
+    ) {
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.color = color
+        paint.textSize = cardinalSize
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.DEFAULT_BOLD
+
+        nativeCanvas.save()
+        nativeCanvas.rotate(degrees, centerPixel.x, centerPixel.y)
+        nativeCanvas.drawText(text, centerPixel.x, centerPixel.y - dialTickRadius + dp(1f), paint)
+        nativeCanvas.restore()
+        paint.typeface = Typeface.DEFAULT
+    }
+
+    private fun drawDial(
+        nativeCanvas: AndroidCanvas,
+        drawTicks: Boolean = true,
+        drawBackground: Boolean = true
+    ) {
+        val backgroundRadius = compassSize / 2f
+        if (drawBackground) {
+            paint.reset()
+            paint.isAntiAlias = true
+            paint.style = Paint.Style.FILL
+            paint.color = Color.TRANSPARENT
+            nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, backgroundRadius, paint)
+            if (drawDialBezel) {
+                paint.color = secondaryColor
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = (min(canvasHeight, canvasWidth) - compassSize) / 2f
+                nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, backgroundRadius + paint.strokeWidth / 2f, paint)
+            }
         }
 
-        imageMode(ImageMode.Corner)
-    }
-
-    fun setRadiusDistance(distance: Distance) {
-        maxDistanceMeters = distance.meters()
-        maxDistanceBaseUnits = maxDistanceMeters.convertTo(prefs.baseDistanceUnits)
-        distanceText = null
-        invalidate()
-    }
-
-    private fun drawCardinalDirections() {
-        textMode(TextMode.Center)
-        textSize(cardinalSize)
-        stroke(secondaryColor)
-        textStyle(TextStyle.Bold)
-        strokeWeight(dp(1f))
-        opacity(255)
-        fill(primaryColor)
-        drawDirection(0f, north)
-        fill(Color.WHITE)
-        drawDirection(90f, east)
-        drawDirection(180f, south)
-        drawDirection(270f, west)
-    }
-
-    private fun drawDirection(degrees: Float, text: String) {
-        push()
-        rotate(degrees)
-        textMode(TextMode.Center)
-        text(
-            text,
-            width / 2f,
-            height / 2f - dialTickRadius + dp(1f)
-        )
-        pop()
-    }
-
-    fun bindMapView(view: MapView) {
-        mapView = view
-    }
-
-    override fun setup() {
-        super.setup()
-        iconSize = dp(24f).toInt()
-        radarSize = dp(10f).toInt()
-        directionSize = dp(16f).toInt()
-        compassSize = min(height, width) - 2 * iconSize - 2 * Resources.dp(context, 2f).toInt()
-        compassPath = Path().apply {
-            addCircle(width / 2f, height / 2f, compassSize / 2f, Path.Direction.CW)
-        }
-        distanceSize = sp(10f)
-        cardinalSize = sp(20f)
-        primaryColor = Resources.getCardinalDirectionColor(context)
-        secondaryColor = Resources.color(context, R.color.colorSecondary)
-        textColor = Resources.androidTextColorSecondary(context)
-        distanceText = null
-        north = context.getString(R.string.direction_north)
-        south = context.getString(R.string.direction_south)
-        east = context.getString(R.string.direction_east)
-        west = context.getString(R.string.direction_west)
-        centerPixel = PixelCoordinate(width / 2f, height / 2f)
-        compassCircle = Circle(Vector2(centerPixel.x, centerPixel.y), compassSize / 2f)
-        locationStrokeWeight = dp(0.5f)
-        dialTickRadius = if (drawDialBezel) {
-            compassSize / 2f + iconSize / 2f + dp(2f)
-        } else {
-            (compassSize / 2f) * 0.9f
-        }
-        dial = CompassDial(
-            centerPixel,
-            dialTickRadius,
-            compassSize / 2f,
-            Color.TRANSPARENT,
-            Color.WHITE,
-            Color.WHITE,
-            hideTrueCardinalTicks = true,
-            tickLength = dp(6f),
-            cardinalTickLength = dp(10f),
-            bezelThickness = if (drawDialBezel) (min(height, width) - compassSize) / 2f else 0f,
-            bezelColor = secondaryColor
-
-        )
-        lastWidth = width
-        lastHeight = height
-        mapView?.clipPath = compassPath
-    }
-
-    override fun draw() {
-        if (!isVisible) {
+        if (!drawTicks) {
             return
         }
-        if (lastWidth != width || lastHeight != height) {
-            setup()
+
+        drawTicks(nativeCanvas, 15, dp(6f), dp(2f), Color.WHITE)
+        drawTicks(nativeCanvas, 45, dp(10f), dp(3f), Color.WHITE)
+    }
+
+    private fun drawTicks(
+        nativeCanvas: AndroidCanvas,
+        interval: Int,
+        length: Float,
+        strokeWidth: Float,
+        @ColorInt color: Int
+    ) {
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.color = Color.BLACK
+        paint.style = Paint.Style.STROKE
+        paint.strokeCap = Paint.Cap.SQUARE
+        paint.strokeWidth = strokeWidth + dp(1f)
+        for (degrees in 0 until 360 step interval) {
+            drawTick(nativeCanvas, degrees.toFloat(), length, paint)
         }
-        clear()
-        push()
-        rotate(-azimuth)
-        dial.draw(drawer, false)
-        if (shouldDrawAzimuthIndicator) {
-            push()
-            rotate(azimuth)
-            drawAzimuth()
-            pop()
+
+        paint.color = color
+        paint.strokeWidth = strokeWidth
+        for (degrees in 0 until 360 step interval) {
+            drawTick(nativeCanvas, degrees.toFloat(), length, paint)
         }
-        drawCompassLayers()
-        drawCompass()
-        pop()
+        paint.strokeCap = Paint.Cap.ROUND
+    }
+
+    private fun drawTick(
+        nativeCanvas: AndroidCanvas,
+        degrees: Float,
+        length: Float,
+        paint: Paint
+    ) {
+        val radians = Math.toRadians((degrees - 90).toDouble())
+        val startRadius = dialTickRadius - length / 2f
+        val endRadius = dialTickRadius + length / 2f
+        val startX = centerPixel.x + cos(radians).toFloat() * startRadius
+        val startY = centerPixel.y + sin(radians).toFloat() * startRadius
+        val endX = centerPixel.x + cos(radians).toFloat() * endRadius
+        val endY = centerPixel.y + sin(radians).toFloat() * endRadius
+        nativeCanvas.drawLine(startX, startY, endX, endY, paint)
     }
 
     override fun draw(reference: IMappableReferencePoint, size: Int?) {
+        val nativeCanvas = canvas ?: return
         val sizeDp = size?.let { dp(it.toFloat()).toInt() } ?: iconSize
-
         if (reference.opacity == 0f) {
             return
         }
-        val tint = reference.tint
-        if (tint != null) {
-            tint(tint)
-        } else {
-            noTint()
-        }
-        opacity((255 * reference.opacity).toInt())
-        push()
-        rotate(reference.bearing)
-        val bitmap = reference.bitmap ?: getBitmap(reference.drawableId, sizeDp)
-        push()
-        imageMode(ImageMode.Center)
-        translate(width / 2f, iconSize / 2f + dp(1f))
-        rotate(reference.rotation, 0f, 0f)
-        image(bitmap, 0f, 0f)
-        pop()
-        pop()
-        noTint()
-        opacity(255)
-        noStroke()
+
+        val bitmap = getBitmap(reference.drawableId, sizeDp)
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.isFilterBitmap = true
+        paint.alpha = (255 * reference.opacity).toInt()
+        paint.colorFilter = reference.tint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
+
+        nativeCanvas.save()
+        nativeCanvas.rotate(reference.bearing, centerPixel.x, centerPixel.y)
+        nativeCanvas.translate(centerPixel.x, iconSize / 2f + dp(1f))
+        nativeCanvas.rotate(reference.rotation)
+        nativeCanvas.drawBitmap(bitmap, -bitmap.width / 2f, -bitmap.height / 2f, paint)
+        nativeCanvas.restore()
+        paint.alpha = 255
+        paint.colorFilter = null
     }
 
     override fun draw(bearing: IMappableBearing, stopAt: Coordinate?) {
-        push()
-        fill(bearing.color)
+        val nativeCanvas = canvas ?: return
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.color = bearing.color
+        paint.style = Paint.Style.FILL
+        paint.alpha = if (stopAt != null) 25 else 100
 
-        // To end of compass
-        opacity(if (stopAt != null) 25 else 100)
-        val dp2 = dp(2f)
-        arc(
-            iconSize.toFloat() + dp2,
-            iconSize.toFloat() + dp2,
-            compassSize.toFloat(),
-            compassSize.toFloat(),
+        val inset = iconSize.toFloat() + dp(2f)
+        arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
+        nativeCanvas.drawArc(
+            arcRect,
             azimuth - 90,
-            azimuth - 90 + deltaAngle(azimuth, bearing.bearing),
-            ArcMode.Pie
+            deltaAngle(azimuth, bearing.bearing),
+            true,
+            paint
         )
 
-        // To highlighted location
         stopAt?.let {
             val pixel = mapView?.toPixel(it) ?: return@let
             val size = min(compassSize.toFloat(), pixel.distanceTo(centerPixel) * 2)
-            opacity(75)
-            arc(
+            paint.alpha = 75
+            arcRect.set(
                 centerPixel.x - size / 2f,
                 centerPixel.y - size / 2f,
-                size,
-                size,
+                centerPixel.x + size / 2f,
+                centerPixel.y + size / 2f
+            )
+            nativeCanvas.drawArc(
+                arcRect,
                 azimuth - 90,
-                azimuth - 90 + deltaAngle(azimuth, bearing.bearing),
-                ArcMode.Pie
+                deltaAngle(azimuth, bearing.bearing),
+                true,
+                paint
             )
         }
-
-        opacity(255)
-        pop()
+        paint.alpha = 255
     }
 }
