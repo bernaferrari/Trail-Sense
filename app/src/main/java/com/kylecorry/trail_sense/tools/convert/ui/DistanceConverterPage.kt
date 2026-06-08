@@ -7,8 +7,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import kotlin.math.absoluteValue
 
-class FragmentDistanceConverter(private val context: Context) :
-    SimpleConvertFragment<DistanceUnits>(DistanceUnits.Meters, DistanceUnits.Feet) {
+class DistanceConverterPage(private val context: Context) :
+    SimpleConverterPage<DistanceUnits>(DistanceUnits.Meters, DistanceUnits.Feet) {
 
     private val formatService by lazy { FormatService.getInstance(context) }
 

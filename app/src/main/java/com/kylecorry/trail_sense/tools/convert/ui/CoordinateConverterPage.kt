@@ -28,7 +28,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 
-class FragmentToolCoordinateConvert(context: Context) : ConverterPage {
+class CoordinateConverterPage(context: Context) : ConverterPage {
 
     private val formatService = FormatService.getInstance(context)
     private val formats = BuiltInCoordinateFormat.entries

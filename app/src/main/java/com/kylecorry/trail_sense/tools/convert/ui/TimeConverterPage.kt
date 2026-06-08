@@ -5,8 +5,8 @@ import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
-class FragmentTimeConverter(private val context: Context) :
-    SimpleConvertFragment<TimeUnits>(TimeUnits.Minutes, TimeUnits.Hours) {
+class TimeConverterPage(private val context: Context) :
+    SimpleConverterPage<TimeUnits>(TimeUnits.Minutes, TimeUnits.Hours) {
 
     private val formatService by lazy { FormatService.getInstance(context) }
 

@@ -31,7 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 
-abstract class SimpleConvertFragment<T>(private val defaultFrom: T, private val defaultTo: T) :
+abstract class SimpleConverterPage<T>(private val defaultFrom: T, private val defaultTo: T) :
     ConverterPage {
 
     abstract val units: List<T>

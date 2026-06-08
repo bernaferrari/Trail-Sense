@@ -6,8 +6,8 @@ import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
-class FragmentTemperatureConverter(private val context: Context) :
-    SimpleConvertFragment<TemperatureUnits>(TemperatureUnits.Celsius, TemperatureUnits.Fahrenheit) {
+class TemperatureConverterPage(private val context: Context) :
+    SimpleConverterPage<TemperatureUnits>(TemperatureUnits.Celsius, TemperatureUnits.Fahrenheit) {
 
     private val formatService by lazy { FormatService.getInstance(context) }
 

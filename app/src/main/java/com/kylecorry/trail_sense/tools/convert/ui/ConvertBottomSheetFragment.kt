@@ -17,9 +17,9 @@ class ConvertBottomSheetFragment : TrailSenseBottomSheetComposeFragment() {
     private fun getPages(): List<ConverterPage> {
         val context = requireContext()
         return listOf(
-            FragmentToolCoordinateConvert(context),
-            FragmentDistanceConverter(context),
-            FragmentTemperatureConverter(context)
+            CoordinateConverterPage(context),
+            DistanceConverterPage(context),
+            TemperatureConverterPage(context)
         )
     }
 

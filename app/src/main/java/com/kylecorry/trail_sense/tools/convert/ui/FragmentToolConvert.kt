@@ -27,12 +27,12 @@ class FragmentToolConvert : TrailSenseComposeFragment() {
     private fun getPages(): List<ConverterPage> {
         val context = requireContext()
         return listOf(
-            FragmentToolCoordinateConvert(context),
-            FragmentDistanceConverter(context),
-            FragmentTemperatureConverter(context),
-            FragmentVolumeConverter(context),
-            FragmentWeightConverter(context),
-            FragmentTimeConverter(context)
+            CoordinateConverterPage(context),
+            DistanceConverterPage(context),
+            TemperatureConverterPage(context),
+            VolumeConverterPage(context),
+            WeightConverterPage(context),
+            TimeConverterPage(context)
         )
     }
 
