@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
@@ -83,6 +84,19 @@ class ErrorBannerState(context: Context) {
                     ?.invoke()
             }
         )
+    }
+}
+
+class ErrorBannerView(
+    context: Context,
+    private val state: ErrorBannerState
+) : AbstractComposeView(context) {
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            state.Content()
+        }
     }
 }
 

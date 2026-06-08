@@ -34,7 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -149,22 +149,40 @@ class CreateBlankMapCommand(
         units: List<DistanceUnits>,
         onCenterChange: (Coordinate?) -> Unit,
         onDistanceChange: (Distance?) -> Unit
-    ): ComposeView {
-        return ComposeView(context).apply {
-            setContent {
-                TrailSenseTheme {
-                    BlankMapCalibrationContent(
-                        center = center,
-                        distance = distance,
-                        units = units,
-                        onCenterChange = onCenterChange,
-                        onDistanceChange = onDistanceChange
-                    )
-                }
-            }
-        }
+    ): BlankMapCalibrationView {
+        return BlankMapCalibrationView(
+            context = context,
+            center = center,
+            distance = distance,
+            units = units,
+            onCenterChange = onCenterChange,
+            onDistanceChange = onDistanceChange
+        )
     }
 
+}
+
+private class BlankMapCalibrationView(
+    context: Context,
+    private val center: Coordinate?,
+    private val distance: Distance?,
+    private val units: List<DistanceUnits>,
+    private val onCenterChange: (Coordinate?) -> Unit,
+    private val onDistanceChange: (Distance?) -> Unit
+) : AbstractComposeView(context) {
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            BlankMapCalibrationContent(
+                center = center,
+                distance = distance,
+                units = units,
+                onCenterChange = onCenterChange,
+                onDistanceChange = onDistanceChange
+            )
+        }
+    }
 }
 
 @Composable

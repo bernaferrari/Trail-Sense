@@ -18,7 +18,6 @@ import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.fragment.app.FragmentContainerView
@@ -54,7 +53,7 @@ import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils.setupWithNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.ErrorBannerView
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.battery.infrastructure.commands.PowerSavingModeAlertCommand
@@ -665,13 +664,8 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
     )
 
     val errorBanner = ErrorBannerState(context)
-    val errorBannerView = ComposeView(context).apply {
+    val errorBannerView = ErrorBannerView(context, errorBanner).apply {
         id = R.id.error_banner
-        setContent {
-            TrailSenseTheme {
-                errorBanner.Content()
-            }
-        }
     }
     colorFilter.addView(
         errorBannerView,
