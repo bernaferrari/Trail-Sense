@@ -149,7 +149,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             id = R.id.linear_compass
         }
         addView(
-            linearCompass,
+            linearCompass.view,
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 Resources.dp(context, 100f).toInt()

@@ -973,7 +973,7 @@ private fun createNavigatorViews(
         isFocusable = false
     }
     root.addView(
-        radarCompass,
+        radarCompass.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

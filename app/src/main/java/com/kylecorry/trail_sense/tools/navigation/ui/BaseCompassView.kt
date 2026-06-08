@@ -3,13 +3,16 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
+import android.view.View
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.isInvisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -17,10 +20,10 @@ import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassLaye
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 
 abstract class BaseCompassView @JvmOverloads constructor(
-    context: Context,
+    protected val context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr), ICompassView {
+) : ICompassView {
 
     private val bitmapLoader by lazy { BitmapLoader(context) }
     protected val prefs by lazy { UserPreferences(context) }
@@ -64,6 +67,66 @@ abstract class BaseCompassView @JvmOverloads constructor(
     init {
         useTrueNorth = prefs.compass.useTrueNorth
     }
+
+    val view = ComposeView(context).apply {
+        setContent {
+            Content()
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    var isInvisible: Boolean
+        get() = view.isInvisible
+        set(value) {
+            view.isInvisible = value
+        }
+
+    var isClickable: Boolean
+        get() = view.isClickable
+        set(value) {
+            view.isClickable = value
+        }
+
+    var isFocusable: Boolean
+        get() = view.isFocusable
+        set(value) {
+            view.isFocusable = value
+        }
+
+    val width: Int
+        get() = view.width
+
+    val height: Int
+        get() = view.height
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
+
+    fun invalidate() {
+        requestRedraw()
+        view.invalidate()
+    }
+
+    @Composable
+    abstract fun Content()
 
     protected fun requestRedraw() {
         renderVersion++
