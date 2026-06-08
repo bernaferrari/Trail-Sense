@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,6 +45,7 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
@@ -67,6 +70,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
+import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
@@ -229,6 +233,8 @@ private class NavigatorController(private val fragment: Fragment) {
     private var lastErrorCodes: List<String> = emptyList()
     private var lastAttributionLayerKey: Int? = null
     private var lastAttributionRadarVisible: Boolean? = null
+    private var showLocationSheet by mutableStateOf(false)
+    private var locationFormat = BuiltInCoordinateFormat.DecimalDegrees
 
     private val northReferenceHideTimer = CoroutineTimer {
         if (isViewReady) {
@@ -247,12 +253,33 @@ private class NavigatorController(private val fragment: Fragment) {
     private val triggers = HookTriggers()
     private var isCreated = false
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         NavigatorHost(
             views = views,
             modifier = modifier
         )
+        if (showLocationSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showLocationSheet = false
+                }
+            ) {
+                LocationSheet(
+                    initialFormat = locationFormat,
+                    getState = ::getLocationSheetState,
+                    onFormatSelected = {
+                        locationFormat = it
+                    },
+                    onPickFormat = ::pickLocationFormat,
+                    onShare = {
+                        Share.shareLocation(fragment, gps.location, locationFormat)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 
     fun onCreate() {
@@ -330,7 +357,8 @@ private class NavigatorController(private val fragment: Fragment) {
         }
 
         views.navigationTitle.onSubtitleClick = {
-            LocationBottomSheet(fragment, gps).show()
+            locationFormat = userPrefs.navigation.coordinateFormat
+            showLocationSheet = true
         }
 
         views.altitude.onClick = {
@@ -439,6 +467,43 @@ private class NavigatorController(private val fragment: Fragment) {
 
         val alerter = ImproveAccuracyAlerter(fragment.requireContext())
         alerter.alert(listOf(gps, compass))
+    }
+
+    private fun pickLocationFormat(
+        currentFormat: BuiltInCoordinateFormat,
+        onSelected: (BuiltInCoordinateFormat) -> Unit
+    ) {
+        val formats = BuiltInCoordinateFormat.entries
+        val formatStrings = formats.map { formatService.formatCoordinateType(it) }
+        Pickers.item(
+            fragment.requireContext(),
+            fragment.getString(R.string.pref_coordinate_format_title),
+            formatStrings,
+            defaultSelectedIndex = formats.indexOf(currentFormat)
+        ) {
+            if (it != null) {
+                onSelected(formats[it])
+            }
+        }
+    }
+
+    private fun getLocationSheetState(format: BuiltInCoordinateFormat): LocationSheetState {
+        val accuracy = gps.horizontalAccuracy?.let {
+            val accuracyStr = formatService.formatDistance(
+                Distance.meters(it).convertTo(baseDistanceUnits)
+            )
+            fragment.getString(R.string.accuracy_distance_format, accuracyStr)
+        }
+
+        val timeAgo = Duration.between(gps.time, Instant.now())
+        return LocationSheetState(
+            location = formatService.formatLocation(gps.location, format),
+            coordinateFormat = formatService.formatCoordinateType(format),
+            accuracy = accuracy,
+            satellites = fragment.getString(R.string.num_satellites, gps.satellites ?: 0),
+            time = fragment.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+            datum = fragment.getString(R.string.wgs84)
+        )
     }
 
     private fun updateAstronomyData() {

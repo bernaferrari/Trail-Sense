@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,109 +35,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
-import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
-import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.time.Duration
-import java.time.Instant
 
-class LocationBottomSheet(
-    private val fragment: Fragment,
-    var gps: ISatelliteGPS? = null
-) {
-
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private var format = BuiltInCoordinateFormat.DecimalDegrees
-
-    fun show(): BottomSheetDialog {
-        val context = fragment.requireContext()
-        val dialog = BottomSheetDialog(context)
-        dialog.setContentView(
-            TrailSenseComposeRootView(
-                context,
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow
-            ) {
-                val initialFormat = remember {
-                    prefs.navigation.coordinateFormat.also { format = it }
-                }
-
-                LocationSheet(
-                    initialFormat = initialFormat,
-                    getState = ::getState,
-                    onFormatSelected = { format = it },
-                    onPickFormat = ::pickFormat,
-                    onShare = share@{
-                        val location = gps?.location ?: return@share
-                        Share.shareLocation(fragment, location, format)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        )
-        dialog.show()
-        return dialog
-    }
-
-    private fun pickFormat(
-        currentFormat: BuiltInCoordinateFormat,
-        onSelected: (BuiltInCoordinateFormat) -> Unit
-    ) {
-        val formats = BuiltInCoordinateFormat.entries
-        val formatStrings = formats.map { formatService.formatCoordinateType(it) }
-        Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.pref_coordinate_format_title),
-            formatStrings,
-            defaultSelectedIndex = formats.indexOf(currentFormat)
-        ) {
-            if (it != null) {
-                onSelected(formats[it])
-            }
-        }
-    }
-
-    private fun getState(format: BuiltInCoordinateFormat): LocationSheetState {
-        val gps = this.gps
-        if (gps == null) {
-            return LocationSheetState(
-                location = "",
-                coordinateFormat = formatService.formatCoordinateType(format),
-                datum = fragment.getString(R.string.wgs84)
-            )
-        }
-
-        val accuracy = gps.horizontalAccuracy?.let {
-            val accuracyStr = formatService.formatDistance(
-                Distance.meters(it).convertTo(prefs.baseDistanceUnits)
-            )
-            fragment.getString(R.string.accuracy_distance_format, accuracyStr)
-        }
-
-        val timeAgo = Duration.between(gps.time, Instant.now())
-        return LocationSheetState(
-            location = formatService.formatLocation(gps.location, format),
-            coordinateFormat = formatService.formatCoordinateType(format),
-            accuracy = accuracy,
-            satellites = fragment.getString(R.string.num_satellites, gps.satellites ?: 0),
-            time = fragment.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
-            datum = fragment.getString(R.string.wgs84)
-        )
-    }
-}
-
-private data class LocationSheetState(
+data class LocationSheetState(
     val location: String,
     val coordinateFormat: String,
     val accuracy: String? = null,
@@ -148,7 +51,7 @@ private data class LocationSheetState(
 )
 
 @Composable
-private fun LocationSheet(
+fun LocationSheet(
     initialFormat: BuiltInCoordinateFormat,
     getState: (BuiltInCoordinateFormat) -> LocationSheetState,
     onFormatSelected: (BuiltInCoordinateFormat) -> Unit,
