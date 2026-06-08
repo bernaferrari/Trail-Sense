@@ -5,6 +5,7 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationCopy
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationGeoSender
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationQRSender
@@ -85,19 +86,23 @@ object Share {
     ) {
         var called = false
 
-        val customOnAction = { action: ActionItem?, sheet: ActionSheet ->
+        val customOnAction = { action: ActionItem? ->
             if (!called) {
                 called = true
                 if (action != null) {
-                    sheet.dismiss()
                     action.action()
                 } else {
                     noActionSelected()
                 }
             }
         }
-        val sheet = ActionSheet(title, subtitle, actions, customOnAction, customView)
-        sheet.show(fragment)
+
+        val host = fragment as? TrailSenseComposeDestinationFragment
+        if (host == null) {
+            noActionSelected()
+            return
+        }
+        host.showActionSheet(title, subtitle, actions, customOnAction)
     }
 
 }

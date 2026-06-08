@@ -28,7 +28,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -143,6 +145,8 @@ import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sharing.ActionItem
+import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
 import com.kylecorry.trail_sense.shared.sharing.MapSite
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.text.TextUtils
@@ -270,6 +274,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     BeaconListControllerHost {
 
     private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
+    private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
     private val screenFlashlight by lazy { ScreenTorch(requireActivity().window) }
     private val screenFlashlightCache by lazy {
@@ -300,6 +305,15 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     fun cleanupReactiveEffects() {
         cleanupEffects()
+    }
+
+    fun showActionSheet(
+        title: String,
+        subtitle: String?,
+        actions: List<ActionItem>,
+        onAction: (ActionItem?) -> Unit
+    ) {
+        actionSheet = ActionSheetState(title, subtitle, actions, onAction)
     }
 
     override fun onCreateView(
@@ -370,6 +384,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun FragmentContent() {
         Box(Modifier.fillMaxSize()) {
@@ -511,7 +526,25 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                 }
             }
             layerSheet?.Content(this@TrailSenseComposeDestinationFragment, Modifier.fillMaxSize())
+            val currentActionSheet = actionSheet
+            if (currentActionSheet != null) {
+                ModalBottomSheet(onDismissRequest = { dismissActionSheet(null) }) {
+                    ActionSheetContent(
+                        title = currentActionSheet.title,
+                        subtitle = currentActionSheet.subtitle,
+                        actions = currentActionSheet.actions,
+                        onAction = ::dismissActionSheet,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
+    }
+
+    private fun dismissActionSheet(action: ActionItem?) {
+        val current = actionSheet ?: return
+        actionSheet = null
+        current.onAction(action)
     }
 
     override fun focusSearch(): Boolean {
@@ -3587,3 +3620,10 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         const val DESTINATION_WEATHER = "weather"
     }
 }
+
+private data class ActionSheetState(
+    val title: String,
+    val subtitle: String?,
+    val actions: List<ActionItem>,
+    val onAction: (ActionItem?) -> Unit
+)

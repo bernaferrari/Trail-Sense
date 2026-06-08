@@ -1,12 +1,10 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -20,55 +18,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
-
-class ActionSheet(
-    private val title: String,
-    private val subtitle: String?,
-    private val actions: List<ActionItem>,
-    private val onAction: (action: ActionItem?, sheet: ActionSheet) -> Unit
-) {
-
-    private var sheet: BottomSheetDialog? = null
-
-    fun show(fragment: Fragment): BottomSheetDialog {
-        val context = fragment.requireContext()
-        val dialog = BottomSheetDialog(context)
-        sheet = dialog
-        dialog.setContentView(
-            TrailSenseComposeRootView(
-                context,
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow
-            ) {
-                ActionSheetContent(
-                    title = title,
-                    subtitle = subtitle,
-                    actions = actions,
-                    onAction = { onAction(it, this@ActionSheet) },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        )
-        dialog.setOnDismissListener {
-            onAction(null, this)
-            sheet = null
-        }
-        dialog.show()
-        return dialog
-    }
-
-    fun dismiss() {
-        sheet?.dismiss()
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ActionSheetContent(
+fun ActionSheetContent(
     title: String,
     subtitle: String?,
     actions: List<ActionItem>,
