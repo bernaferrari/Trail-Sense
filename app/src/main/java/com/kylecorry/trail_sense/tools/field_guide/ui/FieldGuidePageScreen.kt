@@ -41,12 +41,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -61,7 +59,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun FieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { FieldGuidePageController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -87,20 +85,20 @@ fun FieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class FieldGuidePageController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class FieldGuidePageController(private val fragment: TrailSenseDestinationHost) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
     val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
     private val pageId: Long? by lazy {
-        fragment.arguments?.getLong("page_id")?.takeIf { it != 0L }
+        fragment.destinationArguments?.getLong("page_id")?.takeIf { it != 0L }
     }
 
     var page by mutableStateOf<FieldGuidePage?>(null)
         private set
 
     fun loadPage() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             page = withContext(Dispatchers.IO) {
                 pageId?.let { repo.getPage(it) }
             }

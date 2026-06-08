@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
+import android.os.Bundle
 import android.util.Size
 import android.view.View
 import androidx.annotation.StringRes
@@ -20,6 +21,7 @@ interface TrailSenseDestinationHost {
     val lifecycleOwner: LifecycleOwner
     val lifecycleScope: CoroutineScope
     val andromedaActivity: AndromedaActivity
+    val destinationArguments: Bundle?
 
     fun requireContext(): Context
     fun getResources(): Resources

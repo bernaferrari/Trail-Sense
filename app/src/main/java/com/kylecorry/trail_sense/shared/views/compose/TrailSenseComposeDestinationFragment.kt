@@ -321,6 +321,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     override val andromedaActivity: AndromedaActivity
         get() = requireActivity() as AndromedaActivity
 
+    override val destinationArguments: Bundle?
+        get() = arguments
+
     val hookResetOnResume: Int
         get() = resetOnResume
 
