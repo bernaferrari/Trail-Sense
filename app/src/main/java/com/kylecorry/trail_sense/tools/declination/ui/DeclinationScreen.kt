@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.declination.ui
 
 import androidx.compose.foundation.layout.Row

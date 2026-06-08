@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
 import androidx.compose.foundation.layout.Arrangement
