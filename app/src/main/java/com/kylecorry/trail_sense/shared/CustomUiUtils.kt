@@ -14,7 +14,19 @@ import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -45,8 +57,8 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
-import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -398,19 +410,41 @@ object CustomUiUtils {
         content: CharSequence? = null,
         populateFn: (Chart) -> Unit
     ) {
-        val chartPrompt = createChartPrompt(fragment.requireContext())
-
-        if (content != null) {
-            chartPrompt.content.text = content
-        } else {
-            chartPrompt.content.isVisible = false
+        val view = TrailSenseComposeRootView(
+            fragment.requireContext(),
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            val context = LocalContext.current
+            val chart = remember {
+                Chart(context).also(populateFn)
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                if (content != null) {
+                    Text(
+                        text = content.toString(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                }
+                AndroidView(
+                    factory = { chart },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.chart_height))
+                )
+            }
         }
-
-        populateFn(chartPrompt.chart)
         Alerts.dialog(
             fragment.requireContext(),
             title,
-            contentView = chartPrompt.root,
+            contentView = view,
             cancelText = null
         )
     }
@@ -440,55 +474,6 @@ object CustomUiUtils {
             }
         )
     }
-
-    private fun createChartPrompt(context: Context): ChartPrompt {
-        val padding = Resources.dp(context, 24f).toInt()
-        val spacing = Resources.dp(context, 16f).toInt()
-        val chartHeight = context.resources.getDimensionPixelSize(R.dimen.chart_height)
-        val root = ConstraintLayout(context).apply {
-            setPadding(padding, padding, padding, padding)
-        }
-
-        val content = TrailSenseTextView(context).apply {
-            id = R.id.content
-        }
-        root.addView(
-            content,
-            ConstraintLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            }
-        )
-
-        val chart = Chart(context).apply {
-            id = R.id.chart
-        }
-        root.addView(
-            chart,
-            ConstraintLayout.LayoutParams(
-                0,
-                chartHeight
-            ).apply {
-                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                topToBottom = R.id.content
-                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-                topMargin = spacing
-            }
-        )
-
-        return ChartPrompt(root, content, chart)
-    }
-
-    private data class ChartPrompt(
-        val root: ConstraintLayout,
-        val content: TrailSenseTextView,
-        val chart: Chart
-    )
 
     fun Resources.getPrimaryColor(context: Context): Int {
         return try {
