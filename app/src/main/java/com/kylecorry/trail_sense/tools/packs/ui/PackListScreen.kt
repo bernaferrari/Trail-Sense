@@ -41,7 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -59,7 +59,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackListToolScreen(fragment: Fragment) {
+fun PackListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { PackListController(fragment) }
 
     DisposableEffect(controller) {
@@ -80,7 +80,7 @@ fun PackListToolScreen(fragment: Fragment) {
     )
 }
 
-private class PackListController(private val fragment: Fragment) {
+private class PackListController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val packRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
     private var isInitialized = false

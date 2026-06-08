@@ -40,7 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -63,7 +63,7 @@ import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
 @Composable
-fun CreateItemToolScreen(fragment: Fragment) {
+fun CreateItemToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CreateItemController(fragment) }
 
     DisposableEffect(controller) {
@@ -99,7 +99,7 @@ fun CreateItemToolScreen(fragment: Fragment) {
     )
 }
 
-private class CreateItemController(private val fragment: Fragment) {
+private class CreateItemController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
     val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
