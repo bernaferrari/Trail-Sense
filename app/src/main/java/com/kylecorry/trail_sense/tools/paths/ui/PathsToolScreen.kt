@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,11 +36,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.onBackPressed
@@ -60,7 +65,6 @@ import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -96,25 +100,55 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import java.time.Duration
 
-class PathsFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun PathsToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { PathsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class PathsController(private val fragment: Fragment) {
 
     private val service by lazy {
         Tools.getService(
-            requireContext(),
+            fragment.requireContext(),
             PathsToolRegistration.SERVICE_BACKTRACK
         )
     }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val pathService by lazy {
-        PathService.getInstance(requireContext())
+        PathService.getInstance(fragment.requireContext())
     }
 
     private val gps by lazy {
-        SensorService(requireContext()).getGPS()
+        SensorService(fragment.requireContext()).getGPS()
     }
 
     private val gpxService by lazy {
-        IOFactory().createGpxService(this)
+        IOFactory().createGpxService(fragment as AndromedaFragment)
     }
 
     private var sort = PathSortMethod.MostRecent
@@ -131,9 +165,10 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     private var backtrackFrequency by mutableStateOf<Duration?>(null)
     private var sortMenuText by mutableStateOf("")
     private var showBacktrackFrequencyPicker by mutableStateOf(false)
+    private var isInitialized = false
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
         PathsScreen(
             title = title.ifBlank { stringResource(R.string.paths) },
@@ -146,7 +181,7 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
             resetKey = pathListResetKey,
             backtrackState = backtrackState,
             backtrackFrequency = backtrackFrequency,
-            formatService = FormatService.getInstance(requireContext()),
+            formatService = FormatService.getInstance(fragment.requireContext()),
             baseDistanceUnits = prefs.baseDistanceUnits,
             onSearchChange = {
                 searchText = it
@@ -162,7 +197,7 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
                 showBacktrackFrequencyPicker = true
             },
             onBacktrackToggleClick = ::toggleBacktrack,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
 
         if (showBacktrackFrequencyPicker) {
@@ -185,11 +220,13 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
         manager = GroupListManager(
-            lifecycleScope,
+            fragment.viewLifecycleOwner.lifecycleScope,
             pathLoader,
             lastRoot,
             this::sortPaths
@@ -200,29 +237,31 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
             if (rootChanged) {
                 pathListResetKey++
             }
-            title = (root as PathGroup?)?.name ?: getString(R.string.paths)
+            title = (root as PathGroup?)?.name ?: fragment.getString(R.string.paths)
         }
 
         sort = prefs.navigation.pathSort
-        sortMenuText = getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
 
         // TODO: See if it is possible to get notified of changes without loading all paths
-        observeFlow(pathService.getPaths()) {
+        fragment.observeFlow(pathService.getPaths()) {
             manager.refresh()
         }
 
-        onBackPressed {
+        fragment.onBackPressed {
             if (!manager.up()) {
                 remove()
-                findNavController().navigateUp()
+                fragment.findNavController().navigateUp()
             }
         }
 
-        title = getString(R.string.paths)
+        title = fragment.getString(R.string.paths)
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
+        if (!isInitialized) {
+            return
+        }
         Tools.subscribe(
             PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED,
             this::onBacktrackChanged
@@ -234,8 +273,10 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
         updateStatusBar()
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
+        if (!isInitialized) {
+            return
+        }
         tryOrNothing {
             lastRoot = manager.root
         }
@@ -247,6 +288,11 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
             PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
             this::onBacktrackChanged
         )
+    }
+
+    fun onDestroy() {
+        onPause()
+        isInitialized = false
     }
 
     private fun updateStatusBar() {
@@ -264,28 +310,28 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun changeBacktrackFrequency(frequency: Duration) {
         ChangeBacktrackFrequencyCommand(
-            requireContext(),
-            lifecycleScope
+            fragment.requireContext(),
+            fragment.viewLifecycleOwner.lifecycleScope
         ) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleBacktrack() {
-        val command = ToggleBacktrackCommand(this)
+        val command = ToggleBacktrackCommand(fragment)
         command.execute()
     }
 
     private fun changeSort() {
         val sortOptions = PathSortMethod.values()
         Pickers.item(
-            requireContext(),
-            getString(R.string.sort),
+            fragment.requireContext(),
+            fragment.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.navigation.pathSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.navigation.pathSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -293,11 +339,11 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun getSortString(sortMethod: PathSortMethod): String {
         return when (sortMethod) {
-            PathSortMethod.MostRecent -> getString(R.string.most_recent)
-            PathSortMethod.Longest -> getString(R.string.longest)
-            PathSortMethod.Shortest -> getString(R.string.shortest)
-            PathSortMethod.Closest -> getString(R.string.closest)
-            PathSortMethod.Name -> getString(R.string.name)
+            PathSortMethod.MostRecent -> fragment.getString(R.string.most_recent)
+            PathSortMethod.Longest -> fragment.getString(R.string.longest)
+            PathSortMethod.Shortest -> fragment.getString(R.string.shortest)
+            PathSortMethod.Closest -> fragment.getString(R.string.closest)
+            PathSortMethod.Name -> fragment.getString(R.string.name)
         }
     }
 
@@ -318,8 +364,8 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setGroupVisibility(group: PathGroup, visible: Boolean) {
-        inBackground {
-            Alerts.withLoading(requireContext(), getString(R.string.loading)) {
+        fragment.inBackground {
+            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
                 val paths = onIO {
                     pathService.loader().getChildren(group.id, null).filterIsInstance<Path>()
                 }
@@ -350,7 +396,7 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun simplifyPath(path: Path) {
-        val command = SimplifyPathCommand(requireContext(), this, pathService)
+        val command = SimplifyPathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
@@ -366,34 +412,34 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun togglePathVisibility(path: Path) {
-        val command = TogglePathVisibilityCommand(requireContext(), this, pathService)
+        val command = TogglePathVisibilityCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun renamePath(path: Path) {
-        val command = RenamePathCommand(requireContext(), this, pathService)
+        val command = RenamePathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun keepPath(path: Path) {
-        val command = KeepPathCommand(requireContext(), this, pathService)
+        val command = KeepPathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun showPath(path: Path) {
-        val command = ViewPathCommand(findNavController())
+        val command = ViewPathCommand(fragment.findNavController())
         command.execute(path)
     }
 
     private fun showPath(id: Long) {
-        val command = ViewPathCommand(findNavController())
+        val command = ViewPathCommand(fragment.findNavController())
         command.execute(id)
     }
 
     private fun importPaths() {
         val command = ImportPathsCommand(
-            requireContext(),
-            this,
+            fragment.requireContext(),
+            fragment,
             gpxService,
             pathService,
             prefs.navigation
@@ -402,7 +448,7 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun exportPath(path: IPath?) {
-        val command = ExportPathCommand(requireContext(), this, gpxService, pathService)
+        val command = ExportPathCommand(fragment.requireContext(), fragment, gpxService, pathService)
         command.execute(path)
     }
 
@@ -411,18 +457,18 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun deletePath(path: Path) {
-        val command = DeletePathCommand(requireContext(), this, pathService)
+        val command = DeletePathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun merge(path: Path) {
-        val command = MergePathCommand(requireContext(), this, pathService)
+        val command = MergePathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun createPath() {
-        val command = CreatePathCommand(requireContext(), pathService, prefs.navigation)
-        inBackground {
+        val command = CreatePathCommand(fragment.requireContext(), pathService, prefs.navigation)
+        fragment.inBackground {
             command.execute(manager.root?.id)?.let {
                 showPath(it)
             }
@@ -431,35 +477,35 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
 
     // Groups
     private fun deleteGroup(group: PathGroup) {
-        val command = DeletePathGroupGroupCommand(requireContext(), pathService)
-        inBackground {
+        val command = DeletePathGroupGroupCommand(fragment.requireContext(), pathService)
+        fragment.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun renameGroup(group: PathGroup) {
-        val command = RenamePathGroupGroupCommand(requireContext(), pathService)
-        inBackground {
+        val command = RenamePathGroupGroupCommand(fragment.requireContext(), pathService)
+        fragment.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun createGroup() {
-        val command = CreatePathGroupCommand(requireContext(), pathService)
-        inBackground {
+        val command = CreatePathGroupCommand(fragment.requireContext(), pathService)
+        fragment.inBackground {
             command.execute(manager.root?.id)
             manager.refresh()
         }
     }
 
     private fun movePath(path: IPath) {
-        val command = MoveIPathCommand(requireContext(), pathService)
-        inBackground {
+        val command = MoveIPathCommand(fragment.requireContext(), pathService)
+        fragment.inBackground {
             val newGroup = command.execute(path)
             if (newGroup?.id != path.parentId) {
-                toast(getString(R.string.moved_to, newGroup?.name ?: getString(R.string.no_group)))
+                fragment.toast(fragment.getString(R.string.moved_to, newGroup?.name ?: fragment.getString(R.string.no_group)))
                 manager.refresh()
             }
         }

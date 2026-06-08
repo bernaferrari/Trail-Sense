@@ -906,8 +906,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentBacktrack
-            setClassName("com.kylecorry.trail_sense.tools.paths.ui.PathsFragment")
-            label = "FragmentBacktrack"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PathsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATHS)
+                .build())
             putAction(
                 R.id.action_fragmentBacktrack_to_action_navigation,
                 NavAction(R.id.action_navigation, NavOptions.Builder()
