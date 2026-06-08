@@ -25,7 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,45 +50,28 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (item: T?) -> Unit
     ) {
-        val view = ComposeView(context)
-        var root by mutableStateOf<T?>(null)
-        var items by mutableStateOf<List<T>>(emptyList())
-        var resetKey by mutableIntStateOf(0)
         var selected: T? = null
         var alert: AlertDialog? = null
-
-        manager.onChange = { newRoot, newItems, rootChanged ->
-            root = newRoot
-            items = newItems
-            if (rootChanged) {
-                resetKey++
+        val view = GroupablePickerView(
+            context = context,
+            emptyText = emptyText,
+            titleProvider = titleProvider,
+            itemTitleProvider = itemTitleProvider,
+            searchEnabled = searchEnabled,
+            onNavigateUp = { manager.up() },
+            onSearch = { manager.search(it) },
+            onClick = {
+                if (it.isGroup) {
+                    manager.open(it.id)
+                } else {
+                    selected = it
+                    onPick.invoke(it)
+                    alert?.dismiss()
+                }
             }
-        }
+        )
 
-        view.setContent {
-            TrailSenseTheme {
-                GroupableSelectContent(
-                    root = root,
-                    items = items,
-                    emptyText = emptyText,
-                    resetKey = resetKey,
-                    titleProvider = titleProvider,
-                    itemTitleProvider = itemTitleProvider,
-                    searchEnabled = searchEnabled,
-                    onNavigateUp = { manager.up() },
-                    onSearch = { manager.search(it) },
-                    onClick = {
-                        if (it.isGroup) {
-                            manager.open(it.id)
-                        } else {
-                            selected = it
-                            onPick.invoke(it)
-                            alert?.dismiss()
-                        }
-                    }
-                )
-            }
-        }
+        manager.onChange = view::update
 
         manager.open(initialGroup)
         alert = Alerts.dialog(context, title ?: "", contentView = view, okText = null) {
@@ -108,46 +91,73 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (cancelled: Boolean, item: T?) -> Unit
     ) {
-        val view = ComposeView(context)
-        var root by mutableStateOf<T?>(null)
-        var items by mutableStateOf<List<T>>(emptyList())
-        var resetKey by mutableIntStateOf(0)
-
-        manager.onChange = { newRoot, newItems, rootChanged ->
-            root = newRoot
-            items = newItems
-            if (rootChanged) {
-                resetKey++
+        val view = GroupablePickerView(
+            context = context,
+            emptyText = emptyText,
+            titleProvider = titleProvider,
+            itemTitleProvider = itemTitleProvider,
+            searchEnabled = searchEnabled,
+            onNavigateUp = { manager.up() },
+            onSearch = { manager.search(it) },
+            onClick = {
+                if (it.isGroup) {
+                    manager.open(it.id)
+                }
             }
-        }
+        )
 
-        view.setContent {
-            TrailSenseTheme {
-                GroupableSelectContent(
-                    root = root,
-                    items = items,
-                    emptyText = emptyText,
-                    resetKey = resetKey,
-                    titleProvider = titleProvider,
-                    itemTitleProvider = itemTitleProvider,
-                    searchEnabled = searchEnabled,
-                    onNavigateUp = { manager.up() },
-                    onSearch = { manager.search(it) },
-                    onClick = {
-                        if (it.isGroup) {
-                            manager.open(it.id)
-                        }
-                    }
-                )
-            }
-        }
+        manager.onChange = view::update
 
         manager.open(initialGroup)
         Alerts.dialog(context, title ?: "", contentView = view, okText = okText) {
-            onPick.invoke(it, root)
+            onPick.invoke(it, view.selectedRoot)
         }
     }
 
+}
+
+private class GroupablePickerView<T : Groupable>(
+    context: Context,
+    private val emptyText: String,
+    private val titleProvider: (T?) -> String,
+    private val itemTitleProvider: (T) -> String,
+    private val searchEnabled: Boolean,
+    private val onNavigateUp: () -> Unit,
+    private val onSearch: (String) -> Unit,
+    private val onClick: (T) -> Unit
+) : AbstractComposeView(context) {
+
+    private var root by mutableStateOf<T?>(null)
+    private var items by mutableStateOf<List<T>>(emptyList())
+    private var resetKey by mutableIntStateOf(0)
+    val selectedRoot: T?
+        get() = root
+
+    fun update(newRoot: T?, newItems: List<T>, rootChanged: Boolean) {
+        root = newRoot
+        items = newItems
+        if (rootChanged) {
+            resetKey++
+        }
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            GroupableSelectContent(
+                root = root,
+                items = items,
+                emptyText = emptyText,
+                resetKey = resetKey,
+                titleProvider = titleProvider,
+                itemTitleProvider = itemTitleProvider,
+                searchEnabled = searchEnabled,
+                onNavigateUp = onNavigateUp,
+                onSearch = onSearch,
+                onClick = onClick
+            )
+        }
+    }
 }
 
 @Composable

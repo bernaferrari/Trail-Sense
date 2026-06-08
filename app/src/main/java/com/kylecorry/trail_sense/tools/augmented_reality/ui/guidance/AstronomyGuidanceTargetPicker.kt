@@ -9,12 +9,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -166,13 +167,23 @@ class AstronomyGuidanceTargetPicker(
         options: List<AstronomyGuidanceOption>
     ): AstronomyGuidanceOption? = suspendCoroutine { cont ->
         val context = view.context
-        val dialogView = ComposeView(context)
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
-        var filteredOptions by mutableStateOf(options)
-        var query by mutableStateOf("")
+        var alert: androidx.appcompat.app.AlertDialog? = null
+        val dialogView = AstronomyGuidanceTargetPickerView(
+            context = context,
+            options = options,
+            onSelected = {
+                selected = it
+                if (!resumed) {
+                    resumed = true
+                    cont.resume(it)
+                }
+                alert?.dismiss()
+            }
+        )
 
-        val alert = Alerts.dialog(
+        alert = Alerts.dialog(
             context,
             context.getString(R.string.locate),
             contentView = dialogView,
@@ -183,8 +194,19 @@ class AstronomyGuidanceTargetPicker(
                 cont.resume(selected)
             }
         }
+    }
 
-        dialogView.setContent {
+    private class AstronomyGuidanceTargetPickerView(
+        context: android.content.Context,
+        private val options: List<AstronomyGuidanceOption>,
+        private val onSelected: (AstronomyGuidanceOption) -> Unit
+    ) : AbstractComposeView(context) {
+
+        private var filteredOptions by mutableStateOf(options)
+        private var query by mutableStateOf("")
+
+        @Composable
+        override fun Content() {
             TrailSenseTheme {
                 Column {
                     OutlinedTextField(
@@ -233,14 +255,7 @@ class AstronomyGuidanceTargetPicker(
                                     iconTint = option.iconTint?.let { Color(it) }
                                         ?: MaterialTheme.colorScheme.primary,
                                     iconRotation = option.iconRotation,
-                                    onClick = {
-                                        selected = option
-                                        if (!resumed) {
-                                            resumed = true
-                                            cont.resume(option)
-                                        }
-                                        alert.dismiss()
-                                    },
+                                    onClick = { onSelected(option) },
                                     animateEntrance = false,
                                     modifier = Modifier.testTag("astronomy_guidance_target")
                                 )
