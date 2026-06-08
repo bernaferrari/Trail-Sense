@@ -11,7 +11,6 @@ import android.text.util.Linkify.WEB_URLS
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.NumberPicker
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
@@ -32,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -269,6 +269,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.roundToInt
 
 class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
@@ -1866,6 +1867,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         val prefs = remember { AppServiceRegistry.get<UserPreferences>().bubbleLevel }
         val formatter = remember { AppServiceRegistry.get<FormatService>() }
         var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
+        var showThresholdDialog by remember { mutableStateOf(false) }
         val title = stringResource(R.string.pref_bubble_level_threshold_title)
         SettingsList(title = stringResource(R.string.tool_bubble_level_title)) {
             item("threshold") {
@@ -1873,13 +1875,24 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                     label = title,
                     summary = formatter.formatDegrees(threshold.toFloat()),
                     onClick = {
-                        pickBubbleLevelThreshold(title, threshold) {
-                            threshold = it
-                        }
+                        showThresholdDialog = true
                     },
                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                 )
             }
+        }
+        if (showThresholdDialog) {
+            BubbleLevelThresholdDialog(
+                title = title,
+                current = threshold,
+                formatter = formatter,
+                onDismiss = { showThresholdDialog = false },
+                onConfirm = {
+                    prefs.threshold = it.toFloat()
+                    threshold = it
+                    showThresholdDialog = false
+                }
+            )
         }
     }
 
@@ -2338,6 +2351,48 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     @Composable
+    private fun BubbleLevelThresholdDialog(
+        title: String,
+        current: Int,
+        formatter: FormatService,
+        onDismiss: () -> Unit,
+        onConfirm: (Int) -> Unit
+    ) {
+        var value by remember(current) { mutableFloatStateOf(current.toFloat()) }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(text = title)
+            },
+            text = {
+                androidx.compose.foundation.layout.Column {
+                    Text(text = formatter.formatDegrees(value))
+                    Slider(
+                        value = value,
+                        onValueChange = { value = it },
+                        valueRange = 0f..10f,
+                        steps = 9
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirm(value.roundToInt())
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+
+    @Composable
     private fun RulerScaleDialog(
         title: String,
         current: Float,
@@ -2514,26 +2569,6 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             cancelText = null,
             allowLinks = true
         )
-    }
-
-    private fun pickBubbleLevelThreshold(title: String, current: Int, onChange: (Int) -> Unit) {
-        val picker = NumberPicker(requireContext())
-        picker.minValue = 0
-        picker.maxValue = 10
-        picker.value = current
-        picker.wrapSelectorWheel = false
-
-        Alerts.dialog(
-            requireContext(),
-            title,
-            contentView = picker
-        ) { cancelled ->
-            if (!cancelled) {
-                AppServiceRegistry.get<UserPreferences>().bubbleLevel.threshold =
-                    picker.value.toFloat()
-                onChange(picker.value)
-            }
-        }
     }
 
     private fun pickBaselineDistance(
