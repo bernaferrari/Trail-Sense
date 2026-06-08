@@ -37,7 +37,6 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -468,7 +467,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         )
 
         Pickers.menu(
-            views.pathTitleMenuAnchor, listOf(
+            requireView(), listOf(
                 getString(R.string.rename),
                 if (path.temporary) getString(R.string.keep_forever) else null,
                 if (path.style.visible) getString(R.string.hide) else getString(
@@ -807,7 +806,6 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 private data class PathOverviewViews(
     val root: PathScrollState,
     val pathTitle: PathTitleState,
-    val pathTitleMenuAnchor: View,
     val pathStyleControls: PathStyleControlsView,
     val pathMapHolder: PathMapHolderState,
     val pathImage: MapView,
@@ -1046,14 +1044,6 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     val root = PathScrollState()
 
     val title = PathTitleState()
-    val titleView = ComposeView(context).apply {
-        id = R.id.path_title
-        setContent {
-            TrailSenseTheme {
-                PathTitle(title)
-            }
-        }
-    }
 
     val styleControls = PathStyleControlsView(context)
     val mapHolder = PathMapHolderState(Resources.dp(context, 250f).toInt())
@@ -1092,7 +1082,6 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     return PathOverviewViews(
         root = root,
         pathTitle = title,
-        pathTitleMenuAnchor = titleView,
         pathStyleControls = styleControls,
         pathMapHolder = mapHolder,
         pathImage = pathImage,
