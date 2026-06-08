@@ -1,9 +1,9 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
@@ -32,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -92,7 +97,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -107,12 +111,47 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FragmentToolTriangulate : TrailSenseComposeFragment() {
+@Composable
+fun TriangulateToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(fragment) {
+        TriangulateController(fragment)
+    }
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val appNavigation by lazy { NavControllerAppNavigation(findNavController()) }
-    private val navigator by lazy { Navigator.getInstance(requireContext()) }
+    DisposableEffect(lifecycleOwner, controller) {
+        controller.onViewCreated()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+            controller.onDestroyView()
+        }
+    }
+
+    controller.Content(modifier)
+}
+
+private class TriangulateController(
+    private val fragment: Fragment
+) {
+
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val appNavigation by lazy { NavControllerAppNavigation(fragment.findNavController()) }
+    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
 
     private var location: Coordinate? = null
 
@@ -144,8 +183,8 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
     private val isBound: Boolean
         get() = map != null
 
-    private val compass by lazy { SensorService(requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
+    private val compass by lazy { SensorService(fragment.requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
     private var cameraBearingIndex: Int? = null
 
@@ -167,7 +206,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
     }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         TriangulateScreen(
             title = title,
             actionsVisible = actionsVisible,
@@ -213,12 +252,11 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             onLocation1ExpandedChange = { location1Expanded = it },
             onLocation2ExpandedChange = { location2Expanded = it },
             onReset = ::reset,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize()
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onViewCreated() {
         isViewCreated = true
         maybeSetup()
     }
@@ -237,27 +275,27 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
 
     private fun createBeacon() {
         location?.let {
-            AppUtils.placeBeacon(requireContext(), GeoUri(it))
+            AppUtils.placeBeacon(fragment.requireContext(), GeoUri(it))
         }
     }
 
     private fun navigateToLocation() {
         location?.let {
-            navigator.navigateTo(it, getString(R.string.location), BeaconOwner.Triangulate)
+            navigator.navigateTo(it, fragment.getString(R.string.location), BeaconOwner.Triangulate)
             appNavigation.navigate(R.id.action_navigation)
         }
     }
 
     private fun shareLocation() {
         location?.let {
-            Share.shareLocation(this, it)
+            Share.shareLocation(fragment, it)
         }
     }
 
     private fun updateGpsOverride() {
         location?.let { coord ->
             prefs.locationOverride = coord
-            Alerts.toast(requireContext(), getString(R.string.location_override_updated))
+            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.location_override_updated))
         }
     }
 
@@ -287,11 +325,11 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
     }
 
     private fun setBearingFromCamera(index: Int) {
-        requestCamera { hasPermission ->
+        fragment.requestCamera { hasPermission ->
             if (hasPermission) {
                 cameraBearingIndex = index
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(this) {
+                    cameraSheet = SightingCompassDialog(fragment) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
                         }
@@ -299,7 +337,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
                 }
                 cameraSheet?.show()
             } else {
-                alertNoCameraPermission()
+                fragment.alertNoCameraPermission()
             }
         }
     }
@@ -328,7 +366,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
                     it,
                     id = 1,
                     name = "1",
-                    color = Resources.getPrimaryMarkerColor(requireContext()),
+                    color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
                     strokeColor = Color.WHITE
                 )
             },
@@ -337,7 +375,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
                     it,
                     id = 2,
                     name = "2",
-                    color = Resources.getPrimaryMarkerColor(requireContext()),
+                    color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
                     strokeColor = Color.WHITE
                 )
             },
@@ -373,15 +411,15 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             formatService.formatDistance(it, Units.getDecimalPlaces(it.units))
         }
         return buildSpannedString {
-            append(getString(R.string.location_number, locationIdx))
+            append(fragment.getString(R.string.location_number, locationIdx))
             if (distance != null) {
                 appendLine()
                 scale(0.75f) {
                     append(
                         if (shouldCalculateMyLocation) {
-                            getString(R.string.distance_away_from_self, formattedDistance)
+                            fragment.getString(R.string.distance_away_from_self, formattedDistance)
                         } else {
-                            getString(R.string.distance_away_from_destination, formattedDistance)
+                            fragment.getString(R.string.distance_away_from_destination, formattedDistance)
                         }
                     )
                 }
@@ -395,11 +433,11 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
         }
 
         if (shouldCalculateMyLocation) {
-            location1Instructions = getString(R.string.triangulate_self_location_1_instructions)
-            location2Instructions = getString(R.string.triangulate_self_location_2_instructions)
+            location1Instructions = fragment.getString(R.string.triangulate_self_location_1_instructions)
+            location2Instructions = fragment.getString(R.string.triangulate_self_location_2_instructions)
         } else {
-            location1Instructions = getString(R.string.triangulate_destination_location_1_instructions)
-            location2Instructions = getString(
+            location1Instructions = fragment.getString(R.string.triangulate_destination_location_1_instructions)
+            location2Instructions = fragment.getString(
                 R.string.triangulate_destination_location_2_instructions,
                 formatService.formatDistance(
                     recommendedMinDistance,
@@ -449,7 +487,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             GeoJsonFeature.lineString(
                 if (shouldCalculateMyLocation) pts.reversed() else pts,
                 locationIdx.toLong(),
-                color = Resources.getPrimaryMarkerColor(requireContext()),
+                color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
                 lineStyle = LineStyle.Arrow
             )
         } else {
@@ -457,8 +495,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         compass.start {
             val bearing = compass.rawBearing
             compassBearingText = formatService.formatDegrees(bearing, replace360 = true)
@@ -469,20 +506,18 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
         updateTimer.once(500)
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         updateTimer.stop()
         compass.stop(null)
         saveState()
     }
 
-    override fun onDestroyView() {
+    fun onDestroyView() {
         map = null
         cameraSheet = null
         cameraBearingIndex = null
         isViewCreated = false
         isSetup = false
-        super.onDestroyView()
     }
 
     private fun update() {
@@ -521,7 +556,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
     private fun setLocation(location: Coordinate?) {
         this.location = location
         if (location == null || location.latitude.isNaN() || location.longitude.isNaN()) {
-            title = getString(R.string.could_not_triangulate)
+            title = fragment.getString(R.string.could_not_triangulate)
             actionsVisible = false
         } else {
             title = formatService.formatLocation(location)
@@ -540,7 +575,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
         preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
         preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1Value)
         preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2Value)
@@ -561,7 +596,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
         shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
         bearing1Value = preferences.getFloat("state_triangulate_bearing1")
         bearing2Value = preferences.getFloat("state_triangulate_bearing2")
@@ -580,7 +615,7 @@ class FragmentToolTriangulate : TrailSenseComposeFragment() {
         bearing1TrueNorth = false
         bearing2TrueNorth = false
 
-        val preferences = PreferencesSubsystem.getInstance(requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
         preferences.remove("state_triangulate_self")
         preferences.remove("state_triangulate_bearing1")
         preferences.remove("state_triangulate_bearing2")

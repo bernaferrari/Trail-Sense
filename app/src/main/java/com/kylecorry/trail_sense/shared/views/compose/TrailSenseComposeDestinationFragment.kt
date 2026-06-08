@@ -196,6 +196,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
+import com.kylecorry.trail_sense.tools.triangulate.ui.TriangulateToolScreen
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
@@ -357,6 +358,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_FLASHLIGHT -> Flashlight()
             DESTINATION_BATTERY -> BatteryTool()
             DESTINATION_METAL_DETECTOR -> MetalDetectorToolScreen()
+            DESTINATION_TRIANGULATE -> TriangulateToolScreen(this)
         }
     }
 
@@ -3369,5 +3371,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_FLASHLIGHT = "flashlight"
         const val DESTINATION_BATTERY = "battery"
         const val DESTINATION_METAL_DETECTOR = "metal_detector"
+        const val DESTINATION_TRIANGULATE = "triangulate"
     }
 }
