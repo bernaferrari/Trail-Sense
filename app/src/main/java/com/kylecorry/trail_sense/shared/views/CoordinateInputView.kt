@@ -1,15 +1,23 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -76,9 +84,9 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
     private val mapPicker = MapLocationPicker()
     private lateinit var locationEdit: EditText
     private lateinit var locationEditHolder: TextInputLayout
-    private lateinit var gpsBtn: ImageButton
-    private lateinit var helpBtn: ImageButton
-    private lateinit var gpsLoadingIndicator: LoadingIndicator
+    private lateinit var gpsBtn: View
+    private lateinit var helpBtn: View
+    private lateinit var gpsLoadingIndicator: ProgressBar
 
     init {
         context?.let {
@@ -86,12 +94,13 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
 
             val iconSize = Resources.dp(it, 32f).toInt()
             val iconPadding = Resources.dp(it, 8f).toInt()
-            gpsBtn = ImageButton(it).apply {
-                id = R.id.gps_btn
+            gpsBtn = createCoordinateIconButton(
+                it,
+                id = R.id.gps_btn,
+                icon = R.drawable.ic_location,
+                showBackground = true
+            ).apply {
                 elevation = Resources.dp(it, 4f)
-                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-                setImageResource(R.drawable.ic_location)
-                setBackgroundResource(R.drawable.rounded_rectangle)
             }
             addView(
                 gpsBtn,
@@ -138,12 +147,12 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
                 )
             )
 
-            helpBtn = ImageButton(it).apply {
-                id = R.id.coordinate_input_help_btn
-                background = null
-                setImageResource(R.drawable.ic_help)
-                imageTintList = ColorStateList.valueOf(Resources.androidTextColorPrimary(it))
-            }
+            helpBtn = createCoordinateIconButton(
+                it,
+                id = R.id.coordinate_input_help_btn,
+                icon = R.drawable.ic_help,
+                showBackground = false
+            )
             addView(
                 helpBtn,
                 LayoutParams(iconSize, iconSize).apply {
@@ -274,4 +283,33 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
         beaconListener = listener
     }
 
+}
+
+private fun createCoordinateIconButton(
+    context: Context,
+    id: Int,
+    icon: Int,
+    showBackground: Boolean
+): ComposeView {
+    return ComposeView(context).apply {
+        this.id = id
+        if (showBackground) {
+            background = Resources.drawable(context, R.drawable.rounded_rectangle)
+        }
+        setContent {
+            TrailSenseTheme {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
 }

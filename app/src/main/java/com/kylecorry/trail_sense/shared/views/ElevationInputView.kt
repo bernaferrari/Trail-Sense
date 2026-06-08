@@ -5,9 +5,17 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
@@ -15,7 +23,6 @@ import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -63,7 +70,7 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     private var autofillListener: (() -> Unit)? = null
 
     private lateinit var elevationInput: DistanceInputView
-    private lateinit var gpsBtn: ImageButton
+    private lateinit var gpsBtn: View
 
     private lateinit var gpsLoadingIndicator: LoadingIndicator
 
@@ -73,12 +80,9 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
 
             val iconSize = Resources.dp(it, 32f).toInt()
             val iconPadding = Resources.dp(it, 8f).toInt()
-            gpsBtn = ImageButton(it).apply {
+            gpsBtn = createElevationIconButton(it).apply {
                 id = R.id.gps_btn
                 elevation = Resources.dp(it, 4f)
-                setPadding(iconPadding, iconPadding, iconPadding, iconPadding)
-                setImageResource(R.drawable.ic_altitude)
-                setBackgroundResource(R.drawable.rounded_rectangle)
             }
             addView(
                 gpsBtn,
@@ -112,8 +116,6 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
                     1f
                 )
             )
-
-            CustomUiUtils.setButtonState(gpsBtn, true)
 
             // Set up elevation input
             elevationInput.defaultHint = it.getString(R.string.elevation)
@@ -225,4 +227,25 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     }
 
 
+}
+
+private fun createElevationIconButton(context: Context): ComposeView {
+    return ComposeView(context).apply {
+        background = Resources.drawable(context, R.drawable.rounded_rectangle)
+        setContent {
+            TrailSenseTheme {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_altitude),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
 }
