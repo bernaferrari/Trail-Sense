@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -285,7 +286,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             timer.once(Duration.ofMillis(30))
         }
 
-        views.addPointBtn.setOnClickListener {
+        views.pathActions.onAddPointClick = {
             inBackground {
                 var wasSuccessful = false
                 val job = launch {
@@ -305,7 +306,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             }
         }
 
-        views.navigateBtn.setOnClickListener {
+        views.pathActions.onNavigateClick = {
             navigateToNearestPathPoint()
         }
 
@@ -849,8 +850,7 @@ private data class PathOverviewViews(
     val pathElevationMin: PathDataPointState,
     val pathElevationMax: PathDataPointState,
     val chart: Chart,
-    val navigateBtn: PathTextButton,
-    val addPointBtn: PathTextButton,
+    val pathActions: PathActionsView,
     val pathsTiming: PathTimingView
 )
 
@@ -1146,12 +1146,9 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val buttonRow = LinearLayout(context).apply {
-        gravity = Gravity.CENTER
-        orientation = LinearLayout.HORIZONTAL
-    }
+    val pathActions = PathActionsView(context)
     content.addView(
-        buttonRow,
+        pathActions,
         LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1159,38 +1156,6 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
             topMargin = 16.dp(context)
             bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
         }
-    )
-
-    val navigate = PathTextButton(
-        context,
-        context.getString(R.string.navigate),
-        R.drawable.ic_beacon
-    ).apply {
-        id = R.id.navigate_btn
-    }
-    buttonRow.addView(
-        navigate,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val addPoint = PathTextButton(
-        context,
-        context.getString(R.string.point),
-        R.drawable.ic_add
-    ).apply {
-        id = R.id.add_point_btn
-    }
-    buttonRow.addView(
-        addPoint,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
     )
 
     val timing = PathTimingView(context).apply {
@@ -1228,8 +1193,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         pathElevationMin = min,
         pathElevationMax = max,
         chart = chart,
-        navigateBtn = navigate,
-        addPointBtn = addPoint,
+        pathActions = pathActions,
         pathsTiming = timing
     )
 }
@@ -1312,25 +1276,52 @@ private class PathTimingView(context: Context) : AbstractComposeView(context) {
     }
 }
 
-private class PathTextButton(
-    context: Context,
-    private val text: String,
-    private val icon: Int
-) : AbstractComposeView(context) {
+private class PathActionsView(context: Context) : AbstractComposeView(context) {
+    var onNavigateClick by mutableStateOf({})
+    var onAddPointClick by mutableStateOf({})
+
     @Composable
     override fun Content() {
         TrailSenseTheme {
-            Button(onClick = { performClick() }) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(18.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                PathActionButton(
+                    text = context.getString(R.string.navigate),
+                    icon = R.drawable.ic_beacon,
+                    onClick = onNavigateClick
                 )
-                Text(text = text)
+                PathActionButton(
+                    text = context.getString(R.string.point),
+                    icon = R.drawable.ic_add,
+                    onClick = onAddPointClick,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun PathActionButton(
+    text: String,
+    icon: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .size(18.dp)
+        )
+        Text(text = text)
     }
 }
 
