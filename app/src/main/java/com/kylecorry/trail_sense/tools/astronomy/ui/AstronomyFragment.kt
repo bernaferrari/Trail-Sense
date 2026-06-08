@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -48,7 +47,6 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -115,7 +113,8 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
     private lateinit var gps: IGPS
 
-    private lateinit var chart: AstroChart
+    private val chart: AstroChart
+        get() = views.sunMoonChart
 
     private lateinit var sunTimesMode: SunTimesMode
 
@@ -166,7 +165,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     override fun beforeCreateContent() {
-        astronomyViews = createAstronomyViews(requireContext())
+        astronomyViews = createAstronomyViews(requireContext(), this::showTimeSeeker)
     }
 
     @Composable
@@ -192,8 +191,6 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             views.astronomyTitle.rightButton,
             prefs.astronomy
         ).bind()
-
-        chart = AstroChart(views.sunMoonChart, this::showTimeSeeker)
 
         views.button3d.isVisible =
             Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
@@ -617,7 +614,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 private data class AstronomyViews(
     val astronomyTitle: AstronomyTitleState,
     val displayDate: AstronomyDatePickerState,
-    val sunMoonChart: Chart,
+    val sunMoonChart: AstroChart,
     val timeSeekerDetails: AstronomyTimeSeekerDetailsState,
     val timeSeeker: AstronomyTimeSeekerState,
     val button3d: AstronomyTextButtonState
@@ -808,8 +805,7 @@ private fun AstronomyScreen(
         ) {
             views.displayDate.Content()
         }
-        AndroidView(
-            factory = { views.sunMoonChart },
+        views.sunMoonChart.Content(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.chart_height))
@@ -855,11 +851,14 @@ private fun AstronomyScreen(
     }
 }
 
-private fun createAstronomyViews(context: Context): AstronomyViews {
+private fun createAstronomyViews(
+    context: Context,
+    onChartClicked: (time: ZonedDateTime?) -> Unit = {}
+): AstronomyViews {
     return AstronomyViews(
         astronomyTitle = AstronomyTitleState(),
         displayDate = AstronomyDatePickerState(context),
-        sunMoonChart = Chart(context).apply { id = R.id.sunMoonChart },
+        sunMoonChart = AstroChart(context, onChartClicked),
         timeSeekerDetails = AstronomyTimeSeekerDetailsState(),
         timeSeeker = AstronomyTimeSeekerState(maxValue = (60 * 24).toFloat()),
         button3d = AstronomyTextButtonState(context.getString(R.string.view_in_3d))

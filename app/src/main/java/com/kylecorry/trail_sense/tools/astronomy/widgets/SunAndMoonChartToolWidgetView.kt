@@ -3,8 +3,9 @@ package com.kylecorry.trail_sense.tools.astronomy.widgets
 import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.views.chart.Chart
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -39,9 +40,9 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
 
         val views = getView(context, prefs)
         onMain {
-            val chart = Chart(context)
             val userPrefs = UserPreferences(context)
-            val astroChart = AstroChart(chart) {}
+            val astroChart = AstroChart(context) {}
+            astroChart.setMoonImage(R.drawable.ic_moon)
             astroChart.setBands(userPrefs.astronomy.showAstronomyBands)
             astroChart.plot(sunAltitudes, moonAltitudes)
 
@@ -53,7 +54,12 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             astroChart.moveSun(currentSun)
             astroChart.moveMoon(currentMoon)
 
-            renderChart(context, views, chart)
+            val chartView = ComposeView(context).apply {
+                setContent {
+                    astroChart.Content(Modifier.fillMaxSize())
+                }
+            }
+            renderChart(context, views, chartView)
         }
 
         views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
