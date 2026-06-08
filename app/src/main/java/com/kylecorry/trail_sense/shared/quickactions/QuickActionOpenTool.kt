@@ -2,14 +2,14 @@ package com.kylecorry.trail_sense.shared.quickactions
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
 class QuickActionOpenTool(
     button: QuickActionButtonView,
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     @IdRes private val navId: Int,
     @DrawableRes private val icon: Int
 ) :

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 
-class QuickActionBacktrack(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
+class QuickActionBacktrack(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
     ToolServiceQuickAction(
         btn,
         fragment,

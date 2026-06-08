@@ -58,6 +58,7 @@ import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -65,8 +66,8 @@ import androidx.navigation.fragment.findNavController as fragmentFindNavControll
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -76,6 +77,7 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
+import com.kylecorry.andromeda.fragments.inBackground as runInBackground
 import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
@@ -140,16 +142,15 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
-import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
+import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
-import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
@@ -269,6 +270,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.WeatherToolScreen
 import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -308,6 +310,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     private var clinometerLockController: ClinometerLockController? = null
     private var beaconListController: BeaconListControllerHost? = null
     private var mapController: MapControllerHost? = null
+
+    override val lifecycleOwner: LifecycleOwner
+        get() = viewLifecycleOwner
 
     val hookResetOnResume: Int
         get() = resetOnResume
@@ -367,6 +372,66 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         }
     }
 
+    override fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
+                action(Permissions.canRecognizeActivity(requireContext()))
+            }
+        } else {
+            action(true)
+        }
+    }
+
+    override fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermission(
+            SpecialPermission.SCHEDULE_EXACT_ALARMS,
+            PermissionRationale(
+                getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
+                AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                    getString(
+                        R.string.allow_schedule_exact_alarms_instructions,
+                        getString(R.string.app_name),
+                        getString(R.string.settings)
+                    )
+                ),
+                ok = getString(R.string.settings),
+            )
+        ) {
+            val isGranted = Permissions.hasPermission(
+                requireContext(),
+                SpecialPermission.SCHEDULE_EXACT_ALARMS
+            )
+            if (!isGranted) {
+                Alerts.toast(
+                    requireContext(),
+                    getString(R.string.exact_alarm_permission_denied),
+                    short = false
+                )
+            }
+            action(isGranted)
+        }
+    }
+
+    override fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
+        if (Permissions.canStartLocationForgroundService(requireContext())) {
+            action(true)
+            return
+        }
+
+        requirePermissionRequester().requestPermissions(
+            listOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        ) {
+            val hasPermission = Permissions.canStartLocationForgroundService(requireContext())
+            if (!hasPermission) {
+                Alerts.toast(requireContext(), getString(R.string.backtrack_no_permission))
+            }
+            action(hasPermission)
+        }
+    }
+
     override fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
         requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
             action(Permissions.isBackgroundLocationEnabled(requireContext()))
@@ -403,6 +468,34 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override fun findNavController(): NavController {
         return fragmentFindNavController()
+    }
+
+    override fun toast(message: CharSequence, short: Boolean) {
+        Alerts.toast(requireContext(), message, short)
+    }
+
+    override fun inBackground(
+        state: BackgroundMinimumState,
+        cancelWhenRerun: Boolean,
+        block: suspend CoroutineScope.() -> Unit
+    ): Job {
+        return runInBackground(state, block = block)
+    }
+
+    override fun alertNoActivityRecognitionPermission() {
+        Alerts.toast(
+            requireContext(),
+            getString(R.string.activity_recognition_permission_denied),
+            short = false
+        )
+    }
+
+    override fun openWidgets() {
+        requireMainActivity().openWidgets()
+    }
+
+    override fun reloadTheme() {
+        requireMainActivity().reloadTheme()
     }
 
     override fun onCreateView(
@@ -676,6 +769,18 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override fun refreshBeaconList() {
         beaconListController?.refreshBeaconList()
+    }
+
+    override fun getBottomNavigationHeight(): Int {
+        return requireMainActivity().getBottomNavigationHeight()
+    }
+
+    override fun addOverlayView(view: View) {
+        requireMainActivity().addOverlayView(view)
+    }
+
+    override fun removeOverlayView(view: View) {
+        requireMainActivity().removeOverlayView(view)
     }
 
     @Composable

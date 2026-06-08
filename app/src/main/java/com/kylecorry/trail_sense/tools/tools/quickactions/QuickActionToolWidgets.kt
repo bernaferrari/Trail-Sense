@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
-import com.kylecorry.trail_sense.shared.requireMainActivity
 
-class QuickActionToolWidgets(button: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) : QuickActionButton(
+class QuickActionToolWidgets(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) : QuickActionButton(
     button,
     fragment
 ) {
@@ -18,7 +17,7 @@ class QuickActionToolWidgets(button: QuickActionButtonView, fragment: TrailSense
 
     override fun onClick() {
         super.onClick()
-        fragment.requireMainActivity().openWidgets()
+        fragment.openWidgets()
     }
 
 }

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import androidx.compose.runtime.mutableStateListOf
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class MainActivityQuickActionBinder(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val state: MainActivityQuickActionState
 ) : IQuickActionBinder {
 
@@ -55,12 +55,12 @@ class MainActivityQuickActionBinder(
 
         recommended.distinct().forEach {
             val action = factory.create(it, createButton(true), fragment)
-            action.bind(fragment.viewLifecycleOwner)
+            action.bind(fragment.lifecycleOwner)
         }
 
         selected.forEach {
             val action = factory.create(it, createButton(false), fragment)
-            action.bind(fragment.viewLifecycleOwner)
+            action.bind(fragment.lifecycleOwner)
         }
     }
 }

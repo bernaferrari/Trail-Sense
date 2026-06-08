@@ -3,13 +3,12 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
-import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.SunsetAlarmCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -60,7 +59,7 @@ class SunsetAlarmReceiver : BroadcastReceiver() {
          * Enable sunset alerts and request permissions if needed
          */
         suspend fun enable(
-            fragment: TrailSenseComposeDestinationFragment,
+            fragment: TrailSenseDestinationHost,
             shouldRequestPermissions: Boolean
         ) {
             val service = Tools.getService(

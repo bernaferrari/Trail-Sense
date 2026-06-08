@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
 abstract class ToolServiceQuickAction(
     btn: QuickActionButtonView,
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     private val serviceId: String,
     private val stateChangeBroadcastId: String,
     private val hideWhenUnavailable: Boolean = false

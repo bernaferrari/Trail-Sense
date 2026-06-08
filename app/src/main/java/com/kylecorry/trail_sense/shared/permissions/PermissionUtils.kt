@@ -6,12 +6,8 @@ import android.os.Build
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.IPermissionRequester
-import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.trail_sense.R
 
 fun TrailSenseComposeDestinationFragment.alertNoCameraPermission() {
@@ -22,26 +18,8 @@ fun TrailSenseComposeDestinationFragment.alertNoCameraPermission() {
     )
 }
 
-fun TrailSenseComposeDestinationFragment.alertNoActivityRecognitionPermission() {
-    Alerts.toast(
-        requireContext(),
-        getString(R.string.activity_recognition_permission_denied),
-        short = false
-    )
-}
-
 fun TrailSenseComposeDestinationFragment.alertExactAlarmsDenied() {
     toast(getString(R.string.exact_alarm_permission_denied), short = false)
-}
-
-fun TrailSenseComposeDestinationFragment.requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
-            action(Permissions.canRecognizeActivity(requireContext()))
-        }
-    } else {
-        action(true)
-    }
 }
 
 fun TrailSenseComposeDestinationFragment.getPermissionRequester(): IPermissionRequester? {
@@ -50,32 +28,6 @@ fun TrailSenseComposeDestinationFragment.getPermissionRequester(): IPermissionRe
 
 fun TrailSenseComposeDestinationFragment.requirePermissionRequester(): IPermissionRequester {
     return this
-}
-
-fun TrailSenseComposeDestinationFragment.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-    requirePermissionRequester().requestPermission(
-        SpecialPermission.SCHEDULE_EXACT_ALARMS,
-        PermissionRationale(
-            getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
-            DependencyRegistry.get<MarkdownService>().toMarkdown(
-                getString(
-                    R.string.allow_schedule_exact_alarms_instructions,
-                    getString(R.string.app_name),
-                    getString(R.string.settings)
-                )
-            ),
-            ok = getString(R.string.settings),
-        )
-    ) {
-        val isGranted = Permissions.hasPermission(
-            requireContext(),
-            SpecialPermission.SCHEDULE_EXACT_ALARMS
-        )
-        if (!isGranted) {
-            alertExactAlarmsDenied()
-        }
-        action(isGranted)
-    }
 }
 
 fun Permissions.canStartLocationForgroundService(context: Context): Boolean {
@@ -90,27 +42,4 @@ fun Permissions.canStartLocationForgroundService(context: Context): Boolean {
 
 fun Permissions.canGetLocationCustom(context: Context): Boolean {
     return isBackgroundLocationEnabled(context) || canGetLocation(context, checkAppOps = true)
-}
-
-/**
- * Request location permission when absolutely required to start a foreground service (Android 14+)
- */
-fun TrailSenseComposeDestinationFragment.requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
-    if (Permissions.canStartLocationForgroundService(requireContext())) {
-        action(true)
-        return
-    }
-
-    requirePermissionRequester().requestPermissions(
-        listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    ) {
-        val hasPermission = Permissions.canStartLocationForgroundService(requireContext())
-        if (!hasPermission) {
-            toast(getString(R.string.backtrack_no_permission))
-        }
-        action(hasPermission)
-    }
 }

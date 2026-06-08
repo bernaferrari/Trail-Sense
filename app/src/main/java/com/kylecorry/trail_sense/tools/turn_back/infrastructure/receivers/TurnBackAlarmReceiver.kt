@@ -13,9 +13,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
-import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
 
@@ -93,7 +92,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
          * Enable turn back alerts and request permissions if needed
          */
         fun enable(
-            fragment: TrailSenseComposeDestinationFragment,
+            fragment: TrailSenseDestinationHost,
             shouldRequestPermissions: Boolean
         ) {
             if (shouldRequestPermissions) {

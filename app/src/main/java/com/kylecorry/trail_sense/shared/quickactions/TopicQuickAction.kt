@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
 
 abstract class TopicQuickAction(
     btn: QuickActionButtonView,
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     private val hideWhenUnavailable: Boolean = false
 ) :
     QuickActionButton(btn, fragment) {

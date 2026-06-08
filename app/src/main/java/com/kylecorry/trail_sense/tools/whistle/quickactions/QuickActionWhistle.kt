@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.whistle.quickactions
 
 import android.annotation.SuppressLint
 import android.view.MotionEvent
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.fragments.inBackground
@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 
-class QuickActionWhistle(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
+class QuickActionWhistle(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
     QuickActionButton(btn, fragment) {
 
     private var whistle: ISoundPlayer? = null

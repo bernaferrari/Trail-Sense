@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.quickactions
 
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.fragments.inBackground
@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import kotlinx.coroutines.launch
 
-class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) : QuickActionButton(
+class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) : QuickActionButton(
     button, fragment
 ) {
     private val mapService = getAppService<OfflineMapService>()

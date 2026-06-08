@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyPreferences
 
 class AstronomyQuickActionBinder(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val leftButton: ComposeQuickActionButtonView,
     private val rightButton: ComposeQuickActionButtonView,
     private val prefs: AstronomyPreferences
@@ -25,8 +25,8 @@ class AstronomyQuickActionBinder(
             rightButton,
             fragment
         )
-        left.bind(fragment)
-        right.bind(fragment)
+        left.bind(fragment.lifecycleOwner)
+        right.bind(fragment.lifecycleOwner)
     }
 
 }

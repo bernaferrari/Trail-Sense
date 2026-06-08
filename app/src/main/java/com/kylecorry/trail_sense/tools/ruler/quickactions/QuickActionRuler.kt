@@ -6,13 +6,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
@@ -23,7 +22,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionRuler(
     btn: QuickActionButtonView,
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
 ) : QuickActionButton(btn, fragment) {
     private val prefs by lazy { UserPreferences(context) }
 
@@ -36,7 +35,6 @@ class QuickActionRuler(
             removeRuler()
         }
 
-        val activity = fragment.activity as? MainActivity ?: return
         val rulerUnits = if (prefs.baseDistanceUnits.isMetric) {
             DistanceUnits.Centimeters
         } else {
@@ -68,10 +66,10 @@ class QuickActionRuler(
             Resources.dp(context, 80f).toInt(),
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        layoutParams.bottomMargin = activity.getBottomNavigationHeight()
+        layoutParams.bottomMargin = fragment.getBottomNavigationHeight()
         ruler.layoutParams = layoutParams
 
-        activity.addOverlayView(ruler)
+        fragment.addOverlayView(ruler)
 
         setIcon(R.drawable.ruler)
     }
@@ -108,7 +106,7 @@ class QuickActionRuler(
 
     private fun removeRuler() {
         ruler?.let {
-            (fragment.activity as? MainActivity)?.removeOverlayView(it)
+            fragment.removeOverlayView(it)
         }
         ruler = null
     }

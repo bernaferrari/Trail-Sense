@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.guide.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionUserGuide(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
+class QuickActionUserGuide(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
     QuickActionButton(btn, fragment) {
     override fun onCreate() {
         super.onCreate()
