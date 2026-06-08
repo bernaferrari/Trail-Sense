@@ -52,6 +52,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils.setupWithNavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
@@ -362,6 +363,15 @@ class MainActivity : AndromedaActivity() {
             return
         }
 
+        if (intent.action == "com.kylecorry.trail_sense.NAVIGATE") {
+            val destination = intent.getIntExtra("destination", 0)
+            val args = intent.getBundleExtra("arguments")
+            if (destination != 0) {
+                navController?.navigate(destination, args)
+            }
+            return
+        }
+
         val tools = Tools.getTools(this)
         tools.forEach { tool ->
             tool.intentHandlers.forEach { handler ->
@@ -537,9 +547,7 @@ class MainActivity : AndromedaActivity() {
 
     private fun initializeNavGraph(startDestination: Int) {
         val nav = navController ?: return
-        val navGraph = nav.navInflater.inflate(R.navigation.nav_graph)
-        navGraph.setStartDestination(startDestination)
-        nav.graph = navGraph
+        nav.graph = TrailSenseNavGraph.create(nav, startDestination)
     }
 
     private fun onPowerSavingModeChanged(data: Bundle): Boolean {
