@@ -28,13 +28,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,12 +54,26 @@ fun ToolsScreen(
     onToolClick: (Tool) -> Unit,
     onToolLongClick: (Tool) -> Unit,
     onSettingsClick: () -> Unit,
+    onSearchFocusRequestChanged: (((() -> Boolean)?) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val allTools = remember { Tools.getTools(context) }
     val toolSearch = remember { ToolSearch(context) }
+    val searchFocusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     var filter by remember { mutableStateOf("") }
+
+    DisposableEffect(onSearchFocusRequestChanged, keyboard) {
+        onSearchFocusRequestChanged?.invoke {
+            searchFocusRequester.requestFocus()
+            keyboard?.show()
+            true
+        }
+        onDispose {
+            onSearchFocusRequestChanged?.invoke(null)
+        }
+    }
 
     val filteredTools = remember(allTools, filter, toolSearch) {
         if (filter.isBlank()) allTools
@@ -84,7 +102,9 @@ fun ToolsScreen(
                 },
                 placeholder = { Text(stringResource(R.string.search)) },
                 singleLine = true,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(searchFocusRequester)
             )
             IconButton(onClick = onSettingsClick) {
                 Icon(

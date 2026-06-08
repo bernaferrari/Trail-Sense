@@ -21,6 +21,7 @@ class ToolsFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { com.kylecorry.trail_sense.shared.UserPreferences(requireContext()) }
     private val pinnedToolManager by lazy { PinnedToolManager(prefs) }
+    private var focusSearchRequest: (() -> Boolean)? = null
 
     @Composable
     override fun FragmentContent() {
@@ -33,8 +34,15 @@ class ToolsFragment : TrailSenseComposeFragment() {
             },
             onSettingsClick = {
                 findNavController().navigate(R.id.action_settings)
+            },
+            onSearchFocusRequestChanged = {
+                focusSearchRequest = it
             }
         )
+    }
+
+    fun focusSearch(): Boolean {
+        return focusSearchRequest?.invoke() == true
     }
 
     private fun showToolActions(tool: Tool) {

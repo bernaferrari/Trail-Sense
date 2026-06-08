@@ -15,7 +15,6 @@ import android.view.Menu
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -34,7 +33,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.navigation.NavigationBarView
-import com.google.android.material.textfield.TextInputEditText
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
@@ -64,6 +62,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.ToolsFragment
 
 class MainActivity : AndromedaActivity() {
 
@@ -506,10 +505,8 @@ class MainActivity : AndromedaActivity() {
         ).setIcon(R.drawable.apps)
             .setOnMenuItemClickListener {
                 if (navController?.currentDestination?.id == R.id.action_experimental_tools && !views.quickActionsSheet.isOpen()) {
-                    val searchinput = findViewById<TextInputEditText>(R.id.search_view_edit_text)
-                    if (searchinput?.requestFocus() == true) {
-                        val imm = getSystemService(InputMethodManager::class.java)
-                        imm.showSoftInput(searchinput, InputMethodManager.SHOW_IMPLICIT)
+                    val toolsFragment = getFragment() as? ToolsFragment
+                    if (toolsFragment?.focusSearch() == true) {
                         return@setOnMenuItemClickListener true
                     }
                 }
