@@ -121,9 +121,11 @@ import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
+import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
+import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
@@ -139,6 +141,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
+import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
@@ -247,6 +250,9 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
             DESTINATION_LIGHT_METER -> LightMeterScreen()
             DESTINATION_TOOLS -> ToolsHome()
+            DESTINATION_CONVERT -> ConvertScreen()
+            DESTINATION_BALLISTICS -> BallisticsScreen()
+            DESTINATION_PERMITS -> PermitsScreen()
         }
     }
 
@@ -2773,5 +2779,8 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_AUGMENTED_REALITY_SETTINGS = "augmented_reality_settings"
         const val DESTINATION_LIGHT_METER = "light_meter"
         const val DESTINATION_TOOLS = "tools"
+        const val DESTINATION_CONVERT = "convert"
+        const val DESTINATION_BALLISTICS = "ballistics"
+        const val DESTINATION_PERMITS = "permits"
     }
 }

@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
 import androidx.compose.foundation.layout.Column
@@ -13,18 +15,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
-
-class FragmentToolBallistics : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        BallisticsTabs()
-    }
-}
 
 @Composable
-private fun BallisticsTabs(
+fun BallisticsScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedIndex by remember { mutableIntStateOf(0) }

@@ -1,32 +1,29 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 
-class FragmentToolConvert : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        ConverterTabs(
-            pages = getPages(),
-            names = getPageNames()
-        )
-    }
-
-    private fun getPages(): List<ConverterPage> {
-        val context = requireContext()
-        return listOf(
+@Composable
+fun ConvertScreen(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val pages = remember(context) {
+        listOf(
             CoordinateConverterPage(context),
             DistanceConverterPage(context),
             TemperatureConverterPage(context),
@@ -35,17 +32,19 @@ class FragmentToolConvert : TrailSenseComposeFragment() {
             TimeConverterPage(context)
         )
     }
-
-    private fun getPageNames(): List<String> {
-        return listOf(
-            getString(R.string.coordinates_tab),
-            getString(R.string.distance),
-            getString(R.string.temperature),
-            getString(R.string.volume),
-            getString(R.string.weight),
-            getString(R.string.time)
-        )
-    }
+    val names = listOf(
+        stringResource(R.string.coordinates_tab),
+        stringResource(R.string.distance),
+        stringResource(R.string.temperature),
+        stringResource(R.string.volume),
+        stringResource(R.string.weight),
+        stringResource(R.string.time)
+    )
+    ConverterTabs(
+        pages = pages,
+        names = names,
+        modifier = modifier
+    )
 }
 
 @Composable

@@ -556,8 +556,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolConvertFragment
-            setClassName("com.kylecorry.trail_sense.tools.convert.ui.FragmentToolConvert")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ConvertFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CONVERT)
+                .build())
             graph.addDestination(this)
         }
 
@@ -663,15 +667,23 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolBallistics
-            setClassName("com.kylecorry.trail_sense.tools.ballistics.ui.FragmentToolBallistics")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolBallistics"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BALLISTICS)
+                .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolPermits
-            setClassName("com.kylecorry.trail_sense.tools.permits.ui.FragmentToolPermits")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolPermits"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PERMITS)
+                .build())
             graph.addDestination(this)
         }
 
