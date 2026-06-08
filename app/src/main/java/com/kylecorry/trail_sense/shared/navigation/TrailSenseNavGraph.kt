@@ -926,8 +926,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.bubbleLevelSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.level.ui.BubbleLevelSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "BubbleLevelSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BUBBLE_LEVEL_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

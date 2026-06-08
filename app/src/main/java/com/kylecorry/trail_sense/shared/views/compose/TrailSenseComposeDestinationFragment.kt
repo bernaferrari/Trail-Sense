@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import android.view.View
+import android.widget.NumberPicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
@@ -38,6 +41,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
@@ -73,8 +77,31 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
             DESTINATION_LICENSES -> LicensesScreen()
             DESTINATION_BEACON_SETTINGS -> BeaconSettings()
+            DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
             DESTINATION_CAMERA_SETTINGS -> CameraSettings()
             DESTINATION_ERROR_SETTINGS -> ErrorSettings()
+        }
+    }
+
+    @Composable
+    private fun BubbleLevelSettings() {
+        val prefs = remember { AppServiceRegistry.get<UserPreferences>().bubbleLevel }
+        val formatter = remember { AppServiceRegistry.get<FormatService>() }
+        var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
+        val title = stringResource(R.string.pref_bubble_level_threshold_title)
+        SettingsList(title = stringResource(R.string.tool_bubble_level_title)) {
+            item("threshold") {
+                SettingsActionRow(
+                    label = title,
+                    summary = formatter.formatDegrees(threshold.toFloat()),
+                    onClick = {
+                        pickBubbleLevelThreshold(title, threshold) {
+                            threshold = it
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
         }
     }
 
@@ -322,6 +349,26 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         )
     }
 
+    private fun pickBubbleLevelThreshold(title: String, current: Int, onChange: (Int) -> Unit) {
+        val picker = NumberPicker(requireContext())
+        picker.minValue = 0
+        picker.maxValue = 10
+        picker.value = current
+        picker.wrapSelectorWheel = false
+
+        Alerts.dialog(
+            requireContext(),
+            title,
+            contentView = picker
+        ) { cancelled ->
+            if (!cancelled) {
+                AppServiceRegistry.get<UserPreferences>().bubbleLevel.threshold =
+                    picker.value.toFloat()
+                onChange(picker.value)
+            }
+        }
+    }
+
     private fun projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
         return mapOf(
             CameraPreferences.ProjectionType.EstimatedIntrinsics to
@@ -359,6 +406,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_WATER_BOIL_SETTINGS = "water_boil_settings"
         const val DESTINATION_LICENSES = "licenses"
         const val DESTINATION_BEACON_SETTINGS = "beacon_settings"
+        const val DESTINATION_BUBBLE_LEVEL_SETTINGS = "bubble_level_settings"
         const val DESTINATION_CAMERA_SETTINGS = "camera_settings"
         const val DESTINATION_ERROR_SETTINGS = "error_settings"
     }
