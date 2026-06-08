@@ -51,8 +51,7 @@ class QuickActionSheet @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ConstraintLayout(context, attrs) {
 
-    private val header: ComposeView
-    private val quickActionsContainer: ComposeView
+    private val content: ComposeView
     private val widgetsContainer: ScrollView
     private val widgets: FlexboxLayout
     private val quickActionState = MainActivityQuickActionState()
@@ -79,12 +78,13 @@ class QuickActionSheet @JvmOverloads constructor(
         isFocusable = true
         setOnTouchListener { _, _ -> true }
 
-        header = ComposeView(context).apply {
+        content = ComposeView(context).apply {
             id = R.id.tabs
             setContent {
                 TrailSenseTheme {
-                    QuickActionHeader(
+                    QuickActionSheetContent(
                         selectedTab = selectedTab,
+                        state = quickActionState,
                         onTabSelected = {
                             if (it == 0) {
                                 showQuickActions()
@@ -100,7 +100,7 @@ class QuickActionSheet @JvmOverloads constructor(
             }
         }
         addView(
-            header,
+            content,
             LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -108,25 +108,6 @@ class QuickActionSheet @JvmOverloads constructor(
                 startToStart = LayoutParams.PARENT_ID
                 endToEnd = LayoutParams.PARENT_ID
                 topToTop = LayoutParams.PARENT_ID
-            }
-        )
-
-        quickActionsContainer = ComposeView(context).apply {
-            id = R.id.quick_actions_container
-            setContent {
-                TrailSenseTheme {
-                    QuickActionsContent(quickActionState)
-                }
-            }
-        }
-        addView(
-            quickActionsContainer,
-            LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = Resources.dp(context, 16f).toInt()
-                topToBottom = R.id.tabs
             }
         )
 
@@ -225,49 +206,56 @@ class QuickActionSheet @JvmOverloads constructor(
 
     private fun showQuickActions() {
         selectedTab = 0
-        quickActionsContainer.isVisible = true
         widgetsContainer.isVisible = false
     }
 
     private fun showWidgets() {
         selectedTab = 1
-        quickActionsContainer.isVisible = false
         widgetsContainer.isVisible = true
     }
 
 }
 
 @Composable
-private fun QuickActionHeader(
+private fun QuickActionSheetContent(
     selectedTab: Int,
+    state: MainActivityQuickActionState,
     onTabSelected: (Int) -> Unit,
     onClose: () -> Unit
 ) {
-    androidx.compose.foundation.layout.Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        PrimaryTabRow(
-            selectedTabIndex = selectedTab,
-            modifier = Modifier.weight(1f)
+        androidx.compose.foundation.layout.Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            Tab(
-                selected = selectedTab == 0,
-                onClick = { onTabSelected(0) },
-                text = { Text(stringResource(R.string.quick_actions)) }
-            )
-            Tab(
-                selected = selectedTab == 1,
-                onClick = { onTabSelected(1) },
-                text = { Text(stringResource(R.string.widgets)) }
-            )
+            PrimaryTabRow(
+                selectedTabIndex = selectedTab,
+                modifier = Modifier.weight(1f)
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { onTabSelected(0) },
+                    text = { Text(stringResource(R.string.quick_actions)) }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { onTabSelected(1) },
+                    text = { Text(stringResource(R.string.widgets)) }
+                )
+            }
+            IconButton(onClick = onClose) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_cancel),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-        IconButton(onClick = onClose) {
-            Icon(
-                painter = painterResource(R.drawable.ic_cancel),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+        if (selectedTab == 0) {
+            QuickActionsContent(state)
         }
     }
 }
