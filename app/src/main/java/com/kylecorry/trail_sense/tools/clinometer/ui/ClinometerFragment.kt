@@ -11,13 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +42,6 @@ import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
@@ -562,8 +561,8 @@ private data class ClinometerViews(
     val cameraClinometer: CameraClinometerView,
     val avalancheRisk: ClinometerDataPointState,
     val estimatedHeight: ClinometerDataPointState,
-    val clinometerInstructions: TextView,
-    val cameraClinometerInstructions: TextView
+    val clinometerInstructions: ClinometerInstructionView,
+    val cameraClinometerInstructions: ClinometerInstructionView
 )
 
 private class ClinometerDataPointState(
@@ -893,14 +892,37 @@ private fun createInstructionView(
     context: Context,
     id: Int,
     icon: Int
-): TextView {
-    return TextView(context).apply {
+): ClinometerInstructionView {
+    return ClinometerInstructionView(context, icon).apply {
         this.id = id
-        gravity = Gravity.CENTER
-        text = context.getString(R.string.clinometer_rotate_device)
-        compoundDrawablePadding = 8.dp(context)
-        setCompoundDrawables(top = icon)
-        CustomUiUtils.setImageColor(this, Resources.androidTextColorSecondary(context))
+    }
+}
+
+private class ClinometerInstructionView(
+    context: Context,
+    private val icon: Int
+) : AbstractComposeView(context) {
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(48.dp)
+                )
+                Text(
+                    text = context.getString(R.string.clinometer_rotate_device),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
     }
 }
 
