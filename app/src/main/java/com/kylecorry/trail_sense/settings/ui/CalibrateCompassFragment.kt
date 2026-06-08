@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
@@ -20,10 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -42,13 +38,13 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource
 import com.kylecorry.trail_sense.shared.sensors.providers.CompassProvider
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
-class CalibrateCompassFragment : Fragment() {
+class CalibrateCompassFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
@@ -69,170 +65,160 @@ class CalibrateCompassFragment : Fragment() {
         compass = sensorService.getCompass()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    val compassSourceOptions = remember { getCompassSourceOptions() }
+    @Composable
+    override fun FragmentContent() {
+        val compassSourceOptions = remember { getCompassSourceOptions() }
 
-                    var azimuth by remember { mutableStateOf(getString(R.string.dash)) }
-                    var accuracy by remember { mutableStateOf(getString(R.string.dash)) }
-                    var declination by remember { mutableStateOf(getString(R.string.dash)) }
-                    var source by remember { mutableStateOf(prefs.compass.source.id) }
-                    var smoothing by remember { mutableStateOf(prefs.compass.compassSmoothing) }
-                    var useTrueNorth by remember {
-                        mutableStateOf(getBoolean(R.string.pref_use_true_north, true))
-                    }
-                    var useAutoDeclination by remember {
-                        mutableStateOf(prefs.useAutoDeclination)
-                    }
-                    var declinationOverride by remember {
-                        mutableStateOf(prefs.declinationOverride)
-                    }
+        var azimuth by remember { mutableStateOf(getString(R.string.dash)) }
+        var accuracy by remember { mutableStateOf(getString(R.string.dash)) }
+        var declination by remember { mutableStateOf(getString(R.string.dash)) }
+        var source by remember { mutableStateOf(prefs.compass.source.id) }
+        var smoothing by remember { mutableStateOf(prefs.compass.compassSmoothing) }
+        var useTrueNorth by remember {
+            mutableStateOf(getBoolean(R.string.pref_use_true_north, true))
+        }
+        var useAutoDeclination by remember {
+            mutableStateOf(prefs.useAutoDeclination)
+        }
+        var declinationOverride by remember {
+            mutableStateOf(prefs.declinationOverride)
+        }
 
-                    setCompassReadings = {
-                        azimuth = it.azimuth
-                        accuracy = it.accuracy
-                        declination = it.declination
-                        declinationOverride = it.declinationOverride
-                    }
-                    setDeclinationOverride = {
-                        declinationOverride = it
-                    }
+        setCompassReadings = {
+            azimuth = it.azimuth
+            accuracy = it.accuracy
+            declination = it.declination
+            declinationOverride = it.declinationOverride
+        }
+        setDeclinationOverride = {
+            declinationOverride = it
+        }
 
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            )
-                        ) {
-                            item("header") {
-                                TrailSenseSectionHeader(
-                                    title = stringResource(R.string.pref_compass_sensor_title)
-                                )
-                            }
-                            if (hasCompass) {
-                                item("azimuth") {
-                                    SettingsInfoRow(
-                                        label = stringResource(R.string.compass_azimuth),
-                                        summary = azimuth,
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                }
-                                item("calibrate") {
-                                    SettingsActionRow(
-                                        label = stringResource(R.string.calibrate),
-                                        summary = getString(
-                                            R.string.compass_reported_accuracy,
-                                            accuracy
-                                        ),
-                                        onClick = ::showCalibrationDialog,
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                }
-                                item("source") {
-                                    SettingsPickerRow(
-                                        label = stringResource(R.string.source),
-                                        selected = optionLabel(compassSourceOptions, source),
-                                        onClick = {
-                                            pickOption(
-                                                getString(R.string.source),
-                                                compassSourceOptions,
-                                                source
-                                            ) {
-                                                source = it
-                                                putString(R.string.pref_compass_source, it)
-                                                resetCompass()
-                                            }
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                }
-                                item("smoothing") {
-                                    CompassSmoothingRow(
-                                        smoothing = smoothing,
-                                        onSmoothingChange = {
-                                            smoothing = it
-                                            putInt(R.string.pref_compass_filter_amt, it)
-                                            resetCompass()
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                                item("true_north") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.true_north),
-                                        checked = useTrueNorth,
-                                        onCheckedChange = {
-                                            useTrueNorth = it
-                                            prefs.compass.useTrueNorth = it
-                                            resetCompass()
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                            }
-                            item("declination") {
-                                SettingsInfoRow(
-                                    label = stringResource(R.string.compass_declination),
-                                    summary = declination,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("auto_declination") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.compass_auto_declination),
-                                    summary = stringResource(R.string.pref_auto_declination_summary),
-                                    checked = useAutoDeclination,
-                                    onCheckedChange = {
-                                        useAutoDeclination = it
-                                        prefs.useAutoDeclination = it
-                                        update()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("declination_override") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.compass_declination_override),
-                                    selected = getString(
-                                        R.string.degree_format,
-                                        declinationOverride
-                                    ),
-                                    enabled = !useAutoDeclination,
-                                    onClick = {
-                                        pickDeclinationOverride(declinationOverride) {
-                                            declinationOverride = it
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("declination_gps") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.override_from_gps),
-                                    enabled = !useAutoDeclination,
-                                    onClick = ::updateDeclinationFromGps,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                        }
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                )
+            ) {
+                item("header") {
+                    TrailSenseSectionHeader(
+                        title = stringResource(R.string.pref_compass_sensor_title)
+                    )
+                }
+                if (hasCompass) {
+                    item("azimuth") {
+                        SettingsInfoRow(
+                            label = stringResource(R.string.compass_azimuth),
+                            summary = azimuth,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
                     }
+                    item("calibrate") {
+                        SettingsActionRow(
+                            label = stringResource(R.string.calibrate),
+                            summary = getString(
+                                R.string.compass_reported_accuracy,
+                                accuracy
+                            ),
+                            onClick = ::showCalibrationDialog,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                    }
+                    item("source") {
+                        SettingsPickerRow(
+                            label = stringResource(R.string.source),
+                            selected = optionLabel(compassSourceOptions, source),
+                            onClick = {
+                                pickOption(
+                                    getString(R.string.source),
+                                    compassSourceOptions,
+                                    source
+                                ) {
+                                    source = it
+                                    putString(R.string.pref_compass_source, it)
+                                    resetCompass()
+                                }
+                            },
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                    }
+                    item("smoothing") {
+                        CompassSmoothingRow(
+                            smoothing = smoothing,
+                            onSmoothingChange = {
+                                smoothing = it
+                                putInt(R.string.pref_compass_filter_amt, it)
+                                resetCompass()
+                            },
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                        TrailSenseDivider()
+                    }
+                    item("true_north") {
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.true_north),
+                            checked = useTrueNorth,
+                            onCheckedChange = {
+                                useTrueNorth = it
+                                prefs.compass.useTrueNorth = it
+                                resetCompass()
+                            },
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                        TrailSenseDivider()
+                    }
+                }
+                item("declination") {
+                    SettingsInfoRow(
+                        label = stringResource(R.string.compass_declination),
+                        summary = declination,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("auto_declination") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.compass_auto_declination),
+                        summary = stringResource(R.string.pref_auto_declination_summary),
+                        checked = useAutoDeclination,
+                        onCheckedChange = {
+                            useAutoDeclination = it
+                            prefs.useAutoDeclination = it
+                            update()
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("declination_override") {
+                    SettingsPickerRow(
+                        label = stringResource(R.string.compass_declination_override),
+                        selected = getString(
+                            R.string.degree_format,
+                            declinationOverride
+                        ),
+                        enabled = !useAutoDeclination,
+                        onClick = {
+                            pickDeclinationOverride(declinationOverride) {
+                                declinationOverride = it
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("declination_gps") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.override_from_gps),
+                        enabled = !useAutoDeclination,
+                        onClick = ::updateDeclinationFromGps,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
                 }
             }
         }
