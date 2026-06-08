@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
@@ -53,16 +54,20 @@ open class EnhancedImageView @JvmOverloads constructor(
         }
 
     val width: Int
-        get() = view.width
+        get() = view.width.takeIf { it > 0 } ?: contentWidth
 
     val height: Int
-        get() = view.height
+        get() = view.height.takeIf { it > 0 } ?: contentHeight
 
     fun setBackgroundColor(color: Int) {
         view.setBackgroundColor(color)
     }
 
     fun post(action: () -> Unit) {
+        if (!view.isAttachedToWindow) {
+            action()
+            return
+        }
         view.post {
             action()
         }
@@ -71,6 +76,8 @@ open class EnhancedImageView @JvmOverloads constructor(
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
     private var renderVersion by mutableIntStateOf(0)
+    private var contentWidth by mutableIntStateOf(0)
+    private var contentHeight by mutableIntStateOf(0)
 
     private val imageView = TiledImageView(context, attrs)
 
@@ -186,9 +193,16 @@ open class EnhancedImageView @JvmOverloads constructor(
         get() = imageView.isImageLoaded
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         TrailSenseTheme {
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .onSizeChanged {
+                        contentWidth = it.width
+                        contentHeight = it.height
+                    }
+            ) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { imageView }

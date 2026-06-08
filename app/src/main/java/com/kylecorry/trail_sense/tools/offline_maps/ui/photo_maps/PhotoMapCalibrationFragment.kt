@@ -38,7 +38,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
@@ -497,10 +496,7 @@ private fun PhotoMapCalibrationHost(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { views.calibrationMap.view }
-        )
+        views.calibrationMap.Content(Modifier.fillMaxSize())
         if (views.previewButton.isVisible) {
             Box(
                 modifier = Modifier
