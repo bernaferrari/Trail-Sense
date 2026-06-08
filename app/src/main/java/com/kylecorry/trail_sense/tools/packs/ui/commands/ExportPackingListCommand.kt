@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.packs.ui.commands
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.text.slugify
 import com.kylecorry.trail_sense.R
@@ -12,8 +11,9 @@ import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import androidx.fragment.app.Fragment
 
-class ExportPackingListCommand(private val fragment: AndromedaFragment) : Command<Pack> {
+class ExportPackingListCommand(private val fragment: Fragment) : Command<Pack> {
 
     private val exportService = LighterPackIOService.create(fragment)
 

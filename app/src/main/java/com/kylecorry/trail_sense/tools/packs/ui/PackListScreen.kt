@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -47,7 +50,6 @@ import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -56,48 +58,60 @@ import com.kylecorry.trail_sense.tools.packs.ui.commands.ImportPackingListComman
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PackListFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun PackListToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { PackListController(fragment) }
 
-    private val packRepo by lazy { PackRepo.getInstance(requireContext()) }
-
-    private var packs by mutableStateOf(emptyList<Pack>())
-
-    @Composable
-    override fun FragmentContent() {
-        PackListScreen(
-            packs = packs,
-            onImportPack = ::importPack,
-            onCreatePack = ::createPack,
-            onOpenPack = { openPack(it.id) },
-            onRenamePack = ::renamePack,
-            onCopyPack = ::copyPack,
-            onExportPack = ::exportPack,
-            onDeletePack = ::deletePack,
-            modifier = Modifier.fillMaxSize()
-        )
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {}
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    PackListScreen(
+        packs = controller.packs,
+        onImportPack = controller::importPack,
+        onCreatePack = controller::createPack,
+        onOpenPack = { controller.openPack(it.id) },
+        onRenamePack = controller::renamePack,
+        onCopyPack = controller::copyPack,
+        onExportPack = controller::exportPack,
+        onDeletePack = controller::deletePack,
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+private class PackListController(private val fragment: Fragment) {
+
+    private val packRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
+    private var isInitialized = false
+
+    var packs by mutableStateOf(emptyList<Pack>())
+        private set
+
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
         loadPacks()
     }
 
     private fun loadPacks() {
-        observe(packRepo.getPacks()) {
+        fragment.observe(packRepo.getPacks()) {
             packs = it.sortedWith(compareBy { pack -> -pack.id })
         }
     }
 
-    private fun renamePack(pack: Pack) {
+    fun renamePack(pack: Pack) {
         Pickers.text(
-            requireContext(),
-            getString(R.string.rename),
+            fragment.requireContext(),
+            fragment.getString(R.string.rename),
             null,
             pack.name,
-            hint = getString(R.string.name)
+            hint = fragment.getString(R.string.name)
         ) {
             if (it != null) {
-                inBackground {
+                fragment.inBackground {
                     withContext(Dispatchers.IO) {
                         packRepo.addPack(pack.copy(name = it))
                     }
@@ -106,18 +120,18 @@ class PackListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun exportPack(pack: Pack) {
-        ExportPackingListCommand(this).execute(pack)
+    fun exportPack(pack: Pack) {
+        ExportPackingListCommand(fragment).execute(pack)
     }
 
-    private fun deletePack(pack: Pack) {
+    fun deletePack(pack: Pack) {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete_pack),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete_pack),
             pack.name
         ) { cancelled ->
             if (!cancelled) {
-                inBackground {
+                fragment.inBackground {
                     withContext(Dispatchers.IO) {
                         packRepo.deletePack(pack)
                     }
@@ -126,29 +140,29 @@ class PackListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun openPack(packId: Long) {
+    fun openPack(packId: Long) {
         tryOrNothing {
             val bundle = Bundle().apply {
                 putLong("pack_id", packId)
             }
-            findNavController().navigate(R.id.action_pack_to_pack_items, bundle)
+            fragment.findNavController().navigate(R.id.action_pack_to_pack_items, bundle)
         }
     }
 
-    private fun importPack() {
-        ImportPackingListCommand(this).execute()
+    fun importPack() {
+        ImportPackingListCommand(fragment).execute()
     }
 
-    private fun createPack() {
+    fun createPack() {
         Pickers.text(
-            requireContext(),
-            getString(R.string.new_packing_list),
+            fragment.requireContext(),
+            fragment.getString(R.string.new_packing_list),
             null,
             null,
-            hint = getString(R.string.name)
+            hint = fragment.getString(R.string.name)
         ) {
             if (it != null) {
-                inBackground {
+                fragment.inBackground {
                     val packId = withContext(Dispatchers.IO) {
                         packRepo.addPack(Pack(0, it))
                     }
@@ -161,16 +175,16 @@ class PackListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun copyPack(oldPack: Pack) {
+    fun copyPack(oldPack: Pack) {
         Pickers.text(
-            requireContext(),
-            getString(R.string.new_packing_list),
+            fragment.requireContext(),
+            fragment.getString(R.string.new_packing_list),
             null,
             null,
-            hint = getString(R.string.name)
+            hint = fragment.getString(R.string.name)
         ) {
             if (it != null) {
-                inBackground {
+                fragment.inBackground {
                     val packId = withContext(Dispatchers.IO) {
                         packRepo.copyPack(oldPack, Pack(0, it))
                     }

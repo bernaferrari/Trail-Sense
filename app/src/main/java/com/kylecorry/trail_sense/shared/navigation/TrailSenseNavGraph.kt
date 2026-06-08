@@ -1247,8 +1247,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.packListFragment
-            setClassName("com.kylecorry.trail_sense.tools.packs.ui.PackListFragment")
-            label = "PackListFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PackListScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PACK_LIST)
+                .build())
             putAction(
                 R.id.action_pack_to_pack_items,
                 NavAction(R.id.packItemListFragment, NavOptions.Builder()

@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.CoroutinePickers
 import com.kylecorry.trail_sense.R
@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 
-class ImportPackingListCommand(private val fragment: AndromedaFragment) : Command {
+class ImportPackingListCommand(private val fragment: Fragment) : Command {
 
     private val importService = LighterPackIOService.create(fragment)
     private val repo = PackRepo.getInstance(fragment.requireContext())
