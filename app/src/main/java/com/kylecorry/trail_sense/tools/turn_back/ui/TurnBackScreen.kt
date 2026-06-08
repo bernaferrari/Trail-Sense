@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -71,7 +71,7 @@ object TurnBackKeys {
 }
 
 @Composable
-fun TurnBackToolScreen(fragment: Fragment) {
+fun TurnBackToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { TurnBackController(fragment) }
 
     TurnBackScreen(
@@ -88,7 +88,7 @@ fun TurnBackToolScreen(fragment: Fragment) {
     )
 }
 
-private class TurnBackController(private val fragment: Fragment) {
+private class TurnBackController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     val sharedPrefs by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()) }

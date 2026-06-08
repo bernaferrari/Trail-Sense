@@ -52,7 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
@@ -86,7 +86,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun CloudToolScreen(fragment: Fragment) {
+fun CloudToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CloudController(fragment) }
 
     DisposableEffect(controller) {
@@ -113,7 +113,7 @@ fun CloudToolScreen(fragment: Fragment) {
     controller.PhotoImportContent()
 }
 
-private class CloudController(private val fragment: Fragment) {
+private class CloudController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
     private val cloudDetailsService by lazy { CloudDetailsService(fragment.requireContext()) }
@@ -221,7 +221,7 @@ private class CloudController(private val fragment: Fragment) {
         }
     }
 
-    private suspend fun takePhoto(fragment: Fragment, size: Size): android.net.Uri? {
+    private suspend fun takePhoto(fragment: TrailSenseComposeDestinationFragment, size: Size): android.net.Uri? {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
             fragment.requireActivity().runOnUiThread {

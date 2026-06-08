@@ -50,7 +50,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
@@ -80,7 +80,7 @@ import java.time.Instant
 import kotlin.math.abs
 
 @Composable
-fun CloudResultsToolScreen(fragment: Fragment) {
+fun CloudResultsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CloudResultsController(fragment) }
     DisposableEffect(controller) {
         onDispose {
@@ -108,7 +108,7 @@ fun CloudResultsToolScreen(fragment: Fragment) {
     )
 }
 
-private class CloudResultsController(private val fragment: Fragment) {
+private class CloudResultsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     var image by mutableStateOf<Bitmap?>(null)
         private set

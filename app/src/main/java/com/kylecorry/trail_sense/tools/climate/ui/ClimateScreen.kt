@@ -52,7 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.annotation.StringRes
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -101,7 +101,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
-fun ClimateToolScreen(fragment: Fragment) {
+fun ClimateToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { ClimateController(fragment) }
 
     DisposableEffect(controller) {
@@ -114,7 +114,7 @@ fun ClimateToolScreen(fragment: Fragment) {
     controller.Content()
 }
 
-private class ClimateController(private val fragment: Fragment) {
+private class ClimateController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val locationSubsystem by lazy { LocationSubsystem.getInstance(fragment.requireContext()) }
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
