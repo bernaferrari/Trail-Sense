@@ -36,14 +36,6 @@
         <attr name="android:gravity" />
     </declare-styleable>
 
-    <declare-styleable name="MaskedProgressView">
-        <attr name="android:drawable" />
-        <attr name="android:drawableTint" />
-        <attr name="android:progress" />
-        <attr name="android:progressTint" />
-        <attr name="horizontal" format="boolean" />
-    </declare-styleable>
-
     <declare-styleable name="CameraView">
         <attr name="flipEnable" format="boolean" />
     </declare-styleable>
