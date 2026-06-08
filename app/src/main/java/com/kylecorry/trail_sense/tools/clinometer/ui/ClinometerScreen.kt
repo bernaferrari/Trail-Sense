@@ -37,7 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -86,7 +86,7 @@ import kotlin.math.min
 
 @Composable
 fun ClinometerToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     onController: (ClinometerLockController?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -115,7 +115,7 @@ fun ClinometerToolScreen(
 }
 
 private class ClinometerController(
-    private val fragment: Fragment
+    private val fragment: TrailSenseComposeDestinationFragment
 ) : ClinometerLockController {
 
     private var clinometerViews: ClinometerViews? =

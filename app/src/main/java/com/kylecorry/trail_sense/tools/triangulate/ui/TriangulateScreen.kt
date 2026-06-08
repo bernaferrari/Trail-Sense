@@ -52,7 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -114,7 +114,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun TriangulateToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -146,7 +146,7 @@ fun TriangulateToolScreen(
 }
 
 private class TriangulateController(
-    private val fragment: Fragment
+    private val fragment: TrailSenseComposeDestinationFragment
 ) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }

@@ -3,8 +3,8 @@ package com.kylecorry.trail_sense.tools.map.ui
 import android.content.Context
 import android.graphics.Color
 import android.view.View
-import androidx.fragment.app.Fragment
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -38,7 +38,7 @@ class MapToolLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, fragment: Fragment) {
+    fun resume(context: Context, view: IMapView, fragment: TrailSenseComposeDestinationFragment) {
         synchronized(runningLock) {
             isRunning = true
         }

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.sharing
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -21,7 +21,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 object GeoJsonFeatureClickHandler {
 
     fun handleFeatureClick(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         feature: GeoJsonFeature
     ) {
         val layerId = feature.getLayerId()

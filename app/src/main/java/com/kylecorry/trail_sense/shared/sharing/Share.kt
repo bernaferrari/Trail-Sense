@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationCopy
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationGeoSender
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationQRSender
@@ -15,7 +14,7 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationS
 object Share {
 
     fun shareLocation(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         location: Coordinate,
         format: BuiltInCoordinateFormat = UserPreferences(fragment.requireContext()).navigation.coordinateFormat,
         title: String = fragment.getString(R.string.location)
@@ -39,7 +38,7 @@ object Share {
     }
 
     fun share(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         title: String,
         actions: List<ShareAction>,
         subtitle: String? = null,
@@ -78,7 +77,7 @@ object Share {
     }
 
     fun actions(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         title: String,
         actions: List<ActionItem>,
         subtitle: String? = null,
@@ -98,12 +97,7 @@ object Share {
             }
         }
 
-        val host = fragment as? TrailSenseComposeDestinationFragment
-        if (host == null) {
-            noActionSelected()
-            return
-        }
-        host.showActionSheet(title, subtitle, actions, customOnAction)
+        fragment.showActionSheet(title, subtitle, actions, customOnAction)
     }
 
 }
