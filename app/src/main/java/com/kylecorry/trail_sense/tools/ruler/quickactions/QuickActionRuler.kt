@@ -2,8 +2,9 @@ package com.kylecorry.trail_sense.tools.ruler.quickactions
 
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
@@ -12,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
@@ -29,7 +31,7 @@ class QuickActionRuler(
 ) : QuickActionButton(btn, fragment) {
     private val prefs by lazy { UserPreferences(context) }
 
-    private var ruler: ComposeView? = null
+    private var ruler: QuickActionRulerView? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -39,30 +41,24 @@ class QuickActionRuler(
         }
 
         val activity = fragment.activity as? MainActivity ?: return
-        val ruler = ComposeView(context)
+        val ruler = QuickActionRulerView(
+            context,
+            rulerUnits = if (prefs.baseDistanceUnits.isMetric) {
+                DistanceUnits.Centimeters
+            } else {
+                DistanceUnits.Inches
+            },
+            yDpi = Screen.ydpi(context),
+            scale = prefs.ruler.rulerScale,
+            flipped = prefs.ruler.rulerFlipped,
+            onDistanceSelected = { _ ->
+                setState(false)
+                this.ruler?.isVisible = false
+            }
+        )
         this.ruler = ruler
         ruler.isVisible = false
         ruler.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-        ruler.setContent {
-            TrailSenseTheme {
-                RulerCanvas(
-                    rulerUnits = if (prefs.baseDistanceUnits.isMetric) {
-                        DistanceUnits.Centimeters
-                    } else {
-                        DistanceUnits.Inches
-                    },
-                    highlight = null,
-                    yDpi = Screen.ydpi(context),
-                    scale = prefs.ruler.rulerScale,
-                    flipped = prefs.ruler.rulerFlipped,
-                    onDistanceSelected = {
-                        setState(false)
-                        ruler.isVisible = false
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
 
         ruler.x = 0f
         ruler.y = 0f
@@ -124,4 +120,29 @@ class QuickActionRuler(
         ruler = null
     }
 
+}
+
+private class QuickActionRulerView(
+    context: android.content.Context,
+    private val rulerUnits: DistanceUnits,
+    private val yDpi: Float,
+    private val scale: Float,
+    private val flipped: Boolean,
+    private val onDistanceSelected: (Distance) -> Unit
+) : AbstractComposeView(context) {
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            RulerCanvas(
+                rulerUnits = rulerUnits,
+                highlight = null,
+                yDpi = yDpi,
+                scale = scale,
+                flipped = flipped,
+                onDistanceSelected = onDistanceSelected,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
 }
