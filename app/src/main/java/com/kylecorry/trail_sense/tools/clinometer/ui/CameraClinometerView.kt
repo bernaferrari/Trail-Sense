@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
-import android.content.Context
 import android.graphics.Paint
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -15,7 +13,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -25,35 +22,19 @@ import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-class CameraClinometerView(context: Context) {
+class CameraClinometerView {
 
     var inclination by mutableStateOf(0f)
     var startInclination by mutableStateOf<Float?>(null)
     private var cameraVisible by mutableStateOf(true)
 
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
     var isVisible: Boolean
         get() = cameraVisible
         set(value) {
             cameraVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     @Composable

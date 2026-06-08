@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
-import android.content.Context
 import android.graphics.Paint
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -17,7 +15,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -27,36 +24,20 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class ClinometerView(context: Context) : IClinometerView {
+class ClinometerView : IClinometerView {
 
     private var displayAngle by mutableStateOf(90f)
     private var displayStartAngle by mutableStateOf<Float?>(null)
     private var viewInvisible by mutableStateOf(false)
 
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
     var isInvisible: Boolean
         get() = viewInvisible
         set(value) {
             viewInvisible = value
-            view.visibility = if (value) View.INVISIBLE else View.VISIBLE
         }
 
     override var angle: Float

@@ -755,17 +755,13 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         icon = R.drawable.ruler
     )
 
-    val clinometer = ClinometerView(context).apply {
-        id = R.id.clinometer
-    }
+    val clinometer = ClinometerView()
     val cameraViewHolder = ClinometerVisibilityState(initialVisible = false)
     val camera = CameraState(context)
     val arView = AugmentedRealityView(context).apply {
         id = R.id.ar_view
     }
-    val cameraClinometer = CameraClinometerView(context).apply {
-        id = R.id.camera_clinometer
-    }
+    val cameraClinometer = CameraClinometerView()
 
     val clinometerInstructions = ClinometerVisibilityState()
     val cameraClinometerInstructions = ClinometerVisibilityState()
