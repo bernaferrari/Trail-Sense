@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.weather.ui
 
-import android.os.Bundle
-import android.view.View
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +18,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Intents
@@ -40,7 +46,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -58,16 +63,38 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 
-class WeatherSettingsFragment : TrailSenseComposeFragment() {
+@Composable
+fun WeatherSettingsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { WeatherSettingsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val userPrefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                controller.onResume()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content()
+}
+
+private class WeatherSettingsController(private val fragment: Fragment) {
+
+    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
     private val prefs by lazy { userPrefs.weather }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
 
     private val weatherMonitorService by lazy {
         Tools.getService(
-            requireContext(),
+            fragment.requireContext(),
             WeatherToolRegistration.SERVICE_WEATHER_MONITOR
         )!!
     }
@@ -76,9 +103,9 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
     private var refreshNotificationSummary: ((String) -> Unit)? = null
 
     @Composable
-    override fun FragmentContent() {
+    fun Content() {
                     val quickActionOptions = remember {
-                        Tools.getQuickActions(requireContext()).map {
+                        Tools.getQuickActions(fragment.requireContext()).map {
                             WeatherOption(it.id.toString(), it.name)
                         }
                     }
@@ -314,9 +341,9 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                                     ),
                                     summary = notificationSummary,
                                     onClick = {
-                                        startActivity(
+                                        fragment.startActivity(
                                             Intents.notificationSettings(
-                                                requireContext(),
+                                                fragment.requireContext(),
                                                 CurrentWeatherAlerter.WEATHER_CHANNEL_ID
                                             )
                                         )
@@ -380,7 +407,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                                     enabled = dailyWeatherNotification,
                                     onClick = {
                                         Pickers.time(
-                                            requireContext(),
+                                            fragment.requireContext(),
                                             userPrefs.use24HourTime,
                                             dailyWeatherTime
                                         ) { time ->
@@ -516,7 +543,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                             hint = stringResource(R.string.frequency),
                             onDurationPicked = {
                                 if (it != null) {
-                                    ChangeWeatherFrequencyCommand(requireContext()) { frequency ->
+                                    ChangeWeatherFrequencyCommand(fragment.requireContext()) { frequency ->
                                         updateFrequency = frequency
                                     }.execute(it)
                                 }
@@ -530,9 +557,8 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                 }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+    fun onCreate() {
+        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
             setMonitorWeatherState?.invoke(
                 weatherMonitorService.isEnabled(),
                 !weatherMonitorService.isBlocked()
@@ -541,22 +567,20 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         refreshNotificationSummary?.invoke(notificationSummary())
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         setMonitorWeatherState = null
         refreshNotificationSummary = null
-        super.onDestroyView()
     }
 
     private fun onMonitorWeatherChanged(enabled: Boolean) {
-        inBackground {
+        fragment.inBackground {
             if (enabled && prefs.shouldMonitorWeather) {
                 weatherMonitorService.enable()
-                RequestRemoveBatteryRestrictionCommand(this@WeatherSettingsFragment).execute()
+                RequestRemoveBatteryRestrictionCommand(fragment).execute()
             } else {
                 weatherMonitorService.disable()
             }
@@ -564,7 +588,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
     }
 
     private fun restartWeatherMonitor() {
-        inBackground {
+        fragment.inBackground {
             weatherMonitorService.restart()
         }
     }
@@ -576,7 +600,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            requireContext(),
+            fragment.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -588,11 +612,11 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<WeatherOption> {
-        return options(resources.getStringArray(entriesId).toList(), valuesId)
+        return options(fragment.resources.getStringArray(entriesId).toList(), valuesId)
     }
 
     private fun options(entries: List<CharSequence>, valuesId: Int): List<WeatherOption> {
-        val values = resources.getStringArray(valuesId)
+        val values = fragment.resources.getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             WeatherOption(value, entries.getOrElse(index) { value }.toString())
         }
@@ -654,7 +678,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
 
     private suspend fun getDebugTimingSummary(): String? {
         return withContext(Dispatchers.Default) {
-            val readings = WeatherRepo.getInstance(requireContext()).getAll()
+            val readings = WeatherRepo.getInstance(fragment.requireContext()).getAll()
                 .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
 
             if (readings.isEmpty()) {
@@ -678,9 +702,9 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
     }
 
     private fun exportWeatherData() {
-        val exporter = IOFactory().createCsvService(requireMainActivity())
-        val repo = WeatherRepo.getInstance(requireContext())
-        inBackground(BackgroundMinimumState.Created) {
+        val exporter = IOFactory().createCsvService(fragment.requireMainActivity())
+        val repo = WeatherRepo.getInstance(fragment.requireContext())
+        fragment.inBackground(BackgroundMinimumState.Created) {
             val exported = withContext(Dispatchers.IO) {
                 val readings = repo.getAll().sortedByDescending { it.time }
                 val csv = WeatherCsvConverter().toCSV(readings)
@@ -688,7 +712,7 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
             }
             if (exported) {
                 withContext(Dispatchers.Main) {
-                    Alerts.toast(requireContext(), getString(R.string.weather_exported))
+                    Alerts.toast(fragment.requireContext(), getString(R.string.weather_exported))
                 }
             }
         }
@@ -696,10 +720,14 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
 
     private fun notificationSummary(): String {
         val isBlocked = Notify.isChannelBlocked(
-            requireContext(),
+            fragment.requireContext(),
             CurrentWeatherAlerter.WEATHER_CHANNEL_ID
         )
         return if (isBlocked) getString(R.string.off) else getString(R.string.on)
+    }
+
+    private fun getString(@StringRes id: Int, vararg args: Any): String {
+        return fragment.getString(id, *args)
     }
 
     private fun getStringPreference(key: Int, default: String): String {
