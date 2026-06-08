@@ -5,15 +5,14 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
@@ -64,23 +63,18 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
         return views
     }
 
-    private fun createPressureChartTitle(context: Context): PressureChartTitleView {
-        return PressureChartTitleView(context).apply {
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-        }
-    }
-}
-
-private class PressureChartTitleView(context: Context) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
+    private fun createPressureChartTitle(context: Context): View {
+        return TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
             Text(
                 text = context.getString(R.string.pressure),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium
             )
+        }.apply {
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
         }
     }
 }

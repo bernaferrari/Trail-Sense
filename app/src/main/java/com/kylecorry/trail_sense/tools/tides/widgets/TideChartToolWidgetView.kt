@@ -5,14 +5,13 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
 import com.kylecorry.trail_sense.tools.tides.ui.TideChart
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -66,26 +65,18 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         return views
     }
 
-    private fun createTideChartTitle(context: Context, title: String): TideChartTitleView {
-        return TideChartTitleView(context, title).apply {
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
-        }
-    }
-}
-
-private class TideChartTitleView(
-    context: Context,
-    private val title: String
-) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
+    private fun createTideChartTitle(context: Context, title: String): View {
+        return TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
             Text(
                 text = title,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium
             )
+        }.apply {
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
         }
     }
 }

@@ -34,8 +34,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,7 +66,7 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -149,31 +149,11 @@ class CreateBlankMapCommand(
         units: List<DistanceUnits>,
         onCenterChange: (Coordinate?) -> Unit,
         onDistanceChange: (Distance?) -> Unit
-    ): BlankMapCalibrationView {
-        return BlankMapCalibrationView(
-            context = context,
-            center = center,
-            distance = distance,
-            units = units,
-            onCenterChange = onCenterChange,
-            onDistanceChange = onDistanceChange
-        )
-    }
-
-}
-
-private class BlankMapCalibrationView(
-    context: Context,
-    private val center: Coordinate?,
-    private val distance: Distance?,
-    private val units: List<DistanceUnits>,
-    private val onCenterChange: (Coordinate?) -> Unit,
-    private val onDistanceChange: (Distance?) -> Unit
-) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
+    ): TrailSenseComposeRootView {
+        return TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
             BlankMapCalibrationContent(
                 center = center,
                 distance = distance,
@@ -183,6 +163,7 @@ private class BlankMapCalibrationView(
             )
         }
     }
+
 }
 
 @Composable

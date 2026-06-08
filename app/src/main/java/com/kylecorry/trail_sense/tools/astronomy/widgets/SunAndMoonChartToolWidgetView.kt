@@ -4,12 +4,12 @@ import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChart
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
@@ -55,7 +55,16 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             astroChart.moveSun(currentSun)
             astroChart.moveMoon(currentMoon)
 
-            renderChart(context, views, SunAndMoonChartView(context, astroChart))
+            renderChart(
+                context,
+                views,
+                TrailSenseComposeRootView(
+                    context,
+                    ViewCompositionStrategy.DisposeOnDetachedFromWindow
+                ) {
+                    astroChart.Content(Modifier.fillMaxSize())
+                }
+            )
         }
 
         views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
@@ -65,16 +74,5 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             NavigationUtils.toolPendingIntent(context, Tools.ASTRONOMY)
         )
         return views
-    }
-}
-
-private class SunAndMoonChartView(
-    context: Context,
-    private val chart: AstroChart
-) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        chart.Content(Modifier.fillMaxSize())
     }
 }

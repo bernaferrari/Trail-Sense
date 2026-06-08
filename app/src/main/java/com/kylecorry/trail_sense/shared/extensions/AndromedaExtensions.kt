@@ -12,7 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AlertDialog
 import com.kylecorry.andromeda.alerts.Alerts
@@ -20,6 +20,7 @@ import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 inline fun Alerts.withCancelableLoading(
     context: Context,
@@ -46,7 +47,12 @@ fun Alerts.cancelableLoading(
     return dialog(
         context,
         title,
-        contentView = LoadingDialogView(context),
+        contentView = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            LoadingDialogContent()
+        },
         okText = null,
         cancelText = cancelText,
         cancelOnOutsideTouch = false
@@ -57,17 +63,14 @@ fun Alerts.cancelableLoading(
     }
 }
 
-private class LoadingDialogView(context: Context) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Box(
-                modifier = Modifier.padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+@Composable
+private fun LoadingDialogContent() {
+    TrailSenseTheme {
+        Box(
+            modifier = Modifier.padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

@@ -18,13 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -36,18 +36,13 @@ fun compassCalibrationView(
     width: Int,
     height: Int
 ): View {
-    return CompassCalibrationView(context).apply {
+    return TrailSenseComposeRootView(
+        context,
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        CompassCalibrationContent()
+    }.apply {
         layoutParams = ViewGroup.LayoutParams(width, height)
-    }
-}
-
-private class CompassCalibrationView(context: Context) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            CompassCalibrationContent()
-        }
     }
 }
 
