@@ -69,7 +69,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private var showRecenter by mutableStateOf(false)
     private var childSpec by mutableStateOf<PhotoMapChildSpec?>(null)
 
-    private val exportService by lazy { FragmentMapExportService(this) }
+    private val exportService by lazy { PhotoMapExportService(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

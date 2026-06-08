@@ -91,8 +91,8 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ShowMapsDisclaim
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ToggleVisibilityMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
-import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.TrailMapAction
-import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.FragmentMapExportService
+import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.VectorMapAction
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
 
 class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
 
@@ -122,7 +122,7 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
             getString(R.string.importing_map)
         )
     }
-    private val exportService by lazy { FragmentMapExportService(this) }
+    private val exportService by lazy { PhotoMapExportService(this) }
 
     @Composable
     override fun FragmentContent() {

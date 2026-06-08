@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.co
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.TrailMapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.commands.ExportTrailMapCommand
 
-class FragmentMapExportService(private val fragment: AndromedaFragment) {
+class PhotoMapExportService(private val fragment: AndromedaFragment) {
     private val uriPicker = IntentUriPicker(fragment, fragment.requireContext())
     private val loading = AlertLoadingIndicator(
         fragment.requireContext(),
