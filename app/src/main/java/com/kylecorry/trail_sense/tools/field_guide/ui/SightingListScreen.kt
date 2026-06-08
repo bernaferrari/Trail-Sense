@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
@@ -22,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +35,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -42,7 +49,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -55,37 +61,48 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SightingListFragment : TrailSenseComposeFragment() {
+@Composable
+fun SightingListToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { SightingListController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
-    private val navigator by lazy { Navigator.getInstance(requireContext()) }
-    private val pageId by lazy { requireArguments().getLong("page_id") }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                controller.loadPage()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        controller.loadPage()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    SightingListScreen(
+        items = controller.getSightingListItems(),
+        onCreate = controller::createSighting
+    )
+}
+
+private class SightingListController(private val fragment: Fragment) {
+
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val pageId by lazy { fragment.requireArguments().getLong("page_id") }
 
     private var page by mutableStateOf<FieldGuidePage?>(null)
 
-    @Composable
-    override fun FragmentContent() {
-        SightingListScreen(
-            items = getSightingListItems(),
-            onCreate = ::createSighting
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadPage()
-    }
-
-    private fun loadPage() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun loadPage() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             page = withContext(Dispatchers.IO) {
                 repo.getPage(pageId)
             }
         }
     }
 
-    private fun getSightingListItems(): List<SightingListItem> {
+    fun getSightingListItems(): List<SightingListItem> {
         val currentPage = page
         val sightings = currentPage?.sightings?.sortedByDescending { it.time } ?: emptyList()
         return sightings.map {
@@ -96,7 +113,7 @@ class SightingListFragment : TrailSenseComposeFragment() {
                         time.toZonedDateTime(),
                         includeSeconds = false
                     )
-                } ?: getString(R.string.sighting),
+                } ?: fragment.getString(R.string.sighting),
                 subtitle = it.notes ?: "",
                 isHarvested = it.harvested == true,
                 hasLocation = it.location != null,
@@ -108,8 +125,8 @@ class SightingListFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun createSighting() {
-        findNavController().navigateWithAnimation(
+    fun createSighting() {
+        fragment.findNavController().navigateWithAnimation(
             R.id.createFieldGuideSightingFragment,
             Bundle().apply {
                 putLong("page_id", pageId)
@@ -118,7 +135,7 @@ class SightingListFragment : TrailSenseComposeFragment() {
     }
 
     private fun editSighting(sighting: Sighting) {
-        findNavController().navigateWithAnimation(
+        fragment.findNavController().navigateWithAnimation(
             R.id.createFieldGuideSightingFragment,
             Bundle().apply {
                 putLong("page_id", pageId)
@@ -129,17 +146,17 @@ class SightingListFragment : TrailSenseComposeFragment() {
 
     private fun deleteSighting(sighting: Sighting) {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete),
             sighting.time?.let { time ->
                 formatter.formatRelativeDateTime(
                     time.toZonedDateTime(),
                     includeSeconds = false
                 )
-            } ?: getString(R.string.sighting)
+            } ?: fragment.getString(R.string.sighting)
         ) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch {
+                fragment.viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.deleteSighting(sighting)
                     }
@@ -156,7 +173,7 @@ class SightingListFragment : TrailSenseComposeFragment() {
             BeaconOwner.FieldGuide,
             elevation = sighting.altitude
         )
-        findNavController().openTool(Tools.NAVIGATION)
+        fragment.findNavController().openTool(Tools.NAVIGATION)
     }
 
     private fun createBeacon(sighting: Sighting) {
@@ -170,7 +187,7 @@ class SightingListFragment : TrailSenseComposeFragment() {
                 )
             )
         }
-        findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
+        fragment.findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
     }
 }
 

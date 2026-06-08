@@ -164,6 +164,7 @@ import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightScreen
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightScreen
+import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListToolScreen
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
 import com.kylecorry.trail_sense.tools.declination.ui.DeclinationScreen
@@ -411,6 +412,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_PACK_LIST -> PackListToolScreen(this)
             DESTINATION_PACK_ITEM_LIST -> PackItemListToolScreen(this)
             DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
+            DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
         }
     }
 
@@ -3450,5 +3452,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_PACK_LIST = "pack_list"
         const val DESTINATION_PACK_ITEM_LIST = "pack_item_list"
         const val DESTINATION_CREATE_PACK_ITEM = "create_pack_item"
+        const val DESTINATION_SIGHTING_LIST = "sighting_list"
     }
 }

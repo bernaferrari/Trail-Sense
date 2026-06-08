@@ -261,8 +261,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sightingListFragment
-            setClassName("com.kylecorry.trail_sense.tools.field_guide.ui.SightingListFragment")
-            label = "SightingListFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "SightingListScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SIGHTING_LIST)
+                .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .build())
