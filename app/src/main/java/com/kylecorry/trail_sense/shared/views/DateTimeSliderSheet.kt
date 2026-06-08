@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.util.AttributeSet
-import android.widget.FrameLayout
+import android.view.View
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -28,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -47,7 +45,7 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class DateTimeSliderSheet(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
+class DateTimeSliderSheetState(context: Context) {
 
     private val formatter = getAppService<FormatService>()
     private val hooks = Hooks(
@@ -59,35 +57,15 @@ class DateTimeSliderSheet(context: Context, attrs: AttributeSet?) : FrameLayout(
     )
     private var trigger by hooks.state("")
     private var currentTime by mutableStateOf(ZonedDateTime.now())
+    lateinit var view: View
 
     var onTimeChanged: ((Instant?) -> Unit)? = null
 
-    init {
-        addView(
-            ComposeView(context).apply {
-                setContent {
-                    TrailSenseTheme {
-                        DateTimeSliderSheetContent(
-                            currentTime = currentTime,
-                            formatter = formatter,
-                            onDateChanged = {
-                                currentTime = currentTime.with(it)
-                                notifyChanged()
-                            },
-                            onTimeChanged = {
-                                currentTime = currentTime.with(it)
-                                notifyChanged()
-                            }
-                        )
-                    }
-                }
-            },
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT
-            )
-        )
-    }
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
 
     fun setTime(instant: Instant?) {
         currentTime = instant?.toZonedDateTime() ?: ZonedDateTime.now()
@@ -99,12 +77,28 @@ class DateTimeSliderSheet(context: Context, attrs: AttributeSet?) : FrameLayout(
 
     fun show() {
         hooks.startStateUpdates()
-        isVisible = true
+        view.isVisible = true
     }
 
     fun hide() {
         hooks.stopStateUpdates()
-        isVisible = false
+        view.isVisible = false
+    }
+
+    @Composable
+    fun Content() {
+        DateTimeSliderSheetContent(
+            currentTime = currentTime,
+            formatter = formatter,
+            onDateChanged = {
+                currentTime = currentTime.with(it)
+                notifyChanged()
+            },
+            onTimeChanged = {
+                currentTime = currentTime.with(it)
+                notifyChanged()
+            }
+        )
     }
 }
 

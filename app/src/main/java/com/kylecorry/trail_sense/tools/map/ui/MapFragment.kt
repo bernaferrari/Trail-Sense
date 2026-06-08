@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
@@ -54,7 +55,7 @@ import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
-import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheet
+import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveComposeFragment
@@ -655,7 +656,7 @@ private data class MapViews(
     val sensorStatusBadges: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView,
     val distanceSheet: MapDistanceSheet,
-    val timeSheet: DateTimeSliderSheet
+    val timeSheet: DateTimeSliderSheetState
 )
 
 @Composable
@@ -821,12 +822,19 @@ private fun createMapViews(context: Context): MapViews {
         }
     )
 
-    val timeSheet = DateTimeSliderSheet(context, null).apply {
+    val timeSheet = DateTimeSliderSheetState(context)
+    val timeSheetView = ComposeView(context).apply {
         id = R.id.time_sheet
         visibility = View.GONE
+        timeSheet.view = this
+        setContent {
+            TrailSenseTheme {
+                timeSheet.Content()
+            }
+        }
     }
     root.addView(
-        timeSheet,
+        timeSheetView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
