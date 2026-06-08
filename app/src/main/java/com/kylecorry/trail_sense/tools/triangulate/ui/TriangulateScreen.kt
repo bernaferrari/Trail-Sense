@@ -254,6 +254,7 @@ private class TriangulateController(
             onReset = ::reset,
             modifier = modifier.fillMaxSize()
         )
+        cameraSheet?.Content()
     }
 
     fun onViewCreated() {
@@ -514,6 +515,7 @@ private class TriangulateController(
 
     fun onDestroyView() {
         map = null
+        cameraSheet?.dismiss()
         cameraSheet = null
         cameraBearingIndex = null
         isViewCreated = false

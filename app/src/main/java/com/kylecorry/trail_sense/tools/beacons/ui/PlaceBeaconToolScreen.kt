@@ -262,6 +262,8 @@ private class PlaceBeaconController(private val fragment: Fragment) {
                 }
             )
         }
+
+        cameraSheet?.Content()
     }
 
     fun onResume() {
@@ -284,6 +286,7 @@ private class PlaceBeaconController(private val fragment: Fragment) {
         onPause()
         backCallback?.remove()
         backCallback = null
+        cameraSheet?.dismiss()
         cameraSheet = null
         isInitialized = false
     }
