@@ -44,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -75,7 +75,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Composable
-fun TidesToolScreen(fragment: Fragment) {
+fun TidesToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { TidesController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -108,7 +108,7 @@ fun TidesToolScreen(fragment: Fragment) {
     )
 }
 
-private class TidesController(private val fragment: Fragment) {
+private class TidesController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideService by lazy { TideService(fragment.requireContext()) }

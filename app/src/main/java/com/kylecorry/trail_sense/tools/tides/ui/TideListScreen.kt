@@ -43,7 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -68,7 +68,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun TideListToolScreen(fragment: Fragment) {
+fun TideListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { TideListController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -98,7 +98,7 @@ fun TideListToolScreen(fragment: Fragment) {
     )
 }
 
-private class TideListController(private val fragment: Fragment) {
+private class TideListController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }

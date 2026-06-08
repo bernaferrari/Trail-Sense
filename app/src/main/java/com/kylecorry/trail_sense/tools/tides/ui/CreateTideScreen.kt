@@ -51,7 +51,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.pickers.Pickers
@@ -85,7 +85,7 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 @Composable
-fun CreateTideToolScreen(fragment: Fragment) {
+fun CreateTideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CreateTideController(fragment) }
 
     DisposableEffect(controller) {
@@ -126,7 +126,7 @@ fun CreateTideToolScreen(fragment: Fragment) {
     )
 }
 
-private class CreateTideController(private val fragment: Fragment) {
+private class CreateTideController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
