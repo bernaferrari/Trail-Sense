@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.Distance
@@ -34,38 +38,161 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPe
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class NavigationSettingsFragment : TrailSenseComposeFragment() {
+@Composable
+fun NavigationSettingsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { NavigationSettingsController(fragment) }
+    DisposableEffect(controller) {
+        onDispose {
+            controller.onDispose()
+        }
+    }
+    NavigationSettingsContent(controller)
+}
 
+private class NavigationSettingsController(private val fragment: Fragment) {
     private var layerSheet: MapLayersBottomSheet? = null
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val userPrefs by lazy { UserPreferences(requireContext()) }
-    private val prefs by lazy { userPrefs.navigation }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
-    private val distanceUnits by lazy {
+    val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    val prefs by lazy { userPrefs.navigation }
+    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
+    val distanceUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }
 
-    @Composable
-    override fun FragmentContent() {
+    fun onDispose() {
+        layerSheet?.dismiss()
+    }
+
+    fun showLayerSheet() {
+        layerSheet?.dismiss()
+        layerSheet = MapLayersBottomSheet(NavigationToolRegistration.MAP_ID)
+        layerSheet?.show(fragment)
+    }
+
+    fun onCurrentPaceSpeedometerSelected() {
+        fragment.requestActivityRecognition { hasPermission ->
+            if (!hasPermission) {
+                fragment.alertNoActivityRecognitionPermission()
+            }
+        }
+    }
+
+    fun pickOption(
+        title: String,
+        options: List<NavigationOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            fragment.requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    fun pickVisibleBeaconCount(current: Int, onPicked: (Int) -> Unit) {
+        Pickers.number(
+            fragment.requireContext(),
+            fragment.getString(R.string.pref_num_visible_beacons_title),
+            null,
+            current,
+            allowDecimals = false,
+            allowNegative = false
+        ) { value ->
+            if (value != null) {
+                val count = value.toInt()
+                putString(R.string.pref_num_visible_beacons, count.toString())
+                onPicked(count)
+            }
+        }
+    }
+
+    fun pickNearbyRadius(current: Distance, onPicked: (Distance) -> Unit) {
+        CustomUiUtils.pickDistance(
+            fragment.requireContext(),
+            distanceUnits,
+            current,
+            fragment.getString(R.string.pref_max_beacon_distance_title)
+        ) { distance, cancelled ->
+            if (cancelled || distance == null || distance.value <= 0) {
+                return@pickDistance
+            }
+
+            prefs.maxBeaconDistance = distance.meters().value
+            onPicked(relative(Distance.meters(prefs.maxBeaconDistance)))
+        }
+    }
+
+    fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
+        val entries = fragment.resources.getStringArray(entriesId)
+        val values = fragment.resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            NavigationOption(value, entries.getOrElse(index) { value })
+        }
+    }
+
+    fun optionLabel(options: List<NavigationOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
+    }
+
+    fun formatDistance(distance: Distance): String {
+        return formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units))
+    }
+
+    fun relative(distance: Distance): Distance {
+        return distance.convertTo(userPrefs.baseDistanceUnits).toRelativeDistance()
+    }
+
+    fun getStringPreference(key: Int, default: String): String {
+        return cache.getString(fragment.getString(key)) ?: default
+    }
+
+    fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
+        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+    }
+
+    fun putString(key: Int, value: String) {
+        cache.putString(fragment.getString(key), value)
+    }
+
+    fun putBoolean(key: Int, value: Boolean) {
+        cache.putBoolean(fragment.getString(key), value)
+    }
+}
+
+private data class NavigationOption(
+    val value: String,
+    val label: String
+)
+
+@Composable
+private fun NavigationSettingsContent(controller: NavigationSettingsController) {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val prefs = controller.prefs
+                    val hasCompass = controller.hasCompass
                     val quickActionOptions = remember {
-                        Tools.getQuickActions(requireContext()).map {
+                        Tools.getQuickActions(context).map {
                             NavigationOption(it.id.toString(), it.name)
                         }
                     }
                     val speedometerOptions = remember {
-                        options(R.array.speedometer_entries, R.array.speedometer_values)
+                        controller.options(R.array.speedometer_entries, R.array.speedometer_values)
                     }
                     val sunMoonOptions = remember {
-                        options(R.array.sun_moon_compass_entries, R.array.sun_moon_compass_values)
+                        controller.options(R.array.sun_moon_compass_entries, R.array.sun_moon_compass_values)
                     }
 
                     var leftQuickAction by remember {
@@ -76,7 +203,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                     }
                     var showCalibrationDialog by remember {
                         mutableStateOf(
-                            getBoolean(R.string.pref_show_calibrate_on_navigate_dialog, true)
+                            controller.getBoolean(R.string.pref_show_calibrate_on_navigate_dialog, true)
                         )
                     }
                     var keepScreenUnlockedWhileNavigating by remember {
@@ -90,18 +217,18 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                     }
                     var speedometerType by remember {
                         mutableStateOf(
-                            getStringPreference(R.string.pref_navigation_speedometer_type, "instant")
+                            controller.getStringPreference(R.string.pref_navigation_speedometer_type, "instant")
                         )
                     }
                     var showLinearCompass by remember {
-                        mutableStateOf(getBoolean(R.string.pref_show_linear_compass, true))
+                        mutableStateOf(controller.getBoolean(R.string.pref_show_linear_compass, true))
                     }
                     var showDialTicksWhenNoCompass by remember {
                         mutableStateOf(prefs.showDialTicksWhenNoCompass)
                     }
                     var showSunMoonCompass by remember {
                         mutableStateOf(
-                            getStringPreference(R.string.pref_show_sun_moon_compass, "when_up")
+                            controller.getStringPreference(R.string.pref_show_sun_moon_compass, "when_up")
                         )
                     }
                     var displayMultipleBeacons by remember {
@@ -111,7 +238,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                         mutableStateOf(prefs.numberOfVisibleBeacons)
                     }
                     var nearbyRadius by remember {
-                        mutableStateOf(relative(Distance.meters(prefs.maxBeaconDistance)))
+                        mutableStateOf(controller.relative(Distance.meters(prefs.maxBeaconDistance)))
                     }
                     var nearbyLinearOnly by remember {
                         mutableStateOf(prefs.showNearbyBeaconsOnlyOnLinearCompass)
@@ -129,7 +256,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                     LaunchedEffect(hasCompass) {
                         if (!hasCompass) {
                             displayMultipleBeacons = true
-                            putBoolean(R.string.pref_display_multi_beacons, true)
+                            controller.putBoolean(R.string.pref_display_multi_beacons, true)
                         }
                     }
 
@@ -152,15 +279,15 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                             item("left_action") {
                                 SettingsPickerRow(
                                     label = stringResource(R.string.left_quick_action),
-                                    selected = optionLabel(quickActionOptions, leftQuickAction),
+                                    selected = controller.optionLabel(quickActionOptions, leftQuickAction),
                                     onClick = {
-                                        pickOption(
-                                            getString(R.string.left_quick_action),
+                                        controller.pickOption(
+                                            context.getString(R.string.left_quick_action),
                                             quickActionOptions,
                                             leftQuickAction
                                         ) {
                                             leftQuickAction = it
-                                            putString(
+                                            controller.putString(
                                                 R.string.pref_navigation_quick_action_left,
                                                 it
                                             )
@@ -172,15 +299,15 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                             item("right_action") {
                                 SettingsPickerRow(
                                     label = stringResource(R.string.right_quick_action),
-                                    selected = optionLabel(quickActionOptions, rightQuickAction),
+                                    selected = controller.optionLabel(quickActionOptions, rightQuickAction),
                                     onClick = {
-                                        pickOption(
-                                            getString(R.string.right_quick_action),
+                                        controller.pickOption(
+                                            context.getString(R.string.right_quick_action),
                                             quickActionOptions,
                                             rightQuickAction
                                         ) {
                                             rightQuickAction = it
-                                            putString(
+                                            controller.putString(
                                                 R.string.pref_navigation_quick_action_right,
                                                 it
                                             )
@@ -199,7 +326,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         checked = showCalibrationDialog,
                                         onCheckedChange = {
                                             showCalibrationDialog = it
-                                            putBoolean(
+                                            controller.putBoolean(
                                                 R.string.pref_show_calibrate_on_navigate_dialog,
                                                 it
                                             )
@@ -215,7 +342,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                     checked = keepScreenUnlockedWhileNavigating,
                                     onCheckedChange = {
                                         keepScreenUnlockedWhileNavigating = it
-                                        putBoolean(
+                                        controller.putBoolean(
                                             R.string.pref_navigation_lock_screen_presence,
                                             it
                                         )
@@ -230,7 +357,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                     checked = keepScreenUnlockedWhileOpen,
                                     onCheckedChange = {
                                         keepScreenUnlockedWhileOpen = it
-                                        putBoolean(R.string.pref_navigation_keep_unlocked, it)
+                                        controller.putBoolean(R.string.pref_navigation_keep_unlocked, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -252,20 +379,20 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                             item("speedometer") {
                                 SettingsPickerRow(
                                     label = stringResource(R.string.speedometer),
-                                    selected = optionLabel(speedometerOptions, speedometerType),
+                                    selected = controller.optionLabel(speedometerOptions, speedometerType),
                                     onClick = {
-                                        pickOption(
-                                            getString(R.string.speedometer),
+                                        controller.pickOption(
+                                            context.getString(R.string.speedometer),
                                             speedometerOptions,
                                             speedometerType
                                         ) {
                                             speedometerType = it
-                                            putString(
+                                            controller.putString(
                                                 R.string.pref_navigation_speedometer_type,
                                                 it
                                             )
                                             if (it == "instant_pedometer") {
-                                                onCurrentPaceSpeedometerSelected()
+                                                controller.onCurrentPaceSpeedometerSelected()
                                             }
                                         }
                                     },
@@ -285,7 +412,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         checked = showLinearCompass,
                                         onCheckedChange = {
                                             showLinearCompass = it
-                                            putBoolean(R.string.pref_show_linear_compass, it)
+                                            controller.putBoolean(R.string.pref_show_linear_compass, it)
                                         },
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
@@ -299,7 +426,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         checked = showDialTicksWhenNoCompass,
                                         onCheckedChange = {
                                             showDialTicksWhenNoCompass = it
-                                            putBoolean(
+                                            controller.putBoolean(
                                                 R.string.pref_show_dial_ticks_when_no_compass,
                                                 it
                                             )
@@ -312,15 +439,15 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                             item("sun_moon_compass") {
                                 SettingsPickerRow(
                                     label = stringResource(R.string.pref_show_sun_moon_compass_title),
-                                    selected = optionLabel(sunMoonOptions, showSunMoonCompass),
+                                    selected = controller.optionLabel(sunMoonOptions, showSunMoonCompass),
                                     onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_show_sun_moon_compass_title),
+                                        controller.pickOption(
+                                            context.getString(R.string.pref_show_sun_moon_compass_title),
                                             sunMoonOptions,
                                             showSunMoonCompass
                                         ) {
                                             showSunMoonCompass = it
-                                            putString(R.string.pref_show_sun_moon_compass, it)
+                                            controller.putString(R.string.pref_show_sun_moon_compass, it)
                                         }
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
@@ -334,7 +461,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         checked = displayMultipleBeacons,
                                         onCheckedChange = {
                                             displayMultipleBeacons = it
-                                            putBoolean(R.string.pref_display_multi_beacons, it)
+                                            controller.putBoolean(R.string.pref_display_multi_beacons, it)
                                         },
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
@@ -346,7 +473,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         selected = numberOfVisibleBeacons.toString(),
                                         enabled = displayMultipleBeacons,
                                         onClick = {
-                                            pickVisibleBeaconCount(numberOfVisibleBeacons) {
+                                            controller.pickVisibleBeaconCount(numberOfVisibleBeacons) {
                                                 numberOfVisibleBeacons = it
                                             }
                                         },
@@ -356,10 +483,10 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                 item("nearby_radius") {
                                     SettingsPickerRow(
                                         label = stringResource(R.string.pref_max_beacon_distance_title),
-                                        selected = formatDistance(nearbyRadius),
-                                        enabled = displayMultipleBeacons,
-                                        onClick = {
-                                            pickNearbyRadius(nearbyRadius) {
+                                    selected = controller.formatDistance(nearbyRadius),
+                                    enabled = displayMultipleBeacons,
+                                    onClick = {
+                                            controller.pickNearbyRadius(nearbyRadius) {
                                                 nearbyRadius = it
                                             }
                                         },
@@ -373,7 +500,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         enabled = displayMultipleBeacons,
                                         onCheckedChange = {
                                             nearbyLinearOnly = it
-                                            putBoolean(R.string.pref_nearby_linear_only, it)
+                                            controller.putBoolean(R.string.pref_nearby_linear_only, it)
                                         },
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
@@ -387,7 +514,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                     checked = drawCompassDialBezel,
                                     onCheckedChange = {
                                         drawCompassDialBezel = it
-                                        putBoolean(
+                                        controller.putBoolean(
                                             R.string.pref_navigation_draw_compass_dial_bezel,
                                             it
                                         )
@@ -404,7 +531,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                         checked = showAzimuthIndicator,
                                         onCheckedChange = {
                                             showAzimuthIndicator = it
-                                            putBoolean(
+                                            controller.putBoolean(
                                                 R.string.pref_navigation_show_azimuth_indicator,
                                                 it
                                             )
@@ -424,7 +551,7 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                                     checked = highDetailMode,
                                     onCheckedChange = {
                                         highDetailMode = it
-                                        putBoolean(R.string.pref_navigation_high_detail_mode, it)
+                                        controller.putBoolean(R.string.pref_navigation_high_detail_mode, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -433,122 +560,10 @@ class NavigationSettingsFragment : TrailSenseComposeFragment() {
                             item("layers") {
                                 SettingsActionRow(
                                     label = stringResource(R.string.layers),
-                                    onClick = ::showLayerSheet,
+                                    onClick = controller::showLayerSheet,
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
                             }
                         }
                     }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        layerSheet?.dismiss()
-    }
-
-    private fun showLayerSheet() {
-        layerSheet?.dismiss()
-        layerSheet = MapLayersBottomSheet(NavigationToolRegistration.MAP_ID)
-        layerSheet?.show(this)
-    }
-
-    private fun onCurrentPaceSpeedometerSelected() {
-        requestActivityRecognition { hasPermission ->
-            if (!hasPermission) {
-                alertNoActivityRecognitionPermission()
-            }
-        }
-    }
-
-    private fun pickOption(
-        title: String,
-        options: List<NavigationOption>,
-        selected: String,
-        onSelected: (String) -> Unit
-    ) {
-        Pickers.item(
-            requireContext(),
-            title,
-            options.map { it.label },
-            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
-        ) { index ->
-            if (index != null) {
-                onSelected(options[index].value)
-            }
-        }
-    }
-
-    private fun pickVisibleBeaconCount(current: Int, onPicked: (Int) -> Unit) {
-        Pickers.number(
-            requireContext(),
-            getString(R.string.pref_num_visible_beacons_title),
-            null,
-            current,
-            allowDecimals = false,
-            allowNegative = false
-        ) { value ->
-            if (value != null) {
-                val count = value.toInt()
-                putString(R.string.pref_num_visible_beacons, count.toString())
-                onPicked(count)
-            }
-        }
-    }
-
-    private fun pickNearbyRadius(current: Distance, onPicked: (Distance) -> Unit) {
-        CustomUiUtils.pickDistance(
-            requireContext(),
-            distanceUnits,
-            current,
-            getString(R.string.pref_max_beacon_distance_title)
-        ) { distance, cancelled ->
-            if (cancelled || distance == null || distance.value <= 0) {
-                return@pickDistance
-            }
-
-            prefs.maxBeaconDistance = distance.meters().value
-            onPicked(relative(Distance.meters(prefs.maxBeaconDistance)))
-        }
-    }
-
-    private fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
-        val entries = resources.getStringArray(entriesId)
-        val values = resources.getStringArray(valuesId)
-        return values.mapIndexed { index, value ->
-            NavigationOption(value, entries.getOrElse(index) { value })
-        }
-    }
-
-    private fun optionLabel(options: List<NavigationOption>, selected: String): String {
-        return options.firstOrNull { it.value == selected }?.label ?: selected
-    }
-
-    private fun formatDistance(distance: Distance): String {
-        return formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units))
-    }
-
-    private fun relative(distance: Distance): Distance {
-        return distance.convertTo(userPrefs.baseDistanceUnits).toRelativeDistance()
-    }
-
-    private fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(getString(key)) ?: default
-    }
-
-    private fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(getString(key)) ?: defaultValue
-    }
-
-    private fun putString(key: Int, value: String) {
-        cache.putString(getString(key), value)
-    }
-
-    private fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(getString(key), value)
-    }
-
-    private data class NavigationOption(
-        val value: String,
-        val label: String
-    )
 }
