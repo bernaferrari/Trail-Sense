@@ -54,6 +54,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
@@ -73,6 +74,9 @@ import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.receivers.StartOnBootController
+import com.kylecorry.trail_sense.settings.backup.BackupCommand
+import com.kylecorry.trail_sense.settings.backup.ChangeAutomaticBackupDirectoryCommand
+import com.kylecorry.trail_sense.settings.backup.RestoreCommand
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.licenses.Library
@@ -89,6 +93,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
+import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
@@ -201,6 +206,72 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_MIRROR_CAMERA -> MirrorCamera()
             DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
             DESTINATION_WATER_PURIFICATION -> WaterPurification()
+            DESTINATION_BACKUP_SETTINGS -> BackupSettings()
+        }
+    }
+
+    @Composable
+    private fun BackupSettings() {
+        val prefs = remember { UserPreferences(requireContext()) }
+        var autoBackupEnabled by remember {
+            mutableStateOf(prefs.backup.isAutoBackupEnabled)
+        }
+        var autoBackupSummary by remember {
+            mutableStateOf(getAutoBackupSummary(prefs, autoBackupEnabled))
+        }
+        var includeMapsforge by remember {
+            mutableStateOf(prefs.backup.includeMapsforgeMaps)
+        }
+
+        SettingsList(title = stringResource(R.string.backup_restore)) {
+            item("backup") {
+                SettingsActionRow(
+                    label = stringResource(R.string.backup),
+                    onClick = ::backup,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("restore") {
+                SettingsActionRow(
+                    label = stringResource(R.string.restore),
+                    onClick = ::restore,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("auto_backup") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.automatic_backup),
+                    summary = autoBackupSummary,
+                    checked = autoBackupEnabled,
+                    onCheckedChange = {
+                        autoBackupEnabled = it
+                        prefs.backup.isAutoBackupEnabled = it
+                        if (it) {
+                            changeAutoBackupDirectory(prefs) { isEnabled ->
+                                autoBackupEnabled = isEnabled
+                                autoBackupSummary = getAutoBackupSummary(prefs, isEnabled)
+                            }
+                        } else {
+                            autoBackupSummary = null
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("mapsforge") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.include_mapsforge_backups),
+                    summary = stringResource(R.string.include_mapsforge_backups_summary),
+                    checked = includeMapsforge,
+                    onCheckedChange = {
+                        includeMapsforge = it
+                        prefs.backup.includeMapsforgeMaps = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
         }
     }
 
@@ -1486,6 +1557,41 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         }
     }
 
+    private fun backup() {
+        val uriPicker = IntentUriPicker(requireActivity() as IntentResultRetriever, requireContext())
+        viewLifecycleOwner.lifecycleScope.launch {
+            BackupCommand(requireContext(), uriPicker).execute()
+        }
+    }
+
+    private fun restore() {
+        val uriPicker = IntentUriPicker(requireActivity() as IntentResultRetriever, requireContext())
+        viewLifecycleOwner.lifecycleScope.launch {
+            RestoreCommand(requireContext(), uriPicker).execute()
+        }
+    }
+
+    private fun changeAutoBackupDirectory(
+        prefs: UserPreferences,
+        onChanged: (Boolean) -> Unit
+    ) {
+        val resultRetriever = requireActivity() as IntentResultRetriever
+        ChangeAutomaticBackupDirectoryCommand(requireContext(), resultRetriever) { isSuccessful ->
+            if (!isSuccessful) {
+                prefs.backup.isAutoBackupEnabled = false
+            }
+            onChanged(isSuccessful)
+        }.execute()
+    }
+
+    private fun getAutoBackupSummary(prefs: UserPreferences, isEnabled: Boolean): String? {
+        return if (isEnabled) {
+            prefs.backup.userFriendlyAutoBackupPathName
+        } else {
+            null
+        }
+    }
+
     private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSettingsState {
         return PluginSettingsState(
             connected = pluginSubsystem.getConnectedPlugins().sortedPlugins(),
@@ -1656,5 +1762,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_MIRROR_CAMERA = "mirror_camera"
         const val DESTINATION_PHOTO_MAP_SETTINGS = "photo_map_settings"
         const val DESTINATION_WATER_PURIFICATION = "water_purification"
+        const val DESTINATION_BACKUP_SETTINGS = "backup_settings"
     }
 }

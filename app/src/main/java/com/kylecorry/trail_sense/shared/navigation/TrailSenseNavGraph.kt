@@ -1007,8 +1007,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.backupSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.BackupSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "BackupSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BACKUP_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
