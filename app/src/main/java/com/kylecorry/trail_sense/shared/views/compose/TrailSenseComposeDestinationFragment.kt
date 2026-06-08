@@ -172,6 +172,7 @@ import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
+import com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapToolScreen
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.metaldetector.ui.MetalDetectorToolScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
@@ -383,6 +384,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
             DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
+            DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
         }
     }
 
@@ -3408,5 +3410,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CLOUD_RESULTS = "cloud_results"
         const val DESTINATION_BEACON_DETAILS = "beacon_details"
         const val DESTINATION_SCAN_QR = "scan_qr"
+        const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
     }
 }

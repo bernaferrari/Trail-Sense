@@ -94,8 +94,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.offlineMapViewFragment
-            setClassName("com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapFragment")
-            label = "OfflineMapViewFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "ViewVectorMapScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_VECTOR_MAP_VIEW)
+                .build())
             addArgument("offline_map_file_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .build())

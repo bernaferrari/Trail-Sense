@@ -1,7 +1,8 @@
-package com.kylecorry.trail_sense.tools.offline_maps.ui.trail_maps
+@file:Suppress("FunctionNaming")
+
+package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
 import android.graphics.Color as AndroidColor
-import android.os.Bundle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,8 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +32,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.luna.concurrency.onMain
@@ -38,7 +45,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -51,53 +57,66 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ViewVectorMapFragment : TrailSenseComposeFragment() {
+@Composable
+fun ViewVectorMapToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { ViewVectorMapController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(controller) {
+        controller.loadMap()
+    }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                controller.onPause()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
+    VectorMapScreen(
+        map = controller.map,
+        onMapReady = controller::onMapReady,
+        onZoomIn = { controller.mapView?.zoom(2f) },
+        onZoomOut = { controller.mapView?.zoom(0.5f) },
+        onRename = { controller.map?.let { controller.rename(it) } },
+        onEditAttribution = { controller.map?.let { controller.editAttribution(it) } },
+        onDelete = { controller.map?.let { controller.delete(it) } }
+    )
+}
+
+private class ViewVectorMapController(private val fragment: Fragment) {
     private val service by lazy { getAppService<MapService>() }
-    private var map by mutableStateOf<VectorMap?>(null)
-    private var mapView: MapView? = null
+    var map by mutableStateOf<VectorMap?>(null)
+        private set
+    var mapView: MapView? = null
+        private set
     private var configuredMapId: Long? = null
 
     private val mapId: Long
-        get() = requireArguments().getLong("offline_map_file_id")
+        get() = fragment.requireArguments().getLong("offline_map_file_id")
 
-    @Composable
-    override fun FragmentContent() {
-        VectorMapScreen(
-            map = map,
-            onMapReady = ::onMapReady,
-            onZoomIn = { mapView?.zoom(2f) },
-            onZoomOut = { mapView?.zoom(0.5f) },
-            onRename = { map?.let { rename(it) } },
-            onEditAttribution = { map?.let { editAttribution(it) } },
-            onDelete = { map?.let { delete(it) } }
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadMap()
-    }
-
-    override fun onPause() {
-        mapView?.stop()
-        super.onPause()
-    }
-
-    override fun onDestroyView() {
+    fun onDestroy() {
+        onPause()
         mapView?.stop()
         mapView = null
         configuredMapId = null
-        super.onDestroyView()
     }
 
-    private fun onMapReady(view: MapView) {
+    fun onPause() {
+        mapView?.stop()
+    }
+
+    fun onMapReady(view: MapView) {
         mapView = view
         configureMap(view, map)
     }
 
-    private fun loadMap() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun loadMap() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getVectorMap(mapId)
             }
@@ -121,7 +140,7 @@ class ViewVectorMapFragment : TrailSenseComposeFragment() {
         }
 
         val factory = LayerFactory()
-        val layer = Tools.getMapLayerDefinition(requireContext(), TrailMapsTileSource.SOURCE_ID)!!
+        val layer = Tools.getMapLayerDefinition(fragment.requireContext(), TrailMapsTileSource.SOURCE_ID)!!
         val tileLayer = factory.createLayer(layer)
         tileLayer.setFeatureFilter(map.id.toString())
         view.setLayers(listOf(tileLayer))
@@ -133,26 +152,26 @@ class ViewVectorMapFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun rename(map: VectorMap) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            RenameMapCommand(requireContext(), service).execute(map)
+    fun rename(map: VectorMap) {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
+            RenameMapCommand(fragment.requireContext(), service).execute(map)
             loadMap()
         }
     }
 
-    private fun editAttribution(map: VectorMap) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            EditOfflineMapAttributionCommand(requireContext()).execute(map)
+    fun editAttribution(map: VectorMap) {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
+            EditOfflineMapAttributionCommand(fragment.requireContext()).execute(map)
             loadMap()
         }
     }
 
-    private fun delete(map: VectorMap) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            DeleteMapCommand(requireContext(), service).execute(map)
+    fun delete(map: VectorMap) {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
+            DeleteMapCommand(fragment.requireContext(), service).execute(map)
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
                 onMain {
-                    findNavController().popBackStack()
+                    fragment.findNavController().popBackStack()
                 }
             } else {
                 loadMap()
