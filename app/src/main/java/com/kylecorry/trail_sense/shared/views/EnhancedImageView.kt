@@ -8,6 +8,7 @@ import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -36,39 +37,20 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import kotlin.math.max
 
 open class EnhancedImageView @JvmOverloads constructor(
-    val context: Context,
+    context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) {
+) : AbstractComposeView(context, attrs, defStyleAttr) {
 
-    val view = ComposeView(context, attrs, defStyleAttr).apply {
-        setContent {
-            Content()
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
-    val width: Int
-        get() = view.width.takeIf { it > 0 } ?: contentWidth
-
-    val height: Int
-        get() = view.height.takeIf { it > 0 } ?: contentHeight
-
-    fun setBackgroundColor(color: Int) {
-        view.setBackgroundColor(color)
-    }
+    val view: View
+        get() = this
 
     fun post(action: () -> Unit) {
-        if (!view.isAttachedToWindow) {
+        if (!isAttachedToWindow) {
             action()
             return
         }
-        view.post {
+        super.post {
             action()
         }
     }
@@ -193,7 +175,17 @@ open class EnhancedImageView @JvmOverloads constructor(
         get() = imageView.isImageLoaded
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
+    override fun Content() {
+        EnhancedImageContent()
+    }
+
+    @Composable
+    fun Content(modifier: Modifier) {
+        EnhancedImageContent(modifier)
+    }
+
+    @Composable
+    fun EnhancedImageContent(modifier: Modifier = Modifier) {
         TrailSenseTheme {
             Box(
                 modifier = modifier
@@ -220,8 +212,8 @@ open class EnhancedImageView @JvmOverloads constructor(
         }
     }
 
-    fun invalidate() {
-        view.invalidate()
+    override fun invalidate() {
+        super.invalidate()
         requestRedraw()
     }
 
