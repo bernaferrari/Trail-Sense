@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.fragment.FragmentNavigator
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 
 object TrailSenseNavGraph {
 
@@ -454,8 +455,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.levelFragment
-            setClassName("com.kylecorry.trail_sense.tools.level.ui.LevelFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "LevelFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LEVEL)
+                .build())
             graph.addDestination(this)
         }
 
@@ -529,8 +534,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolWhistleFragment
-            setClassName("com.kylecorry.trail_sense.tools.whistle.ui.ToolWhistleFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolWhistleFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WHISTLE)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1132,15 +1141,23 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentLocalMessaging
-            setClassName("com.kylecorry.trail_sense.tools.comms.messaging.ui.FragmentToolLocalMessaging")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolLocalMessaging"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LOCAL_MESSAGING)
+                .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentLocalTalk
-            setClassName("com.kylecorry.trail_sense.tools.comms.talk.ui.FragmentToolLocalTalk")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolLocalTalk"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LOCAL_TALK)
+                .build())
             graph.addDestination(this)
         }
 
