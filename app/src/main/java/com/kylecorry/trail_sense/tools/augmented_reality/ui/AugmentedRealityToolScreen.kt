@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -262,13 +264,50 @@ private class AugmentedRealityController(private val fragment: Fragment) {
     private var visibleLayersOverride: List<ARLayer>? = null
     private var visibleLayers: List<ARLayer> = emptyList()
     private var isCreated = false
+    private var showLayersSheet by mutableStateOf(false)
+    private var showBeaconLayer by mutableStateOf(false)
+    private var showPathLayer by mutableStateOf(false)
+    private var showAstronomyLayer by mutableStateOf(false)
+    private var showGridLayer by mutableStateOf(false)
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         AugmentedRealityHost(
             views = views,
             modifier = modifier
         )
+
+        if (showLayersSheet) {
+            ModalBottomSheet(
+                onDismissRequest = ::dismissLayersSheet
+            ) {
+                ARLayersContent(
+                    showBeaconLayer = showBeaconLayer,
+                    onShowBeaconLayerChange = {
+                        showBeaconLayer = it
+                        userPrefs.augmentedReality.showBeaconLayer = it
+                    },
+                    showPathLayer = showPathLayer,
+                    onShowPathLayerChange = {
+                        showPathLayer = it
+                        userPrefs.augmentedReality.showPathLayer = it
+                    },
+                    showAstronomyLayer = showAstronomyLayer,
+                    onShowAstronomyLayerChange = {
+                        showAstronomyLayer = it
+                        userPrefs.augmentedReality.showAstronomyLayer = it
+                    },
+                    showGridLayer = showGridLayer,
+                    onShowGridLayerChange = {
+                        showGridLayer = it
+                        userPrefs.augmentedReality.showGridLayer = it
+                    },
+                    onClose = ::dismissLayersSheet,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
 
     fun onCreate() {
@@ -725,11 +764,17 @@ private class AugmentedRealityController(private val fragment: Fragment) {
     }
 
     private fun showLayersSheet() {
-        val sheet = ARLayersBottomSheet()
-        sheet.setOnDismissListener {
-            updateLayerVisibility()
-        }
-        sheet.show(fragment)
+        val prefs = userPrefs.augmentedReality
+        showBeaconLayer = prefs.showBeaconLayer
+        showPathLayer = prefs.showPathLayer
+        showAstronomyLayer = prefs.showAstronomyLayer
+        showGridLayer = prefs.showGridLayer
+        showLayersSheet = true
+    }
+
+    private fun dismissLayersSheet() {
+        showLayersSheet = false
+        updateLayerVisibility()
     }
 
     private fun startCalibration() {
