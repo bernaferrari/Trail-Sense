@@ -89,8 +89,8 @@ fun Fragment.requirePermissionRequester(): IPermissionRequester {
     return getPermissionRequester()!!
 }
 
-fun <T> T.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) where T : IPermissionRequester, T : Fragment {
-    requestPermission(
+fun Fragment.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+    requirePermissionRequester().requestPermission(
         SpecialPermission.SCHEDULE_EXACT_ALARMS,
         PermissionRationale(
             getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),

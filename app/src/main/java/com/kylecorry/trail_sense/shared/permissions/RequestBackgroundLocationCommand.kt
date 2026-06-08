@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.shared.permissions
 import android.content.Context
 import androidx.fragment.app.Fragment
 import com.kylecorry.luna.specifications.Specification
-import com.kylecorry.andromeda.fragments.IPermissionRequester
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.preferences.Flag
 import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
@@ -22,7 +21,7 @@ class RequestBackgroundLocationCommand<T>(
     flag,
     alerter,
     isRequired
-) where T : Fragment, T : IPermissionRequester {
+) where T : Fragment {
     companion object {
         private const val SHOWN_KEY = "cache_background_location_requested"
     }

@@ -6,7 +6,6 @@ import android.content.Intent
 import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
-import com.kylecorry.andromeda.fragments.IPermissionRequester
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
@@ -59,10 +58,10 @@ class SunsetAlarmReceiver : BroadcastReceiver() {
         /**
          * Enable sunset alerts and request permissions if needed
          */
-        suspend fun <T> enable(
-            fragment: T,
+        suspend fun enable(
+            fragment: Fragment,
             shouldRequestPermissions: Boolean
-        ) where T : Fragment, T : IPermissionRequester {
+        ) {
             val service = Tools.getService(
                 fragment.requireContext(),
                 AstronomyToolRegistration.SERVICE_SUNSET_ALERTS

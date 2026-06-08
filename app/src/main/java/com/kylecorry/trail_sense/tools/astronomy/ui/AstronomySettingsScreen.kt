@@ -1,7 +1,9 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.os.Bundle
-import android.view.View
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,12 +11,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
@@ -24,7 +31,6 @@ import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -34,20 +40,44 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.Sunset
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun AstronomySettingsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { AstronomySettingsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content()
+}
+
+private class AstronomySettingsController(private val fragment: Fragment) {
+
+    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val sunsetService by lazy {
         Tools.getService(
-            requireContext(),
+            fragment.requireContext(),
             AstronomyToolRegistration.SERVICE_SUNSET_ALERTS
         )!!
     }
     private val sunriseService by lazy {
         Tools.getService(
-            requireContext(),
+            fragment.requireContext(),
             AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS
         )!!
     }
@@ -56,12 +86,12 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
     private var setSunriseAlertsState: ((Boolean) -> Unit)? = null
 
     @Composable
-    override fun FragmentContent() {
+    fun Content() {
                     val sunTimeOptions = remember {
                         options(R.array.sun_times_entries, R.array.sun_times_values)
                     }
                     val quickActionOptions = remember {
-                        Tools.getQuickActions(requireContext()).map {
+                        Tools.getQuickActions(fragment.requireContext()).map {
                             AstronomyOption(it.id.toString(), it.name)
                         }
                     }
@@ -72,7 +102,7 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
                         timeOptions(listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L))
                     }
                     val showStartCameraIn3D = remember {
-                        Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
+                        Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
                     }
 
                     var sunTimeMode by remember {
@@ -400,32 +430,11 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
                     }
     }
 
-    override fun onResume() {
-        super.onResume()
-        Tools.subscribe(
-            AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_ENABLED,
-            ::onSunsetAlertsChanged
-        )
-        Tools.subscribe(
-            AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_DISABLED,
-            ::onSunsetAlertsChanged
-        )
-        Tools.subscribe(
-            AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_ENABLED,
-            ::onSunriseAlertsChanged
-        )
-        Tools.subscribe(
-            AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_DISABLED,
-            ::onSunriseAlertsChanged
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
         val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
         val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
 
-        cache.onChange.asLiveData().observe(viewLifecycleOwner) {
+        cache.onChange.asLiveData().observe(fragment.viewLifecycleOwner) {
             if (it == sunsetAlertTimeKey) {
                 restartSunsetAlerts()
             } else if (it == sunriseAlertTimeKey) {
@@ -434,8 +443,26 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onResume() {
+        Tools.subscribe(
+            AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_ENABLED,
+            ::onSunsetAlertsChanged
+        )
+        Tools.subscribe(
+            AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_DISABLED,
+            ::onSunsetAlertsChanged
+        )
+        Tools.subscribe(
+            AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_ENABLED,
+            ::onSunriseAlertsChanged
+        )
+        Tools.subscribe(
+            AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_DISABLED,
+            ::onSunriseAlertsChanged
+        )
+    }
+
+    fun onPause() {
         Tools.unsubscribe(
             AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_ENABLED,
             ::onSunsetAlertsChanged
@@ -454,16 +481,15 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
         )
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         setSunsetAlertsState = null
         setSunriseAlertsState = null
-        super.onDestroyView()
     }
 
     private fun onSunsetAlertsPreferenceChanged(enabled: Boolean) {
-        inBackground {
+        fragment.inBackground {
             if (enabled) {
-                SunsetAlarmReceiver.enable(this@AstronomySettingsFragment, true)
+                SunsetAlarmReceiver.enable(fragment, true)
             } else {
                 sunsetService.disable()
             }
@@ -471,9 +497,9 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun onSunriseAlertsPreferenceChanged(enabled: Boolean) {
-        inBackground {
+        fragment.inBackground {
             if (enabled) {
-                SunriseAlarmReceiver.enable(this@AstronomySettingsFragment, true)
+                SunriseAlarmReceiver.enable(fragment, true)
             } else {
                 sunriseService.disable()
             }
@@ -481,13 +507,13 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun restartSunsetAlerts() {
-        inBackground {
+        fragment.inBackground {
             sunsetService.restart()
         }
     }
 
     private fun restartSunriseAlerts() {
-        inBackground {
+        fragment.inBackground {
             sunriseService.restart()
         }
     }
@@ -499,7 +525,7 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            requireContext(),
+            fragment.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -511,8 +537,8 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<AstronomyOption> {
-        val entries = resources.getStringArray(entriesId)
-        val values = resources.getStringArray(valuesId)
+        val entries = fragment.resources.getStringArray(entriesId)
+        val values = fragment.resources.getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             AstronomyOption(value, entries.getOrElse(index) { value })
         }
@@ -545,6 +571,10 @@ class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun putBoolean(key: Int, value: Boolean) {
         cache.putBoolean(getString(key), value)
+    }
+
+    private fun getString(@StringRes id: Int, vararg args: Any): String {
+        return fragment.getString(id, *args)
     }
 
     private fun onSunsetAlertsChanged(data: Bundle): Boolean {

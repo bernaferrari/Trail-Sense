@@ -509,8 +509,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.astronomySettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.astronomy.ui.AstronomySettingsFragment")
-            label = "AstronomySettingsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "AstronomySettingsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ASTRONOMY_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

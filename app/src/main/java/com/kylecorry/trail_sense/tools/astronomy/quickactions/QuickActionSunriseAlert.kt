@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.IPermissionRequester
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -46,18 +45,16 @@ class QuickActionSunriseAlert(btn: QuickActionButtonView, fragment: Fragment) :
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
-                    if (fragment is IPermissionRequester) {
-                        SunriseAlarmReceiver.enable(fragment, true)
-                        val alertTime =
-                            Duration.ofMinutes(prefs.astronomy.sunriseAlertMinutesBefore)
-                        val formattedAlertTime = formatter.formatDuration(alertTime)
-                        fragment.toast(
-                            context.getString(
-                                R.string.sunrise_alert_scheduled,
-                                formattedAlertTime
-                            )
+                    SunriseAlarmReceiver.enable(fragment, true)
+                    val alertTime =
+                        Duration.ofMinutes(prefs.astronomy.sunriseAlertMinutesBefore)
+                    val formattedAlertTime = formatter.formatDuration(alertTime)
+                    fragment.toast(
+                        context.getString(
+                            R.string.sunrise_alert_scheduled,
+                            formattedAlertTime
                         )
-                    }
+                    )
                 }
 
                 else -> return@inBackground
