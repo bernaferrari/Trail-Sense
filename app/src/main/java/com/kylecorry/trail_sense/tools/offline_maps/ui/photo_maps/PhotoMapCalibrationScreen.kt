@@ -1,8 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
-import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -38,6 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.annotation.StringRes
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
@@ -62,7 +68,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -81,34 +86,79 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
+@Composable
+fun PhotoMapCalibrationToolScreen(
+    fragment: Fragment,
+    mapId: Long,
+    onRotation: (Float) -> Unit,
+    onComplete: () -> Unit,
+    onController: (PhotoMapCalibrationController) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment, mapId, onRotation, onComplete) {
+        PhotoMapCalibrationController(fragment, mapId, onRotation, onComplete)
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val service = getAppService<OfflineMapService>()
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private var calibrationViews: PhotoMapCalibrationViews? = null
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        onController(controller)
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier)
+}
+
+class PhotoMapCalibrationController(
+    private val fragment: Fragment,
+    private val mapId: Long,
+    private var showRotation: (Float) -> Unit,
+    private var onDone: () -> Unit
+) {
+
+    private val service = getAppService<MapService>()
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private var calibrationViews: PhotoMapCalibrationViews? =
+        createPhotoMapCalibrationViews(fragment.requireContext())
     private val views: PhotoMapCalibrationViews
         get() = calibrationViews ?: error("Photo map calibration views are not ready")
     private val isBound: Boolean
         get() = calibrationViews != null
 
-    private var mapId = 0L
+    @Composable
+    fun Content(modifier: Modifier = Modifier) {
+        PhotoMapCalibrationHost(
+            views = views,
+            modifier = modifier
+        )
+    }
+
     private var map: PhotoMap? = null
 
     private var calibrationIndex = 0
     private var maxPoints = 2
-    private var onDone: () -> Unit = {}
-    private var showRotation: (Float) -> Unit = {}
     private val rotationCalculator = MapRotationCalculator()
     private var originalRotation = 0f
 
-    private lateinit var backCallback: OnBackPressedCallback
+    private var backCallback: OnBackPressedCallback? = null
 
     private val manager = MapCalibrationManager(maxPoints) {
         updateMapCalibration()
     }
 
     // Sensors
-    private val sensorService by lazy { SensorService(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val compass by lazy { sensorService.getCompass() }
 
@@ -118,68 +168,19 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
     private var showPreview = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mapId = requireArguments().getLong("mapId")
-    }
-
-    override fun beforeCreateContent() {
-        calibrationViews = createPhotoMapCalibrationViews(requireContext())
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        PhotoMapCalibrationHost(
-            views = views,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Populate the last known location
-        views.calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
-        views.calibrationMap.userLocation = gps.location
-        views.calibrationMap.userLocationAccuracy =
-            gps.horizontalAccuracy?.let { Distance.meters(it) }
-
-        observe(gps) {
-            views.calibrationMap.userLocation = gps.location
-            views.calibrationMap.userLocationAccuracy =
-                gps.horizontalAccuracy?.let { Distance.meters(it) }
-            compass.declination = declinationStrategy.getDeclination()
-        }
-
-        observe(compass) {
-            views.calibrationMap.userAzimuth = compass.bearing
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        calibrationViews?.calibrationMap?.stop()
-    }
-
-    override fun onDestroyView() {
-        calibrationViews = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    fun onCreate() {
         CustomUiUtils.disclaimer(
-            requireContext(),
-            getString(R.string.map_calibration),
-            getString(R.string.map_calibration_instructions),
-            getString(R.string.map_calibration_shown),
+            fragment.requireContext(),
+            fragment.getString(R.string.map_calibration),
+            fragment.getString(R.string.map_calibration_instructions),
+            fragment.getString(R.string.map_calibration_shown),
             cancelText = null
         )
 
         views.mapCalibrationBottomPanel.onTitleClick = {
-            dialog(
-                getString(R.string.map_calibration),
-                getString(R.string.map_calibration_instructions),
+            fragment.dialog(
+                fragment.getString(R.string.map_calibration),
+                fragment.getString(R.string.map_calibration_instructions),
                 cancelText = null
             )
         }
@@ -188,10 +189,10 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
         views.mapCalibrationBottomPanel.onNextClick = {
             if (calibrationIndex == (maxPoints - 1)) {
-                inBackground {
-                    map = map?.let { save(service.getPhotoMap(it.id) ?: it) }
+                fragment.inBackground {
+                    map = map?.let { save(it) }
                     manager.reset(map?.georeference?.calibrationPoints ?: emptyList())
-                    backCallback.remove()
+                    backCallback?.remove()
                     onDone()
                 }
             } else {
@@ -234,21 +235,42 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             views.calibrationMap.zoomBy(2f)
         }
 
-        backCallback = promptIfUnsavedChanges {
+        backCallback = fragment.promptIfUnsavedChanges {
             hasChanges()
         }
     }
 
-    fun setOnCompleteListener(listener: () -> Unit) {
-        onDone = listener
+    fun onResume() {
+        // Populate the last known location
+        views.calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
+        views.calibrationMap.userLocation = gps.location
+        views.calibrationMap.userLocationAccuracy =
+            gps.horizontalAccuracy?.let { Distance.meters(it) }
+
+        fragment.observe(gps) {
+            views.calibrationMap.userLocation = gps.location
+            views.calibrationMap.userLocationAccuracy =
+                gps.horizontalAccuracy?.let { Distance.meters(it) }
+            compass.declination = declinationStrategy.getDeclination()
+        }
+
+        fragment.observe(compass) {
+            views.calibrationMap.userAzimuth = compass.bearing
+        }
     }
 
-    fun setOnRotationListener(listener: (Float) -> Unit) {
-        showRotation = listener
+    fun onPause() {
+        calibrationViews?.calibrationMap?.stop()
+    }
+
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
+        calibrationViews = null
     }
 
     fun reloadMap() {
-        inBackground {
+        fragment.inBackground {
             map = service.getPhotoMap(mapId)
             onMain {
                 map?.let(::onMapLoad)
@@ -365,7 +387,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
         views.mapCalibrationBottomPanel.iconTint = when {
             notice.isNotBlank() -> Color(getErrorColor())
             manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
-            else -> Color(Resources.androidTextColorSecondary(requireContext()))
+            else -> Color(Resources.androidTextColorSecondary(fragment.requireContext()))
         }
     }
 
@@ -394,7 +416,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             MyLocationGeoJsonSource.SOURCE_ID,
             BeaconGeoJsonSource.SOURCE_ID
         ) else emptyList()
-        inBackground {
+        fragment.inBackground {
             views.calibrationMap.setLayersWithPreferences(
                 OfflineMapsToolRegistration.PHOTO_MAPS_ID,
                 layers
@@ -445,7 +467,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
     private fun getErrorColor(): Int {
         return Resources.getAndroidColorAttr(
-            requireContext(),
+            fragment.requireContext(),
             androidx.appcompat.R.attr.colorError
         )
     }
@@ -463,20 +485,8 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
         return manager.hasChanges()
     }
 
-    companion object {
-        fun create(
-            mapId: Long,
-            showRotation: (rotation: Float) -> Unit = {},
-            onComplete: () -> Unit = {}
-        ): PhotoMapCalibrationFragment {
-            return PhotoMapCalibrationFragment().apply {
-                arguments = Bundle().apply {
-                    putLong("mapId", mapId)
-                }
-                setOnRotationListener(showRotation)
-                setOnCompleteListener(onComplete)
-            }
-        }
+    private fun getString(@StringRes id: Int, vararg args: Any): String {
+        return fragment.getString(id, *args)
     }
 
 }

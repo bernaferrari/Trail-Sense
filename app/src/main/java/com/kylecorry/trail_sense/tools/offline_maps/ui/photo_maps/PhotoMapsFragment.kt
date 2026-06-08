@@ -64,6 +64,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private var autoLockLocation = false
     private var map: PhotoMap? = null
     private var currentFragment: Fragment? = null
+    private var currentCalibrationController: PhotoMapCalibrationController? = null
     private var title by mutableStateOf("")
     private var subtitle by mutableStateOf<String?>(null)
     private var showRecenter by mutableStateOf(false)
@@ -92,7 +93,14 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
                     loadMap()
                 }
             },
-            onCalibrationFragment = ::onCalibrationFragment,
+            onCalibrationRotation = ::showRotation,
+            onCalibrationController = ::onCalibrationController,
+            onCalibrationComplete = {
+                inBackground {
+                    autoRotate()
+                    loadMap()
+                }
+            },
             onViewFragment = ::onViewFragment,
             modifier = Modifier.fillMaxSize()
         )
@@ -108,13 +116,14 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     override fun onDestroyView() {
         currentFragment = null
+        currentCalibrationController = null
         super.onDestroyView()
     }
 
     private fun showMenu(anchor: View) {
         val fragment = currentFragment
         val isMapView = fragment != null && fragment is ViewPhotoMapFragment
-        val isCalibrationFragment = fragment != null && fragment is PhotoMapCalibrationFragment
+        val isCalibrationFragment = currentCalibrationController != null
 
         val actions = listOf(
             MapContextualAction.Calibrate to if (isMapView) getString(R.string.calibrate) else null,
@@ -159,13 +168,8 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun calibrate() {
         showRecenter = true
-        val fragment = PhotoMapCalibrationFragment.create(mapId, this::showRotation) {
-            inBackground {
-                autoRotate()
-                loadMap()
-            }
-        }
-        setFragment(fragment)
+        currentFragment = null
+        childSpec = PhotoMapChildSpec.Calibration(mapId)
     }
 
     private fun showRotation(rotation: Float) {
@@ -286,9 +290,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
             fragment.recenter()
         }
 
-        if (fragment != null && fragment is PhotoMapCalibrationFragment) {
-            fragment.recenter()
-        }
+        currentCalibrationController?.recenter()
     }
 
     private fun reload() {
@@ -297,9 +299,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
             fragment.reloadMap()
         }
 
-        if (fragment != null && fragment is PhotoMapCalibrationFragment) {
-            fragment.reloadMap()
-        }
+        currentCalibrationController?.reloadMap()
     }
 
     private suspend fun loadMap() {
@@ -323,6 +323,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
         hideRotation()
         showRecenter = false
         currentFragment = null
+        currentCalibrationController = null
         childSpec = PhotoMapChildSpec.Warp(mapId)
     }
 
@@ -352,27 +353,20 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private fun view() {
         hideRotation()
         showRecenter = true
+        currentCalibrationController = null
         val fragment = ViewPhotoMapFragment.create(mapId, autoLockLocation)
         setFragment(fragment)
     }
 
     private fun setFragment(fragment: Fragment) {
         childSpec = when (fragment) {
-            is PhotoMapCalibrationFragment -> PhotoMapChildSpec.Calibration(mapId)
             is ViewPhotoMapFragment -> PhotoMapChildSpec.View(mapId, autoLockLocation)
             else -> null
         }
     }
 
-    private fun onCalibrationFragment(fragment: PhotoMapCalibrationFragment) {
-        currentFragment = fragment
-        fragment.setOnRotationListener(::showRotation)
-        fragment.setOnCompleteListener {
-            inBackground {
-                autoRotate()
-                loadMap()
-            }
-        }
+    private fun onCalibrationController(controller: PhotoMapCalibrationController) {
+        currentCalibrationController = controller
     }
 
     private fun onViewFragment(fragment: ViewPhotoMapFragment) {
@@ -390,7 +384,9 @@ private fun PhotoMapsScreen(
     childSpec: PhotoMapChildSpec?,
     fragment: Fragment,
     onWarpComplete: () -> Unit,
-    onCalibrationFragment: (PhotoMapCalibrationFragment) -> Unit,
+    onCalibrationRotation: (Float) -> Unit,
+    onCalibrationController: (PhotoMapCalibrationController) -> Unit,
+    onCalibrationComplete: () -> Unit,
     onViewFragment: (ViewPhotoMapFragment) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -421,12 +417,13 @@ private fun PhotoMapsScreen(
                                 onComplete = onWarpComplete
                             )
 
-                            is PhotoMapChildSpec.Calibration -> AndroidFragment<PhotoMapCalibrationFragment>(
+                            is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
                                 modifier = Modifier.fillMaxSize(),
-                                arguments = Bundle().apply {
-                                    putLong("mapId", spec.mapId)
-                                },
-                                onUpdate = onCalibrationFragment
+                                fragment = fragment,
+                                mapId = spec.mapId,
+                                onRotation = onCalibrationRotation,
+                                onComplete = onCalibrationComplete,
+                                onController = onCalibrationController
                             )
 
                             is PhotoMapChildSpec.View -> AndroidFragment<ViewPhotoMapFragment>(
@@ -548,7 +545,9 @@ private fun PhotoMapsScreenPreview() {
             childSpec = null,
             fragment = Fragment(),
             onWarpComplete = {},
-            onCalibrationFragment = {},
+            onCalibrationRotation = {},
+            onCalibrationController = {},
+            onCalibrationComplete = {},
             onViewFragment = {}
         )
     }
