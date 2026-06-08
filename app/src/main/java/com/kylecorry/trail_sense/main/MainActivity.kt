@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.ColorFilter
+import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Build
@@ -18,6 +20,7 @@ import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.fragment.app.FragmentContainerView
@@ -148,7 +151,8 @@ class MainActivity : AndromedaActivity() {
         }
 
         if (userPrefs.theme == UserPreferences.Theme.Night) {
-            views.colorFilter.setColorFilter(
+            setColorFilter(
+                views.colorFilter,
                 PorterDuffColorFilter(
                     Color.RED,
                     PorterDuff.Mode.MULTIPLY
@@ -655,7 +659,7 @@ class MainActivity : AndromedaActivity() {
 
 private data class MainActivityViews(
     val root: CoordinatorLayout,
-    val colorFilter: ColorFilterConstraintLayout,
+    val colorFilter: ConstraintLayout,
     val errorBanner: ErrorBannerState,
     val fragmentHolder: FragmentContainerView,
     val quickActionsSheet: QuickActionSheetState,
@@ -671,7 +675,7 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         )
     }
 
-    val colorFilter = ColorFilterConstraintLayout(context, null).apply {
+    val colorFilter = ConstraintLayout(context).apply {
         id = R.id.color_filter
     }
     root.addView(
@@ -770,4 +774,15 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         quickActionsSheet,
         bottomNavigation
     )
+}
+
+private fun setColorFilter(view: View, filter: ColorFilter?) {
+    val paint = Paint().apply {
+        colorFilter = filter
+    }
+    if (filter != null) {
+        view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
+    } else {
+        view.setLayerType(View.LAYER_TYPE_NONE, paint)
+    }
 }
