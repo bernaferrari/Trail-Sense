@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.permissions
 import android.Manifest
 import android.content.Context
 import android.os.Build
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.camera.Camera
@@ -15,7 +15,7 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.trail_sense.R
 
-fun Fragment.alertNoCameraPermission() {
+fun TrailSenseComposeDestinationFragment.alertNoCameraPermission() {
     Alerts.toast(
         requireContext(),
         getString(R.string.camera_permission_denied),
@@ -23,7 +23,7 @@ fun Fragment.alertNoCameraPermission() {
     )
 }
 
-fun Fragment.alertNoActivityRecognitionPermission() {
+fun TrailSenseComposeDestinationFragment.alertNoActivityRecognitionPermission() {
     Alerts.toast(
         requireContext(),
         getString(R.string.activity_recognition_permission_denied),
@@ -31,11 +31,11 @@ fun Fragment.alertNoActivityRecognitionPermission() {
     )
 }
 
-fun Fragment.alertExactAlarmsDenied() {
+fun TrailSenseComposeDestinationFragment.alertExactAlarmsDenied() {
     toast(getString(R.string.exact_alarm_permission_denied), short = false)
 }
 
-fun Fragment.requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
+fun TrailSenseComposeDestinationFragment.requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
             action(Permissions.canRecognizeActivity(requireContext()))
@@ -45,7 +45,7 @@ fun Fragment.requestActivityRecognition(action: (hasPermission: Boolean) -> Unit
     }
 }
 
-fun Fragment.requestIgnoreBatteryOptimizations(
+fun TrailSenseComposeDestinationFragment.requestIgnoreBatteryOptimizations(
     action: (hasPermission: Boolean) -> Unit
 ) {
     requirePermissionRequester().requestPermission(
@@ -75,21 +75,15 @@ fun Fragment.requestIgnoreBatteryOptimizations(
     }
 }
 
-fun Fragment.getPermissionRequester(): IPermissionRequester? {
-    return if (this is IPermissionRequester) {
-        this
-    } else if (requireActivity() is IPermissionRequester) {
-        requireActivity() as IPermissionRequester
-    } else {
-        null
-    }
+fun TrailSenseComposeDestinationFragment.getPermissionRequester(): IPermissionRequester? {
+    return this
 }
 
-fun Fragment.requirePermissionRequester(): IPermissionRequester {
-    return getPermissionRequester()!!
+fun TrailSenseComposeDestinationFragment.requirePermissionRequester(): IPermissionRequester {
+    return this
 }
 
-fun Fragment.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+fun TrailSenseComposeDestinationFragment.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
     requirePermissionRequester().requestPermission(
         SpecialPermission.SCHEDULE_EXACT_ALARMS,
         PermissionRationale(
@@ -115,7 +109,7 @@ fun Fragment.requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit
     }
 }
 
-fun Fragment.requestCamera(action: (hasPermission: Boolean) -> Unit) {
+fun TrailSenseComposeDestinationFragment.requestCamera(action: (hasPermission: Boolean) -> Unit) {
     requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
         action(Camera.isAvailable(requireContext()))
     }
@@ -138,7 +132,7 @@ fun Permissions.canGetLocationCustom(context: Context): Boolean {
 /**
  * Request location permission when absolutely required to start a foreground service (Android 14+)
  */
-fun Fragment.requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
+fun TrailSenseComposeDestinationFragment.requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
     if (Permissions.canStartLocationForgroundService(requireContext())) {
         action(true)
         return

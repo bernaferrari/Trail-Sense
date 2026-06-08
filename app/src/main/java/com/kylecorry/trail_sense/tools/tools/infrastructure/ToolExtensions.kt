@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
@@ -19,7 +19,7 @@ fun ToolService.getFeatureState(): FeatureState {
 }
 
 fun Tools.observe(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     toolBroadCastId: String,
     onReceiveBroadcast: suspend (data: Bundle) -> Unit
 ) {

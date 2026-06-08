@@ -72,12 +72,10 @@ object FlashlightToolRegistration : ToolRegistration {
                 ),
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
-                    { context, _, fragment ->
-                        fragment is ScreenFlashlightController && UserPreferences(
-                            context
-                        ).flashlight.controlScreenFlashlightWithVolumeButtons
+                    { context, _, _ ->
+                        UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
-                    { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }
+                    { ScreenFlashlightBrightnessVolumeAction(it) }
                 )
             ),
             notificationChannelGroups = listOf(

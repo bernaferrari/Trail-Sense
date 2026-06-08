@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.permissions
 
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 
-class RemoveBatteryRestrictionsAlerter(private val fragment: Fragment) : IAlerter {
+class RemoveBatteryRestrictionsAlerter(private val fragment: TrailSenseComposeDestinationFragment) : IAlerter {
 
     override fun alert() {
         val context = fragment.requireContext()

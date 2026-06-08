@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.permissions
 
 import android.Manifest
 import android.os.Build
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -11,7 +11,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 
-class BackgroundLocationAlerter(private val fragment: Fragment) : IAlerter {
+class BackgroundLocationAlerter(private val fragment: TrailSenseComposeDestinationFragment) : IAlerter {
 
     override fun alert() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {

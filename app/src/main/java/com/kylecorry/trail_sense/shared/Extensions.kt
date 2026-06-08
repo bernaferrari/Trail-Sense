@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.IdRes
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -27,7 +27,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.math.roundToInt
 
-fun Fragment.requireMainActivity(): MainActivity {
+fun TrailSenseComposeDestinationFragment.requireMainActivity(): MainActivity {
     return requireActivity() as MainActivity
 }
 
