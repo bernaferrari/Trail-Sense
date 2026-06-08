@@ -222,6 +222,7 @@ import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
+import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRToolScreen
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.signal_finder.ui.SignalFinderToolScreen
@@ -474,6 +475,10 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
             DESTINATION_OFFLINE_MAP_LIST -> OfflineMapListToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
+            DESTINATION_VIEW_QR -> QRShareScreen(
+                title = requireArguments().getString("qr_title").orEmpty(),
+                text = requireArguments().getString("qr_text").orEmpty()
+            )
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
             DESTINATION_NAVIGATION -> NavigatorToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
@@ -3553,6 +3558,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         const val DESTINATION_PLACE_BEACON = "place_beacon"
         const val DESTINATION_OFFLINE_MAP_LIST = "offline_map_list"
         const val DESTINATION_SCAN_QR = "scan_qr"
+        const val DESTINATION_VIEW_QR = "view_qr"
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
         const val DESTINATION_NAVIGATION = "navigation"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"

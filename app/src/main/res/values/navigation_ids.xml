@@ -134,6 +134,7 @@
     <item name="toolsSettingsFragment" type="id" />
     <item name="turnBackFragment" type="id" />
     <item name="unitSettingsFragment" type="id" />
+    <item name="viewQrFragment" type="id" />
     <item name="waterPurificationFragment" type="id" />
     <item name="weatherSettingsFragment" type="id" />
 </resources>

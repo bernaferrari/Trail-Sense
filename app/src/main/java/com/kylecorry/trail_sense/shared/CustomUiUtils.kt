@@ -5,8 +5,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
+import android.os.Bundle
 import android.util.Size
 import android.view.Gravity
 import android.view.View
@@ -19,7 +18,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -48,7 +47,7 @@ import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
-import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
+import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -256,8 +255,17 @@ object CustomUiUtils {
         fragment: Fragment,
         title: String,
         qr: String
-    ): BottomSheetDialog {
-        return ViewQRBottomSheet(fragment, title, qr).show()
+    ) {
+        if (qr.length > QR_SHARE_MAX_LENGTH) {
+            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.qr_text_too_long))
+        }
+        fragment.findNavController().navigate(
+            R.id.viewQrFragment,
+            Bundle().apply {
+                putString("qr_title", title)
+                putString("qr_text", qr.take(QR_SHARE_MAX_LENGTH))
+            }
+        )
     }
 
     suspend fun takePhoto(fragment: AndromedaFragment, size: Size? = null): Uri? =

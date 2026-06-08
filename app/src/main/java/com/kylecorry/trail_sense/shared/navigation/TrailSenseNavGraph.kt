@@ -586,6 +586,25 @@ object TrailSenseNavGraph {
         }
 
         fragmentNavigator.createDestination().apply {
+            id = R.id.viewQrFragment
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "QRShareScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_VIEW_QR)
+                .build())
+            addArgument("qr_title", NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue("")
+                .build())
+            addArgument("qr_text", NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue("")
+                .build())
+            graph.addDestination(this)
+        }
+
+        fragmentNavigator.createDestination().apply {
             id = R.id.levelFragment
             setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "LevelFragment"
