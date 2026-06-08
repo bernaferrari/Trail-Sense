@@ -147,7 +147,7 @@ import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission as showNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -495,6 +495,10 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             getString(R.string.activity_recognition_permission_denied),
             short = false
         )
+    }
+
+    override fun alertNoCameraPermission() {
+        showNoCameraPermission()
     }
 
     override fun openWidgets() {

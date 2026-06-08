@@ -39,6 +39,7 @@ interface TrailSenseDestinationHost {
     fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit)
     fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit)
     fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit)
+    fun alertNoCameraPermission()
     fun alertNoActivityRecognitionPermission()
     fun showPhotoImport(
         resolution: Size?,

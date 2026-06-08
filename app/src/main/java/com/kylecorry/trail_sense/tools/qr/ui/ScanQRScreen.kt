@@ -40,11 +40,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -67,7 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ScanQRToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun ScanQRToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { ScanQRController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(controller, lifecycleOwner) {
@@ -101,7 +100,7 @@ fun ScanQRToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class ScanQRController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class ScanQRController(private val fragment: TrailSenseDestinationHost) {
     private val cameraSize = Size(200, 200)
 
     var history by mutableStateOf<List<String>>(emptyList())
@@ -120,7 +119,7 @@ private class ScanQRController(private val fragment: TrailSenseComposeDestinatio
     fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
         cameraView.clipToOutline = true
-        if (shouldStartCamera && fragment.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+        if (shouldStartCamera && fragment.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             startCamera()
         }
     }
@@ -241,7 +240,7 @@ private class ScanQRController(private val fragment: TrailSenseComposeDestinatio
         bitmap: Bitmap,
         isFromGallery: Boolean = false
     ): Boolean = synchronized(scanLock) {
-        if (!fragment.isAdded || fragment.view == null) {
+        if (!fragment.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             bitmap.recycle()
             return true
         }

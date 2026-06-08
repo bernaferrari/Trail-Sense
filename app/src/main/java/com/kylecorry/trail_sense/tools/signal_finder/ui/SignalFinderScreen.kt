@@ -35,12 +35,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -69,7 +67,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SignalFinderToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun SignalFinderToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) {
         SignalFinderController(fragment)
     }
@@ -105,7 +103,7 @@ fun SignalFinderToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class SignalFinderController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class SignalFinderController(private val fragment: TrailSenseDestinationHost) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val cellSignal by lazy { sensorService.getCellSignal() }
@@ -182,7 +180,7 @@ private class SignalFinderController(private val fragment: TrailSenseComposeDest
     private fun loadNearbyTowers(currentLocation: Coordinate) {
         lastTowerLocation = currentLocation
         towerJob?.cancel()
-        towerJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        towerJob = fragment.lifecycleScope.launch {
             loading = true
             val towers = withContext(Dispatchers.IO) {
                 CellTowerModel.getTowers(
