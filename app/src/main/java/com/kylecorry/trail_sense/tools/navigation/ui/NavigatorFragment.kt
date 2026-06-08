@@ -314,9 +314,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.altitude.onClick = {
-            val sheet = AltitudeBottomSheet()
-            sheet.currentAltitude = Reading(altimeter.altitude, Instant.now())
-            sheet.show(this)
+            AltitudeBottomSheet(this, Reading(altimeter.altitude, Instant.now())).show()
         }
 
         views.linearCompass.setOnClickListener {

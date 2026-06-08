@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.os.Bundle
-import android.view.View
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,10 +27,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.map
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -45,7 +46,7 @@ import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -56,93 +57,105 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
-class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
+class AltitudeBottomSheet(
+    private val fragment: Fragment,
+    var currentAltitude: Reading<Float>? = null
+) {
 
-    private val pathService by lazy { PathService.getInstance(requireContext()) }
-    private val weatherRepo by lazy { WeatherRepo.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
+    private val weatherRepo by lazy { WeatherRepo.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private var setHistorySummary: ((String) -> Unit)? = null
     private var setChartReadings: ((List<Reading<Float>>) -> Unit)? = null
     private var units = DistanceUnits.Meters
     private var backtrackReadings = listOf<Reading<Float>>()
     private var weatherReadings = listOf<Reading<Float>>()
 
-    var currentAltitude: Reading<Float>? = null
-
     private val maxHistoryDuration = Duration.ofDays(1)
     private val maxFilterHistoryDuration = maxHistoryDuration.plusHours(6)
     private var historyDuration = maxHistoryDuration
 
-    @Composable
-    override fun FragmentContent() {
-        val initialUnits = remember {
-            prefs.baseDistanceUnits.also { units = it }
-        }
-        var historySummary by remember {
-            mutableStateOf(formatHistoryDuration())
-        }
-        var chartReadings by remember {
-            mutableStateOf<List<Reading<Float>>>(emptyList())
-        }
-        var showHistoryDurationPicker by remember { mutableStateOf(false) }
-        val historyDurationTitle = stringResource(R.string.elevation_history_length)
+    fun show(): BottomSheetDialog {
+        units = prefs.baseDistanceUnits
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                val initialUnits = remember {
+                    prefs.baseDistanceUnits.also { units = it }
+                }
+                var historySummary by remember {
+                    mutableStateOf(formatHistoryDuration())
+                }
+                var chartReadings by remember {
+                    mutableStateOf<List<Reading<Float>>>(emptyList())
+                }
+                var showHistoryDurationPicker by remember { mutableStateOf(false) }
+                val historyDurationTitle = stringResource(R.string.elevation_history_length)
 
-        DisposableEffect(Unit) {
-            setHistorySummary = { historySummary = it }
-            setChartReadings = { chartReadings = it }
-            onDispose {
-                setHistorySummary = null
-                setChartReadings = null
+                DisposableEffect(Unit) {
+                    setHistorySummary = { historySummary = it }
+                    setChartReadings = { chartReadings = it }
+                    onDispose {
+                        setHistorySummary = null
+                        setChartReadings = null
+                    }
+                }
+
+                AltitudeContent(
+                    historySummary = historySummary,
+                    readings = chartReadings,
+                    units = initialUnits,
+                    onHistoryClick = {
+                        showHistoryDurationPicker = true
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (showHistoryDurationPicker) {
+                    DurationPickerDialog(
+                        title = historyDurationTitle,
+                        duration = historyDuration,
+                        onDurationPicked = {
+                            if (it != null) {
+                                historyDuration = it
+                                updateChart()
+                            }
+                            showHistoryDurationPicker = false
+                        },
+                        onDismiss = {
+                            showHistoryDurationPicker = false
+                        }
+                    )
+                }
             }
-        }
-
-        AltitudeContent(
-            historySummary = historySummary,
-            readings = chartReadings,
-            units = initialUnits,
-            onHistoryClick = {
-                showHistoryDurationPicker = true
-            },
-            modifier = Modifier.fillMaxSize()
         )
 
-        if (showHistoryDurationPicker) {
-            DurationPickerDialog(
-                title = historyDurationTitle,
-                duration = historyDuration,
-                onDurationPicked = {
-                    if (it != null) {
-                        historyDuration = it
-                        updateChart()
-                    }
-                    showHistoryDurationPicker = false
-                },
-                onDismiss = {
-                    showHistoryDurationPicker = false
-                }
-            )
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        units = prefs.baseDistanceUnits
-
-        observe(getBacktrackReadings()) {
+        val backtrackLiveData = getBacktrackReadings()
+        val weatherLiveData = getWeatherReadings()
+        val backtrackObserver = Observer<List<Reading<Float>>> {
             backtrackReadings = it
             updateChart()
         }
-        observe(getWeatherReadings()) {
+        val weatherObserver = Observer<List<Reading<Float>>> {
             weatherReadings = it
             updateChart()
         }
-    }
 
-    override fun onDestroyView() {
-        setHistorySummary = null
-        setChartReadings = null
-        super.onDestroyView()
+        backtrackLiveData.observe(fragment.viewLifecycleOwner, backtrackObserver)
+        weatherLiveData.observe(fragment.viewLifecycleOwner, weatherObserver)
+        dialog.setOnDismissListener {
+            backtrackLiveData.removeObserver(backtrackObserver)
+            weatherLiveData.removeObserver(weatherObserver)
+            setHistorySummary = null
+            setChartReadings = null
+        }
+        dialog.show()
+        return dialog
     }
 
     private fun updateChart(readings: List<Reading<Float>>) {
@@ -151,7 +164,7 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
     }
 
     private fun updateChart() {
-        inBackground {
+        fragment.inBackground {
             val filteredReadings = onDefault {
                 val readings =
                     (backtrackReadings + weatherReadings + listOfNotNull(currentAltitude)).sortedBy { it.time }
@@ -165,7 +178,7 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
                 onIO {
-                    DebugElevationsCommand(requireContext(), readings, smoothed).execute()
+                    DebugElevationsCommand(fragment.requireContext(), readings, smoothed).execute()
                 }
 
                 smoothed.filter {
@@ -178,7 +191,7 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
     }
 
     private fun formatHistoryDuration(): String {
-        return getString(R.string.last_duration, formatService.formatDuration(historyDuration))
+        return fragment.getString(R.string.last_duration, formatService.formatDuration(historyDuration))
     }
 
     private fun getWeatherReadings(): LiveData<List<Reading<Float>>> {
