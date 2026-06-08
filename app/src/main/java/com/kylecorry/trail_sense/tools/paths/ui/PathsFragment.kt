@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,9 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,7 +41,6 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.onBackPressed
@@ -64,6 +59,7 @@ import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -99,7 +95,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import java.time.Duration
 
-class PathsFragment : AndromedaFragment() {
+class PathsFragment : TrailSenseAndromedaComposeFragment() {
 
     private val service by lazy {
         Tools.getService(
@@ -134,45 +130,35 @@ class PathsFragment : AndromedaFragment() {
     private var backtrackFrequency by mutableStateOf<Duration?>(null)
     private var sortMenuText by mutableStateOf("")
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PathsScreen(
-                        title = title.ifBlank { stringResource(R.string.paths) },
-                        sortMenuText = sortMenuText.ifBlank {
-                            stringResource(R.string.sort_by, stringResource(R.string.most_recent))
-                        },
-                        searchText = searchText,
-                        items = pathItems,
-                        isEmpty = pathItems.isEmpty(),
-                        resetKey = pathListResetKey,
-                        backtrackState = backtrackState,
-                        backtrackFrequency = backtrackFrequency,
-                        formatService = FormatService.getInstance(requireContext()),
-                        baseDistanceUnits = prefs.baseDistanceUnits,
-                        onSearchChange = {
-                            searchText = it
-                            manager.search(it)
-                        },
-                        onMenuAction = ::handleToolbarAction,
-                        onPathAction = ::handleAction,
-                        onGroupAction = ::handleGroupAction,
-                        onImportPath = ::importPaths,
-                        onCreateGroup = ::createGroup,
-                        onCreatePath = ::createPath,
-                        onBacktrackFrequencyClick = ::changeBacktrackFrequency,
-                        onBacktrackToggleClick = ::toggleBacktrack,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PathsScreen(
+            title = title.ifBlank { stringResource(R.string.paths) },
+            sortMenuText = sortMenuText.ifBlank {
+                stringResource(R.string.sort_by, stringResource(R.string.most_recent))
+            },
+            searchText = searchText,
+            items = pathItems,
+            isEmpty = pathItems.isEmpty(),
+            resetKey = pathListResetKey,
+            backtrackState = backtrackState,
+            backtrackFrequency = backtrackFrequency,
+            formatService = FormatService.getInstance(requireContext()),
+            baseDistanceUnits = prefs.baseDistanceUnits,
+            onSearchChange = {
+                searchText = it
+                manager.search(it)
+            },
+            onMenuAction = ::handleToolbarAction,
+            onPathAction = ::handleAction,
+            onGroupAction = ::handleGroupAction,
+            onImportPath = ::importPaths,
+            onCreateGroup = ::createGroup,
+            onCreatePath = ::createPath,
+            onBacktrackFrequencyClick = ::changeBacktrackFrequency,
+            onBacktrackToggleClick = ::toggleBacktrack,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

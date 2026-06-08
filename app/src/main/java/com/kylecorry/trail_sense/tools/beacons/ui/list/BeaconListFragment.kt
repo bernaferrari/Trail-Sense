@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -37,8 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -57,7 +54,6 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.extensions.filterIndices
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.gpx.GPXData
@@ -77,6 +73,7 @@ import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -109,7 +106,7 @@ import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import java.time.Instant
 
-class BeaconListFragment : AndromedaFragment() {
+class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private val gps by lazy { sensorService.getGPS() }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -136,42 +133,32 @@ class BeaconListFragment : AndromedaFragment() {
     private lateinit var manager: GroupListManager<IBeacon>
     private var lastRoot: IBeacon? = null
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    BeaconListScreen(
-                        title = title.ifBlank { stringResource(R.string.beacons) },
-                        sortMenuText = sortMenuText.ifBlank {
-                            stringResource(R.string.sort_by, stringResource(R.string.closest))
-                        },
-                        searchText = searchText,
-                        items = beaconItems,
-                        isEmpty = beaconItems.isEmpty(),
-                        resetKey = beaconListResetKey,
-                        formatService = formatService,
-                        baseDistanceUnits = prefs.baseDistanceUnits,
-                        currentLocation = gps.location,
-                        isCreateMenuOpen = isCreateMenuOpen,
-                        onSearchChange = {
-                            searchText = it
-                            manager.search(it)
-                        },
-                        onToolbarAction = ::handleToolbarAction,
-                        onCreateMenuOpenChange = { isCreateMenuOpen = it },
-                        onCreateAction = ::handleCreateAction,
-                        onBeaconAction = ::handleBeaconAction,
-                        onGroupAction = ::handleBeaconGroupAction,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        BeaconListScreen(
+            title = title.ifBlank { stringResource(R.string.beacons) },
+            sortMenuText = sortMenuText.ifBlank {
+                stringResource(R.string.sort_by, stringResource(R.string.closest))
+            },
+            searchText = searchText,
+            items = beaconItems,
+            isEmpty = beaconItems.isEmpty(),
+            resetKey = beaconListResetKey,
+            formatService = formatService,
+            baseDistanceUnits = prefs.baseDistanceUnits,
+            currentLocation = gps.location,
+            isCreateMenuOpen = isCreateMenuOpen,
+            onSearchChange = {
+                searchText = it
+                manager.search(it)
+            },
+            onToolbarAction = ::handleToolbarAction,
+            onCreateMenuOpenChange = { isCreateMenuOpen = it },
+            onCreateAction = ::handleCreateAction,
+            onBeaconAction = ::handleBeaconAction,
+            onGroupAction = ::handleBeaconGroupAction,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
@@ -42,16 +41,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.os.BundleCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -76,6 +72,7 @@ import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
@@ -90,7 +87,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PlaceBeaconFragment : Fragment() {
+class PlaceBeaconFragment : TrailSenseComposeFragment() {
 
     private val beaconService by lazy { BeaconService(requireContext()) }
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
@@ -128,60 +125,50 @@ class PlaceBeaconFragment : Fragment() {
         data = data.copy(groupId = if (groupId == 0L) null else groupId)
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PlaceBeaconScreen(
-                        data = data,
-                        groupName = groupName.ifBlank { stringResource(R.string.no_group) },
-                        canSave = isComplete.isSatisfiedBy(data),
-                        hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-                        onNameChange = { updateData(data.copy(name = it)) },
-                        onCoordinateChange = { updateData(data.copy(coordinate = it)) },
-                        onElevationChange = { updateData(data.copy(elevation = it)) },
-                        onCreateAtDistanceChange = {
-                            updateData(data.copy(createAtDistance = it))
-                        },
-                        onDistanceChange = { updateData(data.copy(distanceTo = it)) },
-                        onBearingChange = { bearing, isTrueNorth ->
-                            updateData(
-                                data.copy(
-                                    bearingTo = bearing,
-                                    bearingIsTrueNorth = isTrueNorth
-                                )
-                            )
-                        },
-                        onNotesChange = { updateData(data.copy(notes = it)) },
-                        onGroupClick = ::pickGroup,
-                        onColorClick = ::pickColor,
-                        onIconClick = ::pickIcon,
-                        onSave = ::onSubmit,
-                        locationAutofillRequest = locationAutofillRequest,
-                        onAutoLocationClick = {
-                            if (data.elevation == null) {
-                                elevationAutofillRequest++
-                            }
-                        },
-                        onCoordinateBeaconSelected = {
-                            if (data.elevation == null) {
-                                elevationAutofillRequest++
-                            }
-                        },
-                        elevationAutofillRequest = elevationAutofillRequest,
-                        compassBearingText = compassBearingText,
-                        hasCompass = hasCompass,
-                        onCompassBearingClick = ::setBearingFromCompass,
-                        onCameraBearingClick = ::setBearingFromCamera
+    @Composable
+    override fun FragmentContent() {
+        PlaceBeaconScreen(
+            data = data,
+            groupName = groupName.ifBlank { stringResource(R.string.no_group) },
+            canSave = isComplete.isSatisfiedBy(data),
+            hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+            onNameChange = { updateData(data.copy(name = it)) },
+            onCoordinateChange = { updateData(data.copy(coordinate = it)) },
+            onElevationChange = { updateData(data.copy(elevation = it)) },
+            onCreateAtDistanceChange = {
+                updateData(data.copy(createAtDistance = it))
+            },
+            onDistanceChange = { updateData(data.copy(distanceTo = it)) },
+            onBearingChange = { bearing, isTrueNorth ->
+                updateData(
+                    data.copy(
+                        bearingTo = bearing,
+                        bearingIsTrueNorth = isTrueNorth
                     )
+                )
+            },
+            onNotesChange = { updateData(data.copy(notes = it)) },
+            onGroupClick = ::pickGroup,
+            onColorClick = ::pickColor,
+            onIconClick = ::pickIcon,
+            onSave = ::onSubmit,
+            locationAutofillRequest = locationAutofillRequest,
+            onAutoLocationClick = {
+                if (data.elevation == null) {
+                    elevationAutofillRequest++
                 }
-            }
-        }
+            },
+            onCoordinateBeaconSelected = {
+                if (data.elevation == null) {
+                    elevationAutofillRequest++
+                }
+            },
+            elevationAutofillRequest = elevationAutofillRequest,
+            compassBearingText = compassBearingText,
+            hasCompass = hasCompass,
+            onCompassBearingClick = ::setBearingFromCompass,
+            onCameraBearingClick = ::setBearingFromCamera
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
