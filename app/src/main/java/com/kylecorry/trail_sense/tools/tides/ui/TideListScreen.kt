@@ -43,12 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.sol.science.oceanography.TideType
 import com.kylecorry.trail_sense.R
@@ -68,7 +66,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun TideListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun TideListToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { TideListController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -98,7 +96,7 @@ fun TideListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class TideListController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class TideListController(private val fragment: TrailSenseDestinationHost) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
@@ -126,7 +124,7 @@ private class TideListController(private val fragment: TrailSenseComposeDestinat
             getTideTitle(tide)
         ) { cancelled ->
             if (!cancelled) {
-                fragment.viewLifecycleOwner.lifecycleScope.launch {
+                fragment.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         tideRepo.deleteTideTable(tide)
                     }
@@ -137,7 +135,7 @@ private class TideListController(private val fragment: TrailSenseComposeDestinat
     }
 
     fun toggleVisibility(tide: TideTable) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 ToggleTideTableVisibilityCommand(fragment.requireContext()).execute(tide)
             }
@@ -173,7 +171,7 @@ private class TideListController(private val fragment: TrailSenseComposeDestinat
 
     private fun refreshTides() {
         refreshJob?.cancel()
-        refreshJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        refreshJob = fragment.lifecycleScope.launch {
             val tables = withContext(Dispatchers.IO) {
                 tideRepo.getTideTables().sortedWith(compareBy({ it.isEditable }, { tide ->
                     tide.location?.distanceTo(gps.location) ?: Float.POSITIVE_INFINITY

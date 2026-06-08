@@ -18,7 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -41,7 +41,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun AstronomySettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun AstronomySettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { AstronomySettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -64,7 +64,7 @@ fun AstronomySettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) 
     controller.Content()
 }
 
-private class AstronomySettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class AstronomySettingsController(private val fragment: TrailSenseDestinationHost) {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
@@ -434,7 +434,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseCompos
         val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
         val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
 
-        cache.onChange.asLiveData().observe(fragment.viewLifecycleOwner) {
+        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
             if (it == sunsetAlertTimeKey) {
                 restartSunsetAlerts()
             } else if (it == sunriseAlertTimeKey) {
@@ -537,8 +537,8 @@ private class AstronomySettingsController(private val fragment: TrailSenseCompos
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<AstronomyOption> {
-        val entries = fragment.resources.getStringArray(entriesId)
-        val values = fragment.resources.getStringArray(valuesId)
+        val entries = fragment.getResources().getStringArray(entriesId)
+        val values = fragment.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             AstronomyOption(value, entries.getOrElse(index) { value })
         }
