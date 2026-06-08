@@ -49,8 +49,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.shared.views.SearchView
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
@@ -272,12 +270,6 @@ fun <T> T.useUnsavedChangesPrompt(hasChanges: Boolean) where T : Fragment, T : R
         } else {
             false
         }
-    }
-}
-
-fun ReactiveComponent.useSearch(view: SearchView, onSearch: (String) -> Unit) {
-    useEffect(view) {
-        view.setOnSearchListener(onSearch)
     }
 }
 

@@ -1,32 +1,30 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
-import android.content.Context
-import android.view.Gravity
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.core.view.isVisible
+import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.SearchView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -167,20 +165,16 @@ class AstronomyGuidanceTargetPicker(
         view: AugmentedRealityView,
         options: List<AstronomyGuidanceOption>
     ): AstronomyGuidanceOption? = suspendCoroutine { cont ->
-        val dialogView = createSearchListDialog(view.context)
-        val search = dialogView.findViewById<SearchView>(R.id.search)
-        val list = dialogView.findViewById<ComposeView>(R.id.list)
-        val empty = dialogView.findViewById<TextView>(R.id.empty_text)
+        val context = view.context
+        val dialogView = ComposeView(context)
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
         var filteredOptions by mutableStateOf(options)
-
-        empty.text = view.context.getString(R.string.no_results)
-        empty.isVisible = options.isEmpty()
+        var query by mutableStateOf("")
 
         val alert = Alerts.dialog(
-            view.context,
-            view.context.getString(R.string.locate),
+            context,
+            context.getString(R.string.locate),
             contentView = dialogView,
             okText = null
         ) {
@@ -190,100 +184,73 @@ class AstronomyGuidanceTargetPicker(
             }
         }
 
-        list.setContent {
+        dialogView.setContent {
             TrailSenseTheme {
-                LazyColumn(
-                    modifier = Modifier.testTag("astronomy_guidance_target_list")
-                ) {
-                    items(filteredOptions, key = { it.name }) { option ->
-                        TrailSenseListItem(
-                            title = option.name,
-                            subtitle = option.subtitle,
-                            icon = painterResource(option.icon),
-                            iconTint = option.iconTint?.let { Color(it) }
-                                ?: MaterialTheme.colorScheme.primary,
-                            iconRotation = option.iconRotation,
-                            onClick = {
-                                selected = option
-                                if (!resumed) {
-                                    resumed = true
-                                    cont.resume(option)
+                Column {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            filteredOptions = if (it.isBlank()) {
+                                options
+                            } else {
+                                TextUtils.search(it, options) { option ->
+                                    listOfNotNull(option.name, option.subtitle)
                                 }
-                                alert.dismiss()
-                            },
-                            animateEntrance = false,
-                            modifier = Modifier.testTag("astronomy_guidance_target")
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        singleLine = true,
+                        label = { Text(context.getString(R.string.search)) },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_search),
+                                contentDescription = null
+                            )
+                        }
+                    )
+
+                    if (filteredOptions.isEmpty()) {
+                        Text(
+                            text = context.getString(R.string.no_results),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(32.dp)
                         )
-                        TrailSenseDivider()
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(top = 16.dp)
+                                .testTag("astronomy_guidance_target_list")
+                        ) {
+                            items(filteredOptions, key = { it.name }) { option ->
+                                TrailSenseListItem(
+                                    title = option.name,
+                                    subtitle = option.subtitle,
+                                    icon = painterResource(option.icon),
+                                    iconTint = option.iconTint?.let { Color(it) }
+                                        ?: MaterialTheme.colorScheme.primary,
+                                    iconRotation = option.iconRotation,
+                                    onClick = {
+                                        selected = option
+                                        if (!resumed) {
+                                            resumed = true
+                                            cont.resume(option)
+                                        }
+                                        alert.dismiss()
+                                    },
+                                    animateEntrance = false,
+                                    modifier = Modifier.testTag("astronomy_guidance_target")
+                                )
+                                TrailSenseDivider()
+                            }
+                        }
                     }
                 }
             }
         }
-
-        search.setOnSearchListener { query ->
-            val filtered = if (query.isBlank()) {
-                options
-            } else {
-                TextUtils.search(query, options) {
-                    listOfNotNull(it.name, it.subtitle)
-                }
-            }
-            filteredOptions = filtered
-            empty.isVisible = filtered.isEmpty()
-        }
-    }
-
-    private fun createSearchListDialog(context: Context): View {
-        val horizontalMargin = Resources.dp(context, 16f).toInt()
-        val emptyTopPadding = Resources.dp(context, 32f).toInt()
-        val listTopMargin = Resources.dp(context, 16f).toInt()
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
-        root.addView(
-            SearchView(context, null).apply {
-                id = R.id.search
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = horizontalMargin
-                marginEnd = horizontalMargin
-            }
-        )
-
-        root.addView(
-            TextView(context).apply {
-                id = R.id.empty_text
-                gravity = Gravity.CENTER
-                setPadding(0, emptyTopPadding, 0, 0)
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
-                isVisible = false
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-        )
-
-        root.addView(
-            ComposeView(context).apply {
-                id = R.id.list
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = listTopMargin
-            }
-        )
-
-        return root
     }
 
     private data class AstronomyGuidanceOption(
