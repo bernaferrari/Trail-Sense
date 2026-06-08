@@ -2,13 +2,11 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.ProgressBar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
@@ -16,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
@@ -41,7 +40,7 @@ import kotlinx.coroutines.launch
  * A view that allows the user to enter an elevation
  */
 class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
-    LinearLayout(context, attrs) {
+    ConstraintLayout(context ?: throw IllegalArgumentException("Context is required"), attrs) {
 
     private val sensorService by lazy { SensorService(getContext()) }
     private val altimeter by lazy { sensorService.getAltimeter() }
@@ -72,12 +71,10 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     private lateinit var elevationInput: DistanceInputView
     private lateinit var gpsBtn: View
 
-    private lateinit var gpsLoadingIndicator: LoadingIndicator
+    private lateinit var gpsLoadingIndicator: View
 
     init {
         context?.let {
-            orientation = HORIZONTAL
-
             val iconSize = Resources.dp(it, 32f).toInt()
             val iconPadding = Resources.dp(it, 8f).toInt()
             gpsBtn = createElevationIconButton(it).apply {
@@ -87,20 +84,23 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
             addView(
                 gpsBtn,
                 LayoutParams(iconSize, iconSize).apply {
-                    gravity = Gravity.CENTER
+                    startToStart = LayoutParams.PARENT_ID
+                    topToTop = R.id.elevation_input
+                    bottomToBottom = R.id.elevation_input
                     marginEnd = iconPadding
                 }
             )
 
-            gpsLoadingIndicator = ProgressBar(it, null, android.R.attr.progressBarStyle).apply {
+            gpsLoadingIndicator = createElevationLoadingIndicator(it).apply {
                 id = R.id.gps_loading
-                isIndeterminate = true
                 visibility = View.INVISIBLE
             }
             addView(
                 gpsLoadingIndicator,
                 LayoutParams(iconSize, iconSize).apply {
-                    gravity = Gravity.CENTER
+                    startToStart = LayoutParams.PARENT_ID
+                    topToTop = R.id.elevation_input
+                    bottomToBottom = R.id.elevation_input
                     marginEnd = iconPadding
                 }
             )
@@ -112,9 +112,13 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
                 elevationInput,
                 LayoutParams(
                     0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    1f
-                )
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    startToEnd = R.id.gps_btn
+                    endToEnd = LayoutParams.PARENT_ID
+                    topToTop = LayoutParams.PARENT_ID
+                    bottomToBottom = LayoutParams.PARENT_ID
+                }
             )
 
             // Set up elevation input
@@ -196,7 +200,7 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
      */
     fun autofill() {
         if (!gpsBtn.isVisible) return
-        gpsBtn.isVisible = false
+        gpsBtn.visibility = View.INVISIBLE
         gpsLoadingIndicator.isVisible = true
         elevationInput.isEnabled = false
         altimeter.start(this::onAltimeterUpdate)
@@ -243,6 +247,24 @@ private fun createElevationIconButton(context: Context): ComposeView {
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun createElevationLoadingIndicator(context: Context): ComposeView {
+    return ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
