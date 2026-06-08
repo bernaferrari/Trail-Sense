@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
-import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
@@ -23,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
@@ -40,64 +38,6 @@ import com.kylecorry.andromeda.core.units.PixelBounds
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.fixPerspective
 import kotlin.math.max
 import kotlin.math.min
-
-class PerspectiveCorrectionView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr) {
-
-    private val state = PerspectiveCorrectionState(context)
-
-    var mapRotation: Float
-        get() = state.mapRotation
-        set(value) {
-            state.mapRotation = value
-        }
-
-    var onLoad: (Bitmap) -> Unit
-        get() = state.onLoad
-        set(value) {
-            state.onLoad = value
-        }
-
-    var hasChanges: Boolean
-        get() = state.hasChanges
-        set(value) {
-            state.hasChanges = value
-        }
-
-    var isPreview: Boolean
-        get() = state.isPreview
-        set(value) {
-            state.isPreview = value
-        }
-
-    @Composable
-    override fun Content() {
-        PerspectiveCorrection(state = state)
-    }
-
-    fun resetCorners() {
-        state.resetCorners()
-    }
-
-    fun setBounds(bounds: PixelBounds) {
-        state.setBounds(bounds)
-    }
-
-    fun getPercentBounds(): PercentBounds? {
-        return state.getPercentBounds()
-    }
-
-    fun setImage(path: String) {
-        state.setImage(path)
-    }
-
-    fun clearImage() {
-        state.clearImage()
-    }
-}
 
 @Composable
 fun rememberPerspectiveCorrectionState(): PerspectiveCorrectionState {
