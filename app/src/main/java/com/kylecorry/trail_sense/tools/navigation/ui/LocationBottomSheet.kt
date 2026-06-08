@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,9 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.sol.units.Distance
@@ -47,37 +47,48 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
 
-class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
-
+class LocationBottomSheet(
+    private val fragment: Fragment,
     var gps: ISatelliteGPS? = null
+) {
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private var format = BuiltInCoordinateFormat.DecimalDegrees
 
-    @Composable
-    override fun FragmentContent() {
-        val initialFormat = remember {
-            prefs.navigation.coordinateFormat.also { format = it }
-        }
+    fun show(): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                val initialFormat = remember {
+                    prefs.navigation.coordinateFormat.also { format = it }
+                }
 
-        LocationSheet(
-            initialFormat = initialFormat,
-            getState = ::getState,
-            onFormatSelected = { format = it },
-            onPickFormat = ::pickFormat,
-            onShare = share@{
-                val location = gps?.location ?: return@share
-                Share.shareLocation(this@LocationBottomSheet, location, format)
-            },
-            modifier = Modifier.fillMaxSize()
+                LocationSheet(
+                    initialFormat = initialFormat,
+                    getState = ::getState,
+                    onFormatSelected = { format = it },
+                    onPickFormat = ::pickFormat,
+                    onShare = share@{
+                        val location = gps?.location ?: return@share
+                        Share.shareLocation(fragment, location, format)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         )
+        dialog.show()
+        return dialog
     }
 
     private fun pickFormat(
@@ -87,8 +98,8 @@ class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
         val formats = BuiltInCoordinateFormat.entries
         val formatStrings = formats.map { formatService.formatCoordinateType(it) }
         Pickers.item(
-            requireContext(),
-            getString(R.string.pref_coordinate_format_title),
+            fragment.requireContext(),
+            fragment.getString(R.string.pref_coordinate_format_title),
             formatStrings,
             defaultSelectedIndex = formats.indexOf(currentFormat)
         ) {
@@ -104,7 +115,7 @@ class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
             return LocationSheetState(
                 location = "",
                 coordinateFormat = formatService.formatCoordinateType(format),
-                datum = getString(R.string.wgs84)
+                datum = fragment.getString(R.string.wgs84)
             )
         }
 
@@ -112,7 +123,7 @@ class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
             val accuracyStr = formatService.formatDistance(
                 Distance.meters(it).convertTo(prefs.baseDistanceUnits)
             )
-            getString(R.string.accuracy_distance_format, accuracyStr)
+            fragment.getString(R.string.accuracy_distance_format, accuracyStr)
         }
 
         val timeAgo = Duration.between(gps.time, Instant.now())
@@ -120,9 +131,9 @@ class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
             location = formatService.formatLocation(gps.location, format),
             coordinateFormat = formatService.formatCoordinateType(format),
             accuracy = accuracy,
-            satellites = getString(R.string.num_satellites, gps.satellites ?: 0),
-            time = getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
-            datum = getString(R.string.wgs84)
+            satellites = fragment.getString(R.string.num_satellites, gps.satellites ?: 0),
+            time = fragment.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+            datum = fragment.getString(R.string.wgs84)
         )
     }
 }
@@ -145,33 +156,11 @@ private fun LocationSheet(
     onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     var selectedFormat by remember(initialFormat) { mutableStateOf(initialFormat) }
     var state by remember(selectedFormat) { mutableStateOf(getState(selectedFormat)) }
-    var isResumed by remember {
-        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-    }
 
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> isResumed = true
-                Lifecycle.Event.ON_PAUSE -> isResumed = false
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    LaunchedEffect(isResumed, selectedFormat) {
+    LaunchedEffect(selectedFormat) {
         state = getState(selectedFormat)
-        if (!isResumed) {
-            return@LaunchedEffect
-        }
-
         while (isActive) {
             delay(100)
             state = getState(selectedFormat)

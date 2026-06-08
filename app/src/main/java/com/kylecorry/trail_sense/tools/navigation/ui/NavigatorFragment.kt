@@ -310,9 +310,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.navigationTitle.onSubtitleClick = {
-            val sheet = LocationBottomSheet()
-            sheet.gps = gps
-            sheet.show(this)
+            LocationBottomSheet(this, gps).show()
         }
 
         views.altitude.onClick = {
