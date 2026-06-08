@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -408,7 +407,7 @@ fun CameraPreview(
             }
         )
     ) {
-        AndroidView(
+        PlatformView(
             factory = { state.preview },
             update = {
                 state.applyViewAttributes()
