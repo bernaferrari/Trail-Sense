@@ -5,10 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.fragments.AndromedaFragment
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
 abstract class TrailSenseAndromedaComposeFragment : AndromedaFragment() {
 
@@ -18,13 +15,8 @@ abstract class TrailSenseAndromedaComposeFragment : AndromedaFragment() {
         savedInstanceState: Bundle?
     ): View {
         beforeCreateContent()
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    FragmentContent()
-                }
-            }
+        return TrailSenseComposeRootView(requireContext()) {
+            FragmentContent()
         }
     }
 

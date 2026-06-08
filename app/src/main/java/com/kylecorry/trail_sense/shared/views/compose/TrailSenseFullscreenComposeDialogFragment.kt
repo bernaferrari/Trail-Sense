@@ -5,10 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
 abstract class TrailSenseFullscreenComposeDialogFragment : FullscreenDialogFragment() {
 
@@ -17,13 +14,8 @@ abstract class TrailSenseFullscreenComposeDialogFragment : FullscreenDialogFragm
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    FragmentContent()
-                }
-            }
+        return TrailSenseComposeRootView(requireContext()) {
+            FragmentContent()
         }
     }
 
