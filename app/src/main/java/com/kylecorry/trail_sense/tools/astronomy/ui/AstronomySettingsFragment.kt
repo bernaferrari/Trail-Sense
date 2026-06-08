@@ -1,25 +1,21 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.fragments.asLiveData
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
@@ -28,7 +24,7 @@ import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -38,7 +34,7 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.Sunset
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class AstronomySettingsFragment : AndromedaFragment() {
+class AstronomySettingsFragment : TrailSenseAndromedaComposeFragment() {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -59,15 +55,8 @@ class AstronomySettingsFragment : AndromedaFragment() {
     private var setSunsetAlertsState: ((Boolean) -> Unit)? = null
     private var setSunriseAlertsState: ((Boolean) -> Unit)? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
+    @Composable
+    override fun FragmentContent() {
                     val sunTimeOptions = remember {
                         options(R.array.sun_times_entries, R.array.sun_times_values)
                     }
@@ -409,9 +398,6 @@ class AstronomySettingsFragment : AndromedaFragment() {
                             }
                         }
                     }
-                }
-            }
-        }
     }
 
     override fun onResume() {
