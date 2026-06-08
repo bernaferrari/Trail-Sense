@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import android.content.DialogInterface
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,31 +20,49 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 class ActionSheet(
     private val title: String,
     private val subtitle: String?,
     private val actions: List<ActionItem>,
     private val onAction: (action: ActionItem?, sheet: ActionSheet) -> Unit
-) : TrailSenseBottomSheetComposeFragment() {
+) {
 
-    @Composable
-    override fun FragmentContent() {
-        ActionSheetContent(
-            title = title,
-            subtitle = subtitle,
-            actions = actions,
-            onAction = { onAction(it, this@ActionSheet) },
-            modifier = Modifier.fillMaxSize()
+    private var sheet: BottomSheetDialog? = null
+
+    fun show(fragment: Fragment): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                ActionSheetContent(
+                    title = title,
+                    subtitle = subtitle,
+                    actions = actions,
+                    onAction = { onAction(it, this@ActionSheet) },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         )
+        dialog.setOnDismissListener {
+            onAction(null, this)
+            sheet = null
+        }
+        dialog.show()
+        return dialog
     }
 
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        onAction(null, this)
+    fun dismiss() {
+        sheet?.dismiss()
     }
 }
 
