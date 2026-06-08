@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -70,7 +71,6 @@ import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
-import com.google.android.material.button.MaterialButton
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -850,8 +850,8 @@ private data class PathOverviewViews(
     val pathElevationMin: PathDataPointState,
     val pathElevationMax: PathDataPointState,
     val chart: Chart,
-    val navigateBtn: MaterialButton,
-    val addPointBtn: MaterialButton,
+    val navigateBtn: PathTextButton,
+    val addPointBtn: PathTextButton,
     val pathsTiming: TextView
 )
 
@@ -1186,10 +1186,12 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val navigate = MaterialButton(context).apply {
+    val navigate = PathTextButton(
+        context,
+        context.getString(R.string.navigate),
+        R.drawable.ic_beacon
+    ).apply {
         id = R.id.navigate_btn
-        text = context.getString(R.string.navigate)
-        icon = ContextCompat.getDrawable(context, R.drawable.ic_beacon)
     }
     buttonRow.addView(
         navigate,
@@ -1201,10 +1203,12 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val addPoint = MaterialButton(context).apply {
+    val addPoint = PathTextButton(
+        context,
+        context.getString(R.string.point),
+        R.drawable.ic_add
+    ).apply {
         id = R.id.add_point_btn
-        text = context.getString(R.string.point)
-        icon = ContextCompat.getDrawable(context, R.drawable.ic_add)
     }
     buttonRow.addView(
         addPoint,
@@ -1255,6 +1259,28 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         addPointBtn = addPoint,
         pathsTiming = timing
     )
+}
+
+private class PathTextButton(
+    context: Context,
+    private val text: String,
+    private val icon: Int
+) : AbstractComposeView(context) {
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Button(onClick = { performClick() }) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(18.dp)
+                )
+                Text(text = text)
+            }
+        }
+    }
 }
 
 private class PathIconButton(
