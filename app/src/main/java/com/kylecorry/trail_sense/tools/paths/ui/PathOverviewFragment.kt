@@ -74,6 +74,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.DebugPathElevationsCommand
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
@@ -92,6 +93,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorScaleContent
 import com.kylecorry.trail_sense.shared.views.ColorScaleState
+import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
@@ -183,6 +185,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private val paceFactor = 1.75f
 
     private var isFullscreen = false
+    private var pathColorPickerTarget by mutableStateOf<Path?>(null)
 
     private val converter: IPathPointBeaconConverter by lazy {
         TemporaryPathPointBeaconConverter(
@@ -207,6 +210,28 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             views = views,
             modifier = Modifier.fillMaxSize()
         )
+
+        val colorPickerPath = pathColorPickerTarget
+        if (colorPickerPath != null) {
+            ColorPickerDialog(
+                title = stringResource(R.string.path_color),
+                selectedColor = AppColor.values().firstOrNull {
+                    it.color == colorPickerPath.style.color
+                } ?: AppColor.Gray,
+                onColorPicked = {
+                    if (it != null) {
+                        ChangePathColorCommand(
+                            this@PathOverviewFragment,
+                            pathService
+                        ).execute(colorPickerPath, it)
+                    }
+                    pathColorPickerTarget = null
+                },
+                onDismiss = {
+                    pathColorPickerTarget = null
+                }
+            )
+        }
     }
 
     override fun onDestroyView() {
@@ -360,8 +385,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
         views.pathStyleControls.onColorClick = colorClick@{
             val path = path ?: return@colorClick
-            val command = ChangePathColorCommand(requireContext(), this)
-            command.execute(path)
+            pathColorPickerTarget = path
         }
 
         views.pathStyleControls.onPointStyleClick = pointStyleClick@{

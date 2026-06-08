@@ -55,7 +55,6 @@ import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.ColorPickerContent
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.DurationInput
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
@@ -155,44 +154,6 @@ object CustomUiUtils {
                 elevationInputView.pause()
             } else {
                 onElevationPick.invoke(elevation, false)
-            }
-        }
-    }
-
-    fun pickColor(
-        context: Context,
-        default: AppColor? = null,
-        title: String,
-        onColorPick: (color: AppColor?) -> Unit
-    ) {
-        val view = createPromptContainer(context)
-        var color = default
-        val colorPicker = ComposeView(context).apply {
-            id = R.id.prompt_color_picker
-            setContent {
-                TrailSenseTheme {
-                    var selectedColor by remember { mutableStateOf(default) }
-                    ColorPickerContent(
-                        selectedColor = selectedColor,
-                        onColorSelected = {
-                            selectedColor = it
-                            color = it
-                        }
-                    )
-                }
-            }
-        }
-        view.addPromptContent(colorPicker)
-
-        Alerts.dialog(
-            context,
-            title,
-            contentView = view
-        ) { cancelled ->
-            if (cancelled) {
-                onColorPick.invoke(null)
-            } else {
-                onColorPick.invoke(color)
             }
         }
     }
