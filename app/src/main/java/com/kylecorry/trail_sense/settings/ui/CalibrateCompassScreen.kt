@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -52,7 +52,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
 @Composable
-fun CalibrateCompassToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CalibrateCompassToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CalibrateCompassController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -77,7 +77,7 @@ fun CalibrateCompassToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     CalibrateCompassContent(controller)
 }
 
-private class CalibrateCompassController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CalibrateCompassController(private val fragment: TrailSenseDestinationHost) {
 
     val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }

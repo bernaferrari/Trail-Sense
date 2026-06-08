@@ -24,7 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -49,7 +49,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun PathsSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun PathsSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { PathsSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -72,7 +72,7 @@ fun PathsSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     PathsSettingsContent(controller)
 }
 
-private class PathsSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class PathsSettingsController(private val fragment: TrailSenseDestinationHost) {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
     val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -216,8 +216,8 @@ private class PathsSettingsController(private val fragment: TrailSenseComposeDes
     }
 
     fun options(entriesId: Int, valuesId: Int): List<PathOption> {
-        val entries = fragment.resources.getStringArray(entriesId)
-        val values = fragment.resources.getStringArray(valuesId)
+        val entries = fragment.getResources().getStringArray(entriesId)
+        val values = fragment.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             PathOption(value, entries.getOrElse(index) { value })
         }

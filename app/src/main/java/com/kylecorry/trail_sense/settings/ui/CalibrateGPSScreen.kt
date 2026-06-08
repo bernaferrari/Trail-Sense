@@ -34,7 +34,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -62,7 +62,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeacon
 import kotlinx.coroutines.launch
 
 @Composable
-fun CalibrateGPSToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CalibrateGPSToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CalibrateGPSController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -86,7 +86,7 @@ fun CalibrateGPSToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     CalibrateGPSContent(controller)
 }
 
-private class CalibrateGPSController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CalibrateGPSController(private val fragment: TrailSenseDestinationHost) {
 
     val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val sensorService by lazy { SensorService(fragment.requireContext()) }

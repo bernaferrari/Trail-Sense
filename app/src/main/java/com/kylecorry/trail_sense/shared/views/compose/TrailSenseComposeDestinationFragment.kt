@@ -314,6 +314,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     override val lifecycleOwner: LifecycleOwner
         get() = viewLifecycleOwner
 
+    override val lifecycleScope: CoroutineScope
+        get() = viewLifecycleOwner.lifecycleScope
+
     val hookResetOnResume: Int
         get() = resetOnResume
 

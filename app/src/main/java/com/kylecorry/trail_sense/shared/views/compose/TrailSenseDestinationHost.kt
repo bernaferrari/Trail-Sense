@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import android.content.Context
+import android.content.Intent
+import android.content.res.Resources
 import android.net.Uri
 import android.util.Size
 import android.view.View
@@ -15,10 +17,13 @@ import kotlinx.coroutines.Job
 
 interface TrailSenseDestinationHost {
     val lifecycleOwner: LifecycleOwner
+    val lifecycleScope: CoroutineScope
 
     fun requireContext(): Context
+    fun getResources(): Resources
     fun getString(@StringRes resId: Int): String
     fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String
+    fun startActivity(intent: Intent)
     fun findNavController(): NavController
     fun toast(message: CharSequence, short: Boolean = true)
     fun inBackground(
