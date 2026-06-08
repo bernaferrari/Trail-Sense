@@ -1243,8 +1243,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.tools.ui.ToolsSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolsSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TOOLS_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

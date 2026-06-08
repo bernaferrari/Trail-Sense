@@ -76,6 +76,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -91,7 +92,9 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
 
@@ -140,6 +143,61 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_ERROR_HANDLER -> ErrorHandler()
             DESTINATION_GUIDE_LIST -> GuideList()
             DESTINATION_DIAGNOSTICS -> Diagnostics()
+            DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
+        }
+    }
+
+    @Composable
+    private fun ToolsSettings() {
+        val prefs = remember { UserPreferences(requireContext()) }
+        val tools = remember {
+            AlphabeticalToolSort().sort(Tools.getTools(requireContext())).first().tools
+        }
+        var bottomNavSelection by remember {
+            mutableStateOf(prefs.bottomNavigationTools)
+        }
+        SettingsList(title = stringResource(R.string.tools)) {
+            item("quick_actions") {
+                SettingsActionRow(
+                    label = stringResource(R.string.quick_actions),
+                    summary = stringResource(R.string.tool_quick_action_summary),
+                    onClick = { pickQuickActions(prefs) },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("widgets") {
+                SettingsActionRow(
+                    label = stringResource(R.string.widget_pref_title),
+                    summary = stringResource(R.string.widget_bottom_sheet_instructions),
+                    onClick = { pickWidgets(prefs) },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            items(bottomNavSelection.size) { index ->
+                val title = stringResource(R.string.bottom_navigation_slot, index + 1)
+                SettingsActionRow(
+                    label = title,
+                    summary = getBottomNavToolName(tools, bottomNavSelection.getOrNull(index)),
+                    onClick = {
+                        pickBottomNavTool(title, index, tools, bottomNavSelection, prefs) {
+                            bottomNavSelection = it
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("tools_fixed_slot") {
+                SettingsActionRow(
+                    label = stringResource(
+                        R.string.bottom_navigation_slot,
+                        bottomNavSelection.size + 1
+                    ),
+                    summary = stringResource(R.string.tools),
+                    enabled = false,
+                    onClick = {},
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
         }
     }
 
@@ -953,6 +1011,87 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         return scale.toString()
     }
 
+    private fun pickQuickActions(prefs: UserPreferences) {
+        val potentialActions = Tools.getQuickActions(requireContext())
+            .filterNot { it.id == Tools.QUICK_ACTION_NONE }
+
+        val selected = prefs.toolQuickActions
+
+        val selectedIndices = potentialActions.mapIndexedNotNull { index, action ->
+            if (selected.contains(action.id)) index else null
+        }
+
+        Pickers.items(
+            requireContext(),
+            getString(R.string.quick_actions),
+            potentialActions.map { it.name },
+            selectedIndices
+        ) {
+            if (it != null) {
+                prefs.toolQuickActions = it.map { potentialActions[it].id }
+            }
+        }
+    }
+
+    private fun pickWidgets(prefs: UserPreferences) {
+        val tools = Tools.getTools(requireContext())
+        val potentialWidgets = tools
+            .flatMap { it.widgets }
+            .filter { it.isEnabled(requireContext()) && it.canPlaceInApp }
+            .distinctBy { it.id }
+            .sortedBy { it.name }
+
+        val selected = prefs.toolWidgets
+
+        val selectedIndices = potentialWidgets.mapIndexedNotNull { index, widget ->
+            if (selected.contains(widget.id)) index else null
+        }
+
+        Pickers.items(
+            requireContext(),
+            getString(R.string.widget_pref_title),
+            potentialWidgets.map { it.name },
+            selectedIndices
+        ) {
+            if (it != null) {
+                prefs.toolWidgets = it.map { potentialWidgets[it].id }
+            }
+        }
+    }
+
+    private fun pickBottomNavTool(
+        title: String,
+        index: Int,
+        tools: List<Tool>,
+        bottomNavSelection: List<Long>,
+        prefs: UserPreferences,
+        onSelectionChanged: (List<Long>) -> Unit
+    ) {
+        val names = listOf(getString(R.string.none)) + tools.map { it.name }
+        val ids = listOf(0L) + tools.map { it.id }
+
+        Pickers.item(
+            requireContext(),
+            title,
+            names,
+            ids.indexOfFirst { it == bottomNavSelection.getOrNull(index) }
+        ) {
+            if (it != null) {
+                val selected = ids[it]
+                val newSelection = bottomNavSelection.mapIndexed { selectionIndex, id ->
+                    if (selectionIndex == index) selected else id
+                }
+                prefs.bottomNavigationTools = newSelection
+                onSelectionChanged(newSelection)
+                requireMainActivity().updateBottomNavigation()
+            }
+        }
+    }
+
+    private fun getBottomNavToolName(tools: List<Tool>, id: Long?): String {
+        return tools.firstOrNull { it.id == id }?.name ?: getString(R.string.none)
+    }
+
     private fun projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
         return mapOf(
             CameraPreferences.ProjectionType.EstimatedIntrinsics to
@@ -1068,5 +1207,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_ERROR_HANDLER = "error_handler"
         const val DESTINATION_GUIDE_LIST = "guide_list"
         const val DESTINATION_DIAGNOSTICS = "diagnostics"
+        const val DESTINATION_TOOLS_SETTINGS = "tools_settings"
     }
 }
