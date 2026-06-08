@@ -397,8 +397,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beaconsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.BeaconSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "BeaconSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1087,15 +1091,23 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cameraSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.CameraSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "CameraSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CAMERA_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.errorSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.ErrorSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ErrorSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ERROR_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
