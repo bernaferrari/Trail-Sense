@@ -1000,8 +1000,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.themeSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.ThemeSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ThemeSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_THEME_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1036,8 +1040,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.experimentalSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.ExperimentalSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ExperimentalSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_EXPERIMENTAL_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

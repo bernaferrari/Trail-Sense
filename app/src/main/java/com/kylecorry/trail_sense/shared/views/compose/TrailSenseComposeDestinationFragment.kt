@@ -50,6 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.color.DynamicColors
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.clipboard.Clipboard
@@ -63,10 +64,12 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.toFloatCompat
+import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
@@ -82,6 +85,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
+import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -90,6 +94,8 @@ import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
+import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -123,6 +129,7 @@ import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
+import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
@@ -207,6 +214,285 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
             DESTINATION_WATER_PURIFICATION -> WaterPurification()
             DESTINATION_BACKUP_SETTINGS -> BackupSettings()
+            DESTINATION_THEME_SETTINGS -> ThemeSettings()
+            DESTINATION_EXPERIMENTAL_SETTINGS -> ExperimentalSettings()
+        }
+    }
+
+    @Composable
+    private fun ThemeSettings() {
+        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
+        val prefs = remember { UserPreferences(requireContext()) }
+        val dynamicColorsAvailable = remember { DynamicColors.isDynamicColorAvailable() }
+        val themeOptions = remember { settingsOptions(R.array.theme_entries, R.array.theme_values) }
+        val widgetThemeOptions = remember { widgetThemeOptions() }
+
+        var theme by remember {
+            mutableStateOf(getStringPreference(cache, R.string.pref_theme, "system"))
+        }
+        var useDynamicColors by remember {
+            mutableStateOf(getBoolean(cache, R.string.pref_use_dynamic_colors, true))
+        }
+        var useDynamicCompassColors by remember {
+            mutableStateOf(getBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, false))
+        }
+        var widgetTheme by remember { mutableStateOf(getDefaultWidgetTheme(cache)) }
+        var useCompactMode by remember { mutableStateOf(prefs.useCompactMode) }
+        var showAllBottomNavigationLabels by remember {
+            mutableStateOf(prefs.useShowAllBottomNavigationLabels)
+        }
+        var nightModeFullscreen by remember {
+            mutableStateOf(getBoolean(cache, R.string.pref_night_mode_fullscreen, false))
+        }
+
+        SettingsList(title = stringResource(R.string.pref_theme_title)) {
+            item("theme") {
+                SettingsPickerRow(
+                    label = stringResource(R.string.pref_theme_title),
+                    selected = optionLabel(themeOptions, theme),
+                    onClick = {
+                        pickOption(getString(R.string.pref_theme_title), themeOptions, theme) {
+                            theme = it
+                            putString(cache, R.string.pref_theme, it)
+                            requireMainActivity().reloadTheme()
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            if (dynamicColorsAvailable) {
+                item("dynamic_colors") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.dynamic_colors),
+                        checked = useDynamicColors,
+                        onCheckedChange = {
+                            useDynamicColors = it
+                            putBoolean(cache, R.string.pref_use_dynamic_colors, it)
+                            requireMainActivity().reloadTheme()
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("dynamic_compass_colors") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.compass_dynamic_colors),
+                        summary = stringResource(R.string.compass_dynamic_colors_summary),
+                        checked = useDynamicCompassColors,
+                        onCheckedChange = {
+                            useDynamicCompassColors = it
+                            putBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, it)
+                        },
+                        enabled = useDynamicColors,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+            }
+            item("widget_theme") {
+                SettingsPickerRow(
+                    label = stringResource(R.string.default_widget_theme),
+                    selected = optionLabel(widgetThemeOptions, widgetTheme),
+                    onClick = {
+                        pickOption(
+                            getString(R.string.default_widget_theme),
+                            widgetThemeOptions,
+                            widgetTheme
+                        ) {
+                            widgetTheme = it
+                            putString(cache, R.string.pref_default_widget_theme, it)
+                            Tools.triggerWidgetUpdate(requireContext(), null)
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("compact_mode") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.compact_mode),
+                    checked = useCompactMode,
+                    onCheckedChange = {
+                        useCompactMode = it
+                        requireMainActivity().changeBottomNavLabelsVisibility(it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("nav_labels") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_show_all_bottom_navigation_labels),
+                    checked = showAllBottomNavigationLabels,
+                    onCheckedChange = {
+                        showAllBottomNavigationLabels = it
+                        requireMainActivity().showAllBottomNavLabels(it)
+                    },
+                    enabled = !useCompactMode,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("night_fullscreen") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_night_mode_fullscreen_title),
+                    summary = stringResource(R.string.pref_night_mode_fullscreen_summary),
+                    checked = nightModeFullscreen,
+                    onCheckedChange = {
+                        nightModeFullscreen = it
+                        putBoolean(cache, R.string.pref_night_mode_fullscreen, it)
+                        requireMainActivity().reloadTheme()
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+    }
+
+    @Composable
+    private fun ExperimentalSettings() {
+        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
+        val userPrefs = remember { UserPreferences(requireContext()) }
+        val hasMetalDirectionSupport = remember {
+            Sensors.hasGyroscope(requireContext()) && SensorService(requireContext()).hasCompass()
+        }
+        val showForecastSource = remember {
+            Tools.isToolAvailable(requireContext(), Tools.WEATHER) && isDebug()
+        }
+        val showNotificationGrouping = remember {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+        }
+        val forecastOptions = remember { forecastOptions() }
+        val notificationGroupingOptions = remember { notificationGroupingOptions() }
+
+        var showMetalDirection by remember {
+            mutableStateOf(getBoolean(cache, R.string.pref_experimental_metal_direction, false))
+        }
+        var useZeroShutterLag by remember {
+            mutableStateOf(userPrefs.camera.useZeroShutterLag)
+        }
+        var isCliffHeightEnabled by remember {
+            mutableStateOf(userPrefs.isCliffHeightEnabled)
+        }
+        var useFilteredGps by remember {
+            mutableStateOf(userPrefs.useFilteredGPS)
+        }
+        var forecastSource by remember {
+            mutableStateOf(forecastSourceValue(userPrefs.weather.forecastSource))
+        }
+        var showPressureForecast by remember {
+            mutableStateOf(userPrefs.weather.showPressureForecast)
+        }
+        var notificationGrouping by remember {
+            mutableStateOf(notificationGroupingValue(userPrefs.notificationGroupingBehavior))
+        }
+
+        SettingsList(title = stringResource(R.string.experimental)) {
+            if (hasMetalDirectionSupport) {
+                item("metal_direction") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_experimental_metal_direction_title),
+                        summary = stringResource(R.string.tool_metal_detector_title),
+                        checked = showMetalDirection,
+                        onCheckedChange = {
+                            showMetalDirection = it
+                            putBoolean(cache, R.string.pref_experimental_metal_direction, it)
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+            }
+            item("zero_shutter_lag") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.zero_shutter_lag),
+                    summary = stringResource(R.string.camera),
+                    checked = useZeroShutterLag,
+                    onCheckedChange = {
+                        useZeroShutterLag = it
+                        putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("cliff_height") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.tool_cliff_height_title),
+                    summary = stringResource(R.string.tool_cliff_height_description),
+                    checked = isCliffHeightEnabled,
+                    onCheckedChange = {
+                        isCliffHeightEnabled = it
+                        userPrefs.isCliffHeightEnabled = it
+                        requireMainActivity().updateBottomNavigation()
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("filtered_gps") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.smooth_gps_readings),
+                    checked = useFilteredGps,
+                    onCheckedChange = {
+                        useFilteredGps = it
+                        putBoolean(cache, R.string.pref_use_filtered_gps, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            if (showForecastSource) {
+                item("forecast_source") {
+                    SettingsPickerRow(
+                        label = stringResource(R.string.forecast_algorithm),
+                        selected = optionLabel(forecastOptions, forecastSource),
+                        onClick = {
+                            pickOption(
+                                getString(R.string.forecast_algorithm),
+                                forecastOptions,
+                                forecastSource
+                            ) {
+                                forecastSource = it
+                                putString(cache, R.string.pref_weather_forecast_source, it)
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
+            item("pressure_forecast") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.show_pressure_forecast),
+                    summary = stringResource(R.string.weather),
+                    checked = showPressureForecast,
+                    onCheckedChange = {
+                        showPressureForecast = it
+                        putBoolean(cache, R.string.pref_show_pressure_forecast, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            if (showNotificationGrouping) {
+                item("notification_grouping") {
+                    SettingsPickerRow(
+                        label = stringResource(R.string.notification_grouping),
+                        selected = optionLabel(notificationGroupingOptions, notificationGrouping),
+                        onClick = {
+                            pickOption(
+                                getString(R.string.notification_grouping),
+                                notificationGroupingOptions,
+                                notificationGrouping
+                            ) {
+                                notificationGrouping = it
+                                putString(cache, R.string.pref_notification_group_behavior, it)
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
         }
     }
 
@@ -1592,6 +1878,127 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         }
     }
 
+    private fun pickOption(
+        title: String,
+        options: List<SettingsOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    private fun optionLabel(options: List<SettingsOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
+    }
+
+    private fun settingsOptions(entriesId: Int, valuesId: Int): List<SettingsOption> {
+        val entries = resources.getStringArray(entriesId)
+        val values = resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            SettingsOption(value, entries.getOrElse(index) { value })
+        }
+    }
+
+    private fun widgetThemeOptions(): List<SettingsOption> {
+        return listOf(
+            SettingsOption(
+                WidgetTheme.System.id.toString(),
+                getString(R.string.theme_system)
+            ),
+            SettingsOption(
+                WidgetTheme.TransparentBlack.id.toString(),
+                getString(
+                    R.string.theme_transparent_type,
+                    getString(R.string.widget_theme_black_text)
+                )
+            ),
+            SettingsOption(
+                WidgetTheme.TransparentWhite.id.toString(),
+                getString(
+                    R.string.theme_transparent_type,
+                    getString(R.string.widget_theme_white_text)
+                )
+            )
+        )
+    }
+
+    private fun forecastOptions(): List<SettingsOption> {
+        return ForecastSource.entries.map {
+            SettingsOption(forecastSourceValue(it), it.name)
+        }
+    }
+
+    private fun notificationGroupingOptions(): List<SettingsOption> {
+        val labels = mapOf(
+            GroupBehavior.System to getString(R.string.theme_system),
+            GroupBehavior.UngroupAll to getString(R.string.ungroup_all),
+            GroupBehavior.UngroupHigh to getString(R.string.ungroup_alerts)
+        )
+        return GroupBehavior.entries.map {
+            SettingsOption(
+                notificationGroupingValue(it),
+                labels[it] ?: it.name
+            )
+        }
+    }
+
+    private fun forecastSourceValue(source: ForecastSource): String {
+        return when (source) {
+            ForecastSource.Sol -> "1"
+            ForecastSource.Zambretti -> "2"
+        }
+    }
+
+    private fun notificationGroupingValue(behavior: GroupBehavior): String {
+        return when (behavior) {
+            GroupBehavior.System -> "1"
+            GroupBehavior.UngroupAll -> "2"
+            GroupBehavior.UngroupHigh -> "3"
+        }
+    }
+
+    private fun getDefaultWidgetTheme(cache: IPreferences): String {
+        val key = getString(R.string.pref_default_widget_theme)
+        val current = cache.getString(key)
+        if (current != null) {
+            return current
+        }
+
+        val default = WidgetTheme.System.id.toString()
+        cache.putString(key, default)
+        return default
+    }
+
+    private fun getStringPreference(cache: IPreferences, key: Int, default: String): String {
+        return cache.getString(getString(key)) ?: default
+    }
+
+    private fun getBoolean(cache: IPreferences, key: Int, default: Boolean): Boolean {
+        return cache.getBoolean(getString(key)) ?: default
+    }
+
+    private fun putString(cache: IPreferences, key: Int, value: String) {
+        cache.putString(getString(key), value)
+    }
+
+    private fun putBoolean(cache: IPreferences, key: Int, value: Boolean) {
+        cache.putBoolean(getString(key), value)
+    }
+
+    private data class SettingsOption(
+        val value: String,
+        val label: String
+    )
+
     private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSettingsState {
         return PluginSettingsState(
             connected = pluginSubsystem.getConnectedPlugins().sortedPlugins(),
@@ -1763,5 +2170,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_PHOTO_MAP_SETTINGS = "photo_map_settings"
         const val DESTINATION_WATER_PURIFICATION = "water_purification"
         const val DESTINATION_BACKUP_SETTINGS = "backup_settings"
+        const val DESTINATION_THEME_SETTINGS = "theme_settings"
+        const val DESTINATION_EXPERIMENTAL_SETTINGS = "experimental_settings"
     }
 }
