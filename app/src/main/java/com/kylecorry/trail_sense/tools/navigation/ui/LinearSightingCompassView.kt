@@ -11,6 +11,9 @@ import com.kylecorry.andromeda.core.system.Resources
 import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
 import androidx.core.view.isVisible
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.findFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -24,7 +27,9 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassLayer
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 
@@ -38,7 +43,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     private var isStarted = false
     private var isResumed = false
     private val lock = Any()
-    private val viewCamera: CameraView
+    private val viewCamera: CameraState
     private val viewCameraLine: View
     private val linearCompass: LinearCompassView
     private val sightingCompassButton: FloatingActionButton
@@ -88,13 +93,23 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     }
 
     init {
-        viewCamera = CameraView(context, null).apply {
-            id = R.id.view_camera
+        viewCamera = CameraState(context).apply {
             keepScreenOn = true
             isVisible = false
         }
+        val viewCameraPreview = ComposeView(context).apply {
+            id = R.id.view_camera
+            setContent {
+                TrailSenseTheme {
+                    CameraPreview(
+                        state = viewCamera,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
         addView(
-            viewCamera,
+            viewCameraPreview,
             LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 resources.getDimensionPixelSize(R.dimen.circular_display_size)

@@ -42,6 +42,12 @@ import kotlin.math.roundToInt
 class CameraState(context: Context) {
     internal val view = CameraView(context, null)
 
+    val context: Context
+        get() = view.context
+
+    val width: Int
+        get() = view.width
+
     var defaultZoomRatio: Float
         get() = view.defaultZoomRatio
         set(value) {
@@ -64,6 +70,28 @@ class CameraState(context: Context) {
         get() = view.clipToOutline
         set(value) {
             view.clipToOutline = value
+        }
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    var isInvisible: Boolean
+        get() = view.visibility == View.INVISIBLE
+        set(value) {
+            view.visibility = if (value) {
+                View.INVISIBLE
+            } else {
+                View.VISIBLE
+            }
+        }
+
+    var passThroughTouchEvents: Boolean
+        get() = view.passThroughTouchEvents
+        set(value) {
+            view.passThroughTouchEvents = value
         }
 
     val previewImage: Bitmap?
@@ -114,6 +142,18 @@ class CameraState(context: Context) {
 
     fun setFocus(value: Float?) {
         view.setFocus(value)
+    }
+
+    fun setZoom(zoom: Float) {
+        view.setZoom(zoom)
+    }
+
+    fun setOnZoomChangeListener(listener: ((zoom: Float) -> Unit)?) {
+        view.setOnZoomChangeListener(listener)
+    }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
     }
 
     fun setBackgroundResource(resId: Int) {

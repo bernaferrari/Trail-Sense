@@ -56,7 +56,8 @@ import com.kylecorry.trail_sense.shared.extensions.getMarkdown
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
@@ -557,7 +558,7 @@ private data class ClinometerViews(
     val clinometerTitle: ClinometerTitle,
     val clinometer: ClinometerView,
     val cameraViewHolder: LinearLayout,
-    val camera: CameraView,
+    val camera: CameraState,
     val arView: AugmentedRealityView,
     val cameraClinometer: CameraClinometerView,
     val avalancheRisk: ClinometerDataPointState,
@@ -706,8 +707,17 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         clipToOutline = true
     }
     val cameraFrame = FrameLayout(context)
-    val camera = CameraView(context, null).apply {
+    val camera = CameraState(context)
+    val cameraPreview = ComposeView(context).apply {
         id = R.id.camera
+        setContent {
+            TrailSenseTheme {
+                CameraPreview(
+                    state = camera,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
     val arView = AugmentedRealityView(context).apply {
         id = R.id.ar_view
@@ -716,7 +726,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         setBackgroundColor(ContextCompat.getColor(context, R.color.orange_40))
     }
     cameraFrame.addView(
-        camera,
+        cameraPreview,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

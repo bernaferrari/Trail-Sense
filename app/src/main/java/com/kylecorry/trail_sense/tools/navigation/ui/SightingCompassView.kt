@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SightingCompassView(
-    private val camera: CameraView,
+    private val camera: CameraState,
     private val reticle: View,
     private val compass: LinearCompassView,
     private val onClick: () -> Unit = {}

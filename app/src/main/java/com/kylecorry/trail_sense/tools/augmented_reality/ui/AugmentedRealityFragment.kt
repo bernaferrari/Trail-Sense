@@ -60,7 +60,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.readableName
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -753,7 +754,7 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
 
 private data class AugmentedRealityViews(
     val root: View,
-    val camera: CameraView,
+    val camera: CameraState,
     val arView: AugmentedRealityView,
     val cameraToggle: ImageButton,
     val calibrateBtn: ImageButton,
@@ -791,11 +792,20 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         )
     }
 
-    val camera = CameraView(context, null).apply {
+    val camera = CameraState(context)
+    val cameraPreview = ComposeView(context).apply {
         id = R.id.camera
+        setContent {
+            TrailSenseTheme {
+                CameraPreview(
+                    state = camera,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
     root.addView(
-        camera,
+        cameraPreview,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
