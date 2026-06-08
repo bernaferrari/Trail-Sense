@@ -81,11 +81,11 @@ class GPSDiagnosticScanner(private val gps: IGPS? = null) : ToolDiagnosticScanne
                     context.getString(R.string.gps),
                     context.getString(R.string.unavailable),
                     resolution = context.getString(R.string.gps_unavailable_resolution),
-                    action = ToolDiagnosticAction(context.getString(R.string.settings)) {
+                    action = ToolDiagnosticAction(context.getString(R.string.settings)) { actionContext, _ ->
                         try {
-                            it.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                            actionContext.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                         } catch (e: Exception) {
-                            it.startActivity(Intent(Settings.ACTION_SETTINGS))
+                            actionContext.startActivity(Intent(Settings.ACTION_SETTINGS))
                         }
                     }
                 )

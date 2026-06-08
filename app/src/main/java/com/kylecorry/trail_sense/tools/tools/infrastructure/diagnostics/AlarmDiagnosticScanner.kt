@@ -22,9 +22,9 @@ class AlarmDiagnosticScanner : ToolDiagnosticScanner {
                     context.getString(R.string.permission_alarms_and_reminders)
                 ),
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ToolDiagnosticAction(context.getString(R.string.settings)) {
+                    ToolDiagnosticAction(context.getString(R.string.settings)) { actionContext, _ ->
                         Permissions.requestPermission(
-                            context,
+                            actionContext,
                             SpecialPermission.SCHEDULE_EXACT_ALARMS
                         )
                     }
