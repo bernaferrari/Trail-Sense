@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -103,7 +103,7 @@ import kotlin.math.max
 
 @Composable
 fun WeatherToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { WeatherController(fragment) }
@@ -129,7 +129,7 @@ fun WeatherToolScreen(
 }
 
 private class WeatherController(
-    private val fragment: Fragment
+    private val fragment: TrailSenseComposeDestinationFragment
 ) {
     private var weatherViews: WeatherViews? =
         createWeatherViews(fragment.requireContext())

@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -108,7 +108,7 @@ import java.time.ZonedDateTime
 
 @Composable
 fun AstronomyToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { AstronomyController(fragment) }
@@ -136,7 +136,7 @@ fun AstronomyToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AstronomyController(private val fragment: Fragment) {
+private class AstronomyController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val views = createAstronomyViews(fragment.requireContext(), this::showTimeSeeker)
     private val isViewReady: Boolean
