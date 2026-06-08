@@ -46,6 +46,7 @@ import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
@@ -155,7 +156,10 @@ class ViewPhotoMapController(
             views = views,
             modifier = modifier
         )
-        layerSheet.Content(fragment)
+        layerSheet.Content(
+            fragment.requireContext(),
+            { fragment.findNavController().navigateWithAnimation(it) }
+        )
     }
 
     fun onCreate() {

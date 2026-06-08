@@ -547,7 +547,11 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             DESTINATION_WEATHER -> WeatherToolScreen(this)
                 }
             }
-            layerSheet?.Content(this@TrailSenseComposeDestinationFragment, Modifier.fillMaxSize())
+            layerSheet?.Content(
+                requireContext(),
+                { findNavController().navigateWithAnimation(it) },
+                Modifier.fillMaxSize()
+            )
             photoImportDialog?.Content()
             val currentActionSheet = actionSheet
             if (currentActionSheet != null) {

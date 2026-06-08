@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -114,7 +115,11 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
             views = views,
             modifier = modifier
         )
-        layerEditSheet.Content(fragment)
+        layerEditSheet.Content(fragment.requireContext(), ::navigateFromLayerSheet)
+    }
+
+    private fun navigateFromLayerSheet(action: Int) {
+        fragment.findNavController().navigateWithAnimation(action)
     }
 
     override fun onPause() {

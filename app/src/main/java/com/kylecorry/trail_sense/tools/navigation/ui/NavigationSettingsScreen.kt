@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.Distance
@@ -34,6 +35,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -79,7 +81,10 @@ private class NavigationSettingsController(private val fragment: Fragment) {
 
     @Composable
     fun LayerSheet() {
-        layerSheet.Content(fragment)
+        layerSheet.Content(
+            fragment.requireContext(),
+            { fragment.findNavController().navigateWithAnimation(it) }
+        )
     }
 
     fun onCurrentPaceSpeedometerSelected() {

@@ -332,7 +332,10 @@ private class NavigatorController(private val fragment: Fragment) {
                 }
             }
         }
-        layerSheet.Content(fragment)
+        layerSheet.Content(
+            fragment.requireContext(),
+            { fragment.findNavController().navigateWithAnimation(it) }
+        )
     }
 
     fun onCreate() {

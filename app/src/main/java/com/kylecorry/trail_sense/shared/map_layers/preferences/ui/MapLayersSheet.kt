@@ -48,17 +48,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
@@ -68,7 +65,6 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPref
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullDependencyPreferenceKey
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullPreferenceKey
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
@@ -109,12 +105,15 @@ class MapLayersSheetState(
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun Content(fragment: Fragment, modifier: Modifier = Modifier) {
+    fun Content(
+        context: Context,
+        onNavigate: (Int) -> Unit,
+        modifier: Modifier = Modifier
+    ) {
         if (!isVisible) {
             return
         }
 
-        val context = fragment.requireContext()
         val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
         val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
         val listState = rememberLazyListState()
@@ -173,11 +172,7 @@ class MapLayersSheetState(
                 onPreferenceChanged = {
                     refreshKey++
                 },
-                onNavigate = { action ->
-                    (fragment.requireActivity() as? MainActivity)
-                        ?.findNavController()
-                        ?.navigateWithAnimation(action)
-                },
+                onNavigate = onNavigate,
                 onCopySettings = { layer ->
                     pickDestinationMaps(context, layer)
                 },
