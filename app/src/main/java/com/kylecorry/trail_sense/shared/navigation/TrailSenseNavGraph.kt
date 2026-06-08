@@ -255,8 +255,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createFieldGuideSightingFragment
-            setClassName("com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuideSightingFragment")
-            label = "CreateFieldGuideSightingFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "CreateFieldGuideSightingScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_FIELD_GUIDE_SIGHTING)
+                .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .build())

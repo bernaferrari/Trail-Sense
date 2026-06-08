@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -66,7 +69,6 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -78,75 +80,89 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
-class CreateFieldGuideSightingFragment : TrailSenseComposeFragment() {
+@Composable
+fun CreateFieldGuideSightingToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CreateFieldGuideSightingController(fragment) }
 
-    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+
+    CreateFieldGuideSightingScreen(
+        datetime = controller.datetime,
+        location = controller.location,
+        elevation = controller.elevation,
+        notes = controller.notes,
+        harvested = controller.harvested,
+        showOnMap = controller.showOnMap,
+        onDatetimeChange = { controller.datetime = it },
+        onLocationChange = { controller.location = it },
+        onElevationChange = { controller.elevation = it },
+        onNotesChange = { controller.notes = it },
+        onHarvestedChange = { controller.harvested = it },
+        onShowOnMapChange = { controller.showOnMap = it },
+        onSave = controller::save,
+        locationAutofillRequest = controller.locationAutofillRequest,
+        onAutoLocationClick = {
+            if (controller.elevation == null) {
+                controller.elevationAutofillRequest++
+            }
+        },
+        onBeaconSelected = controller::onCoordinateBeaconSelected,
+        elevationAutofillRequest = controller.elevationAutofillRequest,
+        onAutoElevationClick = {
+            if (controller.location == null) {
+                controller.locationAutofillRequest++
+            }
+        }
+    )
+}
+
+private class CreateFieldGuideSightingController(private val fragment: Fragment) {
+
+    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private var isInitialized = false
 
     private var pageId: Long = 0L
     private var sightingId: Long = 0L
     private var initialSighting by mutableStateOf<Sighting?>(null)
     private var initialDatetime = LocalDateTime.now()
 
-    private var datetime by mutableStateOf<LocalDateTime?>(initialDatetime)
-    private var location by mutableStateOf<Coordinate?>(null)
-    private var elevation by mutableStateOf<Distance?>(null)
-    private var notes by mutableStateOf<String?>(null)
-    private var harvested by mutableStateOf(false)
-    private var showOnMap by mutableStateOf(true)
+    var datetime by mutableStateOf<LocalDateTime?>(initialDatetime)
+    var location by mutableStateOf<Coordinate?>(null)
+    var elevation by mutableStateOf<Distance?>(null)
+    var notes by mutableStateOf<String?>(null)
+    var harvested by mutableStateOf(false)
+    var showOnMap by mutableStateOf(true)
 
-    private var locationAutofillRequest by mutableStateOf(0)
-    private var elevationAutofillRequest by mutableStateOf(0)
+    var locationAutofillRequest by mutableStateOf(0)
+    var elevationAutofillRequest by mutableStateOf(0)
     private var backCallback: OnBackPressedCallback? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        pageId = arguments?.getLong("page_id") ?: 0L
-        sightingId = arguments?.getLong("sighting_id") ?: 0L
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        CreateFieldGuideSightingScreen(
-            datetime = datetime,
-            location = location,
-            elevation = this@CreateFieldGuideSightingFragment.elevation,
-            notes = notes,
-            harvested = harvested,
-            showOnMap = showOnMap,
-            onDatetimeChange = { datetime = it },
-            onLocationChange = { location = it },
-            onElevationChange = { this@CreateFieldGuideSightingFragment.elevation = it },
-            onNotesChange = { notes = it },
-            onHarvestedChange = { harvested = it },
-            onShowOnMapChange = { showOnMap = it },
-            onSave = ::save,
-            locationAutofillRequest = locationAutofillRequest,
-            onAutoLocationClick = {
-                if (this@CreateFieldGuideSightingFragment.elevation == null) {
-                    elevationAutofillRequest++
-                }
-            },
-            onBeaconSelected = ::onCoordinateBeaconSelected,
-            elevationAutofillRequest = elevationAutofillRequest,
-            onAutoElevationClick = {
-                if (location == null) {
-                    locationAutofillRequest++
-                }
-            }
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        backCallback = promptIfUnsavedChanges(this::hasChanges)
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        pageId = fragment.arguments?.getLong("page_id") ?: 0L
+        sightingId = fragment.arguments?.getLong("sighting_id") ?: 0L
+        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
         if (sightingId != 0L) {
             loadSighting()
         }
     }
 
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
+    }
+
     private fun loadSighting() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val sighting = repo.getSighting(sightingId)
             initialSighting = sighting
             sighting ?: return@launch
@@ -165,7 +181,7 @@ class CreateFieldGuideSightingFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun save() {
+    fun save() {
         val sighting = Sighting(
             sightingId,
             pageId,
@@ -177,18 +193,18 @@ class CreateFieldGuideSightingFragment : TrailSenseComposeFragment() {
             showOnMap
         )
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            Alerts.withLoading(requireContext(), getString(R.string.saving)) {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
+            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.saving)) {
                 repo.addSighting(sighting)
                 onMain {
                     backCallback?.remove()
-                    findNavController().navigateUp()
+                    fragment.findNavController().navigateUp()
                 }
             }
         }
     }
 
-    private fun onCoordinateBeaconSelected(beacon: Beacon) {
+    fun onCoordinateBeaconSelected(beacon: Beacon) {
         beacon.elevation?.let { beaconElevation ->
             elevation = Distance.meters(beaconElevation).convertTo(prefs.baseDistanceUnits)
         }
