@@ -19,6 +19,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -258,22 +259,16 @@ object CustomUiUtils {
         fragment: Fragment,
         title: String,
         qr: String
-    ): BottomSheetDialogFragment {
-        val sheet = ViewQRBottomSheet(title, qr)
-        sheet.show(fragment)
-        sheet.dismissOnPause(fragment)
-        return sheet
+    ): BottomSheetDialog {
+        return ViewQRBottomSheet(fragment, title, qr).show()
     }
 
     fun scanQR(
         fragment: Fragment,
         title: String,
         onScan: (text: String?) -> Boolean
-    ): BottomSheetDialogFragment {
-        val sheet = ScanQRBottomSheet(title, onScan)
-        sheet.show(fragment)
-        sheet.dismissOnPause(fragment)
-        return sheet
+    ): BottomSheetDialog {
+        return ScanQRBottomSheet(fragment, title, onScan).show()
     }
 
     suspend fun takePhoto(fragment: AndromedaFragment, size: Size? = null): Uri? =

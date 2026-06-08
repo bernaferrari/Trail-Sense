@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,31 +26,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.toast
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 class ViewQRBottomSheet(
+    private val fragment: Fragment,
     private val title: String,
     private val text: String
-) : TrailSenseBottomSheetComposeFragment() {
+) {
 
-    @Composable
-    override fun FragmentContent() {
-        LaunchedEffect(text) {
-            if (text.length > MAX_LENGTH) {
-                toast(getString(R.string.qr_text_too_long))
+    fun show(): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val sheet = BottomSheetDialog(context)
+        sheet.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                LaunchedEffect(text) {
+                    if (text.length > MAX_LENGTH) {
+                        Alerts.toast(context, context.getString(R.string.qr_text_too_long))
+                    }
+                }
+
+                QRShareContent(
+                    title = title,
+                    text = text.take(MAX_LENGTH),
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-        }
-
-        QRShareContent(
-            title = title,
-            text = text.take(MAX_LENGTH),
-            modifier = Modifier.fillMaxSize()
         )
+        sheet.show()
+        return sheet
     }
 
     companion object {

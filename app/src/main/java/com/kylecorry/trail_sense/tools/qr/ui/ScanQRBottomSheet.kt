@@ -1,9 +1,8 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
-import android.content.DialogInterface
 import android.graphics.Bitmap
-import android.os.Bundle
 import android.util.Size
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -24,6 +23,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
@@ -31,41 +32,53 @@ import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 class ScanQRBottomSheet(
+    private val fragment: Fragment,
     private val title: String,
     private val onTextScanned: (text: String?) -> Boolean
-) : TrailSenseBottomSheetComposeFragment() {
+) {
 
     private val cameraSize = Size(200, 200)
-    private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
     private var camera: CameraState? = null
     private var lastMessage: String? = null
+    private var sheet: BottomSheetDialog? = null
 
-    @Composable
-    override fun FragmentContent() {
-        QRImportContent(
-            title = title,
-            onClose = {
-                onTextScanned(null)
-                dismiss()
-            },
-            onCameraReady = {
-                camera = it
-                it.clipToOutline = true
-                it.start(cameraSize) { bitmap ->
-                    onCameraUpdate(bitmap)
-                }
-            },
-            modifier = Modifier.fillMaxSize()
+    fun show(): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                QRImportContent(
+                    title = title,
+                    onClose = {
+                        onTextScanned(null)
+                        sheet?.dismiss()
+                    },
+                    onCameraReady = {
+                        camera = it
+                        it.clipToOutline = true
+                        it.start(cameraSize) { bitmap ->
+                            onCameraUpdate(bitmap)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         )
-    }
-
-    override fun onDestroyView() {
-        camera?.stop()
-        camera = null
-        super.onDestroyView()
+        dialog.setOnDismissListener {
+            stopCamera()
+            haptics.off()
+            sheet = null
+        }
+        dialog.show()
+        return dialog
     }
 
     private fun onCameraUpdate(bitmap: Bitmap) {
@@ -82,15 +95,14 @@ class ScanQRBottomSheet(
             haptics.click()
             lastMessage = message
             if (!onTextScanned(message)) {
-                dismiss()
+                sheet?.dismiss()
             }
         }
     }
 
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
+    private fun stopCamera() {
         camera?.stop()
-        haptics.off()
+        camera = null
     }
 }
 
