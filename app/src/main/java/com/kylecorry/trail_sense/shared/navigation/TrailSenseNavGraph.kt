@@ -998,8 +998,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createTideFragment
-            setClassName("com.kylecorry.trail_sense.tools.tides.ui.CreateTideFragment")
-            label = "CreateTideFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "CreateTideScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_TIDE)
+                .build())
             addArgument("edit_tide_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)

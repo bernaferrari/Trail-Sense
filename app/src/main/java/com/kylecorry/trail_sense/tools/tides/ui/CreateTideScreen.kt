@@ -1,7 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.pickers.Pickers
@@ -67,7 +69,6 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -83,11 +84,53 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-class CreateTideFragment : TrailSenseComposeFragment() {
+@Composable
+fun CreateTideToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CreateTideController(fragment) }
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+
+    CreateTideScreen(
+        name = controller.name,
+        location = controller.location,
+        isSemidiurnal = controller.isSemidiurnal,
+        estimateType = controller.estimateType,
+        estimateTypes = controller.estimateTypes,
+        estimateTypeNames = controller.estimateTypeNameMap,
+        estimateTypeDescriptions = controller.estimateTypeDescriptionMap,
+        lunitidalInterval = controller.lunitidalInterval,
+        tideEntries = controller.tideEntries,
+        tideEntryScrollRequest = controller.tideEntryScrollRequest,
+        canSave = controller.formIsValid(),
+        isLocationRequired = controller.estimateType == EstimateType.LunitidalIntervalManualLocal,
+        isDurationVisible = controller.isLunitidalIntervalManual(),
+        isTideTableRequired = controller.isTideTableRequired(),
+        formatService = controller.formatService,
+        onNameChange = { controller.name = it },
+        onLocationChange = { controller.location = it },
+        onFrequencyChange = { controller.isSemidiurnal = it },
+        onEstimateTypeChange = { controller.estimateType = it },
+        onLunitidalIntervalChange = { controller.lunitidalInterval = it },
+        onAddTideEntry = controller::addTideEntry,
+        onTideEntryChange = controller::updateTideEntry,
+        onTideEntryDelete = controller::deleteTideEntry,
+        onTideTimeClick = controller::pickTideTime,
+        onTideHeightClick = controller::pickTideHeight,
+        onHelp = controller::showHelp,
+        onSave = controller::saveTide
+    )
+}
+
+private class CreateTideController(private val fragment: Fragment) {
+
+    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
 
     private var editingId: Long = 0
@@ -95,38 +138,39 @@ class CreateTideFragment : TrailSenseComposeFragment() {
 
     private var backCallback: OnBackPressedCallback? = null
     private var nextTideEntryId = 1L
+    private var isInitialized = false
 
-    private var name by mutableStateOf("")
-    private var location by mutableStateOf<Coordinate?>(null)
-    private var isSemidiurnal by mutableStateOf(true)
-    private var estimateType by mutableStateOf(EstimateType.Clock)
-    private var lunitidalInterval by mutableStateOf<Duration?>(null)
-    private var tideEntries by mutableStateOf<List<TideEntry>>(emptyList())
-    private var tideEntryScrollRequest by mutableStateOf(0)
+    var name by mutableStateOf("")
+    var location by mutableStateOf<Coordinate?>(null)
+    var isSemidiurnal by mutableStateOf(true)
+    var estimateType by mutableStateOf(EstimateType.Clock)
+    var lunitidalInterval by mutableStateOf<Duration?>(null)
+    var tideEntries by mutableStateOf<List<TideEntry>>(emptyList())
+    var tideEntryScrollRequest by mutableStateOf(0)
 
-    private val estimateTypeNameMap by lazy {
+    val estimateTypeNameMap by lazy {
         mapOf(
-            EstimateType.Clock to getString(R.string.tide_clock),
-            EstimateType.LunitidalIntervalAuto to getString(R.string.lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to getString(R.string.lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to getString(R.string.lunitidal_interval_utc),
-            EstimateType.TideModel to getString(R.string.tide_model_auto),
-            EstimateType.Harmonic to getString(R.string.harmonic)
+            EstimateType.Clock to fragment.getString(R.string.tide_clock),
+            EstimateType.LunitidalIntervalAuto to fragment.getString(R.string.lunitidal_interval_auto),
+            EstimateType.LunitidalIntervalManualLocal to fragment.getString(R.string.lunitidal_interval_local),
+            EstimateType.LunitidalIntervalManualUTC to fragment.getString(R.string.lunitidal_interval_utc),
+            EstimateType.TideModel to fragment.getString(R.string.tide_model_auto),
+            EstimateType.Harmonic to fragment.getString(R.string.harmonic)
         )
     }
 
-    private val estimateTypeDescriptionMap by lazy {
+    val estimateTypeDescriptionMap by lazy {
         mapOf(
-            EstimateType.Clock to getString(R.string.tide_estimation_description_tide_clock),
-            EstimateType.LunitidalIntervalAuto to getString(R.string.tide_estimation_description_lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to getString(R.string.tide_estimation_description_lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to getString(R.string.tide_estimation_description_lunitidal_interval_utc),
-            EstimateType.TideModel to getString(R.string.tide_estimation_description_tide_model),
+            EstimateType.Clock to fragment.getString(R.string.tide_estimation_description_tide_clock),
+            EstimateType.LunitidalIntervalAuto to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_auto),
+            EstimateType.LunitidalIntervalManualLocal to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_local),
+            EstimateType.LunitidalIntervalManualUTC to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_utc),
+            EstimateType.TideModel to fragment.getString(R.string.tide_estimation_description_tide_model),
             EstimateType.Harmonic to "!! NEED TO MANUALLY INSERT INTO DB !!"
         )
     }
 
-    private val estimateTypes by lazy {
+    val estimateTypes by lazy {
         listOfNotNull(
             EstimateType.Clock,
             EstimateType.LunitidalIntervalAuto,
@@ -137,52 +181,13 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         )
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        editingId = arguments?.getLong("edit_tide_id") ?: 0L
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        CreateTideScreen(
-            name = name,
-            location = location,
-            isSemidiurnal = isSemidiurnal,
-            estimateType = estimateType,
-            estimateTypes = estimateTypes,
-            estimateTypeNames = estimateTypeNameMap,
-            estimateTypeDescriptions = estimateTypeDescriptionMap,
-            lunitidalInterval = lunitidalInterval,
-            tideEntries = tideEntries,
-            tideEntryScrollRequest = tideEntryScrollRequest,
-            canSave = formIsValid(),
-            isLocationRequired = estimateType == EstimateType.LunitidalIntervalManualLocal,
-            isDurationVisible = isLunitidalIntervalManual(),
-            isTideTableRequired = isTideTableRequired(),
-            formatService = formatService,
-            onNameChange = { name = it },
-            onLocationChange = { location = it },
-            onFrequencyChange = { isSemidiurnal = it },
-            onEstimateTypeChange = { estimateType = it },
-            onLunitidalIntervalChange = { lunitidalInterval = it },
-            onAddTideEntry = ::addTideEntry,
-            onTideEntryChange = ::updateTideEntry,
-            onTideEntryDelete = ::deleteTideEntry,
-            onTideTimeClick = ::pickTideTime,
-            onTideHeightClick = ::pickTideHeight,
-            onHelp = {
-                UserGuideUtils.showGuide(
-                    this@CreateTideFragment,
-                    R.raw.guide_tool_tides
-                )
-            },
-            onSave = ::saveTide
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        backCallback = promptIfUnsavedChanges(this::hasChanges)
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        editingId = fragment.arguments?.getLong("edit_tide_id") ?: 0L
+        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
 
         if (editingId != 0L) {
             loadEditingTide()
@@ -191,8 +196,13 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         }
     }
 
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
+    }
+
     private fun loadEditingTide() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             editingTide = withContext(Dispatchers.IO) {
                 tideRepo.getTideTable(editingId)
             }
@@ -242,7 +252,7 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         lunitidalInterval = tide.lunitidalInterval
     }
 
-    private fun addTideEntry() {
+    fun addTideEntry() {
         tideEntries = tideEntries + newTideEntry()
         tideEntryScrollRequest++
     }
@@ -251,26 +261,26 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         return TideEntry(nextTideEntryId++, true, null, null)
     }
 
-    private fun updateTideEntry(entry: TideEntry) {
+    fun updateTideEntry(entry: TideEntry) {
         tideEntries = tideEntries.map {
             if (it.id == entry.id) entry else it
         }
     }
 
-    private fun deleteTideEntry(entry: TideEntry) {
+    fun deleteTideEntry(entry: TideEntry) {
         tideEntries = tideEntries.filterNot { it.id == entry.id }
         CustomUiUtils.snackbar(
-            this,
-            getString(R.string.tide_deleted),
-            action = getString(R.string.undo)
+            fragment,
+            fragment.getString(R.string.tide_deleted),
+            action = fragment.getString(R.string.undo)
         ) {
             tideEntries = tideEntries + entry
         }
     }
 
-    private fun pickTideTime(entry: TideEntry) {
+    fun pickTideTime(entry: TideEntry) {
         CustomUiUtils.pickDatetime(
-            requireContext(),
+            fragment.requireContext(),
             prefs.use24HourTime,
             entry.time?.toLocalDateTime() ?: LocalDateTime.now()
         ) {
@@ -280,13 +290,13 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun pickTideHeight(entry: TideEntry) {
+    fun pickTideHeight(entry: TideEntry) {
         val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
         CustomUiUtils.pickDistance(
-            requireContext(),
+            fragment.requireContext(),
             distanceUnits,
             entry.height,
-            getString(R.string.height)
+            fragment.getString(R.string.height)
         ) { distance, cancelled ->
             if (!cancelled) {
                 updateTideEntry(entry.copy(height = distance))
@@ -294,28 +304,35 @@ class CreateTideFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun saveTide() {
+    fun showHelp() {
+        UserGuideUtils.showGuide(
+            fragment,
+            R.raw.guide_tool_tides
+        )
+    }
+
+    fun saveTide() {
         val tide = getTide() ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 tideRepo.addTideTable(tide)
             }
 
             backCallback?.remove()
-            findNavController().navigateUp()
+            fragment.findNavController().navigateUp()
         }
     }
 
-    private fun isTideTableRequired(): Boolean {
+    fun isTideTableRequired(): Boolean {
         return estimateType == EstimateType.Clock || estimateType == EstimateType.LunitidalIntervalAuto
     }
 
-    private fun isLunitidalIntervalManual(): Boolean {
+    fun isLunitidalIntervalManual(): Boolean {
         return estimateType == EstimateType.LunitidalIntervalManualLocal ||
             estimateType == EstimateType.LunitidalIntervalManualUTC
     }
 
-    private fun formIsValid(): Boolean {
+    fun formIsValid(): Boolean {
         return getTide() != null
     }
 
