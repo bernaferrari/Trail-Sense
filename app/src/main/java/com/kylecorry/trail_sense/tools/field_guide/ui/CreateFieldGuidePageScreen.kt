@@ -101,6 +101,7 @@ fun CreateFieldGuidePageToolScreen(fragment: Fragment) {
         onSave = controller::save,
         modifier = Modifier.fillMaxSize()
     )
+    controller.PhotoImportContent()
 }
 
 private class CreateFieldGuidePageController(private val fragment: Fragment) {
@@ -122,6 +123,7 @@ private class CreateFieldGuidePageController(private val fragment: Fragment) {
         private set
     var imagePreview by mutableStateOf<Bitmap?>(null)
         private set
+    private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
     private var backCallback: OnBackPressedCallback? = null
 
     val tags =
@@ -158,6 +160,13 @@ private class CreateFieldGuidePageController(private val fragment: Fragment) {
         backCallback?.remove()
         backCallback = null
         imagePreview = null
+        photoImportDialog?.dismiss()
+        photoImportDialog = null
+    }
+
+    @Composable
+    fun PhotoImportContent() {
+        photoImportDialog?.Content()
     }
 
     fun getTagName(tag: FieldGuidePageTag): String {
@@ -231,9 +240,14 @@ private class CreateFieldGuidePageController(private val fragment: Fragment) {
     private suspend fun takePhoto(fragment: Fragment): Uri? {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
-            PhotoImportDialog(fragment, null, prefs.useZeroShutterLag) { uri ->
-                cont.resume(uri)
-            }.show()
+            fragment.requireActivity().runOnUiThread {
+                photoImportDialog = PhotoImportDialog(fragment, null, prefs.useZeroShutterLag) { uri ->
+                    photoImportDialog = null
+                    cont.resume(uri)
+                }.also {
+                    it.show()
+                }
+            }
         }
     }
 

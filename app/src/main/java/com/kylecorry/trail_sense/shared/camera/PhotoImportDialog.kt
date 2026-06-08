@@ -1,18 +1,12 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
-import android.app.Dialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.util.Size
-import android.view.KeyEvent
-import android.view.Window
-import android.view.WindowManager
 import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -49,6 +50,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
@@ -65,7 +68,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 class PhotoImportDialog(
@@ -78,53 +80,65 @@ class PhotoImportDialog(
     private var isCapturing by mutableStateOf(false)
     private var camera: CameraState? = null
     private var isCameraStarted = false
-    private var dialog: Dialog? = null
+    private var isVisible by mutableStateOf(false)
 
     private var orientation = DeviceOrientation.Orientation.Portrait
 
-    fun show(): Dialog {
+    init {
+        initialize()
+    }
+
+    fun show() {
         isCapturing = false
-        val context = fragment.requireContext()
-        val newDialog = Dialog(context)
-        dialog = newDialog
-        newDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        newDialog.setContentView(
-            TrailSenseComposeRootView(
-                context,
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow
-            ) {
-                PhotoImportContent(
-                    isCapturing = isCapturing,
-                    onClose = {
-                        onCapture(null)
-                        dismiss()
-                    },
-                    onCapture = ::takePhoto,
-                    onCameraReady = {
-                        camera = it
-                        startCamera(it)
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.systemBars)
-                )
-            }
-        )
-        newDialog.window?.apply {
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+        isVisible = true
+    }
+
+    @Composable
+    fun Content() {
+        if (!isVisible) {
+            return
         }
-        initializeDialog(newDialog)
-        newDialog.show()
-        newDialog.window?.setLayout(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT
-        )
-        return newDialog
+
+        Dialog(
+            onDismissRequest = { close(cancelled = true) },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
+        ) {
+            val focusRequester = remember { FocusRequester() }
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+            PhotoImportContent(
+                isCapturing = isCapturing,
+                onClose = { close(cancelled = true) },
+                onCapture = ::takePhoto,
+                onCameraReady = {
+                    camera = it
+                    startCamera(it)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .focusRequester(focusRequester)
+                    .focusable()
+                    .onPreviewKeyEvent {
+                        if (it.type != KeyEventType.KeyDown) {
+                            return@onPreviewKeyEvent false
+                        }
+                        if (it.key != Key.VolumeDown && it.key != Key.VolumeUp) {
+                            return@onPreviewKeyEvent false
+                        }
+                        takePhoto()
+                        true
+                    }
+                    .windowInsetsPadding(WindowInsets.systemBars)
+            )
+        }
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    private fun initializeDialog(dialog: Dialog) {
+    fun initialize() {
         val orientationSensor = SensorService(fragment.requireContext()).getDeviceOrientationSensor()
         orientation = DeviceOrientation.Orientation.Portrait
         fragment.observe(orientationSensor) {
@@ -133,25 +147,6 @@ class PhotoImportDialog(
                 orientation = newOrientation
             } else if (newOrientation == DeviceOrientation.Orientation.Portrait || newOrientation == DeviceOrientation.Orientation.PortraitInverse) {
                 orientation = newOrientation
-            }
-        }
-
-        val volumeKeys = listOf(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP)
-        dialog.setOnKeyListener { _, keyCode, event ->
-            if (!volumeKeys.contains(keyCode) || event.action != KeyEvent.ACTION_DOWN) {
-                return@setOnKeyListener false
-            }
-            takePhoto()
-            true
-        }
-
-        dialog.setOnCancelListener { onCapture(null) }
-        dialog.setOnDismissListener {
-            stopCamera()
-        }
-        camera?.let {
-            if (!isCameraStarted) {
-                startCamera(it)
             }
         }
     }
@@ -219,20 +214,30 @@ class PhotoImportDialog(
                 } else {
                     onCapture(file.toUri())
                 }
-                dismiss()
+                close(cancelled = false)
             }
         }
     }
 
     fun dismiss() {
-        dialog?.dismiss()
+        close(cancelled = false)
+    }
+
+    private fun close(cancelled: Boolean) {
+        if (!isVisible && camera == null) {
+            return
+        }
+        if (cancelled) {
+            onCapture(null)
+        }
+        isVisible = false
+        stopCamera()
     }
 
     private fun stopCamera() {
         camera?.stop()
         camera = null
         isCameraStarted = false
-        dialog = null
     }
 }
 

@@ -144,6 +144,7 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPe
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
@@ -275,6 +276,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
+    private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
     private val screenFlashlight by lazy { ScreenTorch(requireActivity().window) }
     private val screenFlashlightCache by lazy {
@@ -314,6 +316,19 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         onAction: (ActionItem?) -> Unit
     ) {
         actionSheet = ActionSheetState(title, subtitle, actions, onAction)
+    }
+
+    fun showPhotoImport(
+        resolution: android.util.Size?,
+        useZeroShutterLag: Boolean,
+        onCapture: (android.net.Uri?) -> Unit
+    ) {
+        photoImportDialog = PhotoImportDialog(this, resolution, useZeroShutterLag) {
+            photoImportDialog = null
+            onCapture(it)
+        }.also {
+            it.show()
+        }
     }
 
     override fun onCreateView(
@@ -526,6 +541,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                 }
             }
             layerSheet?.Content(this@TrailSenseComposeDestinationFragment, Modifier.fillMaxSize())
+            photoImportDialog?.Content()
             val currentActionSheet = actionSheet
             if (currentActionSheet != null) {
                 ModalBottomSheet(onDismissRequest = { dismissActionSheet(null) }) {

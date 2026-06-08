@@ -109,6 +109,7 @@ fun CloudToolScreen(fragment: Fragment) {
         onDismissCloudImage = { controller.selectedCloudImage = null },
         modifier = Modifier.fillMaxSize()
     )
+    controller.PhotoImportContent()
 }
 
 private class CloudController(private val fragment: Fragment) {
@@ -124,6 +125,7 @@ private class CloudController(private val fragment: Fragment) {
     var subtitle by mutableStateOf("")
         private set
     var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
+    private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
 
     fun onCreate() {
         if (isInitialized) {
@@ -151,6 +153,13 @@ private class CloudController(private val fragment: Fragment) {
 
     fun onDestroy() {
         selectedCloudImage = null
+        photoImportDialog?.dismiss()
+        photoImportDialog = null
+    }
+
+    @Composable
+    fun PhotoImportContent() {
+        photoImportDialog?.Content()
     }
 
     fun showGuide() {
@@ -210,9 +219,14 @@ private class CloudController(private val fragment: Fragment) {
     private suspend fun takePhoto(fragment: Fragment, size: Size): android.net.Uri? {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
-            PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
-                cont.resume(uri)
-            }.show()
+            fragment.requireActivity().runOnUiThread {
+                photoImportDialog = PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
+                    photoImportDialog = null
+                    cont.resume(uri)
+                }.also {
+                    it.show()
+                }
+            }
         }
     }
 

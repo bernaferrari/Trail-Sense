@@ -39,7 +39,6 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -47,6 +46,7 @@ import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -287,12 +287,14 @@ object CustomUiUtils {
             }
 
             val prefs = UserPreferences(fragment.requireContext()).camera
-
-            val sheet = PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
+            val host = fragment as? TrailSenseComposeDestinationFragment
+            if (host == null) {
+                onCapture(null)
+                return@requestCamera
+            }
+            host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
                 onCapture(uri)
             }
-
-            sheet.show()
         }
     }
 
