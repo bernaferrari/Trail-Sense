@@ -4,7 +4,6 @@ import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -115,7 +114,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
     private var amountEditHolder: TextInputLayout
     private var secondaryAmountEdit: TextInputEditText
     private var secondaryAmountEditHolder: TextInputLayout
-    private var unitBtn: ComposeView
+    private var unitBtn: UnitPickerButtonView
     private var unitBtnState: UnitPickerButtonState
 
     private fun setSelectedUnitText(unit: Units?) {
@@ -212,13 +211,8 @@ class MultipartUnitInputView<Units : Enum<*>>(
         secondaryAmountEditHolder.isVisible = _showSecondary
 
         unitBtnState = UnitPickerButtonState()
-        unitBtn = ComposeView(context).apply {
+        unitBtn = UnitPickerButtonView(context, state = unitBtnState).apply {
             id = R.id.units
-            setContent {
-                TrailSenseTheme {
-                    unitBtnState.Content()
-                }
-            }
         }
         addView(
             unitBtn,
