@@ -45,21 +45,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.background.AlarmTaskScheduler
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.permissions.PermissionRationale
-import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
-import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import kotlinx.coroutines.delay
@@ -74,7 +67,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 @Composable
-fun ClockToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun ClockToolScreen(fragment: TrailSenseDestinationHost) {
     val context = LocalContext.current
     val formatService = remember { FormatService.getInstance(context) }
     val sensorService = remember { SensorService(context) }
@@ -86,7 +79,7 @@ fun ClockToolScreen(fragment: TrailSenseComposeDestinationFragment) {
         prefs = prefs,
         gps = gps,
         getGpsTime = { getGPSTime(gps) },
-        requestExactAlarms = { requestExactAlarms(fragment, it) },
+        requestExactAlarms = { fragment.requestScheduleExactAlarms(it) },
         onScheduleNextMinute = { gpsTime, systemTime ->
             sendNextMinuteNotification(fragment, formatService, gpsTime, systemTime)
         }
@@ -320,7 +313,7 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
 }
 
 private fun sendNextMinuteNotification(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     formatService: FormatService,
     gpsTime: Instant,
     systemTime: Instant
@@ -356,37 +349,5 @@ private fun sendNextMinuteNotification(
             scheduler.once(sendTime.toZonedDateTime().toInstant())
             fragment.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
-    }
-}
-
-private fun requestExactAlarms(
-    fragment: TrailSenseComposeDestinationFragment,
-    action: (hasPermission: Boolean) -> Unit
-) {
-    fragment.requirePermissionRequester().requestPermission(
-        SpecialPermission.SCHEDULE_EXACT_ALARMS,
-        PermissionRationale(
-            fragment.getString(
-                R.string.allow_schedule_exact_alarms,
-                fragment.getString(R.string.app_name)
-            ),
-            AppServiceRegistry.get<MarkdownService>().toMarkdown(
-                fragment.getString(
-                    R.string.allow_schedule_exact_alarms_instructions,
-                    fragment.getString(R.string.app_name),
-                    fragment.getString(R.string.settings)
-                )
-            ),
-            ok = fragment.getString(R.string.settings),
-        )
-    ) {
-        val isGranted = Permissions.hasPermission(
-            fragment.requireContext(),
-            SpecialPermission.SCHEDULE_EXACT_ALARMS
-        )
-        if (!isGranted) {
-            fragment.alertExactAlarmsDenied()
-        }
-        action(isGranted)
     }
 }
