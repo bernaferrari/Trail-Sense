@@ -127,7 +127,7 @@ class ViewVectorMapFragment : TrailSenseComposeFragment() {
         view.setLayers(listOf(tileLayer))
         view.start()
         map.bounds?.let { bounds ->
-            view.doOnLayout {
+            view.view.doOnLayout {
                 view.fitIntoView(bounds)
             }
         }
@@ -234,16 +234,19 @@ private fun VectorMapScreen(
             }
 
             Box(modifier = Modifier.weight(1f)) {
+                var composeMapView by remember { mutableStateOf<MapView?>(null) }
                 AndroidView(
                     factory = { context ->
-                        MapView(context).apply {
+                        val view = MapView(context).apply {
                             keepScreenOn = true
                             backgroundColorOverride = AndroidColor.rgb(127, 127, 127)
                             onMapReady(this)
                         }
+                        composeMapView = view
+                        view.view
                     },
                     update = {
-                        onMapReady(it)
+                        composeMapView?.let(onMapReady)
                     },
                     modifier = Modifier
                         .matchParentSize()

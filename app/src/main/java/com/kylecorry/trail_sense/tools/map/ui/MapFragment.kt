@@ -688,7 +688,7 @@ private fun createMapViews(context: Context): MapViews {
         keepScreenOn = true
     }
     root.addView(
-        map,
+        map.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

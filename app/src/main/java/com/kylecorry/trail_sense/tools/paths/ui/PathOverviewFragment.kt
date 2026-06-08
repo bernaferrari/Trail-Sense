@@ -993,7 +993,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         keepScreenOn = true
     }
     mapHolder.addView(
-        pathImage,
+        pathImage.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

@@ -829,16 +829,22 @@ private fun TriangulateMap(
     onMapReady: (MapView) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var mapView by remember { mutableStateOf<MapView?>(null) }
     AndroidView(
         modifier = modifier.testTag("map"),
         factory = { context ->
-            MapView(context).apply {
+            val view = MapView(context).apply {
                 id = R.id.map
                 background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
                 backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
                 backgroundColorOverride = Resources.color(context, R.color.colorSecondary)
                 onMapReady(this)
             }
+            mapView = view
+            view.view
+        },
+        update = {
+            mapView?.let(onMapReady)
         }
     )
 }

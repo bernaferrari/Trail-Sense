@@ -1,12 +1,16 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.drawable.Drawable
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View
 import android.view.ScaleGestureDetector
 import android.widget.OverScroller
 import androidx.compose.foundation.Canvas
@@ -17,7 +21,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.isInvisible
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -47,8 +53,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeView(context, attrs),
-    IMapView {
+class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapView {
     override var isWidget: Boolean = false
     var isInteractive = true
     var isPanEnabled = true
@@ -76,6 +81,7 @@ class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeVi
 
     private var onLongPressCallback: ((Coordinate) -> Unit)? = null
     private var onSingleTapCallback: ((Coordinate) -> Unit)? = null
+    private var externalTouchListener: View.OnTouchListener? = null
     private var pendingScaleChangeCallback = false
     private var onScaleChange: ((resolutionPixels: Float) -> Unit)? = null
     private var onCenterChange: ((center: Coordinate) -> Unit)? = null
@@ -98,9 +104,92 @@ class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeVi
             invalidate()
         }
 
-    override fun invalidate() {
-        super.invalidate()
-        post {
+    val view = ComposeView(context).apply {
+        setContent {
+            Content()
+        }
+        setOnTouchListener { v, event ->
+            if (externalTouchListener?.onTouch(v, event) == true) {
+                true
+            } else {
+                onTouchEvent(event)
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var keepScreenOn: Boolean
+        get() = view.keepScreenOn
+        set(value) {
+            view.keepScreenOn = value
+        }
+
+    var background: Drawable?
+        get() = view.background
+        set(value) {
+            view.background = value
+        }
+
+    var backgroundTintList: ColorStateList?
+        get() = view.backgroundTintList
+        set(value) {
+            view.backgroundTintList = value
+        }
+
+    var isInvisible: Boolean
+        get() = view.isInvisible
+        set(value) {
+            view.isInvisible = value
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    val width: Int
+        get() = view.width
+
+    val height: Int
+        get() = view.height
+
+    fun setBackgroundColor(color: Int) {
+        view.setBackgroundColor(color)
+    }
+
+    fun setBackgroundResource(resId: Int) {
+        view.setBackgroundResource(resId)
+    }
+
+    fun setOnTouchListener(listener: View.OnTouchListener?) {
+        externalTouchListener = listener
+    }
+
+    fun measure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        view.measure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    fun layout(left: Int, top: Int, right: Int, bottom: Int) {
+        view.layout(left, top, right, bottom)
+    }
+
+    fun draw(canvas: AndroidCanvas) {
+        view.draw(canvas)
+    }
+
+    fun post(action: () -> Unit): Boolean {
+        return view.post(action)
+    }
+
+    fun invalidate() {
+        view.invalidate()
+        view.post {
             renderVersion++
         }
     }
@@ -320,15 +409,16 @@ class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeVi
             }
         }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        this@MapView.layerManager.invalidate()
-    }
-
     @Composable
-    override fun Content() {
+    private fun Content() {
         TrailSenseTheme {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged {
+                        this@MapView.layerManager.invalidate()
+                    }
+            ) {
                 renderVersion
                 if (::drawer.isInitialized) {
                     drawer.canvas = drawContext.canvas.nativeCanvas
@@ -577,7 +667,7 @@ class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeVi
     private val gestureDetector = GestureDetector(context, mGestureListener)
     private val mScaleDetector = ScaleGestureDetector(context, scaleListener)
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
+    fun onTouchEvent(event: MotionEvent): Boolean {
         if (isInteractive) {
             if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                 scroller.forceFinished(true)

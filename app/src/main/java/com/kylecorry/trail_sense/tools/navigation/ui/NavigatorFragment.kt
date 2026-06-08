@@ -957,7 +957,7 @@ private fun createNavigatorViews(
         id = R.id.radar_compass_map
     }
     root.addView(
-        radarCompassMap,
+        radarCompassMap.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = R.id.radar_compass
             endToEnd = R.id.radar_compass
