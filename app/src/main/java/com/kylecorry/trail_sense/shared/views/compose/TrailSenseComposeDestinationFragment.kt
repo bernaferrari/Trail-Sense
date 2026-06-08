@@ -182,6 +182,7 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.Pedome
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
+import com.kylecorry.trail_sense.tools.signal_finder.ui.SignalFinderToolScreen
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
@@ -367,6 +368,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CLOCK -> ClockToolScreen(this)
             DESTINATION_RULER -> RulerScreen()
             DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
+            DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
         }
     }
 
@@ -3384,5 +3386,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CLOCK = "clock"
         const val DESTINATION_RULER = "ruler"
         const val DESTINATION_TEMPERATURE_ESTIMATION = "temperature_estimation"
+        const val DESTINATION_SIGNAL_FINDER = "signal_finder"
     }
 }

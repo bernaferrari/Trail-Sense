@@ -1,8 +1,11 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +35,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -52,7 +60,6 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -61,21 +68,65 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ToolSignalFinderFragment : TrailSenseComposeFragment() {
+@Composable
+fun SignalFinderToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) {
+        SignalFinderController(fragment)
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
-    private val sensorService by lazy { SensorService(requireContext()) }
+    SignalFinderScreen(
+        signals = controller.signals,
+        towers = controller.nearbyTowers,
+        location = controller.location,
+        loading = controller.loading,
+        disclaimer = controller.disclaimer,
+        formatter = controller.formatter,
+        prefs = controller.prefs,
+        onNavigateToTower = controller::navigateToTower,
+        onCreateBeacon = controller::createBeacon
+    )
+}
+
+private class SignalFinderController(private val fragment: Fragment) {
+
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val cellSignal by lazy { sensorService.getCellSignal() }
     private val gps by lazy { sensorService.getGPS() }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
-    private val navigator by lazy { Navigator.getInstance(requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
     private val handler = Handler(Looper.getMainLooper())
 
-    private var signals by mutableStateOf(emptyList<CellSignal>())
-    private var nearbyTowers by mutableStateOf(emptyList<ApproximateCoordinate>())
-    private var location by mutableStateOf(Coordinate.zero)
-    private var loading by mutableStateOf(false)
+    var signals by mutableStateOf(emptyList<CellSignal>())
+        private set
+    var nearbyTowers by mutableStateOf(emptyList<ApproximateCoordinate>())
+        private set
+    var location by mutableStateOf(Coordinate.zero)
+        private set
+    var loading by mutableStateOf(false)
+        private set
+    val disclaimer by lazy {
+        markdown.toMarkdown(fragment.getString(R.string.cell_tower_disclaimer))
+    }
     private var lastTowerLocation: Coordinate? = null
     private var towerJob: Job? = null
 
@@ -90,23 +141,7 @@ class ToolSignalFinderFragment : TrailSenseComposeFragment() {
         }
     }
 
-    @Composable
-    override fun FragmentContent() {
-        SignalFinderScreen(
-            signals = signals,
-            towers = nearbyTowers,
-            location = location,
-            loading = loading,
-            disclaimer = markdown.toMarkdown(getString(R.string.cell_tower_disclaimer)),
-            formatter = formatter,
-            prefs = prefs,
-            onNavigateToTower = ::navigateToTower,
-            onCreateBeacon = ::createBeacon
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         cellSignal.start(sensorListener)
         gps.start(sensorListener)
         refreshReadings()
@@ -114,20 +149,18 @@ class ToolSignalFinderFragment : TrailSenseComposeFragment() {
         handler.postDelayed(refreshRunnable, 1000)
     }
 
-    override fun onPause() {
+    fun onPause() {
         handler.removeCallbacks(refreshRunnable)
         cellSignal.stop(sensorListener)
         gps.stop(sensorListener)
         towerJob?.cancel()
-        super.onPause()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         handler.removeCallbacks(refreshRunnable)
         cellSignal.stop(sensorListener)
         gps.stop(sensorListener)
         towerJob?.cancel()
-        super.onDestroyView()
     }
 
     private fun refreshReadings() {
@@ -149,7 +182,7 @@ class ToolSignalFinderFragment : TrailSenseComposeFragment() {
     private fun loadNearbyTowers(currentLocation: Coordinate) {
         lastTowerLocation = currentLocation
         towerJob?.cancel()
-        towerJob = viewLifecycleOwner.lifecycleScope.launch {
+        towerJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             loading = true
             val towers = withContext(Dispatchers.IO) {
                 CellTowerModel.getTowers(
@@ -162,16 +195,16 @@ class ToolSignalFinderFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun navigateToTower(tower: ApproximateCoordinate) {
-        navigator.navigateTo(tower.coordinate, getString(R.string.cell_tower))
-        findNavController().openTool(Tools.NAVIGATION)
+    fun navigateToTower(tower: ApproximateCoordinate) {
+        navigator.navigateTo(tower.coordinate, fragment.getString(R.string.cell_tower))
+        fragment.findNavController().openTool(Tools.NAVIGATION)
     }
 
-    private fun createBeacon(tower: ApproximateCoordinate) {
+    fun createBeacon(tower: ApproximateCoordinate) {
         val bundle = Bundle().apply {
             putParcelable("initial_location", GeoUri(tower.coordinate))
         }
-        findNavController().navigate(R.id.placeBeaconFragment, bundle)
+        fragment.findNavController().navigate(R.id.placeBeaconFragment, bundle)
     }
 }
 

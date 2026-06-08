@@ -278,8 +278,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.signalFinderFragment
-            setClassName("com.kylecorry.trail_sense.tools.signal_finder.ui.ToolSignalFinderFragment")
-            label = "SignalFinderFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "SignalFinderScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SIGNAL_FINDER)
+                .build())
             graph.addDestination(this)
         }
 
