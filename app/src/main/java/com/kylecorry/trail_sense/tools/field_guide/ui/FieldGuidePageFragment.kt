@@ -2,9 +2,6 @@ package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -35,22 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -60,7 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FieldGuidePageFragment : Fragment() {
+class FieldGuidePageFragment : TrailSenseComposeFragment() {
 
     private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(requireContext()) }
@@ -71,25 +65,15 @@ class FieldGuidePageFragment : Fragment() {
 
     private var page by mutableStateOf<FieldGuidePage?>(null)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    FieldGuidePageScreen(
-                        page = page,
-                        files = files,
-                        tagNameMapper = tagNameMapper,
-                        onEdit = ::editPage,
-                        onSightings = ::openSightings
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        FieldGuidePageScreen(
+            page = page,
+            files = files,
+            tagNameMapper = tagNameMapper,
+            onEdit = ::editPage,
+            onSightings = ::openSightings
+        )
     }
 
     override fun onResume() {

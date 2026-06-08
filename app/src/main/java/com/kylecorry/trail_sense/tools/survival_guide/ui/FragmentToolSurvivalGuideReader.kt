@@ -2,9 +2,7 @@ package com.kylecorry.trail_sense.tools.survival_guide.ui
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -35,14 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -59,7 +54,7 @@ import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
@@ -69,7 +64,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FragmentToolSurvivalGuideReader : Fragment() {
+class FragmentToolSurvivalGuideReader : TrailSenseComposeFragment() {
 
     private val chapterResourceId by lazy { requireArguments().getInt("chapter_resource_id") }
     private val headerIndex by lazy { requireArguments().getInt("header_index", 0) }
@@ -81,25 +76,15 @@ class FragmentToolSurvivalGuideReader : Fragment() {
 
     private var content by mutableStateOf<String?>(null)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SurvivalGuideReaderScreen(
-                        chapter = chapter,
-                        content = content,
-                        headerIndex = headerIndex,
-                        canPrint = isDebug(),
-                        onPrint = ::printChapter
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        SurvivalGuideReaderScreen(
+            chapter = chapter,
+            content = content,
+            headerIndex = headerIndex,
+            canPrint = isDebug(),
+            onPrint = ::printChapter
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

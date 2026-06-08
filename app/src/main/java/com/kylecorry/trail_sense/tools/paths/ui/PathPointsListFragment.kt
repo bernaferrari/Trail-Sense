@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,20 +10,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
-class PathPointsListFragment : BottomSheetDialogFragment() {
+class PathPointsListFragment : TrailSenseBottomSheetComposeFragment() {
 
     private var points: List<PathPoint> = emptyList()
     private var updatePoints: ((List<PathPoint>) -> Unit)? = null
@@ -42,44 +36,34 @@ class PathPointsListFragment : BottomSheetDialogFragment() {
         updatePoints?.invoke(points)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    var displayedPoints by remember { mutableStateOf(points) }
-                    DisposableEffect(Unit) {
-                        updatePoints = { displayedPoints = it }
-                        onDispose {
-                            updatePoints = null
-                        }
-                    }
-                    PathPointsContent(
-                        points = displayedPoints,
-                        formatService = formatService,
-                        baseDistanceUnits = UserPreferences(requireContext()).baseDistanceUnits,
-                        onCreateBeacon = {
-                            onCreateBeaconListener(it)
-                            dismiss()
-                        },
-                        onDelete = { onDeletePointListener(it) },
-                        onNavigate = {
-                            onNavigateToPointListener(it)
-                            dismiss()
-                        },
-                        onView = {
-                            onViewPointListener(it)
-                            dismiss()
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        var displayedPoints by remember { mutableStateOf(points) }
+        DisposableEffect(Unit) {
+            updatePoints = { displayedPoints = it }
+            onDispose {
+                updatePoints = null
             }
         }
+        PathPointsContent(
+            points = displayedPoints,
+            formatService = formatService,
+            baseDistanceUnits = UserPreferences(requireContext()).baseDistanceUnits,
+            onCreateBeacon = {
+                onCreateBeaconListener(it)
+                dismiss()
+            },
+            onDelete = { onDeletePointListener(it) },
+            onNavigate = {
+                onNavigateToPointListener(it)
+                dismiss()
+            },
+            onView = {
+                onViewPointListener(it)
+                dismiss()
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

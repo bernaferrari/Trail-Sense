@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -31,13 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -48,7 +42,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -61,7 +55,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SightingListFragment : Fragment() {
+class SightingListFragment : TrailSenseComposeFragment() {
 
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
@@ -70,22 +64,12 @@ class SightingListFragment : Fragment() {
 
     private var page by mutableStateOf<FieldGuidePage?>(null)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SightingListScreen(
-                        items = getSightingListItems(),
-                        onCreate = ::createSighting
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        SightingListScreen(
+            items = getSightingListItems(),
+            onCreate = ::createSighting
+        )
     }
 
     override fun onResume() {

@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -32,15 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
@@ -48,14 +42,14 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 
-class ToolCliffHeightFragment : Fragment() {
+class ToolCliffHeightFragment : TrailSenseComposeFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,23 +63,13 @@ class ToolCliffHeightFragment : Fragment() {
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CliffHeightScreen(
-                        onOpenGuide = {
-                            UserGuideUtils.showGuide(this@ToolCliffHeightFragment, R.raw.guide_tool_cliff_height)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        CliffHeightScreen(
+            onOpenGuide = {
+                UserGuideUtils.showGuide(this@ToolCliffHeightFragment, R.raw.guide_tool_cliff_height)
             }
-        }
+        )
     }
 }
 
