@@ -16,8 +16,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -52,7 +57,7 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraView
-import com.kylecorry.trail_sense.shared.views.DataPointView
+import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
@@ -555,11 +560,32 @@ private data class ClinometerViews(
     val camera: CameraView,
     val arView: AugmentedRealityView,
     val cameraClinometer: CameraClinometerView,
-    val avalancheRisk: DataPointView,
-    val estimatedHeight: DataPointView,
+    val avalancheRisk: ClinometerDataPointState,
+    val estimatedHeight: ClinometerDataPointState,
     val clinometerInstructions: TextView,
     val cameraClinometerInstructions: TextView
 )
+
+private class ClinometerDataPointState(
+    initialDescription: String,
+    private val icon: Int
+) {
+    var title by mutableStateOf("")
+    var description by mutableStateOf(initialDescription)
+
+    @Composable
+    fun Content() {
+        DataPointContent(
+            title = title,
+            description = description,
+            icon = icon,
+            tint = MaterialTheme.colorScheme.onSurface,
+            showDescription = true,
+            gravity = Gravity.START,
+            onDescriptionClick = null
+        )
+    }
+}
 
 private data class ClinometerTitle(
     val root: View,
@@ -603,22 +629,36 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         id = R.id.data_points
         orientation = LinearLayout.HORIZONTAL
     }
-    val avalancheRisk = DataPointView(context, null).apply {
+    val avalancheRisk = ClinometerDataPointState(
+        initialDescription = context.getString(R.string.avalanche_risk),
+        icon = R.drawable.avalanche
+    )
+    val avalancheRiskView = ComposeView(context).apply {
         id = R.id.avalanche_risk
-        description = context.getString(R.string.avalanche_risk)
-        setImageResource(R.drawable.avalanche)
+        setContent {
+            TrailSenseTheme {
+                avalancheRisk.Content()
+            }
+        }
     }
-    val estimatedHeight = DataPointView(context, null).apply {
+    val estimatedHeight = ClinometerDataPointState(
+        initialDescription = context.getString(R.string.height),
+        icon = R.drawable.ruler
+    )
+    val estimatedHeightView = ComposeView(context).apply {
         id = R.id.estimated_height
-        description = context.getString(R.string.height)
-        setImageResource(R.drawable.ruler)
+        setContent {
+            TrailSenseTheme {
+                estimatedHeight.Content()
+            }
+        }
     }
     dataPoints.addView(
-        avalancheRisk,
+        avalancheRiskView,
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     )
     dataPoints.addView(
-        estimatedHeight,
+        estimatedHeightView,
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     )
     root.addView(

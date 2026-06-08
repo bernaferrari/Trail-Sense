@@ -115,7 +115,7 @@ private fun createContentLayoutParams(gravity: Int): FrameLayout.LayoutParams {
 }
 
 @Composable
-private fun DataPointContent(
+fun DataPointContent(
     title: String,
     description: String,
     @DrawableRes icon: Int?,
