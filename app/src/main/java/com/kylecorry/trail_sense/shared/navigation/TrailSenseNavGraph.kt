@@ -728,8 +728,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolNotes
-            setClassName("com.kylecorry.trail_sense.tools.notes.ui.FragmentToolNotes")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolNotes"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NOTES)
+                .build())
             putAction(
                 R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
                 NavAction(R.id.fragmentToolNotesCreate, NavOptions.Builder()
@@ -744,8 +748,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolNotesCreate
-            setClassName("com.kylecorry.trail_sense.tools.notes.ui.FragmentToolNotesCreate")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolNotesCreate"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NOTE_EDITOR)
+                .build())
             addArgument("edit_note_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)

@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import android.os.Bundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,76 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.notes.domain.Note
-import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
-import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-
-class FragmentToolNotes : TrailSenseComposeFragment() {
-
-    private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
-
-    @Composable
-    override fun FragmentContent() {
-        NotesScreen(
-            notes = notesRepo.getNotes(),
-            lifecycleOwner = viewLifecycleOwner,
-            onAdd = {
-                findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
-            },
-            onEdit = ::editNote,
-            onDelete = ::deleteNote,
-            onShowQR = ::showQR
-        )
-    }
-
-    private fun showQR(note: Note) {
-        CustomUiUtils.showQR(
-            this,
-            note.title ?: getString(android.R.string.untitled),
-            NoteQREncoder().encode(note)
-        )
-    }
-
-    private fun deleteNote(note: Note) {
-        Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete_note_title),
-            if (note.title?.trim().isNullOrEmpty()) {
-                getString(android.R.string.untitled)
-            } else {
-                note.title
-            }
-        ) { cancelled ->
-            if (!cancelled) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    notesRepo.deleteNote(note)
-                }
-            }
-        }
-    }
-
-    private fun editNote(note: Note) {
-        val bundle = Bundle().apply {
-            putLong("edit_note_id", note.id)
-        }
-        findNavController().navigate(
-            R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
-            bundle
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotesScreen(
+fun NotesScreen(
     notes: LiveData<List<Note>>,
     lifecycleOwner: LifecycleOwner,
     onAdd: () -> Unit,

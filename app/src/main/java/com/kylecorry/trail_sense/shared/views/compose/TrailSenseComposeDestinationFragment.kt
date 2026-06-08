@@ -108,6 +108,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
+import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -145,7 +146,12 @@ import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
+import com.kylecorry.trail_sense.tools.notes.domain.Note
+import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
+import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
+import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
+import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
@@ -157,9 +163,12 @@ import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
 import java.time.Duration
+import java.time.Instant
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
     ScreenFlashlightController {
@@ -170,9 +179,13 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private val screenFlashlightCache by lazy {
         PreferencesSubsystem.getInstance(requireContext()).preferences
     }
+    private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
     private var focusSearchRequest: (() -> Boolean)? = null
     private var screenFlashlightBrightness by mutableFloatStateOf(100f)
     private var screenFlashlightIsRed by mutableStateOf(false)
+    private var editingNote: Note? = null
+    private var noteTitle = ""
+    private var noteContent = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -196,6 +209,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
                 cancelText = null
             )
             DESTINATION_SCREEN_FLASHLIGHT -> initializeScreenFlashlight()
+            DESTINATION_NOTE_EDITOR -> promptIfUnsavedChanges(::hasNoteChanges)
         }
     }
 
@@ -279,6 +293,8 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
             DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
             DESTINATION_LIGHTNING -> LightningScreen()
+            DESTINATION_NOTES -> Notes()
+            DESTINATION_NOTE_EDITOR -> NoteEditor()
         }
     }
 
@@ -304,6 +320,36 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             onTurnOff = {
                 turnOffScreenFlashlight()
                 requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        )
+    }
+
+    @Composable
+    private fun Notes() {
+        NotesScreen(
+            notes = notesRepo.getNotes(),
+            lifecycleOwner = viewLifecycleOwner,
+            onAdd = {
+                findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
+            },
+            onEdit = ::editNote,
+            onDelete = ::deleteNote,
+            onShowQR = ::showNoteQR
+        )
+    }
+
+    @Composable
+    private fun NoteEditor() {
+        NoteEditorScreen(
+            noteId = requireArguments().getLong("edit_note_id"),
+            loadNote = { notesRepo.getNote(it) },
+            onStateChanged = { newTitle, newContent, note ->
+                noteTitle = newTitle
+                noteContent = newContent
+                editingNote = note
+            },
+            onSave = { newTitle, newContent ->
+                saveNote(newTitle, newContent)
             }
         )
     }
@@ -2725,6 +2771,68 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         setScreenFlashlightBrightness((screenFlashlightBrightness.toInt() - 10).coerceAtLeast(0))
     }
 
+    private fun showNoteQR(note: Note) {
+        CustomUiUtils.showQR(
+            this,
+            note.title ?: getString(android.R.string.untitled),
+            NoteQREncoder().encode(note)
+        )
+    }
+
+    private fun deleteNote(note: Note) {
+        Alerts.dialog(
+            requireContext(),
+            getString(R.string.delete_note_title),
+            if (note.title?.trim().isNullOrEmpty()) {
+                getString(android.R.string.untitled)
+            } else {
+                note.title
+            }
+        ) { cancelled ->
+            if (!cancelled) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    notesRepo.deleteNote(note)
+                }
+            }
+        }
+    }
+
+    private fun editNote(note: Note) {
+        findNavController().navigate(
+            R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
+            Bundle().apply {
+                putLong("edit_note_id", note.id)
+            }
+        )
+    }
+
+    private suspend fun saveNote(title: String, content: String) {
+        val existingNote = editingNote
+        val note = existingNote?.copy(title = title, contents = content)
+            ?.apply { id = existingNote.id }
+            ?: Note(title, content, Instant.now().toEpochMilli())
+        withContext(Dispatchers.IO) {
+            notesRepo.addNote(note)
+        }
+        withContext(Dispatchers.Main) {
+            findNavController().navigateUp()
+        }
+    }
+
+    private fun hasNoteChanges(): Boolean {
+        return !nothingEnteredForNote() &&
+                (noteTitle != editingNote?.title.orEmpty() ||
+                        noteContent != editingNote?.contents.orEmpty())
+    }
+
+    private fun nothingEnteredForNote(): Boolean {
+        if (editingNote != null) {
+            return false
+        }
+
+        return noteTitle.isBlank() && noteContent.isBlank()
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -2874,5 +2982,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SCREEN_FLASHLIGHT = "screen_flashlight"
         const val DESTINATION_SOLAR_PANEL = "solar_panel"
         const val DESTINATION_LIGHTNING = "lightning"
+        const val DESTINATION_NOTES = "notes"
+        const val DESTINATION_NOTE_EDITOR = "note_editor"
     }
 }
