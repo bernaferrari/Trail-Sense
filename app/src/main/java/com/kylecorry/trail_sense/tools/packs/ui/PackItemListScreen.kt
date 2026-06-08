@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -54,7 +57,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
@@ -72,55 +74,68 @@ import kotlin.math.floor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun PackItemListToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { PackItemListController(fragment) }
 
-    private val itemRepo by lazy { PackRepo.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {}
+    }
+
+    PackItemScreen(
+        title = controller.title,
+        items = controller.sortedItems,
+        totalPercentPacked = controller.totalPercentPacked,
+        totalPackedWeight = controller.totalPackedWeight,
+        showWeightOverview = controller.showWeightOverview,
+        onSort = controller::changeSort,
+        onRename = { controller.pack?.let { current -> controller.renamePack(current) } },
+        onExport = { controller.pack?.let { current -> controller.exportPack(current) } },
+        onDeletePack = { controller.pack?.let { current -> controller.deletePack(current) } },
+        onClearAmounts = controller::clearAmounts,
+        onAddItem = controller::addItem,
+        onItemClick = controller::editItem,
+        onItemCheckedChange = controller::onItemCheckboxClicked,
+        onAddAmount = controller::add,
+        onSubtractAmount = controller::subtract,
+        onEditItem = controller::editItem,
+        onDeleteItem = controller::deleteItem,
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+private class PackItemListController(private val fragment: Fragment) {
+
+    private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val packService = PackService()
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private var isInitialized = false
 
     private var items = emptyList<PackItem>()
-    private var sortedItems by mutableStateOf(emptyList<PackItem>())
-    private var pack: Pack? = null
+    var sortedItems by mutableStateOf(emptyList<PackItem>())
+        private set
+    var pack: Pack? = null
+        private set
     private var packId: Long = 0L
-    private var title by mutableStateOf("")
-    private var totalPercentPacked by mutableStateOf("")
-    private var totalPackedWeight by mutableStateOf("")
-    private var showWeightOverview by mutableStateOf(false)
+    var title by mutableStateOf("")
+        private set
+    var totalPercentPacked by mutableStateOf("")
+        private set
+    var totalPackedWeight by mutableStateOf("")
+        private set
+    var showWeightOverview by mutableStateOf(false)
+        private set
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        packId = arguments?.getLong("pack_id") ?: 0L
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        PackItemScreen(
-            title = title,
-            items = sortedItems,
-            totalPercentPacked = totalPercentPacked,
-            totalPackedWeight = totalPackedWeight,
-            showWeightOverview = showWeightOverview,
-            onSort = ::changeSort,
-            onRename = { pack?.let { current -> renamePack(current) } },
-            onExport = { pack?.let { current -> exportPack(current) } },
-            onDeletePack = { pack?.let { current -> deletePack(current) } },
-            onClearAmounts = ::clearAmounts,
-            onAddItem = ::addItem,
-            onItemClick = ::editItem,
-            onItemCheckedChange = ::onItemCheckboxClicked,
-            onAddAmount = ::add,
-            onSubtractAmount = ::subtract,
-            onEditItem = ::editItem,
-            onDeleteItem = ::deleteItem,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        packId = fragment.arguments?.getLong("pack_id") ?: 0L
         setupUI()
-        inBackground {
+        fragment.inBackground {
             loadPack(packId)
         }
     }
@@ -136,14 +151,14 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setupUI() {
-        observe(itemRepo.getItemsFromPack(packId)) {
+        fragment.observe(itemRepo.getItemsFromPack(packId)) {
             items = it
             updateItems()
         }
     }
 
-    private fun addItem() {
-        findNavController().navigate(
+    fun addItem() {
+        fragment.findNavController().navigate(
             R.id.action_action_inventory_to_createItemFragment,
             Bundle().apply {
                 putLong("pack_id", packId)
@@ -151,14 +166,14 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         )
     }
 
-    private fun clearAmounts() {
+    fun clearAmounts() {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.clear_amounts),
-            getString(R.string.action_inventory_clear_confirm)
+            fragment.requireContext(),
+            fragment.getString(R.string.clear_amounts),
+            fragment.getString(R.string.action_inventory_clear_confirm)
         ) { cancelled ->
             if (!cancelled) {
-                inBackground {
+                fragment.inBackground {
                     withContext(Dispatchers.IO) {
                         itemRepo.clearPackedAmounts(packId)
                     }
@@ -172,22 +187,22 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         prefs.packs.packSort = newSort
     }
 
-    private fun renamePack(pack: Pack) {
+    fun renamePack(pack: Pack) {
         Pickers.text(
-            requireContext(),
-            getString(R.string.rename),
+            fragment.requireContext(),
+            fragment.getString(R.string.rename),
             null,
             pack.name,
-            hint = getString(R.string.name)
+            hint = fragment.getString(R.string.name)
         ) {
             if (it != null) {
-                inBackground {
+                fragment.inBackground {
                     val renamed = pack.copy(name = it)
                     withContext(Dispatchers.IO) {
                         itemRepo.addPack(renamed)
                     }
                     withContext(Dispatchers.Main) {
-                        this@PackItemListFragment.pack = renamed
+                        this@PackItemListController.pack = renamed
                         title = renamed.name
                     }
                 }
@@ -195,30 +210,30 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun exportPack(pack: Pack) {
-        ExportPackingListCommand(this).execute(pack)
+    fun exportPack(pack: Pack) {
+        ExportPackingListCommand(fragment).execute(pack)
     }
 
-    private fun deletePack(pack: Pack) {
+    fun deletePack(pack: Pack) {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete_pack),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete_pack),
             pack.name
         ) { cancelled ->
             if (!cancelled) {
-                inBackground {
+                fragment.inBackground {
                     withContext(Dispatchers.IO) {
                         itemRepo.deletePack(pack)
                     }
                     withContext(Dispatchers.Main) {
-                        findNavController().popBackStack()
+                        fragment.findNavController().popBackStack()
                     }
                 }
             }
         }
     }
 
-    private fun onItemCheckboxClicked(item: PackItem) {
+    fun onItemCheckboxClicked(item: PackItem) {
         if (!item.isFullyPacked) {
             if (item.desiredAmount == 0.0) {
                 setAmount(item, 1.0)
@@ -230,30 +245,30 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun deleteItem(item: PackItem) {
-        inBackground {
+    fun deleteItem(item: PackItem) {
+        fragment.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.deleteItem(item)
             }
         }
     }
 
-    private fun editItem(item: PackItem) {
+    fun editItem(item: PackItem) {
         val bundle = Bundle().apply {
             putLong("edit_item_id", item.id)
             putLong("pack_id", packId)
         }
-        findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
+        fragment.findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
     }
 
-    private fun add(item: PackItem) {
+    fun add(item: PackItem) {
         Pickers.number(
-            requireContext(),
-            getString(R.string.add),
+            fragment.requireContext(),
+            fragment.getString(R.string.add),
             null,
             null,
             allowNegative = false,
-            hint = getString(R.string.dialog_item_amount)
+            hint = fragment.getString(R.string.dialog_item_amount)
         ) {
             if (it != null) {
                 addAmount(item, it.toDouble())
@@ -261,14 +276,14 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun subtract(item: PackItem) {
+    fun subtract(item: PackItem) {
         Pickers.number(
-            requireContext(),
-            getString(R.string.subtract),
+            fragment.requireContext(),
+            fragment.getString(R.string.subtract),
             null,
             null,
             allowNegative = false,
-            hint = getString(R.string.dialog_item_amount)
+            hint = fragment.getString(R.string.dialog_item_amount)
         ) {
             if (it != null) {
                 addAmount(item, -it.toDouble())
@@ -277,7 +292,7 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun addAmount(item: PackItem, amount: Double) {
-        inBackground {
+        fragment.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.addItem(
                     item.copy(amount = max(0.0, item.amount + amount))
@@ -287,7 +302,7 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setAmount(item: PackItem, amount: Double) {
-        inBackground {
+        fragment.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.addItem(
                     item.copy(amount = amount)
@@ -296,11 +311,11 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun changeSort() {
+    fun changeSort() {
         val options = listOf("category", "percent_asc", "percent_desc", "weight_asc", "weight_desc")
         Pickers.item(
-            requireContext(),
-            getString(R.string.sort),
+            fragment.requireContext(),
+            fragment.getString(R.string.sort),
             options.map { getSortTitle(it) },
             options.indexOf(prefs.packs.packSort)
         ) {
@@ -320,11 +335,11 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun getSortTitle(sort: String): String {
         return when (sort) {
-            "category" -> getString(R.string.category)
-            "percent_asc" -> getString(R.string.pack_sort_percent_low_to_high)
-            "percent_desc" -> getString(R.string.pack_sort_percent_high_to_low)
-            "weight_asc" -> getString(R.string.pack_sort_weight_low_to_high)
-            "weight_desc" -> getString(R.string.pack_sort_weight_high_to_low)
+            "category" -> fragment.getString(R.string.category)
+            "percent_asc" -> fragment.getString(R.string.pack_sort_percent_low_to_high)
+            "percent_desc" -> fragment.getString(R.string.pack_sort_percent_high_to_low)
+            "weight_asc" -> fragment.getString(R.string.pack_sort_weight_low_to_high)
+            "weight_desc" -> fragment.getString(R.string.pack_sort_weight_high_to_low)
             else -> ""
         }
     }
@@ -343,7 +358,7 @@ class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
             ""
         }
         totalPercentPacked =
-            getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
+            fragment.getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
         sortedItems = sorts[prefs.packs.packSort]?.sort(items) ?: items
     }
 }
