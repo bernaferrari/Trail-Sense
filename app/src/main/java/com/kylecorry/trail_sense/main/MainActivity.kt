@@ -15,11 +15,11 @@ import android.view.KeyEvent
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commitNow
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -665,7 +665,7 @@ private data class MainActivityViews(
     val root: CoordinatorLayout,
     val colorFilter: ConstraintLayout,
     val errorBanner: ErrorBannerState,
-    val fragmentHolder: FragmentContainerView,
+    val fragmentHolder: FrameLayout,
     val quickActionsSheet: QuickActionSheetState,
     val bottomNavigation: MainBottomNavigationState
 )
@@ -740,7 +740,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         }
     )
 
-    val fragmentHolder = FragmentContainerView(context).apply {
+    val fragmentHolder = FrameLayout(context).apply {
         id = R.id.fragment_holder
     }
     colorFilter.addView(
