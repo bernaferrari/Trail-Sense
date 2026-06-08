@@ -12,12 +12,9 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.toast
@@ -52,6 +49,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -68,7 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
-class ViewPhotoMapFragment : Fragment() {
+class ViewPhotoMapFragment : TrailSenseComposeFragment() {
     private var photoMapViews: ViewPhotoMapViews? = null
     private val views: ViewPhotoMapViews
         get() = photoMapViews ?: error("Photo map views are not ready")
@@ -116,24 +114,16 @@ class ViewPhotoMapFragment : Fragment() {
         shouldLockOnMapLoad = requireArguments().getBoolean("autoLockLocation", false)
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createViewPhotoMapViews(requireContext())
-        photoMapViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ViewPhotoMapHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        photoMapViews = createViewPhotoMapViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        ViewPhotoMapHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onResume() {

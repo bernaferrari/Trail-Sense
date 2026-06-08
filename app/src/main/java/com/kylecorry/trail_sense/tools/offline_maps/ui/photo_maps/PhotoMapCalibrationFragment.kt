@@ -13,14 +13,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
@@ -45,6 +42,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
@@ -57,7 +55,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibratio
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 
-class PhotoMapCalibrationFragment : Fragment() {
+class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
     private val service = getAppService<OfflineMapService>()
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -99,24 +97,16 @@ class PhotoMapCalibrationFragment : Fragment() {
         mapId = requireArguments().getLong("mapId")
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createPhotoMapCalibrationViews(requireContext())
-        calibrationViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PhotoMapCalibrationHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        calibrationViews = createPhotoMapCalibrationViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        PhotoMapCalibrationHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onResume() {

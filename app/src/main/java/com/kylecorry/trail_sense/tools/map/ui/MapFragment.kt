@@ -4,16 +4,13 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -26,7 +23,6 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
@@ -61,6 +57,7 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheet
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
@@ -71,30 +68,22 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathC
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import java.time.Instant
 
-class MapFragment : ReactiveAndromedaFragment() {
+class MapFragment : TrailSenseReactiveComposeFragment() {
 
     private var mapViews: MapViews? = null
     private var wasViewCreated = false
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createMapViews(requireContext())
-        mapViews = views
+    override fun beforeCreateContent() {
+        mapViews = createMapViews(requireContext())
         wasViewCreated = true
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    MapHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        MapHost(
+            views = mapViews ?: error("Map views are not ready"),
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -37,7 +36,6 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.show
@@ -78,6 +76,7 @@ import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorScaleView
 import com.kylecorry.trail_sense.shared.views.DataPointView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -113,7 +112,7 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 
 
-class PathOverviewFragment : AndromedaFragment() {
+class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     private var pathOverviewViews: PathOverviewViews? = null
     private val views: PathOverviewViews
@@ -177,24 +176,16 @@ class PathOverviewFragment : AndromedaFragment() {
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createPathOverviewViews(requireContext())
-        pathOverviewViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PathOverviewHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        pathOverviewViews = createPathOverviewViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        PathOverviewHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {
