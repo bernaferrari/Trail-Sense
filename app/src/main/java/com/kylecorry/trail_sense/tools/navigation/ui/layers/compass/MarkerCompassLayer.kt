@@ -1,6 +1,4 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
-
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 
 open class MarkerCompassLayer : ICompassLayer {
@@ -27,7 +25,7 @@ open class MarkerCompassLayer : ICompassLayer {
         }
     }
 
-    override fun draw(drawer: ICanvasDrawer, compass: ICompassView) {
+    override fun draw(compass: ICompassView) {
         val markers = synchronized(lock) {
             markers.toList()
         }

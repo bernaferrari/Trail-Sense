@@ -63,7 +63,7 @@ abstract class BaseCompassView : CanvasView, ICompassView {
     }
 
     protected fun drawCompassLayers() {
-        compassLayers.forEach { it.draw(this, this) }
+        compassLayers.forEach { it.draw(this) }
     }
 
     override fun setup() {

@@ -1,6 +1,4 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
-
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableBearing
@@ -26,7 +24,7 @@ class NavigationCompassLayer : ICompassLayer {
         destination = null
     }
 
-    override fun draw(drawer: ICanvasDrawer, compass: ICompassView) {
+    override fun draw(compass: ICompassView) {
         val dest = destination
         val direction = bearing
 
@@ -34,16 +32,16 @@ class NavigationCompassLayer : ICompassLayer {
         if (dest != null) {
             // Draw bearing
             bearingToLayer.setDestination(dest.coordinate, dest.color)
-            bearingToLayer.draw(drawer, compass)
+            bearingToLayer.draw(compass)
 
             // Draw marker
             beaconLayer.setBeacons(listOf(dest))
-            beaconLayer.draw(drawer, compass)
+            beaconLayer.draw(compass)
         } else if (direction != null) {
             // Draw bearing
             bearingLayer.clearBearings()
             bearingLayer.addBearing(direction)
-            bearingLayer.draw(drawer, compass)
+            bearingLayer.draw(compass)
 
             // Draw marker
             markerLayer.clearMarkers()
@@ -56,7 +54,7 @@ class NavigationCompassLayer : ICompassLayer {
                 ),
                 24
             )
-            markerLayer.draw(drawer, compass)
+            markerLayer.draw(compass)
         }
     }
 

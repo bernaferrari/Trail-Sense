@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
 import android.graphics.Color
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R
@@ -37,7 +36,7 @@ class BeaconCompassLayer(
         _compass?.let { updateMarkers(it) }
     }
 
-    override fun draw(drawer: ICanvasDrawer, compass: ICompassView) {
+    override fun draw(compass: ICompassView) {
         var shouldUpdate = false
 
         if (_compass == null) {
@@ -49,7 +48,7 @@ class BeaconCompassLayer(
             updateMarkers(compass)
         }
 
-        markerLayer.draw(drawer, compass)
+        markerLayer.draw(compass)
     }
 
     override fun invalidate() {
