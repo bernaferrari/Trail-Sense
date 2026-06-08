@@ -3,7 +3,9 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
@@ -12,6 +14,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 class UnitInputView<Units : Enum<*>>(
     context: Context,
@@ -83,7 +86,7 @@ class UnitInputView<Units : Enum<*>>(
 
     private var amountEdit: TextInputEditText
     private var amountEditHolder: TextInputLayout
-    private var unitBtn: UnitPickerButtonView
+    private var unitBtn: View
     private var unitBtnState: UnitPickerButtonState
 
     private fun setSelectedUnitText(unit: Units?) {
@@ -133,7 +136,12 @@ class UnitInputView<Units : Enum<*>>(
         )
 
         unitBtnState = UnitPickerButtonState()
-        unitBtn = UnitPickerButtonView(context, state = unitBtnState).apply {
+        unitBtn = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            unitBtnState.Content()
+        }.apply {
             id = R.id.units
         }
         addView(

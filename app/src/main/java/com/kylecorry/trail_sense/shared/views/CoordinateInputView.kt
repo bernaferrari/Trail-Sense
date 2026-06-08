@@ -16,7 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -35,6 +35,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.maps.picker.MapLocationPicker
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -290,46 +291,41 @@ private fun createCoordinateIconButton(
     icon: Int,
     showBackground: Boolean,
     state: CoordinateInputButtonState
-): CoordinateInputButtonView {
-    return CoordinateInputButtonView(context, id, icon, showBackground, state)
-}
-
-private class CoordinateInputButtonView(
-    context: Context,
-    id: Int,
-    private val icon: Int,
-    showBackground: Boolean,
-    private val state: CoordinateInputButtonState
-) : AbstractComposeView(context) {
-
-    init {
+): View {
+    return TrailSenseComposeRootView(
+        context,
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        CoordinateInputButtonContent(icon, state)
+    }.apply {
         this.id = id
         if (showBackground) {
             background = Resources.drawable(context, R.drawable.rounded_rectangle)
         }
     }
+}
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Box(
-                modifier = Modifier.size(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+@Composable
+private fun CoordinateInputButtonContent(
+    icon: Int,
+    state: CoordinateInputButtonState
+) {
+    Box(
+        modifier = Modifier.size(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

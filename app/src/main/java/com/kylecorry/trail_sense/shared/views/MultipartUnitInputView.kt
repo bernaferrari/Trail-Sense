@@ -3,7 +3,9 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -14,6 +16,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 class MultipartUnitInputView<Units : Enum<*>>(
     context: Context,
@@ -114,7 +117,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
     private var amountEditHolder: TextInputLayout
     private var secondaryAmountEdit: TextInputEditText
     private var secondaryAmountEditHolder: TextInputLayout
-    private var unitBtn: UnitPickerButtonView
+    private var unitBtn: View
     private var unitBtnState: UnitPickerButtonState
 
     private fun setSelectedUnitText(unit: Units?) {
@@ -211,7 +214,12 @@ class MultipartUnitInputView<Units : Enum<*>>(
         secondaryAmountEditHolder.isVisible = _showSecondary
 
         unitBtnState = UnitPickerButtonState()
-        unitBtn = UnitPickerButtonView(context, state = unitBtnState).apply {
+        unitBtn = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            unitBtnState.Content()
+        }.apply {
             id = R.id.units
         }
         addView(
