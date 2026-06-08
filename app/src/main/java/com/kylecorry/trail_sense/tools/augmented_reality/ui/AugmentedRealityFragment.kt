@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -14,10 +13,13 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +44,6 @@ import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.core.ui.setTextDistinct
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.show
@@ -50,7 +51,6 @@ import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.google.android.material.button.MaterialButton
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
@@ -772,10 +772,10 @@ private data class AugmentedRealityViews(
     val timeBtn: ArIconButton,
     val searchBtn: ArIconButton,
     val accuracyView: SensorStatusBadgeView,
-    val focusActionButton: Button,
+    val focusActionButton: ArTextButton,
     val calibrationPanel: LinearLayout,
-    val confirmCalibrationButton: Button,
-    val cancelCalibrationButton: MaterialButton,
+    val confirmCalibrationButton: ArTextButton,
+    val cancelCalibrationButton: ArIconButton,
     val guidancePanel: ConstraintLayout,
     val arGuideIcon: ImageView,
     val arGuideName: TextView,
@@ -909,7 +909,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val focusAction = Button(context).apply {
+    val focusAction = ArTextButton(context).apply {
         id = R.id.focus_action_button
         visibility = View.GONE
     }
@@ -931,9 +931,8 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         orientation = LinearLayout.HORIZONTAL
         visibility = View.GONE
     }
-    val confirmCalibration = Button(context).apply {
+    val confirmCalibration = ArTextButton(context, context.getString(R.string.calibrate)).apply {
         id = R.id.confirm_calibration_button
-        text = context.getString(R.string.calibrate)
     }
     calibrationPanel.addView(
         confirmCalibration,
@@ -942,11 +941,13 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
     )
-    val cancelCalibration = MaterialButton(context).apply {
+    val cancelCalibration = createTransparentIconButton(
+        context,
+        R.id.cancel_calibration_button,
+        R.drawable.ic_cancel,
+        Resources.androidTextColorSecondary(context)
+    ).apply {
         id = R.id.cancel_calibration_button
-        icon = ContextCompat.getDrawable(context, R.drawable.ic_cancel)
-        iconSize = 24.dp(context)
-        setPadding(6.dp(context), paddingTop, 6.dp(context), paddingBottom)
     }
     calibrationPanel.addView(
         cancelCalibration,
@@ -1122,6 +1123,28 @@ private class ArIconButton(
                     tint = ComposeColor(tint),
                     modifier = Modifier.size(24.dp)
                 )
+            }
+        }
+    }
+}
+
+private class ArTextButton(
+    context: Context,
+    text: String = ""
+) : AbstractComposeView(context) {
+    private var label by mutableStateOf(text)
+
+    fun setTextDistinct(text: String) {
+        if (label != text) {
+            label = text
+        }
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Button(onClick = { performClick() }) {
+                Text(text = label)
             }
         }
     }
