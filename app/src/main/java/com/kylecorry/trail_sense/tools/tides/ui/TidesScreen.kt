@@ -44,12 +44,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.sol.science.oceanography.Tide
@@ -75,7 +73,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Composable
-fun TidesToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun TidesToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { TidesController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -108,7 +106,7 @@ fun TidesToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class TidesController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class TidesController(private val fragment: TrailSenseDestinationHost) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideService by lazy { TideService(fragment.requireContext()) }
@@ -164,7 +162,7 @@ private class TidesController(private val fragment: TrailSenseComposeDestination
         daily = null
         current = null
 
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val updatedTable = newTable ?: loadTideCommand.execute()
             val locationSubsystem = LocationSubsystem.getInstance(fragment.requireContext())
             if (updatedTable?.isAutomaticNearbyTide == true &&
@@ -198,7 +196,7 @@ private class TidesController(private val fragment: TrailSenseComposeDestination
         val currentTable = table ?: return
         val date = displayDate
         dailyTideJob?.cancel()
-        dailyTideJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        dailyTideJob = fragment.lifecycleScope.launch {
             daily = dailyTideCommand.execute(currentTable, date)
         }
     }
@@ -206,14 +204,14 @@ private class TidesController(private val fragment: TrailSenseComposeDestination
     private fun updateCurrentTide() {
         val currentTable = table ?: return
         currentTideJob?.cancel()
-        currentTideJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        currentTideJob = fragment.lifecycleScope.launch {
             current = currentTideCommand.execute(currentTable)
         }
     }
 
     private fun startCurrentRefresh() {
         currentRefreshJob?.cancel()
-        currentRefreshJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        currentRefreshJob = fragment.lifecycleScope.launch {
             while (isActive) {
                 updateCurrentTide()
                 delay(Duration.ofMinutes(1).toMillis())
