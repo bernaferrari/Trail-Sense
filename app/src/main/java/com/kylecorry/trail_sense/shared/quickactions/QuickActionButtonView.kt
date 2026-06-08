@@ -5,8 +5,7 @@ import androidx.annotation.DrawableRes
 
 /**
  * An abstraction over the widget backing a quick action button. This lets quick actions work with
- * a [com.google.android.material.button.MaterialButton] where possible and fall back to an
- * [android.widget.ImageButton] (for example, the buttons provided by the toolbar).
+ * Material buttons and Compose-hosted icon buttons without coupling actions to a specific UI toolkit.
  */
 interface QuickActionButtonView {
     var isVisible: Boolean
