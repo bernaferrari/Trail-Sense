@@ -3,11 +3,12 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,21 +24,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
@@ -214,7 +215,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             manager.calibrate(calibrationIndex, it)
         }
 
-        views.previewButton.setOnClickListener {
+        views.previewButton.onClick = {
             val validation = validateCalibration()
             if (validation == MapCalibrationValidationResult.Valid) {
                 setPreviewMode(!showPreview)
@@ -223,14 +224,14 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             }
         }
 
-        views.zoomInBtn.setState(false)
-        views.zoomOutBtn.setState(false)
+        views.zoomInBtn.isOn = false
+        views.zoomOutBtn.isOn = false
 
-        views.zoomOutBtn.setOnClickListener {
+        views.zoomOutBtn.onClick = {
             views.calibrationMap.zoomBy(0.5f)
         }
 
-        views.zoomInBtn.setOnClickListener {
+        views.zoomInBtn.onClick = {
             views.calibrationMap.zoomBy(2f)
         }
 
@@ -482,20 +483,11 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 }
 
 private data class PhotoMapCalibrationViews(
-    val root: View,
-    val previewButton: PhotoMapTextButton,
+    val previewButton: PhotoMapTextButtonState,
     val calibrationMap: MapCalibrationView,
-    val zoomOutBtn: PhotoMapIconButton,
-    val zoomInBtn: PhotoMapIconButton,
-    val mapCalibrationBottomPanel: PhotoMapCalibrationPanelView
-)
-
-private data class PhotoMapCalibrationControls(
-    val previewButton: PhotoMapTextButton,
-    val calibrationMap: MapCalibrationView,
-    val zoomOutBtn: PhotoMapIconButton,
-    val zoomInBtn: PhotoMapIconButton,
-    val bottomPanel: PhotoMapCalibrationPanelView
+    val zoomOutBtn: PhotoMapIconButtonState,
+    val zoomInBtn: PhotoMapIconButtonState,
+    val mapCalibrationBottomPanel: PhotoMapCalibrationPanelState
 )
 
 @Suppress("FunctionNaming")
@@ -504,135 +496,51 @@ private fun PhotoMapCalibrationHost(
     views: PhotoMapCalibrationViews,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
+    Box(modifier = modifier) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { views.calibrationMap }
+        )
+        if (views.previewButton.isVisible) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            ) {
+                views.previewButton.Content()
+            }
+        }
+        views.zoomInBtn.Content(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 232.dp)
+        )
+        views.zoomOutBtn.Content(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 176.dp)
+        )
+        if (views.mapCalibrationBottomPanel.isVisible) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                views.mapCalibrationBottomPanel.Content()
+            }
+        }
+    }
 }
 
 private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
-    val root = ConstraintLayout(context)
-    val controls = createPhotoMapCalibrationControls(context)
-    addPhotoMapCalibrationControls(context, root, controls)
-
     return PhotoMapCalibrationViews(
-        root = root,
-        previewButton = controls.previewButton,
-        calibrationMap = controls.calibrationMap,
-        zoomOutBtn = controls.zoomOutBtn,
-        zoomInBtn = controls.zoomInBtn,
-        mapCalibrationBottomPanel = controls.bottomPanel
+        previewButton = PhotoMapTextButtonState(context.getString(R.string.preview)),
+        calibrationMap = MapCalibrationView(context).apply { id = R.id.calibration_map },
+        zoomOutBtn = PhotoMapIconButtonState(R.drawable.ic_zoom_out),
+        zoomInBtn = PhotoMapIconButtonState(R.drawable.ic_add),
+        mapCalibrationBottomPanel = PhotoMapCalibrationPanelState(context)
     )
 }
 
-private fun createPhotoMapCalibrationControls(context: Context): PhotoMapCalibrationControls {
-    val previewButton = PhotoMapTextButton(context, context.getString(R.string.preview)).apply {
-        id = R.id.preview_button
-        alpha = 0.86f
-        visibility = View.GONE
-    }
-
-    val calibrationMap = MapCalibrationView(context).apply {
-        id = R.id.calibration_map
-    }
-
-    val zoomOutBtn = PhotoMapIconButton(context, R.drawable.ic_zoom_out).apply {
-        id = R.id.zoom_out_btn
-        alpha = 0.86f
-        isClickable = true
-        isFocusable = true
-    }
-
-    val zoomInBtn = PhotoMapIconButton(context, R.drawable.ic_add).apply {
-        id = R.id.zoom_in_btn
-        alpha = 0.86f
-        isClickable = true
-        isFocusable = true
-    }
-
-    val bottomPanel = PhotoMapCalibrationPanelView(context).apply {
-        id = R.id.map_calibration_bottom_panel
-        visibility = View.GONE
-    }
-
-    return PhotoMapCalibrationControls(
-        previewButton = previewButton,
-        calibrationMap = calibrationMap,
-        zoomOutBtn = zoomOutBtn,
-        zoomInBtn = zoomInBtn,
-        bottomPanel = bottomPanel
-    )
-}
-
-private fun addPhotoMapCalibrationControls(
-    context: Context,
-    root: ConstraintLayout,
-    controls: PhotoMapCalibrationControls
+private class PhotoMapCalibrationPanelState(
+    private val context: Context
 ) {
-    val margin = Resources.dp(context, 16f).toInt()
-    val zoomBottom = Resources.dp(context, 176f).toInt()
-
-    root.addView(
-        controls.calibrationMap,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    root.addView(
-        controls.previewButton,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            topMargin = margin
-        }
-    )
-    root.addView(
-        controls.zoomOutBtn,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = margin
-            bottomMargin = zoomBottom
-        }
-    )
-    root.addView(
-        controls.zoomInBtn,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = margin
-            bottomMargin = zoomBottom + Resources.dp(context, 56f).toInt()
-        }
-    )
-    root.addView(
-        controls.bottomPanel,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-}
-
-private class PhotoMapCalibrationPanelView(
-    context: Context
-) : AbstractComposeView(context) {
 
     private val formatService by lazy { FormatService.getInstance(context) }
     private val sensorService by lazy { SensorService(context) }
@@ -644,6 +552,7 @@ private class PhotoMapCalibrationPanelView(
     var iconTint by mutableStateOf(Color(Resources.androidTextColorSecondary(context)))
     var nextText by mutableStateOf(context.getString(R.string.next))
     var showPrevious by mutableStateOf(false)
+    var isVisible by mutableStateOf(false)
     var onTitleClick: () -> Unit = {}
     var onPreviousClick: () -> Unit = {}
     var onNextClick: () -> Unit = {}
@@ -660,11 +569,6 @@ private class PhotoMapCalibrationPanelView(
 
     fun setOnCoordinateChangeListener(listener: ((Coordinate?) -> Unit)?) {
         coordinateChangeListener = listener
-    }
-
-    override fun onDetachedFromWindow() {
-        gps.stop(this::onGPSUpdate)
-        super.onDetachedFromWindow()
     }
 
     private fun updateCoordinate(text: String) {
@@ -717,20 +621,23 @@ private class PhotoMapCalibrationPanelView(
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(16.dp)
-            ) {
-                panelHeader()
-                Spacer(modifier = Modifier.height(16.dp))
-                coordinateInput()
-                Spacer(modifier = Modifier.height(16.dp))
-                panelActions()
+    fun Content() {
+        DisposableEffect(Unit) {
+            onDispose {
+                gps.stop(this@PhotoMapCalibrationPanelState::onGPSUpdate)
             }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp)
+        ) {
+            panelHeader()
+            Spacer(modifier = Modifier.height(16.dp))
+            coordinateInput()
+            Spacer(modifier = Modifier.height(16.dp))
+            panelActions()
         }
     }
 
@@ -840,28 +747,68 @@ private class PhotoMapCalibrationPanelView(
     }
 }
 
-private class PhotoMapTextButton(
-    context: Context,
+private class PhotoMapTextButtonState(
     text: String = ""
-) : AbstractComposeView(context) {
+) {
     var text by mutableStateOf(text)
     var checked by mutableStateOf(false)
+    var isVisible by mutableStateOf(false)
+    var isEnabled by mutableStateOf(true)
+    var onClick by mutableStateOf({})
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Button(
-                onClick = { performClick() },
-                colors = if (checked) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                } else {
-                    ButtonDefaults.buttonColors()
-                }
-            ) {
-                Text(text = text)
+    fun Content() {
+        Button(
+            onClick = onClick,
+            enabled = isEnabled,
+            colors = if (checked) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            }
+        ) {
+            Text(text = text)
+        }
+    }
+}
+
+private class PhotoMapIconButtonState(
+    icon: Int
+) {
+    var iconRes by mutableIntStateOf(icon)
+    var isOn by mutableStateOf(false)
+    var onClick by mutableStateOf({})
+
+    @Composable
+    fun Content(modifier: Modifier = Modifier) {
+        val background = if (isOn) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+        val foreground = if (isOn) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        Surface(
+            onClick = onClick,
+            modifier = modifier.size(40.dp),
+            shape = CircleShape,
+            color = background,
+            shadowElevation = 6.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
