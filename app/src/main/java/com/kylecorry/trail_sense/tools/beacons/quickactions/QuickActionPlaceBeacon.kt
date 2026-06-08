@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.beacons.quickactions
 
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -18,11 +18,10 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
-import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
 import java.time.ZonedDateTime
 import kotlinx.coroutines.launch
 
-class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: Fragment) :
+class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
     QuickActionButton(btn, fragment) {
 
     override fun onCreate() {
@@ -82,9 +81,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: Fragment) :
                         )
                     }
 
-                    if (fragment is BeaconListControllerHost) {
-                        fragment.refreshBeaconList()
-                    }
+                    fragment.refreshBeaconList()
                 }
             }
 

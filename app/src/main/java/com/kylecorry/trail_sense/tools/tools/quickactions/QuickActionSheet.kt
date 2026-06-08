@@ -44,6 +44,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 
 class QuickActionSheetState(private val context: Context) {
@@ -77,7 +78,7 @@ class QuickActionSheetState(private val context: Context) {
             return
         }
 
-        val fragment = activity.getFragment()
+        val fragment = activity.getFragment() as? TrailSenseComposeDestinationFragment
 
         if (fragment == null) {
             Alerts.toast(context, context.getString(R.string.quick_actions_are_unavailable))
@@ -105,7 +106,7 @@ class QuickActionSheetState(private val context: Context) {
     }
 
     private fun bindWidgetsIfReady() {
-        val fragment = activity?.getFragment() ?: return
+        val fragment = activity?.getFragment() as? TrailSenseComposeDestinationFragment ?: return
         val widgets = widgets ?: return
         if (widgetBinder != null) {
             return

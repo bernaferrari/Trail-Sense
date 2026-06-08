@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.sensors.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -22,7 +22,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import kotlinx.coroutines.launch
 
-class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: Fragment) :
+class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
     QuickActionButton(btn, fragment) {
 
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }

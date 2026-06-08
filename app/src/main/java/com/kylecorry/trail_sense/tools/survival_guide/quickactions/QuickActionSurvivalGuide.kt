@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.survival_guide.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionSurvivalGuide(btn: QuickActionButtonView, fragment: Fragment) :
+class QuickActionSurvivalGuide(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
     QuickActionButton(btn, fragment) {
     override fun onCreate() {
         super.onCreate()

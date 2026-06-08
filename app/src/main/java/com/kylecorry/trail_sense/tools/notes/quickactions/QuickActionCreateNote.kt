@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.notes.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
-class QuickActionCreateNote(btn: QuickActionButtonView, fragment: Fragment) :
+class QuickActionCreateNote(btn: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
     QuickActionButton(btn, fragment) {
 
     override fun onCreate() {

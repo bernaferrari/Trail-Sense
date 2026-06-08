@@ -2,13 +2,13 @@ package com.kylecorry.trail_sense.tools.clouds.quickactions
 
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
-class QuickActionScanCloud(button: QuickActionButtonView, fragment: Fragment) :
+class QuickActionScanCloud(button: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) :
     QuickActionButton(button, fragment) {
 
     override fun onCreate() {

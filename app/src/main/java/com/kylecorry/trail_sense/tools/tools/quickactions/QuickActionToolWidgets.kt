@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.requireMainActivity
 
-class QuickActionToolWidgets(button: QuickActionButtonView, fragment: Fragment) : QuickActionButton(
+class QuickActionToolWidgets(button: QuickActionButtonView, fragment: TrailSenseComposeDestinationFragment) : QuickActionButton(
     button,
     fragment
 ) {
