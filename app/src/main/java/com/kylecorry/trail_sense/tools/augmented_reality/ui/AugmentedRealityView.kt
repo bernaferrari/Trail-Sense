@@ -46,7 +46,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
 import com.kylecorry.trail_sense.shared.textDimensions
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.IARCalibrator
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapperFactory
@@ -168,7 +167,7 @@ class AugmentedRealityView : CanvasView {
     private var onGuideReached: (() -> Unit)? = null
 
     // Camera binding
-    private var camera: CameraView? = null
+    private var camera: CameraState? = null
     private val fovRunner = CoroutineQueueRunner(1, dispatcher = Dispatchers.Main)
     private var owner: LifecycleOwner? = null
     private val lifecycleObserver = LifecycleEventObserver { _, event ->
@@ -557,17 +556,6 @@ class AugmentedRealityView : CanvasView {
 
     fun bind(
         camera: CameraState,
-        lifecycleOwner: LifecycleOwner? = null,
-        defaultLayoutParams: ViewGroup.LayoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    ) {
-        bind(camera.view, lifecycleOwner, defaultLayoutParams)
-    }
-
-    fun bind(
-        camera: CameraView,
         lifecycleOwner: LifecycleOwner? = null,
         defaultLayoutParams: ViewGroup.LayoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,

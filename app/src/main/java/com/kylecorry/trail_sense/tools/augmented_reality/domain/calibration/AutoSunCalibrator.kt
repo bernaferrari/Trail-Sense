@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.trail_sense.shared.camera.GrayscaleMomentFinder
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 
@@ -12,7 +12,7 @@ class AutoSunCalibrator : IARCalibrator {
 
     private val astro = AstronomyService()
 
-    override suspend fun calibrateBearing(view: AugmentedRealityView, camera: CameraView): Float? {
+    override suspend fun calibrateBearing(view: AugmentedRealityView, camera: CameraState): Float? {
         // TODO: If the sun and actual are too far apart, return null
         val image = camera.previewImage ?: return null
         return onDefault {
