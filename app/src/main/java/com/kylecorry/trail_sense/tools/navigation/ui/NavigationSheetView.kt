@@ -5,8 +5,15 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -29,7 +36,8 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.DataPointView
+import com.kylecorry.trail_sense.shared.views.DataPointContent
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
@@ -58,10 +66,10 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
 
     // VIEWS
     private val toolbar: Toolbar
-    private val distanceDataView: DataPointView
-    private val bearingDataView: DataPointView
-    private val elevationDataView: DataPointView
-    private val etaDataView: DataPointView
+    private val distanceDataView: NavigationDataPointState
+    private val bearingDataView: NavigationDataPointState
+    private val elevationDataView: NavigationDataPointState
+    private val etaDataView: NavigationDataPointState
 
     init {
         val root = LinearLayout(context).apply {
@@ -131,11 +139,16 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
         row: LinearLayout,
         id: Int,
         icon: Int
-    ): DataPointView {
-        val view = DataPointView(context, null).apply {
+    ): NavigationDataPointState {
+        val dataPoint = NavigationDataPointState(icon)
+        val view = ComposeView(context).apply {
             this.id = id
-            setContentGravity(Gravity.CENTER)
-            setImageResource(icon)
+            dataPoint.view = this
+            setContent {
+                TrailSenseTheme {
+                    dataPoint.Content()
+                }
+            }
         }
         row.addView(
             view,
@@ -148,7 +161,7 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
                 marginEnd = Resources.dp(context, 8f).toInt()
             }
         )
-        return view
+        return dataPoint
     }
 
 
@@ -374,5 +387,37 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
                 )
             )
         }
+    }
+}
+
+private class NavigationDataPointState(
+    private val icon: Int
+) {
+    lateinit var view: View
+    var title by mutableStateOf("")
+    var description by mutableStateOf("")
+    private var showDescriptionState by mutableStateOf(true)
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    fun setShowDescription(show: Boolean) {
+        showDescriptionState = show
+    }
+
+    @Composable
+    fun Content() {
+        DataPointContent(
+            title = title,
+            description = description,
+            icon = icon,
+            tint = MaterialTheme.colorScheme.onSurface,
+            showDescription = showDescriptionState,
+            gravity = Gravity.CENTER,
+            onDescriptionClick = null
+        )
     }
 }
