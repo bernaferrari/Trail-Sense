@@ -20,15 +20,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.doOnLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.luna.concurrency.onMain
@@ -127,7 +127,7 @@ class ViewVectorMapFragment : TrailSenseComposeFragment() {
         view.setLayers(listOf(tileLayer))
         view.start()
         map.bounds?.let { bounds ->
-            view.view.doOnLayout {
+            view.doOnLayout {
                 view.fitIntoView(bounds)
             }
         }
@@ -173,6 +173,7 @@ private fun VectorMapScreen(
     modifier: Modifier = Modifier
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -234,20 +235,16 @@ private fun VectorMapScreen(
             }
 
             Box(modifier = Modifier.weight(1f)) {
-                var composeMapView by remember { mutableStateOf<MapView?>(null) }
-                AndroidView(
-                    factory = { context ->
-                        val view = MapView(context).apply {
-                            keepScreenOn = true
-                            backgroundColorOverride = AndroidColor.rgb(127, 127, 127)
-                            onMapReady(this)
-                        }
-                        composeMapView = view
-                        view.view
-                    },
-                    update = {
-                        composeMapView?.let(onMapReady)
-                    },
+                val composeMapView = remember {
+                    MapView(context).apply {
+                        keepScreenOn = true
+                        backgroundColorOverride = AndroidColor.rgb(127, 127, 127)
+                    }
+                }
+                SideEffect {
+                    onMapReady(composeMapView)
+                }
+                composeMapView.Content(
                     modifier = Modifier
                         .matchParentSize()
                         .testTag("map")

@@ -70,6 +70,8 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
     private var lastFlingY = 0
     private lateinit var drawer: ICanvasDrawer
     private var renderVersion by mutableIntStateOf(0)
+    private var contentWidth by mutableIntStateOf(0)
+    private var contentHeight by mutableIntStateOf(0)
     private var isSetup = false
 
     private val lookupMatrix = Matrix()
@@ -85,6 +87,7 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
     private var pendingScaleChangeCallback = false
     private var onScaleChange: ((resolutionPixels: Float) -> Unit)? = null
     private var onCenterChange: ((center: Coordinate) -> Unit)? = null
+    private val pendingLayoutCallbacks = mutableListOf<() -> Unit>()
 
     override var userLocation: Coordinate = Coordinate.zero
         set(value) {
@@ -154,10 +157,10 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
         }
 
     val width: Int
-        get() = view.width
+        get() = view.width.takeIf { it > 0 } ?: contentWidth
 
     val height: Int
-        get() = view.height
+        get() = view.height.takeIf { it > 0 } ?: contentHeight
 
     fun setBackgroundColor(color: Int) {
         view.setBackgroundColor(color)
@@ -184,13 +187,25 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
     }
 
     fun post(action: () -> Unit): Boolean {
+        if (!view.isAttachedToWindow) {
+            action()
+            return true
+        }
         return view.post(action)
     }
 
     fun invalidate() {
         view.invalidate()
-        view.post {
+        post {
             renderVersion++
+        }
+    }
+
+    fun doOnLayout(action: () -> Unit) {
+        if (width > 0 && height > 0) {
+            action()
+        } else {
+            pendingLayoutCallbacks.add(action)
         }
     }
 
@@ -410,12 +425,19 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
         }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         TrailSenseTheme {
             Canvas(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxSize()
                     .onSizeChanged {
+                        contentWidth = it.width
+                        contentHeight = it.height
+                        if (it.width > 0 && it.height > 0 && pendingLayoutCallbacks.isNotEmpty()) {
+                            val callbacks = pendingLayoutCallbacks.toList()
+                            pendingLayoutCallbacks.clear()
+                            callbacks.forEach { callback -> callback() }
+                        }
                         this@MapView.layerManager.invalidate()
                     }
             ) {

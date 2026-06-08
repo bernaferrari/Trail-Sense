@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,8 +49,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import androidx.navigation.fragment.findNavController
@@ -829,24 +828,18 @@ private fun TriangulateMap(
     onMapReady: (MapView) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var mapView by remember { mutableStateOf<MapView?>(null) }
-    AndroidView(
-        modifier = modifier.testTag("map"),
-        factory = { context ->
-            val view = MapView(context).apply {
-                id = R.id.map
-                background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
-                backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
-                backgroundColorOverride = Resources.color(context, R.color.colorSecondary)
-                onMapReady(this)
-            }
-            mapView = view
-            view.view
-        },
-        update = {
-            mapView?.let(onMapReady)
+    val context = LocalContext.current
+    val mapView = remember {
+        MapView(context).apply {
+            id = R.id.map
+            backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
+            backgroundColorOverride = Resources.color(context, R.color.colorSecondary)
         }
-    )
+    }
+    SideEffect {
+        onMapReady(mapView)
+    }
+    mapView.Content(modifier = modifier.testTag("map"))
 }
 
 @Composable
