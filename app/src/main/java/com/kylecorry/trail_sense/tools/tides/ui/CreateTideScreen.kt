@@ -51,9 +51,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -85,7 +83,7 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 @Composable
-fun CreateTideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CreateTideToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CreateTideController(fragment) }
 
     DisposableEffect(controller) {
@@ -126,7 +124,7 @@ fun CreateTideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class CreateTideController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CreateTideController(private val fragment: TrailSenseDestinationHost) {
 
     val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
@@ -186,7 +184,7 @@ private class CreateTideController(private val fragment: TrailSenseComposeDestin
             return
         }
         isInitialized = true
-        editingId = fragment.arguments?.getLong("edit_tide_id") ?: 0L
+        editingId = fragment.destinationArguments?.getLong("edit_tide_id") ?: 0L
         backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
 
         if (editingId != 0L) {
@@ -202,7 +200,7 @@ private class CreateTideController(private val fragment: TrailSenseComposeDestin
     }
 
     private fun loadEditingTide() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             editingTide = withContext(Dispatchers.IO) {
                 tideRepo.getTideTable(editingId)
             }
@@ -314,7 +312,7 @@ private class CreateTideController(private val fragment: TrailSenseComposeDestin
 
     fun saveTide() {
         val tide = getTide() ?: return
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 tideRepo.addTideTable(tide)
             }
