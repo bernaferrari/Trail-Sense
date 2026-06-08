@@ -46,25 +46,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -73,11 +69,9 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import java.util.UUID
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun CreateFieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CreateFieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CreateFieldGuidePageController(fragment) }
 
     DisposableEffect(controller) {
@@ -101,17 +95,16 @@ fun CreateFieldGuidePageToolScreen(fragment: TrailSenseComposeDestinationFragmen
         onSave = controller::save,
         modifier = Modifier.fillMaxSize()
     )
-    controller.PhotoImportContent()
 }
 
-private class CreateFieldGuidePageController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CreateFieldGuidePageController(private val fragment: TrailSenseDestinationHost) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
     private val uriPicker by lazy {
         IntentUriPicker(
-            fragment.requireActivity() as IntentResultRetriever,
+            fragment.andromedaActivity as IntentResultRetriever,
             fragment.requireContext()
         )
     }
@@ -123,7 +116,6 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseCom
         private set
     var imagePreview by mutableStateOf<Bitmap?>(null)
         private set
-    private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
     private var backCallback: OnBackPressedCallback? = null
 
     val tags =
@@ -134,7 +126,7 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseCom
             return
         }
         isInitialized = true
-        fragment.arguments?.let {
+        fragment.destinationArguments?.let {
             val pageId = it.getLong(ARG_PAGE_ID, 0L)
             if (pageId != 0L) {
                 fragment.inBackground {
@@ -160,13 +152,6 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseCom
         backCallback?.remove()
         backCallback = null
         imagePreview = null
-        photoImportDialog?.dismiss()
-        photoImportDialog = null
-    }
-
-    @Composable
-    fun PhotoImportContent() {
-        photoImportDialog?.Content()
     }
 
     fun getTagName(tag: FieldGuidePageTag): String {
@@ -204,10 +189,7 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseCom
             if (!it) {
                 return@requestCamera
             }
-            fragment.inBackground {
-                val uri = takePhoto(fragment)
-                uploadPhoto(uri)
-            }
+            showPhotoImport()
         }
     }
 
@@ -237,22 +219,11 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseCom
         }
     }
 
-    private suspend fun takePhoto(fragment: TrailSenseComposeDestinationFragment): Uri? {
-        return suspendCoroutine { cont ->
-            val prefs = UserPreferences(fragment.requireContext()).camera
-            fragment.requireActivity().runOnUiThread {
-                photoImportDialog = PhotoImportDialog(
-                    fragment.requireContext(),
-                    fragment.viewLifecycleOwner,
-                    fragment.viewLifecycleOwner.lifecycleScope,
-                    null,
-                    prefs.useZeroShutterLag
-                ) { uri ->
-                    photoImportDialog = null
-                    cont.resume(uri)
-                }.also {
-                    it.show()
-                }
+    private fun showPhotoImport() {
+        val prefs = UserPreferences(fragment.requireContext()).camera
+        fragment.showPhotoImport(null, prefs.useZeroShutterLag) { uri ->
+            fragment.inBackground {
+                uploadPhoto(uri)
             }
         }
     }
