@@ -181,6 +181,7 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
+import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
@@ -363,6 +364,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_TRIANGULATE -> TriangulateToolScreen(this)
             DESTINATION_DECLINATION -> DeclinationScreen()
             DESTINATION_CLOCK -> ClockToolScreen(this)
+            DESTINATION_RULER -> RulerScreen()
         }
     }
 
@@ -3378,5 +3380,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_TRIANGULATE = "triangulate"
         const val DESTINATION_DECLINATION = "declination"
         const val DESTINATION_CLOCK = "clock"
+        const val DESTINATION_RULER = "ruler"
     }
 }

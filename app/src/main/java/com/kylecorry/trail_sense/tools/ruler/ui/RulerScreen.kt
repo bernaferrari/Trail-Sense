@@ -59,18 +59,9 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
-
-class RulerFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        RulerScreen()
-    }
-}
 
 @Composable
-private fun RulerScreen(
+fun RulerScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

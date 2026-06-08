@@ -657,8 +657,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.rulerFragment
-            setClassName("com.kylecorry.trail_sense.tools.ruler.ui.RulerFragment")
-            label = "RulerFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "RulerScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_RULER)
+                .build())
             graph.addDestination(this)
         }
 
