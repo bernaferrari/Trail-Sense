@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,9 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
@@ -58,6 +54,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
@@ -75,7 +72,7 @@ import kotlin.math.floor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PackItemListFragment : AndromedaFragment() {
+class PackItemListFragment : TrailSenseAndromedaComposeFragment() {
 
     private val itemRepo by lazy { PackRepo.getInstance(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -96,38 +93,28 @@ class PackItemListFragment : AndromedaFragment() {
         packId = arguments?.getLong("pack_id") ?: 0L
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PackItemScreen(
-                        title = title,
-                        items = sortedItems,
-                        totalPercentPacked = totalPercentPacked,
-                        totalPackedWeight = totalPackedWeight,
-                        showWeightOverview = showWeightOverview,
-                        onSort = ::changeSort,
-                        onRename = { pack?.let { current -> renamePack(current) } },
-                        onExport = { pack?.let { current -> exportPack(current) } },
-                        onDeletePack = { pack?.let { current -> deletePack(current) } },
-                        onClearAmounts = ::clearAmounts,
-                        onAddItem = ::addItem,
-                        onItemClick = ::editItem,
-                        onItemCheckedChange = ::onItemCheckboxClicked,
-                        onAddAmount = ::add,
-                        onSubtractAmount = ::subtract,
-                        onEditItem = ::editItem,
-                        onDeleteItem = ::deleteItem,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PackItemScreen(
+            title = title,
+            items = sortedItems,
+            totalPercentPacked = totalPercentPacked,
+            totalPackedWeight = totalPackedWeight,
+            showWeightOverview = showWeightOverview,
+            onSort = ::changeSort,
+            onRename = { pack?.let { current -> renamePack(current) } },
+            onExport = { pack?.let { current -> exportPack(current) } },
+            onDeletePack = { pack?.let { current -> deletePack(current) } },
+            onClearAmounts = ::clearAmounts,
+            onAddItem = ::addItem,
+            onItemClick = ::editItem,
+            onItemCheckedChange = ::onItemCheckboxClicked,
+            onAddAmount = ::add,
+            onSubtractAmount = ::subtract,
+            onEditItem = ::editItem,
+            onDeleteItem = ::deleteItem,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

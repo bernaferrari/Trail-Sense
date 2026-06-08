@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.text.InputType
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,14 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -55,6 +50,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -64,7 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
-class CreateItemFragment : Fragment() {
+class CreateItemFragment : TrailSenseComposeFragment() {
 
     private val itemRepo by lazy { PackRepo.getInstance(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -107,42 +103,32 @@ class CreateItemFragment : Fragment() {
         packId = arguments?.getLong("pack_id") ?: 0L
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: android.os.Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CreateItemScreen(
-                        title = stringResource(
-                            if (itemId == 0L) R.string.create_item_title else R.string.edit_item_title
-                        ),
-                        name = name,
-                        amount = amountText,
-                        desiredAmount = desiredAmountText,
-                        category = selectedCategory,
-                        categories = sortedCategories.map { it to nameMapper.getString(it) },
-                        weight = weight,
-                        weightUnit = selectedWeightUnit,
-                        weightUnits = formatService.sortWeightUnits(WeightUnits.entries),
-                        isOptional = isOptional,
-                        onNameChange = { name = it },
-                        onAmountChange = { amountText = it },
-                        onDesiredAmountChange = { desiredAmountText = it },
-                        onCategoryChange = { category = it },
-                        onWeightChange = { newWeight, unit ->
-                            weight = newWeight
-                            selectedWeightUnit = unit
-                        },
-                        onOptionalChange = { isOptional = it },
-                        onSave = ::saveItem
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        CreateItemScreen(
+            title = stringResource(
+                if (itemId == 0L) R.string.create_item_title else R.string.edit_item_title
+            ),
+            name = name,
+            amount = amountText,
+            desiredAmount = desiredAmountText,
+            category = selectedCategory,
+            categories = sortedCategories.map { it to nameMapper.getString(it) },
+            weight = weight,
+            weightUnit = selectedWeightUnit,
+            weightUnits = formatService.sortWeightUnits(WeightUnits.entries),
+            isOptional = isOptional,
+            onNameChange = { name = it },
+            onAmountChange = { amountText = it },
+            onDesiredAmountChange = { desiredAmountText = it },
+            onCategoryChange = { category = it },
+            onWeightChange = { newWeight, unit ->
+                weight = newWeight
+                selectedWeightUnit = unit
+            },
+            onOptionalChange = { isOptional = it },
+            onSave = ::saveItem
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {

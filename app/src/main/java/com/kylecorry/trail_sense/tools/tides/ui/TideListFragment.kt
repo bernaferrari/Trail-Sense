@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -36,16 +33,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -55,6 +49,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -66,7 +61,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class TideListFragment : Fragment() {
+class TideListFragment : TrailSenseComposeFragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(requireContext()) }
@@ -78,26 +73,16 @@ class TideListFragment : Fragment() {
     private var refreshJob: Job? = null
     private var tides by mutableStateOf(emptyList<Pair<TideTable, TideType?>>())
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    TideListScreen(
-                        tides = tides,
-                        onCreate = ::createTide,
-                        onSelect = ::selectTide,
-                        onEdit = ::editTide,
-                        onDelete = ::deleteTide,
-                        onToggleVisibility = ::toggleVisibility
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        TideListScreen(
+            tides = tides,
+            onCreate = ::createTide,
+            onSelect = ::selectTide,
+            onEdit = ::editTide,
+            onDelete = ::deleteTide,
+            onToggleVisibility = ::toggleVisibility
+        )
     }
 
     override fun onResume() {

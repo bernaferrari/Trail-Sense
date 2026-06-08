@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,9 +41,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,7 +50,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.pickers.Pickers
@@ -72,6 +67,7 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -87,7 +83,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-class CreateTideFragment : Fragment() {
+class CreateTideFragment : TrailSenseComposeFragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val tideRepo by lazy { TideTableRepo.getInstance(requireContext()) }
@@ -146,52 +142,42 @@ class CreateTideFragment : Fragment() {
         editingId = arguments?.getLong("edit_tide_id") ?: 0L
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CreateTideScreen(
-                        name = name,
-                        location = location,
-                        isSemidiurnal = isSemidiurnal,
-                        estimateType = estimateType,
-                        estimateTypes = estimateTypes,
-                        estimateTypeNames = estimateTypeNameMap,
-                        estimateTypeDescriptions = estimateTypeDescriptionMap,
-                        lunitidalInterval = lunitidalInterval,
-                        tideEntries = tideEntries,
-                        tideEntryScrollRequest = tideEntryScrollRequest,
-                        canSave = formIsValid(),
-                        isLocationRequired = estimateType == EstimateType.LunitidalIntervalManualLocal,
-                        isDurationVisible = isLunitidalIntervalManual(),
-                        isTideTableRequired = isTideTableRequired(),
-                        formatService = formatService,
-                        onNameChange = { name = it },
-                        onLocationChange = { location = it },
-                        onFrequencyChange = { isSemidiurnal = it },
-                        onEstimateTypeChange = { estimateType = it },
-                        onLunitidalIntervalChange = { lunitidalInterval = it },
-                        onAddTideEntry = ::addTideEntry,
-                        onTideEntryChange = ::updateTideEntry,
-                        onTideEntryDelete = ::deleteTideEntry,
-                        onTideTimeClick = ::pickTideTime,
-                        onTideHeightClick = ::pickTideHeight,
-                        onHelp = {
-                            UserGuideUtils.showGuide(
-                                this@CreateTideFragment,
-                                R.raw.guide_tool_tides
-                            )
-                        },
-                        onSave = ::saveTide
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        CreateTideScreen(
+            name = name,
+            location = location,
+            isSemidiurnal = isSemidiurnal,
+            estimateType = estimateType,
+            estimateTypes = estimateTypes,
+            estimateTypeNames = estimateTypeNameMap,
+            estimateTypeDescriptions = estimateTypeDescriptionMap,
+            lunitidalInterval = lunitidalInterval,
+            tideEntries = tideEntries,
+            tideEntryScrollRequest = tideEntryScrollRequest,
+            canSave = formIsValid(),
+            isLocationRequired = estimateType == EstimateType.LunitidalIntervalManualLocal,
+            isDurationVisible = isLunitidalIntervalManual(),
+            isTideTableRequired = isTideTableRequired(),
+            formatService = formatService,
+            onNameChange = { name = it },
+            onLocationChange = { location = it },
+            onFrequencyChange = { isSemidiurnal = it },
+            onEstimateTypeChange = { estimateType = it },
+            onLunitidalIntervalChange = { lunitidalInterval = it },
+            onAddTideEntry = ::addTideEntry,
+            onTideEntryChange = ::updateTideEntry,
+            onTideEntryDelete = ::deleteTideEntry,
+            onTideTimeClick = ::pickTideTime,
+            onTideHeightClick = ::pickTideHeight,
+            onHelp = {
+                UserGuideUtils.showGuide(
+                    this@CreateTideFragment,
+                    R.raw.guide_tool_tides
+                )
+            },
+            onSave = ::saveTide
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

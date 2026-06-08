@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,12 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -59,35 +56,25 @@ import com.kylecorry.trail_sense.tools.packs.ui.commands.ImportPackingListComman
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class PackListFragment : AndromedaFragment() {
+class PackListFragment : TrailSenseAndromedaComposeFragment() {
 
     private val packRepo by lazy { PackRepo.getInstance(requireContext()) }
 
     private var packs by mutableStateOf(emptyList<Pack>())
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PackListScreen(
-                        packs = packs,
-                        onImportPack = ::importPack,
-                        onCreatePack = ::createPack,
-                        onOpenPack = { openPack(it.id) },
-                        onRenamePack = ::renamePack,
-                        onCopyPack = ::copyPack,
-                        onExportPack = ::exportPack,
-                        onDeletePack = ::deletePack,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PackListScreen(
+            packs = packs,
+            onImportPack = ::importPack,
+            onCreatePack = ::createPack,
+            onOpenPack = { openPack(it.id) },
+            onRenamePack = ::renamePack,
+            onCopyPack = ::copyPack,
+            onExportPack = ::exportPack,
+            onDeletePack = ::deletePack,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
