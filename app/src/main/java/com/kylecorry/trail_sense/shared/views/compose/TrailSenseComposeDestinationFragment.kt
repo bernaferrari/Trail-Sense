@@ -147,6 +147,7 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
+import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
@@ -361,6 +362,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_METAL_DETECTOR -> MetalDetectorToolScreen()
             DESTINATION_TRIANGULATE -> TriangulateToolScreen(this)
             DESTINATION_DECLINATION -> DeclinationScreen()
+            DESTINATION_CLOCK -> ClockToolScreen(this)
         }
     }
 
@@ -3375,5 +3377,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_METAL_DETECTOR = "metal_detector"
         const val DESTINATION_TRIANGULATE = "triangulate"
         const val DESTINATION_DECLINATION = "declination"
+        const val DESTINATION_CLOCK = "clock"
     }
 }

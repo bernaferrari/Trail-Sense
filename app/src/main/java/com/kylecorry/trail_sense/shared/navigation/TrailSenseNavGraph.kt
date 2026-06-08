@@ -635,8 +635,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolClockFragment
-            setClassName("com.kylecorry.trail_sense.tools.clock.ui.ToolClockFragment")
-            label = "ToolClockFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "ClockScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOCK)
+                .build())
             graph.addDestination(this)
         }
 

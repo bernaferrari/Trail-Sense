@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
@@ -57,8 +58,8 @@ import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
+import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
@@ -70,107 +71,31 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class ToolClockFragment : TrailSenseComposeFragment() {
+@Composable
+fun ClockToolScreen(fragment: Fragment) {
+    val context = LocalContext.current
+    val formatService = remember { FormatService.getInstance(context) }
+    val sensorService = remember { SensorService(context) }
+    val gps = remember { sensorService.getGPS() }
+    val prefs = remember { UserPreferences(context) }
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-
-    @Composable
-    override fun FragmentContent() {
-        ClockScreen(
-            formatService = formatService,
-            prefs = prefs,
-            gps = gps,
-            getGpsTime = ::getGPSTime,
-            requestExactAlarms = { requestExactAlarms(it) },
-            onScheduleNextMinute = ::sendNextMinuteNotification
-        )
-    }
-
-    private fun getGPSTime(): Instant {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            tryOrNothing {
-                return SystemClock.currentGnssTimeClock().instant()
-            }
+    ClockScreen(
+        formatService = formatService,
+        prefs = prefs,
+        gps = gps,
+        getGpsTime = { getGPSTime(gps) },
+        requestExactAlarms = { requestExactAlarms(fragment, it) },
+        onScheduleNextMinute = { gpsTime, systemTime ->
+            sendNextMinuteNotification(fragment, formatService, gpsTime, systemTime)
         }
-
-        val fixTime = gps.fixTimeElapsedNanos ?: return gps.time
-        val systemTime = SystemClock.elapsedRealtimeNanos()
-        val timeDiff = fixTime - systemTime
-        return gps.time.plusNanos(timeDiff)
-    }
-
-    private fun sendNextMinuteNotification(gpsTime: Instant, systemTime: Instant) {
-        val systemDiff = Duration.between(systemTime, Instant.now())
-        val currentTime = gpsTime.plus(systemDiff)
-        val clockError = Duration.between(systemTime, gpsTime)
-        val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
-        val displayTimeWithSeconds = myTime.toLocalDateTime()
-        var displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
-        val displayTimeSecond = displayTimeWithSeconds.second
-        if (displayTimeSecond > 45) {
-            displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(2)
-        }
-        val sendTime = displayTime.minus(clockError)
-        val formattedTime = formatService.formatTime(displayTime.toLocalTime())
-
-        Alerts.dialog(
-            requireContext(),
-            getString(R.string.clock_sync_time_settings),
-            getString(R.string.clock_sync_instructions, formattedTime)
-        ) { cancelled ->
-            if (!cancelled) {
-                Alerts.toast(
-                    requireContext(),
-                    getString(R.string.pip_notification_scheduled, formattedTime)
-                )
-
-                val scheduler = AlarmTaskScheduler(requireContext()) {
-                    NextMinuteBroadcastReceiver.pendingIntent(
-                        requireContext(),
-                        formattedTime
-                    )
-                }
-                scheduler.once(sendTime.toZonedDateTime().toInstant())
-                startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
-            }
-        }
-    }
-
-    private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermission(
-            SpecialPermission.SCHEDULE_EXACT_ALARMS,
-            PermissionRationale(
-                getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
-                AppServiceRegistry.get<MarkdownService>().toMarkdown(
-                    getString(
-                        R.string.allow_schedule_exact_alarms_instructions,
-                        getString(R.string.app_name),
-                        getString(R.string.settings)
-                    )
-                ),
-                ok = getString(R.string.settings),
-            )
-        ) {
-            val isGranted = Permissions.hasPermission(
-                requireContext(),
-                SpecialPermission.SCHEDULE_EXACT_ALARMS
-            )
-            if (!isGranted) {
-                alertExactAlarmsDenied()
-            }
-            action(isGranted)
-        }
-    }
+    )
 }
 
 @Composable
 private fun ClockScreen(
     formatService: FormatService,
     prefs: UserPreferences,
-    gps: com.kylecorry.andromeda.core.sensors.ISensor,
+    gps: ISatelliteGPS,
     getGpsTime: () -> Instant,
     requestExactAlarms: ((Boolean) -> Unit) -> Unit,
     onScheduleNextMinute: (Instant, Instant) -> Unit
@@ -377,4 +302,89 @@ private fun Offset.pointAt(radius: Float, degrees: Float): Offset {
         x + (cos(radians) * radius).toFloat(),
         y + (sin(radians) * radius).toFloat()
     )
+}
+
+private fun getGPSTime(gps: ISatelliteGPS): Instant {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        tryOrNothing {
+            return SystemClock.currentGnssTimeClock().instant()
+        }
+    }
+
+    val fixTime = gps.fixTimeElapsedNanos ?: return gps.time
+    val systemTime = SystemClock.elapsedRealtimeNanos()
+    val timeDiff = fixTime - systemTime
+    return gps.time.plusNanos(timeDiff)
+}
+
+private fun sendNextMinuteNotification(
+    fragment: Fragment,
+    formatService: FormatService,
+    gpsTime: Instant,
+    systemTime: Instant
+) {
+    val context = fragment.requireContext()
+    val systemDiff = Duration.between(systemTime, Instant.now())
+    val currentTime = gpsTime.plus(systemDiff)
+    val clockError = Duration.between(systemTime, gpsTime)
+    val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
+    val displayTimeWithSeconds = myTime.toLocalDateTime()
+    var displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
+    val displayTimeSecond = displayTimeWithSeconds.second
+    if (displayTimeSecond > 45) {
+        displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(2)
+    }
+    val sendTime = displayTime.minus(clockError)
+    val formattedTime = formatService.formatTime(displayTime.toLocalTime())
+
+    Alerts.dialog(
+        context,
+        fragment.getString(R.string.clock_sync_time_settings),
+        fragment.getString(R.string.clock_sync_instructions, formattedTime)
+    ) { cancelled ->
+        if (!cancelled) {
+            Alerts.toast(
+                context,
+                fragment.getString(R.string.pip_notification_scheduled, formattedTime)
+            )
+
+            val scheduler = AlarmTaskScheduler(context) {
+                NextMinuteBroadcastReceiver.pendingIntent(context, formattedTime)
+            }
+            scheduler.once(sendTime.toZonedDateTime().toInstant())
+            fragment.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
+        }
+    }
+}
+
+private fun requestExactAlarms(
+    fragment: Fragment,
+    action: (hasPermission: Boolean) -> Unit
+) {
+    fragment.requirePermissionRequester().requestPermission(
+        SpecialPermission.SCHEDULE_EXACT_ALARMS,
+        PermissionRationale(
+            fragment.getString(
+                R.string.allow_schedule_exact_alarms,
+                fragment.getString(R.string.app_name)
+            ),
+            AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                fragment.getString(
+                    R.string.allow_schedule_exact_alarms_instructions,
+                    fragment.getString(R.string.app_name),
+                    fragment.getString(R.string.settings)
+                )
+            ),
+            ok = fragment.getString(R.string.settings),
+        )
+    ) {
+        val isGranted = Permissions.hasPermission(
+            fragment.requireContext(),
+            SpecialPermission.SCHEDULE_EXACT_ALARMS
+        )
+        if (!isGranted) {
+            fragment.alertExactAlarmsDenied()
+        }
+        action(isGranted)
+    }
 }
