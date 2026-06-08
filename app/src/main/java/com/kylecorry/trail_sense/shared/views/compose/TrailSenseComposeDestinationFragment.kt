@@ -311,7 +311,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         cleanupEffects()
     }
 
-    fun showActionSheet(
+    override fun showActionSheet(
         title: String,
         subtitle: String?,
         actions: List<ActionItem>,

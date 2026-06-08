@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Size
 import androidx.annotation.StringRes
 import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.sharing.ActionItem
 
 interface TrailSenseDestinationHost {
     fun requireContext(): Context
@@ -16,5 +17,12 @@ interface TrailSenseDestinationHost {
         resolution: Size?,
         useZeroShutterLag: Boolean,
         onCapture: (Uri?) -> Unit
+    )
+
+    fun showActionSheet(
+        title: String,
+        subtitle: String?,
+        actions: List<ActionItem>,
+        onAction: (ActionItem?) -> Unit
     )
 }

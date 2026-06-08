@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.share
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.sharing.ShareAction
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 
-class BeaconSender(private val fragment: TrailSenseComposeDestinationFragment) : IBeaconSender {
+class BeaconSender(private val fragment: TrailSenseDestinationHost) : IBeaconSender {
     override fun send(beacon: Beacon) {
         Share.share(
             fragment, beacon.name, listOf(

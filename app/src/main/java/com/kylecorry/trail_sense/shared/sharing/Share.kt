@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationS
 object Share {
 
     fun shareLocation(
-        fragment: TrailSenseComposeDestinationFragment,
+        fragment: TrailSenseDestinationHost,
         location: Coordinate,
         format: BuiltInCoordinateFormat = UserPreferences(fragment.requireContext()).navigation.coordinateFormat,
         title: String = fragment.getString(R.string.location)
@@ -38,7 +38,7 @@ object Share {
     }
 
     fun share(
-        fragment: TrailSenseComposeDestinationFragment,
+        fragment: TrailSenseDestinationHost,
         title: String,
         actions: List<ShareAction>,
         subtitle: String? = null,
@@ -77,7 +77,7 @@ object Share {
     }
 
     fun actions(
-        fragment: TrailSenseComposeDestinationFragment,
+        fragment: TrailSenseDestinationHost,
         title: String,
         actions: List<ActionItem>,
         subtitle: String? = null,
