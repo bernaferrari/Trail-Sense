@@ -20,7 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -169,7 +168,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             isFocusable = true
         }
         addView(
-            sightingCompassButton,
+            sightingCompassButton.view,
             LayoutParams(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
@@ -322,15 +321,51 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
 
 }
 
-private class SightingCompassButton(context: Context) : AbstractComposeView(context) {
+private class SightingCompassButton(context: Context) {
     private var isOn by mutableStateOf(false)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var contentDescription: CharSequence?
+        get() = view.contentDescription
+        set(value) {
+            view.contentDescription = value
+        }
+
+    var isClickable: Boolean
+        get() = view.isClickable
+        set(value) {
+            view.isClickable = value
+        }
+
+    var isFocusable: Boolean
+        get() = view.isFocusable
+        set(value) {
+            view.isFocusable = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
 
     fun setState(isOn: Boolean) {
         this.isOn = isOn
     }
 
     @Composable
-    override fun Content() {
+    private fun Content() {
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -342,21 +377,19 @@ private class SightingCompassButton(context: Context) : AbstractComposeView(cont
             MaterialTheme.colorScheme.onSurfaceVariant
         }
 
-        TrailSenseTheme {
-            androidx.compose.material3.Surface(
-                modifier = Modifier.size(40.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = background,
-                shadowElevation = 6.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_camera),
-                        contentDescription = null,
-                        tint = foreground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+        androidx.compose.material3.Surface(
+            modifier = Modifier.size(40.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = background,
+            shadowElevation = 6.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_camera),
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
