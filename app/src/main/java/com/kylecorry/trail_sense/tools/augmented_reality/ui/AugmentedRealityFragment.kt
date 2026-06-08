@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -964,7 +963,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         text = context.getString(R.string.target)
     }
     guidancePanel.addView(
-        guideLabel,
+        guideLabel.view,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = R.id.ar_guide_name
             endToEnd = R.id.ar_guide_name
@@ -976,7 +975,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         id = R.id.ar_guide_icon
     }
     guidancePanel.addView(
-        guideIcon,
+        guideIcon.view,
         ConstraintLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             topToTop = R.id.ar_guide_label
@@ -1006,7 +1005,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         id = R.id.ar_guide_name
     }
     guidancePanel.addView(
-        guideName,
+        guideName.view,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToEnd = R.id.ar_guide_icon
             endToStart = R.id.ar_guide_cancel
@@ -1239,11 +1238,25 @@ private class ArCalibrationPanelView(private val context: Context) {
     }
 }
 
-private class ArGuideIconView(context: Context) : AbstractComposeView(context) {
+private class ArGuideIconView(context: Context) {
     private var icon by mutableIntStateOf(R.drawable.ic_location)
     private var iconRotation by mutableStateOf(0f)
     private var iconTint by mutableIntStateOf(Color.WHITE)
     private var backgroundTint by mutableIntStateOf(Color.TRANSPARENT)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
 
     fun setState(
         icon: Int,
@@ -1258,25 +1271,23 @@ private class ArGuideIconView(context: Context) : AbstractComposeView(context) {
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Surface(
-                color = ComposeColor(backgroundTint),
-                contentColor = ComposeColor(iconTint),
-                shape = CircleShape
+    private fun Content() {
+        Surface(
+            color = ComposeColor(backgroundTint),
+            contentColor = ComposeColor(iconTint),
+            shape = CircleShape
+        ) {
+            Box(
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.size(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(14.dp)
-                            .rotate(iconRotation)
-                    )
-                }
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .rotate(iconRotation)
+                )
             }
         }
     }
@@ -1285,21 +1296,33 @@ private class ArGuideIconView(context: Context) : AbstractComposeView(context) {
 private class ArTextView(
     context: Context,
     private val style: ArTextStyle = ArTextStyle.Label
-) : AbstractComposeView(context) {
+) {
     var text by mutableStateOf("")
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Text(
-                text = text,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = when (style) {
-                    ArTextStyle.Label -> MaterialTheme.typography.bodySmall
-                    ArTextStyle.Title -> MaterialTheme.typography.bodyLarge
-                }
-            )
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
         }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    @Composable
+    private fun Content() {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = when (style) {
+                ArTextStyle.Label -> MaterialTheme.typography.bodySmall
+                ArTextStyle.Title -> MaterialTheme.typography.bodyLarge
+            }
+        )
     }
 }
 
