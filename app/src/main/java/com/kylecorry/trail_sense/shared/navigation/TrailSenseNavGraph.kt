@@ -422,8 +422,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pathsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.PathsSettingsFragment")
-            label = "PathsSettingsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PathsSettingsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATHS_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
@@ -31,7 +38,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -42,48 +48,249 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class PathsSettingsFragment : TrailSenseComposeFragment() {
+@Composable
+fun PathsSettingsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { PathsSettingsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    PathsSettingsContent(controller)
+}
+
+private class PathsSettingsController(private val fragment: Fragment) {
+
+    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    val prefs by lazy { UserPreferences(fragment.requireContext()) }
 
     private var setBacktrackEnabledState: ((Boolean) -> Unit)? = null
     private var refreshNotificationState: (() -> Unit)? = null
 
-    @Composable
-    override fun FragmentContent() {
+    fun setBacktrackEnabledState(updater: (Boolean) -> Unit) {
+        setBacktrackEnabledState = updater
+    }
+
+    fun setRefreshNotificationState(updater: () -> Unit) {
+        refreshNotificationState = updater
+    }
+
+    fun onResume() {
+        refreshNotificationState?.invoke()
+        Tools.subscribe(
+            PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED,
+            ::onBacktrackEnabled
+        )
+        Tools.subscribe(
+            PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED,
+            ::onBacktrackDisabled
+        )
+    }
+
+    fun onPause() {
+        Tools.unsubscribe(
+            PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED,
+            ::onBacktrackEnabled
+        )
+        Tools.unsubscribe(
+            PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED,
+            ::onBacktrackDisabled
+        )
+    }
+
+    fun onDestroy() {
+        setBacktrackEnabledState = null
+        refreshNotificationState = null
+    }
+
+    fun isBacktrackBlocked(): Boolean {
+        return Tools.getService(
+            fragment.requireContext(),
+            PathsToolRegistration.SERVICE_BACKTRACK
+        )?.isBlocked() ?: false
+    }
+
+    fun toggleBacktrack(onBlocked: () -> Unit) {
+        ToggleBacktrackCommand(fragment) {
+            onBlocked()
+        }.execute()
+    }
+
+    fun openNotificationSettings() {
+        fragment.startActivity(
+            Intents.notificationSettings(
+                fragment.requireContext(),
+                BacktrackService.FOREGROUND_CHANNEL_ID
+            )
+        )
+    }
+
+    fun changeBacktrackFrequency(
+        duration: Duration,
+        onChanged: (Duration) -> Unit
+    ) {
+        ChangeBacktrackFrequencyCommand(
+            fragment.requireContext(),
+            fragment.lifecycleScope
+        ) { frequency ->
+            onChanged(frequency)
+        }.execute(duration)
+    }
+
+    fun pickOption(
+        title: String,
+        options: List<PathOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        Pickers.item(
+            fragment.requireContext(),
+            title,
+            options.map { it.label },
+            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                onSelected(options[index].value)
+            }
+        }
+    }
+
+    fun pickBacktrackHistory(onPicked: (Int) -> Unit) {
+        Pickers.number(
+            fragment.requireContext(),
+            fragment.getString(R.string.pref_backtrack_history_days_title),
+            null,
+            prefs.navigation.backtrackHistory.toDays().toInt(),
+            allowDecimals = false,
+            allowNegative = false,
+            hint = fragment.getString(R.string.days)
+        ) { days ->
+            if (days != null) {
+                val dayCount = days.toInt()
+                prefs.navigation.backtrackHistory = Duration.ofDays(days.toLong())
+                onPicked(dayCount)
+            }
+        }
+    }
+
+    fun formatBacktrackInterval(): String {
+        return formatService.formatDuration(
+            prefs.backtrackRecordFrequency,
+            includeSeconds = true
+        )
+    }
+
+    fun formatBacktrackHistory(): String {
+        return formatService.formatDays(
+            prefs.navigation.backtrackHistory.toDays().toInt()
+        )
+    }
+
+    fun notificationSummary(): String {
+        val isBlocked = Notify.isChannelBlocked(
+            fragment.requireContext(),
+            BacktrackService.FOREGROUND_CHANNEL_ID
+        )
+        return if (isBlocked) fragment.getString(R.string.off) else fragment.getString(R.string.on)
+    }
+
+    fun notificationsTitle(): String {
+        return fragment.getString(
+            R.string.notifications_channel,
+            fragment.getString(R.string.backtrack)
+        )
+    }
+
+    fun options(entriesId: Int, valuesId: Int): List<PathOption> {
+        val entries = fragment.resources.getStringArray(entriesId)
+        val values = fragment.resources.getStringArray(valuesId)
+        return values.mapIndexed { index, value ->
+            PathOption(value, entries.getOrElse(index) { value })
+        }
+    }
+
+    fun optionLabel(options: List<PathOption>, selected: String): String {
+        return options.firstOrNull { it.value == selected }?.label ?: selected
+    }
+
+    fun getBoolean(key: Int, default: Boolean): Boolean {
+        return cache.getBoolean(fragment.getString(key)) ?: default
+    }
+
+    fun getStringPreference(key: Int, default: String): String {
+        return cache.getString(fragment.getString(key)) ?: default
+    }
+
+    fun putBoolean(key: Int, value: Boolean) {
+        cache.putBoolean(fragment.getString(key), value)
+    }
+
+    fun putString(key: Int, value: String) {
+        cache.putString(fragment.getString(key), value)
+    }
+
+    private fun onBacktrackEnabled(data: Bundle): Boolean {
+        setBacktrackEnabledState?.invoke(true)
+        return true
+    }
+
+    private fun onBacktrackDisabled(data: Bundle): Boolean {
+        setBacktrackEnabledState?.invoke(false)
+        return true
+    }
+}
+
+private data class PathOption(
+    val value: String,
+    val label: String
+)
+
+@Composable
+private fun PathsSettingsContent(controller: PathsSettingsController) {
+                    val prefs = controller.prefs
+                    val formatService = controller.formatService
                     val pathStyleOptions = remember {
-                        options(R.array.line_style_entries, R.array.line_style_values)
+                        controller.options(R.array.line_style_entries, R.array.line_style_values)
                     }
                     val isBacktrackBlocked = remember {
-                        Tools.getService(
-                            requireContext(),
-                            PathsToolRegistration.SERVICE_BACKTRACK
-                        )?.isBlocked() ?: false
+                        controller.isBacktrackBlocked()
                     }
 
                     var backtrackEnabled by remember {
                         mutableStateOf(prefs.backtrackEnabled)
                     }
                     var backtrackIntervalSummary by remember {
-                        mutableStateOf(formatBacktrackInterval())
+                        mutableStateOf(controller.formatBacktrackInterval())
                     }
                     var backtrackHistorySummary by remember {
-                        mutableStateOf(formatBacktrackHistory())
+                        mutableStateOf(controller.formatBacktrackHistory())
                     }
                     var backtrackNotificationsSummary by remember {
-                        mutableStateOf(notificationSummary())
+                        mutableStateOf(controller.notificationSummary())
                     }
                     var saveCellSignal by remember {
                         mutableStateOf(prefs.backtrackSaveCellHistory)
                     }
                     var showLastSignalBeacon by remember {
-                        mutableStateOf(getBoolean(R.string.pref_show_last_signal_beacon, true))
+                        mutableStateOf(controller.getBoolean(R.string.pref_show_last_signal_beacon, true))
                     }
                     var pathStyle by remember {
                         mutableStateOf(
-                            getStringPreference(
+                            controller.getStringPreference(
                                 R.string.pref_backtrack_path_style,
                                 "dotted"
                             )
@@ -93,26 +300,27 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                         mutableStateOf(prefs.navigation.defaultPathColor)
                     }
                     var simplifyPaths by remember {
-                        mutableStateOf(getBoolean(R.string.pref_auto_simplify_paths, true))
+                        mutableStateOf(controller.getBoolean(R.string.pref_auto_simplify_paths, true))
                     }
                     var onlyNavigateToPoints by remember {
                         mutableStateOf(
-                            getBoolean(R.string.pref_only_navigate_path_points, true)
+                            controller.getBoolean(R.string.pref_only_navigate_path_points, true)
                         )
                     }
                     var fastPathRendering by remember {
-                        mutableStateOf(getBoolean(R.string.pref_fast_path_rendering, false))
+                        mutableStateOf(controller.getBoolean(R.string.pref_fast_path_rendering, false))
                     }
                     var showPathColorPicker by remember { mutableStateOf(false) }
                     var showBacktrackFrequencyPicker by remember { mutableStateOf(false) }
+                    val pathStyleTitle = stringResource(R.string.pref_default_path_style_title)
                     val pathColorTitle = stringResource(R.string.pref_default_path_color_title)
                     val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
 
-                    setBacktrackEnabledState = {
+                    controller.setBacktrackEnabledState {
                         backtrackEnabled = it
                     }
-                    refreshNotificationState = {
-                        backtrackNotificationsSummary = notificationSummary()
+                    controller.setRefreshNotificationState {
+                        backtrackNotificationsSummary = controller.notificationSummary()
                     }
 
                     Surface(
@@ -139,9 +347,9 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     enabled = !isBacktrackBlocked,
                                     onCheckedChange = {
                                         backtrackEnabled = it
-                                        ToggleBacktrackCommand(this@PathsSettingsFragment) {
+                                        controller.toggleBacktrack {
                                             backtrackEnabled = false
-                                        }.execute()
+                                        }
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -162,7 +370,7 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     label = stringResource(R.string.pref_backtrack_history_days_title),
                                     summary = backtrackHistorySummary,
                                     onClick = {
-                                        pickBacktrackHistory {
+                                        controller.pickBacktrackHistory {
                                             backtrackHistorySummary =
                                                 formatService.formatDays(
                                                     if (it > 0) it else 1
@@ -174,19 +382,9 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("notifications") {
                                 SettingsActionRow(
-                                    label = getString(
-                                        R.string.notifications_channel,
-                                        getString(R.string.backtrack)
-                                    ),
+                                    label = controller.notificationsTitle(),
                                     summary = backtrackNotificationsSummary,
-                                    onClick = {
-                                        startActivity(
-                                            Intents.notificationSettings(
-                                                requireContext(),
-                                                BacktrackService.FOREGROUND_CHANNEL_ID
-                                            )
-                                        )
-                                    },
+                                    onClick = controller::openNotificationSettings,
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
                             }
@@ -211,7 +409,7 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     enabled = saveCellSignal,
                                     onCheckedChange = {
                                         showLastSignalBeacon = it
-                                        putBoolean(R.string.pref_show_last_signal_beacon, it)
+                                        controller.putBoolean(R.string.pref_show_last_signal_beacon, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -219,16 +417,16 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("path_style") {
                                 SettingsPickerRow(
-                                    label = stringResource(R.string.pref_default_path_style_title),
-                                    selected = optionLabel(pathStyleOptions, pathStyle),
+                                    label = pathStyleTitle,
+                                    selected = controller.optionLabel(pathStyleOptions, pathStyle),
                                     onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_default_path_style_title),
+                                        controller.pickOption(
+                                            pathStyleTitle,
                                             pathStyleOptions,
                                             pathStyle
                                         ) {
                                             pathStyle = it
-                                            putString(R.string.pref_backtrack_path_style, it)
+                                            controller.putString(R.string.pref_backtrack_path_style, it)
                                         }
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
@@ -257,7 +455,7 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     checked = simplifyPaths,
                                     onCheckedChange = {
                                         simplifyPaths = it
-                                        putBoolean(R.string.pref_auto_simplify_paths, it)
+                                        controller.putBoolean(R.string.pref_auto_simplify_paths, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -269,7 +467,7 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     checked = onlyNavigateToPoints,
                                     onCheckedChange = {
                                         onlyNavigateToPoints = it
-                                        putBoolean(R.string.pref_only_navigate_path_points, it)
+                                        controller.putBoolean(R.string.pref_only_navigate_path_points, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -282,7 +480,7 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                     checked = fastPathRendering,
                                     onCheckedChange = {
                                         fastPathRendering = it
-                                        putBoolean(R.string.pref_fast_path_rendering, it)
+                                        controller.putBoolean(R.string.pref_fast_path_rendering, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -317,16 +515,13 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             showSeconds = true,
                             onDurationPicked = {
                                 if (it != null) {
-                                    ChangeBacktrackFrequencyCommand(
-                                        requireContext(),
-                                        lifecycleScope
-                                    ) { frequency ->
+                                    controller.changeBacktrackFrequency(it) { frequency ->
                                         backtrackIntervalSummary =
                                             formatService.formatDuration(
                                                 frequency,
                                                 includeSeconds = true
                                             )
-                                    }.execute(it)
+                                    }
                                 }
                                 showBacktrackFrequencyPicker = false
                             },
@@ -335,136 +530,4 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             }
                         )
                     }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        refreshNotificationState?.invoke()
-        Tools.subscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED,
-            ::onBacktrackEnabled
-        )
-        Tools.subscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED,
-            ::onBacktrackDisabled
-        )
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Tools.unsubscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED,
-            ::onBacktrackEnabled
-        )
-        Tools.unsubscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED,
-            ::onBacktrackDisabled
-        )
-    }
-
-    override fun onDestroyView() {
-        setBacktrackEnabledState = null
-        refreshNotificationState = null
-        super.onDestroyView()
-    }
-
-    private fun pickOption(
-        title: String,
-        options: List<PathOption>,
-        selected: String,
-        onSelected: (String) -> Unit
-    ) {
-        Pickers.item(
-            requireContext(),
-            title,
-            options.map { it.label },
-            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
-        ) { index ->
-            if (index != null) {
-                onSelected(options[index].value)
-            }
-        }
-    }
-
-    private fun pickBacktrackHistory(onPicked: (Int) -> Unit) {
-        Pickers.number(
-            requireContext(),
-            getString(R.string.pref_backtrack_history_days_title),
-            null,
-            prefs.navigation.backtrackHistory.toDays().toInt(),
-            allowDecimals = false,
-            allowNegative = false,
-            hint = getString(R.string.days)
-        ) { days ->
-            if (days != null) {
-                val dayCount = days.toInt()
-                prefs.navigation.backtrackHistory = Duration.ofDays(days.toLong())
-                onPicked(dayCount)
-            }
-        }
-    }
-
-    private fun formatBacktrackInterval(): String {
-        return formatService.formatDuration(
-            prefs.backtrackRecordFrequency,
-            includeSeconds = true
-        )
-    }
-
-    private fun formatBacktrackHistory(): String {
-        return formatService.formatDays(
-            prefs.navigation.backtrackHistory.toDays().toInt()
-        )
-    }
-
-    private fun notificationSummary(): String {
-        val isBlocked = Notify.isChannelBlocked(
-            requireContext(),
-            BacktrackService.FOREGROUND_CHANNEL_ID
-        )
-        return if (isBlocked) getString(R.string.off) else getString(R.string.on)
-    }
-
-    private fun options(entriesId: Int, valuesId: Int): List<PathOption> {
-        val entries = resources.getStringArray(entriesId)
-        val values = resources.getStringArray(valuesId)
-        return values.mapIndexed { index, value ->
-            PathOption(value, entries.getOrElse(index) { value })
-        }
-    }
-
-    private fun optionLabel(options: List<PathOption>, selected: String): String {
-        return options.firstOrNull { it.value == selected }?.label ?: selected
-    }
-
-    private fun getBoolean(key: Int, default: Boolean): Boolean {
-        return cache.getBoolean(getString(key)) ?: default
-    }
-
-    private fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(getString(key)) ?: default
-    }
-
-    private fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(getString(key), value)
-    }
-
-    private fun putString(key: Int, value: String) {
-        cache.putString(getString(key), value)
-    }
-
-    private fun onBacktrackEnabled(data: Bundle): Boolean {
-        setBacktrackEnabledState?.invoke(true)
-        return true
-    }
-
-    private fun onBacktrackDisabled(data: Bundle): Boolean {
-        setBacktrackEnabledState?.invoke(false)
-        return true
-    }
-
-    private data class PathOption(
-        val value: String,
-        val label: String
-    )
 }
