@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,19 +14,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
-class PathPointsListFragment : TrailSenseBottomSheetComposeFragment() {
+class PathPointsSheet {
 
     private var points: List<PathPoint> = emptyList()
     private var updatePoints: ((List<PathPoint>) -> Unit)? = null
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private var sheet: BottomSheetDialog? = null
+    private var formatService: FormatService? = null
     var onCreateBeaconListener: (point: PathPoint) -> Unit = {}
     var onDeletePointListener: (point: PathPoint) -> Unit = {}
     var onNavigateToPointListener: (point: PathPoint) -> Unit = {}
@@ -36,39 +40,52 @@ class PathPointsListFragment : TrailSenseBottomSheetComposeFragment() {
         updatePoints?.invoke(points)
     }
 
-    @Composable
-    override fun FragmentContent() {
-        var displayedPoints by remember { mutableStateOf(points) }
-        DisposableEffect(Unit) {
-            updatePoints = { displayedPoints = it }
-            onDispose {
-                updatePoints = null
+    fun show(fragment: Fragment): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        val formatter = FormatService.getInstance(context)
+        formatService = formatter
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                var displayedPoints by remember { mutableStateOf(points) }
+                DisposableEffect(Unit) {
+                    updatePoints = { displayedPoints = it }
+                    onDispose {
+                        updatePoints = null
+                    }
+                }
+                PathPointsContent(
+                    points = displayedPoints,
+                    formatService = formatter,
+                    baseDistanceUnits = UserPreferences(context).baseDistanceUnits,
+                    onCreateBeacon = {
+                        onCreateBeaconListener(it)
+                        sheet?.dismiss()
+                    },
+                    onDelete = { onDeletePointListener(it) },
+                    onNavigate = {
+                        onNavigateToPointListener(it)
+                        sheet?.dismiss()
+                    },
+                    onView = {
+                        onViewPointListener(it)
+                        sheet?.dismiss()
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-        }
-        PathPointsContent(
-            points = displayedPoints,
-            formatService = formatService,
-            baseDistanceUnits = UserPreferences(requireContext()).baseDistanceUnits,
-            onCreateBeacon = {
-                onCreateBeaconListener(it)
-                dismiss()
-            },
-            onDelete = { onDeletePointListener(it) },
-            onNavigate = {
-                onNavigateToPointListener(it)
-                dismiss()
-            },
-            onView = {
-                onViewPointListener(it)
-                dismiss()
-            },
-            modifier = Modifier.fillMaxSize()
         )
-    }
-
-    override fun onDestroyView() {
-        updatePoints = null
-        super.onDestroyView()
+        dialog.setOnDismissListener {
+            updatePoints = null
+            sheet = null
+            formatService = null
+        }
+        dialog.show()
+        return dialog
     }
 
 }

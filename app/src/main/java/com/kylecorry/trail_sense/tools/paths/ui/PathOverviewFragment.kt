@@ -159,7 +159,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private val hikingService = HikingService()
     private val pathService by lazy { PathService.getInstance(requireContext()) }
 
-    private var pointSheet: PathPointsListFragment? = null
+    private var pointSheet: PathPointsSheet? = null
 
     private val chart: PathElevationChart
         get() = views.chart
@@ -709,10 +709,10 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         views.pathLegend.isVisible = path.style.point != PathPointColoringStyle.None
     }
 
-    // Waypoints
+        // Waypoints
     private fun viewPoints() {
         views.root.scrollTo(0, 0)
-        pointSheet = PathPointsListFragment()
+        pointSheet = PathPointsSheet()
         pointSheet?.show(this)
         pointSheet?.onCreateBeaconListener = { createBeacon(it) }
         pointSheet?.onDeletePointListener = { deleteWaypoint(it) }
