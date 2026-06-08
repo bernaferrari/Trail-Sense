@@ -27,13 +27,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
@@ -48,6 +45,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -60,9 +58,11 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 @Composable
-fun CalibrateBarometerToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CalibrateBarometerToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CalibrateBarometerController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -87,7 +87,7 @@ fun CalibrateBarometerToolScreen(fragment: TrailSenseComposeDestinationFragment)
     CalibrateBarometerContent(controller)
 }
 
-private class CalibrateBarometerController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CalibrateBarometerController(private val fragment: TrailSenseDestinationHost) {
 
     val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
@@ -117,8 +117,10 @@ private class CalibrateBarometerController(private val fragment: TrailSenseCompo
     private var setBarometerOffset: ((Float) -> Unit)? = null
 
     fun onViewCreated() {
-        fragment.observe(weatherSubsystem.weatherChanged) {
-            updateBarometerData()
+        fragment.lifecycleScope.launch {
+            weatherSubsystem.weatherChanged.flow().collect {
+                updateBarometerData()
+            }
         }
         updateBarometerData()
     }
