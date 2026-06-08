@@ -79,8 +79,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mapSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.map.ui.MapSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "MapSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MAP_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -551,8 +555,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolCliffHeightFragment
-            setClassName("com.kylecorry.trail_sense.tools.cliffheight.ui.ToolCliffHeightFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolCliffHeightFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLIFF_HEIGHT)
+                .build())
             graph.addDestination(this)
         }
 

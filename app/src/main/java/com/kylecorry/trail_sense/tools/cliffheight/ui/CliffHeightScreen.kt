@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
-import android.os.Bundle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -38,43 +39,16 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
-import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 
-class ToolCliffHeightFragment : TrailSenseComposeFragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        CustomUiUtils.disclaimer(
-            requireContext(),
-            getString(R.string.disclaimer_message_title),
-            getString(R.string.tool_cliff_height_disclaimer),
-            "cache_dialog_tool_cliff_height",
-            considerShownIfCancelled = true,
-            cancelText = null
-        )
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        CliffHeightScreen(
-            onOpenGuide = {
-                UserGuideUtils.showGuide(this@ToolCliffHeightFragment, R.raw.guide_tool_cliff_height)
-            }
-        )
-    }
-}
-
 @Composable
-private fun CliffHeightScreen(
+internal fun CliffHeightScreen(
     onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier
 ) {

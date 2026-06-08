@@ -57,6 +57,7 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.text.toFloatCompat
@@ -82,6 +83,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -89,20 +91,25 @@ import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
+import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
+import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
+import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import kotlinx.coroutines.launch
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
+
+    private var layerSheet: MapLayersBottomSheet? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -117,7 +124,20 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                 "com.kylecorry.trail_sense_comms",
                 "b76f32bf-6a72-4992-a741-0c9bf19ebd11"
             )
+            DESTINATION_CLIFF_HEIGHT -> CustomUiUtils.disclaimer(
+                requireContext(),
+                getString(R.string.disclaimer_message_title),
+                getString(R.string.tool_cliff_height_disclaimer),
+                "cache_dialog_tool_cliff_height",
+                considerShownIfCancelled = true,
+                cancelText = null
+            )
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        layerSheet?.dismiss()
     }
 
     @Composable
@@ -151,6 +171,69 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_DIAGNOSTICS -> Diagnostics()
             DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
             DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
+            DESTINATION_MAP_SETTINGS -> MapSettings()
+            DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
+                onOpenGuide = {
+                    UserGuideUtils.showGuide(this, R.raw.guide_tool_cliff_height)
+                }
+            )
+        }
+    }
+
+    @Composable
+    private fun MapSettings() {
+        val prefs = remember { UserPreferences(requireContext()).map }
+        var keepUnlocked by remember {
+            mutableStateOf(prefs.keepScreenUnlockedWhileOpen)
+        }
+        var saveMapState by remember { mutableStateOf(prefs.saveMapState) }
+        var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
+
+        SettingsList(title = stringResource(R.string.maps)) {
+            item("keep_unlocked") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
+                    checked = keepUnlocked,
+                    onCheckedChange = {
+                        keepUnlocked = it
+                        prefs.keepScreenUnlockedWhileOpen = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("save_state") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.remember_map_state),
+                    checked = saveMapState,
+                    onCheckedChange = {
+                        saveMapState = it
+                        prefs.saveMapState = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("high_detail") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_high_detail_mode_title),
+                    summary = stringResource(R.string.pref_high_detail_mode_summary),
+                    checked = highDetailMode,
+                    onCheckedChange = {
+                        highDetailMode = it
+                        prefs.highDetailMode = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("layers") {
+                SettingsActionRow(
+                    label = stringResource(R.string.layers),
+                    onClick = ::showMapLayerSheet,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
         }
     }
 
@@ -1181,6 +1264,12 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         return tools.firstOrNull { it.id == id }?.name ?: getString(R.string.none)
     }
 
+    private fun showMapLayerSheet() {
+        layerSheet?.dismiss()
+        layerSheet = MapLayersBottomSheet(MapToolRegistration.MAP_ID)
+        layerSheet?.show(this)
+    }
+
     private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSettingsState {
         return PluginSettingsState(
             connected = pluginSubsystem.getConnectedPlugins().sortedPlugins(),
@@ -1345,5 +1434,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_DIAGNOSTICS = "diagnostics"
         const val DESTINATION_TOOLS_SETTINGS = "tools_settings"
         const val DESTINATION_PLUGINS_SETTINGS = "plugins_settings"
+        const val DESTINATION_MAP_SETTINGS = "map_settings"
+        const val DESTINATION_CLIFF_HEIGHT = "cliff_height"
     }
 }
