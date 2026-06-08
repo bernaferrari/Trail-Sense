@@ -1440,8 +1440,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.augmentedRealityFragment
-            setClassName("com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityFragment")
-            label = "AugmentedRealityFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "AugmentedRealityScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY)
+                .build())
             addArgument("mode", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(1L)

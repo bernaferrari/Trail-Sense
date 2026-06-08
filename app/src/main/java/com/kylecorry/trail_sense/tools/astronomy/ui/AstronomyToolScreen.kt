@@ -95,7 +95,7 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.items.MoonListItemProducer
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.SolarEclipseListItemProducer
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.SunListItemProducer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMode
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityFragment
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.openAugmentedReality
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -228,7 +228,7 @@ private class AstronomyController(private val fragment: Fragment) {
             } else {
                 views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
-            AugmentedRealityFragment.open(
+            openAugmentedReality(
                 fragment.findNavController(),
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
