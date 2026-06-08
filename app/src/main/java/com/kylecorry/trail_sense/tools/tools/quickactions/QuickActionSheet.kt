@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import android.widget.LinearLayout
 import android.widget.ScrollView
 import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexWrap
@@ -42,7 +41,7 @@ class QuickActionSheet @JvmOverloads constructor(
 
     private val closeButton: View
     private val tabs: TabLayout
-    private val quickActionsContainer: LinearLayout
+    private val quickActionsContainer: ConstraintLayout
     private val recommendedQuickActions: FlexboxLayout
     private val quickActions: FlexboxLayout
     private val widgetsContainer: ScrollView
@@ -113,9 +112,8 @@ class QuickActionSheet @JvmOverloads constructor(
             }
         )
 
-        quickActionsContainer = LinearLayout(context).apply {
+        quickActionsContainer = ConstraintLayout(context).apply {
             id = R.id.quick_actions_container
-            orientation = LinearLayout.VERTICAL
         }
         addView(
             quickActionsContainer,
@@ -136,14 +134,20 @@ class QuickActionSheet @JvmOverloads constructor(
         }
         quickActionsContainer.addView(
             recommendedQuickActions,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
+            LayoutParams(
+                0,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+            }
         )
 
+        val quickActionDividerId = View.generateViewId()
         quickActionsContainer.addView(
             ComposeView(context).apply {
+                id = quickActionDividerId
                 setContent {
                     TrailSenseTheme {
                         Box(
@@ -155,10 +159,13 @@ class QuickActionSheet @JvmOverloads constructor(
                     }
                 }
             },
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
+            LayoutParams(
+                0,
                 Resources.dp(context, 1f).toInt()
             ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToBottom = R.id.recommended_quick_actions
                 topMargin = Resources.dp(context, 8f).toInt()
                 bottomMargin = Resources.dp(context, 8f).toInt()
             }
@@ -172,10 +179,15 @@ class QuickActionSheet @JvmOverloads constructor(
         }
         quickActionsContainer.addView(
             quickActions,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
+            LayoutParams(
+                0,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToBottom = quickActionDividerId
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
         )
 
         widgetsContainer = object : ScrollView(context) {
