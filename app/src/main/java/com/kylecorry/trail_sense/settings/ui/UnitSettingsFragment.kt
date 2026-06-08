@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,10 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.units.PressureUnits
@@ -30,25 +23,18 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.MapSite
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class UnitSettingsFragment : Fragment() {
+class UnitSettingsFragment : TrailSenseComposeFragment() {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
     private val userPrefs by lazy { UserPreferences(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
+    @Composable
+    override fun FragmentContent() {
                     val hasBarometer = remember { Sensors.hasBarometer(requireContext()) }
                     val distanceOptions = remember {
                         options(R.array.distance_unit_entries, R.array.distance_unit_values)
@@ -210,9 +196,6 @@ class UnitSettingsFragment : Fragment() {
                             }
                         }
                     }
-                }
-            }
-        }
     }
 
     @Composable
