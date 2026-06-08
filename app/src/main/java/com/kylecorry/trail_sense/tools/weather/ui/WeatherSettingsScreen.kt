@@ -41,6 +41,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.io.IOFactory
+import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -580,7 +581,10 @@ private class WeatherSettingsController(private val fragment: Fragment) {
         fragment.inBackground {
             if (enabled && prefs.shouldMonitorWeather) {
                 weatherMonitorService.enable()
-                RequestRemoveBatteryRestrictionCommand(fragment).execute()
+                RequestRemoveBatteryRestrictionCommand(
+                    fragment.requireContext(),
+                    RemoveBatteryRestrictionsAlerter(fragment)
+                ).execute()
             } else {
                 weatherMonitorService.disable()
             }

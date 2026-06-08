@@ -14,6 +14,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
+import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
+import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
@@ -99,6 +101,10 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
             if (shouldRequestPermissions) {
                 fragment.requestScheduleExactAlarms {
                     start(fragment.requireContext())
+                    RequestBackgroundLocationCommand(
+                        fragment.requireContext(),
+                        BackgroundLocationAlerter(fragment)
+                    ).execute()
                 }
             } else {
                 start(fragment.requireContext())

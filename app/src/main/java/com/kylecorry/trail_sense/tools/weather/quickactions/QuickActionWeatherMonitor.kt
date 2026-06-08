@@ -8,6 +8,7 @@ import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
@@ -41,7 +42,10 @@ class QuickActionWeatherMonitor(
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
                     service?.enable()
-                    RequestRemoveBatteryRestrictionCommand(fragment).execute()
+                    RequestRemoveBatteryRestrictionCommand(
+                        fragment.requireContext(),
+                        RemoveBatteryRestrictionsAlerter(fragment)
+                    ).execute()
                 }
 
                 else -> fragment.toast(context.getString(R.string.weather_monitoring_disabled))

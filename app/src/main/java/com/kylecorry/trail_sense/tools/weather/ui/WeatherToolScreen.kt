@@ -64,6 +64,7 @@ import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
+import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
@@ -261,7 +262,10 @@ private class WeatherController(
                 FeatureState.On -> weatherMonitorService.disable()
                 FeatureState.Off -> {
                     weatherMonitorService.enable()
-                    RequestRemoveBatteryRestrictionCommand(fragment).execute()
+                    RequestRemoveBatteryRestrictionCommand(
+                        fragment.requireContext(),
+                        RemoveBatteryRestrictionsAlerter(fragment)
+                    ).execute()
                 }
 
                 FeatureState.Unavailable -> fragment.toast(fragment.getString(R.string.weather_monitoring_disabled))

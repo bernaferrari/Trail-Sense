@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
@@ -72,7 +73,10 @@ class SunsetAlarmReceiver : BroadcastReceiver() {
                     runBlocking {
                         service?.restart()
                     }
-                    RequestBackgroundLocationCommand(fragment).execute()
+                    RequestBackgroundLocationCommand(
+                        fragment.requireContext(),
+                        BackgroundLocationAlerter(fragment)
+                    ).execute()
                 }
             }
         }
