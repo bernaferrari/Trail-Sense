@@ -3,15 +3,15 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
+import androidx.compose.ui.unit.dp
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.luna.concurrency.onIO
@@ -598,7 +598,6 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 }
 
 private data class ViewPhotoMapViews(
-    val root: View,
     val map: MapView,
     val mapAttribution: MapAttributionState,
     val zoomInBtn: PhotoMapIconButton,
@@ -614,34 +613,48 @@ private fun ViewPhotoMapHost(
     views: ViewPhotoMapViews,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
+    Box(modifier = modifier) {
+        views.map.Content(Modifier.fillMaxSize())
+        if (views.mapAttribution.isVisible) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 120.dp)
+            ) {
+                views.mapAttribution.Content()
+            }
+        }
+        views.zoomInBtn.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 232.dp)
+        )
+        views.zoomOutBtn.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 176.dp)
+        )
+        views.lockBtn.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 120.dp)
+        )
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            views.navigationSheet.Content(Modifier.fillMaxWidth())
+        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            views.distanceSheet.Content(Modifier.fillMaxWidth())
+        }
+    }
 }
 
 private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
-    val margin = Resources.dp(context, 16f).toInt()
-    val bottomReserve = Resources.dp(context, 120f).toInt()
-    val fabStep = Resources.dp(context, 56f).toInt()
-
-    val root = ConstraintLayout(context)
-
     val map = MapView(context).apply {
         id = R.id.map
         setBackgroundColor(Resources.color(context, R.color.colorSecondary))
     }
 
     val attribution = MapAttributionState()
-    val attributionView = ComposeView(context).apply {
-        id = R.id.map_attribution
-        setContent {
-            TrailSenseTheme {
-                attribution.Content()
-            }
-        }
-    }
-
     val lockBtn = PhotoMapIconButton(context, R.drawable.satellite).apply {
         id = R.id.lock_btn
         alpha = 0.86f
@@ -670,98 +683,8 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
 
     val distanceSheet = MapDistanceSheetState(context)
-    val distanceSheetView = ComposeView(context).apply {
-        id = R.id.distance_sheet
-        visibility = View.GONE
-        distanceSheet.view = this
-        setContent {
-            TrailSenseTheme {
-                distanceSheet.Content()
-            }
-        }
-    }
-
-    root.addView(
-        map.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    root.addView(
-        attributionView,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomMargin = bottomReserve
-        }
-    )
-    root.addView(
-        zoomInBtn.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = margin
-            bottomMargin = bottomReserve + fabStep * 2
-        }
-    )
-    root.addView(
-        zoomOutBtn.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = margin
-            bottomMargin = bottomReserve + fabStep
-        }
-    )
-    root.addView(
-        lockBtn.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = margin
-            bottomMargin = bottomReserve
-        }
-    )
-    root.addView(
-        navigationSheet.view,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    root.addView(
-        distanceSheetView,
-        ConstraintLayout.LayoutParams(
-            0,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
     return ViewPhotoMapViews(
-        root = root,
         map = map,
         mapAttribution = attribution,
         zoomInBtn = zoomInBtn,

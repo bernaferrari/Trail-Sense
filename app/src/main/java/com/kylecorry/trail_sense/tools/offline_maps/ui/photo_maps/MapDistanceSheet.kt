@@ -40,6 +40,7 @@ class MapDistanceSheetState(context: Context) {
     var undoListener: (() -> Unit)? = null
     var createPathListener: (() -> Unit)? = null
 
+    private var isVisible by mutableStateOf(false)
     private var distanceText by mutableStateOf("")
 
     fun setDistance(distance: Distance) {
@@ -48,20 +49,26 @@ class MapDistanceSheetState(context: Context) {
     }
 
     fun show() {
+        isVisible = true
         view?.isVisible = true
     }
 
     fun hide() {
+        isVisible = false
         view?.isVisible = false
     }
 
     @Composable
-    fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!isVisible) {
+            return
+        }
         MapDistanceSheetContent(
             distance = distanceText,
             onUndo = { undoListener?.invoke() },
             onCancel = { cancelListener?.invoke() },
-            onCreatePath = { createPathListener?.invoke() }
+            onCreatePath = { createPathListener?.invoke() },
+            modifier = modifier
         )
     }
 }
@@ -71,10 +78,11 @@ private fun MapDistanceSheetContent(
     distance: String,
     onUndo: () -> Unit,
     onCancel: () -> Unit,
-    onCreatePath: () -> Unit
+    onCreatePath: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(

@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.view.View
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,6 +29,9 @@ class PhotoMapIconButton(
 
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
+    private var buttonVisible by mutableStateOf(true)
+    private var alphaState by mutableStateOf(1f)
+    private var clickListener: View.OnClickListener? = null
 
     val view = ComposeView(context).apply {
         setContent {
@@ -43,8 +48,9 @@ class PhotoMapIconButton(
         }
 
     var alpha: Float
-        get() = view.alpha
+        get() = alphaState
         set(value) {
+            alphaState = value
             view.alpha = value
         }
 
@@ -61,12 +67,14 @@ class PhotoMapIconButton(
         }
 
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = buttonVisible
         set(value) {
+            buttonVisible = value
             view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     fun setOnClickListener(listener: View.OnClickListener?) {
+        clickListener = listener
         view.setOnClickListener(listener)
     }
 
@@ -79,7 +87,10 @@ class PhotoMapIconButton(
     }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!buttonVisible) {
+            return
+        }
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -92,7 +103,12 @@ class PhotoMapIconButton(
         }
 
         Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = modifier
+                .size(40.dp)
+                .alpha(alphaState)
+                .clickable(enabled = isClickable) {
+                    clickListener?.onClick(view)
+                },
             shape = CircleShape,
             color = background,
             shadowElevation = 6.dp

@@ -30,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -75,6 +74,7 @@ class NavigationSheetView(private val context: Context) {
     private var isNavigating: Boolean = false
     private var sensorValues: NavigationSensorValues? = null
     private var useTrueNorthOverride: Boolean? = null
+    private var sheetVisible by mutableStateOf(true)
 
     // VIEWS
     private val toolbar: NavigationSheetToolbarState
@@ -112,14 +112,16 @@ class NavigationSheetView(private val context: Context) {
         }
 
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = sheetVisible
         set(value) {
+            sheetVisible = value
             view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     var visibility: Int
         get() = view.visibility
         set(value) {
+            sheetVisible = value == View.VISIBLE
             view.visibility = value
         }
 
@@ -128,9 +130,12 @@ class NavigationSheetView(private val context: Context) {
     }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!sheetVisible) {
+            return
+        }
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
