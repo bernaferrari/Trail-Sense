@@ -47,7 +47,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.system.CurrentApp
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.pickers.Pickers
@@ -55,6 +58,7 @@ import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
 import com.kylecorry.trail_sense.receivers.StartOnBootController
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
@@ -70,6 +74,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -81,6 +86,7 @@ import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
 
@@ -126,7 +132,51 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                 resource = requireArguments().getInt("guide_contents")
             )
             DESTINATION_EXPERIMENTATION -> ExperimentationContent()
+            DESTINATION_ERROR_HANDLER -> ErrorHandler()
         }
+    }
+
+    @Composable
+    private fun ErrorHandler() {
+        val toolId = requireArguments().getLong("tool_id", 0L)
+        val errorDetails = requireArguments().getString("error").orEmpty()
+        val navController = findNavController()
+        ErrorHandlerScreen(
+            toolId = toolId,
+            onEmail = {
+                startActivity(
+                    Intents.email(
+                        getString(R.string.email),
+                        "Error in ${getString(R.string.app_name)}",
+                        errorDetails
+                    )
+                )
+            },
+            onCopyError = {
+                Clipboard.copy(
+                    requireContext(),
+                    errorDetails,
+                    getString(R.string.copied_to_clipboard_toast)
+                )
+            },
+            onViewDetails = {
+                Alerts.dialog(
+                    requireContext(),
+                    getString(R.string.error_occurred),
+                    errorDetails,
+                    cancelText = null
+                )
+            },
+            onReopenTool = {
+                navController.openTool(toolId)
+            },
+            onRestartApp = {
+                CurrentApp.restart(requireContext())
+            },
+            onOpenSettings = {
+                navController.openTool(Tools.SETTINGS)
+            }
+        )
     }
 
     @Composable
@@ -978,5 +1028,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_POWER_SETTINGS = "power_settings"
         const val DESTINATION_GUIDE = "guide"
         const val DESTINATION_EXPERIMENTATION = "experimentation"
+        const val DESTINATION_ERROR_HANDLER = "error_handler"
     }
 }

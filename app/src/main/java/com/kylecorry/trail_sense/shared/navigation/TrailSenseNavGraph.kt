@@ -1242,8 +1242,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolErrorHandler
-            setClassName("com.kylecorry.trail_sense.main.errors.ErrorHandlerFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ErrorHandlerFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ERROR_HANDLER)
+                .build())
             addArgument("tool_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .build())
