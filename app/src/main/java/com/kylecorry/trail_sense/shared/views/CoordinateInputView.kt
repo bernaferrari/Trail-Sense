@@ -10,12 +10,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -289,31 +290,44 @@ private fun createCoordinateIconButton(
     icon: Int,
     showBackground: Boolean,
     state: CoordinateInputButtonState
-): ComposeView {
-    return ComposeView(context).apply {
+): CoordinateInputButtonView {
+    return CoordinateInputButtonView(context, id, icon, showBackground, state)
+}
+
+private class CoordinateInputButtonView(
+    context: Context,
+    id: Int,
+    private val icon: Int,
+    showBackground: Boolean,
+    private val state: CoordinateInputButtonState
+) : AbstractComposeView(context) {
+
+    init {
         this.id = id
         if (showBackground) {
             background = Resources.drawable(context, R.drawable.rounded_rectangle)
         }
-        setContent {
-            TrailSenseTheme {
-                Box(
-                    modifier = Modifier.size(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(icon),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Box(
+                modifier = Modifier.size(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
