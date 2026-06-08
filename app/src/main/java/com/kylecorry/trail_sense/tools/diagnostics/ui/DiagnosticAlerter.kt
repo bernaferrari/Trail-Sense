@@ -1,18 +1,20 @@
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import android.content.Context
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
-import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticSeverity
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 
-class DiagnosticAlerter(private val fragment: Fragment) {
+class DiagnosticAlerter(private val context: Context) {
 
-    private val context = fragment.requireContext()
-
-    fun alert(item: DiagnosticItem) {
+    fun alert(
+        item: DiagnosticItem,
+        onAction: (ToolDiagnosticAction) -> Unit
+    ) {
         val affectedTools = item.tools.sortedBy { it.name }.joinToString("\n") { "- ${it.name}" }
 
         val message = context.getString(
@@ -31,7 +33,7 @@ class DiagnosticAlerter(private val fragment: Fragment) {
             okText = item.result.action?.name ?: context.getString(android.R.string.ok)
         ) { cancelled ->
             if (!cancelled) {
-                item.result.action?.action?.invoke(fragment)
+                item.result.action?.let(onAction)
             }
         }
     }

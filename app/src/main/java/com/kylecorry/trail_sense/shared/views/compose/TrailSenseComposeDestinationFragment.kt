@@ -1824,7 +1824,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                 findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
             },
             onShowDiagnostic = {
-                DiagnosticAlerter(this).alert(it)
+                DiagnosticAlerter(requireContext()).alert(it) { action ->
+                    action.action(this)
+                }
             }
         )
     }
