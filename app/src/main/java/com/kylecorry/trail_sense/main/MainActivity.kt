@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.ColorFilter
 import android.graphics.Paint
@@ -13,15 +12,12 @@ import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.Menu
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commitNow
@@ -39,7 +35,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.material.navigation.NavigationBarView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
@@ -58,7 +53,6 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.extensions.findNavController
-import com.kylecorry.trail_sense.shared.navigation.NavigationUtils.setupWithNavController
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
@@ -147,7 +141,7 @@ class MainActivity : AndromedaActivity() {
         // Handle black theme
         if (isBlackTheme) {
             window.decorView.rootView.setBackgroundColor(Color.BLACK)
-            views.bottomNavigation.setBackgroundColor(Color.BLACK)
+            views.bottomNavigation.useBlackTheme = true
         }
 
         if (userPrefs.theme == UserPreferences.Theme.Night) {
@@ -190,8 +184,7 @@ class MainActivity : AndromedaActivity() {
         val selectedTool = tools.firstOrNull { it.isOpen(currentNavId ?: 0) }
         // If the tool appears in the bottom nav, select it. Otherwise, select the Tools tab
         val idToSelect = if (selectedTool != null) {
-            val isToolPinnedToNav =
-                views.bottomNavigation.menu.findItem(selectedTool.navAction) != null
+            val isToolPinnedToNav = views.bottomNavigation.contains(selectedTool.navAction)
             if (isToolPinnedToNav) {
                 selectedTool.navAction
             } else {
@@ -201,7 +194,7 @@ class MainActivity : AndromedaActivity() {
             R.id.action_experimental_tools
         }
 
-        views.bottomNavigation.menu.findItem(idToSelect)?.isChecked = true
+        views.bottomNavigation.selectedItemId = idToSelect
 
         lastKnownFragment = getFragment()?.javaClass?.simpleName
     }
@@ -217,20 +210,10 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun setBottomNavLabelsVisibility() {
-        views.bottomNavigation.apply {
-            if (userPrefs.useCompactMode) {
-                layoutParams.height = Resources.dp(context, 55f).toInt() + bottomInsets
-                labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_UNLABELED
-            } else {
-                layoutParams.height = LayoutParams.WRAP_CONTENT
-                if (userPrefs.useShowAllBottomNavigationLabels) {
-                    labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
-                } else {
-                    labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_AUTO
-                }
-
-            }
-        }
+        views.bottomNavigation.useCompactMode = userPrefs.useCompactMode
+        views.bottomNavigation.showAllLabels = userPrefs.useShowAllBottomNavigationLabels
+        views.bottomNavigation.bottomInsetDp =
+            (bottomInsets / resources.displayMetrics.density).toInt()
     }
 
     private fun bindLayoutInsets() {
@@ -336,8 +319,13 @@ class MainActivity : AndromedaActivity() {
         ).execute()
 
         if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
-            val item = views.bottomNavigation.menu.findItem(R.id.action_weather)
-            item?.isVisible = false
+            views.bottomNavigation.items.replaceAll {
+                if (it.id == R.id.action_weather) {
+                    it.copy(visible = false)
+                } else {
+                    it
+                }
+            }
         }
 
         handleIntentAction(intent)
@@ -406,7 +394,7 @@ class MainActivity : AndromedaActivity() {
         super.onRestoreInstanceState(savedInstanceState)
         views.bottomNavigation.selectedItemId = savedInstanceState.getInt(
             "page",
-            views.bottomNavigation.menu[0].itemId
+            views.bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         )
         if (savedInstanceState.containsKey("navigation")) {
             tryOrNothing {
@@ -510,53 +498,63 @@ class MainActivity : AndromedaActivity() {
         val bottomNavTools = userPrefs.bottomNavigationTools
 
         val tools = Tools.getTools(this)
-        views.bottomNavigation.menu.clear()
+        views.bottomNavigation.items.clear()
         bottomNavTools.forEachIndexed { index, toolId ->
             val toolItem = tools.firstOrNull { it.id == toolId } ?: return@forEachIndexed
-            views.bottomNavigation.menu.add(
-                Menu.NONE,
-                toolItem.navAction,
-                index,
-                toolItem.name
-            ).setIcon(toolItem.icon)
+            views.bottomNavigation.items.add(
+                MainBottomNavigationItem(
+                    id = toolItem.navAction,
+                    title = toolItem.name,
+                    icon = toolItem.icon
+                )
+            )
         }
 
-        views.bottomNavigation.menu.add(
-            Menu.NONE,
-            R.id.action_experimental_tools,
-            bottomNavTools.size,
-            getString(R.string.tools)
-        ).setIcon(R.drawable.apps)
-            .setOnMenuItemClickListener {
-                if (navController?.currentDestination?.id == R.id.action_experimental_tools && !views.quickActionsSheet.isOpen()) {
-                    val toolsFragment = getFragment() as? ToolSearchFocusable
-                    if (toolsFragment?.focusSearch() == true) {
-                        return@setOnMenuItemClickListener true
-                    }
-                }
-                false
-            }
-
-        views.bottomNavigation.setItemLongClickListener {
-            views.quickActionsSheet.show(this)
-            true
-        }
+        views.bottomNavigation.items.add(
+            MainBottomNavigationItem(
+                id = R.id.action_experimental_tools,
+                title = getString(R.string.tools),
+                icon = R.drawable.apps
+            )
+        )
 
         // Open the left most item by default (and clear the back stack)
         val initialItem = if (SafeMode.isEnabled()) {
             tools.first { it.id == Tools.SETTINGS }.navAction
         } else {
-            views.bottomNavigation.menu[0].itemId
+            views.bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         }
 
         // Only initialize the nav graph once
         effect("navGraph") {
             initializeNavGraph(initialItem)
         }
-        // Bind to navigation
-        navController?.let { views.bottomNavigation.setupWithNavController(it, false) }
-
         updateBottomNavSelection()
+    }
+
+    fun onBottomNavigationItemSelected(itemId: Int) {
+        if (itemId == R.id.action_experimental_tools &&
+            navController?.currentDestination?.id == R.id.action_experimental_tools &&
+            !views.quickActionsSheet.isOpen()
+        ) {
+            val toolsFragment = getFragment() as? ToolSearchFocusable
+            if (toolsFragment?.focusSearch() == true) {
+                return
+            }
+        }
+
+        val nav = navController ?: return
+        if (nav.currentDestination?.id != itemId) {
+            nav.navigate(
+                itemId,
+                null,
+                NavOptions.Builder()
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(nav.graph.startDestinationId, false)
+                    .build()
+            )
+        }
+        views.bottomNavigation.selectedItemId = itemId
     }
 
     private fun initializeNavGraph(startDestination: Int) {
@@ -589,15 +587,11 @@ class MainActivity : AndromedaActivity() {
     }
 
     fun setBottomNavigationEnabled(isEnabled: Boolean) {
-        if (isEnabled) {
-            views.bottomNavigation.enable()
-        } else {
-            views.bottomNavigation.disable()
-        }
+        views.bottomNavigation.isEnabled = isEnabled
     }
 
     fun getBottomNavigationView(): View {
-        return views.bottomNavigation
+        return views.bottomNavigationView
     }
 
     fun addOverlayView(view: View) {
@@ -663,10 +657,12 @@ private data class MainActivityViews(
     val errorBanner: ErrorBannerState,
     val fragmentHolder: FragmentContainerView,
     val quickActionsSheet: QuickActionSheetState,
-    val bottomNavigation: CustomBottomNavigationView
+    val bottomNavigation: MainBottomNavigationState,
+    val bottomNavigationView: View
 )
 
-private fun createMainActivityViews(context: Context): MainActivityViews {
+private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
+    val context = activity
     val root = CoordinatorLayout(context).apply {
         id = R.id.coordinator
         layoutParams = ViewGroup.MarginLayoutParams(
@@ -707,18 +703,24 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         }
     )
 
-    val bottomNavigation = CustomBottomNavigationView(context, null).apply {
-        id = R.id.bottom_navigation
-        itemIconTintList = AppCompatResources.getColorStateList(context, R.drawable.selector)
-        itemTextColor = ColorStateList.valueOf(
-            Resources.getAndroidColorAttr(
-                context,
-                com.google.android.material.R.attr.colorOnSurface
-            )
+    val bottomNavigation = MainBottomNavigationState()
+    val quickActionsSheet = QuickActionSheetState(context)
+    val bottomNavigationView = TrailSenseComposeRootView(
+        context,
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        MainBottomNavigation(
+            state = bottomNavigation,
+            onItemClick = activity::onBottomNavigationItemSelected,
+            onItemLongClick = {
+                quickActionsSheet.show(activity)
+            }
         )
+    }.apply {
+        id = R.id.bottom_navigation
     }
     colorFilter.addView(
-        bottomNavigation,
+        bottomNavigationView,
         LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -745,7 +747,6 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         }
     )
 
-    val quickActionsSheet = QuickActionSheetState(context)
     val quickActionsSheetView = TrailSenseComposeRootView(
         context,
         ViewCompositionStrategy.DisposeOnDetachedFromWindow
@@ -772,7 +773,8 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         errorBanner,
         fragmentHolder,
         quickActionsSheet,
-        bottomNavigation
+        bottomNavigation,
+        bottomNavigationView
     )
 }
 
