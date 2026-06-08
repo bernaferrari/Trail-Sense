@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.light.ui
 
 import android.graphics.Paint
@@ -43,21 +45,12 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
 
-class ToolLightFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        LightMeterScreen()
-    }
-}
-
 @Composable
-private fun LightMeterScreen(
+fun LightMeterScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

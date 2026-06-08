@@ -791,8 +791,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolLightFragment
-            setClassName("com.kylecorry.trail_sense.tools.light.ui.ToolLightFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ToolLightFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LIGHT_METER)
+                .build())
             graph.addDestination(this)
         }
 

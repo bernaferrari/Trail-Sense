@@ -128,6 +128,7 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
+import com.kylecorry.trail_sense.tools.light.ui.LightMeterScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
@@ -234,6 +235,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             )
             DESTINATION_UNIT_SETTINGS -> UnitSettings()
             DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
+            DESTINATION_LIGHT_METER -> LightMeterScreen()
         }
     }
 
@@ -2676,5 +2678,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_PLUGIN_DETAILS = "plugin_details"
         const val DESTINATION_UNIT_SETTINGS = "unit_settings"
         const val DESTINATION_AUGMENTED_REALITY_SETTINGS = "augmented_reality_settings"
+        const val DESTINATION_LIGHT_METER = "light_meter"
     }
 }
