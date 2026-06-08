@@ -1,20 +1,20 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
@@ -42,7 +43,6 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
@@ -654,11 +654,12 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
 
         views.guidancePanel.isVisible = true
         views.arGuideName.text = state.name
-        views.arGuideIcon.setImageResource(state.icon)
-        views.arGuideIcon.rotation = state.iconRotation
-        views.arGuideIcon.backgroundTintList =
-            ColorStateList.valueOf(state.iconBackgroundTint ?: Color.TRANSPARENT)
-        Colors.setImageColor(views.arGuideIcon, state.iconTint)
+        views.arGuideIcon.setState(
+            icon = state.icon,
+            iconRotation = state.iconRotation,
+            iconTint = state.iconTint ?: Color.WHITE,
+            backgroundTint = state.iconBackgroundTint ?: Color.TRANSPARENT
+        )
     }
 
     private fun currentVisibleLayers(): List<ARLayer> {
@@ -777,7 +778,7 @@ private data class AugmentedRealityViews(
     val confirmCalibrationButton: ArTextButton,
     val cancelCalibrationButton: ArIconButton,
     val guidancePanel: ConstraintLayout,
-    val arGuideIcon: ImageView,
+    val arGuideIcon: ArGuideIconView,
     val arGuideName: TextView,
     val arGuideCancel: ArIconButton,
     val timeSheet: DateTimeSliderSheetState
@@ -996,10 +997,8 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val guideIcon = ImageView(context).apply {
+    val guideIcon = ArGuideIconView(context).apply {
         id = R.id.ar_guide_icon
-        setBackgroundResource(R.drawable.circle)
-        setPadding(5.dp(context), 5.dp(context), 5.dp(context), 5.dp(context))
     }
     guidancePanel.addView(
         guideIcon,
@@ -1145,6 +1144,49 @@ private class ArTextButton(
         TrailSenseTheme {
             Button(onClick = { performClick() }) {
                 Text(text = label)
+            }
+        }
+    }
+}
+
+private class ArGuideIconView(context: Context) : AbstractComposeView(context) {
+    private var icon by mutableIntStateOf(R.drawable.ic_location)
+    private var iconRotation by mutableStateOf(0f)
+    private var iconTint by mutableIntStateOf(Color.WHITE)
+    private var backgroundTint by mutableIntStateOf(Color.TRANSPARENT)
+
+    fun setState(
+        icon: Int,
+        iconRotation: Float,
+        iconTint: Int,
+        backgroundTint: Int
+    ) {
+        this.icon = icon
+        this.iconRotation = iconRotation
+        this.iconTint = iconTint
+        this.backgroundTint = backgroundTint
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Surface(
+                color = ComposeColor(backgroundTint),
+                contentColor = ComposeColor(iconTint),
+                shape = CircleShape
+            ) {
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .rotate(iconRotation)
+                    )
+                }
             }
         }
     }
