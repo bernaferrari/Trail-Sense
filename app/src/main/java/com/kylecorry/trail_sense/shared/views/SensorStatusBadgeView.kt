@@ -1,32 +1,51 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
-import android.widget.LinearLayout
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
-import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
-import com.kylecorry.andromeda.views.badge.Badge
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.diagnostics.status.GpsStatusBadgeProvider
+import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 
 class SensorStatusBadgeView(
     context: Context,
     attrs: AttributeSet? = null
-) : LinearLayout(context, attrs) {
+) : AbstractComposeView(context, attrs) {
 
-    private val gpsBadge: Badge
-    private val compassBadge: Badge
+    private var gpsBadge by mutableStateOf<StatusBadge?>(null)
+    private var compassBadge by mutableStateOf<StatusBadge?>(null)
+    private var showGpsBadge by mutableStateOf(false)
+    private var showCompassBadge by mutableStateOf(SensorService(context).hasCompass())
 
     private var gpsStatusBadgeProvider: GpsStatusBadgeProvider? = null
     private var compassStatusBadgeProvider: SensorStatusBadgeProvider? = null
@@ -49,41 +68,6 @@ class SensorStatusBadgeView(
     }
 
     init {
-        orientation = VERTICAL
-        gravity = android.view.Gravity.START
-
-        gpsBadge = Badge(context, null).apply {
-            id = R.id.gps_status
-            setForegroundTint(Color.BLACK)
-            setImageResource(R.drawable.satellite)
-        }
-        addView(
-            gpsBadge,
-            LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = Resources.dp(context, 8f).toInt()
-            }
-        )
-
-        compassBadge = Badge(context, null).apply {
-            id = R.id.compass_status
-            setForegroundTint(Color.BLACK)
-            setImageResource(R.drawable.ic_compass_icon)
-        }
-        addView(
-            compassBadge,
-            LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        if (!SensorService(context).hasCompass()) {
-            compassBadge.visibility = GONE
-        }
-
         doOnAttach {
             findViewTreeLifecycleOwner()?.lifecycle?.addObserver(lifecycleListener)
         }
@@ -94,8 +78,28 @@ class SensorStatusBadgeView(
         }
     }
 
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Column(
+                modifier = Modifier.clickable { performClick() },
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                val gps = gpsBadge
+                val compass = compassBadge
+                if (showGpsBadge && gps != null) {
+                    SensorBadgeContent(gps, modifier = Modifier)
+                }
+                if (showCompassBadge && compass != null) {
+                    SensorBadgeContent(compass, modifier = Modifier)
+                }
+            }
+        }
+    }
+
     fun setSensors(gps: ISatelliteGPS?, compass: ISensor) {
-        gpsBadge.isVisible = gps != null
+        showGpsBadge = gps != null
         this.gps = gps
         this.compassSensor = compass
         gpsStatusBadgeProvider = gps?.let { GpsStatusBadgeProvider(it, context) }
@@ -121,13 +125,36 @@ class SensorStatusBadgeView(
     }
 
     private fun updateBadges() {
-        gpsStatusBadgeProvider?.getBadge()?.let {
-            gpsBadge.setStatusText(it.name)
-            gpsBadge.setBackgroundTint(it.color)
-        }
-        compassStatusBadgeProvider?.getBadge()?.let {
-            compassBadge.setStatusText(it.name)
-            compassBadge.setBackgroundTint(it.color)
+        gpsBadge = gpsStatusBadgeProvider?.getBadge()
+        compassBadge = compassStatusBadgeProvider?.getBadge()
+    }
+}
+
+@Composable
+private fun SensorBadgeContent(
+    badge: StatusBadge,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = Color(badge.color),
+        contentColor = Color.Black,
+        shape = RoundedCornerShape(50)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                painter = painterResource(badge.icon),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = badge.name,
+                style = MaterialTheme.typography.labelMedium
+            )
         }
     }
 }
