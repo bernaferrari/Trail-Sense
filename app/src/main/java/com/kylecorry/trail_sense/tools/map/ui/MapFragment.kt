@@ -64,7 +64,7 @@ import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView
-import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheet
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheetState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import java.time.Instant
@@ -655,7 +655,7 @@ private data class MapViews(
     val lockButton: FloatingActionButton,
     val sensorStatusBadges: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView,
-    val distanceSheet: MapDistanceSheet,
+    val distanceSheet: MapDistanceSheetState,
     val timeSheet: DateTimeSliderSheetState
 )
 
@@ -809,12 +809,19 @@ private fun createMapViews(context: Context): MapViews {
         }
     )
 
-    val distanceSheet = MapDistanceSheet(context, null).apply {
+    val distanceSheet = MapDistanceSheetState(context)
+    val distanceSheetView = ComposeView(context).apply {
         id = R.id.distance_sheet
         visibility = View.GONE
+        distanceSheet.view = this
+        setContent {
+            TrailSenseTheme {
+                distanceSheet.Content()
+            }
+        }
     }
     root.addView(
-        distanceSheet,
+        distanceSheetView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

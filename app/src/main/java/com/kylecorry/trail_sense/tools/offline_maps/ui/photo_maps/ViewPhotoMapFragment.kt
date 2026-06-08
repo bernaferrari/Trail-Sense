@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
@@ -610,7 +611,7 @@ private data class ViewPhotoMapViews(
     val zoomOutBtn: FloatingActionButton,
     val lockBtn: FloatingActionButton,
     val navigationSheet: com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView,
-    val distanceSheet: MapDistanceSheet
+    val distanceSheet: MapDistanceSheetState
 )
 
 @Composable
@@ -679,9 +680,16 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
             visibility = View.GONE
         }
 
-    val distanceSheet = MapDistanceSheet(context, null).apply {
+    val distanceSheet = MapDistanceSheetState(context)
+    val distanceSheetView = ComposeView(context).apply {
         id = R.id.distance_sheet
         visibility = View.GONE
+        distanceSheet.view = this
+        setContent {
+            TrailSenseTheme {
+                distanceSheet.Content()
+            }
+        }
     }
 
     root.addView(
@@ -743,7 +751,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         )
     )
     root.addView(
-        distanceSheet,
+        distanceSheetView,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,

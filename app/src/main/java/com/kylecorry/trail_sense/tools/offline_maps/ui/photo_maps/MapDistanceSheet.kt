@@ -1,104 +1,134 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
-import android.util.AttributeSet
-import android.view.Gravity
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.LinearLayout
+import android.view.View
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.flatten
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 
+class MapDistanceSheetState(context: Context) {
 
-class MapDistanceSheet(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
+    private val formatter = FormatService.getInstance(context)
 
-    private val formatter by lazy { FormatService.getInstance(context) }
-
+    var view: View? = null
     var cancelListener: (() -> Unit)? = null
     var undoListener: (() -> Unit)? = null
     var createPathListener: (() -> Unit)? = null
 
-    private val toolbar: Toolbar
-
-    init {
-        val root = LinearLayout(context).apply {
-            background = ColorDrawable(
-                Resources.getAndroidColorAttr(
-                    context,
-                    com.google.android.material.R.attr.colorSurfaceContainer
-                )
-            )
-            orientation = LinearLayout.VERTICAL
-        }
-        addView(
-            root,
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT
-            )
-        )
-
-        toolbar = Toolbar(context, null).apply {
-            id = R.id.map_distance_title
-            leftButton.setImageResource(R.drawable.ic_undo)
-            rightButton.setImageResource(R.drawable.ic_cancel)
-            title.text = context.getString(R.string.distance)
-            leftButton.flatten()
-            rightButton.flatten()
-        }
-        root.addView(
-            toolbar,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        toolbar.rightButton.setOnClickListener {
-            cancelListener?.invoke()
-        }
-        toolbar.leftButton.setOnClickListener {
-            undoListener?.invoke()
-        }
-
-        val createPathButton = Button(context).apply {
-            id = R.id.create_path_btn
-            text = context.getString(R.string.create_path)
-        }
-        root.addView(
-            createPathButton,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER
-                bottomMargin = Resources.dp(context, 8f).toInt()
-            }
-        )
-
-        createPathButton.setOnClickListener {
-            createPathListener?.invoke()
-        }
-
-    }
+    private var distanceText by mutableStateOf("")
 
     fun setDistance(distance: Distance) {
-        toolbar.subtitle.text =
+        distanceText =
             formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units), false)
     }
 
     fun show() {
-        isVisible = true
+        view?.isVisible = true
     }
 
     fun hide() {
-        isVisible = false
+        view?.isVisible = false
+    }
+
+    @Composable
+    fun Content() {
+        MapDistanceSheetContent(
+            distance = distanceText,
+            onUndo = { undoListener?.invoke() },
+            onCancel = { cancelListener?.invoke() },
+            onCreatePath = { createPathListener?.invoke() }
+        )
+    }
+}
+
+@Composable
+private fun MapDistanceSheetContent(
+    distance: String,
+    onUndo: () -> Unit,
+    onCancel: () -> Unit,
+    onCreatePath: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onUndo) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_undo),
+                        contentDescription = null
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.distance),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = distance,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onCancel) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cancel),
+                        contentDescription = null
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(onClick = onCreatePath) {
+                    Text(text = stringResource(R.string.create_path))
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
     }
 }
