@@ -840,7 +840,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val cameraToggle = createArIconButton(context, R.id.camera_toggle, R.drawable.ic_camera)
     root.addView(
-        cameraToggle,
+        cameraToggle.view,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
             topToTop = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
@@ -850,7 +850,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val calibrate = createArIconButton(context, R.id.calibrate_btn, R.drawable.ic_compass_icon)
     root.addView(
-        calibrate,
+        calibrate.view,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
             topToTop = ConstraintLayout.LayoutParams.PARENT_ID
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
@@ -860,7 +860,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val layers = createArIconButton(context, R.id.layers_btn, R.drawable.ic_layers)
     root.addView(
-        layers,
+        layers.view,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
             startToStart = R.id.calibrate_btn
             endToEnd = R.id.calibrate_btn
@@ -873,7 +873,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         visibility = View.GONE
     }
     root.addView(
-        search,
+        search.view,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
             startToStart = R.id.camera_toggle
             endToEnd = R.id.camera_toggle
@@ -884,7 +884,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val time = createArIconButton(context, R.id.time_btn, R.drawable.ic_tool_clock)
     root.addView(
-        time,
+        time.view,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
             startToStart = R.id.camera_toggle
             endToEnd = R.id.camera_toggle
@@ -991,7 +991,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         Resources.androidTextColorSecondary(context)
     )
     guidancePanel.addView(
-        guideCancel,
+        guideCancel.view,
         ConstraintLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
             topToTop = R.id.ar_guide_label
@@ -1077,27 +1077,65 @@ private class ArIconButton(
     context: Context,
     icon: Int,
     private val tint: Int
-) : AbstractComposeView(context) {
+) {
     private var iconRes by mutableIntStateOf(icon)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var alpha: Float
+        get() = view.alpha
+        set(value) {
+            view.alpha = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
+
+    fun setOnLongClickListener(listener: View.OnLongClickListener?) {
+        view.setOnLongClickListener(listener)
+    }
 
     fun setImageResource(icon: Int) {
         iconRes = icon
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Box(
-                modifier = Modifier.size(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = ComposeColor(tint),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+    private fun Content() {
+        Box(
+            modifier = Modifier.size(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = ComposeColor(tint),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
