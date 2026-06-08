@@ -3,10 +3,8 @@ package com.kylecorry.trail_sense.tools.clinometer.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.View
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -24,9 +22,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +37,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
@@ -66,7 +70,6 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
@@ -81,19 +84,52 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class ClinometerFragment : TrailSenseComposeFragment() {
+@Composable
+fun ClinometerToolScreen(
+    fragment: Fragment,
+    onController: (ClinometerLockController?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { ClinometerController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private var clinometerViews: ClinometerViews? = null
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        onController(controller)
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+            onController(null)
+        }
+    }
+
+    controller.Content(modifier = modifier)
+}
+
+private class ClinometerController(
+    private val fragment: Fragment
+) : ClinometerLockController {
+
+    private var clinometerViews: ClinometerViews? =
+        createClinometerViews(fragment.requireContext())
     private val views: ClinometerViews
         get() = clinometerViews ?: error("Clinometer views are not ready")
 
-    private val sensorService by lazy { SensorService(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val orientation by lazy { sensorService.getOrientation() }
     private val cameraClinometer by lazy { Clinometer(orientation, isAugmentedReality = true) }
     private val sideClinometer by lazy { Clinometer(orientation, isAugmentedReality = false) }
     private val deviceOrientation by lazy { sensorService.getDeviceOrientationSensor() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val throttle = Throttle(20)
     private val invalidCameraOrientations = listOf(
         DeviceOrientation.Orientation.Landscape,
@@ -131,23 +167,17 @@ class ClinometerFragment : TrailSenseComposeFragment() {
     private val clinometer: IClinometer
         get() = if (useCamera) cameraClinometer else sideClinometer
 
-    override fun beforeCreateContent() {
-        clinometerViews = createClinometerViews(requireContext())
-    }
-
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         ClinometerHost(
             views = views,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        toast(getString(R.string.set_inclination_instructions))
+    fun onCreate() {
+        fragment.toast(fragment.getString(R.string.set_inclination_instructions))
 
         views.clinometerTitle.isLeftButtonSelected = false
         views.clinometerTitle.isRightButtonSelected = false
@@ -182,11 +212,11 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         views.arView.showPosition = false
         views.arView.passThroughTouchEvents = true
 
-        views.arView.bind(views.camera, viewLifecycleOwner)
+        views.arView.bind(views.camera, fragment.viewLifecycleOwner)
 
-        observe(sideClinometer) { updateUI() }
-        observe(cameraClinometer) { updateUI() }
-        observe(deviceOrientation) { updateUI() }
+        fragment.observe(sideClinometer) { updateUI() }
+        fragment.observe(cameraClinometer) { updateUI() }
+        fragment.observe(deviceOrientation) { updateUI() }
     }
 
     private fun startSideClinometer() {
@@ -198,7 +228,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
     }
 
     private fun startCameraClinometer(showAlert: Boolean) {
-        requestCamera { hasPermission ->
+        fragment.requestCamera { hasPermission ->
             if (hasPermission) {
                 useCamera = true
                 views.camera.start(
@@ -210,7 +240,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
             } else {
                 startSideClinometer()
                 if (showAlert) {
-                    alertNoCameraPermission()
+                    fragment.alertNoCameraPermission()
                 }
             }
         }
@@ -223,8 +253,8 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
     private fun askForHeightOrDistance() {
         Pickers.item(
-            requireContext(), getString(R.string.measure), listOf(
-                getString(R.string.height), getString(R.string.distance)
+            fragment.requireContext(), fragment.getString(R.string.measure), listOf(
+                fragment.getString(R.string.height), fragment.getString(R.string.distance)
             ), when {
                 distanceAway != null -> 0
                 knownHeight != null -> 1
@@ -243,19 +273,19 @@ class ClinometerFragment : TrailSenseComposeFragment() {
     private fun measureHeightPrompt() {
         val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
         CustomUiUtils.pickDistance(
-            requireContext(),
+            fragment.requireContext(),
             units,
             distanceAway,
-            getString(R.string.clinometer_measure_height_title)
+            fragment.getString(R.string.clinometer_measure_height_title)
         ) { distance, _ ->
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
                 views.clinometerTitle.isRightButtonSelected = true
                 CustomUiUtils.disclaimer(
-                    requireContext(),
-                    getString(R.string.instructions),
-                    getMarkdown(
+                    fragment.requireContext(),
+                    fragment.getString(R.string.instructions),
+                    fragment.getMarkdown(
                         R.string.clinometer_measure_height_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -270,11 +300,11 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         val units = formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
 
         CustomUiUtils.pickDistance(
-            requireContext(),
+            fragment.requireContext(),
             units,
             knownHeight,
-            getString(R.string.clinometer_measure_distance_title),
-            hint = getString(R.string.height),
+            fragment.getString(R.string.clinometer_measure_distance_title),
+            hint = fragment.getString(R.string.height),
             showFeetAndInches = true
         ) { distance, _ ->
             if (distance != null) {
@@ -283,9 +313,9 @@ class ClinometerFragment : TrailSenseComposeFragment() {
                 views.clinometerTitle.isRightButtonSelected = true
 
                 CustomUiUtils.disclaimer(
-                    requireContext(),
-                    getString(R.string.instructions),
-                    getMarkdown(
+                    fragment.requireContext(),
+                    fragment.getString(R.string.instructions),
+                    fragment.getMarkdown(
                         R.string.clinometer_measure_distance_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -296,8 +326,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         if (distanceAway == null && knownHeight == null) {
             distanceAway = prefs.clinometer.baselineDistance
             views.clinometerTitle.isRightButtonSelected = distanceAway != null
@@ -310,18 +339,16 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         if (useCamera) {
             views.camera.stop()
             views.arView.stop()
         }
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         views.arView.unbind()
         clinometerViews = null
-        super.onDestroyView()
     }
 
     private fun updateUI() {
@@ -359,7 +386,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
         views.clinometerTitle.title = formatter.formatDegrees(incline)
         views.clinometerTitle.subtitle =
-            getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
+            fragment.getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
 
         views.avalancheRisk.title = getAvalancheRiskString(Geology.getAvalancheRisk(incline))
 
@@ -373,21 +400,21 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
         when {
             distanceAway != null -> {
-                views.estimatedHeight.description = getString(R.string.height)
+                views.estimatedHeight.description = fragment.getString(R.string.height)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getHeight(distanceAway).toRelativeDistance(), 1, false
                 )
             }
 
             knownHeight != null -> {
-                views.estimatedHeight.description = getString(R.string.distance)
+                views.estimatedHeight.description = fragment.getString(R.string.distance)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getDistance(knownHeight).toRelativeDistance(), 1, false
                 )
             }
 
             else -> {
-                views.estimatedHeight.title = getString(R.string.distance_unset)
+                views.estimatedHeight.title = fragment.getString(R.string.distance_unset)
             }
         }
     }
@@ -419,9 +446,9 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
     private fun getAvalancheRiskString(risk: AvalancheRisk): String {
         return when (risk) {
-            AvalancheRisk.Low -> getString(R.string.low)
-            AvalancheRisk.Moderate -> getString(R.string.moderate)
-            AvalancheRisk.High -> getString(R.string.high)
+            AvalancheRisk.Low -> fragment.getString(R.string.low)
+            AvalancheRisk.Moderate -> fragment.getString(R.string.moderate)
+            AvalancheRisk.High -> fragment.getString(R.string.high)
         }
     }
 
@@ -459,7 +486,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         )
     }
 
-    fun onTouchDown() {
+    override fun onTouchDown() {
         if (!isOrientationValid() || isHolding) {
             return
         }
@@ -477,7 +504,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         startMarker = addMarker()
     }
 
-    fun onTouchUp() {
+    override fun onTouchUp() {
         if (!isOrientationValid() || !isHolding) {
             return
         }
@@ -539,7 +566,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         )
         markerLayer.addMarker(
             ARMarker(
-                point, CanvasCircle(Resources.getPrimaryMarkerColor(requireContext()))
+                point, CanvasCircle(Resources.getPrimaryMarkerColor(fragment.requireContext()))
             )
         )
         return point

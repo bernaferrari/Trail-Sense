@@ -2,19 +2,19 @@ package com.kylecorry.trail_sense.tools.clinometer.volumeactions
 
 import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
-import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerFragment
+import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerLockController
 
 class ClinometerLockVolumeAction(fragment: Fragment) : VolumeAction {
 
-    private val clinometerFragment = fragment as? ClinometerFragment
+    private val clinometerController = fragment as? ClinometerLockController
 
     override fun onButtonPress(isUpButton: Boolean): Boolean {
-        clinometerFragment?.onTouchDown()
-        return clinometerFragment != null
+        clinometerController?.onTouchDown()
+        return clinometerController != null
     }
 
     override fun onButtonRelease(isUpButton: Boolean): Boolean {
-        clinometerFragment?.onTouchUp()
-        return clinometerFragment != null
+        clinometerController?.onTouchUp()
+        return clinometerController != null
     }
 }

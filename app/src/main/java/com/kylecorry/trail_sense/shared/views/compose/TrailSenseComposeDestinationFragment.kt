@@ -159,6 +159,8 @@ import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudToolScreen
+import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerLockController
+import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerToolScreen
 import com.kylecorry.trail_sense.tools.climate.ui.ClimateToolScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
@@ -248,7 +250,7 @@ import java.time.Duration
 import java.time.Instant
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
-    ScreenFlashlightController, FlashlightController {
+    ScreenFlashlightController, FlashlightController, ClinometerLockController {
 
     private var layerSheet: MapLayersBottomSheet? = null
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
@@ -272,6 +274,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var survivalGuideSummary by mutableStateOf("")
     private var survivalGuideSearchJob: Job? = null
     private var selectedFlashlightMode = FlashlightMode.Torch
+    private var clinometerLockController: ClinometerLockController? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -433,6 +436,10 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)
             DESTINATION_PHOTO_MAPS -> PhotoMapsToolScreen(this)
+            DESTINATION_CLINOMETER -> ClinometerToolScreen(
+                fragment = this,
+                onController = { clinometerLockController = it }
+            )
         }
     }
 
@@ -455,6 +462,14 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         } else {
             flashlight.set(selectedFlashlightMode)
         }
+    }
+
+    override fun onTouchDown() {
+        clinometerLockController?.onTouchDown()
+    }
+
+    override fun onTouchUp() {
+        clinometerLockController?.onTouchUp()
     }
 
     @Composable
@@ -3483,5 +3498,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CREATE_FIELD_GUIDE_PAGE = "create_field_guide_page"
         const val DESTINATION_CREATE_FIELD_GUIDE_SIGHTING = "create_field_guide_sighting"
         const val DESTINATION_PHOTO_MAPS = "photo_maps"
+        const val DESTINATION_CLINOMETER = "clinometer"
     }
 }

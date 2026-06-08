@@ -378,8 +378,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clinometerFragment
-            setClassName("com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerFragment")
-            label = "ClinometerFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "ClinometerScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLINOMETER)
+                .build())
             graph.addDestination(this)
         }
 
