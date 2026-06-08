@@ -39,12 +39,12 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -85,6 +85,8 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
         var chartReadings by remember {
             mutableStateOf<List<Reading<Float>>>(emptyList())
         }
+        var showHistoryDurationPicker by remember { mutableStateOf(false) }
+        val historyDurationTitle = stringResource(R.string.elevation_history_length)
 
         DisposableEffect(Unit) {
             setHistorySummary = { historySummary = it }
@@ -99,9 +101,28 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
             historySummary = historySummary,
             readings = chartReadings,
             units = initialUnits,
-            onHistoryClick = ::pickHistoryDuration,
+            onHistoryClick = {
+                showHistoryDurationPicker = true
+            },
             modifier = Modifier.fillMaxSize()
         )
+
+        if (showHistoryDurationPicker) {
+            DurationPickerDialog(
+                title = historyDurationTitle,
+                duration = historyDuration,
+                onDurationPicked = {
+                    if (it != null) {
+                        historyDuration = it
+                        updateChart()
+                    }
+                    showHistoryDurationPicker = false
+                },
+                onDismiss = {
+                    showHistoryDurationPicker = false
+                }
+            )
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -122,19 +143,6 @@ class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
         setHistorySummary = null
         setChartReadings = null
         super.onDestroyView()
-    }
-
-    private fun pickHistoryDuration() {
-        CustomUiUtils.pickDuration(
-            requireContext(),
-            historyDuration,
-            getString(R.string.elevation_history_length)
-        ) {
-            if (it != null) {
-                historyDuration = it
-                updateChart()
-            }
-        }
     }
 
     private fun updateChart(readings: List<Reading<Float>>) {

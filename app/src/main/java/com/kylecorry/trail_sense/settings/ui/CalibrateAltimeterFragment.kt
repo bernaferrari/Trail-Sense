@@ -43,6 +43,7 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -128,6 +129,12 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                     var demSummary by androidx.compose.runtime.remember {
                         androidx.compose.runtime.mutableStateOf(getString(R.string.built_in_dem))
                     }
+                    var showForceCalibrationPicker by androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf(false)
+                    }
+                    val forceCalibrationTitle = androidx.compose.ui.res.stringResource(
+                        R.string.fused_altimeter_force_calibration
+                    )
 
                     setAltitudeState = { altitude = it }
                     setModeState = { mode = it }
@@ -237,11 +244,11 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                             if (conditionalState.isFused) {
                                 item("force_calibration") {
                                     SettingsActionRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.fused_altimeter_force_calibration
-                                        ),
+                                        label = forceCalibrationTitle,
                                         summary = forceCalibrationSummary,
-                                        onClick = ::updateForceCalibrationInterval,
+                                        onClick = {
+                                            showForceCalibrationPicker = true
+                                        },
                                         modifier = androidx.compose.ui.Modifier.padding(
                                             horizontal = TrailSenseSpacing.lg
                                         )
@@ -348,10 +355,27 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                                             horizontal = TrailSenseSpacing.lg
                                         )
                                     )
-                                }
                             }
                         }
                     }
+
+                    if (showForceCalibrationPicker) {
+                        DurationPickerDialog(
+                            title = forceCalibrationTitle,
+                            duration = prefs.altimeter.fusedAltimeterForcedRecalibrationInterval,
+                            onDurationPicked = {
+                                if (it != null) {
+                                    prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = it
+                                    forceCalibrationSummary = formatForceCalibrationInterval()
+                                }
+                                showForceCalibrationPicker = false
+                            },
+                            onDismiss = {
+                                showForceCalibrationPicker = false
+                            }
+                        )
+                    }
+                }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -483,19 +507,6 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
         if (prefs.altimeterMode == UserPreferences.AltimeterMode.Barometer) {
             updateAltitudeOverride()
-        }
-    }
-
-    private fun updateForceCalibrationInterval() {
-        CustomUiUtils.pickDuration(
-            requireContext(),
-            prefs.altimeter.fusedAltimeterForcedRecalibrationInterval,
-            getString(R.string.fused_altimeter_force_calibration)
-        ) {
-            if (it != null) {
-                prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = it
-                setForceCalibrationSummary?.invoke(formatForceCalibrationInterval())
-            }
         }
     }
 
