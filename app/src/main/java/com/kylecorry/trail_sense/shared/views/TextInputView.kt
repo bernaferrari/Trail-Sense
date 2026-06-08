@@ -4,14 +4,14 @@ import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.kylecorry.trail_sense.R
 
 class TextInputView(context: Context, attrs: AttributeSet?) :
-    FrameLayout(context, attrs) {
+    ConstraintLayout(context, attrs) {
 
     private val edittext: TextInputEditText
     private val holder: TextInputLayout
@@ -35,9 +35,14 @@ class TextInputView(context: Context, attrs: AttributeSet?) :
         addView(
             holder,
             LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
         )
 
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TextInputView)
