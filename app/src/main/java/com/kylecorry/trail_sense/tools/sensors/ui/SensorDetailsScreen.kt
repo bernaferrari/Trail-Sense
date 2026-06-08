@@ -1,9 +1,10 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.sensors.ui
 
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.ColorInt
@@ -23,8 +24,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +37,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.sensors.ISensor
@@ -66,7 +73,6 @@ import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.MockHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
@@ -74,14 +80,42 @@ import java.time.ZonedDateTime
 import java.time.format.TextStyle
 import java.util.Locale
 
-class SensorDetailsFragment : TrailSenseComposeFragment() {
+@Composable
+fun SensorDetailsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { SensorDetailsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    SensorDetailsScreen(
+        sensors = controller.sensorDetails,
+        onShowSensorList = controller::showSensorList
+    )
+}
+
+private class SensorDetailsController(private val fragment: Fragment) {
+
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val sensorDetailsMap = mutableMapOf<String, SensorDetails?>()
-    private var sensorDetails by mutableStateOf<List<SensorDetails>>(emptyList())
+    var sensorDetails by mutableStateOf<List<SensorDetails>>(emptyList())
+        private set
     private val handler = Handler(Looper.getMainLooper())
     private val sensorListener = { updateAllSensorDetails() }
     private val updateRunnable = object : Runnable {
@@ -96,7 +130,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     private val magnetometer by lazy { sensorService.getMagnetometer() }
     private val barometer by lazy { sensorService.getBarometer() }
     private val hygrometer by lazy { sensorService.getHygrometer() }
-    private val battery by lazy { Battery(requireContext()) }
+    private val battery by lazy { Battery(fragment.requireContext()) }
     private val gyroscope by lazy { sensorService.getGyroscope() }
     private val thermometer by lazy { sensorService.getThermometer() }
     private val cellSignal by lazy { sensorService.getCellSignal() }
@@ -108,10 +142,10 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     private val altimeter by lazy { sensorService.getAltimeter() }
 
     // Cache
-    private val cachedGPS by lazy { CachedGPS(requireContext(), 500) }
-    private val cachedAltimeter by lazy { CachedAltimeter(requireContext(), 500) }
+    private val cachedGPS by lazy { CachedGPS(fragment.requireContext(), 500) }
+    private val cachedAltimeter by lazy { CachedAltimeter(fragment.requireContext(), 500) }
 
-    private val unavailableText by lazy { getString(R.string.unavailable) }
+    private val unavailableText by lazy { fragment.getString(R.string.unavailable) }
     private val observedSensors: List<ISensor> by lazy {
         listOf(
             cachedGPS,
@@ -131,16 +165,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         )
     }
 
-    @Composable
-    override fun FragmentContent() {
-        SensorDetailsScreen(
-            sensors = sensorDetails,
-            onShowSensorList = ::showSensorList
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         initializeUnavailableSensors()
         observedSensors.forEach { it.start(sensorListener) }
         updateAllSensorDetails()
@@ -148,32 +173,30 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         handler.postDelayed(updateRunnable, 500)
     }
 
-    override fun onPause() {
+    fun onPause() {
         handler.removeCallbacks(updateRunnable)
         observedSensors.forEach { it.stop(sensorListener) }
-        super.onPause()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         handler.removeCallbacks(updateRunnable)
         observedSensors.forEach { it.stop(sensorListener) }
-        super.onDestroyView()
     }
 
     private fun initializeUnavailableSensors() {
-        if (!Sensors.hasCompass(requireContext())) {
+        if (!Sensors.hasCompass(fragment.requireContext())) {
             sensorDetailsMap["compass"] = SensorDetails(
-                getString(R.string.pref_compass_sensor_title),
+                fragment.getString(R.string.pref_compass_sensor_title),
                 "",
-                getString(R.string.unavailable),
+                fragment.getString(R.string.unavailable),
                 CustomUiUtils.getQualityColor(Quality.Poor),
                 R.drawable.ic_compass_icon
             )
         }
     }
 
-    private fun showSensorList() {
-        val sensorManager = requireContext().getSystemService<SensorManager>()
+    fun showSensorList() {
+        val sensorManager = fragment.requireContext().getSystemService<SensorManager>()
         val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
 
         val description = sensors?.joinToString("\n\n") { sensor ->
@@ -181,8 +204,8 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         } ?: ""
 
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.sensors),
+            fragment.requireContext(),
+            fragment.getString(R.string.sensors),
             description,
             cancelText = null
         )
@@ -216,13 +239,13 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     }
 
     private fun updateGyro() {
-        if (!Sensors.hasSensor(requireContext(), Sensor.TYPE_GYROSCOPE)) {
+        if (!Sensors.hasSensor(fragment.requireContext(), Sensor.TYPE_GYROSCOPE)) {
             return
         }
         val euler = gyroscope.orientation.toEuler()
         sensorDetailsMap["gyroscope"] = SensorDetails(
-            getString(R.string.sensor_gyroscope),
-            getString(
+            fragment.getString(R.string.sensor_gyroscope),
+            fragment.getString(
                 R.string.roll_pitch_yaw,
                 formatService.formatDegrees(euler.roll),
                 formatService.formatDegrees(euler.pitch),
@@ -236,7 +259,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateClock() {
         sensorDetailsMap["clock"] = SensorDetails(
-            getString(R.string.tool_clock_title),
+            fragment.getString(R.string.tool_clock_title),
             formatService.formatTime(LocalTime.now()) + " " + ZonedDateTime.now().zone.getDisplayName(
                 TextStyle.FULL,
                 Locale.getDefault()
@@ -249,7 +272,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateGPSCache() {
         sensorDetailsMap["gps_cache"] = SensorDetails(
-            getString(R.string.gps_cache),
+            fragment.getString(R.string.gps_cache),
             formatService.formatLocation(cachedGPS.location),
             getGPSCacheStatus(),
             CustomUiUtils.getQualityColor(getGPSCacheQuality()),
@@ -265,7 +288,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
             .convertTo(if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) DistanceUnits.Meters else DistanceUnits.Feet)
 
         sensorDetailsMap["altimeter_cache"] = SensorDetails(
-            getString(R.string.altimeter_cache),
+            fragment.getString(R.string.altimeter_cache),
             formatService.formatDistance(altitude),
             getAltimeterCacheStatus(),
             CustomUiUtils.getQualityColor(getAltimeterCacheQuality()),
@@ -280,7 +303,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         )
             .convertTo(if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) DistanceUnits.Meters else DistanceUnits.Feet)
         sensorDetailsMap["altimeter"] = SensorDetails(
-            getString(R.string.pref_altimeter_calibration_title),
+            fragment.getString(R.string.pref_altimeter_calibration_title),
             formatService.formatDistance(altitude),
             getAltimeterStatus(),
             getAltimeterColor(),
@@ -295,7 +318,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
             else -> Quality.Poor
         }
         sensorDetailsMap["battery"] = SensorDetails(
-            getString(R.string.tool_battery_title),
+            fragment.getString(R.string.tool_battery_title),
             formatService.formatPercentage(battery.percent),
             formatService.formatBatteryHealth(battery.health),
             CustomUiUtils.getQualityColor(quality),
@@ -310,7 +333,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         val pressure =
             Pressure.from(barometer.pressure, PressureUnits.Hpa).convertTo(prefs.pressureUnits)
         sensorDetailsMap["barometer"] = SensorDetails(
-            getString(R.string.barometer),
+            fragment.getString(R.string.barometer),
             formatService.formatPressure(
                 pressure,
                 Units.getDecimalPlaces(prefs.pressureUnits)
@@ -323,8 +346,8 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateGPS() {
         sensorDetailsMap["gps"] = SensorDetails(
-            getString(R.string.gps),
-            "${formatService.formatLocation(gps.location)}\n${gps.satellites ?: 0} ${getString(R.string.satellites)}",
+            fragment.getString(R.string.gps),
+            "${formatService.formatLocation(gps.location)}\n${gps.satellites ?: 0} ${fragment.getString(R.string.satellites)}",
             getGPSStatus(),
             getGPSColor(),
             R.drawable.satellite
@@ -334,7 +357,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     private fun updateCompass() {
         sensorDetailsMap["compass"] = if (compass is MockSensor) {
             SensorDetails(
-                getString(R.string.pref_compass_sensor_title),
+                fragment.getString(R.string.pref_compass_sensor_title),
                 "-",
                 unavailableText,
                 CustomUiUtils.getQualityColor(Quality.Unknown),
@@ -342,7 +365,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
             )
         } else {
             SensorDetails(
-                getString(R.string.pref_compass_sensor_title),
+                fragment.getString(R.string.pref_compass_sensor_title),
                 formatService.formatDegrees(compass.rawBearing, replace360 = true),
                 formatService.formatQuality(compass.quality),
                 CustomUiUtils.getQualityColor(compass.quality),
@@ -357,7 +380,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
             TemperatureUnits.Celsius
         ).convertTo(prefs.temperatureUnits)
         sensorDetailsMap["thermometer"] = SensorDetails(
-            getString(R.string.tool_thermometer_title),
+            fragment.getString(R.string.tool_thermometer_title),
             formatService.formatTemperature(temperature),
             formatService.formatQuality(thermometer.quality),
             CustomUiUtils.getQualityColor(thermometer.quality),
@@ -371,7 +394,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         }
 
         sensorDetailsMap["hygrometer"] = SensorDetails(
-            getString(R.string.hygrometer),
+            fragment.getString(R.string.hygrometer),
             formatService.formatPercentage(hygrometer.humidity),
             formatService.formatQuality(hygrometer.quality),
             CustomUiUtils.getQualityColor(hygrometer.quality),
@@ -381,7 +404,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateGravity() {
         sensorDetailsMap["gravity"] = SensorDetails(
-            getString(R.string.gravity),
+            fragment.getString(R.string.gravity),
             formatService.formatAcceleration(gravity.acceleration.magnitude(), 2),
             formatService.formatQuality(gravity.quality),
             CustomUiUtils.getQualityColor(gravity.quality),
@@ -391,7 +414,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateAccelerometer() {
         sensorDetailsMap["accelerometer"] = SensorDetails(
-            getString(R.string.accelerometer),
+            fragment.getString(R.string.accelerometer),
             formatService.formatAcceleration(accelerometer.acceleration.magnitude(), 2),
             formatService.formatQuality(accelerometer.quality),
             CustomUiUtils.getQualityColor(accelerometer.quality),
@@ -402,7 +425,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     private fun updateCellSignal() {
         val signal = cellSignal.signals.maxByOrNull { it.strength }
         sensorDetailsMap["cell"] = SensorDetails(
-            getString(R.string.cell_signal),
+            fragment.getString(R.string.cell_signal),
             "${
                 formatService.formatCellNetwork(signal?.network)
             }\n${formatService.formatPercentage(signal?.strength ?: 0f)} (${
@@ -418,7 +441,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun updateMagnetometer() {
         sensorDetailsMap["magnetometer"] = SensorDetails(
-            getString(R.string.magnetometer),
+            fragment.getString(R.string.magnetometer),
             formatService.formatMagneticField(magnetometer.magneticField.magnitude()),
             formatService.formatQuality(magnetometer.quality),
             CustomUiUtils.getQualityColor(magnetometer.quality),
@@ -429,11 +452,11 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     @ColorInt
     private fun getAltimeterColor(): Int {
         if (altimeter is OverrideAltimeter) {
-            return Resources.color(requireContext(), R.color.green)
+            return Resources.color(fragment.requireContext(), R.color.green)
         }
 
         if (altimeter is CachedAltimeter) {
-            return Resources.color(requireContext(), R.color.red)
+            return Resources.color(fragment.requireContext(), R.color.red)
         }
 
         if (altimeter is BarometricAltimeter) {
@@ -441,7 +464,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
         }
 
         if (!altimeter.hasValidReading) {
-            return Resources.color(requireContext(), R.color.yellow)
+            return Resources.color(fragment.requireContext(), R.color.yellow)
         }
 
         return CustomUiUtils.getQualityColor(altimeter.quality)
@@ -449,15 +472,15 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun getAltimeterStatus(): String {
         if (altimeter is OverrideAltimeter) {
-            return getString(R.string.gps_user)
+            return fragment.getString(R.string.gps_user)
         }
 
         if (altimeter is CachedGPS) {
-            return getString(R.string.unavailable)
+            return fragment.getString(R.string.unavailable)
         }
 
         if (!altimeter.hasValidReading) {
-            return getString(R.string.gps_searching)
+            return fragment.getString(R.string.gps_searching)
         }
 
         return formatService.formatQuality(altimeter.quality)
@@ -466,21 +489,21 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
     @ColorInt
     private fun getGPSColor(): Int {
         if (gps is OverrideGPS) {
-            return Resources.color(requireContext(), R.color.green)
+            return Resources.color(fragment.requireContext(), R.color.green)
         }
 
-        if (gps is InactiveGPS || !GPS.isAvailable(requireContext())) {
-            return Resources.color(requireContext(), R.color.red)
+        if (gps is InactiveGPS || !GPS.isAvailable(fragment.requireContext())) {
+            return Resources.color(fragment.requireContext(), R.color.red)
         }
 
         if (Duration.between(gps.time, Instant.now()) > Duration.ofMinutes(2)) {
-            return Resources.color(requireContext(), R.color.yellow)
+            return Resources.color(fragment.requireContext(), R.color.yellow)
         }
 
         if (!gps.hasValidReading || (prefs.requiresSatellites && (gps.satellites
                 ?: 0) < 4) || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)
         ) {
-            return Resources.color(requireContext(), R.color.yellow)
+            return Resources.color(fragment.requireContext(), R.color.yellow)
         }
 
         return CustomUiUtils.getQualityColor(gps.quality)
@@ -488,7 +511,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun getGPSCacheStatus(): String {
         return if (cachedGPS.location == Coordinate.zero) {
-            getString(R.string.unavailable)
+            fragment.getString(R.string.unavailable)
         } else {
             formatService.formatQuality(Quality.Good)
         }
@@ -504,7 +527,7 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun getAltimeterCacheStatus(): String {
         return if (cachedAltimeter.altitude == 0f) {
-            getString(R.string.unavailable)
+            fragment.getString(R.string.unavailable)
         } else {
             formatService.formatQuality(Quality.Good)
         }
@@ -520,39 +543,39 @@ class SensorDetailsFragment : TrailSenseComposeFragment() {
 
     private fun getGPSStatus(): String {
         if (gps is OverrideGPS) {
-            return getString(R.string.gps_user)
+            return fragment.getString(R.string.gps_user)
         }
 
-        if (gps is InactiveGPS || !GPS.isAvailable(requireContext())) {
-            return getString(R.string.unavailable)
+        if (gps is InactiveGPS || !GPS.isAvailable(fragment.requireContext())) {
+            return fragment.getString(R.string.unavailable)
         }
 
         if (Duration.between(gps.time, Instant.now()) > Duration.ofMinutes(2)) {
-            return getString(R.string.gps_stale)
+            return fragment.getString(R.string.gps_stale)
         }
 
         if (!gps.hasValidReading || (prefs.requiresSatellites && (gps.satellites
                 ?: 0) < 4) || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)
         ) {
-            return getString(R.string.gps_searching)
+            return fragment.getString(R.string.gps_searching)
         }
 
         return formatService.formatQuality(gps.quality)
     }
 
-    data class SensorDetails(
-        val name: String,
-        val description: String,
-        val statusMessage: String,
-        @ColorInt val statusColor: Int,
-        @DrawableRes val statusIcon: Int
-    )
-
 }
+
+data class SensorDetails(
+    val name: String,
+    val description: String,
+    val statusMessage: String,
+    @ColorInt val statusColor: Int,
+    @DrawableRes val statusIcon: Int
+)
 
 @Composable
 private fun SensorDetailsScreen(
-    sensors: List<SensorDetailsFragment.SensorDetails>,
+    sensors: List<SensorDetails>,
     onShowSensorList: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -608,7 +631,7 @@ private fun SensorDetailsScreen(
 
 @Composable
 private fun SensorDetailsRow(
-    sensor: SensorDetailsFragment.SensorDetails,
+    sensor: SensorDetails,
     modifier: Modifier = Modifier
 ) {
     Column(

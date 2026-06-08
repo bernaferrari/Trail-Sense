@@ -196,6 +196,7 @@ import com.kylecorry.trail_sense.tools.qr.ui.ScanQRToolScreen
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.signal_finder.ui.SignalFinderToolScreen
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
+import com.kylecorry.trail_sense.tools.sensors.ui.SensorDetailsToolScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
@@ -395,6 +396,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CALIBRATE_BAROMETER -> CalibrateBarometerToolScreen(this)
             DESTINATION_CALIBRATE_COMPASS -> CalibrateCompassToolScreen(this)
             DESTINATION_CALIBRATE_GPS -> CalibrateGPSToolScreen(this)
+            DESTINATION_SENSOR_DETAILS -> SensorDetailsToolScreen(this)
         }
     }
 
@@ -3426,5 +3428,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CALIBRATE_BAROMETER = "calibrate_barometer"
         const val DESTINATION_CALIBRATE_COMPASS = "calibrate_compass"
         const val DESTINATION_CALIBRATE_GPS = "calibrate_gps"
+        const val DESTINATION_SENSOR_DETAILS = "sensor_details"
     }
 }

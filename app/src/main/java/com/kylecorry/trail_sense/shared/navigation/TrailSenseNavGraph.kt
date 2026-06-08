@@ -892,8 +892,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sensorDetailsFragment
-            setClassName("com.kylecorry.trail_sense.tools.sensors.ui.SensorDetailsFragment")
-            label = "SensorDetailsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "SensorDetailsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SENSOR_DETAILS)
+                .build())
             graph.addDestination(this)
         }
 
