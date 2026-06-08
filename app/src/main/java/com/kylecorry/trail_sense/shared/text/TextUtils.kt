@@ -6,7 +6,13 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RawRes
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.view.setPadding
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -25,6 +31,7 @@ import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.PostProcessedTokeniz
 import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.SimpleWordTokenizer
 import com.kylecorry.trail_sense.shared.text.search.TextMatchStrategy
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 object TextUtils {
 
@@ -297,34 +304,22 @@ object TextUtils {
         return text.replace(commentRegex, "").trim()
     }
 
-    private fun createMarkdownContainer(context: Context, children: List<View>): ConstraintLayout {
-        val padding = Resources.dp(context, 16f).toInt()
-        return ConstraintLayout(context).apply {
-            setPadding(padding, padding, padding, padding)
-            var previousId: Int? = null
-            children.forEachIndexed { index, child ->
-                if (child.id == View.NO_ID) {
-                    child.id = View.generateViewId()
+    private fun createMarkdownContainer(context: Context, children: List<View>): View {
+        return TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                children.forEach { child ->
+                    AndroidView(
+                        factory = { child },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-                addView(
-                    child,
-                    ConstraintLayout.LayoutParams(
-                        0,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                        endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                        if (previousId == null) {
-                            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-                        } else {
-                            topToBottom = previousId!!
-                        }
-                        if (index == children.lastIndex) {
-                            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-                        }
-                    }
-                )
-                previousId = child.id
             }
         }
     }
