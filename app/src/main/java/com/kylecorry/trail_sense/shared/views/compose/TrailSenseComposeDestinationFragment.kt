@@ -3,15 +3,30 @@ package com.kylecorry.trail_sense.shared.views.compose
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.util.Linkify.WEB_URLS
 import android.view.View
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.core.text.toSpannable
+import androidx.core.text.util.LinkifyCompat
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.licenses.Library
+import com.kylecorry.trail_sense.settings.licenses.Licenses
+import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.WhistleScreen
@@ -45,6 +60,39 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_TIDE_SETTINGS -> TideSettings()
             DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
             DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
+            DESTINATION_LICENSES -> LicensesScreen()
+        }
+    }
+
+    @Composable
+    private fun LicensesScreen() {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                )
+            ) {
+                item("header") {
+                    TrailSenseSectionHeader(
+                        title = stringResource(R.string.pref_open_source_licenses_title)
+                    )
+                }
+                items(Licenses.libraries, key = { it.name }) { library ->
+                    SettingsActionRow(
+                        label = library.name,
+                        summary = library.url,
+                        onClick = { showLicense(library) },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
         }
     }
 
@@ -136,6 +184,19 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         context.startActivity(intent)
     }
 
+    private fun showLicense(library: Library) {
+        val content = (library.url + "\n\n" + library.license()).toSpannable()
+        LinkifyCompat.addLinks(content, WEB_URLS)
+
+        Alerts.dialog(
+            requireContext(),
+            library.name,
+            content,
+            cancelText = null,
+            allowLinks = true
+        )
+    }
+
     companion object {
         const val ARG_DESTINATION = "compose_destination"
         const val DESTINATION_LEVEL = "level"
@@ -147,5 +208,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_TIDE_SETTINGS = "tide_settings"
         const val DESTINATION_TURN_BACK_SETTINGS = "turn_back_settings"
         const val DESTINATION_WATER_BOIL_SETTINGS = "water_boil_settings"
+        const val DESTINATION_LICENSES = "licenses"
     }
 }

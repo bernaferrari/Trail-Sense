@@ -365,8 +365,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.licenseFragment
-            setClassName("com.kylecorry.trail_sense.settings.licenses.LicenseFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "LicenseFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LICENSES)
+                .build())
             graph.addDestination(this)
         }
 
