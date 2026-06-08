@@ -9,7 +9,17 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.OverScroller
-import com.kylecorry.andromeda.canvas.CanvasView
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
+import com.kylecorry.andromeda.canvas.CanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.luna.hooks.Hooks
@@ -31,12 +41,13 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toCoordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toPixel
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
 
-class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(context, attrs),
+class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeView(context, attrs),
     IMapView {
     override var isWidget: Boolean = false
     var isInteractive = true
@@ -52,6 +63,9 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
     private val scroller = OverScroller(context)
     private var lastFlingX = 0
     private var lastFlingY = 0
+    private lateinit var drawer: ICanvasDrawer
+    private var renderVersion by mutableIntStateOf(0)
+    private var isSetup = false
 
     private val lookupMatrix = Matrix()
 
@@ -84,8 +98,11 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
             invalidate()
         }
 
-    init {
-        runEveryCycle = false
+    override fun invalidate() {
+        super.invalidate()
+        post {
+            renderVersion++
+        }
     }
 
     fun setOnLongPressListener(callback: ((Coordinate) -> Unit)?) {
@@ -308,13 +325,33 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
         this@MapView.layerManager.invalidate()
     }
 
-    override fun setup() {
-        if (!isScaleExplicitlySet) {
-            recenter()
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                renderVersion
+                if (::drawer.isInitialized) {
+                    drawer.canvas = drawContext.canvas.nativeCanvas
+                } else {
+                    drawer = CanvasDrawer(context, drawContext.canvas.nativeCanvas)
+                }
+                setupIfNeeded()
+                render()
+            }
         }
     }
 
-    override fun draw() {
+    private fun setupIfNeeded() {
+        if (isSetup) {
+            return
+        }
+        if (!isScaleExplicitlySet) {
+            recenter()
+        }
+        isSetup = true
+    }
+
+    private fun render() {
         if (scroller.computeScrollOffset()) {
             val dx = lastFlingX - scroller.currX
             val dy = lastFlingY - scroller.currY
@@ -324,9 +361,9 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
             invalidate()
         }
 
-        clear()
-        push()
-        clipPath?.let { clip(it) }
+        drawer.clear()
+        drawer.push()
+        clipPath?.let { drawer.clip(it) }
         backgroundColorOverride?.let { drawer.background(it) }
 
         maxScale = calculateMaxScale(minScale)
@@ -337,12 +374,12 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
             onScaleChange?.invoke(resolutionPixels)
         }
 
-        push()
+        drawer.push()
         drawer.rotate(-mapAzimuth)
         drawLayers()
-        pop()
-        pop()
-        layerManager.drawOverlay(context, this, this)
+        drawer.pop()
+        drawer.pop()
+        layerManager.drawOverlay(context, drawer, this)
     }
 
     private fun drawLayers() {
@@ -352,7 +389,7 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
         }
         // TODO: If map bounds changed, invalidate layers
 
-        layerManager.draw(context, this, this)
+        layerManager.draw(context, drawer, this)
     }
 
     private fun getScale(resolutionPixels: Float): Float {
@@ -458,7 +495,9 @@ class MapView(context: Context, attrs: AttributeSet? = null) : CanvasView(contex
 
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
             val pixel = unrotated(PixelCoordinate(e.x, e.y))
-            layerManager.onClick(this@MapView, this@MapView, pixel)
+            if (::drawer.isInitialized) {
+                layerManager.onClick(drawer, this@MapView, pixel)
+            }
             onSingleTapCallback?.invoke(toCoordinate(pixel))
             return super.onSingleTapConfirmed(e)
         }
