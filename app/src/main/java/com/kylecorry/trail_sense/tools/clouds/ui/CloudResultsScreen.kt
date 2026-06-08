@@ -50,9 +50,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
@@ -80,7 +78,7 @@ import java.time.Instant
 import kotlin.math.abs
 
 @Composable
-fun CloudResultsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CloudResultsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CloudResultsController(fragment) }
     DisposableEffect(controller) {
         onDispose {
@@ -108,7 +106,7 @@ fun CloudResultsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class CloudResultsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CloudResultsController(private val fragment: TrailSenseDestinationHost) {
 
     var image by mutableStateOf<Bitmap?>(null)
         private set
@@ -124,7 +122,7 @@ private class CloudResultsController(private val fragment: TrailSenseComposeDest
     val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
 
     private val uri: Uri? by lazy {
-        BundleCompat.getParcelable(fragment.arguments ?: Bundle(), "image", Uri::class.java)
+        BundleCompat.getParcelable(fragment.destinationArguments ?: Bundle(), "image", Uri::class.java)
     }
 
     fun onResume() {
@@ -147,7 +145,7 @@ private class CloudResultsController(private val fragment: TrailSenseComposeDest
     }
 
     fun pickTime() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val current = time.toZonedDateTime().toLocalDateTime()
             val newTime = CoroutinePickers.datetime(
                 fragment.requireContext(),
@@ -171,7 +169,7 @@ private class CloudResultsController(private val fragment: TrailSenseComposeDest
     }
 
     fun save() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val readings =
                 selection.filter { it.isSelected }
                     .map { Reading(CloudObservation(0, it.genus), time) }
@@ -191,7 +189,7 @@ private class CloudResultsController(private val fragment: TrailSenseComposeDest
         isLoading = true
         selection = emptyList()
 
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             if (image == null) {
                 image = loadImage(uri)
                 DeleteTempFilesCommand(fragment.requireContext()).execute()
