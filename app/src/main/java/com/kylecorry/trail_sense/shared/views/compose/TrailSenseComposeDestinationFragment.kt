@@ -186,6 +186,7 @@ import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapToolScreen
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.metaldetector.ui.MetalDetectorToolScreen
@@ -431,6 +432,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)
+            DESTINATION_PHOTO_MAPS -> PhotoMapsToolScreen(this)
         }
     }
 
@@ -3480,5 +3482,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SIGHTING_LIST = "sighting_list"
         const val DESTINATION_CREATE_FIELD_GUIDE_PAGE = "create_field_guide_page"
         const val DESTINATION_CREATE_FIELD_GUIDE_SIGHTING = "create_field_guide_sighting"
+        const val DESTINATION_PHOTO_MAPS = "photo_maps"
     }
 }

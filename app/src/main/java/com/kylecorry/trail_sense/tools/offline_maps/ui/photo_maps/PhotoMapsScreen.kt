@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,9 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +44,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -54,13 +54,32 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import kotlin.math.absoluteValue
 
-class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun PhotoMapsToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { PhotoMapsController(fragment) }
+
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier)
+}
+
+private class PhotoMapsController(
+    private val fragment: Fragment
+) {
 
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
 
-    private var mapId = 0L
-    private var autoLockLocation = false
+    private var mapId = fragment.requireArguments().getLong("mapId")
+    private var autoLockLocation = fragment.requireArguments().getBoolean("autoLockLocation", false)
     private var map: PhotoMap? = null
     private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null
@@ -69,16 +88,10 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private var showRecenter by mutableStateOf(false)
     private var childSpec by mutableStateOf<PhotoMapChildSpec?>(null)
 
-    private val exportService by lazy { PhotoMapExportService(this) }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mapId = requireArguments().getLong("mapId")
-        autoLockLocation = requireArguments().getBoolean("autoLockLocation", false)
-    }
+    private val exportService by lazy { PhotoMapExportService(fragment) }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         PhotoMapsScreen(
             title = title,
             subtitle = subtitle,
@@ -86,37 +99,34 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
             onRecenter = ::recenter,
             onMenuClick = ::showMenu,
             childSpec = childSpec,
-            fragment = this,
+            fragment = fragment,
             onWarpComplete = {
-                inBackground {
+                fragment.inBackground {
                     loadMap()
                 }
             },
             onCalibrationRotation = ::showRotation,
             onCalibrationController = ::onCalibrationController,
             onCalibrationComplete = {
-                inBackground {
+                fragment.inBackground {
                     autoRotate()
                     loadMap()
                 }
             },
             onViewController = ::onViewController,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        inBackground {
+    fun onCreate() {
+        fragment.inBackground {
             loadMap()
         }
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         currentViewController = null
         currentCalibrationController = null
-        super.onDestroyView()
     }
 
     private fun showMenu(anchor: View) {
@@ -124,19 +134,19 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
         val isCalibrationFragment = currentCalibrationController != null
 
         val actions = listOf(
-            MapContextualAction.Calibrate to if (isMapView) getString(R.string.calibrate) else null,
-            MapContextualAction.Guide to getString(R.string.tool_user_guide_title),
-            MapContextualAction.Rename to getString(R.string.rename),
-            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) getString(
+            MapContextualAction.Calibrate to if (isMapView) fragment.getString(R.string.calibrate) else null,
+            MapContextualAction.Guide to fragment.getString(R.string.tool_user_guide_title),
+            MapContextualAction.Rename to fragment.getString(R.string.rename),
+            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) fragment.getString(
                 R.string.change_map_projection
             ) else null,
-            MapContextualAction.Measure to if (isMapView) getString(R.string.measure) else null,
-            MapContextualAction.CreatePath to if (isMapView) getString(R.string.create_path) else null,
-            MapContextualAction.AdjustLayers to if (isMapView) getString(R.string.layers) else null,
-            MapContextualAction.Export to if (isMapView) getString(R.string.export) else null,
-            MapContextualAction.Print to if (isMapView && Printer.canPrint()) getString(R.string.print) else null,
-            MapContextualAction.Delete to getString(R.string.delete),
-            MapContextualAction.Trace to if (isMapView) getString(R.string.trace) else null
+            MapContextualAction.Measure to if (isMapView) fragment.getString(R.string.measure) else null,
+            MapContextualAction.CreatePath to if (isMapView) fragment.getString(R.string.create_path) else null,
+            MapContextualAction.AdjustLayers to if (isMapView) fragment.getString(R.string.layers) else null,
+            MapContextualAction.Export to if (isMapView) fragment.getString(R.string.export) else null,
+            MapContextualAction.Print to if (isMapView && Printer.canPrint()) fragment.getString(R.string.print) else null,
+            MapContextualAction.Delete to fragment.getString(R.string.delete),
+            MapContextualAction.Trace to if (isMapView) fragment.getString(R.string.trace) else null
         )
 
 
@@ -161,7 +171,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun openGuide() {
-        UserGuideUtils.openGuide(this, R.raw.guide_tool_offline_maps)
+        UserGuideUtils.openGuide(fragment, R.raw.guide_tool_offline_maps)
     }
 
     private fun calibrate() {
@@ -171,7 +181,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun showRotation(rotation: Float) {
-        subtitle = getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
+        subtitle = fragment.getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
     }
 
     private fun hideRotation() {
@@ -179,17 +189,17 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun delete() {
-        inBackground {
+        fragment.inBackground {
             map?.let {
-                DeleteMapCommand(requireContext(), service).execute(it)
-                findNavController().popBackStack()
+                DeleteMapCommand(fragment.requireContext(), service).execute(it)
+                fragment.findNavController().popBackStack()
             }
         }
     }
 
     private fun print() {
-        val command = PrintMapCommand(requireContext())
-        inBackground(BackgroundMinimumState.Created) {
+        val command = PrintMapCommand(fragment.requireContext())
+        fragment.inBackground(BackgroundMinimumState.Created) {
             map?.let {
                 command.execute(it)
             }
@@ -197,7 +207,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun export() {
-        inBackground {
+        fragment.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
                     exportService.export(updated)
@@ -219,10 +229,10 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun rename() {
-        inBackground {
+        fragment.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
-                    RenameMapCommand(requireContext(), service).execute(updated)
+                    RenameMapCommand(fragment.requireContext(), service).execute(updated)
                     val renamed = service.getPhotoMap(updated.id)
                     onMain {
                         map = renamed
@@ -237,8 +247,8 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
         val projections = MapProjectionType.values()
         val projectionNames = projections.map { formatter.formatMapProjection(it) }
         Pickers.item(
-            requireContext(),
-            getString(R.string.change_map_projection),
+            fragment.requireContext(),
+            fragment.getString(R.string.change_map_projection),
             projectionNames,
             projections.indexOf(map?.georeference?.projectionType)
         ) {
@@ -246,7 +256,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
             val newProjection = projections[it]
             val applyProjectionChange = {
                 map?.let { m ->
-                    inBackground {
+                    fragment.inBackground {
                         val updated = service.getPhotoMap(m.id) ?: return@inBackground
                         val changed = service.setProjection(updated, newProjection)
                         onMain {
@@ -259,9 +269,9 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
             if (showConfirmation) {
                 Alerts.dialog(
-                    requireContext(),
-                    getString(R.string.change_map_projection),
-                    getString(R.string.map_calibration_clear_message)
+                    fragment.requireContext(),
+                    fragment.getString(R.string.change_map_projection),
+                    fragment.getString(R.string.map_calibration_clear_message)
                 ) { cancelled ->
                     if (!cancelled) {
                         applyProjectionChange()
@@ -317,7 +327,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
         val delta = Trigonometry.deltaAngle(newRotation, updatedMap.georeference.rotation).absoluteValue
         if (delta > 1f) {
-            toast(getString(R.string.map_auto_rotated))
+            fragment.toast(fragment.getString(R.string.map_auto_rotated))
         }
 
         val rotated = updatedMap.copy(

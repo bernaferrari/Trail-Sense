@@ -1077,8 +1077,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.photoMapsFragment
-            setClassName("com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsFragment")
-            label = "PhotoMapsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PhotoMapsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PHOTO_MAPS)
+                .build())
             addArgument("mapId", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)
