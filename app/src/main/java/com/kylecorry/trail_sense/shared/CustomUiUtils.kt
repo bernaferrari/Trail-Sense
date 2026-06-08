@@ -403,19 +403,19 @@ object CustomUiUtils {
         content: CharSequence? = null,
         populateFn: (Chart) -> Unit
     ) {
-        val chartView = createChartPrompt(fragment.requireContext())
+        val chartPrompt = createChartPrompt(fragment.requireContext())
 
         if (content != null) {
-            chartView.findViewById<TrailSenseTextView>(R.id.content).text = content
+            chartPrompt.content.text = content
         } else {
-            chartView.findViewById<TrailSenseTextView>(R.id.content).isVisible = false
+            chartPrompt.content.isVisible = false
         }
 
-        populateFn(chartView.findViewById(R.id.chart))
+        populateFn(chartPrompt.chart)
         Alerts.dialog(
             fragment.requireContext(),
             title,
-            contentView = chartView,
+            contentView = chartPrompt.root,
             cancelText = null
         )
     }
@@ -446,7 +446,7 @@ object CustomUiUtils {
         )
     }
 
-    private fun createChartPrompt(context: Context): ConstraintLayout {
+    private fun createChartPrompt(context: Context): ChartPrompt {
         val padding = Resources.dp(context, 24f).toInt()
         val spacing = Resources.dp(context, 16f).toInt()
         val chartHeight = context.resources.getDimensionPixelSize(R.dimen.chart_height)
@@ -454,10 +454,11 @@ object CustomUiUtils {
             setPadding(padding, padding, padding, padding)
         }
 
+        val content = TrailSenseTextView(context).apply {
+            id = R.id.content
+        }
         root.addView(
-            TrailSenseTextView(context).apply {
-                id = R.id.content
-            },
+            content,
             ConstraintLayout.LayoutParams(
                 0,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -468,10 +469,11 @@ object CustomUiUtils {
             }
         )
 
+        val chart = Chart(context).apply {
+            id = R.id.chart
+        }
         root.addView(
-            Chart(context).apply {
-                id = R.id.chart
-            },
+            chart,
             ConstraintLayout.LayoutParams(
                 0,
                 chartHeight
@@ -484,8 +486,14 @@ object CustomUiUtils {
             }
         )
 
-        return root
+        return ChartPrompt(root, content, chart)
     }
+
+    private data class ChartPrompt(
+        val root: ConstraintLayout,
+        val content: TrailSenseTextView,
+        val chart: Chart
+    )
 
     fun Resources.getPrimaryColor(context: Context): Int {
         return try {
