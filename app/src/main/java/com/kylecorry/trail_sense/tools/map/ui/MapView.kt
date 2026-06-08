@@ -432,7 +432,11 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
                 modifier = modifier
                     .fillMaxSize()
                     .pointerInteropFilter {
-                        onTouchEvent(it)
+                        if (externalTouchListener?.onTouch(view, it) == true) {
+                            true
+                        } else {
+                            onTouchEvent(it)
+                        }
                     }
                     .onSizeChanged {
                         contentWidth = it.width
