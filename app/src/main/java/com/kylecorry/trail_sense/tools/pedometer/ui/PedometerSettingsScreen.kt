@@ -16,7 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -48,7 +48,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun PedometerSettingsToolScreen(fragment: Fragment) {
+fun PedometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { PedometerSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
@@ -72,7 +72,7 @@ fun PedometerSettingsToolScreen(fragment: Fragment) {
     PedometerSettingsContent(controller, fragment)
 }
 
-private class PedometerSettingsController(private val fragment: Fragment) {
+private class PedometerSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
     val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
@@ -202,7 +202,7 @@ private class PedometerSettingsController(private val fragment: Fragment) {
 @Composable
 private fun PedometerSettingsContent(
     controller: PedometerSettingsController,
-    fragment: Fragment
+    fragment: TrailSenseComposeDestinationFragment
 ) {
                     val userPrefs = controller.userPrefs
                     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }

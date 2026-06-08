@@ -41,7 +41,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
@@ -60,6 +59,7 @@ import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import kotlinx.coroutines.delay
@@ -74,7 +74,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 @Composable
-fun ClockToolScreen(fragment: Fragment) {
+fun ClockToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val context = LocalContext.current
     val formatService = remember { FormatService.getInstance(context) }
     val sensorService = remember { SensorService(context) }
@@ -320,7 +320,7 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
 }
 
 private fun sendNextMinuteNotification(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     formatService: FormatService,
     gpsTime: Instant,
     systemTime: Instant
@@ -360,7 +360,7 @@ private fun sendNextMinuteNotification(
 }
 
 private fun requestExactAlarms(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     action: (hasPermission: Boolean) -> Unit
 ) {
     fragment.requirePermissionRequester().requestPermission(

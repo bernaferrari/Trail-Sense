@@ -18,7 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -41,7 +41,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun AstronomySettingsToolScreen(fragment: Fragment) {
+fun AstronomySettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { AstronomySettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -64,7 +64,7 @@ fun AstronomySettingsToolScreen(fragment: Fragment) {
     controller.Content()
 }
 
-private class AstronomySettingsController(private val fragment: Fragment) {
+private class AstronomySettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }

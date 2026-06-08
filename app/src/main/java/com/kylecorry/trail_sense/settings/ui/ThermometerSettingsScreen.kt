@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -73,7 +73,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
-fun ThermometerSettingsToolScreen(fragment: Fragment) {
+fun ThermometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { ThermometerSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -96,7 +96,7 @@ fun ThermometerSettingsToolScreen(fragment: Fragment) {
     controller.Content()
 }
 
-private class ThermometerSettingsController(private val fragment: Fragment) {
+private class ThermometerSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private var calibratedThermometer: IThermometer? = null
