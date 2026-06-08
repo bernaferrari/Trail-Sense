@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -246,7 +245,7 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.guidancePanel.isVisible = false
-        views.arGuideCancel.setOnClickListener {
+        views.arGuideCancel.onClick = {
             replaceActiveGuidanceTarget(null)
             setMode(ARMode.Normal)
         }
@@ -266,7 +265,7 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
 
         isCameraEnabled = arguments.getBoolean("camera_enabled", true)
 
-        views.cameraToggle.setOnClickListener {
+        views.cameraToggle.onClick = {
             if (isCameraEnabled) {
                 stopCamera()
             } else {
@@ -274,19 +273,19 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
             }
         }
 
-        views.calibrateBtn.setOnClickListener {
+        views.calibrateBtn.onClick = {
             startCalibration()
         }
 
-        views.layersBtn.setOnClickListener {
+        views.layersBtn.onClick = {
             showLayersSheet()
         }
 
-        views.searchBtn.setOnClickListener {
+        views.searchBtn.onClick = {
             showGuidanceLayerPicker()
         }
 
-        views.timeBtn.setOnClickListener {
+        views.timeBtn.onClick = {
             if (views.timeSheet.isVisible) {
                 setTimeOverride(null)
                 views.timeSheet.hide()
@@ -305,13 +304,12 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
 
         setMode(desiredMode, requireArguments().getBundle("extras"))
 
-        views.calibrateBtn.setOnLongClickListener {
+        views.calibrateBtn.onLongClick = {
             dialog(getString(R.string.reset_calibration_question)) { cancelled ->
                 if (!cancelled) {
                     views.arView.resetCalibration()
                 }
             }
-            true
         }
 
         views.calibrationPanel.onConfirmClick = {
@@ -484,7 +482,7 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
         // If the beacon isn't the destination, show the navigate button
         if (navigator.getDestinationId() != beacon.id) {
             views.focusActionButton.setTextDistinct(getString(R.string.navigate))
-            views.focusActionButton.setOnClickListener {
+            views.focusActionButton.onClick = {
                 replaceActiveGuidanceTarget(BeaconGuidanceTarget(beacon))
             }
             views.focusActionButton.isVisible = true
@@ -883,41 +881,32 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         id = R.id.ar_view
     }
 
-    val cameraToggle = createArIconButton(context, R.id.camera_toggle, R.drawable.ic_camera)
-    val calibrate = createArIconButton(context, R.id.calibrate_btn, R.drawable.ic_compass_icon)
-    val layers = createArIconButton(context, R.id.layers_btn, R.drawable.ic_layers)
-    val search = createArIconButton(context, R.id.search_btn, R.drawable.ic_search).apply {
-        visibility = View.GONE
+    val cameraToggle = createArIconButton(R.drawable.ic_camera)
+    val calibrate = createArIconButton(R.drawable.ic_compass_icon)
+    val layers = createArIconButton(R.drawable.ic_layers)
+    val search = createArIconButton(R.drawable.ic_search).apply {
+        isVisible = false
     }
-    val time = createArIconButton(context, R.id.time_btn, R.drawable.ic_tool_clock)
+    val time = createArIconButton(R.drawable.ic_tool_clock)
     val accuracy = SensorStatusBadgeView(context).apply {
         id = R.id.accuracy_view
         alpha = 0.6f
     }
-    val focusAction = ArTextButton(context).apply {
-        id = R.id.focus_action_button
-        visibility = View.GONE
+    val focusAction = ArTextButton().apply {
+        isVisible = false
     }
-    val calibrationPanel = ArCalibrationPanelView(context).apply {
-        id = R.id.calibration_panel
-        visibility = View.GONE
+    val calibrationPanel = ArCalibrationPanelView().apply {
+        isVisible = false
     }
 
-    val guideIcon = ArGuideIconView(context).apply {
-        id = R.id.ar_guide_icon
-    }
+    val guideIcon = ArGuideIconView()
     val guideCancel = createTransparentIconButton(
-        context,
-        R.id.ar_guide_cancel,
         R.drawable.ic_cancel,
         Resources.androidTextColorSecondary(context)
     )
     val guideName = ArTextView(
-        context,
         style = ArTextStyle.Title
-    ).apply {
-        id = R.id.ar_guide_name
-    }
+    )
     val timeSheet = DateTimeSliderSheetState(context)
 
     return AugmentedRealityViews(
@@ -939,76 +928,38 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     )
 }
 
-private fun createArIconButton(context: Context, id: Int, icon: Int): ArIconButton {
-    return createTransparentIconButton(context, id, icon, Color.WHITE)
+private fun createArIconButton(icon: Int): ArIconButton {
+    return createTransparentIconButton(icon, Color.WHITE)
 }
 
 private fun createTransparentIconButton(
-    context: Context,
-    id: Int,
     icon: Int,
     tint: Int
 ): ArIconButton {
-    return ArIconButton(context, icon, tint).apply {
-        this.id = id
-    }
+    return ArIconButton(icon, tint)
 }
 
 private class ArIconButton(
-    context: Context,
     icon: Int,
     private val tint: Int
 ) {
     private var iconRes by mutableIntStateOf(icon)
     private var buttonVisible by mutableStateOf(true)
     private var alphaState by mutableStateOf(1f)
-    private var clickListener: View.OnClickListener? = null
-    private var longClickListener: View.OnLongClickListener? = null
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
+    var onClick by mutableStateOf<(() -> Unit)?>(null)
+    var onLongClick by mutableStateOf<(() -> Unit)?>(null)
 
     var alpha: Float
         get() = alphaState
         set(value) {
             alphaState = value
-            view.alpha = value
         }
 
     var isVisible: Boolean
         get() = buttonVisible
         set(value) {
             buttonVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
         }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            buttonVisible = value == View.VISIBLE
-            view.visibility = value
-        }
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
-        clickListener = listener
-        view.setOnClickListener(listener)
-    }
-
-    fun setOnLongClickListener(listener: View.OnLongClickListener?) {
-        longClickListener = listener
-        view.setOnLongClickListener(listener)
-    }
 
     fun setImageResource(icon: Int) {
         iconRes = icon
@@ -1024,8 +975,8 @@ private class ArIconButton(
                 .size(32.dp)
                 .alpha(alphaState)
                 .combinedClickable(
-                    onClick = { clickListener?.onClick(view) },
-                    onLongClick = { longClickListener?.onLongClick(view) }
+                    onClick = { onClick?.invoke() },
+                    onLongClick = { onLongClick?.invoke() }
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -1040,45 +991,17 @@ private class ArIconButton(
 }
 
 private class ArTextButton(
-    context: Context,
     text: String = ""
 ) {
     private var label by mutableStateOf(text)
     private var buttonVisible by mutableStateOf(true)
-    private var clickListener: View.OnClickListener? = null
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
+    var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     var isVisible: Boolean
         get() = buttonVisible
         set(value) {
             buttonVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
         }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            buttonVisible = value == View.VISIBLE
-            view.visibility = value
-        }
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
-        clickListener = listener
-        view.setOnClickListener(listener)
-    }
 
     fun setTextDistinct(text: String) {
         if (label != text) {
@@ -1093,44 +1016,22 @@ private class ArTextButton(
         }
         Button(
             modifier = modifier,
-            onClick = { clickListener?.onClick(view) ?: view.performClick() }
+            onClick = { onClick?.invoke() }
         ) {
             Text(text = label)
         }
     }
 }
 
-private class ArCalibrationPanelView(private val context: Context) {
+private class ArCalibrationPanelView {
     var onConfirmClick by mutableStateOf<(() -> Unit)?>(null)
     var onCancelClick by mutableStateOf<(() -> Unit)?>(null)
     private var panelVisible by mutableStateOf(true)
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     var isVisible: Boolean
         get() = panelVisible
         set(value) {
             panelVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            panelVisible = value == View.VISIBLE
-            view.visibility = value
         }
 
     @Composable
@@ -1143,7 +1044,7 @@ private class ArCalibrationPanelView(private val context: Context) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(onClick = { onConfirmClick?.invoke() }) {
-                Text(text = context.getString(R.string.calibrate))
+                Text(text = stringResource(R.string.calibrate))
             }
             Box(modifier = Modifier.width(8.dp))
             IconButton(onClick = { onCancelClick?.invoke() }) {
@@ -1158,25 +1059,11 @@ private class ArCalibrationPanelView(private val context: Context) {
     }
 }
 
-private class ArGuideIconView(context: Context) {
+private class ArGuideIconView {
     private var icon by mutableIntStateOf(R.drawable.ic_location)
     private var iconRotation by mutableStateOf(0f)
     private var iconTint by mutableIntStateOf(Color.WHITE)
     private var backgroundTint by mutableIntStateOf(Color.TRANSPARENT)
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     fun setState(
         icon: Int,
@@ -1215,24 +1102,9 @@ private class ArGuideIconView(context: Context) {
 }
 
 private class ArTextView(
-    context: Context,
     private val style: ArTextStyle = ArTextStyle.Label
 ) {
     var text by mutableStateOf("")
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
