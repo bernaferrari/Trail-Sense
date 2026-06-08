@@ -5,14 +5,21 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.buildSpannedString
@@ -246,7 +253,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
         val isCalibrated = isFullyCalibrated()
         if (views.previewButton.isVisible != isCalibrated) {
             views.previewButton.isVisible = isCalibrated
-            CustomUiUtils.setButtonState(views.previewButton, showPreview)
+            views.previewButton.checked = showPreview
         }
 
         map = map?.copy(
@@ -367,7 +374,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             return
         }
 
-        CustomUiUtils.setButtonState(views.previewButton, enabled)
+        views.previewButton.checked = enabled
 
         showPreview = enabled
         updateMapCalibration()
@@ -477,15 +484,15 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
 private data class PhotoMapCalibrationViews(
     val root: View,
-    val previewButton: Button,
+    val previewButton: PhotoMapTextButton,
     val calibrationMap: MapCalibrationView,
     val zoomOutBtn: PhotoMapIconButton,
     val zoomInBtn: PhotoMapIconButton,
     val mapCalibrationBottomPanel: LinearLayout,
     val mapCalibrationTitle: TextView,
     val mapCalibrationCoordinate: CoordinateInputView,
-    val calibrationPrev: Button,
-    val calibrationNext: Button
+    val calibrationPrev: PhotoMapTextButton,
+    val calibrationNext: PhotoMapTextButton
 )
 
 @Composable
@@ -506,9 +513,8 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
 
     val root = FrameLayout(context)
 
-    val previewButton = Button(context).apply {
+    val previewButton = PhotoMapTextButton(context, context.getString(R.string.preview)).apply {
         id = R.id.preview_button
-        text = context.getString(R.string.preview)
         alpha = 0.86f
         visibility = View.GONE
     }
@@ -549,14 +555,12 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         id = R.id.map_calibration_coordinate
     }
 
-    val prev = Button(context).apply {
+    val prev = PhotoMapTextButton(context, context.getString(R.string.previous)).apply {
         id = R.id.calibration_prev
-        text = context.getString(R.string.previous)
     }
 
-    val next = Button(context).apply {
+    val next = PhotoMapTextButton(context, context.getString(R.string.next)).apply {
         id = R.id.calibration_next
-        text = context.getString(R.string.next)
     }
 
     val buttons = LinearLayout(context).apply {
@@ -654,6 +658,33 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         calibrationPrev = prev,
         calibrationNext = next
     )
+}
+
+private class PhotoMapTextButton(
+    context: Context,
+    text: String = ""
+) : AbstractComposeView(context) {
+    var text by mutableStateOf(text)
+    var checked by mutableStateOf(false)
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Button(
+                onClick = { performClick() },
+                colors = if (checked) {
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    ButtonDefaults.buttonColors()
+                }
+            ) {
+                Text(text = text)
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
