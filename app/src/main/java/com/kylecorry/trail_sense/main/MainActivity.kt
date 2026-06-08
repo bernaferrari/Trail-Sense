@@ -513,14 +513,9 @@ class MainActivity : AndromedaActivity() {
                 false
             }
 
-        // Loop through each item of the bottom navigation and override the long press behavior
-        for (i in 0 until views.bottomNavigation.menu.size) {
-            val item = views.bottomNavigation.menu[i]
-            val view = views.bottomNavigation.findViewById<View>(item.itemId)
-            view.setOnLongClickListener {
-                views.quickActionsSheet.show(this)
-                true
-            }
+        views.bottomNavigation.setItemLongClickListener {
+            views.quickActionsSheet.show(this)
+            true
         }
 
         // Open the left most item by default (and clear the back stack)
