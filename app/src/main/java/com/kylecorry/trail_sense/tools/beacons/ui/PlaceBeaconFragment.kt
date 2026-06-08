@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable

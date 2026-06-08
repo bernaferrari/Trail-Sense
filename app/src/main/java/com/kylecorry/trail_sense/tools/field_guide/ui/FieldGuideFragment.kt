@@ -3,9 +3,7 @@ package com.kylecorry.trail_sense.tools.field_guide.ui
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
-import android.view.Gravity
 import android.view.View
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,7 +45,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
