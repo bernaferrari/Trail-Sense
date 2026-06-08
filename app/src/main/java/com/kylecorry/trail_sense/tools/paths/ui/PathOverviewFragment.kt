@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -965,7 +964,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         id = R.id.path_color
     }
     content.addView(
-        styleControls,
+        styleControls.view,
         ConstraintLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1007,7 +1006,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         id = R.id.path_map_fullscreen_toggle
     }
     mapHolder.addView(
-        fullscreenToggle,
+        fullscreenToggle.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1024,7 +1023,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         visibility = View.GONE
     }
     content.addView(
-        selectedPoint,
+        selectedPoint.view,
         ConstraintLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1141,7 +1140,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         id = View.generateViewId()
     }
     content.addView(
-        pathActions,
+        pathActions.view,
         ConstraintLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1159,14 +1158,14 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         visibility = View.GONE
     }
     content.addView(
-        timing,
+        timing.view,
         ConstraintLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = pathActions.id
+            topToBottom = pathActions.view.id
             bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
@@ -1214,7 +1213,7 @@ private fun createPathMapHolderLayoutParams(
     }
 }
 
-private class PathStyleControlsView(context: Context) : AbstractComposeView(context) {
+private class PathStyleControlsView(context: Context) {
     var pathColor by mutableIntStateOf(ContextCompat.getColor(context, R.color.blue))
     var lineStyle by mutableStateOf("")
     var pointStyle by mutableStateOf("")
@@ -1222,30 +1221,42 @@ private class PathStyleControlsView(context: Context) : AbstractComposeView(cont
     var onLineStyleClick by mutableStateOf({})
     var onPointStyleClick by mutableStateOf({})
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(ComposeColor(pathColor), CircleShape)
-                        .clickable(onClick = onColorClick)
-                )
-                PathStyleDropdownText(
-                    text = lineStyle,
-                    onClick = onLineStyleClick,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-                PathStyleDropdownText(
-                    text = pointStyle,
-                    onClick = onPointStyleClick,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
             }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    @Composable
+    private fun Content() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(ComposeColor(pathColor), CircleShape)
+                    .clickable(onClick = onColorClick)
+            )
+            PathStyleDropdownText(
+                text = lineStyle,
+                onClick = onLineStyleClick,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            PathStyleDropdownText(
+                text = pointStyle,
+                onClick = onPointStyleClick,
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
     }
 }
@@ -1276,7 +1287,7 @@ private fun PathStyleDropdownText(
     }
 }
 
-private class PathSelectedPointView(context: Context) : AbstractComposeView(context) {
+private class PathSelectedPointView(context: Context) {
     var point by mutableStateOf<PathPoint?>(null)
     var formatService by mutableStateOf<FormatService?>(null)
     var baseDistanceUnits by mutableStateOf<DistanceUnits?>(null)
@@ -1284,65 +1295,125 @@ private class PathSelectedPointView(context: Context) : AbstractComposeView(cont
     var onDelete by mutableStateOf<(PathPoint) -> Unit>({})
     var onNavigate by mutableStateOf<(PathPoint) -> Unit>({})
 
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
     @Composable
-    override fun Content() {
+    private fun Content() {
         val point = point ?: return
         val formatService = formatService ?: return
         val baseDistanceUnits = baseDistanceUnits ?: return
 
-        TrailSenseTheme {
-            PathPointRow(
-                point = point,
-                formatService = formatService,
-                baseDistanceUnits = baseDistanceUnits,
-                onCreateBeacon = onCreateBeacon,
-                onDelete = onDelete,
-                onNavigate = onNavigate,
-                onView = {}
-            )
-        }
+        PathPointRow(
+            point = point,
+            formatService = formatService,
+            baseDistanceUnits = baseDistanceUnits,
+            onCreateBeacon = onCreateBeacon,
+            onDelete = onDelete,
+            onNavigate = onNavigate,
+            onView = {}
+        )
     }
 }
 
-private class PathTimingView(context: Context) : AbstractComposeView(context) {
+private class PathTimingView(context: Context) {
     var text by mutableStateOf("")
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Text(
-                text = text,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
         }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    @Composable
+    private fun Content() {
+        Text(
+            text = text,
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
-private class PathActionsView(context: Context) : AbstractComposeView(context) {
+private class PathActionsView(private val context: Context) {
     var onNavigateClick by mutableStateOf({})
     var onAddPointClick by mutableStateOf({})
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                PathActionButton(
-                    text = context.getString(R.string.navigate),
-                    icon = R.drawable.ic_beacon,
-                    onClick = onNavigateClick
-                )
-                PathActionButton(
-                    text = context.getString(R.string.point),
-                    icon = R.drawable.ic_add,
-                    onClick = onAddPointClick,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
             }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    @Composable
+    private fun Content() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            PathActionButton(
+                text = context.getString(R.string.navigate),
+                icon = R.drawable.ic_beacon,
+                onClick = onNavigateClick
+            )
+            PathActionButton(
+                text = context.getString(R.string.point),
+                icon = R.drawable.ic_add,
+                onClick = onAddPointClick,
+                modifier = Modifier.padding(start = 16.dp)
+            )
         }
     }
 }
@@ -1372,27 +1443,43 @@ private fun PathActionButton(
 private class PathIconButton(
     context: Context,
     icon: Int
-) : AbstractComposeView(context) {
+) {
     private var iconRes by mutableIntStateOf(icon)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
 
     fun setImageResource(icon: Int) {
         iconRes = icon
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Box(
-                modifier = Modifier.size(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = ComposeColor.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+    private fun Content() {
+        Box(
+            modifier = Modifier.size(48.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = ComposeColor.White,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
