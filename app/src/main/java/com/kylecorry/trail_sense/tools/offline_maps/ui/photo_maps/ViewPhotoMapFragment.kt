@@ -738,7 +738,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
     )
     root.addView(
-        navigationSheet,
+        navigationSheet.view,
         ConstraintLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.WRAP_CONTENT

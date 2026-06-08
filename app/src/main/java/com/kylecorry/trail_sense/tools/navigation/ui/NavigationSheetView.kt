@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,8 +60,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
-    AbstractComposeView(context, attrs) {
+class NavigationSheetView(private val context: Context) {
 
 
     private val prefs = DependencyRegistry.get<UserPreferences>()
@@ -98,31 +97,55 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
         bearingDataView.setShowDescription(false)
     }
 
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
     private fun addNavigationDataPoint(icon: Int): NavigationDataPointState {
         return NavigationDataPointState(icon)
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceContainer
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    toolbar.Content()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        distanceDataView.Content(Modifier.weight(1f))
-                        bearingDataView.Content(Modifier.weight(1f))
-                        elevationDataView.Content(Modifier.weight(1f))
-                        etaDataView.Content(Modifier.weight(1f))
-                    }
+    private fun Content() {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                toolbar.Content()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    distanceDataView.Content(Modifier.weight(1f))
+                    bearingDataView.Content(Modifier.weight(1f))
+                    elevationDataView.Content(Modifier.weight(1f))
+                    etaDataView.Content(Modifier.weight(1f))
                 }
             }
         }
@@ -284,7 +307,7 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
     }
 
     private fun openBeacon(id: Long) {
-        findNavController().navigateWithAnimation(
+        view.findNavController().navigateWithAnimation(
             R.id.beaconDetailsFragment,
             Bundle().apply {
                 putLong("beacon_id", id)

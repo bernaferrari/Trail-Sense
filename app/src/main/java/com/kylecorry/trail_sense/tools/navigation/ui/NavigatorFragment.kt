@@ -1107,7 +1107,7 @@ private fun createNavigatorViews(
         id = R.id.navigation_sheet
     }
     root.addView(
-        navigationSheet,
+        navigationSheet.view,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
