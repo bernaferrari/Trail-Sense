@@ -105,10 +105,10 @@ class AugmentedRealityView @JvmOverloads constructor(
         }
 
     val width: Int
-        get() = view.width
+        get() = view.width.takeIf { it > 0 } ?: contentWidth
 
     val height: Int
-        get() = view.height
+        get() = view.height.takeIf { it > 0 } ?: contentHeight
 
     val x: Float
         get() = view.x
@@ -123,6 +123,10 @@ class AugmentedRealityView @JvmOverloads constructor(
         }
 
     fun post(action: () -> Unit) {
+        if (!view.isAttachedToWindow) {
+            action()
+            return
+        }
         view.post {
             action()
         }
@@ -253,6 +257,8 @@ class AugmentedRealityView @JvmOverloads constructor(
     private var isSetup = false
     private lateinit var drawer: ICanvasDrawer
     private var renderVersion by mutableIntStateOf(0)
+    private var contentWidth by mutableIntStateOf(0)
+    private var contentHeight by mutableIntStateOf(0)
     private val updateTimer = CoroutineTimer(observeOn = Dispatchers.Default) {
         if (!isSetup) {
             return@CoroutineTimer
@@ -346,12 +352,14 @@ class AugmentedRealityView @JvmOverloads constructor(
 
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         TrailSenseTheme {
             Canvas(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxSize()
                     .onSizeChanged {
+                        contentWidth = it.width
+                        contentHeight = it.height
                         previewRect = null
                         syncWithCamera()
                         requestRedraw()

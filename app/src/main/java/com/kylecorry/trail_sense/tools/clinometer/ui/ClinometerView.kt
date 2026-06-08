@@ -36,6 +36,7 @@ class ClinometerView(context: Context) : IClinometerView {
 
     private var displayAngle by mutableStateOf(90f)
     private var displayStartAngle by mutableStateOf<Float?>(null)
+    private var viewInvisible by mutableStateOf(false)
 
     val view = ComposeView(context).apply {
         setContent {
@@ -52,8 +53,9 @@ class ClinometerView(context: Context) : IClinometerView {
         }
 
     var isInvisible: Boolean
-        get() = view.visibility == View.INVISIBLE
+        get() = viewInvisible
         set(value) {
+            viewInvisible = value
             view.visibility = if (value) View.INVISIBLE else View.VISIBLE
         }
 
@@ -70,11 +72,14 @@ class ClinometerView(context: Context) : IClinometerView {
         }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (viewInvisible) {
+            return
+        }
         ClinometerContent(
             angle = displayAngle,
             startAngle = displayStartAngle,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize()
         )
     }
 }

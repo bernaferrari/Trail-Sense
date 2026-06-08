@@ -2,19 +2,23 @@ package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,16 +30,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
@@ -151,7 +152,6 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         views.clinometerTitle.isLeftButtonSelected = false
         views.clinometerTitle.isRightButtonSelected = false
 
-        views.cameraViewHolder.clipToOutline = true
         views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
         views.camera.setShowTorch(false)
         views.camera.passThroughTouchEvents = true
@@ -168,7 +168,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
             askForHeightOrDistance()
         }
 
-        views.root.setOnTouchListener { _, event ->
+        views.onTouch = { event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 onTouchDown()
             } else if (event.action == MotionEvent.ACTION_UP) {
@@ -549,18 +549,22 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 }
 
 private data class ClinometerViews(
-    val root: View,
     val clinometerTitle: ClinometerTitleState,
     val clinometer: ClinometerView,
-    val cameraViewHolder: View,
+    val cameraViewHolder: ClinometerVisibilityState,
     val camera: CameraState,
     val arView: AugmentedRealityView,
     val cameraClinometer: CameraClinometerView,
     val avalancheRisk: ClinometerDataPointState,
     val estimatedHeight: ClinometerDataPointState,
-    val clinometerInstructions: View,
-    val cameraClinometerInstructions: View
+    val clinometerInstructions: ClinometerVisibilityState,
+    val cameraClinometerInstructions: ClinometerVisibilityState,
+    var onTouch: ((MotionEvent) -> Boolean)? = null
 )
+
+private class ClinometerVisibilityState(initialVisible: Boolean = true) {
+    var isVisible by mutableStateOf(initialVisible)
+}
 
 private class ClinometerDataPointState(
     initialDescription: String,
@@ -570,16 +574,18 @@ private class ClinometerDataPointState(
     var description by mutableStateOf(initialDescription)
 
     @Composable
-    fun Content() {
-        DataPointContent(
-            title = title,
-            description = description,
-            icon = icon,
-            tint = MaterialTheme.colorScheme.onSurface,
-            showDescription = true,
-            gravity = Gravity.START,
-            onDescriptionClick = null
-        )
+    fun Content(modifier: Modifier = Modifier) {
+        Box(modifier = modifier) {
+            DataPointContent(
+                title = title,
+                description = description,
+                icon = icon,
+                tint = MaterialTheme.colorScheme.onSurface,
+                showDescription = true,
+                gravity = Gravity.START,
+                onDescriptionClick = null
+            )
+        }
     }
 }
 
@@ -673,229 +679,98 @@ private fun ClinometerHost(
     views: ClinometerViews,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
+    Column(
+        modifier = modifier.pointerInteropFilter { event ->
+            views.onTouch?.invoke(event) ?: false
+        }
+    ) {
+        ClinometerTitle(views.clinometerTitle)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            views.clinometer.Content(Modifier.fillMaxSize())
+            if (views.cameraViewHolder.isVisible) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(ComposeColor(Resources.color(LocalContext.current, R.color.colorSecondary)))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
+                        CameraPreview(
+                            state = views.camera,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        views.arView.Content(Modifier.fillMaxSize())
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .width(60.dp)
+                                .height(1.dp)
+                                .background(ComposeColor(Resources.color(LocalContext.current, R.color.orange_40)))
+                        )
+                    }
+                    views.cameraClinometer.Content(
+                        Modifier
+                            .width(50.dp)
+                            .fillMaxHeight()
+                    )
+                }
+            }
+            if (views.clinometerInstructions.isVisible) {
+                ClinometerInstruction(icon = R.drawable.ic_rotate_flat_to_portrait)
+            }
+            if (views.cameraClinometerInstructions.isVisible) {
+                ClinometerInstruction(icon = R.drawable.ic_rotate_landscape_to_portrait)
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            views.avalancheRisk.Content(Modifier.weight(1f))
+            views.estimatedHeight.Content(Modifier.weight(1f))
+        }
+    }
 }
 
 private fun createClinometerViews(context: Context): ClinometerViews {
-    val root = ConstraintLayout(context).apply {
-        id = R.id.incline_container
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
     val title = ClinometerTitleState()
-    val titleView = ComposeView(context).apply {
-        id = R.id.clinometer_title
-        setContent {
-            TrailSenseTheme {
-                ClinometerTitle(title)
-            }
-        }
-    }
-    root.addView(
-        titleView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
     val avalancheRisk = ClinometerDataPointState(
         initialDescription = context.getString(R.string.avalanche_risk),
         icon = R.drawable.avalanche
     )
-    val avalancheRiskView = ComposeView(context).apply {
-        id = R.id.avalanche_risk
-        setContent {
-            TrailSenseTheme {
-                avalancheRisk.Content()
-            }
-        }
-    }
     val estimatedHeight = ClinometerDataPointState(
         initialDescription = context.getString(R.string.height),
         icon = R.drawable.ruler
-    )
-    val estimatedHeightView = ComposeView(context).apply {
-        id = R.id.estimated_height
-        setContent {
-            TrailSenseTheme {
-                estimatedHeight.Content()
-            }
-        }
-    }
-    root.addView(
-        avalancheRiskView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToStart = R.id.estimated_height
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            bottomMargin = 32.dp(context)
-        }
-    )
-    root.addView(
-        estimatedHeightView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToEnd = R.id.avalanche_risk
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = R.id.avalanche_risk
-            bottomToBottom = R.id.avalanche_risk
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val instrumentFrame = ConstraintLayout(context).apply {
-        id = View.generateViewId()
-    }
-    root.addView(
-        instrumentFrame,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            topToBottom = R.id.clinometer_title
-            bottomToTop = R.id.avalanche_risk
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            dimensionRatio = "1:1"
-            setMargins(16.dp(context), 16.dp(context), 16.dp(context), 16.dp(context))
-        }
     )
 
     val clinometer = ClinometerView(context).apply {
         id = R.id.clinometer
     }
-    instrumentFrame.addView(
-        clinometer.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val cameraViewHolder = ConstraintLayout(context).apply {
-        id = R.id.camera_view_holder
-        visibility = View.GONE
-        background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
-        backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
-        clipToOutline = true
-    }
-    val cameraFrame = ConstraintLayout(context).apply {
-        id = View.generateViewId()
-    }
+    val cameraViewHolder = ClinometerVisibilityState(initialVisible = false)
     val camera = CameraState(context)
-    val cameraPreview = ComposeView(context).apply {
-        id = R.id.camera
-        setContent {
-            TrailSenseTheme {
-                CameraPreview(
-                    state = camera,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-    }
     val arView = AugmentedRealityView(context).apply {
         id = R.id.ar_view
     }
-    val reticle = View(context).apply {
-        setBackgroundColor(ContextCompat.getColor(context, R.color.orange_40))
-    }
-    cameraFrame.addView(
-        cameraPreview,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    cameraFrame.addView(
-        arView.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    cameraFrame.addView(
-        reticle,
-        ConstraintLayout.LayoutParams(60.dp(context), 1.dp(context)).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
     val cameraClinometer = CameraClinometerView(context).apply {
         id = R.id.camera_clinometer
     }
-    cameraViewHolder.addView(
-        cameraFrame,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToStart = R.id.camera_clinometer
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    cameraViewHolder.addView(
-        cameraClinometer.view,
-        ConstraintLayout.LayoutParams(50.dp(context), ViewGroup.LayoutParams.MATCH_PARENT).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    instrumentFrame.addView(
-        cameraViewHolder,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
-    val clinometerInstructions = createInstructionView(
-        context,
-        R.id.clinometer_instructions,
-        R.drawable.ic_rotate_flat_to_portrait
-    )
-    val cameraClinometerInstructions = createInstructionView(
-        context,
-        R.id.camera_clinometer_instructions,
-        R.drawable.ic_rotate_landscape_to_portrait
-    )
-    instrumentFrame.addView(
-        clinometerInstructions,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-    instrumentFrame.addView(
-        cameraClinometerInstructions,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
+    val clinometerInstructions = ClinometerVisibilityState()
+    val cameraClinometerInstructions = ClinometerVisibilityState()
 
     return ClinometerViews(
-        root = root,
         clinometerTitle = title,
         clinometer = clinometer,
         cameraViewHolder = cameraViewHolder,
@@ -907,21 +782,6 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         clinometerInstructions = clinometerInstructions,
         cameraClinometerInstructions = cameraClinometerInstructions
     )
-}
-
-private fun createInstructionView(
-    context: Context,
-    id: Int,
-    icon: Int
-): ComposeView {
-    return ComposeView(context).apply {
-        this.id = id
-        setContent {
-            TrailSenseTheme {
-                ClinometerInstruction(icon = icon)
-            }
-        }
-    }
 }
 
 @Composable
@@ -944,10 +804,6 @@ private fun ClinometerInstruction(icon: Int) {
             modifier = Modifier.padding(top = 8.dp)
         )
     }
-}
-
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
 }
 
 @Preview(showBackground = true)

@@ -33,6 +33,7 @@ class CameraClinometerView(context: Context) {
 
     var inclination by mutableStateOf(0f)
     var startInclination by mutableStateOf<Float?>(null)
+    private var cameraVisible by mutableStateOf(true)
 
     val view = ComposeView(context).apply {
         setContent {
@@ -49,17 +50,21 @@ class CameraClinometerView(context: Context) {
         }
 
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = cameraVisible
         set(value) {
+            cameraVisible = value
             view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!cameraVisible) {
+            return
+        }
         CameraClinometerContent(
             inclination = inclination,
             startInclination = startInclination,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize()
         )
     }
 }
