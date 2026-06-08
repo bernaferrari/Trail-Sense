@@ -36,7 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -102,7 +102,7 @@ import java.time.Duration
 
 @Composable
 fun PathsToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PathsController(fragment) }
@@ -130,7 +130,7 @@ fun PathsToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PathsController(private val fragment: Fragment) {
+private class PathsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val service by lazy {
         Tools.getService(

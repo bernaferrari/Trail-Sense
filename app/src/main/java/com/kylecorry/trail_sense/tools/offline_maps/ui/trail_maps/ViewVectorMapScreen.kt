@@ -32,7 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ViewVectorMapToolScreen(fragment: Fragment) {
+fun ViewVectorMapToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { ViewVectorMapController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(controller) {
@@ -88,7 +88,7 @@ fun ViewVectorMapToolScreen(fragment: Fragment) {
     )
 }
 
-private class ViewVectorMapController(private val fragment: Fragment) {
+private class ViewVectorMapController(private val fragment: TrailSenseComposeDestinationFragment) {
     private val service by lazy { getAppService<MapService>() }
     var map by mutableStateOf<VectorMap?>(null)
         private set

@@ -40,7 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -68,7 +68,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ScanQRToolScreen(fragment: Fragment) {
+fun ScanQRToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { ScanQRController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(controller, lifecycleOwner) {
@@ -102,7 +102,7 @@ fun ScanQRToolScreen(fragment: Fragment) {
     )
 }
 
-private class ScanQRController(private val fragment: Fragment) {
+private class ScanQRController(private val fragment: TrailSenseComposeDestinationFragment) {
     private val cameraSize = Size(200, 200)
 
     var history by mutableStateOf<List<String>>(emptyList())

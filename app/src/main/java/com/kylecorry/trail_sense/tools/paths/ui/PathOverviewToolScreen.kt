@@ -47,7 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -141,7 +141,7 @@ import java.time.Duration
 
 @Composable
 fun PathOverviewToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PathOverviewController(fragment) }
@@ -169,7 +169,7 @@ fun PathOverviewToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PathOverviewController(private val fragment: Fragment) {
+private class PathOverviewController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val views = createPathOverviewViews(fragment.requireContext())
     private val isViewReady: Boolean
