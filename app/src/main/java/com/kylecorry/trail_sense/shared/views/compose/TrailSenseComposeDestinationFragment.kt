@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 import android.content.Context
 import android.content.Intent
 import android.Manifest
+import android.app.PendingIntent
 import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
@@ -43,6 +44,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.Lifecycle
@@ -76,6 +80,7 @@ import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
@@ -134,6 +139,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
+import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
+import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
+import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
@@ -145,9 +153,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 
-class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
+class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable {
 
     private var layerSheet: MapLayersBottomSheet? = null
+    private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
+    private var focusSearchRequest: (() -> Boolean)? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -236,7 +246,30 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_UNIT_SETTINGS -> UnitSettings()
             DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
             DESTINATION_LIGHT_METER -> LightMeterScreen()
+            DESTINATION_TOOLS -> ToolsHome()
         }
+    }
+
+    override fun focusSearch(): Boolean {
+        return focusSearchRequest?.invoke() == true
+    }
+
+    @Composable
+    private fun ToolsHome() {
+        ToolsScreen(
+            onToolClick = { tool ->
+                findNavController().navigateWithAnimation(tool.navAction)
+            },
+            onToolLongClick = { tool ->
+                showToolActions(tool)
+            },
+            onSettingsClick = {
+                findNavController().navigate(R.id.action_settings)
+            },
+            onSearchFocusRequestChanged = {
+                focusSearchRequest = it
+            }
+        )
     }
 
     @Composable
@@ -2537,6 +2570,66 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         )
     }
 
+    private fun showToolActions(tool: Tool) {
+        val actions = listOfNotNull(
+            if (tool.isExperimental) getString(R.string.experimental) else null,
+            if (tool.description != null) getString(R.string.pref_category_about) else null,
+            if (pinnedToolManager.isPinned(tool.id)) getString(R.string.unpin) else getString(R.string.pin),
+            if (tool.guideId != null) getString(R.string.tool_user_guide_title) else null,
+            if (tool.settingsNavAction != null) getString(R.string.settings) else null,
+            getString(R.string.add_to_homescreen)
+        )
+
+        Pickers.item(requireContext(), tool.name, actions) { selected ->
+            when (actions.getOrNull(selected ?: return@item)) {
+                getString(R.string.experimental) -> Unit
+                getString(R.string.pref_category_about) -> Alerts.dialog(
+                    requireContext(),
+                    tool.name,
+                    tool.description,
+                    cancelText = null
+                )
+                getString(R.string.unpin) -> pinnedToolManager.unpin(tool.id)
+                getString(R.string.pin) -> pinnedToolManager.pin(tool.id)
+                getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(this, tool.guideId!!)
+                getString(R.string.settings) -> findNavController().navigateWithAnimation(tool.settingsNavAction!!)
+                getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
+            }
+        }
+    }
+
+    private fun addToHomescreen(tool: Tool) {
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(requireContext())) {
+            return
+        }
+
+        val shortcutInfo = ShortcutInfoCompat.Builder(requireContext(), "tool-${tool.id}")
+            .setIcon(
+                IconCompat.createFromIcon(
+                    requireContext(),
+                    android.graphics.drawable.Icon.createWithResource(requireContext(), tool.icon)
+                )
+            )
+            .setIntent(MainActivity.openToolIntent(requireContext(), tool.id))
+            .setShortLabel(tool.name)
+            .setLongLabel(tool.name)
+            .build()
+
+        val callbackIntent =
+            ShortcutManagerCompat.createShortcutResultIntent(requireContext(), shortcutInfo)
+        val successCallback = PendingIntent.getBroadcast(
+            requireContext(),
+            0,
+            callbackIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        ShortcutManagerCompat.requestPinShortcut(
+            requireContext(),
+            shortcutInfo,
+            successCallback.intentSender
+        )
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -2679,5 +2772,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_UNIT_SETTINGS = "unit_settings"
         const val DESTINATION_AUGMENTED_REALITY_SETTINGS = "augmented_reality_settings"
         const val DESTINATION_LIGHT_METER = "light_meter"
+        const val DESTINATION_TOOLS = "tools"
     }
 }

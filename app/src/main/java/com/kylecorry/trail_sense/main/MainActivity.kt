@@ -63,7 +63,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.ui.ToolsFragment
+import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 
 class MainActivity : AndromedaActivity() {
 
@@ -515,7 +515,7 @@ class MainActivity : AndromedaActivity() {
         ).setIcon(R.drawable.apps)
             .setOnMenuItemClickListener {
                 if (navController?.currentDestination?.id == R.id.action_experimental_tools && !views.quickActionsSheet.isOpen()) {
-                    val toolsFragment = getFragment() as? ToolsFragment
+                    val toolsFragment = getFragment() as? ToolSearchFocusable
                     if (toolsFragment?.focusSearch() == true) {
                         return@setOnMenuItemClickListener true
                     }
