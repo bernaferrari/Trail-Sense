@@ -788,15 +788,23 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentTurnBackSettings
-            setClassName("com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "TurnBackSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TURN_BACK_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentWaterBoilTimerSettings
-            setClassName("com.kylecorry.trail_sense.tools.waterpurification.ui.WaterBoilTimerSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "WaterBoilTimerSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WATER_BOIL_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -899,8 +907,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cellSignalSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.CellSignalSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "CellSignalSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CELL_SIGNAL_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -913,8 +925,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clockSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.ClockSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ClockSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOCK_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1042,8 +1058,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.tideSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.tides.ui.TideSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "TideSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TIDE_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

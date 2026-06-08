@@ -5,7 +5,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.core.system.Package
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 
@@ -32,7 +40,90 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         when (requireArguments().getString(ARG_DESTINATION)) {
             DESTINATION_LEVEL -> LevelScreen()
             DESTINATION_WHISTLE -> WhistleScreen()
+            DESTINATION_CELL_SIGNAL_SETTINGS -> CellSignalSettings()
+            DESTINATION_CLOCK_SETTINGS -> ClockSettings()
+            DESTINATION_TIDE_SETTINGS -> TideSettings()
+            DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
+            DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
         }
+    }
+
+    @Composable
+    private fun CellSignalSettings() {
+        val prefs = remember { UserPreferences(requireContext()).cellSignal }
+        var populateCache by remember { mutableStateOf(prefs.populateCache) }
+        SingleSwitchSettingsScreen(
+            title = stringResource(R.string.cell_signal),
+            label = stringResource(R.string.pref_cell_signal_refresh_cache_title),
+            summary = stringResource(R.string.pref_cell_signal_refresh_cache_summary),
+            checked = populateCache,
+            onCheckedChange = {
+                populateCache = it
+                prefs.populateCache = it
+            }
+        )
+    }
+
+    @Composable
+    private fun ClockSettings() {
+        val prefs = remember { UserPreferences(requireContext()).clock }
+        var showAnalogClock by remember { mutableStateOf(prefs.showAnalogClock) }
+        SingleSwitchSettingsScreen(
+            title = stringResource(R.string.tool_clock_title),
+            label = stringResource(R.string.pref_enable_analog_title),
+            checked = showAnalogClock,
+            onCheckedChange = {
+                showAnalogClock = it
+                prefs.showAnalogClock = it
+            }
+        )
+    }
+
+    @Composable
+    private fun TideSettings() {
+        val prefs = remember { UserPreferences(requireContext()).tides }
+        var showNearestTide by remember { mutableStateOf(prefs.showNearestTide) }
+        SingleSwitchSettingsScreen(
+            title = stringResource(R.string.tides),
+            label = stringResource(R.string.pref_show_nearest_tide_title),
+            checked = showNearestTide,
+            onCheckedChange = {
+                showNearestTide = it
+                prefs.showNearestTide = it
+            }
+        )
+    }
+
+    @Composable
+    private fun TurnBackSettings() {
+        val prefs = remember { UserPreferences(requireContext()).turnBack }
+        var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
+        SingleSwitchSettingsScreen(
+            title = stringResource(R.string.tool_turn_back),
+            label = stringResource(R.string.use_alarm_for_turn_back_alert),
+            summary = stringResource(R.string.alarm_description),
+            checked = useAlarm,
+            onCheckedChange = {
+                useAlarm = it
+                prefs.useAlarm = it
+            }
+        )
+    }
+
+    @Composable
+    private fun WaterBoilSettings() {
+        val prefs = remember { UserPreferences(requireContext()).waterBoilTimer }
+        var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
+        SingleSwitchSettingsScreen(
+            title = stringResource(R.string.water_boil_timer),
+            label = stringResource(R.string.use_alarm_for_water_boil_timer),
+            summary = stringResource(R.string.alarm_description),
+            checked = useAlarm,
+            onCheckedChange = {
+                useAlarm = it
+                prefs.useAlarm = it
+            }
+        )
     }
 
     private fun openApp(context: Context, packageName: String, tool: String) {
@@ -51,5 +142,10 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_WHISTLE = "whistle"
         const val DESTINATION_LOCAL_MESSAGING = "local_messaging"
         const val DESTINATION_LOCAL_TALK = "local_talk"
+        const val DESTINATION_CELL_SIGNAL_SETTINGS = "cell_signal_settings"
+        const val DESTINATION_CLOCK_SETTINGS = "clock_settings"
+        const val DESTINATION_TIDE_SETTINGS = "tide_settings"
+        const val DESTINATION_TURN_BACK_SETTINGS = "turn_back_settings"
+        const val DESTINATION_WATER_BOIL_SETTINGS = "water_boil_settings"
     }
 }
