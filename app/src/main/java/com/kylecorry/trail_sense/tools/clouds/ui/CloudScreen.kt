@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.clouds.ui
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,14 +53,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
@@ -68,11 +65,10 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
@@ -81,11 +77,9 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRe
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import java.time.Duration
 import java.time.Instant
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun CloudToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CloudToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CloudController(fragment) }
 
     DisposableEffect(controller) {
@@ -109,10 +103,9 @@ fun CloudToolScreen(fragment: TrailSenseComposeDestinationFragment) {
         onDismissCloudImage = { controller.selectedCloudImage = null },
         modifier = Modifier.fillMaxSize()
     )
-    controller.PhotoImportContent()
 }
 
-private class CloudController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CloudController(private val fragment: TrailSenseDestinationHost) {
 
     private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
     private val cloudDetailsService by lazy { CloudDetailsService(fragment.requireContext()) }
@@ -125,7 +118,6 @@ private class CloudController(private val fragment: TrailSenseComposeDestination
     var subtitle by mutableStateOf("")
         private set
     var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
-    private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
 
     fun onCreate() {
         if (isInitialized) {
@@ -139,13 +131,13 @@ private class CloudController(private val fragment: TrailSenseComposeDestination
             )
         )
 
-        fragment.observe(repo.getAllLive()) {
+        repo.getAllLive().observe(fragment.lifecycleOwner) {
             val since = Instant.now().minus(Duration.ofHours(48))
             clouds = it.sortedByDescending { cloud -> cloud.time }
                 .filter { cloud -> cloud.time >= since }
         }
 
-        val shouldOpenScanner = fragment.requireArguments().getBoolean("open_scanner", false)
+        val shouldOpenScanner = fragment.destinationArguments?.getBoolean("open_scanner", false) == true
         if (shouldOpenScanner) {
             addFromCamera()
         }
@@ -153,13 +145,6 @@ private class CloudController(private val fragment: TrailSenseComposeDestination
 
     fun onDestroy() {
         selectedCloudImage = null
-        photoImportDialog?.dismiss()
-        photoImportDialog = null
-    }
-
-    @Composable
-    fun PhotoImportContent() {
-        photoImportDialog?.Content()
     }
 
     fun showGuide() {
@@ -182,18 +167,9 @@ private class CloudController(private val fragment: TrailSenseComposeDestination
         fragment.requestCamera {
             if (it) {
                 fragment.inBackground {
-                    val uri = takePhoto(
-                        fragment,
+                    showPhotoImport(
                         Size(SoftmaxCloudClassifier.IMAGE_SIZE, SoftmaxCloudClassifier.IMAGE_SIZE)
                     )
-                    uri?.let {
-                        fragment.findNavController().navigate(
-                            R.id.action_cloud_to_cloud_picker,
-                            Bundle().apply {
-                                putParcelable("image", uri)
-                            }
-                        )
-                    }
                 }
             } else {
                 fragment.alertNoCameraPermission()
@@ -205,43 +181,32 @@ private class CloudController(private val fragment: TrailSenseComposeDestination
         fragment.inBackground(BackgroundMinimumState.Created) {
             val uri =
                 IntentUriPicker(
-                    fragment.requireActivity() as IntentResultRetriever,
+                    fragment.andromedaActivity as IntentResultRetriever,
                     fragment.requireContext()
                 ).open(listOf("image/*"))
             val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
-            temp?.let {
-                fragment.findNavController().navigate(
-                    R.id.action_cloud_to_cloud_picker,
-                    Bundle().apply {
-                        putParcelable("image", it)
-                    }
-                )
-            }
+            temp?.let { openCloudPicker(it) }
         }
     }
 
-    private suspend fun takePhoto(fragment: TrailSenseComposeDestinationFragment, size: Size): android.net.Uri? {
-        return suspendCoroutine { cont ->
-            val prefs = UserPreferences(fragment.requireContext()).camera
-            fragment.requireActivity().runOnUiThread {
-                photoImportDialog = PhotoImportDialog(
-                    fragment.requireContext(),
-                    fragment.viewLifecycleOwner,
-                    fragment.viewLifecycleOwner.lifecycleScope,
-                    size,
-                    prefs.useZeroShutterLag
-                ) { uri ->
-                    photoImportDialog = null
-                    cont.resume(uri)
-                }.also {
-                    it.show()
-                }
-            }
+    private fun showPhotoImport(size: Size) {
+        val prefs = UserPreferences(fragment.requireContext()).camera
+        fragment.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
+            uri?.let { openCloudPicker(it) }
         }
     }
 
     fun addManual() {
         fragment.findNavController().navigate(R.id.action_cloud_to_cloud_picker)
+    }
+
+    private fun openCloudPicker(uri: Uri) {
+        fragment.findNavController().navigate(
+            R.id.action_cloud_to_cloud_picker,
+            Bundle().apply {
+                putParcelable("image", uri)
+            }
+        )
     }
 
     fun delete(reading: Reading<CloudObservation>) {

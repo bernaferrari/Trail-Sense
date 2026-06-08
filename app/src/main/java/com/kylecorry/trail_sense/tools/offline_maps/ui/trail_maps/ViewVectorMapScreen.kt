@@ -32,12 +32,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -45,6 +42,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -58,7 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ViewVectorMapToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun ViewVectorMapToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { ViewVectorMapController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(controller) {
@@ -88,7 +86,7 @@ fun ViewVectorMapToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class ViewVectorMapController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class ViewVectorMapController(private val fragment: TrailSenseDestinationHost) {
     private val service by lazy { getAppService<MapService>() }
     var map by mutableStateOf<VectorMap?>(null)
         private set
@@ -97,7 +95,8 @@ private class ViewVectorMapController(private val fragment: TrailSenseComposeDes
     private var configuredMapId: Long? = null
 
     private val mapId: Long
-        get() = fragment.requireArguments().getLong("offline_map_file_id")
+        get() = fragment.destinationArguments?.getLong("offline_map_file_id")
+            ?: error("Missing offline map id")
 
     fun onDestroy() {
         onPause()
@@ -116,7 +115,7 @@ private class ViewVectorMapController(private val fragment: TrailSenseComposeDes
     }
 
     fun loadMap() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getVectorMap(mapId)
             }
@@ -153,21 +152,21 @@ private class ViewVectorMapController(private val fragment: TrailSenseComposeDes
     }
 
     fun rename(map: VectorMap) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             RenameMapCommand(fragment.requireContext(), service).execute(map)
             loadMap()
         }
     }
 
     fun editAttribution(map: VectorMap) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             EditOfflineMapAttributionCommand(fragment.requireContext()).execute(map)
             loadMap()
         }
     }
 
     fun delete(map: VectorMap) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             DeleteMapCommand(fragment.requireContext(), service).execute(map)
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
                 onMain {
