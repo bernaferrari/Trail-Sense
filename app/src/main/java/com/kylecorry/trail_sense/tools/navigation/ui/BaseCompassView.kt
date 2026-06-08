@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.AttributeSet
-import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,8 +11,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.isInvisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -36,6 +33,7 @@ abstract class BaseCompassView @JvmOverloads constructor(
     private var _azimuth by mutableFloatStateOf(0f)
     private var contentWidth by mutableIntStateOf(0)
     private var contentHeight by mutableIntStateOf(0)
+    private var contentVisible by mutableStateOf(true)
 
     override var compassCenter: Coordinate
         get() = _compassCenter
@@ -71,61 +69,26 @@ abstract class BaseCompassView @JvmOverloads constructor(
         useTrueNorth = prefs.compass.useTrueNorth
     }
 
-    val view = ComposeView(context).apply {
-        setContent {
-            Content()
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = contentVisible
         set(value) {
-            view.visibility = if (value) View.VISIBLE else View.GONE
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            view.visibility = value
+            contentVisible = value
         }
 
     var isInvisible: Boolean
-        get() = view.isInvisible
+        get() = !contentVisible
         set(value) {
-            view.isInvisible = value
-        }
-
-    var isClickable: Boolean
-        get() = view.isClickable
-        set(value) {
-            view.isClickable = value
-        }
-
-    var isFocusable: Boolean
-        get() = view.isFocusable
-        set(value) {
-            view.isFocusable = value
+            contentVisible = !value
         }
 
     val width: Int
-        get() = view.width.takeIf { it > 0 } ?: contentWidth
+        get() = contentWidth
 
     val height: Int
-        get() = view.height.takeIf { it > 0 } ?: contentHeight
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
-        view.setOnClickListener(listener)
-    }
+        get() = contentHeight
 
     fun invalidate() {
         requestRedraw()
-        view.invalidate()
     }
 
     @Composable

@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.CompassDirection

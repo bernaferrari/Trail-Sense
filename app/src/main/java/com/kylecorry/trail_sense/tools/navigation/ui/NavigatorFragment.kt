@@ -969,10 +969,7 @@ private fun createNavigatorViews(
     }
 
     val radarCompass = RadarCompassView(context, null).apply {
-        id = R.id.radar_compass
-        visibility = View.GONE
-        isClickable = false
-        isFocusable = false
+        isInvisible = true
     }
 
     val linearCompass = LinearSightingCompassView(context).apply {
