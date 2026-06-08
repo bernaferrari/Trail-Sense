@@ -12,10 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -26,7 +27,7 @@ import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
@@ -170,18 +171,22 @@ class AstronomyGuidanceTargetPicker(
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
         var alert: androidx.appcompat.app.AlertDialog? = null
-        val dialogView = AstronomyGuidanceTargetPickerView(
-            context = context,
-            options = options,
-            onSelected = {
+        val dialogView = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            AstronomyGuidanceTargetPickerContent(
+                options = options,
+                onSelected = {
                 selected = it
                 if (!resumed) {
                     resumed = true
                     cont.resume(it)
                 }
                 alert?.dismiss()
-            }
-        )
+                }
+            )
+        }
 
         alert = Alerts.dialog(
             context,
@@ -196,72 +201,67 @@ class AstronomyGuidanceTargetPicker(
         }
     }
 
-    private class AstronomyGuidanceTargetPickerView(
-        context: android.content.Context,
-        private val options: List<AstronomyGuidanceOption>,
-        private val onSelected: (AstronomyGuidanceOption) -> Unit
-    ) : AbstractComposeView(context) {
+    @Composable
+    private fun AstronomyGuidanceTargetPickerContent(
+        options: List<AstronomyGuidanceOption>,
+        onSelected: (AstronomyGuidanceOption) -> Unit
+    ) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        var filteredOptions by remember(options) { mutableStateOf(options) }
+        var query by remember { mutableStateOf("") }
 
-        private var filteredOptions by mutableStateOf(options)
-        private var query by mutableStateOf("")
-
-        @Composable
-        override fun Content() {
-            TrailSenseTheme {
-                Column {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = {
-                            query = it
-                            filteredOptions = if (it.isBlank()) {
-                                options
-                            } else {
-                                TextUtils.search(it, options) { option ->
-                                    listOfNotNull(option.name, option.subtitle)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        singleLine = true,
-                        label = { Text(context.getString(R.string.search)) },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_search),
-                                contentDescription = null
-                            )
-                        }
-                    )
-
-                    if (filteredOptions.isEmpty()) {
-                        Text(
-                            text = context.getString(R.string.no_results),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(32.dp)
-                        )
+        Column {
+            OutlinedTextField(
+                value = query,
+                onValueChange = {
+                    query = it
+                    filteredOptions = if (it.isBlank()) {
+                        options
                     } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(top = 16.dp)
-                                .testTag("astronomy_guidance_target_list")
-                        ) {
-                            items(filteredOptions, key = { it.name }) { option ->
-                                TrailSenseListItem(
-                                    title = option.name,
-                                    subtitle = option.subtitle,
-                                    icon = painterResource(option.icon),
-                                    iconTint = option.iconTint?.let { Color(it) }
-                                        ?: MaterialTheme.colorScheme.primary,
-                                    iconRotation = option.iconRotation,
-                                    onClick = { onSelected(option) },
-                                    animateEntrance = false,
-                                    modifier = Modifier.testTag("astronomy_guidance_target")
-                                )
-                                TrailSenseDivider()
-                            }
+                        TextUtils.search(it, options) { option ->
+                            listOfNotNull(option.name, option.subtitle)
                         }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                singleLine = true,
+                label = { Text(context.getString(R.string.search)) },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = null
+                    )
+                }
+            )
+
+            if (filteredOptions.isEmpty()) {
+                Text(
+                    text = context.getString(R.string.no_results),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(32.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .testTag("astronomy_guidance_target_list")
+                ) {
+                    items(filteredOptions, key = { it.name }) { option ->
+                        TrailSenseListItem(
+                            title = option.name,
+                            subtitle = option.subtitle,
+                            icon = painterResource(option.icon),
+                            iconTint = option.iconTint?.let { Color(it) }
+                                ?: MaterialTheme.colorScheme.primary,
+                            iconRotation = option.iconRotation,
+                            onClick = { onSelected(option) },
+                            animateEntrance = false,
+                            modifier = Modifier.testTag("astronomy_guidance_target")
+                        )
+                        TrailSenseDivider()
                     }
                 }
             }

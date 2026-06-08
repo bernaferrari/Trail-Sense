@@ -31,6 +31,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.google.android.material.navigation.NavigationBarView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
@@ -53,7 +54,7 @@ import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils.setupWithNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.shared.views.ErrorBannerView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.battery.infrastructure.commands.PowerSavingModeAlertCommand
@@ -664,7 +665,12 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
     )
 
     val errorBanner = ErrorBannerState(context)
-    val errorBannerView = ErrorBannerView(context, errorBanner).apply {
+    val errorBannerView = TrailSenseComposeRootView(
+        context,
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        errorBanner.Content()
+    }.apply {
         id = R.id.error_banner
     }
     colorFilter.addView(
