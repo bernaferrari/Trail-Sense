@@ -32,8 +32,4 @@
         <attr name="flipEnable" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="TextInputView">
-        <attr name="android:hint"/>
-    </declare-styleable>
-
 </resources>
