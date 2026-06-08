@@ -181,6 +181,7 @@ import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
+import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.signal_finder.ui.SignalFinderToolScreen
@@ -373,6 +374,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
             DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
             DESTINATION_SETTINGS -> SettingsToolScreen(this)
+            DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
         }
     }
 
@@ -3393,5 +3395,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SIGNAL_FINDER = "signal_finder"
         const val DESTINATION_TURN_BACK = "turn_back"
         const val DESTINATION_SETTINGS = "settings"
+        const val DESTINATION_STRIDE_LENGTH_ESTIMATION = "stride_length_estimation"
     }
 }

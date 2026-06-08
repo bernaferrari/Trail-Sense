@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
@@ -36,40 +39,35 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.IStrideLengthEstimator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.StrideLengthEstimatorFactory
 import kotlinx.coroutines.delay
 
-class FragmentStrideLengthEstimation : TrailSenseComposeFragment() {
-
-    private val estimator by lazy {
-        StepLengthEstimatorFactory(requireContext()).getEstimator()
+@Composable
+fun StrideLengthEstimationToolScreen(fragment: Fragment) {
+    val estimator = remember(fragment) {
+        StrideLengthEstimatorFactory(fragment.requireContext()).getEstimator()
     }
+    val formatter = remember(fragment) { FormatService.getInstance(fragment.requireContext()) }
+    val prefs = remember(fragment) { UserPreferences(fragment.requireContext()) }
+    val units = remember(prefs) { prefs.baseDistanceUnits }
 
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val units by lazy { prefs.baseDistanceUnits }
-
-    @Composable
-    override fun FragmentContent() {
-        StrideLengthScreen(
-            estimator = estimator,
-            strideLengthText = {
-                formatter.formatDistance(it.convertTo(units), 2, false)
-            },
-            onSave = {
-                prefs.pedometer.strideLength = estimator.strideLength ?: Distance.meters(0f)
-                Alerts.toast(requireContext(), getString(R.string.saved))
-            },
-            onPermissionDenied = {
-                alertNoActivityRecognitionPermission()
-            },
-            requestPermission = { callback ->
-                requestActivityRecognition(callback)
-            }
-        )
-    }
+    StrideLengthScreen(
+        estimator = estimator,
+        strideLengthText = {
+            formatter.formatDistance(it.convertTo(units), 2, false)
+        },
+        onSave = {
+            prefs.pedometer.strideLength = estimator.strideLength ?: Distance.meters(0f)
+            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.saved))
+        },
+        onPermissionDenied = {
+            fragment.alertNoActivityRecognitionPermission()
+        },
+        requestPermission = { callback ->
+            fragment.requestActivityRecognition(callback)
+        }
+    )
 }
 
 @Composable

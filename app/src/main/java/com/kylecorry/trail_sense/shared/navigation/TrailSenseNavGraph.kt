@@ -1319,8 +1319,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentStrideLengthEstimation
-            setClassName("com.kylecorry.trail_sense.tools.pedometer.ui.FragmentStrideLengthEstimation")
-            label = "FragmentStrideLengthEstimation"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "StrideLengthEstimationScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_STRIDE_LENGTH_ESTIMATION)
+                .build())
             graph.addDestination(this)
         }
 
