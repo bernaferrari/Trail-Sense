@@ -9,8 +9,6 @@ import android.os.Bundle
 import android.util.Size
 import android.view.Gravity
 import android.view.View
-import android.view.ViewConfiguration
-import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
@@ -376,20 +374,21 @@ object CustomUiUtils {
         default: Pressure? = null,
         onPressurePick: (pressure: Pressure?) -> Unit
     ) {
-        val view = PressureInputView(context)
-        view.layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        val padding = Resources.dp(context, 28f).toInt()
-        view.setPadding(padding, 0, padding, 0)
-        // TODO: Sort the units properly
-        view.units = PressureUnits.entries
-        view.value = default
         var selected = default
-        view.setOnValueChangeListener {
-            selected = it
+        val pressureInput = PressureInputView(context).apply {
+            // TODO: Sort the units properly
+            units = PressureUnits.entries
+            value = default
+            setOnValueChangeListener {
+                selected = it
+            }
         }
+        val view = createPromptContent(
+            context,
+            pressureInput,
+            horizontalPadding = 28,
+            verticalPadding = 0
+        )
 
         Alerts.dialog(context, title, message, contentView = view) {
             if (!it) {
@@ -445,7 +444,12 @@ object CustomUiUtils {
         )
     }
 
-    private fun createPromptContent(context: Context, content: View): View {
+    private fun createPromptContent(
+        context: Context,
+        content: View,
+        horizontalPadding: Int = 16,
+        verticalPadding: Int = 16
+    ): View {
         return TrailSenseComposeRootView(
             context,
             ViewCompositionStrategy.DisposeOnDetachedFromWindow
@@ -454,7 +458,10 @@ object CustomUiUtils {
                 factory = { content },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(
+                        horizontal = horizontalPadding.dp,
+                        vertical = verticalPadding.dp
+                    )
             )
         }
     }
