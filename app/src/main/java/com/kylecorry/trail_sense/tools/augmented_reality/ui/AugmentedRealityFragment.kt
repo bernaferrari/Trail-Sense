@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -779,7 +779,7 @@ private data class AugmentedRealityViews(
     val cancelCalibrationButton: ArIconButton,
     val guidancePanel: ConstraintLayout,
     val arGuideIcon: ArGuideIconView,
-    val arGuideName: TextView,
+    val arGuideName: ArTextView,
     val arGuideCancel: ArIconButton,
     val timeSheet: DateTimeSliderSheetState
 )
@@ -984,7 +984,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val guideLabel = TextView(context).apply {
+    val guideLabel = ArTextView(context).apply {
         id = R.id.ar_guide_label
         text = context.getString(R.string.target)
     }
@@ -1024,9 +1024,11 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val guideName = TextView(context).apply {
+    val guideName = ArTextView(
+        context,
+        style = ArTextStyle.Title
+    ).apply {
         id = R.id.ar_guide_name
-        textSize = 16f
     }
     guidancePanel.addView(
         guideName,
@@ -1190,6 +1192,32 @@ private class ArGuideIconView(context: Context) : AbstractComposeView(context) {
             }
         }
     }
+}
+
+private class ArTextView(
+    context: Context,
+    private val style: ArTextStyle = ArTextStyle.Label
+) : AbstractComposeView(context) {
+    var text by mutableStateOf("")
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Text(
+                text = text,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = when (style) {
+                    ArTextStyle.Label -> MaterialTheme.typography.bodySmall
+                    ArTextStyle.Title -> MaterialTheme.typography.bodyLarge
+                }
+            )
+        }
+    }
+}
+
+private enum class ArTextStyle {
+    Label,
+    Title
 }
 
 private fun resolveThemeColor(context: Context, attr: Int): Int {
