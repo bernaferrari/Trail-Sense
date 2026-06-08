@@ -39,11 +39,9 @@ import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
-import com.kylecorry.andromeda.pickers.material.MaterialPickers
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.CustomUiUtils.time
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
@@ -96,8 +94,8 @@ private class TurnBackController(private val fragment: TrailSenseComposeDestinat
     private val astronomy = AstronomyService()
 
     fun pickReturnTime(currentReturnTime: Instant?) {
-        MaterialPickers.time(
-            fragment.requireActivity().supportFragmentManager,
+        CustomUiUtils.pickTime(
+            fragment.requireContext(),
             prefs.use24HourTime,
             currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
         ) {

@@ -4,7 +4,6 @@ package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -368,20 +367,8 @@ private fun DateTimeInput(
         modifier = modifier
             .fillMaxWidth()
             .clickable {
-                val supportFragmentManager =
-                    (context as? AppCompatActivity)?.supportFragmentManager
-                if (supportFragmentManager != null) {
-                    CustomUiUtils.pickMaterialDatetime(
-                        supportFragmentManager,
-                        prefs.use24HourTime,
-                        selected
-                    ) {
-                        onDatetimeChange(it)
-                    }
-                } else {
-                    CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
-                        onDatetimeChange(it)
-                    }
+                CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
+                    onDatetimeChange(it)
                 }
             }
             .testTag("time"),

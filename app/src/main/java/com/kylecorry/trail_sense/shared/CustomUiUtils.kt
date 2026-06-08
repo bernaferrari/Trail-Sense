@@ -24,13 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
@@ -38,7 +34,6 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
-import com.kylecorry.andromeda.pickers.material.MaterialPickers
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -152,11 +147,7 @@ object CustomUiUtils {
         dayViewDecorator: AndromedaDayViewDecorator? = null,
         onDatePick: (date: LocalDate?) -> Unit
     ) {
-        if (context is FragmentActivity) {
-            MaterialPickers.date(context.supportFragmentManager, date, dayViewDecorator, onDatePick)
-        } else {
-            Pickers.date(context, date, onDatePick)
-        }
+        Pickers.date(context, date, onDatePick)
     }
 
     fun pickTime(
@@ -165,11 +156,7 @@ object CustomUiUtils {
         default: LocalTime = LocalTime.now(),
         onTimePick: (time: LocalTime?) -> Unit
     ) {
-        if (context is FragmentActivity) {
-            MaterialPickers.time(context.supportFragmentManager, use24Hours, default, onTimePick)
-        } else {
-            Pickers.time(context, use24Hours, default, onTimePick)
-        }
+        Pickers.time(context, use24Hours, default, onTimePick)
     }
 
     fun oneTimeToast(
@@ -326,50 +313,6 @@ object CustomUiUtils {
                 onDatetimePick(null)
             }
         }
-    }
-
-    fun pickMaterialDatetime(
-        fragmentManager: FragmentManager,
-        use24Hours: Boolean,
-        default: LocalDateTime = LocalDateTime.now(),
-        onDatetimePick: (value: LocalDateTime?) -> Unit
-    ) {
-        MaterialPickers.date(fragmentManager, default.toLocalDate(), null) { date ->
-            if (date != null) {
-                MaterialPickers.time(fragmentManager, use24Hours, default.toLocalTime()) { time ->
-                    if (time != null) {
-                        onDatetimePick(LocalDateTime.of(date, time))
-                    } else {
-                        onDatetimePick(null)
-                    }
-                }
-            } else {
-                onDatetimePick(null)
-            }
-        }
-    }
-
-    fun MaterialPickers.time(
-        fragmentManager: FragmentManager,
-        use24Hours: Boolean,
-        default: LocalTime = LocalTime.now(),
-        onTimePick: (time: LocalTime?) -> Unit
-    ) {
-        val builder = MaterialTimePicker.Builder()
-            .setHour(default.hour)
-            .setMinute(default.minute)
-            .setTimeFormat(if (use24Hours) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H)
-
-        val picker = builder.build()
-
-        picker.addOnPositiveButtonClickListener {
-            onTimePick(LocalTime.of(picker.hour, picker.minute))
-        }
-
-        picker.addOnCancelListener { onTimePick(null) }
-        picker.addOnNegativeButtonClickListener { onTimePick(null) }
-
-        picker.show(fragmentManager, picker.toString())
     }
 
     fun pickPressure(
