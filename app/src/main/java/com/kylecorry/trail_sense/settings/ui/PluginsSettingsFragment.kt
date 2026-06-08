@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,10 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -35,28 +29,18 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.launch
 
-class PluginsSettingsFragment : Fragment() {
+class PluginsSettingsFragment : TrailSenseComposeFragment() {
 
     private val pluginSubsystem = getAppService<PluginSubsystem>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PluginsSettingsScreen()
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PluginsSettingsScreen()
     }
 
     @Composable

@@ -1,10 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Intent
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,12 +14,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
@@ -31,7 +24,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -40,7 +33,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
-class SettingsFragment : Fragment() {
+class SettingsFragment : TrailSenseComposeFragment() {
 
     private val navigationMap = mapOf(
         R.string.pref_unit_settings to R.id.action_settings_to_unit_settings,
@@ -59,36 +52,26 @@ class SettingsFragment : Fragment() {
 
     private val plugins by lazy { getAppService<PluginSubsystem>() }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SettingsScreen(
-                        version = Package.getVersionName(requireContext()),
-                        pluginsEnabled = plugins.arePluginsEnabled(),
-                        onNavigate = { findNavController().navigateWithAnimation(it) },
-                        onOpenUrl = { startActivity(Intents.url(it)) },
-                        onEmailDeveloper = {
-                            val intent = Intents.email(
-                                getString(R.string.email),
-                                getString(R.string.app_name)
-                            )
-                            startActivity(
-                                Intent.createChooser(
-                                    intent,
-                                    getString(R.string.pref_email_title)
-                                )
-                            )
-                        }
+    @Composable
+    override fun FragmentContent() {
+        SettingsScreen(
+            version = Package.getVersionName(requireContext()),
+            pluginsEnabled = plugins.arePluginsEnabled(),
+            onNavigate = { findNavController().navigateWithAnimation(it) },
+            onOpenUrl = { startActivity(Intents.url(it)) },
+            onEmailDeveloper = {
+                val intent = Intents.email(
+                    getString(R.string.email),
+                    getString(R.string.app_name)
+                )
+                startActivity(
+                    Intent.createChooser(
+                        intent,
+                        getString(R.string.pref_email_title)
                     )
-                }
+                )
             }
-        }
+        )
     }
 
     @Composable

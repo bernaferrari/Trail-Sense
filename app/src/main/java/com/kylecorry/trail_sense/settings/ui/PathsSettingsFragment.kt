@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,11 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
@@ -36,7 +31,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -47,7 +42,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class PathsSettingsFragment : Fragment() {
+class PathsSettingsFragment : TrailSenseComposeFragment() {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -56,15 +51,8 @@ class PathsSettingsFragment : Fragment() {
     private var setBacktrackEnabledState: ((Boolean) -> Unit)? = null
     private var refreshNotificationState: (() -> Unit)? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
+    @Composable
+    override fun FragmentContent() {
                     val pathStyleOptions = remember {
                         options(R.array.line_style_entries, R.array.line_style_values)
                     }
@@ -310,9 +298,6 @@ class PathsSettingsFragment : Fragment() {
                             }
                         }
                     }
-                }
-            }
-        }
     }
 
     override fun onResume() {
