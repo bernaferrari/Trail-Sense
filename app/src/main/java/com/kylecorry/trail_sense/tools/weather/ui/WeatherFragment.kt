@@ -2,9 +2,7 @@ package com.kylecorry.trail_sense.tools.weather.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -35,9 +33,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -52,7 +48,6 @@ import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.views.toolbar.Toolbar
@@ -73,6 +68,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -105,7 +101,7 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
-class WeatherFragment : AndromedaFragment() {
+class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 
     private var weatherViews: WeatherViews? = null
     private val views: WeatherViews
@@ -152,34 +148,26 @@ class WeatherFragment : AndromedaFragment() {
         Tools.getService(requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createWeatherViews(requireContext())
-        weatherViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    WeatherHost(
-                        views = views,
-                        weatherItems = weatherItems,
-                        pressureChartData = pressureChartData,
-                        pressureMarkerText = pressureMarkerText,
-                        isWeatherUpdating = isWeatherUpdating,
-                        monitorState = weatherMonitorState,
-                        monitorFrequency = weatherMonitorFrequency,
-                        formatService = formatService,
-                        onChangeMonitorFrequency = ::changeWeatherFrequency,
-                        onPressureMarkerSelected = ::onPressureMarkerSelected,
-                        onToggleMonitor = ::toggleWeatherMonitor,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        weatherViews = createWeatherViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        WeatherHost(
+            views = views,
+            weatherItems = weatherItems,
+            pressureChartData = pressureChartData,
+            pressureMarkerText = pressureMarkerText,
+            isWeatherUpdating = isWeatherUpdating,
+            monitorState = weatherMonitorState,
+            monitorFrequency = weatherMonitorFrequency,
+            formatService = formatService,
+            onChangeMonitorFrequency = ::changeWeatherFrequency,
+            onPressureMarkerSelected = ::onPressureMarkerSelected,
+            onToggleMonitor = ::toggleWeatherMonitor,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

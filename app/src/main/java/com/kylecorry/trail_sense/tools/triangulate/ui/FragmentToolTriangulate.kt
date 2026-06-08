@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
@@ -43,9 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,7 +52,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -97,6 +93,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -111,7 +108,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FragmentToolTriangulate : Fragment() {
+class FragmentToolTriangulate : TrailSenseComposeFragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -170,65 +167,55 @@ class FragmentToolTriangulate : Fragment() {
         update()
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    TriangulateScreen(
-                        title = title,
-                        actionsVisible = actionsVisible,
-                        navigateVisible = navigateVisible,
-                        updateGpsOverrideVisible = updateGpsOverrideVisible,
-                        shouldCalculateMyLocation = shouldCalculateMyLocation,
-                        location1Title = location1Title,
-                        location2Title = location2Title,
-                        location1Instructions = location1Instructions,
-                        location2Instructions = location2Instructions,
-                        location1Complete = location1Complete,
-                        location2Complete = location2Complete,
-                        location1Expanded = location1Expanded,
-                        location2Expanded = location2Expanded,
-                        location1 = location1Coordinate,
-                        location2 = location2Coordinate,
-                        bearing1 = bearing1Value,
-                        bearing2 = bearing2Value,
-                        bearing1TrueNorth = bearing1TrueNorth,
-                        bearing2TrueNorth = bearing2TrueNorth,
-                        compassBearingText = compassBearingText,
-                        hasCompass = hasCompass,
-                        onModeChanged = {
-                            shouldCalculateMyLocation = it
-                            update()
-                        },
-                        onCreateBeacon = ::createBeacon,
-                        onNavigate = ::navigateToLocation,
-                        onShareLocation = ::shareLocation,
-                        onUpdateGpsOverride = ::updateGpsOverride,
-                        onMapReady = {
-                            map = it
-                            maybeSetup()
-                        },
-                        onLocation1Change = ::updateLocation1Coordinate,
-                        onLocation2Change = ::updateLocation2Coordinate,
-                        onBearing1Change = { bearing, trueNorth -> updateBearing(1, bearing, trueNorth) },
-                        onBearing2Change = { bearing, trueNorth -> updateBearing(2, bearing, trueNorth) },
-                        onCompassBearing1Click = { setBearingFromCompass(1) },
-                        onCompassBearing2Click = { setBearingFromCompass(2) },
-                        onCameraBearing1Click = { setBearingFromCamera(1) },
-                        onCameraBearing2Click = { setBearingFromCamera(2) },
-                        onLocation1ExpandedChange = { location1Expanded = it },
-                        onLocation2ExpandedChange = { location2Expanded = it },
-                        onReset = ::reset,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        TriangulateScreen(
+            title = title,
+            actionsVisible = actionsVisible,
+            navigateVisible = navigateVisible,
+            updateGpsOverrideVisible = updateGpsOverrideVisible,
+            shouldCalculateMyLocation = shouldCalculateMyLocation,
+            location1Title = location1Title,
+            location2Title = location2Title,
+            location1Instructions = location1Instructions,
+            location2Instructions = location2Instructions,
+            location1Complete = location1Complete,
+            location2Complete = location2Complete,
+            location1Expanded = location1Expanded,
+            location2Expanded = location2Expanded,
+            location1 = location1Coordinate,
+            location2 = location2Coordinate,
+            bearing1 = bearing1Value,
+            bearing2 = bearing2Value,
+            bearing1TrueNorth = bearing1TrueNorth,
+            bearing2TrueNorth = bearing2TrueNorth,
+            compassBearingText = compassBearingText,
+            hasCompass = hasCompass,
+            onModeChanged = {
+                shouldCalculateMyLocation = it
+                update()
+            },
+            onCreateBeacon = ::createBeacon,
+            onNavigate = ::navigateToLocation,
+            onShareLocation = ::shareLocation,
+            onUpdateGpsOverride = ::updateGpsOverride,
+            onMapReady = {
+                map = it
+                maybeSetup()
+            },
+            onLocation1Change = ::updateLocation1Coordinate,
+            onLocation2Change = ::updateLocation2Coordinate,
+            onBearing1Change = { bearing, trueNorth -> updateBearing(1, bearing, trueNorth) },
+            onBearing2Change = { bearing, trueNorth -> updateBearing(2, bearing, trueNorth) },
+            onCompassBearing1Click = { setBearingFromCompass(1) },
+            onCompassBearing2Click = { setBearingFromCompass(2) },
+            onCameraBearing1Click = { setBearingFromCamera(1) },
+            onCameraBearing2Click = { setBearingFromCamera(2) },
+            onLocation1ExpandedChange = { location1Expanded = it },
+            onLocation2ExpandedChange = { location2Expanded = it },
+            onReset = ::reset,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

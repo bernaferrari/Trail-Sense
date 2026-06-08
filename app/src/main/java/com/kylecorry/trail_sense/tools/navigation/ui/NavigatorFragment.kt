@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 import android.content.Context
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Gravity
@@ -13,9 +12,7 @@ import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -30,7 +27,6 @@ import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.ui.setTextDistinct
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.observeFlow
@@ -63,6 +59,7 @@ import com.kylecorry.trail_sense.shared.views.DataPointView
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadge
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.map.ui.MapView
@@ -87,7 +84,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.Magnetom
 import java.time.Duration
 import java.time.Instant
 
-class NavigatorFragment : AndromedaFragment() {
+class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
     private var navigatorViews: NavigatorViews? = null
     private val views: NavigatorViews
@@ -182,24 +179,16 @@ class NavigatorFragment : AndromedaFragment() {
 
     private val triggers = HookTriggers()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createNavigatorViews(requireContext())
-        navigatorViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    NavigatorHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        navigatorViews = createNavigatorViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        NavigatorHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

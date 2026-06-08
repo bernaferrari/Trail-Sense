@@ -17,6 +17,7 @@ abstract class TrailSenseAndromedaComposeFragment : AndromedaFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        beforeCreateContent()
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -29,4 +30,7 @@ abstract class TrailSenseAndromedaComposeFragment : AndromedaFragment() {
 
     @Composable
     protected abstract fun FragmentContent()
+
+    protected open fun beforeCreateContent() {
+    }
 }
