@@ -2,9 +2,7 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.core.text.toSpannable
@@ -15,7 +13,6 @@ import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
@@ -46,7 +43,7 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -55,7 +52,7 @@ import java.time.Duration
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
-class CalibrateAltimeterFragment : AndromedaFragment() {
+class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
     private lateinit var barometer: IBarometer
     private lateinit var gps: IGPS
@@ -94,17 +91,8 @@ class CalibrateAltimeterFragment : AndromedaFragment() {
         lastMode = prefs.altimeterMode
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return androidx.compose.ui.platform.ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(
-                androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
-            setContent {
-                TrailSenseTheme {
+    @androidx.compose.runtime.Composable
+    override fun FragmentContent() {
                     val modeOptions = getCalibrationModeOptions()
 
                     var altitude by androidx.compose.runtime.remember {
@@ -364,9 +352,6 @@ class CalibrateAltimeterFragment : AndromedaFragment() {
                             }
                         }
                     }
-                }
-            }
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
