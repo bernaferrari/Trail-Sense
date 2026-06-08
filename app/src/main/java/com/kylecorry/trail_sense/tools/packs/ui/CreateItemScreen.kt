@@ -40,9 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
@@ -63,7 +61,7 @@ import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
 @Composable
-fun CreateItemToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CreateItemToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CreateItemController(fragment) }
 
     DisposableEffect(controller) {
@@ -99,7 +97,7 @@ fun CreateItemToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class CreateItemController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CreateItemController(private val fragment: TrailSenseDestinationHost) {
 
     private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
     val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -144,8 +142,8 @@ private class CreateItemController(private val fragment: TrailSenseComposeDestin
             return
         }
         isInitialized = true
-        itemId = fragment.arguments?.getLong("edit_item_id") ?: 0L
-        packId = fragment.arguments?.getLong("pack_id") ?: 0L
+        itemId = fragment.destinationArguments?.getLong("edit_item_id") ?: 0L
+        packId = fragment.destinationArguments?.getLong("pack_id") ?: 0L
         category = defaultCategory
         selectedWeightUnit = defaultWeightUnit
         backCallback = fragment.promptIfUnsavedChanges(::hasChanges)
@@ -161,7 +159,7 @@ private class CreateItemController(private val fragment: TrailSenseComposeDestin
     }
 
     private fun loadEditingItem(id: Long) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val item = withContext(Dispatchers.IO) {
                 itemRepo.getItem(id)
             } ?: return@launch
@@ -186,7 +184,7 @@ private class CreateItemController(private val fragment: TrailSenseComposeDestin
         val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
         val optional = isOptional
 
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 prefs.preferences.putInt(KEY_LAST_CATEGORY, itemCategory.id)
                 selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
