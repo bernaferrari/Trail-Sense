@@ -405,8 +405,17 @@ object CustomUiUtils {
         content: CharSequence? = null,
         populateFn: (Chart) -> Unit
     ) {
+        showChart(fragment.requireContext(), title, content, populateFn)
+    }
+
+    fun showChart(
+        context: Context,
+        title: String,
+        content: CharSequence? = null,
+        populateFn: (Chart) -> Unit
+    ) {
         val view = TrailSenseComposeRootView(
-            fragment.requireContext(),
+            context,
             ViewCompositionStrategy.DisposeOnDetachedFromWindow
         ) {
             val context = LocalContext.current
@@ -437,7 +446,7 @@ object CustomUiUtils {
             }
         }
         Alerts.dialog(
-            fragment.requireContext(),
+            context,
             title,
             contentView = view,
             cancelText = null

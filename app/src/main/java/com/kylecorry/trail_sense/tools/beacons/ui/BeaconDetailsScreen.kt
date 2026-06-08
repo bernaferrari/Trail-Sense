@@ -228,7 +228,7 @@ private class BeaconDetailsController(private val fragment: Fragment) {
         val currentBeacon = beacon ?: return
         fragment.viewLifecycleOwner.lifecycleScope.launch {
             ShowHighLowTemperatureDialogCommand(
-                fragment,
+                fragment.requireContext(),
                 currentBeacon.coordinate,
                 Distance.meters(currentBeacon.elevation ?: 0f)
             ).execute()

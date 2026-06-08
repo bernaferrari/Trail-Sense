@@ -451,7 +451,7 @@ private class WeatherController(
 
     private fun showTemperatureForecast() {
         fragment.inBackground {
-            ShowHighLowTemperatureDialogCommand(fragment).execute()
+            ShowHighLowTemperatureDialogCommand(fragment.requireContext()).execute()
         }
     }
 

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
-import androidx.fragment.app.Fragment
+import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -15,14 +15,14 @@ import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
 import java.time.ZonedDateTime
 
 class ShowHighLowTemperatureDialogCommand(
-    private val fragment: Fragment,
+    private val context: Context,
     private val location: Coordinate? = null,
     private val elevation: Distance? = null
 ) : CoroutineCommand {
 
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val temperatureUnits by lazy { UserPreferences(fragment.requireContext()).temperatureUnits }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(context) }
+    private val formatter by lazy { FormatService.getInstance(context) }
+    private val temperatureUnits by lazy { UserPreferences(context).temperatureUnits }
 
     override suspend fun execute() {
         val forecast =
@@ -38,12 +38,12 @@ class ShowHighLowTemperatureDialogCommand(
         val now = formatter.formatTemperature(forecast.first().value.convertTo(temperatureUnits))
 
         CustomUiUtils.showChart(
-            fragment,
-            fragment.getString(R.string.next_24_hours),
-            fragment.getString(
+            context,
+            context.getString(R.string.next_24_hours),
+            context.getString(
                 R.string.historic_temperatures_full_disclaimer,
                 30
-            ) + "\n\n" + fragment.getString(
+            ) + "\n\n" + context.getString(
                 R.string.now_value,
                 now
             )
