@@ -67,7 +67,7 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -87,7 +87,7 @@ interface MapControllerHost {
 
 @Composable
 fun MapToolScreen(
-    fragment: TrailSenseReactiveComposeFragment,
+    fragment: TrailSenseComposeDestinationFragment,
     onController: (MapControllerHost?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -105,7 +105,7 @@ fun MapToolScreen(
     )
 }
 
-private class MapController(private val fragment: TrailSenseReactiveComposeFragment) : MapControllerHost {
+private class MapController(private val fragment: TrailSenseComposeDestinationFragment) : MapControllerHost {
 
     val views = createMapViews(fragment.requireContext())
     private var wasViewCreated = true

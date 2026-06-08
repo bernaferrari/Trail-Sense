@@ -8,7 +8,9 @@ import android.graphics.Color as AndroidColor
 import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.NumberPicker
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
@@ -69,6 +71,7 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
+import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.pdf.PdfConvert
 import com.kylecorry.andromeda.pickers.Pickers
@@ -261,7 +264,7 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 
-class TrailSenseComposeDestinationFragment : TrailSenseReactiveComposeFragment(), ToolSearchFocusable,
+class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost {
 
@@ -290,6 +293,23 @@ class TrailSenseComposeDestinationFragment : TrailSenseReactiveComposeFragment()
     private var clinometerLockController: ClinometerLockController? = null
     private var beaconListController: BeaconListControllerHost? = null
     private var mapController: MapControllerHost? = null
+
+    val hookResetOnResume: Int
+        get() = resetOnResume
+
+    fun cleanupReactiveEffects() {
+        cleanupEffects()
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return TrailSenseComposeRootView(requireContext()) {
+            FragmentContent()
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -350,7 +370,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseReactiveComposeFragment()
     }
 
     @Composable
-    override fun FragmentContent() {
+    private fun FragmentContent() {
         when (requireArguments().getString(ARG_DESTINATION)) {
             DESTINATION_LEVEL -> LevelScreen()
             DESTINATION_WHISTLE -> WhistleScreen()
