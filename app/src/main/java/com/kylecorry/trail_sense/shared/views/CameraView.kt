@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.google.android.material.slider.BasicLabelFormatter
+import com.google.android.material.slider.Slider as MaterialSlider
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.toBitmap
 import com.kylecorry.andromeda.camera.Camera
@@ -53,7 +54,7 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
     private val preview: PreviewView
     private val torchBtn: ImageButton
     private val changeCameraBtn: ImageButton
-    private val zoomSeek: Slider
+    private val zoomSeek: MaterialSlider
     private var zoomListener: ((Float) -> Unit)? = null
     private var imageListener: ((Bitmap) -> Unit)? = null
     private var captureListener: ((Bitmap) -> Unit)? = null
@@ -336,7 +337,7 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
             }
         )
 
-        zoomSeek = Slider(context, null).apply {
+        zoomSeek = MaterialSlider(context).apply {
             id = R.id.camera_zoom
         }
         holder.addView(
@@ -410,4 +411,10 @@ class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, 
     }
 
 
+}
+
+private fun MaterialSlider.applyThinStyling() {
+    trackHeight = Resources.dp(context, 8f).toInt()
+    thumbHeight = Resources.dp(context, 32f).toInt()
+    trackStopIndicatorSize = Resources.dp(context, 4f).toInt()
 }

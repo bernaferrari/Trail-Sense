@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.slider.LabelFormatter
+import com.google.android.material.slider.Slider
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -71,7 +72,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.views.DatePickerContent
-import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
@@ -905,7 +905,7 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         }
     )
 
-    val timeSeeker = Slider(context, null).apply {
+    val timeSeeker = Slider(context).apply {
         id = R.id.time_seeker
     }
     seekContent.addView(

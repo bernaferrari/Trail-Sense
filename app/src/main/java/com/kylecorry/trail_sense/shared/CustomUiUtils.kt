@@ -19,11 +19,17 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -57,7 +63,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.BeaconIconPickerContent
 import com.kylecorry.trail_sense.shared.views.ColorPickerContent
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
-import com.kylecorry.trail_sense.shared.views.DurationInputView
+import com.kylecorry.trail_sense.shared.views.DurationInput
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -267,24 +273,36 @@ object CustomUiUtils {
         showSeconds: Boolean = false,
         onDurationPick: (duration: Duration?) -> Unit
     ) {
-        val view = createDurationPrompt(context)
         var duration: Duration? = default
-        val durationMessage = view.findViewById<TextView>(R.id.prompt_duration_message)
-        val durationInput = view.findViewById<DurationInputView>(R.id.prompt_duration)
-
-        durationMessage.isVisible = !message.isNullOrBlank()
-        durationMessage.text = message
-
-        durationInput.showSeconds = showSeconds
-
-        if (!hint.isNullOrBlank()) {
-            durationInput.hint = hint
+        val view = ComposeView(context).apply {
+            id = R.id.prompt_duration
+            setContent {
+                TrailSenseTheme {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        if (!message.isNullOrBlank()) {
+                            Text(
+                                text = message,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                        }
+                        DurationInput(
+                            duration = default,
+                            onDurationChange = {
+                                duration = it
+                            },
+                            hint = hint?.takeIf { it.isNotBlank() }
+                                ?: context.getString(R.string.duration),
+                            showSeconds = showSeconds,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
         }
-
-        durationInput.setOnDurationChangeListener {
-            duration = it
-        }
-        durationInput.updateDuration(default)
 
         Alerts.dialog(
             context,
@@ -594,39 +612,6 @@ object CustomUiUtils {
                 FrameLayout.LayoutParams.WRAP_CONTENT
             )
         )
-    }
-
-    private fun createDurationPrompt(context: Context): LinearLayout {
-        val padding = Resources.dp(context, 16f).toInt()
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(padding, padding, padding, padding)
-        }
-
-        root.addView(
-            TextView(context).apply {
-                id = R.id.prompt_duration_message
-                visibility = View.GONE
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = padding
-            }
-        )
-
-        root.addView(
-            DurationInputView(context, null).apply {
-                id = R.id.prompt_duration
-            },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        return root
     }
 
     private fun createChartPrompt(context: Context): LinearLayout {
