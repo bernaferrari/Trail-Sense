@@ -8,8 +8,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +35,6 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,6 +70,7 @@ import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -263,18 +261,12 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             isFullscreen = !isFullscreen
             views.pathMapHolder.layoutParams = if (isFullscreen) {
                 val legendHeight = Resources.dp(requireContext(), 72f).toInt()
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
+                createPathMapHolderLayoutParams(
+                    requireContext(),
                     views.root.height - legendHeight
                 )
             } else {
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    Resources.dp(requireContext(), 250f).toInt()
-                ).also {
-                    it.marginStart = Resources.dp(requireContext(), 16f).toInt()
-                    it.marginEnd = Resources.dp(requireContext(), 16f).toInt()
-                }
+                createPathMapHolderLayoutParams(requireContext(), Resources.dp(requireContext(), 250f).toInt())
             }
             views.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
             val timer = CoroutineTimer {
@@ -672,6 +664,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private fun deselectPoint() {
         selectedPointId = null
         views.pathSelectedPoint.isVisible = false
+        views.pathSelectedPoint.point = null
         chart.removeHighlight()
         updateMapLayer()
     }
@@ -714,33 +707,15 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             point.id
         }
 
-        views.pathSelectedPoint.removeAllViews()
-
         if (selectedPointId != null) {
             views.pathSelectedPoint.isVisible = true
+            views.pathSelectedPoint.point = point
+            views.pathSelectedPoint.formatService = formatService
+            views.pathSelectedPoint.baseDistanceUnits = prefs.baseDistanceUnits
+            views.pathSelectedPoint.onCreateBeacon = { createBeacon(it) }
+            views.pathSelectedPoint.onDelete = { deleteWaypoint(it) }
+            views.pathSelectedPoint.onNavigate = { navigateToWaypoint(it) }
             chart.highlight(point)
-            views.pathSelectedPoint.addView(
-                ComposeView(requireContext()).apply {
-                    setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-                    setContent {
-                        TrailSenseTheme {
-                            PathPointRow(
-                                point = point,
-                                formatService = formatService,
-                                baseDistanceUnits = prefs.baseDistanceUnits,
-                                onCreateBeacon = { createBeacon(it) },
-                                onDelete = { deleteWaypoint(it) },
-                                onNavigate = { navigateToWaypoint(it) },
-                                onView = {}
-                            )
-                        }
-                    }
-                },
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            )
         } else {
             deselectPoint()
         }
@@ -839,7 +814,7 @@ private data class PathOverviewViews(
     val pathMapHolder: ConstraintLayout,
     val pathImage: MapView,
     val pathMapFullscreenToggle: PathIconButton,
-    val pathSelectedPoint: FrameLayout,
+    val pathSelectedPoint: PathSelectedPointView,
     val pathLegend: ColorScaleState,
     val pathDuration: PathDataPointState,
     val pathDistance: PathDataPointState,
@@ -954,8 +929,8 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         )
     }
 
-    val content = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
+    val content = ConstraintLayout(context).apply {
+        id = View.generateViewId()
     }
     root.addView(
         content,
@@ -976,10 +951,14 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         titleView,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 
     val styleControls = PathStyleControlsView(context).apply {
@@ -987,10 +966,13 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         styleControls,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.path_title
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
             bottomMargin = 16.dp(context)
@@ -1002,13 +984,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         mapHolder,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            250.dp(context)
-        ).apply {
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
+        createPathMapHolderLayoutParams(context, 250.dp(context))
     )
 
     val pathImage = MapView(context, null).apply {
@@ -1043,16 +1019,19 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val selectedPoint = FrameLayout(context).apply {
+    val selectedPoint = PathSelectedPointView(context).apply {
         id = R.id.path_selected_point
         visibility = View.GONE
     }
     content.addView(
         selectedPoint,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.path_map_holder
             topMargin = 16.dp(context)
         }
     )
@@ -1072,10 +1051,13 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         legendView,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             40.dp(context)
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.path_selected_point
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
             topMargin = 16.dp(context)
@@ -1089,10 +1071,13 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         grid,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.path_legend
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
             topMargin = 16.dp(context)
@@ -1109,6 +1094,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     val max = addDataPoint(grid, context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
 
     val elevationTitle = ComposeView(context).apply {
+        id = View.generateViewId()
         setContent {
             TrailSenseTheme {
                 Text(
@@ -1123,11 +1109,13 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         elevationTitle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.path_grid
             topMargin = 16.dp(context)
         }
     )
@@ -1137,22 +1125,30 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         chart,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             context.resources.getDimensionPixelSize(R.dimen.chart_height)
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = elevationTitle.id
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
         }
     )
 
-    val pathActions = PathActionsView(context)
+    val pathActions = PathActionsView(context).apply {
+        id = View.generateViewId()
+    }
     content.addView(
         pathActions,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.chart
             topMargin = 16.dp(context)
             bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
         }
@@ -1164,10 +1160,14 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     }
     content.addView(
         timing,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
+        ConstraintLayout.LayoutParams(
+            0,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = pathActions.id
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
             bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
@@ -1196,6 +1196,22 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         pathActions = pathActions,
         pathsTiming = timing
     )
+}
+
+private fun createPathMapHolderLayoutParams(
+    context: Context,
+    height: Int
+): ConstraintLayout.LayoutParams {
+    return ConstraintLayout.LayoutParams(
+        0,
+        height
+    ).apply {
+        startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+        endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+        topToBottom = R.id.path_color
+        marginStart = 16.dp(context)
+        marginEnd = 16.dp(context)
+    }
 }
 
 private class PathStyleControlsView(context: Context) : AbstractComposeView(context) {
@@ -1257,6 +1273,34 @@ private fun PathStyleDropdownText(
                 .padding(start = 16.dp)
                 .size(18.dp)
         )
+    }
+}
+
+private class PathSelectedPointView(context: Context) : AbstractComposeView(context) {
+    var point by mutableStateOf<PathPoint?>(null)
+    var formatService by mutableStateOf<FormatService?>(null)
+    var baseDistanceUnits by mutableStateOf<DistanceUnits?>(null)
+    var onCreateBeacon by mutableStateOf<(PathPoint) -> Unit>({})
+    var onDelete by mutableStateOf<(PathPoint) -> Unit>({})
+    var onNavigate by mutableStateOf<(PathPoint) -> Unit>({})
+
+    @Composable
+    override fun Content() {
+        val point = point ?: return
+        val formatService = formatService ?: return
+        val baseDistanceUnits = baseDistanceUnits ?: return
+
+        TrailSenseTheme {
+            PathPointRow(
+                point = point,
+                formatService = formatService,
+                baseDistanceUnits = baseDistanceUnits,
+                onCreateBeacon = onCreateBeacon,
+                onDelete = onDelete,
+                onNavigate = onNavigate,
+                onView = {}
+            )
+        }
     }
 }
 
