@@ -1,9 +1,10 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,6 +48,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.dialog
@@ -56,7 +62,6 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -67,14 +72,46 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FieldGuideFragment : TrailSenseComposeFragment() {
+@Composable
+fun FieldGuideToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { FieldGuideController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                controller.reloadPages()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    FieldGuideScreen(
+        query = controller.filter,
+        items = controller.getListItems(),
+        onQueryChange = { controller.filter = it },
+        onViewPage = controller::viewPage,
+        onEditPage = controller::editPage,
+        onDeletePage = controller::deletePage,
+        loadThumbnail = controller::loadThumbnail,
+        onCreate = { controller.createPage(controller.tagFilter) }
+    )
+}
+
+private class FieldGuideController(private val fragment: Fragment) {
+
+    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
     private var pages by mutableStateOf(emptyList<FieldGuidePage>())
-    private var filter by mutableStateOf("")
-    private var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
+    var filter by mutableStateOf("")
+    var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
     private var backCallback: OnBackPressedCallback? = null
+    private var isInitialized = false
 
     private val headingTags = listOf(
         FieldGuidePageTag.Plant,
@@ -106,26 +143,15 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         FieldGuidePageTag.Other to R.drawable.ic_help
     )
 
-    @Composable
-    override fun FragmentContent() {
-        FieldGuideScreen(
-            query = filter,
-            items = getListItems(),
-            onQueryChange = { filter = it },
-            onViewPage = ::viewPage,
-            onEditPage = ::editPage,
-            onDeletePage = ::deletePage,
-            loadThumbnail = ::loadThumbnail,
-            onCreate = { createPage(tagFilter) }
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
         CustomUiUtils.disclaimer(
-            requireContext(),
-            getString(R.string.disclaimer_message_title),
-            getString(R.string.field_guide_disclaimer),
+            fragment.requireContext(),
+            fragment.getString(R.string.disclaimer_message_title),
+            fragment.getString(R.string.field_guide_disclaimer),
             "field_guide_disclaimer",
             cancelText = null
         )
@@ -136,37 +162,38 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
                     filter = ""
                 } else {
                     isEnabled = false
-                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                    fragment.requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
         }
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback!!)
-    }
-
-    override fun onResume() {
-        super.onResume()
+        fragment.requireActivity().onBackPressedDispatcher.addCallback(fragment.viewLifecycleOwner, backCallback!!)
         reloadPages()
     }
 
-    private fun reloadPages() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
+    }
+
+    fun reloadPages() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             pages = withContext(Dispatchers.IO) {
-                FieldGuideCleanupCommand(requireContext()).execute()
+                FieldGuideCleanupCommand(fragment.requireContext()).execute()
                 repo.getAllPages().sortedBy { it.name }
             }
         }
     }
 
-    private fun getListItems(): FieldGuideListItems {
+    fun getListItems(): FieldGuideListItems {
         val filteredPages = getFilteredPages()
-        val tagNameMapper = FieldGuideTagNameMapper(requireContext())
+        val tagNameMapper = FieldGuideTagNameMapper(fragment.requireContext())
         return if (tagFilter == null && filter.isBlank()) {
             FieldGuideListItems(
                 headingTags.map { tag ->
                     FieldGuideListItem.TagItem(
                         tag = tag,
                         title = tagNameMapper.getName(tag),
-                        subtitle = resources.getQuantityString(
+                        subtitle = fragment.resources.getQuantityString(
                             R.plurals.page_group_summary,
                             filteredPages.count { it.tags.contains(tag) },
                             filteredPages.count { it.tags.contains(tag) }
@@ -192,7 +219,7 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
     }
 
     private fun getFilteredPages(): List<FieldGuidePage> {
-        val mapper = FieldGuideTagNameMapper(requireContext())
+        val mapper = FieldGuideTagNameMapper(fragment.requireContext())
         return TextUtils.search(filter, pages) { page ->
             listOf(
                 page.name,
@@ -204,8 +231,8 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun createPage(tag: FieldGuidePageTag?) {
-        findNavController().navigate(
+    fun createPage(tag: FieldGuidePageTag?) {
+        fragment.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("classification_id", tag?.id ?: 0L)
@@ -213,8 +240,8 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun editPage(page: FieldGuidePage) {
-        findNavController().navigate(
+    fun editPage(page: FieldGuidePage) {
+        fragment.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
@@ -222,8 +249,8 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun viewPage(page: FieldGuidePage) {
-        findNavController().navigate(
+    fun viewPage(page: FieldGuidePage) {
+        fragment.findNavController().navigate(
             R.id.fieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
@@ -231,10 +258,10 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun deletePage(page: FieldGuidePage) {
-        dialog(getString(R.string.delete), page.name) { cancelled ->
+    fun deletePage(page: FieldGuidePage) {
+        fragment.dialog(fragment.getString(R.string.delete), page.name) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch {
+                fragment.viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.delete(page)
                     }
@@ -244,8 +271,8 @@ class FieldGuideFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private suspend fun loadThumbnail(page: FieldGuidePage): Bitmap = onIO {
-        val size = Resources.dp(requireContext(), 48f).toInt()
+    suspend fun loadThumbnail(page: FieldGuidePage): Bitmap = onIO {
+        val size = Resources.dp(fragment.requireContext(), 48f).toInt()
         try {
             files.bitmap(page.images.first(), Size(size, size)) ?: getDefaultThumbnail(size)
         } catch (e: Exception) {
