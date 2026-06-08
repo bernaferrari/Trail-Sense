@@ -18,7 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -44,7 +44,6 @@ import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
@@ -65,7 +64,7 @@ import java.time.Instant
 import java.time.LocalTime
 
 @Composable
-fun WeatherSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun WeatherSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { WeatherSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -86,7 +85,7 @@ fun WeatherSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     controller.Content()
 }
 
-private class WeatherSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class WeatherSettingsController(private val fragment: TrailSenseDestinationHost) {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
     private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
@@ -616,11 +615,11 @@ private class WeatherSettingsController(private val fragment: TrailSenseComposeD
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<WeatherOption> {
-        return options(fragment.resources.getStringArray(entriesId).toList(), valuesId)
+        return options(fragment.getResources().getStringArray(entriesId).toList(), valuesId)
     }
 
     private fun options(entries: List<CharSequence>, valuesId: Int): List<WeatherOption> {
-        val values = fragment.resources.getStringArray(valuesId)
+        val values = fragment.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             WeatherOption(value, entries.getOrElse(index) { value }.toString())
         }
@@ -706,7 +705,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseComposeD
     }
 
     private fun exportWeatherData() {
-        val exporter = IOFactory().createCsvService(fragment.requireMainActivity())
+        val exporter = IOFactory().createCsvService(fragment.andromedaActivity)
         val repo = WeatherRepo.getInstance(fragment.requireContext())
         fragment.inBackground(BackgroundMinimumState.Created) {
             val exported = withContext(Dispatchers.IO) {

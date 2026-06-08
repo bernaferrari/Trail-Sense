@@ -1,10 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.FeatureState
 import kotlinx.coroutines.launch
 
@@ -19,16 +18,16 @@ fun ToolService.getFeatureState(): FeatureState {
 }
 
 fun Tools.observe(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     toolBroadCastId: String,
     onReceiveBroadcast: suspend (data: Bundle) -> Unit
 ) {
     val callback: (Bundle) -> Unit = { data ->
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             onReceiveBroadcast(data)
         }
     }
-    fragment.viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+    fragment.lifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 subscribe(toolBroadCastId, callback)

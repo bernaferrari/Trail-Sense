@@ -79,6 +79,7 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.inBackground as runInBackground
 import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
+import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
@@ -316,6 +317,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override val lifecycleScope: CoroutineScope
         get() = viewLifecycleOwner.lifecycleScope
+
+    override val andromedaActivity: AndromedaActivity
+        get() = requireActivity() as AndromedaActivity
 
     val hookResetOnResume: Int
         get() = resetOnResume
