@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
@@ -23,6 +25,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +38,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -46,7 +54,6 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
@@ -62,68 +69,89 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-class BeaconDetailsFragment : TrailSenseComposeFragment() {
+@Composable
+fun BeaconDetailsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { BeaconDetailsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val gps by lazy { SensorService(requireContext()).getGPS() }
-    private val weather by lazy { WeatherSubsystem.getInstance(requireContext()) }
-    private val tides by lazy { TidesSubsystem.getInstance(requireContext()) }
-    private val tideFormatter by lazy { TideFormatter(requireContext()) }
+    LaunchedEffect(controller) {
+        controller.loadBeacon()
+    }
+
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+        }
+    }
+
+    BeaconDetailsScreen(
+        beacon = controller.beacon,
+        distance = controller.distance,
+        altitude = controller.altitude,
+        temperature = controller.temperature,
+        sunrise = controller.sunrise,
+        sunset = controller.sunset,
+        tide = controller.tide,
+        tideIcon = controller.tideIcon,
+        onShare = controller::shareBeacon,
+        onDelete = controller::confirmDelete,
+        onNavigate = controller::navigateToBeacon,
+        onEdit = controller::editBeacon,
+        onTemperatureClick = controller::showTemperatureDetails
+    )
+}
+
+private class BeaconDetailsController(private val fragment: Fragment) {
+
+    private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val gps by lazy { SensorService(fragment.requireContext()).getGPS() }
+    private val weather by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
+    private val tides by lazy { TidesSubsystem.getInstance(fragment.requireContext()) }
+    private val tideFormatter by lazy { TideFormatter(fragment.requireContext()) }
     private val astronomy = AstronomyService()
 
-    private var beaconId: Long = 0L
-    private var beacon by mutableStateOf<Beacon?>(null)
-    private var distance by mutableStateOf("")
-    private var altitude by mutableStateOf<String?>(null)
-    private var temperature by mutableStateOf("")
-    private var sunrise by mutableStateOf<String?>(null)
-    private var sunset by mutableStateOf<String?>(null)
-    private var tide by mutableStateOf<String?>(null)
-    private var tideIcon by mutableStateOf(R.drawable.ic_tide_half)
+    private val beaconId: Long by lazy { fragment.requireArguments().getLong("beacon_id") }
+    var beacon by mutableStateOf<Beacon?>(null)
+        private set
+    var distance by mutableStateOf("")
+        private set
+    var altitude by mutableStateOf<String?>(null)
+        private set
+    var temperature by mutableStateOf("")
+        private set
+    var sunrise by mutableStateOf<String?>(null)
+        private set
+    var sunset by mutableStateOf<String?>(null)
+        private set
+    var tide by mutableStateOf<String?>(null)
+        private set
+    var tideIcon by mutableStateOf(R.drawable.ic_tide_half)
+        private set
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        beaconId = requireArguments().getLong("beacon_id")
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        BeaconDetailsScreen(
-            beacon = beacon,
-            distance = distance,
-            altitude = altitude,
-            temperature = temperature,
-            sunrise = sunrise,
-            sunset = sunset,
-            tide = tide,
-            tideIcon = tideIcon,
-            onShare = ::shareBeacon,
-            onDelete = ::confirmDelete,
-            onNavigate = ::navigateToBeacon,
-            onEdit = ::editBeacon,
-            onTemperatureClick = ::showTemperatureDetails
-        )
-    }
-
-    override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        loadBeacon()
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         gps.start(this::onGpsUpdate)
     }
 
-    override fun onPause() {
+    fun onPause() {
         gps.stop(this::onGpsUpdate)
-        super.onPause()
     }
 
-    private fun loadBeacon() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun loadBeacon() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 beaconRepo.getBeacon(beaconId)?.toBeacon()
             }
@@ -193,52 +221,52 @@ class BeaconDetailsFragment : TrailSenseComposeFragment() {
             temperatureRange.end.convertTo(units)
         )
 
-        temperature = getString(R.string.slash_separated_pair, highValue, lowValue)
+        temperature = fragment.getString(R.string.slash_separated_pair, highValue, lowValue)
     }
 
-    private fun showTemperatureDetails() {
+    fun showTemperatureDetails() {
         val currentBeacon = beacon ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             ShowHighLowTemperatureDialogCommand(
-                this@BeaconDetailsFragment,
+                fragment,
                 currentBeacon.coordinate,
                 Distance.meters(currentBeacon.elevation ?: 0f)
             ).execute()
         }
     }
 
-    private fun navigateToBeacon() {
+    fun navigateToBeacon() {
         val bundle = Bundle().apply {
             putLong("destination", beaconId)
         }
-        findNavController().openTool(Tools.NAVIGATION, bundle)
+        fragment.findNavController().openTool(Tools.NAVIGATION, bundle)
     }
 
-    private fun editBeacon() {
+    fun editBeacon() {
         val bundle = Bundle().apply {
             putLong("edit_beacon", beaconId)
         }
-        findNavController().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
+        fragment.findNavController().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
     }
 
-    private fun shareBeacon() {
+    fun shareBeacon() {
         val currentBeacon = beacon ?: return
-        BeaconSender(this).send(currentBeacon)
+        BeaconSender(fragment).send(currentBeacon)
     }
 
-    private fun confirmDelete() {
+    fun confirmDelete() {
         val beacon = beacon ?: return
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete),
             beacon.name
         ) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch {
+                fragment.viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
                     }
-                    findNavController().navigateUp()
+                    fragment.findNavController().navigateUp()
                 }
             }
         }

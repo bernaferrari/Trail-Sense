@@ -514,8 +514,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beaconDetailsFragment
-            setClassName("com.kylecorry.trail_sense.tools.beacons.ui.BeaconDetailsFragment")
-            label = "BeaconDetailsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "BeaconDetailsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_DETAILS)
+                .build())
             addArgument("beacon_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .build())
