@@ -58,7 +58,6 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -70,6 +69,8 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.views.BeaconIconPickerDialog
+import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
@@ -126,6 +127,11 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
 
     @Composable
     override fun FragmentContent() {
+        var showColorPicker by remember { mutableStateOf(false) }
+        var showIconPicker by remember { mutableStateOf(false) }
+        val colorTitle = stringResource(R.string.color)
+        val iconTitle = stringResource(R.string.icon)
+
         PlaceBeaconScreen(
             data = data,
             groupName = groupName.ifBlank { stringResource(R.string.no_group) },
@@ -148,8 +154,8 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
             },
             onNotesChange = { updateData(data.copy(notes = it)) },
             onGroupClick = ::pickGroup,
-            onColorClick = ::pickColor,
-            onIconClick = ::pickIcon,
+            onColorClick = { showColorPicker = true },
+            onIconClick = { showIconPicker = true },
             onSave = ::onSubmit,
             locationAutofillRequest = locationAutofillRequest,
             onAutoLocationClick = {
@@ -168,6 +174,38 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
             onCompassBearingClick = ::setBearingFromCompass,
             onCameraBearingClick = ::setBearingFromCamera
         )
+
+        if (showColorPicker) {
+            ColorPickerDialog(
+                title = colorTitle,
+                selectedColor = data.color,
+                onColorPicked = {
+                    if (it != null) {
+                        updateData(data.copy(color = it))
+                    }
+                    showColorPicker = false
+                },
+                onDismiss = {
+                    showColorPicker = false
+                }
+            )
+        }
+
+        if (showIconPicker) {
+            BeaconIconPickerDialog(
+                title = iconTitle,
+                selectedIcon = data.icon,
+                icons = BeaconIcon.values().filter { it.isUserSelectable },
+                onIconPicked = {
+                    updateData(data.copy(icon = it))
+                    showIconPicker = false
+                },
+                onDismiss = {
+                    updateData(data.copy(icon = null))
+                    showIconPicker = false
+                }
+            )
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -239,28 +277,6 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
                 return@launch
             }
             updateData(data.copy(groupId = result.second?.id))
-        }
-    }
-
-    private fun pickColor() {
-        CustomUiUtils.pickColor(
-            requireContext(),
-            data.color,
-            getString(R.string.color)
-        ) {
-            if (it != null) {
-                updateData(data.copy(color = it))
-            }
-        }
-    }
-
-    private fun pickIcon() {
-        CustomUiUtils.pickBeaconIcon(
-            requireContext(),
-            data.icon,
-            getString(R.string.icon)
-        ) {
-            updateData(data.copy(icon = it))
         }
     }
 
