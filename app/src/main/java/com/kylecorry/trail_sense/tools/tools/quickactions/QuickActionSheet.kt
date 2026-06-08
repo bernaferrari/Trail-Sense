@@ -6,22 +6,27 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
+import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import android.widget.ScrollView
 import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayout
@@ -31,6 +36,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 
@@ -41,11 +47,10 @@ class QuickActionSheet @JvmOverloads constructor(
 
     private val closeButton: View
     private val tabs: TabLayout
-    private val quickActionsContainer: ConstraintLayout
-    private val recommendedQuickActions: FlexboxLayout
-    private val quickActions: FlexboxLayout
+    private val quickActionsContainer: ComposeView
     private val widgetsContainer: ScrollView
     private val widgets: FlexboxLayout
+    private val quickActionState = MainActivityQuickActionState()
 
     private var quickActionBinder: MainActivityQuickActionBinder? = null
     private var widgetBinder: ToolWidgetViewBinder? = null
@@ -112,8 +117,13 @@ class QuickActionSheet @JvmOverloads constructor(
             }
         )
 
-        quickActionsContainer = ConstraintLayout(context).apply {
+        quickActionsContainer = ComposeView(context).apply {
             id = R.id.quick_actions_container
+            setContent {
+                TrailSenseTheme {
+                    QuickActionsContent(quickActionState)
+                }
+            }
         }
         addView(
             quickActionsContainer,
@@ -123,70 +133,6 @@ class QuickActionSheet @JvmOverloads constructor(
             ).apply {
                 topMargin = Resources.dp(context, 16f).toInt()
                 topToBottom = R.id.tabs
-            }
-        )
-
-        recommendedQuickActions = FlexboxLayout(context).apply {
-            id = R.id.recommended_quick_actions
-            alignItems = AlignItems.CENTER
-            flexWrap = FlexWrap.WRAP
-            justifyContent = JustifyContent.CENTER
-        }
-        quickActionsContainer.addView(
-            recommendedQuickActions,
-            LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = LayoutParams.PARENT_ID
-                endToEnd = LayoutParams.PARENT_ID
-                topToTop = LayoutParams.PARENT_ID
-            }
-        )
-
-        val quickActionDividerId = View.generateViewId()
-        quickActionsContainer.addView(
-            ComposeView(context).apply {
-                id = quickActionDividerId
-                setContent {
-                    TrailSenseTheme {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(MaterialTheme.colorScheme.onSurfaceVariant)
-                        )
-                    }
-                }
-            },
-            LayoutParams(
-                0,
-                Resources.dp(context, 1f).toInt()
-            ).apply {
-                startToStart = LayoutParams.PARENT_ID
-                endToEnd = LayoutParams.PARENT_ID
-                topToBottom = R.id.recommended_quick_actions
-                topMargin = Resources.dp(context, 8f).toInt()
-                bottomMargin = Resources.dp(context, 8f).toInt()
-            }
-        )
-
-        quickActions = FlexboxLayout(context).apply {
-            id = R.id.quick_actions
-            alignItems = AlignItems.CENTER
-            flexWrap = FlexWrap.WRAP
-            justifyContent = JustifyContent.CENTER
-        }
-        quickActionsContainer.addView(
-            quickActions,
-            LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = LayoutParams.PARENT_ID
-                endToEnd = LayoutParams.PARENT_ID
-                topToBottom = quickActionDividerId
-                bottomToBottom = LayoutParams.PARENT_ID
             }
         )
 
@@ -264,7 +210,7 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     fun close() {
-        quickActions.removeAllViews()
+        quickActionState.clear()
         isVisible = false
         widgetBinder?.unbind()
         widgetBinder = null
@@ -293,8 +239,7 @@ class QuickActionSheet @JvmOverloads constructor(
         widgetBinder?.unbind()
         quickActionBinder = MainActivityQuickActionBinder(
             fragment,
-            recommendedQuickActions,
-            quickActions
+            quickActionState
         )
         widgetBinder = ToolWidgetViewBinder(fragment, widgets)
         quickActionBinder?.bind()
@@ -327,4 +272,46 @@ class QuickActionSheet @JvmOverloads constructor(
         widgetsContainer.isVisible = true
     }
 
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuickActionsContent(state: MainActivityQuickActionState) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        QuickActionButtonRow(state.recommended)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        ) {
+            androidx.compose.foundation.layout.Box(modifier = Modifier.padding(top = 1.dp))
+        }
+        QuickActionButtonRow(state.selected)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuickActionButtonRow(buttons: List<ComposeQuickActionButtonView>) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
+    ) {
+        buttons.forEach { button ->
+            Surface(
+                modifier = Modifier.padding(8.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 2.dp
+            ) {
+                button.Content()
+            }
+        }
+    }
 }
