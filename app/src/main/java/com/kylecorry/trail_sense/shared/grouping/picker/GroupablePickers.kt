@@ -25,7 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -33,7 +33,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
@@ -52,8 +52,7 @@ object GroupablePickers {
     ) {
         var selected: T? = null
         var alert: AlertDialog? = null
-        val view = GroupablePickerView(
-            context = context,
+        val state = GroupablePickerState(
             emptyText = emptyText,
             titleProvider = titleProvider,
             itemTitleProvider = itemTitleProvider,
@@ -70,8 +69,14 @@ object GroupablePickers {
                 }
             }
         )
+        val view = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            state.Content()
+        }
 
-        manager.onChange = view::update
+        manager.onChange = state::update
 
         manager.open(initialGroup)
         alert = Alerts.dialog(context, title ?: "", contentView = view, okText = null) {
@@ -91,8 +96,7 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (cancelled: Boolean, item: T?) -> Unit
     ) {
-        val view = GroupablePickerView(
-            context = context,
+        val state = GroupablePickerState(
             emptyText = emptyText,
             titleProvider = titleProvider,
             itemTitleProvider = itemTitleProvider,
@@ -105,19 +109,24 @@ object GroupablePickers {
                 }
             }
         )
+        val view = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            state.Content()
+        }
 
-        manager.onChange = view::update
+        manager.onChange = state::update
 
         manager.open(initialGroup)
         Alerts.dialog(context, title ?: "", contentView = view, okText = okText) {
-            onPick.invoke(it, view.selectedRoot)
+            onPick.invoke(it, state.selectedRoot)
         }
     }
 
 }
 
-private class GroupablePickerView<T : Groupable>(
-    context: Context,
+private class GroupablePickerState<T : Groupable>(
     private val emptyText: String,
     private val titleProvider: (T?) -> String,
     private val itemTitleProvider: (T) -> String,
@@ -125,7 +134,7 @@ private class GroupablePickerView<T : Groupable>(
     private val onNavigateUp: () -> Unit,
     private val onSearch: (String) -> Unit,
     private val onClick: (T) -> Unit
-) : AbstractComposeView(context) {
+) {
 
     private var root by mutableStateOf<T?>(null)
     private var items by mutableStateOf<List<T>>(emptyList())
@@ -142,21 +151,19 @@ private class GroupablePickerView<T : Groupable>(
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            GroupableSelectContent(
-                root = root,
-                items = items,
-                emptyText = emptyText,
-                resetKey = resetKey,
-                titleProvider = titleProvider,
-                itemTitleProvider = itemTitleProvider,
-                searchEnabled = searchEnabled,
-                onNavigateUp = onNavigateUp,
-                onSearch = onSearch,
-                onClick = onClick
-            )
-        }
+    fun Content() {
+        GroupableSelectContent(
+            root = root,
+            items = items,
+            emptyText = emptyText,
+            resetKey = resetKey,
+            titleProvider = titleProvider,
+            itemTitleProvider = itemTitleProvider,
+            searchEnabled = searchEnabled,
+            onNavigateUp = onNavigateUp,
+            onSearch = onSearch,
+            onClick = onClick
+        )
     }
 }
 
