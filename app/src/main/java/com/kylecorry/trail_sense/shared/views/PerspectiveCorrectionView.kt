@@ -13,6 +13,7 @@ import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -20,7 +21,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
@@ -42,8 +47,132 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : AbstractComposeView(context, attrs, defStyleAttr) {
 
-    private var image by mutableStateOf<Bitmap?>(null)
-    private var imagePath: String? = null
+    private val state = PerspectiveCorrectionState(context)
+
+    var mapRotation: Float
+        get() = state.mapRotation
+        set(value) {
+            state.mapRotation = value
+        }
+
+    var onLoad: (Bitmap) -> Unit
+        get() = state.onLoad
+        set(value) {
+            state.onLoad = value
+        }
+
+    var hasChanges: Boolean
+        get() = state.hasChanges
+        set(value) {
+            state.hasChanges = value
+        }
+
+    var isPreview: Boolean
+        get() = state.isPreview
+        set(value) {
+            state.isPreview = value
+        }
+
+    @Composable
+    override fun Content() {
+        PerspectiveCorrection(state = state)
+    }
+
+    fun resetCorners() {
+        state.resetCorners()
+    }
+
+    fun setBounds(bounds: PixelBounds) {
+        state.setBounds(bounds)
+    }
+
+    fun getPercentBounds(): PercentBounds? {
+        return state.getPercentBounds()
+    }
+
+    fun setImage(path: String) {
+        state.setImage(path)
+    }
+
+    fun clearImage() {
+        state.clearImage()
+    }
+}
+
+@Composable
+fun rememberPerspectiveCorrectionState(): PerspectiveCorrectionState {
+    val context = LocalContext.current
+    val state = androidx.compose.runtime.remember(context) {
+        PerspectiveCorrectionState(context)
+    }
+    DisposableEffect(state) {
+        onDispose {
+            state.clearImage()
+        }
+    }
+    return state
+}
+
+@Composable
+fun PerspectiveCorrection(
+    state: PerspectiveCorrectionState,
+    modifier: Modifier = Modifier,
+    imagePath: String? = state.imagePath,
+    mapRotation: Float = state.mapRotation,
+    isPreview: Boolean = state.isPreview,
+    onLoad: (Bitmap) -> Unit = state.onLoad
+) {
+    LaunchedEffect(mapRotation) {
+        state.mapRotation = mapRotation
+    }
+
+    LaunchedEffect(isPreview) {
+        state.isPreview = isPreview
+    }
+
+    LaunchedEffect(imagePath) {
+        if (imagePath == null) {
+            state.clearImage()
+        } else if (state.imagePath != imagePath) {
+            state.setImage(imagePath)
+        }
+    }
+
+    LaunchedEffect(onLoad) {
+        state.onLoad = onLoad
+    }
+
+    val bitmap = state.image
+    LaunchedEffect(bitmap) {
+        if (bitmap != null && !state.calledOnLoad) {
+            state.calledOnLoad = true
+            state.onLoad(bitmap)
+        }
+    }
+
+    TrailSenseTheme {
+        Canvas(
+            modifier = modifier
+                .fillMaxSize()
+                .onSizeChanged(state::setSize)
+                .pointerInteropFilter { state.onTouchEvent(it) }
+        ) {
+            state.draw(drawContext.canvas.nativeCanvas, size.width, size.height)
+        }
+    }
+}
+
+class PerspectiveCorrectionState(
+    private val context: Context
+) {
+
+    internal var image by mutableStateOf<Bitmap?>(null)
+        private set
+
+    var imagePath: String? = null
+        private set
+
+    private var size = IntSize.Zero
     private var linesLoaded = false
     private var scale = 0.9f
     private var topLeft = PixelCoordinate(0f, 0f)
@@ -55,8 +184,23 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
     private var sourceMatrix = Matrix()
     private var renderVersion by mutableIntStateOf(0)
 
+    @ColorInt
+    private var primaryColor = Resources.getPrimaryColor(context)
+    private var imageX = 0f
+    private var imageY = 0f
+    internal var calledOnLoad = false
+    private val files = FileSubsystem.getInstance(context)
+    private val outlinePath = Path()
+    private val imageClipPath = Path()
+    private val overlayPath = Path()
+    private val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
     var mapRotation: Float = 0f
         set(value) {
+            if (field == value) {
+                return
+            }
             field = value
             loadImageIfReady()
             refresh()
@@ -67,67 +211,44 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
 
     var isPreview = false
         set(value) {
+            if (field == value) {
+                return
+            }
             field = value
             refresh()
         }
 
-    @ColorInt
-    private var primaryColor = Resources.getPrimaryColor(context)
-    private var imageX = 0f
-    private var imageY = 0f
-    private var calledOnLoad = false
-    private val files = FileSubsystem.getInstance(context)
-    private val outlinePath = Path()
-    private val imageClipPath = Path()
-    private val overlayPath = Path()
-    private val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    private val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-    @Composable
-    override fun Content() {
-        val bitmap = image
-        LaunchedEffect(bitmap) {
-            if (bitmap != null && !calledOnLoad) {
-                calledOnLoad = true
-                onLoad(bitmap)
-            }
+    fun setSize(newSize: IntSize) {
+        if (size == newSize) {
+            return
         }
-
-        TrailSenseTheme {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                renderVersion
-                loadImageIfReady()
-                val currentImage = image ?: return@Canvas
-                if (!linesLoaded) {
-                    resetLines()
-                }
-
-                imageX = (size.width - currentImage.width * scale) / 2f
-                imageY = (size.height - currentImage.height * scale) / 2f
-
-                drawContext.canvas.nativeCanvas.apply {
-                    save()
-                    rotate(mapRotation, size.width / 2f, size.height / 2f)
-                    translate(imageX, imageY)
-                    scale(scale, scale)
-                    if (isPreview) {
-                        drawPreviewCanvas(this, currentImage, size.width, size.height)
-                    } else {
-                        drawEditCanvas(this, currentImage)
-                        drawMagnify(this, currentImage)
-                    }
-                    restore()
-                }
-            }
-        }
+        size = newSize
+        loadImageIfReady()
+        refresh()
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (w != oldw || h != oldh) {
-            loadImageIfReady()
-            refresh()
+    internal fun draw(canvas: Canvas, width: Float, height: Float) {
+        renderVersion
+        loadImageIfReady()
+        val currentImage = image ?: return
+        if (!linesLoaded) {
+            resetLines()
         }
+
+        imageX = (width - currentImage.width * scale) / 2f
+        imageY = (height - currentImage.height * scale) / 2f
+
+        canvas.save()
+        canvas.rotate(mapRotation, width / 2f, height / 2f)
+        canvas.translate(imageX, imageY)
+        canvas.scale(scale, scale)
+        if (isPreview) {
+            drawPreviewCanvas(canvas, currentImage, width, height)
+        } else {
+            drawEditCanvas(canvas, currentImage)
+            drawMagnify(canvas, currentImage)
+        }
+        canvas.restore()
     }
 
     private fun refresh() {
@@ -135,7 +256,7 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
     }
 
     private fun loadImageIfReady() {
-        if (image == null && imagePath != null && width > 0 && height > 0) {
+        if (image == null && imagePath != null && size.width > 0 && size.height > 0) {
             imagePath?.let { loadImage(it) }
         }
     }
@@ -143,8 +264,8 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
     private fun loadImage(path: String) {
         val border = Resources.dp(context, 48f).toInt()
         val isPortraitRotation = mapRotation == 0f || mapRotation == 180f
-        val w = (if (isPortraitRotation) width else height) - border
-        val h = (if (isPortraitRotation) height else width) - border
+        val w = (if (isPortraitRotation) size.width else size.height) - border
+        val h = (if (isPortraitRotation) size.height else size.width) - border
         val bitmap = files.bitmap(path, w, h) ?: return
         val newImage = bitmap.resizeToFit(w, h)
         image = newImage
@@ -325,7 +446,7 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
 
     private fun toSource(pixel: PixelCoordinate): PixelCoordinate {
         sourceMatrix.reset()
-        sourceMatrix.postRotate(mapRotation, width / 2f, height / 2f)
+        sourceMatrix.postRotate(mapRotation, size.width / 2f, size.height / 2f)
         sourceMatrix.invert(sourceMatrix)
         val point = floatArrayOf(pixel.x, pixel.y)
         sourceMatrix.mapPoints(point)
@@ -336,7 +457,7 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
         )
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
+    fun onTouchEvent(event: MotionEvent): Boolean {
         val position = toSource(PixelCoordinate(event.x, event.y))
         val radius = Resources.dp(context, 16f)
 
@@ -439,7 +560,7 @@ class PerspectiveCorrectionView @JvmOverloads constructor(
         }
 
         val start = toSource(PixelCoordinate(radius, radius))
-        val end = toSource(PixelCoordinate(width.toFloat() - radius, height.toFloat() - radius))
+        val end = toSource(PixelCoordinate(size.width.toFloat() - radius, size.height.toFloat() - radius))
 
         return PixelCoordinate(
             x.coerceIn(min(start.x, end.x), max(start.x, end.x)),

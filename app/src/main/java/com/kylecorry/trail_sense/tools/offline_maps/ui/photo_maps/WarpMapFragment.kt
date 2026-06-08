@@ -29,14 +29,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionView
+import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
+import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
+import com.kylecorry.trail_sense.shared.views.rememberPerspectiveCorrectionState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.fixPerspective
@@ -52,7 +53,7 @@ class WarpMapFragment : TrailSenseComposeFragment() {
     private var mapId = 0L
     private var map by mutableStateOf<PhotoMap?>(null)
     private var isPreview by mutableStateOf(false)
-    private var perspectiveView: PerspectiveCorrectionView? = null
+    private var perspectiveState: PerspectiveCorrectionState? = null
 
     private var onDone: () -> Unit = {}
 
@@ -69,7 +70,7 @@ class WarpMapFragment : TrailSenseComposeFragment() {
             onTogglePreview = ::togglePreview,
             onInstructionsClick = ::showInstructions,
             onNext = ::next,
-            onPerspectiveReady = { perspectiveView = it },
+            onPerspectiveReady = { perspectiveState = it },
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -80,8 +81,8 @@ class WarpMapFragment : TrailSenseComposeFragment() {
     }
 
     override fun onDestroyView() {
-        perspectiveView?.clearImage()
-        perspectiveView = null
+        perspectiveState?.clearImage()
+        perspectiveState = null
         super.onDestroyView()
     }
 
@@ -119,7 +120,7 @@ class WarpMapFragment : TrailSenseComposeFragment() {
 
     private fun next() {
         val currentMap = map ?: return
-        val perspective = perspectiveView ?: return
+        val perspective = perspectiveState ?: return
         val percentBounds = perspective.getPercentBounds() ?: return
         val hasChanges = perspective.hasChanges
 
@@ -165,9 +166,14 @@ private fun WarpMapScreen(
     onTogglePreview: () -> Unit,
     onInstructionsClick: () -> Unit,
     onNext: () -> Unit,
-    onPerspectiveReady: (PerspectiveCorrectionView) -> Unit,
+    onPerspectiveReady: (PerspectiveCorrectionState) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val perspective = rememberPerspectiveCorrectionState()
+    androidx.compose.runtime.LaunchedEffect(perspective) {
+        onPerspectiveReady(perspective)
+    }
+
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.background
@@ -191,28 +197,16 @@ private fun WarpMapScreen(
                 }
             }
 
-            AndroidView(
+            PerspectiveCorrection(
+                state = perspective,
+                imagePath = map?.filename,
+                mapRotation = map?.georeference?.rotation ?: 0f,
+                isPreview = isPreview,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .testTag("perspective"),
-                factory = { context ->
-                    PerspectiveCorrectionView(context).apply {
-                        id = R.id.perspective
-                        onPerspectiveReady(this)
-                    }
-                },
-                update = { view ->
-                    view.isPreview = isPreview
-                    map?.let {
-                        view.mapRotation = it.georeference.rotation
-                        if (view.tag != it.filename) {
-                            view.tag = it.filename
-                            view.setImage(it.filename)
-                        }
-                    }
-                }
+                    .testTag("perspective")
             )
 
             Surface(
