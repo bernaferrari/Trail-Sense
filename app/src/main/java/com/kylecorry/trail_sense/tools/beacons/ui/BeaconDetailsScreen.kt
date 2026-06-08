@@ -38,7 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -70,7 +70,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
-fun BeaconDetailsToolScreen(fragment: Fragment) {
+fun BeaconDetailsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { BeaconDetailsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -113,7 +113,7 @@ fun BeaconDetailsToolScreen(fragment: Fragment) {
     )
 }
 
-private class BeaconDetailsController(private val fragment: Fragment) {
+private class BeaconDetailsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }

@@ -45,7 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -124,7 +124,7 @@ interface BeaconListControllerHost {
 
 @Composable
 fun BeaconListToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier,
     onController: (BeaconListControllerHost?) -> Unit = {}
 ) {
@@ -155,7 +155,7 @@ fun BeaconListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class BeaconListController(private val fragment: Fragment) : BeaconListControllerHost {
+private class BeaconListController(private val fragment: TrailSenseComposeDestinationFragment) : BeaconListControllerHost {
 
     private val gps by lazy { sensorService.getGPS() }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }

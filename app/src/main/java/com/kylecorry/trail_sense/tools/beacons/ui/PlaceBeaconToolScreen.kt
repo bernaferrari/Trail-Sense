@@ -46,7 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -92,7 +92,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun PlaceBeaconToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PlaceBeaconController(fragment) }
@@ -120,7 +120,7 @@ fun PlaceBeaconToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PlaceBeaconController(private val fragment: Fragment) {
+private class PlaceBeaconController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val beaconService by lazy { BeaconService(fragment.requireContext()) }
     private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
