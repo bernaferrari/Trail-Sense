@@ -9,7 +9,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,10 +25,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -836,7 +838,7 @@ private data class PathOverviewViews(
     val pathPointStyle: TextView,
     val pathMapHolder: ConstraintLayout,
     val pathImage: MapView,
-    val pathMapFullscreenToggle: ImageButton,
+    val pathMapFullscreenToggle: PathIconButton,
     val pathSelectedPoint: FrameLayout,
     val pathLegend: ColorScaleState,
     val pathDuration: PathDataPointState,
@@ -1059,11 +1061,8 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val fullscreenToggle = ImageButton(context).apply {
+    val fullscreenToggle = PathIconButton(context, R.drawable.ic_recenter).apply {
         id = R.id.path_map_fullscreen_toggle
-        setImageResource(R.drawable.ic_recenter)
-        setBackgroundColor(Color.TRANSPARENT)
-        imageTintList = ColorStateList.valueOf(Color.WHITE)
     }
     mapHolder.addView(
         fullscreenToggle,
@@ -1256,6 +1255,34 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         addPointBtn = addPoint,
         pathsTiming = timing
     )
+}
+
+private class PathIconButton(
+    context: Context,
+    icon: Int
+) : AbstractComposeView(context) {
+    private var iconRes by mutableIntStateOf(icon)
+
+    fun setImageResource(icon: Int) {
+        iconRes = icon
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Box(
+                modifier = Modifier.size(48.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = ComposeColor.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
 }
 
 private fun createDropdownText(context: Context, id: Int): TextView {

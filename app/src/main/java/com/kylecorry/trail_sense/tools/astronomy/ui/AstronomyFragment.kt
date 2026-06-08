@@ -5,18 +5,20 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -637,7 +639,7 @@ private data class AstronomyViews(
     val sunMoonChart: Chart,
     val timeSeekerPanel: ScrollView,
     val seekTime: TextView,
-    val closeSeek: ImageButton,
+    val closeSeek: View,
     val timeSeeker: Slider,
     val sunPositionText: TextView,
     val moonPositionText: TextView,
@@ -943,12 +945,11 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         }
     )
 
-    val closeSeek = ImageButton(context).apply {
-        id = R.id.close_seek
-        setImageResource(R.drawable.ic_cancel)
-        setBackgroundColor(android.graphics.Color.TRANSPARENT)
-        imageTintList = android.content.res.ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-    }
+    val closeSeek = createAstronomyIconButton(
+        context,
+        R.id.close_seek,
+        R.drawable.ic_cancel
+    )
     seekHeader.addView(
         closeSeek,
         ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
@@ -1051,6 +1052,27 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         astronomyDetailList = list,
         button3d = button3d
     )
+}
+
+private fun createAstronomyIconButton(context: Context, id: Int, icon: Int): ComposeView {
+    return ComposeView(context).apply {
+        this.id = id
+        setContent {
+            TrailSenseTheme {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
 }
 
 private fun Int.dp(context: Context): Int {
