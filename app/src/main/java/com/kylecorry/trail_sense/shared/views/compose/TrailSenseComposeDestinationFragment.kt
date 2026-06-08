@@ -103,6 +103,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.settings.ui.PluginDetailsScreen
+import com.kylecorry.trail_sense.settings.ui.SettingsToolScreen
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
@@ -371,6 +372,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
             DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
             DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
+            DESTINATION_SETTINGS -> SettingsToolScreen(this)
         }
     }
 
@@ -3390,5 +3392,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_TEMPERATURE_ESTIMATION = "temperature_estimation"
         const val DESTINATION_SIGNAL_FINDER = "signal_finder"
         const val DESTINATION_TURN_BACK = "turn_back"
+        const val DESTINATION_SETTINGS = "settings"
     }
 }

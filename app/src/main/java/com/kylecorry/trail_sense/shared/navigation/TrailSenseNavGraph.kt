@@ -104,8 +104,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_settings
-            setClassName("com.kylecorry.trail_sense.settings.ui.SettingsFragment")
-            label = "SettingsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "SettingsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SETTINGS)
+                .build())
             putAction(
                 R.id.action_settings_to_sensor_settings,
                 NavAction(R.id.sensorSettingsFragment, NavOptions.Builder()

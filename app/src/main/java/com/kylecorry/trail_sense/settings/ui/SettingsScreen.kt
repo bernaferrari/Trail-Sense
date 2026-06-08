@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Intent
@@ -14,9 +16,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
@@ -24,7 +28,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -33,55 +36,53 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
-class SettingsFragment : TrailSenseComposeFragment() {
+private val navigationMap = mapOf(
+    R.string.pref_unit_settings to R.id.action_settings_to_unit_settings,
+    R.string.pref_privacy_settings to R.id.action_settings_to_privacy_settings,
+    R.string.pref_theme_settings to R.id.action_settings_to_theme_settings,
+    R.string.pref_experimental_settings to R.id.action_settings_to_experimental_settings,
+    R.string.pref_plugins_settings to R.id.action_settings_to_plugins_settings,
+    R.string.pref_error_settings to R.id.action_settings_to_error_settings,
+    R.string.pref_sensor_settings to R.id.action_settings_to_sensor_settings,
+    R.string.pref_backup_settings to R.id.action_settings_to_backup_settings,
+    R.string.pref_tool_settings_header_key to R.id.toolsSettingsFragment,
+    R.string.pref_open_source_licenses to R.id.action_action_settings_to_licenseFragment,
+    R.string.pref_diagnostics to R.id.action_settings_to_diagnostics
+)
 
-    private val navigationMap = mapOf(
-        R.string.pref_unit_settings to R.id.action_settings_to_unit_settings,
-        R.string.pref_privacy_settings to R.id.action_settings_to_privacy_settings,
-        R.string.pref_theme_settings to R.id.action_settings_to_theme_settings,
-        R.string.pref_experimental_settings to R.id.action_settings_to_experimental_settings,
-        R.string.pref_plugins_settings to R.id.action_settings_to_plugins_settings,
-        R.string.pref_error_settings to R.id.action_settings_to_error_settings,
-        R.string.pref_sensor_settings to R.id.action_settings_to_sensor_settings,
-        R.string.pref_backup_settings to R.id.action_settings_to_backup_settings,
-        R.string.pref_tool_settings_header_key to R.id.toolsSettingsFragment,
-        // About
-        R.string.pref_open_source_licenses to R.id.action_action_settings_to_licenseFragment,
-        R.string.pref_diagnostics to R.id.action_settings_to_diagnostics
+@Composable
+fun SettingsToolScreen(fragment: Fragment) {
+    val plugins = remember { getAppService<PluginSubsystem>() }
+
+    SettingsScreen(
+        version = Package.getVersionName(fragment.requireContext()),
+        pluginsEnabled = plugins.arePluginsEnabled(),
+        onNavigate = { fragment.findNavController().navigateWithAnimation(it) },
+        onOpenUrl = { fragment.startActivity(Intents.url(it)) },
+        onEmailDeveloper = {
+            val intent = Intents.email(
+                fragment.getString(R.string.email),
+                fragment.getString(R.string.app_name)
+            )
+            fragment.startActivity(
+                Intent.createChooser(
+                    intent,
+                    fragment.getString(R.string.pref_email_title)
+                )
+            )
+        }
     )
+}
 
-    private val plugins by lazy { getAppService<PluginSubsystem>() }
-
-    @Composable
-    override fun FragmentContent() {
-        SettingsScreen(
-            version = Package.getVersionName(requireContext()),
-            pluginsEnabled = plugins.arePluginsEnabled(),
-            onNavigate = { findNavController().navigateWithAnimation(it) },
-            onOpenUrl = { startActivity(Intents.url(it)) },
-            onEmailDeveloper = {
-                val intent = Intents.email(
-                    getString(R.string.email),
-                    getString(R.string.app_name)
-                )
-                startActivity(
-                    Intent.createChooser(
-                        intent,
-                        getString(R.string.pref_email_title)
-                    )
-                )
-            }
-        )
-    }
-
-    @Composable
-    private fun SettingsScreen(
-        version: String,
-        pluginsEnabled: Boolean,
-        onNavigate: (Int) -> Unit,
-        onOpenUrl: (String) -> Unit,
-        onEmailDeveloper: () -> Unit
-    ) {
+@Composable
+private fun SettingsScreen(
+    version: String,
+    pluginsEnabled: Boolean,
+    onNavigate: (Int) -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onEmailDeveloper: () -> Unit
+) {
+        val context = LocalContext.current
         val generalItems = listOfNotNull(
             SettingsItem(
                 title = stringResource(R.string.units),
@@ -139,7 +140,7 @@ class SettingsFragment : TrailSenseComposeFragment() {
 
         val toolItems = remember {
             AlphabeticalToolSort()
-                .sort(Tools.getTools(requireContext()))
+                .sort(Tools.getTools(context))
                 .first()
                 .tools
                 .filter { it.settingsNavAction != null }
@@ -227,7 +228,7 @@ class SettingsFragment : TrailSenseComposeFragment() {
                             icon = null,
                             navId = 0
                         ),
-                        onClick = { onOpenUrl(getString(R.string.privacy_policy_url)) }
+                        onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
                     )
                 }
                 item("email") {
@@ -269,11 +270,11 @@ class SettingsFragment : TrailSenseComposeFragment() {
         }
     }
 
-    @Composable
-    private fun SettingsRow(
-        item: SettingsItem,
-        onClick: () -> Unit
-    ) {
+@Composable
+private fun SettingsRow(
+    item: SettingsItem,
+    onClick: () -> Unit
+) {
         TrailSenseListItem(
             title = item.title,
             subtitle = item.subtitle,
@@ -289,13 +290,13 @@ class SettingsFragment : TrailSenseComposeFragment() {
             animateEntrance = false
         )
         TrailSenseDivider()
-    }
+}
 
-    @Composable
-    private fun ToolSettingsRow(
-        tool: Tool,
-        onClick: () -> Unit
-    ) {
+@Composable
+private fun ToolSettingsRow(
+    tool: Tool,
+    onClick: () -> Unit
+) {
         TrailSenseListItem(
             title = tool.name,
             icon = painterResource(tool.icon),
@@ -310,17 +311,13 @@ class SettingsFragment : TrailSenseComposeFragment() {
             animateEntrance = false
         )
         TrailSenseDivider()
-    }
-
-    private data class SettingsItem(
-        val title: String,
-        val subtitle: String?,
-        val icon: Int?,
-        val navId: Int
-    )
-
-    private companion object {
-        const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
-    }
-
 }
+
+private data class SettingsItem(
+    val title: String,
+    val subtitle: String?,
+    val icon: Int?,
+    val navId: Int
+)
+
+private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
