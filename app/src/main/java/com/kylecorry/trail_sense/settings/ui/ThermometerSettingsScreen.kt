@@ -28,17 +28,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.IThermometer
 import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
@@ -52,14 +50,15 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
@@ -71,9 +70,11 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 @Composable
-fun ThermometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun ThermometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { ThermometerSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -96,7 +97,7 @@ fun ThermometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment
     controller.Content()
 }
 
-private class ThermometerSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class ThermometerSettingsController(private val fragment: TrailSenseDestinationHost) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private var calibratedThermometer: IThermometer? = null
@@ -422,7 +423,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseComp
             R.string.pref_min_uncalibrated_temp_c,
             R.string.pref_max_uncalibrated_temp_c
         ).map { getString(it) } + listOf(source)
-        cache.onChange.asLiveData().observe(fragment.viewLifecycleOwner) {
+        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
             if (thermometerInvalidationKeys.contains(it)) {
                 reloadThermometer()
             }
@@ -432,8 +433,10 @@ private class ThermometerSettingsController(private val fragment: TrailSenseComp
             }
         }
 
-        fragment.observe(weather.weatherChanged) {
-            updateData()
+        fragment.lifecycleScope.launch {
+            weather.weatherChanged.flow().collect {
+                updateData()
+            }
         }
         updateData()
     }
@@ -597,8 +600,8 @@ private class ThermometerSettingsController(private val fragment: TrailSenseComp
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<ThermometerOption> {
-        val entries = fragment.resources.getStringArray(entriesId)
-        val values = fragment.resources.getStringArray(valuesId)
+        val entries = fragment.getResources().getStringArray(entriesId)
+        val values = fragment.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             ThermometerOption(value, entries.getOrElse(index) { value })
         }
@@ -650,12 +653,12 @@ private class ThermometerSettingsController(private val fragment: TrailSenseComp
     }
 
     private fun hideLocationUnsetError() {
-        val activity = fragment.requireMainActivity()
+        val activity = fragment.andromedaActivity as MainActivity
         activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
     }
 
     private fun showLocationUnsetError() {
-        val activity = fragment.requireMainActivity()
+        val activity = fragment.andromedaActivity as MainActivity
         val navController = fragment.findNavController()
         val error = UserError(
             ErrorBannerReason.LocationNotSet,
