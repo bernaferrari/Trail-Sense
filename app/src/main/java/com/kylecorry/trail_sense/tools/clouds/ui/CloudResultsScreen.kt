@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.clouds.ui
 
 import android.graphics.Bitmap
@@ -27,6 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +50,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
@@ -63,7 +68,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
@@ -75,45 +79,55 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.abs
 
-class CloudResultsFragment : TrailSenseComposeFragment() {
+@Composable
+fun CloudResultsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CloudResultsController(fragment) }
+    DisposableEffect(controller) {
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+    LaunchedEffect(controller) {
+        controller.onResume()
+    }
 
-    private var image by mutableStateOf<Bitmap?>(null)
+    CloudResultsScreen(
+        image = controller.image,
+        selection = controller.selection,
+        title = stringResource(R.string.clouds),
+        subtitle = controller.formatter.formatDateTime(
+            controller.time.toZonedDateTime(),
+            relative = true,
+            abbreviateMonth = true
+        ),
+        isLoading = controller.isLoading,
+        canSave = controller.selection.any { it.isSelected },
+        onDateClick = controller::pickTime,
+        onSave = controller::save,
+        onSelectionChanged = controller::setSelection
+    )
+}
+
+private class CloudResultsController(private val fragment: Fragment) {
+
+    var image by mutableStateOf<Bitmap?>(null)
+        private set
     private var classifier: ICloudClassifier = SoftmaxCloudClassifier(this::debugLogFeatures)
-    private var selection by mutableStateOf<List<CloudSelection>>(emptyList())
-    private var isLoading by mutableStateOf(false)
-    private var time by mutableStateOf(Instant.now())
+    var selection by mutableStateOf<List<CloudSelection>>(emptyList())
+        private set
+    var isLoading by mutableStateOf(false)
+        private set
+    var time by mutableStateOf(Instant.now())
+        private set
 
-    private val repo by lazy { CloudRepo.getInstance(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
 
-    private var uri: Uri? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        uri = BundleCompat.getParcelable(arguments ?: Bundle(), "image", Uri::class.java)
+    private val uri: Uri? by lazy {
+        BundleCompat.getParcelable(fragment.arguments ?: Bundle(), "image", Uri::class.java)
     }
 
-    @Composable
-    override fun FragmentContent() {
-        CloudResultsScreen(
-            image = image,
-            selection = selection,
-            title = stringResource(R.string.clouds),
-            subtitle = formatter.formatDateTime(
-                time.toZonedDateTime(),
-                relative = true,
-                abbreviateMonth = true
-            ),
-            isLoading = isLoading,
-            canSave = selection.any { it.isSelected },
-            onDateClick = ::pickTime,
-            onSave = ::save,
-            onSelectionChanged = ::setSelection
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         if (uri != null && selection.isEmpty()) {
             analyze()
         } else if (selection.isEmpty()) {
@@ -127,18 +141,17 @@ class CloudResultsFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    fun onDestroy() {
         image?.recycle()
         image = null
     }
 
-    private fun pickTime() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun pickTime() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val current = time.toZonedDateTime().toLocalDateTime()
             val newTime = CoroutinePickers.datetime(
-                requireContext(),
-                UserPreferences(requireContext()).use24HourTime,
+                fragment.requireContext(),
+                UserPreferences(fragment.requireContext()).use24HourTime,
                 current
             )
             if (newTime != null) {
@@ -147,7 +160,7 @@ class CloudResultsFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun setSelection(genus: CloudGenus?, selected: Boolean) {
+    fun setSelection(genus: CloudGenus?, selected: Boolean) {
         selection = selection.map {
             if (genus == it.genus) {
                 it.copy(isSelected = selected)
@@ -157,20 +170,20 @@ class CloudResultsFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun save() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun save() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val readings =
                 selection.filter { it.isSelected }
                     .map { Reading(CloudObservation(0, it.genus), time) }
             readings.forEach {
                 repo.add(it)
             }
-            findNavController().navigateUp()
+            fragment.findNavController().navigateUp()
         }
     }
 
     private fun debugLogFeatures(features: List<Float>) {
-        DebugCloudCommand(requireContext(), features).execute()
+        DebugCloudCommand(fragment.requireContext(), features).execute()
     }
 
     private fun analyze() {
@@ -178,10 +191,10 @@ class CloudResultsFragment : TrailSenseComposeFragment() {
         isLoading = true
         selection = emptyList()
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             if (image == null) {
                 image = loadImage(uri)
-                DeleteTempFilesCommand(requireContext()).execute()
+                DeleteTempFilesCommand(fragment.requireContext()).execute()
             }
             val results = onDefault {
                 image?.let { classifier.classify(it) }

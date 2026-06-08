@@ -149,6 +149,7 @@ import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
+import com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsToolScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
@@ -377,6 +378,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SETTINGS -> SettingsToolScreen(this)
             DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
             DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
+            DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
         }
     }
 
@@ -3399,5 +3401,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SETTINGS = "settings"
         const val DESTINATION_STRIDE_LENGTH_ESTIMATION = "stride_length_estimation"
         const val DESTINATION_PEDOMETER_SETTINGS = "pedometer_settings"
+        const val DESTINATION_CLOUD_RESULTS = "cloud_results"
     }
 }

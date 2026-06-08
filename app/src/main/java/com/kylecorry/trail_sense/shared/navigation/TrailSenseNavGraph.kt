@@ -1334,8 +1334,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cloudResultsFragment
-            setClassName("com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsFragment")
-            label = "CloudResultsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "CloudResultsScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOUD_RESULTS)
+                .build())
             graph.addDestination(this)
         }
 
