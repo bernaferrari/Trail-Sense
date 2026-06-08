@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionScreenFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.services.FlashlightToolService
-import com.kylecorry.trail_sense.tools.flashlight.ui.FragmentToolScreenFlashlight
+import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.volumeactions.FlashlightToggleVolumeAction
 import com.kylecorry.trail_sense.tools.flashlight.volumeactions.ScreenFlashlightBrightnessVolumeAction
 import com.kylecorry.trail_sense.tools.flashlight.widgets.AppWidgetFlashlight
@@ -67,7 +67,7 @@ object FlashlightToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { context, _, fragment ->
-                        fragment is FragmentToolScreenFlashlight && UserPreferences(
+                        fragment is ScreenFlashlightController && UserPreferences(
                             context
                         ).flashlight.controlScreenFlashlightWithVolumeButtons
                     },

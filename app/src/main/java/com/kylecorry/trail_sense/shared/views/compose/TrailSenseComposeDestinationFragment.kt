@@ -73,6 +73,7 @@ import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.toFloatCompat
+import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -128,6 +129,8 @@ import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
+import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightScreen
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
@@ -156,11 +159,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 
-class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable {
+class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
+    ScreenFlashlightController {
 
     private var layerSheet: MapLayersBottomSheet? = null
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
+    private val screenFlashlight by lazy { ScreenTorch(requireActivity().window) }
+    private val screenFlashlightCache by lazy {
+        PreferencesSubsystem.getInstance(requireContext()).preferences
+    }
     private var focusSearchRequest: (() -> Boolean)? = null
+    private var screenFlashlightBrightness by mutableFloatStateOf(100f)
+    private var screenFlashlightIsRed by mutableStateOf(false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -183,10 +193,21 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
                 considerShownIfCancelled = true,
                 cancelText = null
             )
+            DESTINATION_SCREEN_FLASHLIGHT -> initializeScreenFlashlight()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
+            turnOnScreenFlashlight()
         }
     }
 
     override fun onPause() {
+        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
+            turnOffScreenFlashlight()
+        }
         super.onPause()
         layerSheet?.dismiss()
     }
@@ -253,11 +274,34 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CONVERT -> ConvertScreen()
             DESTINATION_BALLISTICS -> BallisticsScreen()
             DESTINATION_PERMITS -> PermitsScreen()
+            DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
         }
     }
 
     override fun focusSearch(): Boolean {
         return focusSearchRequest?.invoke() == true
+    }
+
+    override fun handleVolumeButtonPress(isVolumeUp: Boolean) {
+        if (isVolumeUp) {
+            increaseScreenFlashlightBrightness()
+        } else {
+            decreaseScreenFlashlightBrightness()
+        }
+    }
+
+    @Composable
+    private fun ScreenFlashlight() {
+        ScreenFlashlightScreen(
+            brightness = screenFlashlightBrightness,
+            isRedLight = screenFlashlightIsRed,
+            onBrightnessChange = ::setScreenFlashlightBrightness,
+            onToggleColor = ::toggleScreenFlashlightColor,
+            onTurnOff = {
+                turnOffScreenFlashlight()
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        )
     }
 
     @Composable
@@ -2636,6 +2680,47 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         )
     }
 
+    private fun initializeScreenFlashlight() {
+        if (screenFlashlightCache.getBoolean("cache_red_light") == null) {
+            screenFlashlightCache.putBoolean("cache_red_light", false)
+        }
+        screenFlashlightIsRed = screenFlashlightCache.getBoolean("cache_red_light") == true
+        screenFlashlightBrightness = (
+                screenFlashlightCache.getInt(getString(R.string.pref_screen_torch_brightness))
+                    ?: 100
+                ).toFloat()
+    }
+
+    private fun toggleScreenFlashlightColor() {
+        screenFlashlightIsRed = !screenFlashlightIsRed
+        screenFlashlightCache.putBoolean("cache_red_light", screenFlashlightIsRed)
+    }
+
+    private fun turnOnScreenFlashlight() {
+        setScreenFlashlightBrightness(
+            screenFlashlightCache.getInt(getString(R.string.pref_screen_torch_brightness)) ?: 100
+        )
+    }
+
+    private fun turnOffScreenFlashlight() {
+        screenFlashlight.off()
+    }
+
+    private fun setScreenFlashlightBrightness(percent: Int) {
+        val coerced = percent.coerceIn(0, 100)
+        screenFlashlightBrightness = coerced.toFloat()
+        screenFlashlightCache.putInt(getString(R.string.pref_screen_torch_brightness), coerced)
+        screenFlashlight.on(map(coerced / 100f, 0f, 1f, 0.1f, 1f))
+    }
+
+    private fun increaseScreenFlashlightBrightness() {
+        setScreenFlashlightBrightness((screenFlashlightBrightness.toInt() + 10).coerceAtMost(100))
+    }
+
+    private fun decreaseScreenFlashlightBrightness() {
+        setScreenFlashlightBrightness((screenFlashlightBrightness.toInt() - 10).coerceAtLeast(0))
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -2782,5 +2867,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CONVERT = "convert"
         const val DESTINATION_BALLISTICS = "ballistics"
         const val DESTINATION_PERMITS = "permits"
+        const val DESTINATION_SCREEN_FLASHLIGHT = "screen_flashlight"
     }
 }
