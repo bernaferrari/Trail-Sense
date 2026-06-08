@@ -1,14 +1,12 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.View
-import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +17,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,8 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.CompassDirection
@@ -63,7 +61,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
-    FrameLayout(context, attrs) {
+    AbstractComposeView(context, attrs) {
 
 
     private val prefs = DependencyRegistry.get<UserPreferences>()
@@ -87,99 +85,47 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
     private val etaDataView: NavigationDataPointState
 
     init {
-        val root = LinearLayout(context).apply {
-            id = R.id.navigation_sheet
-            background = ColorDrawable(
-                Resources.getAndroidColorAttr(
-                    context,
-                    com.google.android.material.R.attr.colorSurfaceContainer
-                )
-            )
-            orientation = LinearLayout.VERTICAL
-        }
-        addView(
-            root,
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
-        )
-
         toolbar = NavigationSheetToolbarState()
-        val toolbarView = ComposeView(context).apply {
-            id = R.id.navigation_sheet_title
-            setContent {
-                TrailSenseTheme {
-                    toolbar.Content()
-                }
-            }
-        }
-        root.addView(
-            toolbarView,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        val dataRow = LinearLayout(context).apply {
-            gravity = Gravity.CENTER_VERTICAL
-            orientation = LinearLayout.HORIZONTAL
-        }
-        root.addView(
-            dataRow,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = Resources.dp(context, 8f).toInt()
-                marginEnd = Resources.dp(context, 8f).toInt()
-            }
-        )
-
-        distanceDataView = addNavigationDataPoint(dataRow, R.id.navigation_distance, R.drawable.ruler)
+        distanceDataView = NavigationDataPointState(R.drawable.ruler)
         bearingDataView = addNavigationDataPoint(
-            dataRow,
-            R.id.navigation_bearing,
             R.drawable.ic_compass_icon
         )
         elevationDataView = addNavigationDataPoint(
-            dataRow,
-            R.id.navigation_elevation,
             R.drawable.ic_altitude
         )
-        etaDataView = addNavigationDataPoint(dataRow, R.id.navigation_eta, R.drawable.ic_tool_clock)
+        etaDataView = NavigationDataPointState(R.drawable.ic_tool_clock)
 
         bearingDataView.setShowDescription(false)
     }
 
-    private fun addNavigationDataPoint(
-        row: LinearLayout,
-        id: Int,
-        icon: Int
-    ): NavigationDataPointState {
-        val dataPoint = NavigationDataPointState(icon)
-        val view = ComposeView(context).apply {
-            this.id = id
-            dataPoint.view = this
-            setContent {
-                TrailSenseTheme {
-                    dataPoint.Content()
+    private fun addNavigationDataPoint(icon: Int): NavigationDataPointState {
+        return NavigationDataPointState(icon)
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainer
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    toolbar.Content()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        distanceDataView.Content(Modifier.weight(1f))
+                        bearingDataView.Content(Modifier.weight(1f))
+                        elevationDataView.Content(Modifier.weight(1f))
+                        etaDataView.Content(Modifier.weight(1f))
+                    }
                 }
             }
         }
-        row.addView(
-            view,
-            LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            ).apply {
-                marginStart = Resources.dp(context, 8f).toInt()
-                marginEnd = Resources.dp(context, 8f).toInt()
-            }
-        )
-        return dataPoint
     }
 
 
@@ -488,31 +434,32 @@ private class NavigationSheetToolbarState {
 private class NavigationDataPointState(
     private val icon: Int
 ) {
-    lateinit var view: View
     var title by mutableStateOf("")
     var description by mutableStateOf("")
     private var showDescriptionState by mutableStateOf(true)
 
-    var isVisible: Boolean
-        get() = view.isVisible
-        set(value) {
-            view.isVisible = value
-        }
+    var isVisible by mutableStateOf(true)
 
     fun setShowDescription(show: Boolean) {
         showDescriptionState = show
     }
 
     @Composable
-    fun Content() {
-        DataPointContent(
-            title = title,
-            description = description,
-            icon = icon,
-            tint = MaterialTheme.colorScheme.onSurface,
-            showDescription = showDescriptionState,
-            gravity = Gravity.CENTER,
-            onDescriptionClick = null
-        )
+    fun Content(modifier: Modifier = Modifier) {
+        if (isVisible) {
+            Box(modifier = modifier) {
+                DataPointContent(
+                    title = title,
+                    description = description,
+                    icon = icon,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    showDescription = showDescriptionState,
+                    gravity = Gravity.CENTER,
+                    onDescriptionClick = null
+                )
+            }
+        } else {
+            Spacer(modifier = modifier)
+        }
     }
 }
