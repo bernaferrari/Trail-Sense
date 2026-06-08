@@ -139,6 +139,7 @@ import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.light.ui.LightMeterScreen
+import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
@@ -277,6 +278,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_PERMITS -> PermitsScreen()
             DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
             DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
+            DESTINATION_LIGHTNING -> LightningScreen()
         }
     }
 
@@ -2871,5 +2873,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_PERMITS = "permits"
         const val DESTINATION_SCREEN_FLASHLIGHT = "screen_flashlight"
         const val DESTINATION_SOLAR_PANEL = "solar_panel"
+        const val DESTINATION_LIGHTNING = "lightning"
     }
 }

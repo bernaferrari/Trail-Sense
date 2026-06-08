@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.lightning.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +43,6 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import kotlinx.coroutines.Dispatchers
@@ -50,40 +51,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class FragmentToolLightning : TrailSenseComposeFragment() {
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val repo by lazy { LightningRepo.getInstance(requireContext()) }
-
-    @Composable
-    override fun FragmentContent() {
-        LightningScreen(
-            formatService = formatService,
-            prefs = prefs,
-            loadLastStrike = {
-                withContext(Dispatchers.IO) {
-                    repo.getLast()
-                }
-            },
-            saveStrike = {
-                withContext(Dispatchers.IO) {
-                    repo.add(it)
-                }
-            }
-        )
-    }
-}
-
 @Composable
-private fun LightningScreen(
-    formatService: FormatService,
-    prefs: UserPreferences,
-    loadLastStrike: suspend () -> Reading<LightningStrike>?,
-    saveStrike: suspend (Reading<LightningStrike>) -> Unit
+fun LightningScreen(
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val view = LocalView.current
     val scope = rememberCoroutineScope()
+    val formatService = remember { FormatService.getInstance(context) }
+    val prefs = remember { UserPreferences(context) }
+    val repo = remember { LightningRepo.getInstance(context) }
 
     DisposableEffect(view) {
         val previous = view.keepScreenOn
@@ -103,7 +80,9 @@ private fun LightningScreen(
         units = prefs.baseDistanceUnits
         lightningTime = null
         strike = null
-        lastStrike = loadLastStrike()
+        lastStrike = withContext(Dispatchers.IO) {
+            repo.getLast()
+        }
     }
 
     LaunchedEffect(lightningTime, strike) {
@@ -138,7 +117,7 @@ private fun LightningScreen(
     }.orEmpty()
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Box(
@@ -179,7 +158,9 @@ private fun LightningScreen(
                         strike = currentStrike
                         lightningTime = null
                         scope.launch {
-                            saveStrike(currentStrike)
+                            withContext(Dispatchers.IO) {
+                                repo.add(currentStrike)
+                            }
                         }
                     }
                 },

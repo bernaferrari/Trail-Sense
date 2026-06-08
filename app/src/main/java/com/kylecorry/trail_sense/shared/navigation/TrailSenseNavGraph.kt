@@ -634,8 +634,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolLightning
-            setClassName("com.kylecorry.trail_sense.tools.lightning.ui.FragmentToolLightning")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolLightning"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LIGHTNING)
+                .build())
             graph.addDestination(this)
         }
 
