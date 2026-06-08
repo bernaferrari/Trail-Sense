@@ -678,8 +678,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
 
     val navigationSheet =
         com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView(context).apply {
-            id = R.id.navigation_sheet
-            visibility = View.GONE
+            isVisible = false
         }
 
     val distanceSheet = MapDistanceSheetState(context)

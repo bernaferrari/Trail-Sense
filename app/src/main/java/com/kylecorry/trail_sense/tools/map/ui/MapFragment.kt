@@ -753,8 +753,7 @@ private fun createMapViews(context: Context): MapViews {
     }
 
     val navigationSheet = NavigationSheetView(context).apply {
-        id = R.id.navigation_sheet
-        visibility = View.GONE
+        isVisible = false
     }
 
     val distanceSheet = MapDistanceSheetState(context)

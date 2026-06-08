@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
-import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,12 +23,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -47,9 +43,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.DataPointContent
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
@@ -75,6 +69,7 @@ class NavigationSheetView(private val context: Context) {
     private var sensorValues: NavigationSensorValues? = null
     private var useTrueNorthOverride: Boolean? = null
     private var sheetVisible by mutableStateOf(true)
+    var onOpenBeacon: ((Long) -> Unit)? = null
 
     // VIEWS
     private val toolbar: NavigationSheetToolbarState
@@ -97,32 +92,10 @@ class NavigationSheetView(private val context: Context) {
         bearingDataView.setShowDescription(false)
     }
 
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
     var isVisible: Boolean
         get() = sheetVisible
         set(value) {
             sheetVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            sheetVisible = value == View.VISIBLE
-            view.visibility = value
         }
 
     private fun addNavigationDataPoint(icon: Int): NavigationDataPointState {
@@ -312,12 +285,7 @@ class NavigationSheetView(private val context: Context) {
     }
 
     private fun openBeacon(id: Long) {
-        view.findNavController().navigateWithAnimation(
-            R.id.beaconDetailsFragment,
-            Bundle().apply {
-                putLong("beacon_id", id)
-            }
-        )
+        onOpenBeacon?.invoke(id)
     }
 
     private fun updateDestinationDirection(azimuth: Float, isTitle: Boolean = false) {

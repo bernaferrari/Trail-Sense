@@ -68,6 +68,7 @@ import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
@@ -206,7 +207,15 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                 findNavController().navigate(R.id.calibrateCompassFragment)
             },
             requestCameraPermission = { callback -> requestCamera(callback) },
-            onCameraPermissionDenied = { alertNoCameraPermission() }
+            onCameraPermissionDenied = { alertNoCameraPermission() },
+            onOpenBeacon = { beaconId ->
+                findNavController().navigateWithAnimation(
+                    R.id.beaconDetailsFragment,
+                    Bundle().apply {
+                        putLong("beacon_id", beaconId)
+                    }
+                )
+            }
         )
     }
 
@@ -959,7 +968,8 @@ private fun createNavigatorViews(
     context: Context,
     onNorthReferenceSettingsClick: (() -> Unit)? = null,
     requestCameraPermission: (((Boolean) -> Unit) -> Unit)? = null,
-    onCameraPermissionDenied: (() -> Unit)? = null
+    onCameraPermissionDenied: (() -> Unit)? = null,
+    onOpenBeacon: ((Long) -> Unit)? = null
 ): NavigatorViews {
     val title = NavigationTitleState()
     val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
@@ -988,7 +998,7 @@ private fun createNavigatorViews(
     }
 
     val navigationSheet = NavigationSheetView(context).apply {
-        id = R.id.navigation_sheet
+        this.onOpenBeacon = onOpenBeacon
     }
 
     return NavigatorViews(
