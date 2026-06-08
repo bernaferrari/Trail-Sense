@@ -52,9 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.annotation.StringRes
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.text.toDoubleCompat
@@ -101,7 +100,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
-fun ClimateToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun ClimateToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { ClimateController(fragment) }
 
     DisposableEffect(controller) {
@@ -114,7 +113,7 @@ fun ClimateToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     controller.Content()
 }
 
-private class ClimateController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class ClimateController(private val fragment: TrailSenseDestinationHost) {
 
     private val locationSubsystem by lazy { LocationSubsystem.getInstance(fragment.requireContext()) }
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
@@ -237,7 +236,7 @@ private class ClimateController(private val fragment: TrailSenseComposeDestinati
         val currentElevation = elevation
 
         loadJob?.cancel()
-        loadJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
+        loadJob = fragment.lifecycleScope.launch {
             val result = coroutineScope {
                 val temperatures = async {
                     weatherSubsystem.getTemperatureRanges(
@@ -318,7 +317,12 @@ private class ClimateController(private val fragment: TrailSenseComposeDestinati
         }
 
         if (fullText.isNotBlank()) {
-            fragment.dialog(getString(R.string.ecology), fullText, cancelText = null)
+            Alerts.dialog(
+                fragment.requireContext(),
+                getString(R.string.ecology),
+                fullText,
+                cancelText = null
+            )
         }
     }
 

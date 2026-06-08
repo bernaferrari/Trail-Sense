@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
-import android.Manifest
 import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -29,16 +28,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.permissions.PermissionRationale
-import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -46,8 +41,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
 import com.kylecorry.trail_sense.shared.permissions.IsBackgroundLocationRequired
-import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
-import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
@@ -69,7 +62,7 @@ object TurnBackKeys {
 }
 
 @Composable
-fun TurnBackToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun TurnBackToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { TurnBackController(fragment) }
 
     TurnBackScreen(
@@ -86,7 +79,7 @@ fun TurnBackToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class TurnBackController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class TurnBackController(private val fragment: TrailSenseDestinationHost) {
 
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     val sharedPrefs by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()) }
@@ -160,32 +153,7 @@ private class TurnBackController(private val fragment: TrailSenseComposeDestinat
     }
 
     private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        fragment.requirePermissionRequester().requestPermission(
-            SpecialPermission.SCHEDULE_EXACT_ALARMS,
-            PermissionRationale(
-                fragment.getString(
-                    R.string.allow_schedule_exact_alarms,
-                    fragment.getString(R.string.app_name)
-                ),
-                AppServiceRegistry.get<MarkdownService>().toMarkdown(
-                    fragment.getString(
-                        R.string.allow_schedule_exact_alarms_instructions,
-                        fragment.getString(R.string.app_name),
-                        fragment.getString(R.string.settings)
-                    )
-                ),
-                ok = fragment.getString(R.string.settings),
-            )
-        ) {
-            val isGranted = Permissions.hasPermission(
-                fragment.requireContext(),
-                SpecialPermission.SCHEDULE_EXACT_ALARMS
-            )
-            if (!isGranted) {
-                fragment.alertExactAlarmsDenied()
-            }
-            action(isGranted)
-        }
+        fragment.requestScheduleExactAlarms(action)
     }
 
     private fun requestBackgroundLocation() {
@@ -224,9 +192,7 @@ private class TurnBackController(private val fragment: TrailSenseComposeDestinat
                 allowLinks = true
             ) { cancelled ->
                 if (!cancelled) {
-                    fragment.requirePermissionRequester().requestPermissions(
-                        listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    ) {
+                    fragment.requestBackgroundLocation {
                         // No-op
                     }
                 }
