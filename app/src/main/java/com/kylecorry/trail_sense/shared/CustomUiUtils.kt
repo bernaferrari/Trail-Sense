@@ -39,6 +39,7 @@ import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.andromeda_temp.dismissOnPause
 import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -239,7 +240,9 @@ object CustomUiUtils {
         val playBar =
             fragment.view?.findViewWithTag<View>(fragment.getString(R.string.tag_play_bar))
 
-        val view = playBar ?: fragment.requireActivity().findViewById(R.id.bottom_navigation)
+        val view = playBar
+            ?: (fragment.activity as? MainActivity)?.getBottomNavigationView()
+            ?: fragment.requireView()
 
         return Alerts.snackbar(
             fragment,
