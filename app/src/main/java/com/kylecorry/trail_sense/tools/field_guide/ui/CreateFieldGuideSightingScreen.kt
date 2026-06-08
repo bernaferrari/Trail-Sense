@@ -45,9 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -80,7 +78,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 @Composable
-fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CreateFieldGuideSightingController(fragment) }
 
     DisposableEffect(controller) {
@@ -120,7 +118,7 @@ fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseComposeDestinationFra
     )
 }
 
-private class CreateFieldGuideSightingController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CreateFieldGuideSightingController(private val fragment: TrailSenseDestinationHost) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
@@ -147,8 +145,8 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
             return
         }
         isInitialized = true
-        pageId = fragment.arguments?.getLong("page_id") ?: 0L
-        sightingId = fragment.arguments?.getLong("sighting_id") ?: 0L
+        pageId = fragment.destinationArguments?.getLong("page_id") ?: 0L
+        sightingId = fragment.destinationArguments?.getLong("sighting_id") ?: 0L
         backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
         if (sightingId != 0L) {
             loadSighting()
@@ -161,7 +159,7 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
     }
 
     private fun loadSighting() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val sighting = repo.getSighting(sightingId)
             initialSighting = sighting
             sighting ?: return@launch
@@ -192,7 +190,7 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
             showOnMap
         )
 
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.saving)) {
                 repo.addSighting(sighting)
                 onMain {
