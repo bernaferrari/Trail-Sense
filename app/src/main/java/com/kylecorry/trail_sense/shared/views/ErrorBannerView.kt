@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.util.AttributeSet
-import android.widget.FrameLayout
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
@@ -29,40 +27,12 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.UserPreferences
 
-class ErrorBannerView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
+class ErrorBannerState(context: Context) {
 
     private val errors: MutableList<UserError> = mutableListOf()
-    private val prefs by lazy { UserPreferences(this.context) }
+    private val prefs = UserPreferences(context)
     private var currentError by mutableStateOf<UserError?>(null)
-
-    init {
-        minimumHeight = 64.dp(context)
-        addView(
-            ComposeView(context).apply {
-                setContent {
-                    TrailSenseTheme {
-                        ErrorBannerContent(
-                            error = currentError,
-                            onAction = { currentError?.onAction?.invoke() },
-                            onClose = {
-                                currentError?.reason?.let(::dismiss)
-                            },
-                            onBannerClick = {
-                                currentError
-                                    ?.takeIf { it.action == null }
-                                    ?.onAction
-                                    ?.invoke()
-                            }
-                        )
-                    }
-                }
-            },
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
-        )
-    }
+    var view: View? = null
 
     fun report(error: UserError) {
         if (!prefs.errors.canShowError(error.reason)) {
@@ -104,15 +74,28 @@ class ErrorBannerView(context: Context, attrs: AttributeSet?) : FrameLayout(cont
     }
 
     fun show() {
-        isVisible = true
+        view?.isVisible = true
     }
 
     fun hide() {
-        isVisible = false
+        view?.isVisible = false
     }
 
-    private fun Int.dp(context: Context): Int {
-        return com.kylecorry.andromeda.core.system.Resources.dp(context, toFloat()).toInt()
+    @Composable
+    fun Content() {
+        ErrorBannerContent(
+            error = currentError,
+            onAction = { currentError?.onAction?.invoke() },
+            onClose = {
+                currentError?.reason?.let(::dismiss)
+            },
+            onBannerClick = {
+                currentError
+                    ?.takeIf { it.action == null }
+                    ?.onAction
+                    ?.invoke()
+            }
+        )
     }
 }
 
