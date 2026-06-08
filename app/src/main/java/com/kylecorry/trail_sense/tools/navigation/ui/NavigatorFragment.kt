@@ -10,8 +10,13 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
@@ -55,7 +60,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.Share
-import com.kylecorry.trail_sense.shared.views.DataPointView
+import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadge
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -249,9 +254,6 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         )
 
 
-        views.speed.setShowDescription(false)
-        views.altitude.setShowDescription(false)
-
         NavigationQuickActionBinder(
             this,
             views.navigationTitle,
@@ -283,7 +285,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             sheet.show(this)
         }
 
-        views.altitude.setOnClickListener {
+        views.altitudeView.setOnClickListener {
             val sheet = AltitudeBottomSheet()
             sheet.currentAltitude = Reading(altimeter.altitude, Instant.now())
             sheet.show(this)
@@ -736,8 +738,9 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 private data class NavigatorViews(
     val root: View,
     val navigationTitle: Toolbar,
-    val altitude: DataPointView,
-    val speed: DataPointView,
+    val altitude: NavigatorDataPointState,
+    val altitudeView: View,
+    val speed: NavigatorDataPointState,
     val radarCompassMap: MapView,
     val radarCompass: RadarCompassView,
     val linearCompass: LinearSightingCompassView,
@@ -747,6 +750,25 @@ private data class NavigatorViews(
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
 )
+
+private class NavigatorDataPointState(
+    private val icon: Int
+) {
+    var title by mutableStateOf("")
+
+    @Composable
+    fun Content() {
+        DataPointContent(
+            title = title,
+            description = "",
+            icon = icon,
+            tint = MaterialTheme.colorScheme.onSurface,
+            showDescription = false,
+            gravity = Gravity.START,
+            onDescriptionClick = null
+        )
+    }
+}
 
 @Composable
 private fun NavigatorHost(
@@ -797,25 +819,35 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val altitude = DataPointView(context, null).apply {
+    val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
+    val altitudeView = ComposeView(context).apply {
         id = R.id.altitude
-        setImageResource(R.drawable.ic_altitude)
         foregroundGravity = Gravity.CENTER
+        setContent {
+            TrailSenseTheme {
+                altitude.Content()
+            }
+        }
     }
     grid.addView(
-        altitude,
+        altitudeView,
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
             marginEnd = 16.dp(context)
         }
     )
 
-    val speed = DataPointView(context, null).apply {
+    val speed = NavigatorDataPointState(R.drawable.ic_speed)
+    val speedView = ComposeView(context).apply {
         id = R.id.speed
-        setImageResource(R.drawable.ic_speed)
         foregroundGravity = Gravity.CENTER
+        setContent {
+            TrailSenseTheme {
+                speed.Content()
+            }
+        }
     }
     grid.addView(
-        speed,
+        speedView,
         LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     )
 
@@ -976,6 +1008,7 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         root = root,
         navigationTitle = title,
         altitude = altitude,
+        altitudeView = altitudeView,
         speed = speed,
         radarCompassMap = radarCompassMap,
         radarCompass = radarCompass,
