@@ -30,22 +30,13 @@ import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ExperimentationFragment : TrailSenseComposeFragment() {
-
-    @androidx.compose.runtime.Composable
-    override fun FragmentContent() {
-        ExperimentationContent()
-    }
-}
-
 @androidx.compose.runtime.Composable
-private fun ExperimentationContent() {
+internal fun ExperimentationContent() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val formatter = remember { FormatService.getInstance(context) }

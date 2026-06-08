@@ -25,20 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-class GuideFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        GuideScreen(
-            name = requireArguments().getString("guide_name", ""),
-            resource = requireArguments().getInt("guide_contents")
-        )
-    }
-}
 
 @Composable
 internal fun GuideScreen(name: String, resource: Int) {

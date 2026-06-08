@@ -77,7 +77,9 @@ import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
+import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
@@ -119,6 +121,11 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_RULER_SETTINGS -> RulerSettings()
             DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
             DESTINATION_POWER_SETTINGS -> PowerSettings()
+            DESTINATION_GUIDE -> GuideScreen(
+                name = requireArguments().getString("guide_name", ""),
+                resource = requireArguments().getInt("guide_contents")
+            )
+            DESTINATION_EXPERIMENTATION -> ExperimentationContent()
         }
     }
 
@@ -969,5 +976,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_RULER_SETTINGS = "ruler_settings"
         const val DESTINATION_FLASHLIGHT_SETTINGS = "flashlight_settings"
         const val DESTINATION_POWER_SETTINGS = "power_settings"
+        const val DESTINATION_GUIDE = "guide"
+        const val DESTINATION_EXPERIMENTATION = "experimentation"
     }
 }

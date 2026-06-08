@@ -202,8 +202,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.experimentationFragment
-            setClassName("com.kylecorry.trail_sense.tools.experimentation.ExperimentationFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ExperimentationFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_EXPERIMENTATION)
+                .build())
             graph.addDestination(this)
         }
 
@@ -448,8 +452,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.guideFragment
-            setClassName("com.kylecorry.trail_sense.tools.guide.ui.GuideFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "GuideFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_GUIDE)
+                .build())
             addArgument("guide_name", NavArgument.Builder()
                 .setType(NavType.StringType)
                 .setIsNullable(true)
