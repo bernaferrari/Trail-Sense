@@ -13,17 +13,30 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -48,7 +61,6 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.statistics.Statistics
@@ -294,11 +306,11 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             navigateToNearestPathPoint()
         }
 
-        views.pathTitle.rightButton.setOnClickListener {
+        views.pathTitle.onMenuClick = {
             showPathMenu()
         }
 
-        views.pathTitle.subtitle.setOnClickListener {
+        views.pathTitle.onSubtitleClick = {
             movePath()
         }
 
@@ -399,7 +411,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         inBackground {
             val parent = onIO { pathService.getGroup(path.parentId) }
             if (isViewReady) {
-                views.pathTitle.subtitle.text = parent?.name ?: getString(R.string.no_group)
+                views.pathTitle.subtitle = parent?.name ?: getString(R.string.no_group)
             }
         }
     }
@@ -462,7 +474,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         )
 
         Pickers.menu(
-            views.pathTitle.rightButton, listOf(
+            views.pathTitleMenuAnchor, listOf(
                 getString(R.string.rename),
                 if (path.temporary) getString(R.string.keep_forever) else null,
                 if (path.style.visible) getString(R.string.hide) else getString(
@@ -551,7 +563,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         val end = path.metadata.duration?.end
 
 
-        views.pathTitle.title.text = PathNameFactory(requireContext()).getName(path)
+        views.pathTitle.title = PathNameFactory(requireContext()).getName(path)
 
         val duration = if (start != null && end != null && Duration.between(
                 start,
@@ -817,7 +829,8 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
 private data class PathOverviewViews(
     val root: LockableScrollView,
-    val pathTitle: Toolbar,
+    val pathTitle: PathTitleState,
+    val pathTitleMenuAnchor: View,
     val pathColor: ImageView,
     val pathLineStyle: TextView,
     val pathPointStyle: TextView,
@@ -839,6 +852,13 @@ private data class PathOverviewViews(
     val addPointBtn: MaterialButton,
     val pathsTiming: TextView
 )
+
+private class PathTitleState {
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+    var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
+    var onMenuClick by mutableStateOf<(() -> Unit)?>(null)
+}
 
 private class PathDataPointState(
     initialDescription: String,
@@ -873,6 +893,47 @@ private class PathDataPointState(
 }
 
 @Composable
+private fun PathTitle(
+    state: PathTitleState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Balance the trailing menu button so the title remains centered.
+        Box(modifier = Modifier.size(48.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = state.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = state.subtitle,
+                modifier = Modifier.clickable { state.onSubtitleClick?.invoke() },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        IconButton(onClick = { state.onMenuClick?.invoke() }) {
+            Icon(
+                painter = painterResource(R.drawable.ic_menu_dots),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
 private fun PathOverviewHost(
     views: PathOverviewViews,
     modifier: Modifier = Modifier
@@ -903,14 +964,17 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         )
     )
 
-    val title = Toolbar(context, null).apply {
+    val title = PathTitleState()
+    val titleView = ComposeView(context).apply {
         id = R.id.path_title
-        rightButton.setImageResource(R.drawable.ic_menu_dots)
-        rightButton.isVisible = true
-        leftButton.isVisible = false
+        setContent {
+            TrailSenseTheme {
+                PathTitle(title)
+            }
+        }
     }
     content.addView(
-        title,
+        titleView,
         LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1170,6 +1234,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     return PathOverviewViews(
         root = root,
         pathTitle = title,
+        pathTitleMenuAnchor = titleView,
         pathColor = pathColor,
         pathLineStyle = pathLineStyle,
         pathPointStyle = pathPointStyle,
