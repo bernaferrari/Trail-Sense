@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -559,8 +558,8 @@ private data class ClinometerViews(
     val cameraClinometer: CameraClinometerView,
     val avalancheRisk: ClinometerDataPointState,
     val estimatedHeight: ClinometerDataPointState,
-    val clinometerInstructions: ClinometerInstructionView,
-    val cameraClinometerInstructions: ClinometerInstructionView
+    val clinometerInstructions: View,
+    val cameraClinometerInstructions: View
 )
 
 private class ClinometerDataPointState(
@@ -914,37 +913,36 @@ private fun createInstructionView(
     context: Context,
     id: Int,
     icon: Int
-): ClinometerInstructionView {
-    return ClinometerInstructionView(context, icon).apply {
+): ComposeView {
+    return ComposeView(context).apply {
         this.id = id
+        setContent {
+            TrailSenseTheme {
+                ClinometerInstruction(icon = icon)
+            }
+        }
     }
 }
 
-private class ClinometerInstructionView(
-    context: Context,
-    private val icon: Int
-) : AbstractComposeView(context) {
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(48.dp)
-                )
-                Text(
-                    text = context.getString(R.string.clinometer_rotate_device),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
+@Composable
+private fun ClinometerInstruction(icon: Int) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(48.dp)
+        )
+        Text(
+            text = context.getString(R.string.clinometer_rotate_device),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
 

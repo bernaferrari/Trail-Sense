@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -794,7 +793,7 @@ private data class NavigatorViews(
     val linearCompass: LinearSightingCompassView,
     val mapAttribution: MapAttributionState,
     val northReferenceIndicator: NorthReferenceBadgeState,
-    val beaconBtn: NavigatorIconButton,
+    val beaconBtn: View,
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
 )
@@ -1069,7 +1068,7 @@ private fun createNavigatorViews(
         }
     )
 
-    val beaconBtn = NavigatorIconButton(context, R.drawable.ic_beacon).apply {
+    val beaconBtn = navigatorIconButton(context, R.drawable.ic_beacon).apply {
         id = R.id.beaconBtn
         isClickable = true
         isFocusable = true
@@ -1133,26 +1132,27 @@ private fun createNavigatorViews(
     )
 }
 
-private class NavigatorIconButton(
+private fun navigatorIconButton(
     context: Context,
-    private val icon: Int
-) : AbstractComposeView(context) {
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            androidx.compose.material3.Surface(
-                modifier = Modifier.size(56.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = MaterialTheme.colorScheme.primary,
-                shadowElevation = 6.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
+    icon: Int
+): ComposeView {
+    return ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                androidx.compose.material3.Surface(
+                    modifier = Modifier.size(56.dp),
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    shadowElevation = 6.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(icon),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
         }
