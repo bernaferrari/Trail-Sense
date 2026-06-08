@@ -25,6 +25,7 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
 
     override var isVisible by mutableStateOf(false)
     override var contentDescription by mutableStateOf<CharSequence?>(null)
+    var isClickable by mutableStateOf(true)
     private var iconRes by mutableIntStateOf(0)
     private var isOn by mutableStateOf(false)
     private var onClick: (() -> Unit)? = null
@@ -68,10 +69,11 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
         Box(
             modifier = modifier
                 .size(48.dp)
-                .pointerInteropFilter { onTouch?.invoke(it) ?: false }
+                .pointerInteropFilter { isClickable && (onTouch?.invoke(it) ?: false) }
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
+                    enabled = isClickable,
                     onClick = { onClick?.invoke() },
                     onLongClick = { onLongClick?.invoke() }
                 ),

@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.quickactions
 
-import com.kylecorry.andromeda.views.toolbar.Toolbar
-import com.kylecorry.trail_sense.shared.quickactions.ImageButtonQuickActionView
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
@@ -9,7 +8,8 @@ import com.kylecorry.trail_sense.tools.navigation.ui.NavigatorFragment
 
 class NavigationQuickActionBinder(
     private val fragment: NavigatorFragment,
-    private val navigationTitle: Toolbar,
+    private val leftButton: ComposeQuickActionButtonView,
+    private val rightButton: ComposeQuickActionButtonView,
     private val prefs: NavigationPreferences
 ) : IQuickActionBinder {
 
@@ -17,12 +17,12 @@ class NavigationQuickActionBinder(
         val factory = QuickActionFactory()
         val left = factory.create(
             prefs.leftButton,
-            ImageButtonQuickActionView(navigationTitle.leftButton),
+            leftButton,
             fragment
         )
         val right = factory.create(
             prefs.rightButton,
-            ImageButtonQuickActionView(navigationTitle.rightButton),
+            rightButton,
             fragment
         )
         left.bind(fragment)

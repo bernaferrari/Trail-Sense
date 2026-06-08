@@ -9,16 +9,26 @@ import android.view.Gravity
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
@@ -31,12 +41,10 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.core.ui.setTextDistinct
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.show
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
@@ -57,6 +65,7 @@ import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.Share
@@ -256,7 +265,8 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
         NavigationQuickActionBinder(
             this,
-            views.navigationTitle,
+            views.navigationTitle.leftButton,
+            views.navigationTitle.rightButton,
             userPrefs.navigation
         ).bind()
 
@@ -271,7 +281,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         observe(gps) { }
         observe(speedometer) { }
 
-        views.navigationTitle.subtitle.setOnLongClickListener {
+        views.navigationTitle.onSubtitleLongClick = {
             Share.shareLocation(
                 this,
                 gps.location
@@ -279,7 +289,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             true
         }
 
-        views.navigationTitle.subtitle.setOnClickListener {
+        views.navigationTitle.onSubtitleClick = {
             val sheet = LocationBottomSheet()
             sheet.gps = gps
             sheet.show(this)
@@ -357,7 +367,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         if (!hasCompass) {
             views.radarCompass.shouldDrawDial = userPrefs.navigation.showDialTicksWhenNoCompass
             views.radarCompass.shouldDrawAzimuthIndicator = false
-            views.navigationTitle.title.isVisible = false
+            views.navigationTitle.isTitleVisible = false
             views.northReferenceIndicator.isVisible = false
         } else {
             views.radarCompass.shouldDrawAzimuthIndicator =
@@ -609,7 +619,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             val directionText = formatService.formatDirection(CompassDirection.nearest(bearing))
                 .padStart(2, ' ')
             val titleText = "$azimuthText   $directionText"
-            views.navigationTitle.title.setTextDistinct(titleText)
+            views.navigationTitle.title = titleText
         }
 
         // Compass
@@ -636,9 +646,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         declination = declinationProvider.getDeclination()
         compass.declination = declination
 
-        views.navigationTitle.subtitle.setTextDistinct(
-            formatService.formatLocation(location)
-        )
+        views.navigationTitle.subtitle = formatService.formatLocation(location)
 
         views.radarCompassMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
@@ -741,7 +749,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
 private data class NavigatorViews(
     val root: View,
-    val navigationTitle: Toolbar,
+    val navigationTitle: NavigationTitleState,
     val altitude: NavigatorDataPointState,
     val altitudeView: View,
     val speed: NavigatorDataPointState,
@@ -754,6 +762,16 @@ private data class NavigatorViews(
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
 )
+
+private class NavigationTitleState {
+    val leftButton = ComposeQuickActionButtonView()
+    val rightButton = ComposeQuickActionButtonView()
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+    var isTitleVisible by mutableStateOf(true)
+    var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
+    var onSubtitleLongClick by mutableStateOf<(() -> Boolean)?>(null)
+}
 
 private class NavigatorDataPointState(
     private val icon: Int
@@ -771,6 +789,48 @@ private class NavigatorDataPointState(
             gravity = Gravity.START,
             onDescriptionClick = null
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NavigationTitle(
+    state: NavigationTitleState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        state.leftButton.Content()
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (state.isTitleVisible) {
+                Text(
+                    text = state.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Text(
+                text = state.subtitle,
+                modifier = Modifier.combinedClickable(
+                    onClick = { state.onSubtitleClick?.invoke() },
+                    onLongClick = { state.onSubtitleLongClick?.invoke() }
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        state.rightButton.Content()
     }
 }
 
@@ -794,11 +854,17 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         )
     }
 
-    val title = Toolbar(context, null).apply {
+    val title = NavigationTitleState()
+    val titleView = ComposeView(context).apply {
         id = R.id.navigation_title
+        setContent {
+            TrailSenseTheme {
+                NavigationTitle(title)
+            }
+        }
     }
     root.addView(
-        title,
+        titleView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
