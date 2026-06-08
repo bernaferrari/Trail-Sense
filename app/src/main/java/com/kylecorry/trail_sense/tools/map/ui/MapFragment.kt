@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,7 +36,6 @@ import com.kylecorry.andromeda.core.ui.useService
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
-import com.kylecorry.andromeda.fragments.useClickCallback
 import com.kylecorry.andromeda.fragments.useFlow
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
@@ -191,8 +189,10 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             screenLock.releaseLock(activity)
         }
 
-        useClickCallback(lockButton.view, lockMode, hasCompass) {
-            setLockMode(getNextLockMode(lockMode, hasCompass))
+        useEffect(lockButton, lockMode, hasCompass) {
+            lockButton.setOnClickListener {
+                setLockMode(getNextLockMode(lockMode, hasCompass))
+            }
         }
 
         // Layers
@@ -433,32 +433,10 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         }
 
         // Menu
-        useEffect(menuButton) {
+        useEffect(menuButton, startDistanceMeasurement) {
             menuButton.setState(false)
-        }
-
-        useClickCallback(menuButton.view, startDistanceMeasurement) {
-            val actions = listOf(
-                MapAction.Measure to getString(R.string.measure),
-                MapAction.CreatePath to getString(R.string.create_path),
-                MapAction.AdjustLayers to getString(R.string.layers),
-                MapAction.Trace to getString(R.string.trace)
-            )
-
-            Pickers.menu(
-                menuButton.view,
-                actions.map { action -> action.second }
-            ) { index ->
-                when (actions[index].first) {
-                    MapAction.Measure, MapAction.CreatePath -> startDistanceMeasurement(
-                        null,
-                        false
-                    )
-
-                    MapAction.AdjustLayers -> adjustLayers()
-                    MapAction.Trace -> setLockMode(MapLockMode.Trace)
-                }
-                true
+            menuButton.setOnClickListener {
+                showMapMenu(startDistanceMeasurement, { adjustLayers() }, setLockMode)
             }
         }
 
@@ -561,6 +539,35 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                 // Hide the bottom navigation
                 requireMainActivity().setBottomNavigationEnabled(false)
             }
+        }
+    }
+
+    private fun showMapMenu(
+        startDistanceMeasurement: (Coordinate?, Boolean) -> Unit,
+        adjustLayers: () -> Unit,
+        setLockMode: (MapLockMode) -> Unit
+    ) {
+        val actions = listOf(
+            MapAction.Measure to getString(R.string.measure),
+            MapAction.CreatePath to getString(R.string.create_path),
+            MapAction.AdjustLayers to getString(R.string.layers),
+            MapAction.Trace to getString(R.string.trace)
+        )
+
+        Pickers.menu(
+            requireView(),
+            actions.map { action -> action.second }
+        ) { index ->
+            when (actions[index].first) {
+                MapAction.Measure, MapAction.CreatePath -> startDistanceMeasurement(
+                    null,
+                    false
+                )
+
+                MapAction.AdjustLayers -> adjustLayers()
+                MapAction.Trace -> setLockMode(MapLockMode.Trace)
+            }
+            true
         }
     }
 
@@ -735,17 +742,17 @@ private fun createMapViews(context: Context): MapViews {
 
     val attribution = MapAttributionState()
 
-    val menuButton = smallMapFab(context, R.id.menu_btn, R.drawable.ic_menu_dots)
+    val menuButton = smallMapFab(R.drawable.ic_menu_dots)
 
-    val timeButton = smallMapFab(context, R.id.time_btn, R.drawable.ic_tool_clock).apply {
-        visibility = View.GONE
+    val timeButton = smallMapFab(R.drawable.ic_tool_clock).apply {
+        isVisible = false
     }
 
-    val zoomInButton = smallMapFab(context, R.id.zoom_in_btn, R.drawable.ic_add)
+    val zoomInButton = smallMapFab(R.drawable.ic_add)
 
-    val zoomOutButton = smallMapFab(context, R.id.zoom_out_btn, R.drawable.ic_zoom_out)
+    val zoomOutButton = smallMapFab(R.drawable.ic_zoom_out)
 
-    val lockButton = smallMapFab(context, R.id.lock_btn, R.drawable.satellite)
+    val lockButton = smallMapFab(R.drawable.satellite)
 
     val sensorStatusBadges = SensorStatusBadgeView(context).apply {
         id = R.id.sensor_status_badges
@@ -775,79 +782,33 @@ private fun createMapViews(context: Context): MapViews {
     )
 }
 
-private fun smallMapFab(
-    context: Context,
-    id: Int,
-    drawable: Int
-): MapIconButton {
-    return MapIconButton(context, drawable).apply {
-        this.id = id
+private fun smallMapFab(drawable: Int): MapIconButton {
+    return MapIconButton(drawable).apply {
         alpha = 0.86f
-        isClickable = true
-        isFocusable = true
     }
 }
 
-private class MapIconButton(
-    context: Context,
-    icon: Int
-) {
+private class MapIconButton(icon: Int) {
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
     private var buttonVisible by mutableStateOf(true)
     private var alphaState by mutableStateOf(1f)
-    private var clickListener: View.OnClickListener? = null
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
+    private var clickListener by mutableStateOf<(() -> Unit)?>(null)
 
     var alpha: Float
         get() = alphaState
         set(value) {
             alphaState = value
-            view.alpha = value
-        }
-
-    var isClickable: Boolean
-        get() = view.isClickable
-        set(value) {
-            view.isClickable = value
-        }
-
-    var isFocusable: Boolean
-        get() = view.isFocusable
-        set(value) {
-            view.isFocusable = value
         }
 
     var isVisible: Boolean
         get() = buttonVisible
         set(value) {
             buttonVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            buttonVisible = value == View.VISIBLE
-            view.visibility = value
-        }
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
+    fun setOnClickListener(listener: (() -> Unit)?) {
         clickListener = listener
-        view.setOnClickListener(listener)
     }
 
     fun setImageResource(icon: Int) {
@@ -878,8 +839,8 @@ private class MapIconButton(
             modifier = modifier
                 .size(40.dp)
                 .alpha(alphaState)
-                .clickable(enabled = isClickable) {
-                    clickListener?.onClick(view)
+                .clickable(enabled = clickListener != null) {
+                    clickListener?.invoke()
                 },
             shape = androidx.compose.foundation.shape.CircleShape,
             color = background,
