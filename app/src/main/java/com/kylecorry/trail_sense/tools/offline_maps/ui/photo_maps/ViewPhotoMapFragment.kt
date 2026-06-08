@@ -655,25 +655,16 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
     }
 
     val attribution = MapAttributionState()
-    val lockBtn = PhotoMapIconButton(context, R.drawable.satellite).apply {
-        id = R.id.lock_btn
+    val lockBtn = PhotoMapIconButton(R.drawable.satellite).apply {
         alpha = 0.86f
-        isClickable = true
-        isFocusable = true
     }
 
-    val zoomOutBtn = PhotoMapIconButton(context, R.drawable.ic_zoom_out).apply {
-        id = R.id.zoom_out_btn
+    val zoomOutBtn = PhotoMapIconButton(R.drawable.ic_zoom_out).apply {
         alpha = 0.86f
-        isClickable = true
-        isFocusable = true
     }
 
-    val zoomInBtn = PhotoMapIconButton(context, R.drawable.ic_add).apply {
-        id = R.id.zoom_in_btn
+    val zoomInBtn = PhotoMapIconButton(R.drawable.ic_add).apply {
         alpha = 0.86f
-        isClickable = true
-        isFocusable = true
     }
 
     val navigationSheet =

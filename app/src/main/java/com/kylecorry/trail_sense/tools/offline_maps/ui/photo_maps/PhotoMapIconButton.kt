@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.content.Context
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -17,65 +15,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class PhotoMapIconButton(
-    context: Context,
-    icon: Int
-) {
+class PhotoMapIconButton(icon: Int) {
 
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
     private var buttonVisible by mutableStateOf(true)
     private var alphaState by mutableStateOf(1f)
-    private var clickListener: View.OnClickListener? = null
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
+    private var clickListener by mutableStateOf<(() -> Unit)?>(null)
 
     var alpha: Float
         get() = alphaState
         set(value) {
             alphaState = value
-            view.alpha = value
-        }
-
-    var isClickable: Boolean
-        get() = view.isClickable
-        set(value) {
-            view.isClickable = value
-        }
-
-    var isFocusable: Boolean
-        get() = view.isFocusable
-        set(value) {
-            view.isFocusable = value
         }
 
     var isVisible: Boolean
         get() = buttonVisible
         set(value) {
             buttonVisible = value
-            view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
-    fun setOnClickListener(listener: View.OnClickListener?) {
+    fun setOnClickListener(listener: (() -> Unit)?) {
         clickListener = listener
-        view.setOnClickListener(listener)
     }
 
     fun setImageResource(icon: Int) {
@@ -106,8 +70,8 @@ class PhotoMapIconButton(
             modifier = modifier
                 .size(40.dp)
                 .alpha(alphaState)
-                .clickable(enabled = isClickable) {
-                    clickListener?.onClick(view)
+                .clickable(enabled = clickListener != null) {
+                    clickListener?.invoke()
                 },
             shape = CircleShape,
             color = background,
