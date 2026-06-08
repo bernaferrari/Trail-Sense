@@ -19,6 +19,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -49,12 +54,13 @@ import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.BeaconIconPickerView
-import com.kylecorry.trail_sense.shared.views.ColorPickerView
+import com.kylecorry.trail_sense.shared.views.BeaconIconPickerContent
+import com.kylecorry.trail_sense.shared.views.ColorPickerContent
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.DurationInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRBottomSheet
 import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
@@ -181,15 +187,23 @@ object CustomUiUtils {
         onColorPick: (color: AppColor?) -> Unit
     ) {
         val view = createPromptContainer(context)
-        val colorPicker = ColorPickerView(context, null).apply {
+        var color = default
+        val colorPicker = ComposeView(context).apply {
             id = R.id.prompt_color_picker
+            setContent {
+                TrailSenseTheme {
+                    var selectedColor by remember { mutableStateOf(default) }
+                    ColorPickerContent(
+                        selectedColor = selectedColor,
+                        onColorSelected = {
+                            selectedColor = it
+                            color = it
+                        }
+                    )
+                }
+            }
         }
         view.addPromptContent(colorPicker)
-        var color = default
-        colorPicker.setOnColorChangeListener {
-            color = it
-        }
-        colorPicker.color = color
 
         Alerts.dialog(
             context,
@@ -212,15 +226,24 @@ object CustomUiUtils {
         onIconPick: (icon: BeaconIcon?) -> Unit
     ) {
         val view = createPromptContainer(context)
-        val iconPicker = BeaconIconPickerView(context, null).apply {
+        var icon = default
+        val iconPicker = ComposeView(context).apply {
             id = R.id.prompt_icon_picker
+            setContent {
+                TrailSenseTheme {
+                    var selectedIcon by remember { mutableStateOf(default) }
+                    BeaconIconPickerContent(
+                        selectedIcon = selectedIcon,
+                        icons = BeaconIcon.values().filter { it.isUserSelectable },
+                        onIconSelected = {
+                            selectedIcon = it
+                            icon = it
+                        }
+                    )
+                }
+            }
         }
         view.addPromptContent(iconPicker)
-        var icon = default
-        iconPicker.setOnIconChangeListener {
-            icon = it
-        }
-        iconPicker.icon = icon
 
         Alerts.dialog(
             context,
