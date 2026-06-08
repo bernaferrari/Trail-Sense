@@ -58,6 +58,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
@@ -129,9 +130,11 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
     private var backtrackState by mutableStateOf(FeatureState.Off)
     private var backtrackFrequency by mutableStateOf<Duration?>(null)
     private var sortMenuText by mutableStateOf("")
+    private var showBacktrackFrequencyPicker by mutableStateOf(false)
 
     @Composable
     override fun FragmentContent() {
+        val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
         PathsScreen(
             title = title.ifBlank { stringResource(R.string.paths) },
             sortMenuText = sortMenuText.ifBlank {
@@ -155,10 +158,31 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
             onImportPath = ::importPaths,
             onCreateGroup = ::createGroup,
             onCreatePath = ::createPath,
-            onBacktrackFrequencyClick = ::changeBacktrackFrequency,
+            onBacktrackFrequencyClick = {
+                showBacktrackFrequencyPicker = true
+            },
             onBacktrackToggleClick = ::toggleBacktrack,
             modifier = Modifier.fillMaxSize()
         )
+
+        if (showBacktrackFrequencyPicker) {
+            DurationPickerDialog(
+                title = backtrackFrequencyTitle,
+                duration = prefs.backtrackRecordFrequency,
+                message = stringResource(R.string.actual_frequency_disclaimer),
+                hint = stringResource(R.string.frequency),
+                showSeconds = true,
+                onDurationPicked = {
+                    if (it != null) {
+                        changeBacktrackFrequency(it)
+                    }
+                    showBacktrackFrequencyPicker = false
+                },
+                onDismiss = {
+                    showBacktrackFrequencyPicker = false
+                }
+            )
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -238,11 +262,11 @@ class PathsFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun changeBacktrackFrequency() {
+    private fun changeBacktrackFrequency(frequency: Duration) {
         ChangeBacktrackFrequencyCommand(
             requireContext(),
             lifecycleScope
-        ) { updateStatusBar() }.execute()
+        ) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleBacktrack() {

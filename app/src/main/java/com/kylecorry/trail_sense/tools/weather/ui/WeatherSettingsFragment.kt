@@ -39,6 +39,7 @@ import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrict
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.safeRoundToInt
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -174,6 +175,9 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                     var updateFrequency by remember {
                         mutableStateOf(prefs.weatherUpdateFrequency)
                     }
+                    var showUpdateFrequencyPicker by remember { mutableStateOf(false) }
+                    val updateFrequencyTitle =
+                        stringResource(R.string.pref_weather_update_frequency_title)
                     var showDetailedIcon by remember {
                         mutableStateOf(
                             getBoolean(R.string.pref_weather_show_detailed_icon, true)
@@ -464,13 +468,11 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("update_frequency") {
                                 SettingsActionRow(
-                                    label = stringResource(R.string.pref_weather_update_frequency_title),
+                                    label = updateFrequencyTitle,
                                     summary = formatService.formatDuration(updateFrequency),
                                     enabled = monitorWeather,
                                     onClick = {
-                                        ChangeWeatherFrequencyCommand(requireContext()) {
-                                            updateFrequency = it
-                                        }.execute()
+                                        showUpdateFrequencyPicker = true
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -502,10 +504,30 @@ class WeatherSettingsFragment : TrailSenseComposeFragment() {
                                         summary = debugTimingSummary,
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
-                                }
                             }
                         }
                     }
+
+                    if (showUpdateFrequencyPicker) {
+                        DurationPickerDialog(
+                            title = updateFrequencyTitle,
+                            duration = updateFrequency,
+                            message = stringResource(R.string.actual_frequency_disclaimer),
+                            hint = stringResource(R.string.frequency),
+                            onDurationPicked = {
+                                if (it != null) {
+                                    ChangeWeatherFrequencyCommand(requireContext()) { frequency ->
+                                        updateFrequency = frequency
+                                    }.execute(it)
+                                }
+                                showUpdateFrequencyPicker = false
+                            },
+                            onDismiss = {
+                                showUpdateFrequencyPicker = false
+                            }
+                        )
+                    }
+                }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -30,6 +30,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -103,7 +104,9 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                         mutableStateOf(getBoolean(R.string.pref_fast_path_rendering, false))
                     }
                     var showPathColorPicker by remember { mutableStateOf(false) }
+                    var showBacktrackFrequencyPicker by remember { mutableStateOf(false) }
                     val pathColorTitle = stringResource(R.string.pref_default_path_color_title)
+                    val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
 
                     setBacktrackEnabledState = {
                         backtrackEnabled = it
@@ -146,19 +149,10 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("interval") {
                                 SettingsActionRow(
-                                    label = stringResource(R.string.pref_backtrack_frequency_title),
+                                    label = backtrackFrequencyTitle,
                                     summary = backtrackIntervalSummary,
                                     onClick = {
-                                        ChangeBacktrackFrequencyCommand(
-                                            requireContext(),
-                                            lifecycleScope
-                                        ) {
-                                            backtrackIntervalSummary =
-                                                formatService.formatDuration(
-                                                    it,
-                                                    includeSeconds = true
-                                                )
-                                        }.execute()
+                                        showBacktrackFrequencyPicker = true
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -310,6 +304,34 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             },
                             onDismiss = {
                                 showPathColorPicker = false
+                            }
+                        )
+                    }
+
+                    if (showBacktrackFrequencyPicker) {
+                        DurationPickerDialog(
+                            title = backtrackFrequencyTitle,
+                            duration = prefs.backtrackRecordFrequency,
+                            message = stringResource(R.string.actual_frequency_disclaimer),
+                            hint = stringResource(R.string.frequency),
+                            showSeconds = true,
+                            onDurationPicked = {
+                                if (it != null) {
+                                    ChangeBacktrackFrequencyCommand(
+                                        requireContext(),
+                                        lifecycleScope
+                                    ) { frequency ->
+                                        backtrackIntervalSummary =
+                                            formatService.formatDuration(
+                                                frequency,
+                                                includeSeconds = true
+                                            )
+                                    }.execute(it)
+                                }
+                                showBacktrackFrequencyPicker = false
+                            },
+                            onDismiss = {
+                                showBacktrackFrequencyPicker = false
                             }
                         )
                     }

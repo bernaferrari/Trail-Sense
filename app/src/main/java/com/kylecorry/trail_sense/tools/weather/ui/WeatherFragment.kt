@@ -63,6 +63,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
@@ -122,6 +123,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
     private var isWeatherUpdating by mutableStateOf(false)
     private var weatherMonitorState by mutableStateOf(FeatureState.Off)
     private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
+    private var showWeatherFrequencyPicker by mutableStateOf(false)
 
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
     private var weather: CurrentWeather? = null
@@ -150,6 +152,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 
     @Composable
     override fun FragmentContent() {
+        val weatherFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
         WeatherHost(
             views = views,
             weatherItems = weatherItems,
@@ -159,11 +162,31 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
             monitorState = weatherMonitorState,
             monitorFrequency = weatherMonitorFrequency,
             formatService = formatService,
-            onChangeMonitorFrequency = ::changeWeatherFrequency,
+            onChangeMonitorFrequency = {
+                showWeatherFrequencyPicker = true
+            },
             onPressureMarkerSelected = ::onPressureMarkerSelected,
             onToggleMonitor = ::toggleWeatherMonitor,
             modifier = Modifier.fillMaxSize()
         )
+
+        if (showWeatherFrequencyPicker) {
+            DurationPickerDialog(
+                title = weatherFrequencyTitle,
+                duration = prefs.weather.weatherUpdateFrequency,
+                message = stringResource(R.string.actual_frequency_disclaimer),
+                hint = stringResource(R.string.frequency),
+                onDurationPicked = {
+                    if (it != null) {
+                        changeWeatherFrequency(it)
+                    }
+                    showWeatherFrequencyPicker = false
+                },
+                onDismiss = {
+                    showWeatherFrequencyPicker = false
+                }
+            )
+        }
     }
 
     override fun onDestroyView() {
@@ -204,8 +227,8 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
         weatherMonitorFrequency = weatherMonitorService.getFrequency()
     }
 
-    private fun changeWeatherFrequency() {
-        ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute()
+    private fun changeWeatherFrequency(frequency: Duration) {
+        ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleWeatherMonitor() {

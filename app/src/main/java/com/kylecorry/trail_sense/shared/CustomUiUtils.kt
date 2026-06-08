@@ -14,17 +14,6 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -56,14 +45,11 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
-import com.kylecorry.trail_sense.shared.views.DurationInput
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRBottomSheet
 import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -154,59 +140,6 @@ object CustomUiUtils {
                 elevationInputView.pause()
             } else {
                 onElevationPick.invoke(elevation, false)
-            }
-        }
-    }
-
-    fun pickDuration(
-        context: Context,
-        default: Duration? = null,
-        title: String,
-        message: String? = null,
-        hint: String? = null,
-        showSeconds: Boolean = false,
-        onDurationPick: (duration: Duration?) -> Unit
-    ) {
-        var duration: Duration? = default
-        val view = ComposeView(context).apply {
-            id = R.id.prompt_duration
-            setContent {
-                TrailSenseTheme {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        if (!message.isNullOrBlank()) {
-                            Text(
-                                text = message,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                        }
-                        DurationInput(
-                            duration = default,
-                            onDurationChange = {
-                                duration = it
-                            },
-                            hint = hint?.takeIf { it.isNotBlank() }
-                                ?: context.getString(R.string.duration),
-                            showSeconds = showSeconds,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        }
-
-        Alerts.dialog(
-            context,
-            title,
-            contentView = view
-        ) { cancelled ->
-            if (cancelled) {
-                onDurationPick.invoke(null)
-            } else {
-                onDurationPick.invoke(duration)
             }
         }
     }
