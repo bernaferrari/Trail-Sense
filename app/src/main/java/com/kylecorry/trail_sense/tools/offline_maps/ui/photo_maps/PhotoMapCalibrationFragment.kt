@@ -6,36 +6,52 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.buildSpannedString
-import androidx.core.text.color
 import androidx.core.view.isVisible
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -46,10 +62,12 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPrefer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
@@ -60,6 +78,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibratio
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationValidator
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
@@ -156,7 +177,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             cancelText = null
         )
 
-        views.mapCalibrationTitle.setOnClickListener {
+        views.mapCalibrationBottomPanel.onTitleClick = {
             dialog(
                 getString(R.string.map_calibration),
                 getString(R.string.map_calibration_instructions),
@@ -166,7 +187,7 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
 
         reloadMap()
 
-        views.calibrationNext.setOnClickListener {
+        views.mapCalibrationBottomPanel.onNextClick = {
             if (calibrationIndex == (maxPoints - 1)) {
                 inBackground {
                     map = map?.let { save(service.getPhotoMap(it.id) ?: it) }
@@ -180,13 +201,13 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             }
         }
 
-        views.calibrationPrev.setOnClickListener {
+        views.mapCalibrationBottomPanel.onPreviousClick = {
             calibrationIndex--
             selectPoint(calibrationIndex)
         }
 
 
-        views.mapCalibrationCoordinate.setOnCoordinateChangeListener {
+        views.mapCalibrationBottomPanel.setOnCoordinateChangeListener {
             manager.calibrate(calibrationIndex, it)
         }
 
@@ -313,17 +334,17 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
     }
 
     private fun selectPoint(index: Int) {
-        views.mapCalibrationTitle.text =
+        views.mapCalibrationBottomPanel.title =
             getString(R.string.calibrate_map_point, index + 1, maxPoints)
-        views.mapCalibrationCoordinate.coordinate = if (manager.isCalibrated(index)) {
+        views.mapCalibrationBottomPanel.coordinate = if (manager.isCalibrated(index)) {
             manager.getCalibrationPoint(index).location
         } else {
             null
         }
         views.mapCalibrationBottomPanel.isVisible = true
-        views.calibrationNext.text =
+        views.mapCalibrationBottomPanel.nextText =
             if (index == (maxPoints - 1)) getString(R.string.done) else getString(R.string.next)
-        views.calibrationPrev.isVisible = index == 1
+        views.mapCalibrationBottomPanel.showPrevious = index == 1
 
         updateCompletionState()
     }
@@ -336,28 +357,16 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
         val isValid = validation == MapCalibrationValidationResult.Valid
         views.previewButton.isEnabled = isValid
 
-        // If it is calibrated, replace the info icon with a green checkmark
-        if (notice.isNotBlank()) {
-            views.mapCalibrationTitle.setCompoundDrawables(
-                Resources.dp(requireContext(), 24f).toInt(),
-                left = R.drawable.ic_alert
-            )
-            Colors.setImageColor(views.mapCalibrationTitle, getErrorColor())
-        } else if (manager.isCalibrated(calibrationIndex)) {
-            views.mapCalibrationTitle.setCompoundDrawables(
-                Resources.dp(requireContext(), 24f).toInt(),
-                left = R.drawable.ic_check_outline
-            )
-            Colors.setImageColor(views.mapCalibrationTitle, AppColor.Green.color)
-        } else {
-            views.mapCalibrationTitle.setCompoundDrawables(
-                Resources.dp(requireContext(), 24f).toInt(),
-                left = R.drawable.ic_info
-            )
-            Colors.setImageColor(
-                views.mapCalibrationTitle,
-                Resources.androidTextColorSecondary(requireContext())
-            )
+        views.mapCalibrationBottomPanel.notice = notice
+        views.mapCalibrationBottomPanel.icon = when {
+            notice.isNotBlank() -> R.drawable.ic_alert
+            manager.isCalibrated(calibrationIndex) -> R.drawable.ic_check_outline
+            else -> R.drawable.ic_info
+        }
+        views.mapCalibrationBottomPanel.iconTint = when {
+            notice.isNotBlank() -> Color(getErrorColor())
+            manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
+            else -> Color(Resources.androidTextColorSecondary(requireContext()))
         }
     }
 
@@ -430,18 +439,9 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
     }
 
     private fun updateCalibrationTitle(notice: String) {
-        val title = getString(R.string.calibrate_map_point, calibrationIndex + 1, maxPoints)
-        views.mapCalibrationTitle.text = if (notice.isBlank()) {
-            title
-        } else {
-            buildSpannedString {
-                append(getString(R.string.calibrate_map_point_instructions))
-                appendLine()
-                color(getErrorColor()) {
-                    append(notice)
-                }
-            }
-        }
+        views.mapCalibrationBottomPanel.title =
+            getString(R.string.calibrate_map_point, calibrationIndex + 1, maxPoints)
+        views.mapCalibrationBottomPanel.notice = notice
     }
 
     private fun getErrorColor(): Int {
@@ -488,13 +488,18 @@ private data class PhotoMapCalibrationViews(
     val calibrationMap: MapCalibrationView,
     val zoomOutBtn: PhotoMapIconButton,
     val zoomInBtn: PhotoMapIconButton,
-    val mapCalibrationBottomPanel: LinearLayout,
-    val mapCalibrationTitle: TextView,
-    val mapCalibrationCoordinate: CoordinateInputView,
-    val calibrationPrev: PhotoMapTextButton,
-    val calibrationNext: PhotoMapTextButton
+    val mapCalibrationBottomPanel: PhotoMapCalibrationPanelView
 )
 
+private data class PhotoMapCalibrationControls(
+    val previewButton: PhotoMapTextButton,
+    val calibrationMap: MapCalibrationView,
+    val zoomOutBtn: PhotoMapIconButton,
+    val zoomInBtn: PhotoMapIconButton,
+    val bottomPanel: PhotoMapCalibrationPanelView
+)
+
+@Suppress("FunctionNaming")
 @Composable
 private fun PhotoMapCalibrationHost(
     views: PhotoMapCalibrationViews,
@@ -507,12 +512,21 @@ private fun PhotoMapCalibrationHost(
 }
 
 private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
-    val margin = Resources.dp(context, 16f).toInt()
-    val panelPadding = Resources.dp(context, 16f).toInt()
-    val zoomBottom = Resources.dp(context, 176f).toInt()
-
     val root = FrameLayout(context)
+    val controls = createPhotoMapCalibrationControls(context)
+    addPhotoMapCalibrationControls(context, root, controls)
 
+    return PhotoMapCalibrationViews(
+        root = root,
+        previewButton = controls.previewButton,
+        calibrationMap = controls.calibrationMap,
+        zoomOutBtn = controls.zoomOutBtn,
+        zoomInBtn = controls.zoomInBtn,
+        mapCalibrationBottomPanel = controls.bottomPanel
+    )
+}
+
+private fun createPhotoMapCalibrationControls(context: Context): PhotoMapCalibrationControls {
     val previewButton = PhotoMapTextButton(context, context.getString(R.string.preview)).apply {
         id = R.id.preview_button
         alpha = 0.86f
@@ -537,76 +551,37 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         isFocusable = true
     }
 
-    val bottomPanel = LinearLayout(context).apply {
+    val bottomPanel = PhotoMapCalibrationPanelView(context).apply {
         id = R.id.map_calibration_bottom_panel
-        orientation = LinearLayout.VERTICAL
-        setPadding(panelPadding, panelPadding, panelPadding, panelPadding)
-        setBackgroundColor(Resources.getAndroidColorAttr(context, android.R.attr.colorBackground))
         visibility = View.GONE
     }
 
-    val title = TextView(context).apply {
-        id = R.id.map_calibration_title
-        gravity = Gravity.CENTER_VERTICAL
-        compoundDrawablePadding = Resources.dp(context, 8f).toInt()
-    }
-
-    val coordinate = CoordinateInputView(context).apply {
-        id = R.id.map_calibration_coordinate
-    }
-
-    val prev = PhotoMapTextButton(context, context.getString(R.string.previous)).apply {
-        id = R.id.calibration_prev
-    }
-
-    val next = PhotoMapTextButton(context, context.getString(R.string.next)).apply {
-        id = R.id.calibration_next
-    }
-
-    val buttons = LinearLayout(context).apply {
-        gravity = Gravity.CENTER or Gravity.END
-        orientation = LinearLayout.HORIZONTAL
-        addView(
-            prev,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginEnd = margin
-            }
-        )
-        addView(next)
-    }
-
-    bottomPanel.addView(title)
-    bottomPanel.addView(
-        coordinate,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = margin
-        }
+    return PhotoMapCalibrationControls(
+        previewButton = previewButton,
+        calibrationMap = calibrationMap,
+        zoomOutBtn = zoomOutBtn,
+        zoomInBtn = zoomInBtn,
+        bottomPanel = bottomPanel
     )
-    bottomPanel.addView(
-        buttons,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = margin
-        }
-    )
+}
+
+private fun addPhotoMapCalibrationControls(
+    context: Context,
+    root: ViewGroup,
+    controls: PhotoMapCalibrationControls
+) {
+    val margin = Resources.dp(context, 16f).toInt()
+    val zoomBottom = Resources.dp(context, 176f).toInt()
 
     root.addView(
-        calibrationMap,
+        controls.calibrationMap,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
     )
     root.addView(
-        previewButton,
+        controls.previewButton,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -616,7 +591,7 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         }
     )
     root.addView(
-        zoomOutBtn,
+        controls.zoomOutBtn,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -627,7 +602,7 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         }
     )
     root.addView(
-        zoomInBtn,
+        controls.zoomInBtn,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -638,26 +613,223 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         }
     )
     root.addView(
-        bottomPanel,
+        controls.bottomPanel,
         FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             Gravity.BOTTOM
         )
     )
+}
 
-    return PhotoMapCalibrationViews(
-        root = root,
-        previewButton = previewButton,
-        calibrationMap = calibrationMap,
-        zoomOutBtn = zoomOutBtn,
-        zoomInBtn = zoomInBtn,
-        mapCalibrationBottomPanel = bottomPanel,
-        mapCalibrationTitle = title,
-        mapCalibrationCoordinate = coordinate,
-        calibrationPrev = prev,
-        calibrationNext = next
-    )
+private class PhotoMapCalibrationPanelView(
+    context: Context
+) : AbstractComposeView(context) {
+
+    private val formatService by lazy { FormatService.getInstance(context) }
+    private val sensorService by lazy { SensorService(context) }
+    private val gps by lazy { sensorService.getGPS() }
+
+    var title by mutableStateOf("")
+    var notice by mutableStateOf("")
+    var icon by mutableStateOf(R.drawable.ic_info)
+    var iconTint by mutableStateOf(Color(Resources.androidTextColorSecondary(context)))
+    var nextText by mutableStateOf(context.getString(R.string.next))
+    var showPrevious by mutableStateOf(false)
+    var onTitleClick: () -> Unit = {}
+    var onPreviousClick: () -> Unit = {}
+    var onNextClick: () -> Unit = {}
+
+    private var coordinateText by mutableStateOf("")
+    private var isLoadingLocation by mutableStateOf(false)
+    private var coordinateChangeListener: ((Coordinate?) -> Unit)? = null
+
+    var coordinate: Coordinate?
+        get() = Coordinate.parse(coordinateText)
+        set(value) {
+            coordinateText = value?.let { formatService.formatLocation(it) } ?: ""
+        }
+
+    fun setOnCoordinateChangeListener(listener: ((Coordinate?) -> Unit)?) {
+        coordinateChangeListener = listener
+    }
+
+    override fun onDetachedFromWindow() {
+        gps.stop(this::onGPSUpdate)
+        super.onDetachedFromWindow()
+    }
+
+    private fun updateCoordinate(text: String) {
+        coordinateText = text
+        coordinateChangeListener?.invoke(Coordinate.parse(text))
+    }
+
+    private fun autofill() {
+        if (isLoadingLocation) {
+            return
+        }
+        isLoadingLocation = true
+        gps.start(this::onGPSUpdate)
+    }
+
+    private fun onGPSUpdate(): Boolean {
+        isLoadingLocation = false
+        val location = gps.location
+        coordinate = location
+        coordinateChangeListener?.invoke(location)
+        return false
+    }
+
+    private fun pickAutofillSource() {
+        Pickers.item(
+            context,
+            context.getString(R.string.autofill_source),
+            listOf(
+                context.getString(R.string.gps),
+                context.getString(R.string.beacon)
+            ),
+            0
+        ) {
+            when (it) {
+                0 -> autofill()
+                1 -> pickBeacon()
+            }
+        }
+    }
+
+    private fun pickBeacon() {
+        CoroutineScope(Dispatchers.Main).launch {
+            val beacon = BeaconPickers.pickBeacon(
+                context,
+                sort = ClosestBeaconSort(BeaconService(context), gps::location)
+            ) ?: return@launch
+            coordinate = beacon.coordinate
+            coordinateChangeListener?.invoke(beacon.coordinate)
+        }
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp)
+            ) {
+                panelHeader()
+                Spacer(modifier = Modifier.height(16.dp))
+                coordinateInput()
+                Spacer(modifier = Modifier.height(16.dp))
+                panelActions()
+            }
+        }
+    }
+
+    @Composable
+    private fun panelHeader() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTitleClick() },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (notice.isNotBlank()) {
+                    Text(
+                        text = notice,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(
+                            Resources.getAndroidColorAttr(
+                                context,
+                                androidx.appcompat.R.attr.colorError
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun coordinateInput() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isLoadingLocation) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+            } else {
+                IconButton(
+                    onClick = { pickAutofillSource() },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location),
+                        contentDescription = null
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            OutlinedTextField(
+                value = coordinateText,
+                onValueChange = ::updateCoordinate,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text(context.getString(R.string.location)) },
+                isError = coordinateText.isNotBlank() && Coordinate.parse(coordinateText) == null
+            )
+
+            IconButton(
+                onClick = {
+                    Alerts.dialog(
+                        context,
+                        context.getString(R.string.location_input_help_title),
+                        context.getString(R.string.location_input_help),
+                        cancelText = null
+                    )
+                },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_help),
+                    contentDescription = null
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun panelActions() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            if (showPrevious) {
+                Button(onClick = { onPreviousClick() }) {
+                    Text(context.getString(R.string.previous))
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+            }
+            Button(onClick = { onNextClick() }) {
+                Text(nextText)
+            }
+        }
+    }
 }
 
 private class PhotoMapTextButton(
@@ -687,6 +859,7 @@ private class PhotoMapTextButton(
     }
 }
 
+@Suppress("FunctionNaming")
 @Preview(showBackground = true)
 @Composable
 private fun PhotoMapCalibrationHostPreview() {
