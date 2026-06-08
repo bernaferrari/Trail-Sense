@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
@@ -23,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,13 +41,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -54,44 +60,56 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FieldGuidePageFragment : TrailSenseComposeFragment() {
+@Composable
+fun FieldGuidePageToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { FieldGuidePageController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
-    private val tagNameMapper by lazy { FieldGuideTagNameMapper(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                controller.loadPage()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        controller.loadPage()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    FieldGuidePageScreen(
+        page = controller.page,
+        files = controller.files,
+        tagNameMapper = controller.tagNameMapper,
+        onEdit = controller::editPage,
+        onSightings = controller::openSightings
+    )
+}
+
+private class FieldGuidePageController(private val fragment: Fragment) {
+
+    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
+    val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
     private val pageId: Long? by lazy {
-        arguments?.getLong("page_id")?.takeIf { it != 0L }
+        fragment.arguments?.getLong("page_id")?.takeIf { it != 0L }
     }
 
-    private var page by mutableStateOf<FieldGuidePage?>(null)
+    var page by mutableStateOf<FieldGuidePage?>(null)
+        private set
 
-    @Composable
-    override fun FragmentContent() {
-        FieldGuidePageScreen(
-            page = page,
-            files = files,
-            tagNameMapper = tagNameMapper,
-            onEdit = ::editPage,
-            onSightings = ::openSightings
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadPage()
-    }
-
-    private fun loadPage() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun loadPage() {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             page = withContext(Dispatchers.IO) {
                 pageId?.let { repo.getPage(it) }
             }
         }
     }
 
-    private fun editPage() {
+    fun editPage() {
         val current = page ?: return
-        findNavController().navigate(
+        fragment.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", current.id)
@@ -99,9 +117,9 @@ class FieldGuidePageFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun openSightings() {
+    fun openSightings() {
         val current = page ?: return
-        findNavController().navigate(
+        fragment.findNavController().navigate(
             R.id.sightingListFragment,
             Bundle().apply {
                 putLong("page_id", current.id)

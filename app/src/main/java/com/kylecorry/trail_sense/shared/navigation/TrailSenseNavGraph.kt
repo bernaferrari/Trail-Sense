@@ -236,8 +236,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fieldGuidePageFragment
-            setClassName("com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuidePageFragment")
-            label = "FieldGuidePageFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "FieldGuidePageScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FIELD_GUIDE_PAGE)
+                .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)
