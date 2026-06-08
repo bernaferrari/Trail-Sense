@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
 import android.content.Context
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import android.os.Bundle
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -87,15 +86,17 @@ object FieldGuideToolRegistration : ToolRegistration {
                             defaultValue = true
                         )
                     ),
-                    openFeature = { feature, fragment ->
+                    openFeature = { feature, _, navController ->
                         val fieldGuidePageId =
                             feature.getLongProperty(FieldGuideSightingGeoJsonSource.PROPERTY_PAGE_ID)
-                                ?: return@MapLayerDefinition
-                        val fieldGuideSightingId =
-                            feature.getLongProperty(FieldGuideSightingGeoJsonSource.PROPERTY_SIGHTING_ID)
-                                ?: return@MapLayerDefinition
-                        val navController = fragment.findNavController()
-                        FieldGuideDeepLinks.navigateToSighting(navController, fieldGuidePageId, fieldGuideSightingId)
+                        navController.navigateWithAnimation(
+                            R.id.fieldGuidePageFragment,
+                            Bundle().apply {
+                                fieldGuidePageId?.let {
+                                    putLong("page_id", it)
+                                }
+                            }
+                        )
                     },
                     geoJsonSource = ::FieldGuideSightingGeoJsonSource,
                     refreshBroadcasts = listOf(

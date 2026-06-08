@@ -2,7 +2,8 @@ package com.kylecorry.trail_sense.shared.sharing
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import androidx.navigation.fragment.findNavController
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonPoint
 import com.kylecorry.sol.units.Coordinate
@@ -68,7 +69,11 @@ object GeoJsonFeatureClickHandler {
                 }
 
                 ShareAction.Open -> {
-                    layer?.openFeature?.invoke(feature, fragment)
+                    layer?.openFeature?.invoke(
+                        feature,
+                        fragment.requireContext(),
+                        fragment.findNavController()
+                    )
                 }
 
                 else -> {

@@ -3,8 +3,6 @@ package com.kylecorry.trail_sense.tools.beacons
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.findNavController
@@ -115,10 +113,9 @@ object BeaconsToolRegistration : ToolRegistration {
                     MAP_LAYER_BEACONS,
                     context.getString(R.string.beacons),
                     description = context.getString(R.string.map_layer_beacons_description),
-                    openFeature = { feature, fragment ->
+                    openFeature = { feature, _, navController ->
                         val beaconId =
                             feature.getLongProperty(BeaconGeoJsonSource.PROPERTY_BEACON_ID)
-                        val navController = fragment.findNavController()
                         navController.navigateWithAnimation(
                             R.id.beaconDetailsFragment,
                             Bundle().apply {
