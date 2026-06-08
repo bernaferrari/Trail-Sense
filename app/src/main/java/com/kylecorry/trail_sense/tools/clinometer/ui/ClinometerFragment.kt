@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -555,7 +554,7 @@ private data class ClinometerViews(
     val root: View,
     val clinometerTitle: ClinometerTitleState,
     val clinometer: ClinometerView,
-    val cameraViewHolder: LinearLayout,
+    val cameraViewHolder: View,
     val camera: CameraState,
     val arView: AugmentedRealityView,
     val cameraClinometer: CameraClinometerView,
@@ -709,10 +708,6 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         }
     )
 
-    val dataPoints = LinearLayout(context).apply {
-        id = R.id.data_points
-        orientation = LinearLayout.HORIZONTAL
-    }
     val avalancheRisk = ClinometerDataPointState(
         initialDescription = context.getString(R.string.avalanche_risk),
         icon = R.drawable.avalanche
@@ -737,21 +732,25 @@ private fun createClinometerViews(context: Context): ClinometerViews {
             }
         }
     }
-    dataPoints.addView(
-        avalancheRiskView,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-    )
-    dataPoints.addView(
-        estimatedHeightView,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-    )
     root.addView(
-        dataPoints,
+        avalancheRiskView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            endToStart = R.id.estimated_height
             bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            setMargins(16.dp(context), 0, 16.dp(context), 32.dp(context))
+            marginStart = 16.dp(context)
+            marginEnd = 16.dp(context)
+            bottomMargin = 32.dp(context)
+        }
+    )
+    root.addView(
+        estimatedHeightView,
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToEnd = R.id.avalanche_risk
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = R.id.avalanche_risk
+            bottomToBottom = R.id.avalanche_risk
+            marginEnd = 16.dp(context)
         }
     )
 
@@ -762,7 +761,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         instrumentFrame,
         ConstraintLayout.LayoutParams(0, 0).apply {
             topToBottom = R.id.clinometer_title
-            bottomToTop = R.id.data_points
+            bottomToTop = R.id.avalanche_risk
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
             dimensionRatio = "1:1"
@@ -781,15 +780,16 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         )
     )
 
-    val cameraViewHolder = LinearLayout(context).apply {
+    val cameraViewHolder = ConstraintLayout(context).apply {
         id = R.id.camera_view_holder
-        orientation = LinearLayout.HORIZONTAL
         visibility = View.GONE
         background = ContextCompat.getDrawable(context, R.drawable.rounded_rectangle)
         backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
         clipToOutline = true
     }
-    val cameraFrame = FrameLayout(context)
+    val cameraFrame = FrameLayout(context).apply {
+        id = View.generateViewId()
+    }
     val camera = CameraState(context)
     val cameraPreview = ComposeView(context).apply {
         id = R.id.camera
@@ -832,11 +832,20 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     }
     cameraViewHolder.addView(
         cameraFrame,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToStart = R.id.camera_clinometer
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     cameraViewHolder.addView(
         cameraClinometer,
-        LinearLayout.LayoutParams(50.dp(context), ViewGroup.LayoutParams.MATCH_PARENT)
+        ConstraintLayout.LayoutParams(50.dp(context), ViewGroup.LayoutParams.MATCH_PARENT).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     instrumentFrame.addView(
         cameraViewHolder,
