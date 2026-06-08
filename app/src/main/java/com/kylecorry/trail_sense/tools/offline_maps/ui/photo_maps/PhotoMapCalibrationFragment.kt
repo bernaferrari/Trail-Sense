@@ -2,10 +2,8 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
@@ -512,7 +511,7 @@ private fun PhotoMapCalibrationHost(
 }
 
 private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
-    val root = FrameLayout(context)
+    val root = ConstraintLayout(context)
     val controls = createPhotoMapCalibrationControls(context)
     addPhotoMapCalibrationControls(context, root, controls)
 
@@ -567,7 +566,7 @@ private fun createPhotoMapCalibrationControls(context: Context): PhotoMapCalibra
 
 private fun addPhotoMapCalibrationControls(
     context: Context,
-    root: ViewGroup,
+    root: ConstraintLayout,
     controls: PhotoMapCalibrationControls
 ) {
     val margin = Resources.dp(context, 16f).toInt()
@@ -575,50 +574,59 @@ private fun addPhotoMapCalibrationControls(
 
     root.addView(
         controls.calibrationMap,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     root.addView(
         controls.previewButton,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
             topMargin = margin
         }
     )
     root.addView(
         controls.zoomOutBtn,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginEnd = margin
             bottomMargin = zoomBottom
         }
     )
     root.addView(
         controls.zoomInBtn,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginEnd = margin
             bottomMargin = zoomBottom + Resources.dp(context, 56f).toInt()
         }
     )
     root.addView(
         controls.bottomPanel,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM
-        )
+        ConstraintLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 }
 

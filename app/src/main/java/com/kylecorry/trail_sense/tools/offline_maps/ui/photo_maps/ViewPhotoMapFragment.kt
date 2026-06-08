@@ -2,16 +2,15 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.toast
@@ -626,7 +625,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
     val bottomReserve = Resources.dp(context, 120f).toInt()
     val fabStep = Resources.dp(context, 56f).toInt()
 
-    val root = FrameLayout(context)
+    val root = ConstraintLayout(context)
 
     val map = MapView(context).apply {
         id = R.id.map
@@ -679,69 +678,81 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
 
     root.addView(
         map,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     root.addView(
         attribution,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             bottomMargin = bottomReserve
         }
     )
     root.addView(
         zoomInBtn,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginEnd = margin
             bottomMargin = bottomReserve + fabStep * 2
         }
     )
     root.addView(
         zoomOutBtn,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginEnd = margin
             bottomMargin = bottomReserve + fabStep
         }
     )
     root.addView(
         lockBtn,
-        FrameLayout.LayoutParams(
+        ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM or Gravity.END
+            ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
             marginEnd = margin
             bottomMargin = bottomReserve
         }
     )
     root.addView(
         navigationSheet,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM
-        )
+        ConstraintLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     root.addView(
         distanceSheetView,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.BOTTOM
-        )
+        ConstraintLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 
     return ViewPhotoMapViews(
