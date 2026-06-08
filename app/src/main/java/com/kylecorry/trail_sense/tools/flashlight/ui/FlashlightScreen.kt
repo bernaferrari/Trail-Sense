@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
 import androidx.annotation.DrawableRes
@@ -43,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
@@ -51,7 +52,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.delay
@@ -59,35 +59,8 @@ import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
 
-class FragmentToolFlashlight : TrailSenseComposeFragment() {
-
-    private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
-    private val flashlight by lazy { FlashlightSubsystem.getInstance(requireContext()) }
-    private var selectedMode = FlashlightMode.Torch
-
-    @Composable
-    override fun FragmentContent() {
-        FlashlightScreen(
-            initialSelectedMode = selectedMode,
-            onSelectedModeChanged = { selectedMode = it },
-            onOpenScreenFlashlight = {
-                findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
-            }
-        )
-    }
-
-    fun toggle() {
-        haptics.click()
-        if (flashlight.getMode() != FlashlightMode.Off) {
-            flashlight.set(FlashlightMode.Off)
-        } else {
-            flashlight.set(selectedMode)
-        }
-    }
-}
-
 @Composable
-private fun FlashlightScreen(
+fun FlashlightScreen(
     initialSelectedMode: FlashlightMode,
     onSelectedModeChanged: (FlashlightMode) -> Unit,
     onOpenScreenFlashlight: () -> Unit,

@@ -119,6 +119,7 @@ import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavi
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
+import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -145,7 +146,10 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
+import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightController
+import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightScreen
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightScreen
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
@@ -202,7 +206,7 @@ import java.time.Duration
 import java.time.Instant
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
-    ScreenFlashlightController {
+    ScreenFlashlightController, FlashlightController {
 
     private var layerSheet: MapLayersBottomSheet? = null
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
@@ -211,6 +215,8 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         PreferencesSubsystem.getInstance(requireContext()).preferences
     }
     private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
+    private val flashlight by lazy { FlashlightSubsystem.getInstance(requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
     private var focusSearchRequest: (() -> Boolean)? = null
     private var screenFlashlightBrightness by mutableFloatStateOf(100f)
     private var screenFlashlightIsRed by mutableStateOf(false)
@@ -223,6 +229,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var survivalGuideSearchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
     private var survivalGuideSummary by mutableStateOf("")
     private var survivalGuideSearchJob: Job? = null
+    private var selectedFlashlightMode = FlashlightMode.Torch
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -343,6 +350,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
             DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
             DESTINATION_PEDOMETER -> Pedometer()
+            DESTINATION_FLASHLIGHT -> Flashlight()
         }
     }
 
@@ -355,6 +363,15 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             increaseScreenFlashlightBrightness()
         } else {
             decreaseScreenFlashlightBrightness()
+        }
+    }
+
+    override fun toggle() {
+        haptics.click()
+        if (flashlight.getMode() != FlashlightMode.Off) {
+            flashlight.set(FlashlightMode.Off)
+        } else {
+            flashlight.set(selectedFlashlightMode)
         }
     }
 
@@ -439,6 +456,17 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             onReset = ::resetPedometerCounter,
             onTogglePedometer = { togglePedometer(pedometer) },
             onToggleDistanceAlert = { togglePedometerDistanceAlert(prefs, formatter) }
+        )
+    }
+
+    @Composable
+    private fun Flashlight() {
+        FlashlightScreen(
+            initialSelectedMode = selectedFlashlightMode,
+            onSelectedModeChanged = { selectedFlashlightMode = it },
+            onOpenScreenFlashlight = {
+                findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
+            }
         )
     }
 
@@ -3308,5 +3336,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SURVIVAL_GUIDE_READER = "survival_guide_reader"
         const val DESTINATION_SURVIVAL_GUIDE_LIST = "survival_guide_list"
         const val DESTINATION_PEDOMETER = "pedometer"
+        const val DESTINATION_FLASHLIGHT = "flashlight"
     }
 }

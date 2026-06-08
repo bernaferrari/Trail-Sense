@@ -611,8 +611,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolFlashlight
-            setClassName("com.kylecorry.trail_sense.tools.flashlight.ui.FragmentToolFlashlight")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolFlashlight"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FLASHLIGHT)
+                .build())
             putAction(
                 R.id.action_flashlight_to_screen_flashlight,
                 NavAction(R.id.fragmentToolScreenFlashlight, NavOptions.Builder()
