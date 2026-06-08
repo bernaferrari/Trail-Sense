@@ -1,18 +1,27 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.settings.ui
 
-import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import android.view.View
+import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.IAltimeter
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
@@ -44,7 +53,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -53,7 +61,31 @@ import java.time.Duration
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
-class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun CalibrateAltimeterToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CalibrateAltimeterController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content()
+}
+
+private class CalibrateAltimeterController(private val fragment: Fragment) {
 
     private lateinit var barometer: IBarometer
     private lateinit var gps: IGPS
@@ -66,9 +98,9 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
     private lateinit var lastMode: UserPreferences.AltimeterMode
     private val updateTimer = CoroutineTimer { updateAltitude() }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val overridePopulationRunner = CoroutineQueueRunner(dispatcher = Dispatchers.Default)
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
+    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
 
     private var setAltitudeState: ((String) -> Unit)? = null
     private var setModeState: ((String) -> Unit)? = null
@@ -80,20 +112,20 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     private var setConditionalState: ((AltimeterConditionalState) -> Unit)? = null
     private var setDemSummary: ((String) -> Unit)? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        prefs = UserPreferences(requireContext())
-        sensorService = SensorService(requireContext())
-        gps = CustomGPS(requireContext().applicationContext)
+    fun onCreate() {
+        prefs = UserPreferences(fragment.requireContext())
+        sensorService = SensorService(fragment.requireContext())
+        gps = CustomGPS(fragment.requireContext().applicationContext)
         barometer = sensorService.getBarometer()
         altimeter = sensorService.getAltimeter()
         distanceUnits = prefs.baseDistanceUnits
         ensureDefaultMode()
         lastMode = prefs.altimeterMode
+        onViewCreated()
     }
 
     @androidx.compose.runtime.Composable
-    override fun FragmentContent() {
+    fun Content() {
                     val modeOptions = getCalibrationModeOptions()
 
                     var altitude by androidx.compose.runtime.remember {
@@ -349,7 +381,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                                         ),
                                         onClick = {
                                             FusedAltimeter.clearCachedCalibration(cache)
-                                            toast(getString(R.string.done))
+                                            fragment.toast(getString(R.string.done))
                                         },
                                         modifier = androidx.compose.ui.Modifier.padding(
                                             horizontal = TrailSenseSpacing.lg
@@ -378,10 +410,9 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                 }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    private fun onViewCreated() {
         val seaLevelPressureKey = getString(R.string.pref_sea_level_pressure_override)
-        cache.onChange.asLiveData().observe(viewLifecycleOwner) {
+        cache.onChange.asLiveData().observe(fragment.viewLifecycleOwner) {
             if (it == seaLevelPressureKey) {
                 restartAltimeter()
             }
@@ -389,20 +420,18 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
         refreshConditionalState()
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         startAltimeter()
         updateTimer.interval(200)
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         stopAltimeter()
         updateTimer.stop()
         overridePopulationRunner.cancel()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         setAltitudeState = null
         setModeState = null
         setOverrideSummary = null
@@ -412,7 +441,6 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
         setForceCalibrationSummary = null
         setConditionalState = null
         setDemSummary = null
-        super.onDestroyView()
     }
 
     private fun startAltimeter() {
@@ -435,7 +463,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setOverrideFromBarometer(seaLevelPressure: Float) {
-        inBackground {
+        fragment.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     barometer.read()
@@ -452,7 +480,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                     onMain {
                         refreshOverrideSummary()
                         restartAltimeter()
-                        toast(getString(R.string.elevation_override_updated_toast))
+                        fragment.toast(getString(R.string.elevation_override_updated_toast))
                     }
                 }
             }
@@ -460,7 +488,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setOverrideFromGPS() {
-        inBackground {
+        fragment.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     readAll(listOf(gps, barometer))
@@ -478,7 +506,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
                     onMain {
                         refreshOverrideSummary()
                         restartAltimeter()
-                        toast(getString(R.string.elevation_override_updated_toast))
+                        fragment.toast(getString(R.string.elevation_override_updated_toast))
                     }
                 }
             }
@@ -486,7 +514,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun updateAltitudeOverride() {
-        inBackground {
+        fragment.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     altimeter.read()
@@ -529,7 +557,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun pickAltitudeOverride() {
         CustomUiUtils.pickElevation(
-            requireContext(),
+            fragment.requireContext(),
             Distance.meters(prefs.altitudeOverride).convertTo(distanceUnits),
             getString(R.string.pref_elevation_override_title)
         ) { elevation, _ ->
@@ -541,7 +569,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun pickOverrideFromBarometer() {
         Pickers.number(
-            requireContext(),
+            fragment.requireContext(),
             getString(R.string.pref_elevation_override_sea_level_dialog_title),
             getString(R.string.pref_elevation_override_sea_level_dialog_msg),
             prefs.seaLevelPressureOverride,
@@ -558,7 +586,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     private fun pickSamples(onPicked: (Int) -> Unit) {
         val samples = (1..8).toList()
         Pickers.item(
-            requireContext(),
+            fragment.requireContext(),
             getString(R.string.samples),
             samples.map { it.toString() },
             samples.indexOf(prefs.altimeterSamples).coerceAtLeast(0)
@@ -572,7 +600,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setAltitudeOverride(elevation: Distance) {
-        inBackground {
+        fragment.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     if (prefs.altimeterMode == UserPreferences.AltimeterMode.Barometer) {
@@ -597,14 +625,14 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun loadDEM() {
-        inBackground(state = BackgroundMinimumState.Created) {
+        fragment.inBackground(state = BackgroundMinimumState.Created) {
             val instructions = getString(
                 R.string.digital_elevation_model_link,
                 URLs.DEM
             ).toSpannable()
             LinkifyCompat.addLinks(instructions, WEB_URLS)
             val cancelled = CoroutineAlerts.dialog(
-                requireContext(),
+                fragment.requireContext(),
                 getString(R.string.plugin_digital_elevation_model),
                 instructions,
                 allowLinks = true
@@ -615,40 +643,40 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
             }
 
             val source = IntentUriPicker(
-                this@CalibrateAltimeterFragment,
-                requireContext()
-            ).open(listOf("application/zip")).getOrNull() ?: return@inBackground
+                fragment.requireActivity() as IntentResultRetriever,
+                fragment.requireContext()
+            ).open(listOf("application/zip")) ?: return@inBackground
 
             val loader = DigitalElevationModelLoader()
             try {
-                Alerts.withProgress(requireContext(), getString(R.string.loading)) { setProgress ->
+                Alerts.withProgress(fragment.requireContext(), getString(R.string.loading)) { setProgress ->
                     loader.load(source).collect(setProgress)
                     onMain {
                         onAltimeterModeChanged()
-                        toast(getString(R.string.loaded))
+                        fragment.toast(getString(R.string.loaded))
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 onMain {
-                    toast(getString(R.string.invalid_dem_file))
+                    fragment.toast(getString(R.string.invalid_dem_file))
                 }
             }
         }
     }
 
     private fun clearDEM() {
-        inBackground {
-            val cancelled = CoroutineAlerts.dialog(requireContext(), getString(R.string.remove_dem))
+        fragment.inBackground {
+            val cancelled = CoroutineAlerts.dialog(fragment.requireContext(), getString(R.string.remove_dem))
             if (cancelled) {
                 return@inBackground
             }
             val loader = DigitalElevationModelLoader()
-            Alerts.withLoading(requireContext(), getString(R.string.loading)) {
+            Alerts.withLoading(fragment.requireContext(), getString(R.string.loading)) {
                 loader.clear()
                 onMain {
                     onAltimeterModeChanged()
-                    toast(getString(R.string.done))
+                    fragment.toast(getString(R.string.done))
                 }
             }
         }
@@ -665,7 +693,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun updateDemSummary() {
-        inBackground {
+        fragment.inBackground {
             val version = DEMRepo.getInstance().getVersion()
             onMain {
                 setDemSummary?.invoke(version ?: getString(R.string.built_in_dem))
@@ -742,7 +770,7 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            requireContext(),
+            fragment.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -779,6 +807,10 @@ class CalibrateAltimeterFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun putBoolean(key: Int, value: Boolean) {
         cache.putBoolean(getString(key), value)
+    }
+
+    private fun getString(@StringRes id: Int, vararg args: Any): String {
+        return fragment.getString(id, *args)
     }
 
     private data class AltimeterConditionalState(

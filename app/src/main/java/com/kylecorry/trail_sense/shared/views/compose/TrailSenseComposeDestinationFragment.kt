@@ -104,6 +104,7 @@ import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.settings.ui.PluginDetailsScreen
 import com.kylecorry.trail_sense.settings.ui.PathsSettingsToolScreen
+import com.kylecorry.trail_sense.settings.ui.CalibrateAltimeterToolScreen
 import com.kylecorry.trail_sense.settings.ui.CalibrateBarometerToolScreen
 import com.kylecorry.trail_sense.settings.ui.CalibrateCompassToolScreen
 import com.kylecorry.trail_sense.settings.ui.CalibrateGPSToolScreen
@@ -411,6 +412,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
             DESTINATION_PATHS_SETTINGS -> PathsSettingsToolScreen(this)
+            DESTINATION_CALIBRATE_ALTIMETER -> CalibrateAltimeterToolScreen(this)
             DESTINATION_CALIBRATE_BAROMETER -> CalibrateBarometerToolScreen(this)
             DESTINATION_CALIBRATE_COMPASS -> CalibrateCompassToolScreen(this)
             DESTINATION_CALIBRATE_GPS -> CalibrateGPSToolScreen(this)
@@ -3458,6 +3460,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"
         const val DESTINATION_PATHS_SETTINGS = "paths_settings"
+        const val DESTINATION_CALIBRATE_ALTIMETER = "calibrate_altimeter"
         const val DESTINATION_CALIBRATE_BAROMETER = "calibrate_barometer"
         const val DESTINATION_CALIBRATE_COMPASS = "calibrate_compass"
         const val DESTINATION_CALIBRATE_GPS = "calibrate_gps"
