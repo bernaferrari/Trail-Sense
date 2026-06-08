@@ -499,7 +499,7 @@ private fun PhotoMapCalibrationHost(
     Box(modifier = modifier) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
-            factory = { views.calibrationMap }
+            factory = { views.calibrationMap.view }
         )
         if (views.previewButton.isVisible) {
             Box(

@@ -17,7 +17,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -35,10 +35,38 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import kotlin.math.max
 
 open class EnhancedImageView @JvmOverloads constructor(
-    context: Context,
+    val context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr) {
+) {
+
+    val view = ComposeView(context, attrs, defStyleAttr).apply {
+        setContent {
+            Content()
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    val width: Int
+        get() = view.width
+
+    val height: Int
+        get() = view.height
+
+    fun setBackgroundColor(color: Int) {
+        view.setBackgroundColor(color)
+    }
+
+    fun post(action: () -> Unit) {
+        view.post {
+            action()
+        }
+    }
 
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
@@ -158,7 +186,7 @@ open class EnhancedImageView @JvmOverloads constructor(
         get() = imageView.isImageLoaded
 
     @Composable
-    override fun Content() {
+    private fun Content() {
         TrailSenseTheme {
             Box(modifier = Modifier.fillMaxSize()) {
                 AndroidView(
@@ -178,8 +206,8 @@ open class EnhancedImageView @JvmOverloads constructor(
         }
     }
 
-    override fun invalidate() {
-        super.invalidate()
+    fun invalidate() {
+        view.invalidate()
         requestRedraw()
     }
 
