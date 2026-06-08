@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +36,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
@@ -52,7 +52,8 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.getOrNull
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
@@ -67,7 +68,7 @@ class ScanQRFragment : TrailSenseComposeFragment() {
 
     private var history by mutableStateOf<List<String>>(emptyList())
     private var historyScrollRequest by mutableIntStateOf(0)
-    private var cameraView: CameraView? = null
+    private var cameraView: CameraState? = null
     private var shouldStartCamera = false
 
     private val beaconQREncoder = BeaconQREncoder()
@@ -91,7 +92,7 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun onCameraReady(cameraView: CameraView) {
+    private fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
         cameraView.clipToOutline = true
         if (shouldStartCamera && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
@@ -287,7 +288,7 @@ class ScanQRFragment : TrailSenseComposeFragment() {
 private fun QrScannerScreen(
     history: List<String>,
     scrollRequest: Int,
-    onCameraReady: (CameraView) -> Unit,
+    onCameraReady: (CameraState) -> Unit,
     onCopy: (String) -> Unit,
     onCreateNote: (String) -> Unit,
     onOpenMap: (String) -> Unit,
@@ -308,13 +309,17 @@ private fun QrScannerScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                factory = { context ->
-                    CameraView(context, null).apply {
-                        setBackgroundResource(R.drawable.rounded_rectangle)
-                        onCameraReady(this)
-                    }
-                },
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val cameraState = remember {
+                CameraState(context).apply {
+                    setBackgroundResource(R.drawable.rounded_rectangle)
+                }
+            }
+            LaunchedEffect(cameraState) {
+                onCameraReady(cameraState)
+            }
+            CameraPreview(
+                state = cameraState,
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()

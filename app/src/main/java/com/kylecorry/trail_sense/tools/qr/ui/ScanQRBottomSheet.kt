@@ -24,12 +24,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 
@@ -40,7 +40,7 @@ class ScanQRBottomSheet(
 
     private val cameraSize = Size(200, 200)
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
-    private var camera: CameraView? = null
+    private var camera: CameraState? = null
     private var lastMessage: String? = null
 
     @Composable
@@ -98,7 +98,7 @@ class ScanQRBottomSheet(
 private fun QRImportContent(
     title: String,
     onClose: () -> Unit,
-    onCameraReady: (CameraView) -> Unit,
+    onCameraReady: (CameraState) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -126,22 +126,30 @@ private fun QRImportContent(
                     )
                 }
             }
-            AndroidView(
+            CameraPreview(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
                     .testTag("camera"),
-                factory = { context ->
-                    CameraView(context, null).apply {
-                        id = R.id.camera
-                        setBackgroundResource(R.drawable.rounded_rectangle)
-                        setFlipEnabled(true)
-                        onCameraReady(this)
-                    }
-                }
+                state = rememberQrCameraState(onCameraReady)
             )
         }
     }
+}
+
+@Composable
+private fun rememberQrCameraState(onCameraReady: (CameraState) -> Unit): CameraState {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val camera = androidx.compose.runtime.remember {
+        CameraState(context).apply {
+            setBackgroundResource(R.drawable.rounded_rectangle)
+            setFlipEnabled(true)
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(camera) {
+        onCameraReady(camera)
+    }
+    return camera
 }
 
 @Preview(showBackground = true)

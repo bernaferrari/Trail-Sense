@@ -15,6 +15,9 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.annotation.ColorInt
 import androidx.camera.view.PreviewView
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
@@ -35,6 +38,103 @@ import com.kylecorry.trail_sense.R
 import java.io.File
 import java.time.Duration
 import kotlin.math.roundToInt
+
+class CameraState(context: Context) {
+    internal val view = CameraView(context, null)
+
+    var defaultZoomRatio: Float
+        get() = view.defaultZoomRatio
+        set(value) {
+            view.defaultZoomRatio = value
+        }
+
+    var minZoomRatio: Float?
+        get() = view.minZoomRatio
+        set(value) {
+            view.minZoomRatio = value
+        }
+
+    var keepScreenOn: Boolean
+        get() = view.keepScreenOn
+        set(value) {
+            view.keepScreenOn = value
+        }
+
+    var clipToOutline: Boolean
+        get() = view.clipToOutline
+        set(value) {
+            view.clipToOutline = value
+        }
+
+    val previewImage: Bitmap?
+        get() = view.previewImage
+
+    val fov: Pair<Float, Float>
+        get() = view.fov
+
+    fun start(
+        resolution: Size? = null,
+        lifecycleOwner: LifecycleOwner? = null,
+        captureSettings: ImageCaptureSettings? = null,
+        readFrames: Boolean = true,
+        shouldStabilizePreview: Boolean = true,
+        preferBackCamera: Boolean = true,
+        onImage: ((Bitmap) -> Unit)? = null
+    ) {
+        view.start(
+            resolution = resolution,
+            lifecycleOwner = lifecycleOwner,
+            captureSettings = captureSettings,
+            readFrames = readFrames,
+            shouldStabilizePreview = shouldStabilizePreview,
+            preferBackCamera = preferBackCamera,
+            onImage = onImage
+        )
+    }
+
+    fun stop() {
+        view.stop()
+    }
+
+    suspend fun capture(file: File): Boolean {
+        return view.capture(file)
+    }
+
+    fun setShowTorch(shouldShow: Boolean) {
+        view.setShowTorch(shouldShow)
+    }
+
+    fun setScaleType(type: PreviewView.ScaleType) {
+        view.setScaleType(type)
+    }
+
+    fun setPreviewBackgroundColor(@ColorInt color: Int) {
+        view.setPreviewBackgroundColor(color)
+    }
+
+    fun setFocus(value: Float?) {
+        view.setFocus(value)
+    }
+
+    fun setBackgroundResource(resId: Int) {
+        view.setBackgroundResource(resId)
+    }
+
+    fun setFlipEnabled(enabled: Boolean) {
+        view.setFlipEnabled(enabled)
+    }
+}
+
+@Composable
+fun CameraPreview(
+    state: CameraState,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { state.view },
+        modifier = modifier
+    )
+}
 
 class CameraView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 

@@ -32,8 +32,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,13 +54,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseFullscreenComposeDialogFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -72,7 +74,7 @@ class SightingCompassBottomSheetFragment(
 ) : TrailSenseFullscreenComposeDialogFragment() {
 
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private var camera: CameraView? = null
+    private var camera: CameraState? = null
     private var isViewCreated = false
     private var isCameraStarted = false
     private var bearingState by mutableStateOf<Float?>(null)
@@ -131,7 +133,7 @@ class SightingCompassBottomSheetFragment(
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    private fun startCamera(camera: CameraView) {
+    private fun startCamera(camera: CameraState) {
         if (isCameraStarted) {
             return
         }
@@ -193,7 +195,7 @@ private fun SightingCompassContent(
     bearing: Float,
     onClose: () -> Unit,
     onCapture: () -> Unit,
-    onCameraReady: (CameraView) -> Unit,
+    onCameraReady: (CameraState) -> Unit,
     compassRange: Float,
     modifier: Modifier = Modifier
 ) {
@@ -214,16 +216,18 @@ private fun SightingCompassContent(
                     .weight(1f)
             ) {
                 if (!isPreview) {
-                    AndroidView(
+                    val context = LocalContext.current
+                    val cameraState = remember {
+                        CameraState(context)
+                    }
+                    LaunchedEffect(cameraState) {
+                        onCameraReady(cameraState)
+                    }
+                    CameraPreview(
+                        state = cameraState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .testTag("camera"),
-                        factory = { context ->
-                            CameraView(context, null).apply {
-                                id = R.id.camera
-                                onCameraReady(this)
-                            }
-                        }
+                            .testTag("camera")
                     )
                 } else {
                     Box(

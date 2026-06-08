@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -28,7 +27,8 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
-import com.kylecorry.trail_sense.shared.views.CameraView
+import com.kylecorry.trail_sense.shared.views.CameraPreview
+import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 
 class ToolMirrorCameraFragment : TrailSenseComposeFragment() {
@@ -62,8 +62,8 @@ private fun MirrorCameraScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val cameraView = remember {
-        CameraView(context, null).apply {
+    val cameraState = remember {
+        CameraState(context).apply {
             setScaleType(PreviewView.ScaleType.FIT_CENTER)
             setShowTorch(false)
             setPreviewBackgroundColor(Color.WHITE)
@@ -85,16 +85,16 @@ private fun MirrorCameraScreen(
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, cameraView, isCameraEnabled) {
+    DisposableEffect(lifecycleOwner, cameraState, isCameraEnabled) {
         fun startCamera() {
             if (isCameraEnabled) {
-                cameraView.start(
+                cameraState.start(
                     readFrames = false,
                     preferBackCamera = false,
                     shouldStabilizePreview = false
                 )
             } else {
-                cameraView.stop()
+                cameraState.stop()
             }
         }
         val observer = LifecycleEventObserver { _, event ->
@@ -105,7 +105,7 @@ private fun MirrorCameraScreen(
                 }
 
                 Lifecycle.Event.ON_PAUSE -> {
-                    cameraView.stop()
+                    cameraState.stop()
                     onPauseScreen()
                 }
 
@@ -116,7 +116,7 @@ private fun MirrorCameraScreen(
         startCamera()
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            cameraView.stop()
+            cameraState.stop()
             onPauseScreen()
         }
     }
@@ -127,8 +127,8 @@ private fun MirrorCameraScreen(
             .background(ComposeColor.White),
         contentAlignment = Alignment.Center
     ) {
-        AndroidView(
-            factory = { cameraView },
+        CameraPreview(
+            state = cameraState,
             modifier = Modifier
                 .fillMaxSize(0.9f)
                 .padding(0.dp)
