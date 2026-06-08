@@ -5,14 +5,16 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -313,11 +315,11 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
             true
         }
 
-        views.confirmCalibrationButton.setOnClickListener {
+        views.calibrationPanel.onConfirmClick = {
             calibrate()
         }
 
-        views.cancelCalibrationButton.setOnClickListener {
+        views.calibrationPanel.onCancelClick = {
             stopCalibration()
         }
 
@@ -774,9 +776,7 @@ private data class AugmentedRealityViews(
     val searchBtn: ArIconButton,
     val accuracyView: SensorStatusBadgeView,
     val focusActionButton: ArTextButton,
-    val calibrationPanel: LinearLayout,
-    val confirmCalibrationButton: ArTextButton,
-    val cancelCalibrationButton: ArIconButton,
+    val calibrationPanel: ArCalibrationPanelView,
     val guidancePanel: ConstraintLayout,
     val arGuideIcon: ArGuideIconView,
     val arGuideName: ArTextView,
@@ -927,35 +927,10 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val calibrationPanel = LinearLayout(context).apply {
+    val calibrationPanel = ArCalibrationPanelView(context).apply {
         id = R.id.calibration_panel
-        orientation = LinearLayout.HORIZONTAL
         visibility = View.GONE
     }
-    val confirmCalibration = ArTextButton(context, context.getString(R.string.calibrate)).apply {
-        id = R.id.confirm_calibration_button
-    }
-    calibrationPanel.addView(
-        confirmCalibration,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-    val cancelCalibration = createTransparentIconButton(
-        context,
-        R.id.cancel_calibration_button,
-        R.drawable.ic_cancel,
-        Resources.androidTextColorSecondary(context)
-    ).apply {
-        id = R.id.cancel_calibration_button
-    }
-    calibrationPanel.addView(
-        cancelCalibration,
-        LinearLayout.LayoutParams(38.dp(context), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            marginStart = 8.dp(context)
-        }
-    )
     root.addView(
         calibrationPanel,
         ConstraintLayout.LayoutParams(
@@ -1075,8 +1050,6 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         accuracyView = accuracy,
         focusActionButton = focusAction,
         calibrationPanel = calibrationPanel,
-        confirmCalibrationButton = confirmCalibration,
-        cancelCalibrationButton = cancelCalibration,
         guidancePanel = guidancePanel,
         arGuideIcon = guideIcon,
         arGuideName = guideName,
@@ -1146,6 +1119,31 @@ private class ArTextButton(
         TrailSenseTheme {
             Button(onClick = { performClick() }) {
                 Text(text = label)
+            }
+        }
+    }
+}
+
+private class ArCalibrationPanelView(context: Context) : AbstractComposeView(context) {
+    var onConfirmClick by mutableStateOf<(() -> Unit)?>(null)
+    var onCancelClick by mutableStateOf<(() -> Unit)?>(null)
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Button(onClick = { onConfirmClick?.invoke() }) {
+                    Text(text = context.getString(R.string.calibrate))
+                }
+                Box(modifier = Modifier.width(8.dp))
+                IconButton(onClick = { onCancelClick?.invoke() }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cancel),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
