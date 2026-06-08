@@ -187,6 +187,7 @@ import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
+import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
@@ -409,6 +410,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CREATE_TIDE -> CreateTideToolScreen(this)
             DESTINATION_PACK_LIST -> PackListToolScreen(this)
             DESTINATION_PACK_ITEM_LIST -> PackItemListToolScreen(this)
+            DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
         }
     }
 
@@ -3447,5 +3449,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CREATE_TIDE = "create_tide"
         const val DESTINATION_PACK_LIST = "pack_list"
         const val DESTINATION_PACK_ITEM_LIST = "pack_item_list"
+        const val DESTINATION_CREATE_PACK_ITEM = "create_pack_item"
     }
 }

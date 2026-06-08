@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.text.InputType
-import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -50,7 +53,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -60,11 +62,50 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
-class CreateItemFragment : TrailSenseComposeFragment() {
+@Composable
+fun CreateItemToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CreateItemController(fragment) }
 
-    private val itemRepo by lazy { PackRepo.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+
+    CreateItemScreen(
+        title = stringResource(
+            if (controller.itemId == 0L) R.string.create_item_title else R.string.edit_item_title
+        ),
+        name = controller.name,
+        amount = controller.amountText,
+        desiredAmount = controller.desiredAmountText,
+        category = controller.selectedCategory,
+        categories = controller.sortedCategories.map { it to controller.nameMapper.getString(it) },
+        weight = controller.weight,
+        weightUnit = controller.selectedWeightUnit,
+        weightUnits = controller.formatService.sortWeightUnits(WeightUnits.entries),
+        isOptional = controller.isOptional,
+        onNameChange = { controller.name = it },
+        onAmountChange = { controller.amountText = it },
+        onDesiredAmountChange = { controller.desiredAmountText = it },
+        onCategoryChange = { controller.category = it },
+        onWeightChange = { newWeight, unit ->
+            controller.weight = newWeight
+            controller.selectedWeightUnit = unit
+        },
+        onOptionalChange = { controller.isOptional = it },
+        onSave = controller::saveItem
+    )
+}
+
+private class CreateItemController(private val fragment: Fragment) {
+
+    private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
+    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val prefs by lazy { AppServiceRegistry.get<PreferencesSubsystem>() }
+    private var backCallback: androidx.activity.OnBackPressedCallback? = null
+    private var isInitialized = false
 
     private val defaultCategory by lazy {
         val lastCategoryId = prefs.preferences.getInt(KEY_LAST_CATEGORY)
@@ -76,74 +117,51 @@ class CreateItemFragment : TrailSenseComposeFragment() {
         WeightUnits.entries.firstOrNull { it.id == lastUnitId }
     }
 
-    private val nameMapper by lazy { ItemCategoryStringMapper(requireContext()) }
+    val nameMapper by lazy { ItemCategoryStringMapper(fragment.requireContext()) }
 
-    private val sortedCategories by lazy {
+    val sortedCategories by lazy {
         ItemCategory.entries.sortedBy { nameMapper.getString(it) }
     }
 
     private var editingItem by mutableStateOf<PackItem?>(null)
-    private var name by mutableStateOf("")
-    private var amountText by mutableStateOf("")
-    private var desiredAmountText by mutableStateOf("")
-    private var category by mutableStateOf<ItemCategory?>(null)
-    private var weight by mutableStateOf<Weight?>(null)
-    private var selectedWeightUnit by mutableStateOf<WeightUnits?>(null)
-    private var isOptional by mutableStateOf(false)
+    var name by mutableStateOf("")
+    var amountText by mutableStateOf("")
+    var desiredAmountText by mutableStateOf("")
+    var category by mutableStateOf<ItemCategory?>(null)
+    var weight by mutableStateOf<Weight?>(null)
+    var selectedWeightUnit by mutableStateOf<WeightUnits?>(null)
+    var isOptional by mutableStateOf(false)
 
     private var packId: Long = 0
-    private var itemId: Long = 0
+    var itemId: Long = 0
+        private set
 
-    private val selectedCategory: ItemCategory
+    val selectedCategory: ItemCategory
         get() = category ?: defaultCategory
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        super.onCreate(savedInstanceState)
-        itemId = arguments?.getLong("edit_item_id") ?: 0L
-        packId = arguments?.getLong("pack_id") ?: 0L
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        CreateItemScreen(
-            title = stringResource(
-                if (itemId == 0L) R.string.create_item_title else R.string.edit_item_title
-            ),
-            name = name,
-            amount = amountText,
-            desiredAmount = desiredAmountText,
-            category = selectedCategory,
-            categories = sortedCategories.map { it to nameMapper.getString(it) },
-            weight = weight,
-            weightUnit = selectedWeightUnit,
-            weightUnits = formatService.sortWeightUnits(WeightUnits.entries),
-            isOptional = isOptional,
-            onNameChange = { name = it },
-            onAmountChange = { amountText = it },
-            onDesiredAmountChange = { desiredAmountText = it },
-            onCategoryChange = { category = it },
-            onWeightChange = { newWeight, unit ->
-                weight = newWeight
-                selectedWeightUnit = unit
-            },
-            onOptionalChange = { isOptional = it },
-            onSave = ::saveItem
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        itemId = fragment.arguments?.getLong("edit_item_id") ?: 0L
+        packId = fragment.arguments?.getLong("pack_id") ?: 0L
         category = defaultCategory
         selectedWeightUnit = defaultWeightUnit
-        promptIfUnsavedChanges(::hasChanges)
+        backCallback = fragment.promptIfUnsavedChanges(::hasChanges)
 
         if (itemId != 0L) {
             loadEditingItem(itemId)
         }
     }
 
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
+    }
+
     private fun loadEditingItem(id: Long) {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val item = withContext(Dispatchers.IO) {
                 itemRepo.getItem(id)
             } ?: return@launch
@@ -159,7 +177,7 @@ class CreateItemFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun saveItem() {
+    fun saveItem() {
         val selectedUnit = selectedWeightUnit
         val itemCategory = selectedCategory
         val currentWeight = weight
@@ -168,7 +186,7 @@ class CreateItemFragment : TrailSenseComposeFragment() {
         val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
         val optional = isOptional
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 prefs.preferences.putInt(KEY_LAST_CATEGORY, itemCategory.id)
                 selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
@@ -187,7 +205,8 @@ class CreateItemFragment : TrailSenseComposeFragment() {
                 )
             }
 
-            findNavController().popBackStack()
+            backCallback?.remove()
+            fragment.findNavController().popBackStack()
         }
     }
 
