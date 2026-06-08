@@ -3,16 +3,19 @@ package com.kylecorry.trail_sense.tools.tools.quickactions
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -25,6 +28,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 
 @SuppressLint("ClickableViewAccessibility")
@@ -32,7 +36,7 @@ class QuickActionSheet @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ConstraintLayout(context, attrs) {
 
-    private val closeButton: ImageButton
+    private val closeButton: View
     private val tabs: TabLayout
     private val quickActionsContainer: LinearLayout
     private val recommendedQuickActions: FlexboxLayout
@@ -79,11 +83,19 @@ class QuickActionSheet @JvmOverloads constructor(
             }
         )
 
-        closeButton = ImageButton(context).apply {
+        closeButton = ComposeView(context).apply {
             id = R.id.close_button
-            setBackgroundColor(Color.TRANSPARENT)
-            setImageResource(R.drawable.ic_cancel)
-            imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+            setContent {
+                TrailSenseTheme {
+                    IconButton(onClick = { close() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_cancel),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
         addView(
             closeButton,
@@ -199,11 +211,6 @@ class QuickActionSheet @JvmOverloads constructor(
                 rightMargin = Resources.dp(context, 16f).toInt()
             }
         )
-
-        closeButton.setOnClickListener {
-            close()
-        }
-
         tabs.addTab(
             tabs.newTab().also { it.text = context.getString(R.string.quick_actions) })
         tabs.addTab(
