@@ -5,7 +5,8 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.AbstractComposeView
 import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onMain
@@ -65,18 +66,26 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         return views
     }
 
-    private fun createTideChartTitle(context: Context, title: String): ComposeView {
-        return ComposeView(context).apply {
+    private fun createTideChartTitle(context: Context, title: String): TideChartTitleView {
+        return TideChartTitleView(context, title).apply {
             textAlignment = View.TEXT_ALIGNMENT_CENTER
-            setContent {
-                TrailSenseTheme {
-                    Text(
-                        text = title,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+        }
+    }
+}
+
+private class TideChartTitleView(
+    context: Context,
+    private val title: String
+) : AbstractComposeView(context) {
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

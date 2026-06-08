@@ -4,8 +4,9 @@ import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -54,12 +55,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             astroChart.moveSun(currentSun)
             astroChart.moveMoon(currentMoon)
 
-            val chartView = ComposeView(context).apply {
-                setContent {
-                    astroChart.Content(Modifier.fillMaxSize())
-                }
-            }
-            renderChart(context, views, chartView)
+            renderChart(context, views, SunAndMoonChartView(context, astroChart))
         }
 
         views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
@@ -69,5 +65,16 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             NavigationUtils.toolPendingIntent(context, Tools.ASTRONOMY)
         )
         return views
+    }
+}
+
+private class SunAndMoonChartView(
+    context: Context,
+    private val chart: AstroChart
+) : AbstractComposeView(context) {
+
+    @Composable
+    override fun Content() {
+        chart.Content(Modifier.fillMaxSize())
     }
 }
