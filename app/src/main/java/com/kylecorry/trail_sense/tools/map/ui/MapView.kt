@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Canvas as AndroidCanvas
-import android.graphics.drawable.Drawable
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
@@ -21,10 +18,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.core.view.isInvisible
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.AbstractComposeView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -54,7 +50,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapView {
+class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeView(context, attrs), IMapView {
     override var isWidget: Boolean = false
     var isInteractive = true
     var isPanEnabled = true
@@ -108,10 +104,10 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
             invalidate()
         }
 
-    val view = ComposeView(context).apply {
-        setContent {
-            Content()
-        }
+    val view: View
+        get() = this
+
+    init {
         setOnTouchListener { v, event ->
             if (externalTouchListener?.onTouch(v, event) == true) {
                 true
@@ -121,82 +117,28 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
         }
     }
 
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
-    var keepScreenOn: Boolean
-        get() = view.keepScreenOn
-        set(value) {
-            view.keepScreenOn = value
-        }
-
-    var background: Drawable?
-        get() = view.background
-        set(value) {
-            view.background = value
-        }
-
-    var backgroundTintList: ColorStateList?
-        get() = view.backgroundTintList
-        set(value) {
-            view.backgroundTintList = value
-        }
-
-    var isInvisible: Boolean
-        get() = view.isInvisible
-        set(value) {
-            view.isInvisible = value
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            view.visibility = value
-        }
-
-    val width: Int
-        get() = view.width.takeIf { it > 0 } ?: contentWidth
-
-    val height: Int
-        get() = view.height.takeIf { it > 0 } ?: contentHeight
-
-    fun setBackgroundColor(color: Int) {
-        view.setBackgroundColor(color)
+    @Composable
+    override fun Content() {
+        MapContent()
     }
 
-    fun setBackgroundResource(resId: Int) {
-        view.setBackgroundResource(resId)
-    }
-
-    fun setOnTouchListener(listener: View.OnTouchListener?) {
-        externalTouchListener = listener
-    }
-
-    fun measure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        view.measure(widthMeasureSpec, heightMeasureSpec)
-    }
-
-    fun layout(left: Int, top: Int, right: Int, bottom: Int) {
-        view.layout(left, top, right, bottom)
-    }
-
-    fun draw(canvas: AndroidCanvas) {
-        view.draw(canvas)
+    @Composable
+    fun Content(modifier: Modifier) {
+        MapContent(modifier)
     }
 
     fun post(action: () -> Unit): Boolean {
-        if (!view.isAttachedToWindow) {
+        if (!isAttachedToWindow) {
             action()
             return true
         }
-        return view.post(action)
+        return super.post {
+            action()
+        }
     }
 
-    fun invalidate() {
-        view.invalidate()
+    override fun invalidate() {
+        super.invalidate()
         post {
             renderVersion++
         }
@@ -426,7 +368,7 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
         }
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
+    fun MapContent(modifier: Modifier = Modifier) {
         TrailSenseTheme {
             Canvas(
                 modifier = modifier
@@ -697,7 +639,7 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
     private val gestureDetector = GestureDetector(context, mGestureListener)
     private val mScaleDetector = ScaleGestureDetector(context, scaleListener)
 
-    fun onTouchEvent(event: MotionEvent): Boolean {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
         if (isInteractive) {
             if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                 scroller.forceFinished(true)
