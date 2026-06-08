@@ -5,9 +5,7 @@ import android.content.DialogInterface
 import android.graphics.Paint
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -44,10 +42,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -57,7 +53,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
@@ -65,6 +60,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseFullscreenComposeDialogFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.sol.units.CompassDirection
 import kotlinx.coroutines.Dispatchers
@@ -73,7 +69,7 @@ import kotlin.math.floor
 
 class SightingCompassBottomSheetFragment(
     private val onSelect: (bearing: Float?) -> Unit
-) : FullscreenDialogFragment() {
+) : TrailSenseFullscreenComposeDialogFragment() {
 
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private var camera: CameraView? = null
@@ -91,38 +87,28 @@ class SightingCompassBottomSheetFragment(
 
     private val fovRunner = CoroutineQueueRunner(1, dispatcher = Dispatchers.Default)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SightingCompassContent(
-                        bearingText = bearingState?.let { formatter.formatDegrees(it) } ?: "",
-                        bearing = bearingState ?: 0f,
-                        onClose = {
-                            onSelect(null)
-                            dismiss()
-                        },
-                        onCapture = ::confirmBearing,
-                        onCameraReady = {
-                            camera = it
-                            if (isViewCreated) {
-                                startCamera(it)
-                            }
-                            updateCompass()
-                        },
-                        compassRange = compassRange,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.systemBars)
-                    )
+    @Composable
+    override fun FragmentContent() {
+        SightingCompassContent(
+            bearingText = bearingState?.let { formatter.formatDegrees(it) } ?: "",
+            bearing = bearingState ?: 0f,
+            onClose = {
+                onSelect(null)
+                dismiss()
+            },
+            onCapture = ::confirmBearing,
+            onCameraReady = {
+                camera = it
+                if (isViewCreated) {
+                    startCamera(it)
                 }
-            }
-        }
+                updateCompass()
+            },
+            compassRange = compassRange,
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+        )
     }
 
     @SuppressLint("UnsafeOptInUsageError")

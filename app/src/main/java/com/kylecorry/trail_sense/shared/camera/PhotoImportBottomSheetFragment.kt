@@ -5,9 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Size
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -38,9 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -52,7 +48,6 @@ import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.fragments.FullscreenDialogFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
@@ -63,13 +58,14 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseFullscreenComposeDialogFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 class PhotoImportBottomSheetFragment(
     private val resolution: Size? = null,
     private val useZeroShutterLag: Boolean = false,
     private val onCapture: (uri: Uri?) -> Unit
-) : FullscreenDialogFragment() {
+) : TrailSenseFullscreenComposeDialogFragment() {
 
     private var isCapturing by mutableStateOf(false)
     private var camera: CameraView? = null
@@ -78,36 +74,30 @@ class PhotoImportBottomSheetFragment(
 
     private var orientation = DeviceOrientation.Orientation.Portrait
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         isCapturing = false
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PhotoImportContent(
-                        isCapturing = isCapturing,
-                        onClose = {
-                            onCapture(null)
-                            dismiss()
-                        },
-                        onCapture = ::takePhoto,
-                        onCameraReady = {
-                            camera = it
-                            if (isViewCreated) {
-                                startCamera(it)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.systemBars)
-                    )
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        PhotoImportContent(
+            isCapturing = isCapturing,
+            onClose = {
+                onCapture(null)
+                dismiss()
+            },
+            onCapture = ::takePhoto,
+            onCameraReady = {
+                camera = it
+                if (isViewCreated) {
+                    startCamera(it)
                 }
-            }
-        }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+        )
     }
 
     @SuppressLint("UnsafeOptInUsageError")
