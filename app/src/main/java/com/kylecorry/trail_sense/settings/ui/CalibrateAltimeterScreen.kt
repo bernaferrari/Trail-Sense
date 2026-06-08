@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,6 +52,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -60,9 +60,10 @@ import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.observe
 
 @Composable
-fun CalibrateAltimeterToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun CalibrateAltimeterToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { CalibrateAltimeterController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -85,7 +86,7 @@ fun CalibrateAltimeterToolScreen(fragment: TrailSenseComposeDestinationFragment)
     controller.Content()
 }
 
-private class CalibrateAltimeterController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class CalibrateAltimeterController(private val fragment: TrailSenseDestinationHost) {
 
     private lateinit var barometer: IBarometer
     private lateinit var gps: IGPS
@@ -412,7 +413,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseCompo
 
     private fun onViewCreated() {
         val seaLevelPressureKey = getString(R.string.pref_sea_level_pressure_override)
-        cache.onChange.asLiveData().observe(fragment.viewLifecycleOwner) {
+        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
             if (it == seaLevelPressureKey) {
                 restartAltimeter()
             }
@@ -643,7 +644,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseCompo
             }
 
             val source = IntentUriPicker(
-                fragment.requireActivity() as IntentResultRetriever,
+                fragment.andromedaActivity as IntentResultRetriever,
                 fragment.requireContext()
             ).open(listOf("application/zip")) ?: return@inBackground
 
