@@ -37,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -50,7 +49,6 @@ import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.luna.concurrency.onDefault
@@ -67,6 +65,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -101,7 +100,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExport
 
 @Composable
 fun OfflineMapListToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { OfflineMapListController(fragment) }
@@ -129,7 +128,7 @@ fun OfflineMapListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class OfflineMapListController(private val fragment: Fragment) {
+private class OfflineMapListController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
@@ -486,7 +485,7 @@ private class OfflineMapListController(private val fragment: Fragment) {
 
             OfflineMapCreateAction.ImportCamera -> createMap(
                 CreateMapFromCameraCommand(
-                    fragment as AndromedaFragment,
+                    fragment,
                     mapImportingIndicator
                 )
             )

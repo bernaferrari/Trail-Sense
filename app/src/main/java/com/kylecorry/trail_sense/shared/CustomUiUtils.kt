@@ -36,8 +36,6 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.fragments.AndromedaFragment
-import com.kylecorry.andromeda.fragments.dismissOnPause
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
@@ -282,7 +280,10 @@ object CustomUiUtils {
         )
     }
 
-    suspend fun takePhoto(fragment: AndromedaFragment, size: Size? = null): Uri? =
+    suspend fun takePhoto(
+        fragment: TrailSenseComposeDestinationFragment,
+        size: Size? = null
+    ): Uri? =
         suspendCoroutine { cont ->
             takePhoto(fragment, size) {
                 cont.resume(it)
@@ -290,7 +291,7 @@ object CustomUiUtils {
         }
 
     private fun takePhoto(
-        fragment: AndromedaFragment,
+        fragment: TrailSenseComposeDestinationFragment,
         size: Size? = null,
         onCapture: (uri: Uri?) -> Unit
     ) {
@@ -301,12 +302,7 @@ object CustomUiUtils {
             }
 
             val prefs = UserPreferences(fragment.requireContext()).camera
-            val host = fragment as? TrailSenseComposeDestinationFragment
-            if (host == null) {
-                onCapture(null)
-                return@requestCamera
-            }
-            host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
+            fragment.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
                 onCapture(uri)
             }
         }

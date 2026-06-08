@@ -2,14 +2,10 @@ package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
 import com.kylecorry.andromeda.files.ZipUtils
 import com.kylecorry.andromeda.files.ZipUtils.unzip
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.andromeda_temp.getOrNull
-import com.kylecorry.trail_sense.shared.io.ExternalUriService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.ImportService
-import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.io.UriPicker
 import com.kylecorry.trail_sense.shared.io.UriService
 import com.kylecorry.trail_sense.shared.withId
@@ -93,14 +89,6 @@ class SpeciesImportService(
     }
 
     companion object {
-        fun create(fragment: AndromedaFragment): SpeciesImportService {
-            return SpeciesImportService(
-                IntentUriPicker(fragment, fragment.requireContext()),
-                ExternalUriService(fragment.requireContext()),
-                FileSubsystem.getInstance(fragment.requireContext())
-            )
-        }
-
         private const val MAX_ZIP_FILE_COUNT = 10000
     }
 }
