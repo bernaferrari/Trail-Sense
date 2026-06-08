@@ -4,9 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -327,19 +327,19 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         views.astronomyDetailList.isVisible = false
         views.button3d.isVisible = false
         currentSeekChartTime = time ?: ZonedDateTime.now()
-        views.seekTime.text =
+        views.timeSeekerDetails.time =
             formatService.formatTime(currentSeekChartTime.toLocalTime(), includeSeconds = false)
 
         views.timeSeeker.value = getSeekProgress().toFloat()
 
-        views.closeSeek.setOnClickListener {
+        views.timeSeekerDetails.onClose = {
             hideTimeSeeker()
         }
     }
 
     private fun updateSeekPositions() {
         val positions = getSunMoonPositions(currentSeekChartTime)
-        views.sunPositionText.text = markdownService.toMarkdown(
+        views.timeSeekerDetails.sunPosition = markdownService.toMarkdown(
             getString(
                 R.string.sun_moon_position_template,
                 getString(R.string.sun),
@@ -348,7 +348,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             )
         )
 
-        views.moonPositionText.text = markdownService.toMarkdown(
+        views.timeSeekerDetails.moonPosition = markdownService.toMarkdown(
             getString(
                 R.string.sun_moon_position_template,
                 getString(R.string.moon),
@@ -603,7 +603,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             return
         }
         updateSeekPositions()
-        views.seekTime.text = formatService.formatTime(
+        views.timeSeekerDetails.time = formatService.formatTime(
             currentSeekChartTime.toLocalTime(),
             includeSeconds = false
         )
@@ -639,11 +639,8 @@ private data class AstronomyViews(
     val displayDate: AstronomyDatePickerState,
     val sunMoonChart: Chart,
     val timeSeekerPanel: ScrollView,
-    val seekTime: TextView,
-    val closeSeek: View,
+    val timeSeekerDetails: AstronomyTimeSeekerDetailsView,
     val timeSeeker: Slider,
-    val sunPositionText: TextView,
-    val moonPositionText: TextView,
     val astronomyDetailList: ComposeView,
     val button3d: View
 )
@@ -908,9 +905,7 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         }
     )
 
-    val seekContent = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-    }
+    val seekContent = ConstraintLayout(context)
     timeSeekerPanel.addView(
         seekContent,
         ViewGroup.LayoutParams(
@@ -919,45 +914,15 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         )
     )
 
-    val seekHeader = ConstraintLayout(context)
-    seekContent.addView(
-        seekHeader,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val seekTime = TextView(context).apply {
+    val timeSeekerDetails = AstronomyTimeSeekerDetailsView(context).apply {
         id = R.id.seek_time
-        textAlignment = View.TEXT_ALIGNMENT_CENTER
-        textSize = 18f
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
     }
-    seekHeader.addView(
-        seekTime,
+    seekContent.addView(
+        timeSeekerDetails,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
             topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val closeSeek = createAstronomyIconButton(
-        context,
-        R.id.close_seek,
-        R.drawable.ic_cancel
-    )
-    seekHeader.addView(
-        closeSeek,
-        ConstraintLayout.LayoutParams(32.dp(context), 32.dp(context)).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = 16.dp(context)
         }
     )
 
@@ -966,45 +931,12 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
     }
     seekContent.addView(
         timeSeeker,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToBottom = R.id.seek_time
             topMargin = 16.dp(context)
         }
-    )
-
-    val positions = LinearLayout(context).apply {
-        orientation = LinearLayout.HORIZONTAL
-    }
-    seekContent.addView(
-        positions,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            topMargin = 8.dp(context)
-        }
-    )
-
-    val sunPosition = TextView(context).apply {
-        id = R.id.sun_position_text
-        setLineSpacing(0f, 0.8f)
-    }
-    positions.addView(
-        sunPosition,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-    )
-
-    val moonPosition = TextView(context).apply {
-        id = R.id.moon_position_text
-        setLineSpacing(0f, 0.8f)
-    }
-    positions.addView(
-        moonPosition,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
     )
 
     val list = ComposeView(context).apply {
@@ -1044,13 +976,81 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         displayDate = displayDate,
         sunMoonChart = chart,
         timeSeekerPanel = timeSeekerPanel,
-        seekTime = seekTime,
-        closeSeek = closeSeek,
+        timeSeekerDetails = timeSeekerDetails,
         timeSeeker = timeSeeker,
-        sunPositionText = sunPosition,
-        moonPositionText = moonPosition,
         astronomyDetailList = list,
         button3d = button3d
+    )
+}
+
+private class AstronomyTimeSeekerDetailsView(context: Context) : AbstractComposeView(context) {
+    var time by mutableStateOf("")
+    var sunPosition by mutableStateOf<CharSequence>("")
+    var moonPosition by mutableStateOf<CharSequence>("")
+    var onClose by mutableStateOf({})
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = time,
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_cancel),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    AstronomyPositionText(
+                        text = sunPosition.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    AstronomyPositionText(
+                        text = moonPosition.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AstronomyPositionText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
 
@@ -1063,27 +1063,6 @@ private class AstronomyTextButton(
         TrailSenseTheme {
             Button(onClick = { performClick() }) {
                 Text(text = text)
-            }
-        }
-    }
-}
-
-private fun createAstronomyIconButton(context: Context, id: Int, icon: Int): ComposeView {
-    return ComposeView(context).apply {
-        this.id = id
-        setContent {
-            TrailSenseTheme {
-                Box(
-                    modifier = Modifier.size(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
         }
     }
