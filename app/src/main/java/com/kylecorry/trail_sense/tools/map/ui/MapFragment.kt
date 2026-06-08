@@ -313,7 +313,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                     zoomOutButton.view,
                     if (hasTimeDependentLayers) timeButton.view else null,
                     menuButton.view,
-                    sensorStatusBadges
+                    sensorStatusBadges.view
                 )
             }
 
@@ -790,7 +790,7 @@ private fun createMapViews(context: Context): MapViews {
         alpha = 0.6f
     }
     root.addView(
-        sensorStatusBadges,
+        sensorStatusBadges.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT

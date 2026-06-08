@@ -1091,7 +1091,7 @@ private fun createNavigatorViews(
         alpha = 0.6f
     }
     bottomDetails.addView(
-        accuracyView,
+        accuracyView.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT

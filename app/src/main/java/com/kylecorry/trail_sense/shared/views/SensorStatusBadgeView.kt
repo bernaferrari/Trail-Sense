@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.util.AttributeSet
+import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.doOnAttach
@@ -38,9 +38,8 @@ import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 
 class SensorStatusBadgeView(
-    context: Context,
-    attrs: AttributeSet? = null
-) : AbstractComposeView(context, attrs) {
+    private val context: Context
+) {
 
     private var gpsBadge by mutableStateOf<StatusBadge?>(null)
     private var compassBadge by mutableStateOf<StatusBadge?>(null)
@@ -67,33 +66,61 @@ class SensorStatusBadgeView(
         }
     }
 
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
     init {
-        doOnAttach {
-            findViewTreeLifecycleOwner()?.lifecycle?.addObserver(lifecycleListener)
+        view.doOnAttach {
+            view.findViewTreeLifecycleOwner()?.lifecycle?.addObserver(lifecycleListener)
         }
 
-        doOnDetach {
-            findViewTreeLifecycleOwner()?.lifecycle?.removeObserver(lifecycleListener)
+        view.doOnDetach {
+            view.findViewTreeLifecycleOwner()?.lifecycle?.removeObserver(lifecycleListener)
             stop()
         }
     }
 
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var alpha: Float
+        get() = view.alpha
+        set(value) {
+            view.alpha = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
+
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Column(
-                modifier = Modifier.clickable { performClick() },
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                val gps = gpsBadge
-                val compass = compassBadge
-                if (showGpsBadge && gps != null) {
-                    SensorBadgeContent(gps, modifier = Modifier)
-                }
-                if (showCompassBadge && compass != null) {
-                    SensorBadgeContent(compass, modifier = Modifier)
-                }
+    private fun Content() {
+        Column(
+            modifier = Modifier.clickable { view.performClick() },
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            val gps = gpsBadge
+            val compass = compassBadge
+            if (showGpsBadge && gps != null) {
+                SensorBadgeContent(gps, modifier = Modifier)
+            }
+            if (showCompassBadge && compass != null) {
+                SensorBadgeContent(compass, modifier = Modifier)
             }
         }
     }

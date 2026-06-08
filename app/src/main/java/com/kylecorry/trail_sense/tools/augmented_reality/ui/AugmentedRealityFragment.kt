@@ -892,12 +892,12 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val accuracy = SensorStatusBadgeView(context, null).apply {
+    val accuracy = SensorStatusBadgeView(context).apply {
         id = R.id.accuracy_view
         alpha = 0.6f
     }
     root.addView(
-        accuracy,
+        accuracy.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
