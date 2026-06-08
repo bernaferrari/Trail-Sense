@@ -68,6 +68,8 @@ import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveComposeFragment
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
@@ -78,33 +80,43 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathC
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import java.time.Instant
 
-class MapFragment : TrailSenseReactiveComposeFragment() {
+interface MapControllerHost {
+    fun onUpdate()
+    fun onPause()
+}
 
-    private var mapViews: MapViews? = null
-    private var wasViewCreated = false
-
-    override fun beforeCreateContent() {
-        mapViews = createMapViews(requireContext())
-        wasViewCreated = true
+@Composable
+fun MapToolScreen(
+    fragment: TrailSenseReactiveComposeFragment,
+    onController: (MapControllerHost?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { MapController(fragment) }
+    DisposableEffect(controller) {
+        onController(controller)
+        onDispose {
+            onController(null)
+            controller.onDestroy()
+        }
     }
+    MapHost(
+        views = controller.views,
+        modifier = modifier.fillMaxSize()
+    )
+}
 
-    @Composable
-    override fun FragmentContent() {
-        MapHost(
-            views = mapViews ?: error("Map views are not ready"),
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+private class MapController(private val fragment: TrailSenseReactiveComposeFragment) : MapControllerHost {
 
-    override fun onDestroyView() {
-        wasViewCreated = false
-        mapViews = null
-        super.onDestroyView()
-    }
+    val views = createMapViews(fragment.requireContext())
+    private var wasViewCreated = true
 
     override fun onPause() {
-        super.onPause()
-        cleanupEffects()
+        fragment.cleanupReactiveEffects()
+    }
+
+    fun onDestroy() {
+        wasViewCreated = false
+        onPause()
     }
 
     override fun onUpdate() {
@@ -112,7 +124,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             return
         }
 
-        val views = mapViews ?: return
+        val views = views
         val mapView = views.map
         val lockButton = views.lockButton
         val zoomInButton = views.zoomInButton
@@ -124,10 +136,10 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         val attributionView = views.mapAttribution
         val timeSheet = views.timeSheet
         val sensorStatusBadges = views.sensorStatusBadges
-        val (mapTime, setMapTime) = useState<Instant?>(null)
-        val (hasTimeDependentLayers, setHasTimeDependentLayers) = useState(false)
+        val (mapTime, setMapTime) = fragment.useState<Instant?>(null)
+        val (hasTimeDependentLayers, setHasTimeDependentLayers) = fragment.useState(false)
 
-        useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
+        fragment.useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
             timeButton.isVisible = hasTimeDependentLayers
             if (hasTimeDependentLayers) {
                 timeButton.setState(mapTime != null || timeSheet.isVisible)
@@ -154,68 +166,68 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        val navigation = useNavigationSensors(trueNorth = true)
-        val context = useAndroidContext()
-        val sensors = useService<SensorService>()
-        val hasCompass = useMemo(sensors) { sensors.hasCompass() }
-        val navigator = useService<Navigator>()
-        val pathService = useService<PathService>()
-        val destination = useFlow(navigator.destination2, state = BackgroundMinimumState.Resumed)
-        val prefs = useService<UserPreferences>()
-        val formatter = useService<FormatService>()
-        val activity = useActivity()
-        val navController = useNavController()
+        val navigation = fragment.useNavigationSensors(trueNorth = true)
+        val context = fragment.useAndroidContext()
+        val sensors = fragment.useService<SensorService>()
+        val hasCompass = fragment.useMemo(sensors) { sensors.hasCompass() }
+        val navigator = fragment.useService<Navigator>()
+        val pathService = fragment.useService<PathService>()
+        val destination = fragment.useFlow(navigator.destination2, state = BackgroundMinimumState.Resumed)
+        val prefs = fragment.useService<UserPreferences>()
+        val formatter = fragment.useService<FormatService>()
+        val activity = fragment.useActivity()
+        val navController = fragment.useNavController()
         val (lockMode, setLockMode) = useLockMode()
 
-        val screenLight = useMemo(activity) {
+        val screenLight = fragment.useMemo(activity) {
             ScreenTorch(activity.window)
         }
 
-        val screenLock = useMemo(prefs) {
+        val screenLock = fragment.useMemo(prefs) {
             NavigationScreenLock(prefs.map.keepScreenUnlockedWhileOpen)
         }
 
-        useEffect(mapView, prefs, resetOnResume) {
+        fragment.useEffect(mapView, prefs, fragment.hookResetOnResume) {
             mapView.useDensityPixelsForZoom = !prefs.map.highDetailMode
             mapView.layerManager.invalidate()
             mapView.invalidate()
         }
 
-        useEffect(screenLock, activity, resetOnResume, destination) {
+        fragment.useEffect(screenLock, activity, fragment.hookResetOnResume, destination) {
             screenLock.updateLock(activity)
         }
 
-        useDestroyEffect(screenLock, activity) {
+        fragment.useDestroyEffect(screenLock, activity) {
             screenLock.releaseLock(activity)
         }
 
-        useEffect(lockButton, lockMode, hasCompass) {
+        fragment.useEffect(lockButton, lockMode, hasCompass) {
             lockButton.setOnClickListener {
                 setLockMode(getNextLockMode(lockMode, hasCompass))
             }
         }
 
         // Layers
-        val manager = useMemo { MapToolLayerManager() }
-        useEffect(manager, mapView, mapTime, manager.key) {
+        val manager = fragment.useMemo { MapToolLayerManager() }
+        fragment.useEffect(manager, mapView, mapTime, manager.key) {
             manager.setTime(mapView, mapTime)
         }
-        useEffectWithCleanup(manager, mapView, resetOnResume) {
-            manager.resume(context, mapView, this@MapFragment)
+        fragment.useEffectWithCleanup(manager, mapView, fragment.hookResetOnResume) {
+            manager.resume(context, mapView, fragment)
             return@useEffectWithCleanup {
                 manager.pause(mapView)
             }
         }
 
-        useEffect(manager.key, mapView) {
+        fragment.useEffect(manager.key, mapView) {
             setHasTimeDependentLayers(mapView.layerManager.getLayers().any { it.isTimeDependent })
         }
 
-        useEffect(mapView) {
+        fragment.useEffect(mapView) {
             mapView.setBackgroundColor(Color.rgb(127, 127, 127))
         }
 
-        useBackgroundEffect(mapView, manager.key, attributionView) {
+        fragment.useBackgroundEffect(mapView, manager.key, attributionView) {
             val attribution = mapView.getAttribution(context)
             onMain {
                 attributionView.text = attribution
@@ -223,37 +235,37 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        val layerEditSheet = useMemo(prefs) {
+        val layerEditSheet = fragment.useMemo(prefs) {
             MapLayersBottomSheet(
                 MapToolRegistration.MAP_ID
             )
         }
 
-        usePauseEffect(layerEditSheet) {
+        fragment.usePauseEffect(layerEditSheet) {
             tryOrNothing {
                 layerEditSheet.setOnDismissListener(null)
                 layerEditSheet.dismiss()
             }
         }
 
-        val adjustLayers = useCallback<Unit>(manager, layerEditSheet, context, mapView) {
+        val adjustLayers = fragment.useCallback<Unit>(manager, layerEditSheet, context, mapView) {
             manager.pause(mapView)
             layerEditSheet.setOnDismissListener {
-                manager.resume(context, mapView, this@MapFragment)
-                setHasTimeDependentLayers(
+                manager.resume(context, mapView, fragment)
+            setHasTimeDependentLayers(
                     mapView.layerManager.getLayers().any { it.isTimeDependent })
             }
-            layerEditSheet.show(this)
+            layerEditSheet.show(fragment)
         }
 
         // Distance
-        val stopDistanceMeasurement = useCallback<Unit>(mapDistanceSheetView, manager) {
+        val stopDistanceMeasurement = fragment.useCallback<Unit>(mapDistanceSheetView, manager) {
             manager.stopDistanceMeasurement()
             mapDistanceSheetView.hide()
         }
 
         val startDistanceMeasurement =
-            useCallback(
+            fragment.useCallback(
                 mapDistanceSheetView,
                 stopDistanceMeasurement,
                 navController,
@@ -271,7 +283,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                     stopDistanceMeasurement()
                 }
                 mapDistanceSheetView.createPathListener = {
-                    inBackground {
+                    fragment.inBackground {
                         val id = CreatePathCommand(
                             pathService,
                             prefs.navigation,
@@ -294,22 +306,22 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
 
         // Update layer values
-        useEffect(mapView, navigation.location, navigation.locationAccuracy) {
+        fragment.useEffect(mapView, navigation.location, navigation.locationAccuracy) {
             mapView.userLocation = navigation.location
             mapView.userLocationAccuracy = navigation.locationAccuracy
             mapView.invalidate()
         }
 
-        useEffect(mapView, navigation.bearing) {
+        fragment.useEffect(mapView, navigation.bearing) {
             mapView.userAzimuth = navigation.bearing
         }
 
-        useEffect(manager, mapView.mapBounds, manager.key) {
+        fragment.useEffect(manager, mapView.mapBounds, manager.key) {
             manager.onBoundsChanged()
         }
 
         val traceViews =
-            useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
+            fragment.useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
                 listOfNotNull(
                     { visible: Boolean -> zoomInButton.isVisible = visible },
                     { visible: Boolean -> zoomOutButton.isVisible = visible },
@@ -323,18 +335,18 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                 )
             }
 
-        useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, resetOnResume) {
+        fragment.useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, fragment.hookResetOnResume) {
             switchMapLockMode(lockMode, mapView, lockButton, traceViews, screenLight, context)
         }
 
-        usePauseEffect(screenLight) {
+        fragment.usePauseEffect(screenLight) {
             screenLight.off()
-            requireMainActivity().setBottomNavigationEnabled(true)
+            fragment.requireMainActivity().setBottomNavigationEnabled(true)
         }
 
         useSavedMapState(mapView)
 
-        useEffect(mapView, lockMode, navigation.location) {
+        fragment.useEffect(mapView, lockMode, navigation.location) {
             if (mapView.mapCenter == Coordinate.zero) {
                 mapView.mapCenter = navigation.location
                 mapView.resolution = 2f
@@ -345,13 +357,13 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        useEffect(mapView, lockMode, navigation.bearing) {
+        fragment.useEffect(mapView, lockMode, navigation.bearing) {
             if (lockMode == MapLockMode.Compass) {
                 mapView.mapAzimuth = navigation.bearing.value
             }
         }
 
-        useEffect(zoomInButton, zoomOutButton) {
+        fragment.useEffect(zoomInButton, zoomOutButton) {
             zoomInButton.setState(false)
             zoomOutButton.setState(false)
 
@@ -364,7 +376,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        useEffect(navigationSheetView, destination, navigation) {
+        fragment.useEffect(navigationSheetView, destination, navigation) {
             if (destination != null) {
                 navigationSheetView.updateNavigationSensorValues(navigation)
                 navigationSheetView.setTrueNorthOverride(true)
@@ -374,21 +386,21 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
+        fragment.useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
             mapView.setOnLongPressListener { location ->
                 if (manager.isMeasuringDistance()) {
                     return@setOnLongPressListener
                 }
                 manager.setSelectedLocation(location)
-                inBackground {
+                fragment.inBackground {
                     val elevation = Distance.meters(DEM.getElevation(location).elevation)
 
                     onMain {
                         Share.actions(
-                            this@MapFragment,
+                            fragment,
                             formatter.formatLocation(location),
                             listOf(
-                                ActionItem(getString(R.string.beacon), R.drawable.ic_location) {
+                                ActionItem(fragment.getString(R.string.beacon), R.drawable.ic_location) {
                                     val bundle = Bundle().apply {
                                         putParcelable("initial_location", GeoUri(location))
                                     }
@@ -398,7 +410,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(getString(R.string.navigate), R.drawable.ic_beacon) {
+                                ActionItem(fragment.getString(R.string.navigate), R.drawable.ic_beacon) {
                                     navigator.navigateTo(
                                         location,
                                         formatter.formatLocation(location),
@@ -406,12 +418,12 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(getString(R.string.distance), R.drawable.ruler) {
+                                ActionItem(fragment.getString(R.string.distance), R.drawable.ruler) {
                                     startDistanceMeasurement(location, true)
                                     manager.setSelectedLocation(null)
                                 },
                             ),
-                            subtitle = getString(
+                            subtitle = fragment.getString(
                                 R.string.elevation_value,
                                 formatter.formatElevation(elevation)
                             ),
@@ -423,7 +435,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             }
         }
 
-        useEffect(mapDistanceSheetView, manager, prefs) {
+        fragment.useEffect(mapDistanceSheetView, manager, prefs) {
             manager.setOnDistanceChangedCallback { distance ->
                 val relative = distance
                     .convertTo(prefs.baseDistanceUnits)
@@ -433,7 +445,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         }
 
         // Menu
-        useEffect(menuButton, startDistanceMeasurement) {
+        fragment.useEffect(menuButton, startDistanceMeasurement) {
             menuButton.setState(false)
             menuButton.setOnClickListener {
                 showMapMenu(startDistanceMeasurement, { adjustLayers() }, setLockMode)
@@ -441,17 +453,17 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         }
 
         // Disclaimer
-        useEffect(context) {
+        fragment.useEffect(context) {
             CustomUiUtils.disclaimer(
                 context,
-                getString(R.string.map),
-                getString(R.string.map_tool_disclaimer),
+                fragment.getString(R.string.map),
+                fragment.getString(R.string.map_tool_disclaimer),
                 "pref_map_tool_disclaimer_shown"
             )
         }
 
         // Sensor status
-        useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
+        fragment.useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
             val gps = navigation.gps ?: return@useEffect
             val compass = navigation.compass ?: return@useEffect
             sensorStatusBadges.setSensors(gps as ISatelliteGPS, compass)
@@ -474,7 +486,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         map.isZoomEnabled = true
         traceViews.forEach { it(true) }
         screenLight.off()
-        requireMainActivity().setBottomNavigationEnabled(true)
+        fragment.requireMainActivity().setBottomNavigationEnabled(true)
 
         when (mode) {
             MapLockMode.Location -> {
@@ -516,8 +528,8 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             MapLockMode.Trace -> {
                 CustomUiUtils.disclaimer(
                     context,
-                    getString(R.string.trace),
-                    getString(R.string.map_trace_instructions),
+                    fragment.getString(R.string.trace),
+                    fragment.getString(R.string.map_trace_instructions),
                     "disclaimer_shown_map_trace",
                     cancelText = null
                 )
@@ -537,7 +549,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                 traceViews.forEach { it(false) }
 
                 // Hide the bottom navigation
-                requireMainActivity().setBottomNavigationEnabled(false)
+                fragment.requireMainActivity().setBottomNavigationEnabled(false)
             }
         }
     }
@@ -548,14 +560,14 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         setLockMode: (MapLockMode) -> Unit
     ) {
         val actions = listOf(
-            MapAction.Measure to getString(R.string.measure),
-            MapAction.CreatePath to getString(R.string.create_path),
-            MapAction.AdjustLayers to getString(R.string.layers),
-            MapAction.Trace to getString(R.string.trace)
+            MapAction.Measure to fragment.getString(R.string.measure),
+            MapAction.CreatePath to fragment.getString(R.string.create_path),
+            MapAction.AdjustLayers to fragment.getString(R.string.layers),
+            MapAction.Trace to fragment.getString(R.string.trace)
         )
 
         Pickers.menu(
-            requireView(),
+            fragment.requireView(),
             actions.map { action -> action.second }
         ) { index ->
             when (actions[index].first) {
@@ -596,15 +608,15 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
     }
 
     private fun useSavedMapState(mapView: MapView) {
-        val prefs = useService<UserPreferences>()
-        val shouldSave = useMemo(prefs, resetOnResume) {
+        val prefs = fragment.useService<UserPreferences>()
+        val shouldSave = fragment.useMemo(prefs, fragment.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"
-        val (center, setCenter) = useCoordinatePreference("${key}_coordinate")
-        val (scale, setScale) = useFloatPreference("${key}_scale")
+        val (center, setCenter) = fragment.useCoordinatePreference("${key}_coordinate")
+        val (scale, setScale) = fragment.useFloatPreference("${key}_scale")
 
-        useEffect(mapView, shouldSave) {
+        fragment.useEffect(mapView, shouldSave) {
             if (!shouldSave) {
                 setCenter(null)
                 setScale(null)
@@ -628,24 +640,24 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
     }
 
     private fun useLockMode(): Pair<MapLockMode, (MapLockMode) -> Unit> {
-        val prefs = useService<UserPreferences>()
-        val shouldSave = useMemo(prefs, resetOnResume) {
+        val prefs = fragment.useService<UserPreferences>()
+        val shouldSave = fragment.useMemo(prefs, fragment.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"
-        val (savedLockModeId, setSavedLockModeId) = useIntPreference("${key}_lock_mode")
-        val savedLockMode = useMemo(savedLockModeId) {
+        val (savedLockModeId, setSavedLockModeId) = fragment.useIntPreference("${key}_lock_mode")
+        val savedLockMode = fragment.useMemo(savedLockModeId) {
             MapLockMode.entries.firstOrNull { it.id == savedLockModeId && it != MapLockMode.Trace }
         }
-        val (lockMode, setLockMode) = useState(savedLockMode ?: MapLockMode.Free)
-        val exposedSetLockMode = useCallback(shouldSave) { newLockMode: MapLockMode ->
+        val (lockMode, setLockMode) = fragment.useState(savedLockMode ?: MapLockMode.Free)
+        val exposedSetLockMode = fragment.useCallback(shouldSave) { newLockMode: MapLockMode ->
             setLockMode(newLockMode)
             if (shouldSave) {
                 setSavedLockModeId(newLockMode.id)
             }
         }
 
-        useEffect(shouldSave) {
+        fragment.useEffect(shouldSave) {
             if (!shouldSave) {
                 setSavedLockModeId(null)
             }

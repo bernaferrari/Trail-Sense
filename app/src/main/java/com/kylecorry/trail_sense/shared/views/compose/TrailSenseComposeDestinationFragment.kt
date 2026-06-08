@@ -191,6 +191,8 @@ import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.light.ui.LightMeterScreen
 import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import com.kylecorry.trail_sense.tools.map.ui.MapControllerHost
+import com.kylecorry.trail_sense.tools.map.ui.MapToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.OfflineMapListToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
@@ -259,7 +261,7 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 
-class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
+class TrailSenseComposeDestinationFragment : TrailSenseReactiveComposeFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost {
 
@@ -287,6 +289,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var selectedFlashlightMode = FlashlightMode.Torch
     private var clinometerLockController: ClinometerLockController? = null
     private var beaconListController: BeaconListControllerHost? = null
+    private var mapController: MapControllerHost? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -332,8 +335,18 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
             turnOffScreenFlashlight()
         }
+        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+            mapController?.onPause()
+        }
         super.onPause()
         layerSheet?.dismiss()
+    }
+
+    override fun onUpdate() {
+        super.onUpdate()
+        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+            mapController?.onUpdate()
+        }
     }
 
     @Composable
@@ -368,6 +381,10 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
             DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
             DESTINATION_MAP_SETTINGS -> MapSettings()
+            DESTINATION_MAP -> MapToolScreen(
+                fragment = this,
+                onController = { mapController = it }
+            )
             DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
                 onOpenGuide = {
                     UserGuideUtils.showGuide(this, R.raw.guide_tool_cliff_height)
@@ -3460,6 +3477,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_TOOLS_SETTINGS = "tools_settings"
         const val DESTINATION_PLUGINS_SETTINGS = "plugins_settings"
         const val DESTINATION_MAP_SETTINGS = "map_settings"
+        const val DESTINATION_MAP = "map"
         const val DESTINATION_CLIFF_HEIGHT = "cliff_height"
         const val DESTINATION_MAGNIFIER = "magnifier"
         const val DESTINATION_MIRROR_CAMERA = "mirror_camera"

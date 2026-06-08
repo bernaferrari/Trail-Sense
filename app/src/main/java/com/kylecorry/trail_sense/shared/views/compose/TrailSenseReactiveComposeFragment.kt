@@ -9,6 +9,9 @@ import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
 
 abstract class TrailSenseReactiveComposeFragment : ReactiveAndromedaFragment() {
 
+    val hookResetOnResume: Int
+        get() = resetOnResume
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -24,5 +27,9 @@ abstract class TrailSenseReactiveComposeFragment : ReactiveAndromedaFragment() {
     protected abstract fun FragmentContent()
 
     protected open fun beforeCreateContent() {
+    }
+
+    fun cleanupReactiveEffects() {
+        cleanupEffects()
     }
 }
