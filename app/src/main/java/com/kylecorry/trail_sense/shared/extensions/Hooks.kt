@@ -2,10 +2,9 @@ package com.kylecorry.trail_sense.shared.extensions
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.ComponentDialog
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleObserver
@@ -203,14 +202,14 @@ fun ReactiveAndromedaFragment.useLocation(refreshPolicy: SensorSubsystem.SensorR
     return location to isUpToDate
 }
 
-fun <T> T.useNavController(): NavController where T : ReactiveComponent, T : Fragment {
+fun TrailSenseComposeDestinationFragment.useNavController(): NavController {
     return useMemo(useRootView()) { findNavController() }
 }
 
-fun <T> T.useBackPressedCallback(
+fun TrailSenseComposeDestinationFragment.useBackPressedCallback(
     vararg values: Any?,
     callback: OnBackPressedCallback.() -> Boolean
-) where T : Fragment, T : ReactiveComponent {
+) {
     val navController = useNavController()
     useEffectWithCleanup(*values) {
         val listener = onBackPressed {
@@ -227,32 +226,8 @@ fun <T> T.useBackPressedCallback(
     }
 }
 
-fun <T> T.useBottomSheetBackPressedCallback(
-    vararg values: Any?,
-    callback: OnBackPressedCallback.() -> Boolean
-) where T : BottomSheetDialogFragment, T : ReactiveComponent {
-    useEffectWithCleanup(*values) {
-        val dispatcher = (dialog as? ComponentDialog)?.onBackPressedDispatcher
-            ?: return@useEffectWithCleanup {}
-        val listener = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val consumed = callback()
-                if (!consumed) {
-                    isEnabled = false
-                    dispatcher.onBackPressed()
-                }
-            }
-        }
-        dispatcher.addCallback(viewLifecycleOwner, listener)
-
-        return@useEffectWithCleanup {
-            listener.remove()
-        }
-    }
-}
-
-fun <T> T.useUnsavedChangesPrompt(hasChanges: Boolean) where T : Fragment, T : ReactiveComponent {
-    val activity = useActivity() as? FragmentActivity
+fun TrailSenseComposeDestinationFragment.useUnsavedChangesPrompt(hasChanges: Boolean) {
+    val activity = useActivity() as? ComponentActivity
     useBackPressedCallback(hasChanges, activity) {
         if (hasChanges && activity != null) {
             Alerts.dialog(

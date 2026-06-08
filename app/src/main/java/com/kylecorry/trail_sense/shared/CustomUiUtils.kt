@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
@@ -232,7 +231,7 @@ object CustomUiUtils {
     }
 
     fun snackbar(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         text: String,
         duration: Int = Snackbar.LENGTH_SHORT,
         action: String? = null,
@@ -255,7 +254,7 @@ object CustomUiUtils {
     }
 
     fun showQR(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         title: String,
         qr: String
     ) {
@@ -406,7 +405,7 @@ object CustomUiUtils {
     }
 
     fun showChart(
-        fragment: Fragment,
+        fragment: TrailSenseComposeDestinationFragment,
         title: String,
         content: CharSequence? = null,
         populateFn: (Chart) -> Unit
