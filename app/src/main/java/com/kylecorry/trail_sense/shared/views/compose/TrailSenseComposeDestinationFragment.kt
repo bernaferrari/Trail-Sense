@@ -65,6 +65,7 @@ import androidx.navigation.fragment.findNavController as fragmentFindNavControll
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -76,7 +77,10 @@ import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
+import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.andromeda.pdf.PdfConvert
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.preferences.IPreferences
@@ -360,6 +364,40 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     override fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
         requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
             action(Camera.isAvailable(requireContext()))
+        }
+    }
+
+    override fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+            action(Permissions.isBackgroundLocationEnabled(requireContext()))
+        }
+    }
+
+    override fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermission(
+            SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS,
+            PermissionRationale(
+                getString(
+                    R.string.allow_ignore_battery_restrictions,
+                    getString(R.string.app_name)
+                ),
+                AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                    getString(
+                        R.string.allow_ignore_battery_restrictions_instructions,
+                        getString(R.string.settings)
+                    )
+                ),
+                ok = getString(R.string.settings),
+            )
+        ) {
+            val isGranted = Permissions.hasPermission(
+                requireContext(),
+                SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS
+            )
+            if (!isGranted) {
+                toast(getString(R.string.battery_usage_restricted), short = false)
+            }
+            action(isGranted)
         }
     }
 

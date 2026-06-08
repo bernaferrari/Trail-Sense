@@ -1,17 +1,16 @@
 package com.kylecorry.trail_sense.shared.permissions
 
-import android.Manifest
 import android.os.Build
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.google.android.material.snackbar.Snackbar
-import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
-class BackgroundLocationAlerter(private val fragment: TrailSenseComposeDestinationFragment) : IAlerter {
+class BackgroundLocationAlerter(private val fragment: TrailSenseDestinationHost) : IAlerter {
 
     override fun alert() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -30,15 +29,15 @@ class BackgroundLocationAlerter(private val fragment: TrailSenseComposeDestinati
             val contents =
                 markdown.toMarkdown(context.getString(R.string.access_background_location_rationale))
 
-            fragment.dialog(
+            Alerts.dialog(
+                context,
                 context.getString(R.string.access_background_location),
                 contents,
                 okText = context.getString(R.string.settings),
                 allowLinks = true
             ) { cancelled ->
                 if (!cancelled) {
-                    fragment.requirePermissionRequester()
-                        .requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                    fragment.requestBackgroundLocation {
                         // Do nothing
                     }
                 }

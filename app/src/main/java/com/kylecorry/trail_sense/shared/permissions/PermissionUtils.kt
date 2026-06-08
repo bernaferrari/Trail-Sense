@@ -44,36 +44,6 @@ fun TrailSenseComposeDestinationFragment.requestActivityRecognition(action: (has
     }
 }
 
-fun TrailSenseComposeDestinationFragment.requestIgnoreBatteryOptimizations(
-    action: (hasPermission: Boolean) -> Unit
-) {
-    requirePermissionRequester().requestPermission(
-        SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS,
-        PermissionRationale(
-            getString(
-                R.string.allow_ignore_battery_restrictions,
-                getString(R.string.app_name)
-            ),
-            DependencyRegistry.get<MarkdownService>().toMarkdown(
-                getString(
-                    R.string.allow_ignore_battery_restrictions_instructions,
-                    getString(R.string.settings)
-                )
-            ),
-            ok = getString(R.string.settings),
-        )
-    ) {
-        val isGranted = Permissions.hasPermission(
-            requireContext(),
-            SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS
-        )
-        if (!isGranted) {
-            toast(getString(R.string.battery_usage_restricted), short = false)
-        }
-        action(isGranted)
-    }
-}
-
 fun TrailSenseComposeDestinationFragment.getPermissionRequester(): IPermissionRequester? {
     return this
 }

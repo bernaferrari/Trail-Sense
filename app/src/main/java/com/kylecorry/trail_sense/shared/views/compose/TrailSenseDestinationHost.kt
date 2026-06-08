@@ -14,6 +14,8 @@ interface TrailSenseDestinationHost {
     fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String
     fun findNavController(): NavController
     fun requestCamera(action: (hasPermission: Boolean) -> Unit)
+    fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit)
+    fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit)
     fun showPhotoImport(
         resolution: Size?,
         useZeroShutterLag: Boolean,
