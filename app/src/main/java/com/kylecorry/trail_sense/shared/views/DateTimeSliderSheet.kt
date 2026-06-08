@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.view.View
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -56,7 +55,6 @@ class DateTimeSliderSheetState(context: Context) {
     )
     private var trigger by hooks.state("")
     private var currentTime by mutableStateOf(ZonedDateTime.now())
-    var view: View? = null
     private var sheetVisible by mutableStateOf(false)
 
     var onTimeChanged: ((Instant?) -> Unit)? = null
@@ -65,7 +63,6 @@ class DateTimeSliderSheetState(context: Context) {
         get() = sheetVisible
         set(value) {
             sheetVisible = value
-            view?.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     fun setTime(instant: Instant?) {
