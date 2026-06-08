@@ -48,19 +48,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -73,7 +71,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun FieldGuideToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { FieldGuideController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -103,7 +101,7 @@ fun FieldGuideToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class FieldGuideController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class FieldGuideController(private val fragment: TrailSenseDestinationHost) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
@@ -162,11 +160,14 @@ private class FieldGuideController(private val fragment: TrailSenseComposeDestin
                     filter = ""
                 } else {
                     isEnabled = false
-                    fragment.requireActivity().onBackPressedDispatcher.onBackPressed()
+                    fragment.andromedaActivity.onBackPressedDispatcher.onBackPressed()
                 }
             }
         }
-        fragment.requireActivity().onBackPressedDispatcher.addCallback(fragment.viewLifecycleOwner, backCallback!!)
+        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+            fragment.lifecycleOwner,
+            backCallback!!
+        )
         reloadPages()
     }
 
@@ -176,7 +177,7 @@ private class FieldGuideController(private val fragment: TrailSenseComposeDestin
     }
 
     fun reloadPages() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             pages = withContext(Dispatchers.IO) {
                 FieldGuideCleanupCommand(fragment.requireContext()).execute()
                 repo.getAllPages().sortedBy { it.name }
@@ -193,7 +194,7 @@ private class FieldGuideController(private val fragment: TrailSenseComposeDestin
                     FieldGuideListItem.TagItem(
                         tag = tag,
                         title = tagNameMapper.getName(tag),
-                        subtitle = fragment.resources.getQuantityString(
+                        subtitle = fragment.getResources().getQuantityString(
                             R.plurals.page_group_summary,
                             filteredPages.count { it.tags.contains(tag) },
                             filteredPages.count { it.tags.contains(tag) }
@@ -259,9 +260,9 @@ private class FieldGuideController(private val fragment: TrailSenseComposeDestin
     }
 
     fun deletePage(page: FieldGuidePage) {
-        fragment.dialog(fragment.getString(R.string.delete), page.name) { cancelled ->
+        Alerts.dialog(fragment.requireContext(), fragment.getString(R.string.delete), page.name) { cancelled ->
             if (!cancelled) {
-                fragment.viewLifecycleOwner.lifecycleScope.launch {
+                fragment.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.delete(page)
                     }
