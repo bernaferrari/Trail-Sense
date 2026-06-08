@@ -4,16 +4,17 @@ import android.annotation.SuppressLint
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.core.view.setPadding
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.flexbox.FlexboxLayout
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
@@ -22,15 +23,16 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.launch
 
 class ToolWidgetViewBinder(
-    private val fragment: Fragment,
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner,
     private val widgetsContainer: FlexboxLayout
 ) {
 
     private val widgets = mutableListOf<WidgetInstance>()
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val context by lazy { fragment.requireContext() }
+    private val prefs by lazy { UserPreferences(context) }
 
     private val lifecycleEventObserver = LifecycleEventObserver { _, event ->
         when (event) {
@@ -89,7 +91,7 @@ class ToolWidgetViewBinder(
             widgetsContainer.addView(layout)
 
             val updateFunction = {
-                fragment.inBackground {
+                lifecycleOwner.lifecycleScope.launch {
                     val views = onDefault {
                         widget.widgetView.getPopulatedView(context, null)
                     }
@@ -124,11 +126,11 @@ class ToolWidgetViewBinder(
             )
         }
 
-        fragment.lifecycle.addObserver(lifecycleEventObserver)
+        lifecycleOwner.lifecycle.addObserver(lifecycleEventObserver)
     }
 
     fun unbind() {
-        fragment.lifecycle.removeObserver(lifecycleEventObserver)
+        lifecycleOwner.lifecycle.removeObserver(lifecycleEventObserver)
         onPause()
         onDestroy()
     }

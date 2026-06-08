@@ -110,7 +110,11 @@ class QuickActionSheetState(private val context: Context) {
         if (widgetBinder != null) {
             return
         }
-        widgetBinder = ToolWidgetViewBinder(fragment, widgets)
+        widgetBinder = ToolWidgetViewBinder(
+            fragment.requireContext(),
+            fragment.viewLifecycleOwner,
+            widgets
+        )
         widgetBinder?.bind()
     }
 
