@@ -4,6 +4,7 @@ import android.text.util.Linkify
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
@@ -25,7 +26,11 @@ class ShowMapsDisclaimerCommand(private val fragment: Fragment) : Command {
             shownValue = true
         ) { showUserGuide, _ ->
             if (showUserGuide) {
-                UserGuideUtils.showGuide(fragment, R.raw.guide_tool_offline_maps)
+                UserGuideUtils.showGuide(
+                    context,
+                    fragment.findNavController(),
+                    R.raw.guide_tool_offline_maps
+                )
             }
         }
     }

@@ -22,9 +22,9 @@ class QuickActionUserGuide(btn: QuickActionButtonView, fragment: Fragment) :
             it.isOpen(fragment.findNavController().currentDestination?.id ?: 0)
         }
         if (activeTool?.guideId != null) {
-            UserGuideUtils.showGuide(fragment, activeTool.guideId)
+            UserGuideUtils.showGuide(context, fragment.findNavController(), activeTool.guideId)
         } else {
-            UserGuideUtils.showGuide(fragment, R.raw.guide_tool_tools)
+            UserGuideUtils.showGuide(context, fragment.findNavController(), R.raw.guide_tool_tools)
         }
     }
 

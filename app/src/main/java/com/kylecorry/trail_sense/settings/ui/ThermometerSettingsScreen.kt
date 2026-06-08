@@ -388,7 +388,8 @@ private class ThermometerSettingsController(private val fragment: Fragment) {
                                     label = stringResource(R.string.tool_user_guide_title),
                                     onClick = {
                                         UserGuideUtils.showGuide(
-                                            fragment,
+                                            fragment.requireContext(),
+                                            fragment.findNavController(),
                                             R.raw.guide_tool_settings
                                         )
                                     },

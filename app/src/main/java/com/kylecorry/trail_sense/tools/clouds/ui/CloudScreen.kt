@@ -164,7 +164,11 @@ private class CloudController(private val fragment: Fragment) {
     }
 
     fun showGuide() {
-        UserGuideUtils.showGuide(fragment, R.raw.guide_tool_clouds)
+        UserGuideUtils.showGuide(
+            fragment.requireContext(),
+            fragment.findNavController(),
+            R.raw.guide_tool_clouds
+        )
     }
 
     fun showCloudDetails(reading: Reading<CloudObservation>) {

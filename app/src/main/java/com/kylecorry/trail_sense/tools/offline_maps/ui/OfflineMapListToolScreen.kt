@@ -186,7 +186,13 @@ private class OfflineMapListController(private val fragment: Fragment) {
                 searchText = it
                 manager.search(it)
             },
-            onHelp = { UserGuideUtils.showGuide(fragment, R.raw.guide_tool_offline_maps) },
+            onHelp = {
+                UserGuideUtils.showGuide(
+                    fragment.requireContext(),
+                    fragment.findNavController(),
+                    R.raw.guide_tool_offline_maps
+                )
+            },
             onToolbarAction = ::handleToolbarAction,
             onCreateMenuOpenChange = { isCreateMenuOpen = it },
             onCreateAction = ::handleCreateAction,

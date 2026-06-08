@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.tides.ui
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
@@ -36,7 +37,8 @@ class ShowTideDisclaimerCommand(private val fragment: Fragment, private val onAg
         ) { showGuide, _ ->
             if (showGuide) {
                 UserGuideUtils.openGuide(
-                    fragment,
+                    context,
+                    fragment.findNavController(),
                     R.raw.guide_tool_tides
                 )
             } else {

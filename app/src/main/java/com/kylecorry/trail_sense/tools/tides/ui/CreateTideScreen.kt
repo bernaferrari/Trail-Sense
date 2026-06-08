@@ -306,7 +306,8 @@ private class CreateTideController(private val fragment: Fragment) {
 
     fun showHelp() {
         UserGuideUtils.showGuide(
-            fragment,
+            fragment.requireContext(),
+            fragment.findNavController(),
             R.raw.guide_tool_tides
         )
     }

@@ -171,7 +171,11 @@ private class PhotoMapsController(
     }
 
     private fun openGuide() {
-        UserGuideUtils.openGuide(fragment, R.raw.guide_tool_offline_maps)
+        UserGuideUtils.openGuide(
+            fragment.requireContext(),
+            fragment.findNavController(),
+            R.raw.guide_tool_offline_maps
+        )
     }
 
     private fun calibrate() {

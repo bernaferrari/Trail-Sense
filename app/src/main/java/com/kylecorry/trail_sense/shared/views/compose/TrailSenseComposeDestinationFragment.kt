@@ -447,7 +447,11 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             )
             DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
                 onOpenGuide = {
-                    UserGuideUtils.showGuide(this, R.raw.guide_tool_cliff_height)
+                    UserGuideUtils.showGuide(
+                        requireContext(),
+                        findNavController(),
+                        R.raw.guide_tool_cliff_height
+                    )
                 }
             )
             DESTINATION_MAGNIFIER -> MagnifierScreen(
@@ -3085,7 +3089,11 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                 )
                 getString(R.string.unpin) -> pinnedToolManager.unpin(tool.id)
                 getString(R.string.pin) -> pinnedToolManager.pin(tool.id)
-                getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(this, tool.guideId!!)
+                getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(
+                    requireContext(),
+                    findNavController(),
+                    tool.guideId!!
+                )
                 getString(R.string.settings) -> findNavController().navigateWithAnimation(tool.settingsNavAction!!)
                 getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
             }
