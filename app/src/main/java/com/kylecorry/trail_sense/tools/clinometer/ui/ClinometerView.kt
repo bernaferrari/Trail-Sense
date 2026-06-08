@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.content.Context
 import android.graphics.Paint
-import android.util.AttributeSet
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -32,14 +32,30 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class ClinometerView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr), IClinometerView {
+class ClinometerView(context: Context) : IClinometerView {
 
     private var displayAngle by mutableStateOf(90f)
     private var displayStartAngle by mutableStateOf<Float?>(null)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isInvisible: Boolean
+        get() = view.visibility == View.INVISIBLE
+        set(value) {
+            view.visibility = if (value) View.INVISIBLE else View.VISIBLE
+        }
 
     override var angle: Float
         get() = displayAngle - 90f
@@ -54,14 +70,12 @@ class ClinometerView @JvmOverloads constructor(
         }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            ClinometerContent(
-                angle = displayAngle,
-                startAngle = displayStartAngle,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+    private fun Content() {
+        ClinometerContent(
+            angle = displayAngle,
+            startAngle = displayStartAngle,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

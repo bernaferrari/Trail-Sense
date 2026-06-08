@@ -771,7 +771,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         id = R.id.clinometer
     }
     instrumentFrame.addView(
-        clinometer,
+        clinometer.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
@@ -848,7 +848,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         }
     )
     cameraViewHolder.addView(
-        cameraClinometer,
+        cameraClinometer.view,
         ConstraintLayout.LayoutParams(50.dp(context), ViewGroup.LayoutParams.MATCH_PARENT).apply {
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
             topToTop = ConstraintLayout.LayoutParams.PARENT_ID

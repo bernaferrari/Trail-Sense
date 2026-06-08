@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.content.Context
 import android.graphics.Paint
-import android.util.AttributeSet
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -15,7 +15,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -29,24 +29,38 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-class CameraClinometerView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr) {
+class CameraClinometerView(context: Context) {
 
     var inclination by mutableStateOf(0f)
     var startInclination by mutableStateOf<Float?>(null)
 
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            CameraClinometerContent(
-                inclination = inclination,
-                startInclination = startInclination,
-                modifier = Modifier.fillMaxSize()
-            )
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
         }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    @Composable
+    private fun Content() {
+        CameraClinometerContent(
+            inclination = inclination,
+            startInclination = startInclination,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
