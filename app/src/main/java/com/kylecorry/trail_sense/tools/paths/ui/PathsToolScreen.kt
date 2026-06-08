@@ -44,8 +44,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.onBackPressed
@@ -148,7 +148,10 @@ private class PathsController(private val fragment: Fragment) {
     }
 
     private val gpxService by lazy {
-        IOFactory().createGpxService(fragment as AndromedaFragment)
+        IOFactory().createGpxService(
+            fragment.requireContext(),
+            fragment.requireActivity() as IntentResultRetriever
+        )
     }
 
     private var sort = PathSortMethod.MostRecent

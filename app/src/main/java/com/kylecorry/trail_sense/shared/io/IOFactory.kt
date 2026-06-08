@@ -1,15 +1,19 @@
 package com.kylecorry.trail_sense.shared.io
 
+import android.content.Context
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.fragments.AndromedaActivity
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.gpx.GPXData
 
 class IOFactory {
 
-    fun createGpxService(fragment: AndromedaFragment): IOService<GPXData> {
+    fun createGpxService(
+        context: Context,
+        resultRetriever: IntentResultRetriever
+    ): IOService<GPXData> {
         return GpxIOService(
-            IntentUriPicker(fragment, fragment.requireContext()),
-            ExternalUriService(fragment.requireContext())
+            IntentUriPicker(resultRetriever, context),
+            ExternalUriService(context)
         )
     }
 

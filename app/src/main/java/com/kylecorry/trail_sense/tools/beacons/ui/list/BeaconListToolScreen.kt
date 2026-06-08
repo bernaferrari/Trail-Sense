@@ -55,8 +55,8 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -179,7 +179,10 @@ private class BeaconListController(private val fragment: Fragment) : BeaconListC
     private var qrImportLastMessage: String? = null
 
     private val gpxService by lazy {
-        IOFactory().createGpxService(fragment as AndromedaFragment)
+        IOFactory().createGpxService(
+            fragment.requireContext(),
+            fragment.requireActivity() as IntentResultRetriever
+        )
     }
     private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
 

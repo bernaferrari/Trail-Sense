@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -62,7 +63,6 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.show
@@ -594,7 +594,10 @@ private class PathOverviewController(private val fragment: Fragment) {
         val command = ExportPathCommand(
             fragment.requireContext(),
             fragment,
-            IOFactory().createGpxService(fragment as AndromedaFragment),
+            IOFactory().createGpxService(
+                fragment.requireContext(),
+                fragment.requireActivity() as IntentResultRetriever
+            ),
             pathService
         )
         command.execute(path)
