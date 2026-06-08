@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
-import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackFragment
+import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
 
 class TurnBackAlarmReceiver : BroadcastReceiver() {
 
@@ -27,7 +27,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         val userPrefs = DependencyRegistry.get<UserPreferences>()
 
         val returnTime =
-            prefs.preferences.getInstant(TurnBackFragment.PREF_TURN_BACK_RETURN_TIME) ?: return
+            prefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
 
         val formattedReturnTime =
             FormatService.getInstance(context).formatTime(returnTime, includeSeconds = false)
@@ -55,8 +55,8 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         )
 
         // Clear the times
-        prefs.preferences.remove(TurnBackFragment.PREF_TURN_BACK_TIME)
-        prefs.preferences.remove(TurnBackFragment.PREF_TURN_BACK_RETURN_TIME)
+        prefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
+        prefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
     }
 
     companion object {
@@ -76,7 +76,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         fun start(context: Context) {
             val prefs = PreferencesSubsystem.getInstance(context)
             val turnBackTime = prefs.preferences.getInstant(
-                TurnBackFragment.PREF_TURN_BACK_TIME
+                TurnBackKeys.PREF_TURN_BACK_TIME
             ) ?: return
 
             val scheduler = scheduler(context)

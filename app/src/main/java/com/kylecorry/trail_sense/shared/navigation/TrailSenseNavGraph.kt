@@ -1358,8 +1358,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.turnBackFragment
-            setClassName("com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackFragment")
-            label = "TurnBackFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "TurnBackScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TURN_BACK)
+                .build())
             graph.addDestination(this)
         }
 

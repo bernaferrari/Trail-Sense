@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import android.Manifest
@@ -27,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -50,7 +53,6 @@ import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import kotlinx.coroutines.Dispatchers
@@ -63,32 +65,39 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class TurnBackFragment : TrailSenseComposeFragment() {
+object TurnBackKeys {
+    const val PREF_TURN_BACK_TIME = "pref_turn_back_time"
+    const val PREF_TURN_BACK_RETURN_TIME = "pref_turn_back_return_time"
+}
 
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val sharedPrefs by lazy { PreferencesSubsystem.getInstance(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+@Composable
+fun TurnBackToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { TurnBackController(fragment) }
+
+    TurnBackScreen(
+        formatter = controller.formatter,
+        loadTurnBackTime = {
+            controller.sharedPrefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
+        },
+        loadReturnTime = {
+            controller.sharedPrefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+        },
+        onPickReturnTime = controller::pickReturnTime,
+        onUseSunset = controller::setReturnTimeToSunset,
+        onCancel = controller::cancelTurnBack
+    )
+}
+
+private class TurnBackController(private val fragment: Fragment) {
+
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    val sharedPrefs by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val astronomy = AstronomyService()
 
-    @Composable
-    override fun FragmentContent() {
-        TurnBackScreen(
-            formatter = formatter,
-            loadTurnBackTime = {
-                sharedPrefs.preferences.getInstant(PREF_TURN_BACK_TIME)
-            },
-            loadReturnTime = {
-                sharedPrefs.preferences.getInstant(PREF_TURN_BACK_RETURN_TIME)
-            },
-            onPickReturnTime = ::pickReturnTime,
-            onUseSunset = ::setReturnTimeToSunset,
-            onCancel = ::cancelTurnBack
-        )
-    }
-
-    private fun pickReturnTime(currentReturnTime: Instant?) {
+    fun pickReturnTime(currentReturnTime: Instant?) {
         MaterialPickers.time(
-            requireActivity().supportFragmentManager,
+            fragment.requireActivity().supportFragmentManager,
             prefs.use24HourTime,
             currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
         ) {
@@ -104,23 +113,23 @@ class TurnBackFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun setReturnTimeToSunset() {
-        lifecycleScope.launch {
+    fun setReturnTimeToSunset() {
+        fragment.lifecycleScope.launch {
             var wasSuccessful = false
             var sunsetTime: ZonedDateTime? = null
             val job = launch(Dispatchers.IO) {
-                val location = SensorSubsystem.getInstance(requireContext()).getLocation()
+                val location = SensorSubsystem.getInstance(fragment.requireContext()).getLocation()
                 sunsetTime = astronomy.getNextSunset(location, SunTimesMode.Actual)
                     ?.atZone(ZoneId.systemDefault())
                 wasSuccessful = true
             }
 
             Alerts.withCancelableLoading(
-                requireContext(),
-                getString(R.string.loading),
+                fragment.requireContext(),
+                fragment.getString(R.string.loading),
                 onCancel = { job.cancel() }
             ) {
-                lifecycleScope.launch {
+                fragment.lifecycleScope.launch {
                     job.join()
                     if (wasSuccessful) {
                         setReturnTime(sunsetTime ?: return@launch)
@@ -138,41 +147,44 @@ class TurnBackFragment : TrailSenseComposeFragment() {
         val newTurnBackTime =
             Instant.now().plusMillis((remainingMillisToReturn * turnBackPercent).toLong())
 
-        sharedPrefs.preferences.putInstant(PREF_TURN_BACK_TIME, newTurnBackTime)
-        sharedPrefs.preferences.putInstant(PREF_TURN_BACK_RETURN_TIME, instant)
+        sharedPrefs.preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_TIME, newTurnBackTime)
+        sharedPrefs.preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME, instant)
         enableTurnBackAlarm()
 
-        toast(getString(R.string.turn_back_alert_set))
+        fragment.toast(fragment.getString(R.string.turn_back_alert_set))
     }
 
     private fun enableTurnBackAlarm() {
         requestExactAlarms {
-            TurnBackAlarmReceiver.start(requireContext())
+            TurnBackAlarmReceiver.start(fragment.requireContext())
             requestBackgroundLocation()
         }
     }
 
     private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermission(
+        fragment.requirePermissionRequester().requestPermission(
             SpecialPermission.SCHEDULE_EXACT_ALARMS,
             PermissionRationale(
-                getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
+                fragment.getString(
+                    R.string.allow_schedule_exact_alarms,
+                    fragment.getString(R.string.app_name)
+                ),
                 AppServiceRegistry.get<MarkdownService>().toMarkdown(
-                    getString(
+                    fragment.getString(
                         R.string.allow_schedule_exact_alarms_instructions,
-                        getString(R.string.app_name),
-                        getString(R.string.settings)
+                        fragment.getString(R.string.app_name),
+                        fragment.getString(R.string.settings)
                     )
                 ),
-                ok = getString(R.string.settings),
+                ok = fragment.getString(R.string.settings),
             )
         ) {
             val isGranted = Permissions.hasPermission(
-                requireContext(),
+                fragment.requireContext(),
                 SpecialPermission.SCHEDULE_EXACT_ALARMS
             )
             if (!isGranted) {
-                alertExactAlarmsDenied()
+                fragment.alertExactAlarmsDenied()
             }
             action(isGranted)
         }
@@ -183,7 +195,7 @@ class TurnBackFragment : TrailSenseComposeFragment() {
             sharedPrefs.preferences,
             "cache_background_location_requested"
         )
-        if (!IsBackgroundLocationRequired().isSatisfiedBy(requireContext())) {
+        if (!IsBackgroundLocationRequired().isSatisfiedBy(fragment.requireContext())) {
             shownFlag.set(false)
             return
         }
@@ -197,24 +209,24 @@ class TurnBackFragment : TrailSenseComposeFragment() {
         }
 
         CustomUiUtils.snackbar(
-            this,
-            getString(R.string.sunset_alerts_background_location_disclaimer),
+            fragment,
+            fragment.getString(R.string.sunset_alerts_background_location_disclaimer),
             Snackbar.LENGTH_LONG,
-            getString(R.string.learn_more)
+            fragment.getString(R.string.learn_more)
         ) {
             val markdown = AppServiceRegistry.get<MarkdownService>()
             val contents =
-                markdown.toMarkdown(getString(R.string.access_background_location_rationale))
+                markdown.toMarkdown(fragment.getString(R.string.access_background_location_rationale))
 
             Alerts.dialog(
-                requireContext(),
-                getString(R.string.access_background_location),
+                fragment.requireContext(),
+                fragment.getString(R.string.access_background_location),
                 contents,
-                okText = getString(R.string.settings),
+                okText = fragment.getString(R.string.settings),
                 allowLinks = true
             ) { cancelled ->
                 if (!cancelled) {
-                    requirePermissionRequester().requestPermissions(
+                    fragment.requirePermissionRequester().requestPermissions(
                         listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                     ) {
                         // No-op
@@ -224,15 +236,10 @@ class TurnBackFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun cancelTurnBack() {
-        sharedPrefs.preferences.remove(PREF_TURN_BACK_TIME)
-        sharedPrefs.preferences.remove(PREF_TURN_BACK_RETURN_TIME)
-        TurnBackAlarmReceiver.stop(requireContext())
-    }
-
-    companion object {
-        const val PREF_TURN_BACK_TIME = "pref_turn_back_time"
-        const val PREF_TURN_BACK_RETURN_TIME = "pref_turn_back_return_time"
+    fun cancelTurnBack() {
+        sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
+        sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+        TurnBackAlarmReceiver.stop(fragment.requireContext())
     }
 }
 

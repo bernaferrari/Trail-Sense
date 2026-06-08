@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
-import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackFragment
+import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
 import java.time.Duration
 
 class TurnBackToolService(private val context: Context) : ToolService {
@@ -27,7 +27,7 @@ class TurnBackToolService(private val context: Context) : ToolService {
 
     override fun isEnabled(): Boolean {
         return prefs.preferences.getInstant(
-            TurnBackFragment.PREF_TURN_BACK_TIME
+            TurnBackKeys.PREF_TURN_BACK_TIME
         ) != null
     }
 
@@ -41,8 +41,8 @@ class TurnBackToolService(private val context: Context) : ToolService {
     }
 
     override suspend fun disable() {
-        prefs.preferences.remove(TurnBackFragment.PREF_TURN_BACK_TIME)
-        prefs.preferences.remove(TurnBackFragment.PREF_TURN_BACK_RETURN_TIME)
+        prefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
+        prefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
         stop()
     }
 

@@ -201,6 +201,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
+import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
 import com.kylecorry.trail_sense.tools.triangulate.ui.TriangulateToolScreen
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
@@ -369,6 +370,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_RULER -> RulerScreen()
             DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
             DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
+            DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
         }
     }
 
@@ -3387,5 +3389,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_RULER = "ruler"
         const val DESTINATION_TEMPERATURE_ESTIMATION = "temperature_estimation"
         const val DESTINATION_SIGNAL_FINDER = "signal_finder"
+        const val DESTINATION_TURN_BACK = "turn_back"
     }
 }
