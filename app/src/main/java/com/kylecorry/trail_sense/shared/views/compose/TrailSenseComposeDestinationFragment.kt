@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import android.view.View
 import android.widget.NumberPicker
+import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,9 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,24 +31,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Package
+import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.licenses.Library
-import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
+import com.kylecorry.trail_sense.settings.licenses.Library
+import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
+import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
@@ -80,6 +100,9 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
             DESTINATION_CAMERA_SETTINGS -> CameraSettings()
             DESTINATION_ERROR_SETTINGS -> ErrorSettings()
+            DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
+            DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
+            DESTINATION_SENSOR_SETTINGS -> SensorSettings()
         }
     }
 
@@ -204,6 +227,134 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                 )
                 TrailSenseDivider()
+            }
+        }
+    }
+
+    @Composable
+    private fun ClinometerSettings() {
+        val prefs = remember { UserPreferences(requireContext()) }
+        val formatter = remember { FormatService.getInstance(requireContext()) }
+        var lockWithVolume by remember {
+            mutableStateOf(prefs.clinometer.lockWithVolumeButtons)
+        }
+        var baselineDistance by remember {
+            mutableStateOf(prefs.clinometer.baselineDistance)
+        }
+        val baselineTitle = stringResource(R.string.pref_clinometer_baseline_distance_title)
+
+        SettingsList(title = stringResource(R.string.clinometer_title)) {
+            item("volume_lock") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_clinometer_lock_with_volume_buttons_title),
+                    checked = lockWithVolume,
+                    onCheckedChange = {
+                        lockWithVolume = it
+                        prefs.clinometer.lockWithVolumeButtons = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("baseline_distance") {
+                SettingsActionRow(
+                    label = baselineTitle,
+                    summary = formatDistance(formatter, baselineDistance),
+                    onClick = {
+                        pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
+                            baselineDistance = it
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun PrivacySettings() {
+        val prefs = remember { UserPreferences(requireContext()) }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        var isLocationMocked by remember { mutableStateOf(isLocationMocked(prefs)) }
+        var isScreenshotProtectionOn by remember {
+            mutableStateOf(prefs.privacy.isScreenshotProtectionOn)
+        }
+
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    isLocationMocked = isLocationMocked(prefs)
+                    isScreenshotProtectionOn = prefs.privacy.isScreenshotProtectionOn
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+
+        SettingsList(title = stringResource(R.string.privacy)) {
+            item("location") {
+                TrailSenseListItem(
+                    title = stringResource(R.string.location),
+                    subtitle = if (isLocationMocked) {
+                        stringResource(R.string.location_mocked)
+                    } else {
+                        stringResource(R.string.location_not_mocked)
+                    },
+                    trailing = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    onClick = {
+                        findNavController().navigateWithAnimation(
+                            R.id.action_privacy_settings_to_gps_calibration
+                        )
+                    },
+                    animateEntrance = false
+                )
+                TrailSenseDivider()
+            }
+            item("screenshot_protection") {
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.pref_privacy_screenshot_protection_title),
+                    checked = isScreenshotProtectionOn,
+                    onCheckedChange = {
+                        isScreenshotProtectionOn = it
+                        prefs.privacy.isScreenshotProtectionOn = it
+                        Screen.setAllowScreenshots(requireActivity().window, !it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+    }
+
+    @Composable
+    private fun SensorSettings() {
+        val hasBarometer = remember { Sensors.hasBarometer(requireContext()) }
+        val items = remember(hasBarometer) {
+            sensorSettingsItems(hasBarometer)
+        }
+
+        SettingsList(title = stringResource(R.string.sensors)) {
+            items.forEach { item ->
+                item(item.key) {
+                    TrailSenseListItem(
+                        title = stringResource(item.title),
+                        icon = painterResource(item.icon),
+                        onClick = {
+                            findNavController().navigate(item.destination)
+                        },
+                        animateEntrance = false,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
             }
         }
     }
@@ -369,6 +520,45 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         }
     }
 
+    private fun pickBaselineDistance(
+        prefs: UserPreferences,
+        formatter: FormatService,
+        title: String,
+        current: Distance?,
+        onChange: (Distance?) -> Unit
+    ) {
+        CustomUiUtils.pickDistance(
+            requireContext(),
+            formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+            current,
+            title
+        ) { distance, cancelled ->
+            if (cancelled) {
+                return@pickDistance
+            }
+            val value = if (distance != null && distance.value > 0) {
+                distance
+            } else {
+                null
+            }
+            prefs.clinometer.baselineDistance = value
+            onChange(value)
+        }
+    }
+
+    private fun formatDistance(formatter: FormatService, distance: Distance?): String {
+        return distance?.let {
+            formatter.formatDistance(
+                it,
+                Units.getDecimalPlaces(it.units)
+            )
+        } ?: getString(R.string.dash)
+    }
+
+    private fun isLocationMocked(prefs: UserPreferences): Boolean {
+        return !prefs.useAutoLocation || !SensorService(requireContext()).hasLocationPermission()
+    }
+
     private fun projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
         return mapOf(
             CameraPreferences.ProjectionType.EstimatedIntrinsics to
@@ -381,6 +571,70 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             CameraPreferences.ProjectionType.Linear to getString(R.string.projection_linear)
         )
     }
+
+    private fun sensorSettingsItems(hasBarometer: Boolean): List<SensorSettingsItem> {
+        return listOfNotNull(
+            SensorSettingsItem(
+                key = "compass",
+                title = R.string.pref_compass_sensor_title,
+                icon = R.drawable.ic_compass_icon,
+                destination = R.id.calibrateCompassFragment
+            ),
+            SensorSettingsItem(
+                key = "gps",
+                title = R.string.gps,
+                icon = R.drawable.satellite,
+                destination = R.id.calibrateGPSFragment
+            ),
+            SensorSettingsItem(
+                key = "altimeter",
+                title = R.string.pref_altimeter_calibration_title,
+                icon = R.drawable.ic_altitude,
+                destination = R.id.calibrateAltimeterFragment
+            ),
+            if (hasBarometer) {
+                SensorSettingsItem(
+                    key = "barometer",
+                    title = R.string.barometer,
+                    icon = R.drawable.ic_barometer,
+                    destination = R.id.calibrateBarometerFragment
+                )
+            } else {
+                null
+            },
+            SensorSettingsItem(
+                key = "temperature",
+                title = R.string.tool_thermometer_title,
+                icon = R.drawable.thermometer,
+                destination = R.id.thermometerSettingsFragment
+            ),
+            SensorSettingsItem(
+                key = "camera",
+                title = R.string.camera,
+                icon = R.drawable.ic_camera,
+                destination = R.id.cameraSettingsFragment
+            ),
+            SensorSettingsItem(
+                key = "cell_signal",
+                title = R.string.cell_signal,
+                icon = R.drawable.signal_cellular_3,
+                destination = R.id.cellSignalSettingsFragment
+            ),
+            SensorSettingsItem(
+                key = "details",
+                title = R.string.pref_sensor_details_title,
+                icon = R.drawable.ic_sensors,
+                destination = R.id.sensorDetailsFragment
+            )
+        )
+    }
+
+    private data class SensorSettingsItem(
+        val key: String,
+        val title: Int,
+        @DrawableRes val icon: Int,
+        @IdRes val destination: Int
+    )
 
     @Composable
     private fun getErrorDisplayName(reason: ErrorBannerReason): String {
@@ -409,5 +663,8 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_BUBBLE_LEVEL_SETTINGS = "bubble_level_settings"
         const val DESTINATION_CAMERA_SETTINGS = "camera_settings"
         const val DESTINATION_ERROR_SETTINGS = "error_settings"
+        const val DESTINATION_CLINOMETER_SETTINGS = "clinometer_settings"
+        const val DESTINATION_PRIVACY_SETTINGS = "privacy_settings"
+        const val DESTINATION_SENSOR_SETTINGS = "sensor_settings"
     }
 }

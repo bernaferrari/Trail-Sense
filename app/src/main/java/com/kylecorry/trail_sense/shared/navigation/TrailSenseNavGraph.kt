@@ -948,8 +948,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.privacySettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.PrivacySettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "PrivacySettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PRIVACY_SETTINGS)
+                .build())
             putAction(
                 R.id.action_privacy_settings_to_gps_calibration,
                 NavAction(R.id.calibrateGPSFragment, NavOptions.Builder()
@@ -1006,8 +1010,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sensorSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.SensorSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "SensorSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SENSOR_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1081,8 +1089,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clinometerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "ClinometerSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLINOMETER_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
