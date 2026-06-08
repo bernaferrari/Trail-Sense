@@ -1176,8 +1176,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.temperatureEstimationFragment
-            setClassName("com.kylecorry.trail_sense.tools.temperature_estimation.ui.TemperatureEstimationFragment")
-            label = "TemperatureEstimationFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "TemperatureEstimationScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TEMPERATURE_ESTIMATION)
+                .build())
             graph.addDestination(this)
         }
 

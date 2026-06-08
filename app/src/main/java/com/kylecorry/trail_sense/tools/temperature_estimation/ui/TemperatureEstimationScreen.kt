@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,7 +50,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -59,33 +59,31 @@ private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnit
     MetersPerSecond(DistanceUnits.Meters, TimeUnits.Seconds)
 }
 
-class TemperatureEstimationFragment : TrailSenseComposeFragment() {
+@Composable
+fun TemperatureEstimationToolScreen() {
+    val context = LocalContext.current
+    val sensorService = remember { SensorService(context) }
+    val thermometer = remember { sensorService.getThermometer() }
+    val prefs = remember { UserPreferences(context) }
+    val location = remember { LocationSubsystem.getInstance(context) }
+    val formatService = remember { FormatService.getInstance(context) }
 
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val thermometer by lazy { sensorService.getThermometer() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val location by lazy { LocationSubsystem.getInstance(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
-    @Composable
-    override fun FragmentContent() {
-        TemperatureEstimationScreen(
-            prefs = prefs,
-            formatService = formatService,
-            initialElevation = location.elevation.convertTo(prefs.baseDistanceUnits),
-            sensorTemperature = { thermometer.temperature },
-            hasThermometerReading = {
-                thermometer.hasValidReading || thermometer.temperature != 0f
-            },
-            readThermometer = {
-                readAll(
-                    listOf(thermometer),
-                    Duration.ofSeconds(10),
-                    forceStopOnCompletion = true
-                )
-            }
-        )
-    }
+    TemperatureEstimationScreen(
+        prefs = prefs,
+        formatService = formatService,
+        initialElevation = location.elevation.convertTo(prefs.baseDistanceUnits),
+        sensorTemperature = { thermometer.temperature },
+        hasThermometerReading = {
+            thermometer.hasValidReading || thermometer.temperature != 0f
+        },
+        readThermometer = {
+            readAll(
+                listOf(thermometer),
+                Duration.ofSeconds(10),
+                forceStopOnCompletion = true
+            )
+        }
+    )
 }
 
 @Composable

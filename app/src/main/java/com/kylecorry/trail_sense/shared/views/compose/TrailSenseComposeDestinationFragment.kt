@@ -192,6 +192,7 @@ import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGui
 import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListItem
 import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListScreen
 import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideReaderScreen
+import com.kylecorry.trail_sense.tools.temperature_estimation.ui.TemperatureEstimationToolScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
@@ -365,6 +366,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_DECLINATION -> DeclinationScreen()
             DESTINATION_CLOCK -> ClockToolScreen(this)
             DESTINATION_RULER -> RulerScreen()
+            DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
         }
     }
 
@@ -3381,5 +3383,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_DECLINATION = "declination"
         const val DESTINATION_CLOCK = "clock"
         const val DESTINATION_RULER = "ruler"
+        const val DESTINATION_TEMPERATURE_ESTIMATION = "temperature_estimation"
     }
 }
