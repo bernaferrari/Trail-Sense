@@ -3,10 +3,8 @@ package com.kylecorry.trail_sense.tools.map.ui
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -59,6 +57,7 @@ import com.kylecorry.trail_sense.shared.extensions.useIntPreference
 import com.kylecorry.trail_sense.shared.extensions.useNavController
 import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
 import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -193,10 +192,6 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
         useClickCallback(lockButton, lockMode, hasCompass) {
             setLockMode(getNextLockMode(lockMode, hasCompass))
-        }
-
-        useEffect(attributionView) {
-            attributionView.movementMethod = LinkMovementMethod.getInstance()
         }
 
         // Layers
@@ -658,7 +653,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 private data class MapViews(
     val root: View,
     val map: MapView,
-    val mapAttribution: TextView,
+    val mapAttribution: MapAttributionView,
     val menuButton: MapIconButton,
     val timeButton: MapIconButton,
     val zoomInButton: MapIconButton,
@@ -703,13 +698,8 @@ private fun createMapViews(context: Context): MapViews {
         }
     )
 
-    val attribution = TextView(context).apply {
+    val attribution = MapAttributionView(context).apply {
         id = R.id.map_attribution
-        setBackgroundColor(Color.parseColor("#88000000"))
-        linksClickable = true
-        setPadding(4.dp(context), 2.dp(context), 4.dp(context), 2.dp(context))
-        setTextColor(Color.WHITE)
-        textSize = 8f
     }
     root.addView(
         attribution,

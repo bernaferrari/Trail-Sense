@@ -2,33 +2,15 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.os.Bundle
-import android.text.Spanned
-import android.text.style.URLSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
@@ -57,6 +39,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dem.DEM
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -618,7 +601,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 private data class ViewPhotoMapViews(
     val root: View,
     val map: MapView,
-    val mapAttribution: PhotoMapAttributionView,
+    val mapAttribution: MapAttributionView,
     val zoomInBtn: PhotoMapIconButton,
     val zoomOutBtn: PhotoMapIconButton,
     val lockBtn: PhotoMapIconButton,
@@ -650,7 +633,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         setBackgroundColor(Resources.color(context, R.color.colorSecondary))
     }
 
-    val attribution = PhotoMapAttributionView(context).apply {
+    val attribution = MapAttributionView(context).apply {
         id = R.id.map_attribution
         visibility = View.GONE
     }
@@ -771,66 +754,6 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         navigationSheet = navigationSheet,
         distanceSheet = distanceSheet
     )
-}
-
-private const val PhotoMapAttributionUrlTag = "url"
-
-private class PhotoMapAttributionView(
-    context: Context
-) : AbstractComposeView(context) {
-
-    var text by mutableStateOf<CharSequence?>(null)
-
-    @Composable
-    override fun Content() {
-        val attribution = text ?: return
-        val uriHandler = LocalUriHandler.current
-        val annotated = remember(attribution) {
-            buildAnnotatedString {
-                append(attribution.toString())
-                if (attribution is Spanned) {
-                    attribution.getSpans(0, attribution.length, URLSpan::class.java)
-                        .forEach { span ->
-                            val start = attribution.getSpanStart(span)
-                            val end = attribution.getSpanEnd(span)
-                            if (start >= 0 && end > start) {
-                                addStringAnnotation(PhotoMapAttributionUrlTag, span.url, start, end)
-                                addStyle(
-                                    SpanStyle(
-                                        color = Color.White,
-                                        textDecoration = TextDecoration.Underline
-                                    ),
-                                    start,
-                                    end
-                                )
-                            }
-                        }
-                }
-            }
-        }
-
-        TrailSenseTheme {
-            Surface(
-                color = Color(0x88000000),
-                modifier = Modifier.padding(0.dp)
-            ) {
-                ClickableText(
-                    text = annotated,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.White,
-                        fontSize = 8.sp
-                    ),
-                    onClick = { offset ->
-                        annotated
-                            .getStringAnnotations(PhotoMapAttributionUrlTag, offset, offset)
-                            .firstOrNull()
-                            ?.let { uriHandler.openUri(it.item) }
-                    }
-                )
-            }
-        }
-    }
 }
 
 @Suppress("FunctionNaming")
