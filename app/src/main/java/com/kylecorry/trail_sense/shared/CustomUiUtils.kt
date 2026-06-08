@@ -14,7 +14,6 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorInt
@@ -78,16 +77,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 object CustomUiUtils {
-
-    fun setButtonState(button: ImageButton, state: Boolean) {
-        button.setState(
-            state,
-            Resources.getPrimaryColor(button.context),
-            Resources.getColorOnPrimary(button.context)
-        )
-    }
-
-
     fun setButtonState(
         button: Button,
         isOn: Boolean
