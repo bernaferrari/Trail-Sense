@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.Manifest
 import android.app.PendingIntent
+import android.graphics.Color as AndroidColor
 import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.net.toUri
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.Lifecycle
@@ -67,8 +69,13 @@ import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.pdf.PdfConvert
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.print.ColorMode
+import com.kylecorry.andromeda.print.Orientation
+import com.kylecorry.andromeda.print.Printer
+import com.kylecorry.andromeda.print.ScaleMode
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.luna.concurrency.onDefault
@@ -112,6 +119,8 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
+import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
+import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
@@ -120,8 +129,10 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.MapSite
 import com.kylecorry.trail_sense.shared.tiles.TileManager
+import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
@@ -153,6 +164,9 @@ import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
+import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
+import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideReaderScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
@@ -165,6 +179,7 @@ import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
 import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
@@ -187,6 +202,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var editingNote: Note? = null
     private var noteTitle = ""
     private var noteContent = ""
+    private var survivalGuideContent by mutableStateOf<String?>(null)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -211,6 +227,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             )
             DESTINATION_SCREEN_FLASHLIGHT -> initializeScreenFlashlight()
             DESTINATION_NOTE_EDITOR -> promptIfUnsavedChanges(::hasNoteChanges)
+            DESTINATION_SURVIVAL_GUIDE_READER -> loadSurvivalGuideChapter()
         }
     }
 
@@ -297,6 +314,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_NOTES -> Notes()
             DESTINATION_NOTE_EDITOR -> NoteEditor()
             DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
+            DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
         }
     }
 
@@ -353,6 +371,18 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             onSave = { newTitle, newContent ->
                 saveNote(newTitle, newContent)
             }
+        )
+    }
+
+    @Composable
+    private fun SurvivalGuideReader() {
+        val chapter = getSurvivalGuideChapter()
+        SurvivalGuideReaderScreen(
+            chapter = chapter,
+            content = survivalGuideContent,
+            headerIndex = requireArguments().getInt("header_index", 0),
+            canPrint = isDebug(),
+            onPrint = ::printSurvivalGuideChapter
         )
     }
 
@@ -2835,6 +2865,62 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         return noteTitle.isBlank() && noteContent.isBlank()
     }
 
+    private fun getSurvivalGuideChapter(): Chapter {
+        val chapterResourceId = requireArguments().getInt("chapter_resource_id")
+        return Chapters.getChapters(requireContext()).first { it.resource == chapterResourceId }
+    }
+
+    private fun loadSurvivalGuideChapter() {
+        val chapterResourceId = requireArguments().getInt("chapter_resource_id")
+        viewLifecycleOwner.lifecycleScope.launch {
+            survivalGuideContent = withContext(Dispatchers.IO) {
+                TextUtils.loadTextFromResources(requireContext(), chapterResourceId)
+            }
+        }
+    }
+
+    private fun printSurvivalGuideChapter(chapter: Chapter) {
+        val context = requireContext()
+        val files = FileSubsystem.getInstance(context)
+        val markdown = AppServiceRegistry.get<com.kylecorry.andromeda.markdown.MarkdownService>()
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val loading = withContext(Dispatchers.Main) {
+                Alerts.loading(context, getString(R.string.loading))
+            }
+            try {
+                val printer = Printer(context)
+                printer.setColorMode(ColorMode.Color)
+                printer.setScaleMode(ScaleMode.Fit)
+                printer.setOrientation(Orientation.Portrait)
+                val content = TextUtils.removeMarkdownComments(
+                    "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
+                        context,
+                        chapter.resource
+                    )
+                )
+                val file = files.createTemp("pdf")
+                val parsed = markdown.toMarkdown(content)
+                val textView = TrailSenseTextView(context)
+                textView.textSize = 6f
+                textView.setTextColor(AndroidColor.BLACK)
+                markdown.setParsedMarkdown(textView, parsed)
+                delay(2000)
+                val uri = file.toUri()
+                files.output(uri)?.use {
+                    PdfConvert.toPdf(textView, it)
+                }
+                withContext(Dispatchers.Main) {
+                    printer.print(uri)
+                }
+            } finally {
+                DeleteTempFilesCommand(context).execute()
+                withContext(Dispatchers.Main) {
+                    loading.dismiss()
+                }
+            }
+        }
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -2987,5 +3073,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_NOTES = "notes"
         const val DESTINATION_NOTE_EDITOR = "note_editor"
         const val DESTINATION_WHITE_NOISE = "white_noise"
+        const val DESTINATION_SURVIVAL_GUIDE_READER = "survival_guide_reader"
     }
 }

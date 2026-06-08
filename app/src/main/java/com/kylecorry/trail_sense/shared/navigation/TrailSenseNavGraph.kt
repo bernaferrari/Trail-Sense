@@ -714,8 +714,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolSurvivalGuideReader
-            setClassName("com.kylecorry.trail_sense.tools.survival_guide.ui.FragmentToolSurvivalGuideReader")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolSurvivalGuideReader"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SURVIVAL_GUIDE_READER)
+                .build())
             addArgument("chapter_resource_id", NavArgument.Builder()
                 .setType(NavType.IntType)
                 .build())

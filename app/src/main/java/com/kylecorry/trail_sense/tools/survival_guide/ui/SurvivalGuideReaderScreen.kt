@@ -1,8 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.graphics.Color
-import android.os.Bundle
-import android.view.View
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,119 +24,25 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.pdf.PdfConvert
-import com.kylecorry.andromeda.print.ColorMode
-import com.kylecorry.andromeda.print.Orientation
-import com.kylecorry.andromeda.print.Printer
-import com.kylecorry.andromeda.print.ScaleMode
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.debugging.isDebug
-import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
-import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
-import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-class FragmentToolSurvivalGuideReader : TrailSenseComposeFragment() {
-
-    private val chapterResourceId by lazy { requireArguments().getInt("chapter_resource_id") }
-    private val headerIndex by lazy { requireArguments().getInt("header_index", 0) }
-    private val chapter by lazy {
-        Chapters.getChapters(requireContext()).first { it.resource == chapterResourceId }
-    }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
-    private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
-
-    private var content by mutableStateOf<String?>(null)
-
-    @Composable
-    override fun FragmentContent() {
-        SurvivalGuideReaderScreen(
-            chapter = chapter,
-            content = content,
-            headerIndex = headerIndex,
-            canPrint = isDebug(),
-            onPrint = ::printChapter
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.lifecycleScope.launch {
-            content = withContext(Dispatchers.IO) {
-                TextUtils.loadTextFromResources(requireContext(), chapterResourceId)
-            }
-        }
-    }
-
-    private fun printChapter(chapter: Chapter) {
-        val context = requireContext()
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val loading = withContext(Dispatchers.Main) {
-                Alerts.loading(context, getString(R.string.loading))
-            }
-            try {
-                val printer = Printer(context)
-                printer.setColorMode(ColorMode.Color)
-                printer.setScaleMode(ScaleMode.Fit)
-                printer.setOrientation(Orientation.Portrait)
-                val content = TextUtils.removeMarkdownComments(
-                    "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
-                        context,
-                        chapter.resource
-                    )
-                )
-                val file = files.createTemp("pdf")
-                val parsed = markdown.toMarkdown(content)
-                val textView = TrailSenseTextView(context)
-                textView.textSize = 6f
-                textView.setTextColor(Color.BLACK)
-                markdown.setParsedMarkdown(textView, parsed)
-                delay(2000)
-                val uri = file.toUri()
-                files.output(uri)?.use {
-                    PdfConvert.toPdf(textView, it)
-                }
-                withContext(Dispatchers.Main) {
-                    printer.print(uri)
-                }
-            } finally {
-                DeleteTempFilesCommand(context).execute()
-                withContext(Dispatchers.Main) {
-                    loading.dismiss()
-                }
-            }
-        }
-    }
-}
 
 @Composable
-private fun SurvivalGuideReaderScreen(
+fun SurvivalGuideReaderScreen(
     chapter: Chapter,
     content: String?,
     headerIndex: Int,
