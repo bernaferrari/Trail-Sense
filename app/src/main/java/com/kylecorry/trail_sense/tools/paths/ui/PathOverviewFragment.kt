@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -259,7 +258,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             false
         }
 
-        views.pathMapFullscreenToggle.setOnClickListener {
+        views.pathMapFullscreenToggle.onClick = {
             isFullscreen = !isFullscreen
             views.pathMapHolder.height = if (isFullscreen) {
                 val legendHeight = Resources.dp(requireContext(), 72f).toInt()
@@ -313,12 +312,12 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             viewWaypoint(it)
         }
 
-        views.pathElevationMin.setOnClickListener {
+        views.pathElevationMin.onClick = {
             val point = waypoints.filter { it.elevation != null }.minByOrNull { it.elevation!! }
             point?.let { viewWaypoint(it) }
         }
 
-        views.pathElevationMax.setOnClickListener {
+        views.pathElevationMax.onClick = {
             val point = waypoints.filter { it.elevation != null }.maxByOrNull { it.elevation!! }
             point?.let { viewWaypoint(it) }
         }
@@ -861,23 +860,16 @@ private class PathDataPointState(
     initialDescription: String,
     private val icon: Int
 ) {
-    lateinit var view: View
     var title by mutableStateOf("")
     var description by mutableStateOf(initialDescription)
+    var onClick by mutableStateOf<(() -> Unit)?>(null)
     private var dataPointVisible by mutableStateOf(true)
-    private var clickListener: View.OnClickListener? = null
 
     var isVisible: Boolean
         get() = dataPointVisible
         set(value) {
             dataPointVisible = value
-            view.isVisible = value
         }
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
-        clickListener = listener
-        view.setOnClickListener(listener)
-    }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -886,8 +878,8 @@ private class PathDataPointState(
         }
         Box(
             modifier = modifier.clickable(
-                enabled = clickListener != null,
-                onClick = { clickListener?.onClick(view) ?: view.performClick() }
+                enabled = onClick != null,
+                onClick = { onClick?.invoke() }
             )
         ) {
             DataPointContent(
@@ -1063,9 +1055,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     }
 
-    val styleControls = PathStyleControlsView(context).apply {
-        id = R.id.path_color
-    }
+    val styleControls = PathStyleControlsView(context)
     val mapHolder = PathMapHolderState(Resources.dp(context, 250f).toInt())
 
     val pathImage = MapView(context, null).apply {
@@ -1075,46 +1065,28 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         keepScreenOn = true
     }
 
-    val fullscreenToggle = PathIconButton(context, R.drawable.ic_recenter).apply {
-        id = R.id.path_map_fullscreen_toggle
-    }
+    val fullscreenToggle = PathIconButton(R.drawable.ic_recenter)
 
-    val selectedPoint = PathSelectedPointView(context).apply {
-        id = R.id.path_selected_point
-        visibility = View.GONE
+    val selectedPoint = PathSelectedPointView().apply {
+        isVisible = false
     }
 
     val legend = ColorScaleState()
-    val legendView = ComposeView(context).apply {
-        id = R.id.path_legend
-        legend.view = this
-        setContent {
-            TrailSenseTheme {
-                ColorScaleContent(
-                    state = legend,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-    }
-    val duration = createDataPoint(context, R.id.path_duration, R.drawable.ic_tool_clock, R.string.duration)
-    val distance = createDataPoint(context, R.id.path_distance, R.drawable.ruler, R.string.distance)
-    val points = createDataPoint(context, R.id.path_waypoints, R.drawable.ic_location, R.string.points)
-    val difficulty = createDataPoint(context, R.id.path_difficulty, R.drawable.steps, R.string.difficulty)
-    val gain = createDataPoint(context, R.id.path_elevation_gain, R.drawable.ic_elevation_gain, R.string.ascent)
-    val loss = createDataPoint(context, R.id.path_elevation_loss, R.drawable.ic_elevation_loss, R.string.descent)
-    val min = createDataPoint(context, R.id.path_elevation_min, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
-    val max = createDataPoint(context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
+    val duration = createDataPoint(context, R.drawable.ic_tool_clock, R.string.duration)
+    val distance = createDataPoint(context, R.drawable.ruler, R.string.distance)
+    val points = createDataPoint(context, R.drawable.ic_location, R.string.points)
+    val difficulty = createDataPoint(context, R.drawable.steps, R.string.difficulty)
+    val gain = createDataPoint(context, R.drawable.ic_elevation_gain, R.string.ascent)
+    val loss = createDataPoint(context, R.drawable.ic_elevation_loss, R.string.descent)
+    val min = createDataPoint(context, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
+    val max = createDataPoint(context, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
 
     val chart = PathElevationChart(context)
 
-    val pathActions = PathActionsView(context).apply {
-        id = View.generateViewId()
-    }
+    val pathActions = PathActionsView(context)
 
-    val timing = PathTimingView(context).apply {
-        id = R.id.paths_timing
-        visibility = View.GONE
+    val timing = PathTimingView().apply {
+        isVisible = false
     }
 
     return PathOverviewViews(
@@ -1148,20 +1120,6 @@ private class PathStyleControlsView(context: Context) {
     var onColorClick by mutableStateOf({})
     var onLineStyleClick by mutableStateOf({})
     var onPointStyleClick by mutableStateOf({})
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -1215,7 +1173,7 @@ private fun PathStyleDropdownText(
     }
 }
 
-private class PathSelectedPointView(context: Context) {
+private class PathSelectedPointView {
     var point by mutableStateOf<PathPoint?>(null)
     var formatService by mutableStateOf<FormatService?>(null)
     var baseDistanceUnits by mutableStateOf<DistanceUnits?>(null)
@@ -1224,32 +1182,10 @@ private class PathSelectedPointView(context: Context) {
     var onNavigate by mutableStateOf<(PathPoint) -> Unit>({})
     private var pointVisible by mutableStateOf(true)
 
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
     var isVisible: Boolean
         get() = pointVisible
         set(value) {
             pointVisible = value
-            view.isVisible = value
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            pointVisible = value == View.VISIBLE
-            view.visibility = value
         }
 
     @Composable
@@ -1275,36 +1211,14 @@ private class PathSelectedPointView(context: Context) {
     }
 }
 
-private class PathTimingView(context: Context) {
+private class PathTimingView {
     var text by mutableStateOf("")
     private var timingVisible by mutableStateOf(true)
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     var isVisible: Boolean
         get() = timingVisible
         set(value) {
             timingVisible = value
-            view.isVisible = value
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            timingVisible = value == View.VISIBLE
-            view.visibility = value
         }
 
     @Composable
@@ -1324,20 +1238,6 @@ private class PathTimingView(context: Context) {
 private class PathActionsView(private val context: Context) {
     var onNavigateClick by mutableStateOf({})
     var onAddPointClick by mutableStateOf({})
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -1383,30 +1283,10 @@ private fun PathActionButton(
 }
 
 private class PathIconButton(
-    context: Context,
     icon: Int
 ) {
     private var iconRes by mutableIntStateOf(icon)
-    private var clickListener: View.OnClickListener? = null
-
-    val view = ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Content()
-            }
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
-    fun setOnClickListener(listener: View.OnClickListener?) {
-        clickListener = listener
-        view.setOnClickListener(listener)
-    }
+    var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     fun setImageResource(icon: Int) {
         iconRes = icon
@@ -1417,7 +1297,7 @@ private class PathIconButton(
         Box(
             modifier = modifier
                 .size(48.dp)
-                .clickable { clickListener?.onClick(view) ?: view.performClick() },
+                .clickable { onClick?.invoke() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1432,24 +1312,13 @@ private class PathIconButton(
 
 private fun createDataPoint(
     context: Context,
-    id: Int,
     icon: Int,
     description: Int
 ): PathDataPointState {
-    val dataPoint = PathDataPointState(
+    return PathDataPointState(
         initialDescription = context.getString(description),
         icon = icon
     )
-    val view = ComposeView(context).apply {
-        this.id = id
-        dataPoint.view = this
-        setContent {
-            TrailSenseTheme {
-                dataPoint.Content()
-            }
-        }
-    }
-    return dataPoint
 }
 
 private fun Int.dp(context: Context): Int {

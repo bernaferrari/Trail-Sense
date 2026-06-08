@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.views
 
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -15,21 +14,13 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.scales.IColorScale
 
 class ColorScaleState {
-    var view: View? = null
-
     var colorScale by mutableStateOf<IColorScale?>(null)
     var labels by mutableStateOf<Map<Float, String>>(emptyMap())
-
-    var isVisible: Boolean
-        get() = view?.isVisible == true
-        set(value) {
-            view?.isVisible = value
-        }
+    var isVisible by mutableStateOf(false)
 }
 
 @Composable

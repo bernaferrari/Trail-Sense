@@ -308,7 +308,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             sheet.show(this)
         }
 
-        views.altitudeView.setOnClickListener {
+        views.altitude.onClick = {
             val sheet = AltitudeBottomSheet()
             sheet.currentAltitude = Reading(altimeter.altitude, Instant.now())
             sheet.show(this)
@@ -318,11 +318,11 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             toggleDestinationBearing()
         }
 
-        views.beaconBtn.setOnClickListener {
+        views.onBeaconClick = {
             findNavController().openTool(Tools.BEACONS)
         }
 
-        views.beaconBtn.setOnLongClickListener {
+        views.onBeaconLongClick = {
             if (gps.hasValidReading) {
                 val bundle = Bundle().apply {
                     putParcelable("initial_location", GeoUri(
@@ -334,7 +334,6 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             } else {
                 findNavController().openTool(Tools.BEACONS)
             }
-            true
         }
 
         views.accuracyView.setSensors(gps, compass)
@@ -791,17 +790,18 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 private data class NavigatorViews(
     val navigationTitle: NavigationTitleState,
     val altitude: NavigatorDataPointState,
-    val altitudeView: View,
     val speed: NavigatorDataPointState,
     val radarCompassMap: MapView,
     val radarCompass: RadarCompassView,
     val linearCompass: LinearSightingCompassView,
     val mapAttribution: MapAttributionState,
     val northReferenceIndicator: NorthReferenceBadgeState,
-    val beaconBtn: View,
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
-)
+) {
+    var onBeaconClick by mutableStateOf<(() -> Unit)?>(null)
+    var onBeaconLongClick by mutableStateOf<(() -> Unit)?>(null)
+}
 
 private class NavigationTitleState {
     val leftButton = ComposeQuickActionButtonView()
@@ -817,10 +817,16 @@ private class NavigatorDataPointState(
     private val icon: Int
 ) {
     var title by mutableStateOf("")
+    var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        Box(modifier = modifier) {
+        Box(
+            modifier = modifier.clickable(
+                enabled = onClick != null,
+                onClick = { onClick?.invoke() }
+            )
+        ) {
             DataPointContent(
                 title = title,
                 description = "",
@@ -891,9 +897,7 @@ private fun NavigatorHost(
             verticalAlignment = Alignment.CenterVertically
         ) {
             views.altitude.Content(
-                Modifier
-                    .weight(1f)
-                    .clickable { views.altitudeView.performClick() }
+                Modifier.weight(1f)
             )
             views.speed.Content(Modifier.weight(1f))
         }
@@ -942,8 +946,8 @@ private fun NavigatorHost(
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp)
                     .combinedClickable(
-                        onClick = { views.beaconBtn.performClick() },
-                        onLongClick = { views.beaconBtn.performLongClick() }
+                        onClick = { views.onBeaconClick?.invoke() },
+                        onLongClick = { views.onBeaconLongClick?.invoke() }
                     )
             )
         }
@@ -958,37 +962,8 @@ private fun createNavigatorViews(
     onCameraPermissionDenied: (() -> Unit)? = null
 ): NavigatorViews {
     val title = NavigationTitleState()
-    val titleView = ComposeView(context).apply {
-        id = R.id.navigation_title
-        setContent {
-            TrailSenseTheme {
-                NavigationTitle(title)
-            }
-        }
-    }
-
     val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
-    val altitudeView = ComposeView(context).apply {
-        id = R.id.altitude
-        foregroundGravity = Gravity.CENTER
-        setContent {
-            TrailSenseTheme {
-                altitude.Content()
-            }
-        }
-    }
-
     val speed = NavigatorDataPointState(R.drawable.ic_speed)
-    val speedView = ComposeView(context).apply {
-        id = R.id.speed
-        foregroundGravity = Gravity.CENTER
-        setContent {
-            TrailSenseTheme {
-                speed.Content()
-            }
-        }
-    }
-
     val radarCompassMap = MapView(context).apply {
         id = R.id.radar_compass_map
     }
@@ -1007,31 +982,8 @@ private fun createNavigatorViews(
     }
 
     val mapAttribution = MapAttributionState()
-    val mapAttributionView = ComposeView(context).apply {
-        id = R.id.map_attribution
-        setContent {
-            TrailSenseTheme {
-                mapAttribution.Content()
-            }
-        }
-    }
-
     val northReferenceIndicator = NorthReferenceBadgeState(context).apply {
         onSettingsClick = onNorthReferenceSettingsClick
-    }
-    val northReferenceIndicatorView = ComposeView(context).apply {
-        id = R.id.north_reference_indicator
-        setContent {
-            TrailSenseTheme {
-                northReferenceIndicator.Content()
-            }
-        }
-    }
-
-    val beaconBtn = navigatorIconButton(context, R.drawable.ic_beacon).apply {
-        id = R.id.beaconBtn
-        isClickable = true
-        isFocusable = true
     }
 
     val accuracyView = SensorStatusBadgeView(context).apply {
@@ -1046,14 +998,12 @@ private fun createNavigatorViews(
     return NavigatorViews(
         navigationTitle = title,
         altitude = altitude,
-        altitudeView = altitudeView,
         speed = speed,
         radarCompassMap = radarCompassMap,
         radarCompass = radarCompass,
         linearCompass = linearCompass,
         mapAttribution = mapAttribution,
         northReferenceIndicator = northReferenceIndicator,
-        beaconBtn = beaconBtn,
         accuracyView = accuracyView,
         navigationSheet = navigationSheet
     )
@@ -1079,23 +1029,6 @@ private fun NavigatorIconButton(
             )
         }
     }
-}
-
-private fun navigatorIconButton(
-    context: Context,
-    icon: Int
-): ComposeView {
-    return ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                NavigatorIconButton(icon)
-            }
-        }
-    }
-}
-
-private fun Int.dp(context: Context): Int {
-    return Resources.dp(context, toFloat()).toInt()
 }
 
 @Preview(showBackground = true)
