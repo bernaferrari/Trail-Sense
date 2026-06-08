@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
@@ -26,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -49,7 +56,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -61,48 +67,66 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class TideListFragment : TrailSenseComposeFragment() {
+@Composable
+fun TideListToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { TideListController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(requireContext())) }
-
-    private var refreshJob: Job? = null
-    private var tides by mutableStateOf(emptyList<Pair<TideTable, TideType?>>())
-
-    @Composable
-    override fun FragmentContent() {
-        TideListScreen(
-            tides = tides,
-            onCreate = ::createTide,
-            onSelect = ::selectTide,
-            onEdit = ::editTide,
-            onDelete = ::deleteTide,
-            onToggleVisibility = ::toggleVisibility
-        )
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_DESTROY -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
+    TideListScreen(
+        tides = controller.tides,
+        onCreate = controller::createTide,
+        onSelect = controller::selectTide,
+        onEdit = controller::editTide,
+        onDelete = controller::deleteTide,
+        onToggleVisibility = controller::toggleVisibility
+    )
+}
+
+private class TideListController(private val fragment: Fragment) {
+
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val gps by lazy { sensorService.getGPS() }
+    private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(fragment.requireContext())) }
+
+    private var refreshJob: Job? = null
+    var tides by mutableStateOf(emptyList<Pair<TideTable, TideType?>>())
+        private set
+
+    fun onResume() {
         refreshTides()
     }
 
-    override fun onPause() {
+    fun onPause() {
         refreshJob?.cancel()
-        super.onPause()
     }
 
-    private fun deleteTide(tide: TideTable) {
+    fun deleteTide(tide: TideTable) {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete_tide_prompt),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete_tide_prompt),
             getTideTitle(tide)
         ) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch {
+                fragment.viewLifecycleOwner.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         tideRepo.deleteTideTable(tide)
                     }
@@ -112,17 +136,17 @@ class TideListFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun toggleVisibility(tide: TideTable) {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun toggleVisibility(tide: TideTable) {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                ToggleTideTableVisibilityCommand(requireContext()).execute(tide)
+                ToggleTideTableVisibilityCommand(fragment.requireContext()).execute(tide)
             }
             refreshTides()
         }
     }
 
-    private fun editTide(tide: TideTable) {
-        findNavController().navigate(
+    fun editTide(tide: TideTable) {
+        fragment.findNavController().navigate(
             R.id.action_tideList_to_createTide,
             Bundle().apply {
                 putLong("edit_tide_id", tide.id)
@@ -130,25 +154,26 @@ class TideListFragment : TrailSenseComposeFragment() {
         )
     }
 
-    private fun createTide() {
-        findNavController().navigate(R.id.action_tideList_to_createTide)
+    fun createTide() {
+        fragment.findNavController().navigate(R.id.action_tideList_to_createTide)
     }
 
-    private fun selectTide(tide: TideTable) {
+    fun selectTide(tide: TideTable) {
         prefs.tides.lastTide = tide.id
-        findNavController().navigateUp()
+        fragment.findNavController().navigateUp()
     }
 
     private fun getTideTitle(tide: TideTable): String {
-        return tide.name
-            ?: if (tide.location != null) formatService.formatLocation(tide.location) else getString(
-                android.R.string.untitled
-            )
+        return tide.name ?: if (tide.location != null) {
+            formatService.formatLocation(tide.location)
+        } else {
+            fragment.getString(android.R.string.untitled)
+        }
     }
 
     private fun refreshTides() {
         refreshJob?.cancel()
-        refreshJob = viewLifecycleOwner.lifecycleScope.launch {
+        refreshJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             val tables = withContext(Dispatchers.IO) {
                 tideRepo.getTideTables().sortedWith(compareBy({ it.isEditable }, { tide ->
                     tide.location?.distanceTo(gps.location) ?: Float.POSITIVE_INFINITY
