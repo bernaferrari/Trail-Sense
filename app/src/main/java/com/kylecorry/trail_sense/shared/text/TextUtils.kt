@@ -5,9 +5,8 @@ import android.content.res.ColorStateList
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.annotation.RawRes
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.view.setPadding
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -26,7 +25,6 @@ import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.PostProcessedTokeniz
 import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.SimpleWordTokenizer
 import com.kylecorry.trail_sense.shared.text.search.TextMatchStrategy
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
-import com.kylecorry.trail_sense.shared.views.Views
 
 object TextUtils {
 
@@ -131,7 +129,7 @@ object TextUtils {
             }
         }
 
-        return Views.linear(children, padding = Resources.dp(context, 16f).toInt())
+        return createMarkdownContainer(context, children)
     }
 
     fun getMarkdownKeywords(text: String): Set<String> {
@@ -249,23 +247,25 @@ object TextUtils {
     private fun expandable(
         context: Context,
         title: String,
-        setContent: (TextView) -> Unit
+        setContent: (TrailSenseTextView) -> Unit
     ): ExpansionLayout {
         val expandable = ExpansionLayout(context, null)
 
-        val titleView = Views.text(context, title) as TextView
+        val titleView = TrailSenseTextView(context).apply {
+            text = title
+        }
         titleView.setCompoundDrawables(right = R.drawable.ic_drop_down)
         CustomUiUtils.setImageColor(titleView, Resources.androidTextColorSecondary(context))
         titleView.compoundDrawablePadding = Resources.dp(context, 8f).toInt()
         val padding = Resources.dp(context, 16f).toInt()
         val margin = Resources.dp(context, 8f).toInt()
         titleView.setPadding(padding)
-        titleView.layoutParams = LinearLayout.LayoutParams(
+        titleView.gravity = Gravity.CENTER_VERTICAL
+        titleView.layoutParams = ViewGroup.MarginLayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ).also {
             it.setMargins(0, margin, 0, margin)
-            it.gravity = Gravity.CENTER_VERTICAL
         }
         titleView.setBackgroundResource(R.drawable.rounded_rectangle)
         titleView.backgroundTintList = ColorStateList.valueOf(
@@ -297,7 +297,39 @@ object TextUtils {
         return text.replace(commentRegex, "").trim()
     }
 
-    private fun defaultTextView(context: Context): TextView {
+    private fun createMarkdownContainer(context: Context, children: List<View>): ConstraintLayout {
+        val padding = Resources.dp(context, 16f).toInt()
+        return ConstraintLayout(context).apply {
+            setPadding(padding, padding, padding, padding)
+            var previousId: Int? = null
+            children.forEachIndexed { index, child ->
+                if (child.id == View.NO_ID) {
+                    child.id = View.generateViewId()
+                }
+                addView(
+                    child,
+                    ConstraintLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                        endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                        if (previousId == null) {
+                            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                        } else {
+                            topToBottom = previousId!!
+                        }
+                        if (index == children.lastIndex) {
+                            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                        }
+                    }
+                )
+                previousId = child.id
+            }
+        }
+    }
+
+    private fun defaultTextView(context: Context): TrailSenseTextView {
         return TrailSenseTextView(context).also {
             it.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
