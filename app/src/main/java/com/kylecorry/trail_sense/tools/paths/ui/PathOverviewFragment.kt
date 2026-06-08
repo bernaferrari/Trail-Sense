@@ -45,7 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
@@ -65,7 +64,6 @@ import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.statistics.Statistics
@@ -163,7 +161,8 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     private var pointSheet: PathPointsListFragment? = null
 
-    private lateinit var chart: PathElevationChart
+    private val chart: PathElevationChart
+        get() = views.chart
     private var path: Path? = null
     private var waypoints: List<PathPoint> = emptyList()
     private var pathId: Long = 0L
@@ -253,8 +252,6 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        chart = PathElevationChart(views.chart)
-
         views.pathImage.isInteractive = true
 
         views.pathImage.setOnTouchListener { v, event ->
@@ -826,7 +823,7 @@ private data class PathOverviewViews(
     val pathElevationLoss: PathDataPointState,
     val pathElevationMin: PathDataPointState,
     val pathElevationMax: PathDataPointState,
-    val chart: Chart,
+    val chart: PathElevationChart,
     val pathActions: PathActionsView,
     val pathsTiming: PathTimingView
 )
@@ -1031,14 +1028,13 @@ private fun PathOverviewHost(
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
-        AndroidView(
+        views.chart.Content(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(with(density) {
                     context.resources.getDimensionPixelSize(R.dimen.chart_height).toDp()
                 })
-                .padding(horizontal = 16.dp),
-            factory = { views.chart }
+                .padding(horizontal = 16.dp)
         )
         views.pathActions.Content(
             Modifier
@@ -1110,9 +1106,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     val min = createDataPoint(context, R.id.path_elevation_min, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
     val max = createDataPoint(context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
 
-    val chart = Chart(context).apply {
-        id = R.id.chart
-    }
+    val chart = PathElevationChart(context)
 
     val pathActions = PathActionsView(context).apply {
         id = View.generateViewId()
