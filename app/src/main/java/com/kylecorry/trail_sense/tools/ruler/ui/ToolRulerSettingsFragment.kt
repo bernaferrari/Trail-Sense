@@ -1,13 +1,15 @@
 package com.kylecorry.trail_sense.tools.ruler.ui
 
-import android.text.InputType
-import android.widget.EditText
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -16,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
@@ -35,6 +36,7 @@ class ToolRulerSettingsFragment : TrailSenseComposeFragment() {
     override fun FragmentContent() {
         var scale by remember { mutableFloatStateOf(prefs.rulerScale) }
         var flipped by remember { mutableStateOf(prefs.rulerFlipped) }
+        var showCalibrationDialog by remember { mutableStateOf(false) }
         val calibrationTitle =
             stringResource(R.string.pref_ruler_calibration_title)
         Surface(
@@ -60,9 +62,7 @@ class ToolRulerSettingsFragment : TrailSenseComposeFragment() {
                         label = calibrationTitle,
                         summary = formatScale(scale),
                         onClick = {
-                            pickScale(calibrationTitle, scale) {
-                                scale = it
-                            }
+                            showCalibrationDialog = true
                         },
                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                     )
@@ -81,27 +81,57 @@ class ToolRulerSettingsFragment : TrailSenseComposeFragment() {
                 }
             }
         }
+
+        if (showCalibrationDialog) {
+            RulerScaleDialog(
+                title = calibrationTitle,
+                current = scale,
+                onDismiss = { showCalibrationDialog = false },
+                onConfirm = {
+                    scale = it
+                    prefs.rulerScale = it
+                    showCalibrationDialog = false
+                }
+            )
+        }
     }
 
-    private fun pickScale(title: String, current: Float, onChange: (Float) -> Unit) {
-        val input = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER.or(InputType.TYPE_NUMBER_FLAG_DECIMAL)
-            setText(formatScale(current))
-            selectAll()
-        }
-
-        Alerts.dialog(
-            requireContext(),
-            title,
-            content = getString(R.string.pref_ruler_calibration_summary),
-            contentView = input
-        ) { cancelled ->
-            if (!cancelled) {
-                val value = (input.text.toString().toFloatCompat() ?: 1f).coerceAtLeast(0f)
-                prefs.rulerScale = value
-                onChange(value)
+    @Composable
+    private fun RulerScaleDialog(
+        title: String,
+        current: Float,
+        onDismiss: () -> Unit,
+        onConfirm: (Float) -> Unit
+    ) {
+        var value by remember(current) { mutableStateOf(formatScale(current)) }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(text = title)
+            },
+            text = {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text(text = stringResource(R.string.pref_ruler_calibration_summary)) },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirm((value.toFloatCompat() ?: 1f).coerceAtLeast(0f))
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
             }
-        }
+        )
     }
 
     private fun formatScale(scale: Float): String {
