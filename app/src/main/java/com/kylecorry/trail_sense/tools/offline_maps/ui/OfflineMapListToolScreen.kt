@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,14 +37,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.luna.concurrency.onDefault
@@ -66,7 +72,6 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
@@ -94,12 +99,42 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.VectorMapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
 
-class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun OfflineMapListToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { OfflineMapListController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val sensorService by lazy { SensorService(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class OfflineMapListController(private val fragment: Fragment) {
+
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val mapService by lazy { getAppService<OfflineMapService>() }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val mapService by lazy { MapService.Companion.getInstance(fragment.requireContext()) }
     private val mapLoader by lazy { MapGroupLoader(mapService.loader) }
     private lateinit var manager: GroupListManager<IMap>
 
@@ -114,18 +149,21 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
     private var sortMenuText by mutableStateOf("")
     private var isCreateMenuOpen by mutableStateOf(false)
     private var isCreateEnabled by mutableStateOf(true)
+    private var isInitialized = false
 
-    private val uriPicker by lazy { IntentUriPicker(this, requireContext()) }
+    private val uriPicker by lazy {
+        IntentUriPicker(fragment.requireActivity() as IntentResultRetriever, fragment.requireContext())
+    }
     private val mapImportingIndicator by lazy {
         AlertLoadingIndicator(
-            requireContext(),
-            getString(R.string.importing_map)
+            fragment.requireContext(),
+            fragment.getString(R.string.importing_map)
         )
     }
-    private val exportService by lazy { PhotoMapExportService(this) }
+    private val exportService by lazy { PhotoMapExportService(fragment) }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         OfflineMapListScreen(
             title = title.ifBlank { stringResource(R.string.offline_maps) },
             sortMenuText = sortMenuText.ifBlank {
@@ -148,90 +186,97 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
                 searchText = it
                 manager.search(it)
             },
-            onHelp = { UserGuideUtils.showGuide(this@OfflineMapListFragment, R.raw.guide_tool_offline_maps) },
+            onHelp = { UserGuideUtils.showGuide(fragment, R.raw.guide_tool_offline_maps) },
             onToolbarAction = ::handleToolbarAction,
             onCreateMenuOpenChange = { isCreateMenuOpen = it },
             onCreateAction = ::handleCreateAction,
             onPhotoMapAction = ::onPhotoMapAction,
             onVectorMapAction = ::onVectorMapAction,
             onMapGroupAction = ::onMapGroupAction,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
         manager = GroupListManager(
-            lifecycleScope,
+            fragment.viewLifecycleOwner.lifecycleScope,
             mapLoader,
             lastRoot,
             this::sortMaps
         )
 
         val mapIntentUri =
-            BundleCompat.getParcelable(arguments ?: Bundle(), "map_intent_uri", Uri::class.java)
-        arguments?.remove("map_intent_uri")
+            BundleCompat.getParcelable(fragment.arguments ?: Bundle(), "map_intent_uri", Uri::class.java)
+        fragment.arguments?.remove("map_intent_uri")
         if (mapIntentUri != null) {
             createMap(
                 CreateMapFromUriCommand(
-                    requireContext(),
-                    mapIntentUri
+                    fragment.requireContext(),
+                    mapIntentUri,
+                    mapImportingIndicator
                 )
             )
         }
 
-        ShowMapsDisclaimerCommand(this).execute()
+        ShowMapsDisclaimerCommand(fragment).execute()
 
         sort = prefs.photoMaps.mapSort
-        sortMenuText = getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
         manager.onChange = { root, items, rootChanged ->
             mapItems = items
             if (rootChanged) {
                 mapListResetKey++
             }
-            title = (root as MapGroup?)?.name ?: getString(R.string.offline_maps)
+            title = (root as MapGroup?)?.name ?: fragment.getString(R.string.offline_maps)
         }
 
-        backPressedCallback = onBackPressed {
+        backPressedCallback = fragment.onBackPressed {
             if (!manager.up()) {
                 remove()
-                findNavController().navigateUp()
+                fragment.findNavController().navigateUp()
             }
         }
         updateBackPressedCallback()
-        title = getString(R.string.offline_maps)
+        title = fragment.getString(R.string.offline_maps)
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        super.onHiddenChanged(hidden)
-        updateBackPressedCallback()
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
+        if (!isInitialized) {
+            return
+        }
         updateBackPressedCallback()
         manager.refresh()
-        inBackground {
-            val mapsDeleted = mapService.cleanup()
+        fragment.inBackground {
+            val mapsDeleted = MapCleanupCommand(fragment.requireContext()).execute()
             if (mapsDeleted) {
                 manager.refresh()
             }
         }
     }
 
+    fun onDestroy() {
+        onPause()
+        backPressedCallback?.remove()
+        backPressedCallback = null
+        isInitialized = false
+    }
+
     private fun changeSort() {
         val sortOptions = MapSortMethod.values()
         Pickers.item(
-            requireContext(),
-            getString(R.string.sort),
+            fragment.requireContext(),
+            fragment.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.photoMaps.mapSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.photoMaps.mapSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -239,9 +284,9 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun getSortString(sortMethod: MapSortMethod): String {
         return when (sortMethod) {
-            MapSortMethod.MostRecent -> getString(R.string.most_recent)
-            MapSortMethod.Closest -> getString(R.string.closest)
-            MapSortMethod.Name -> getString(R.string.name)
+            MapSortMethod.MostRecent -> fragment.getString(R.string.most_recent)
+            MapSortMethod.Closest -> fragment.getString(R.string.closest)
+            MapSortMethod.Name -> fragment.getString(R.string.name)
         }
     }
 
@@ -271,9 +316,24 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setGroupVisibility(group: MapGroup, visible: Boolean) {
-        inBackground {
-            Alerts.withLoading(requireContext(), getString(R.string.loading)) {
-                mapService.setVisible(group, visible)
+        fragment.inBackground {
+            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+                val maps = mapService.loader.getChildren(group.id, null)
+
+                // Photo Maps
+                maps
+                    .asSequence()
+                    .filterIsInstance<PhotoMap>()
+                    .filter { it.visible != visible }
+                    .forEach { mapService.add(it.copy(visible = visible)) }
+
+                // Vector Maps
+                maps
+                    .asSequence()
+                    .filterIsInstance<VectorMap>()
+                    .filter { it.visible != visible }
+                    .forEach { mapService.add(it.copy(visible = visible)) }
+
                 onMain {
                     manager.refresh()
                 }
@@ -324,15 +384,15 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun resize(map: PhotoMap) {
-        inBackground {
-            ResizeMapCommand(requireContext(), mapImportingIndicator).execute(map)
+        fragment.inBackground {
+            ResizeMapCommand(fragment.requireContext(), mapImportingIndicator).execute(map)
             manager.refresh()
         }
     }
 
     private fun print(map: PhotoMap) {
-        inBackground(BackgroundMinimumState.Created) {
-            PrintMapCommand(requireContext()).execute(map)
+        fragment.inBackground(BackgroundMinimumState.Created) {
+            PrintMapCommand(fragment.requireContext()).execute(map)
         }
     }
 
@@ -340,37 +400,37 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
         exportService.export(map)
     }
 
-    private fun rename(map: OfflineMapCatalogItem) {
-        inBackground {
-            RenameMapCommand(requireContext(), mapService).execute(map)
+    private fun rename(map: IMap) {
+        fragment.inBackground {
+            RenameMapCommand(fragment.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
 
-    private fun editAttribution(map: TrailMap) {
-        inBackground {
-            EditOfflineMapAttributionCommand(requireContext()).execute(map)
+    private fun editAttribution(map: VectorMap) {
+        fragment.inBackground {
+            EditOfflineMapAttributionCommand(fragment.requireContext()).execute(map)
             manager.refresh()
         }
     }
 
-    private fun move(map: OfflineMapCatalogItem) {
-        inBackground {
-            MoveMapCommand(requireContext(), mapService).execute(map)
+    private fun move(map: IMap) {
+        fragment.inBackground {
+            MoveMapCommand(fragment.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
 
-    private fun toggleVisibility(map: OfflineMapCatalogItem) {
-        inBackground {
+    private fun toggleVisibility(map: IMap) {
+        fragment.inBackground {
             ToggleVisibilityMapCommand(mapService).execute(map)
             manager.refresh()
         }
     }
 
-    private fun delete(map: OfflineMapCatalogItem) {
-        inBackground {
-            DeleteMapCommand(requireContext(), mapService).execute(map)
+    private fun delete(map: IMap) {
+        fragment.inBackground {
+            DeleteMapCommand(fragment.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
@@ -378,22 +438,17 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
     private fun view(map: OfflineMapCatalogItem) {
         when (map) {
             is MapGroup -> manager.open(map.id)
-            is PhotoMap -> findNavController().navigate(
+            is PhotoMap -> fragment.findNavController().navigate(
                 R.id.action_mapList_to_maps,
                 Bundle().apply {
                     putLong("mapId", map.id)
                 }
             )
 
-            is TrailMap -> {
-                if (map.state == OfflineMapState.Draft) {
-                    Alerts.dialog(
-                        requireContext(),
-                        getString(R.string.invalid_trail_map),
-                        getString(R.string.invalid_trail_map_message),
-                        cancelText = null
-                    )
-                    return
+            is VectorMap -> fragment.findNavController().navigateWithAnimation(
+                R.id.offlineMapViewFragment,
+                Bundle().apply {
+                    putLong("offline_map_file_id", map.id)
                 }
 
                 findNavController().navigateWithAnimation(
@@ -417,7 +472,7 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
             OfflineMapCreateAction.CreateGroup -> createMapGroup()
             OfflineMapCreateAction.ImportFile -> createMap(
                 CreateMapFromFileCommand(
-                    requireContext(),
+                    fragment.requireContext(),
                     uriPicker,
                     mapImportingIndicator
                 )
@@ -425,14 +480,14 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
 
             OfflineMapCreateAction.ImportCamera -> createMap(
                 CreateMapFromCameraCommand(
-                    this,
+                    fragment as AndromedaFragment,
                     mapImportingIndicator
                 )
             )
 
             OfflineMapCreateAction.CreateBlank -> createMap(
                 CreateBlankMapCommand(
-                    requireContext(),
+                    fragment.requireContext(),
                     mapImportingIndicator
                 )
             )
@@ -441,25 +496,28 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun createMapGroup() {
-        inBackground {
-            CreateMapGroupCommand(requireContext(), mapService).execute(manager.root?.id)
+        fragment.inBackground {
+            CreateMapGroupCommand(fragment.requireContext(), mapService).execute(manager.root?.id)
             manager.refresh()
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
+        if (!isInitialized) {
+            return
+        }
         tryOrNothing {
             lastRoot = manager.root
         }
     }
 
     private fun updateBackPressedCallback() {
-        backPressedCallback?.isEnabled = !isHidden
+        backPressedCallback?.isEnabled = !fragment.isHidden
     }
 
     private fun createMap(command: ICreateMapCommand) {
-        inBackground(BackgroundMinimumState.Created) {
+        fragment.inBackground(BackgroundMinimumState.Created) {
+            MapCleanupCommand.isMapImportInProgress = true
             try {
                 onMain {
                     isCreateEnabled = false
@@ -467,8 +525,8 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
 
                 val request = command.execute().map { it.copy(parentId = manager.root?.id) }
 
-                if (request.isErr) {
-                    getCreateMapErrorMessage(request.unwrapError())?.let { toast(it) }
+                if (map == null) {
+                    fragment.toast(fragment.getString(R.string.error_importing_map))
                     return@inBackground
                 }
 
@@ -479,19 +537,23 @@ class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
                     mapImportingIndicator.hide()
                 }
 
-                if (result.isErr) {
-                    getCreateMapErrorMessage(result.unwrapError())?.let { toast(it) }
-                    return@inBackground
-                }
+                if (map is PhotoMap) {
+                    val isPdfMap = map.hasPdf(fragment.requireContext())
+                    if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
+                        mapImportingIndicator.show()
+                        val reducer = HighQualityMapReducer(fragment.requireContext())
+                        reducer.reduce(map)
+                        mapImportingIndicator.hide()
+                    }
 
-                val unwrappedResult = result.unwrap()
-                if (unwrappedResult.autoCalibrated) {
-                    toast(getString(R.string.map_auto_calibrated))
+                    if (map.georeference.calibrationPoints.isNotEmpty()) {
+                        fragment.toast(fragment.getString(R.string.map_auto_calibrated))
+                    }
                 }
 
                 manager.refresh(true)
-                when (val map = unwrappedResult.map) {
-                    is PhotoMap -> findNavController().navigate(
+                when (map) {
+                    is PhotoMap -> fragment.findNavController().navigate(
                         R.id.action_mapList_to_maps,
                         Bundle().apply {
                             putLong("mapId", map.id)

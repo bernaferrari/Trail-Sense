@@ -1125,8 +1125,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mapListFragment
-            setClassName("com.kylecorry.trail_sense.tools.offline_maps.ui.OfflineMapListFragment")
-            label = "MapListFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "MapListScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_OFFLINE_MAP_LIST)
+                .build())
             putAction(
                 R.id.action_mapList_to_maps,
                 NavAction(R.id.photoMapsFragment, NavOptions.Builder()

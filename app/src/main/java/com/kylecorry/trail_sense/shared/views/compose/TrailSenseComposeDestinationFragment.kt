@@ -191,6 +191,7 @@ import com.kylecorry.trail_sense.tools.light.ui.LightMeterScreen
 import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
+import com.kylecorry.trail_sense.tools.offline_maps.ui.OfflineMapListToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapToolScreen
@@ -427,6 +428,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             )
             DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
             DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
+            DESTINATION_OFFLINE_MAP_LIST -> OfflineMapListToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
@@ -3497,6 +3499,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_BEACON_LIST = "beacon_list"
         const val DESTINATION_BEACON_DETAILS = "beacon_details"
         const val DESTINATION_PLACE_BEACON = "place_beacon"
+        const val DESTINATION_OFFLINE_MAP_LIST = "offline_map_list"
         const val DESTINATION_SCAN_QR = "scan_qr"
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"
