@@ -57,8 +57,8 @@ import com.kylecorry.trail_sense.shared.extensions.useIntPreference
 import com.kylecorry.trail_sense.shared.extensions.useNavController
 import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
 import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
-import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -653,7 +653,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 private data class MapViews(
     val root: View,
     val map: MapView,
-    val mapAttribution: MapAttributionView,
+    val mapAttribution: MapAttributionState,
     val menuButton: MapIconButton,
     val timeButton: MapIconButton,
     val zoomInButton: MapIconButton,
@@ -698,11 +698,17 @@ private fun createMapViews(context: Context): MapViews {
         }
     )
 
-    val attribution = MapAttributionView(context).apply {
+    val attribution = MapAttributionState()
+    val attributionView = ComposeView(context).apply {
         id = R.id.map_attribution
+        setContent {
+            TrailSenseTheme {
+                attribution.Content()
+            }
+        }
     }
     root.addView(
-        attribution,
+        attributionView,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT

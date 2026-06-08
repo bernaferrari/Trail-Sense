@@ -65,7 +65,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
-import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -787,7 +787,7 @@ private data class NavigatorViews(
     val radarCompassMap: MapView,
     val radarCompass: RadarCompassView,
     val linearCompass: LinearSightingCompassView,
-    val mapAttribution: MapAttributionView,
+    val mapAttribution: MapAttributionState,
     val northReferenceIndicator: NorthReferenceBadge,
     val beaconBtn: NavigatorIconButton,
     val accuracyView: SensorStatusBadgeView,
@@ -993,11 +993,17 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val mapAttribution = MapAttributionView(context).apply {
+    val mapAttribution = MapAttributionState()
+    val mapAttributionView = ComposeView(context).apply {
         id = R.id.map_attribution
+        setContent {
+            TrailSenseTheme {
+                mapAttribution.Content()
+            }
+        }
     }
     root.addView(
-        mapAttribution,
+        mapAttributionView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

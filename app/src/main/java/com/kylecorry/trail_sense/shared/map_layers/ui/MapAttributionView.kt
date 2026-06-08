@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui
 
-import android.content.Context
 import android.text.Spanned
 import android.text.style.URLSpan
 import androidx.compose.foundation.layout.padding
@@ -14,24 +13,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
 private const val URL_ANNOTATION_TAG = "url"
 
-class MapAttributionView(context: Context) : AbstractComposeView(context) {
+class MapAttributionState {
 
     var text by mutableStateOf<CharSequence?>(null)
+    var isVisible by mutableStateOf(false)
 
     @Suppress("DEPRECATION")
     @Composable
-    override fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!isVisible) {
+            return
+        }
         val attribution = text ?: return
         val uriHandler = LocalUriHandler.current
         val annotated = remember(attribution) {
@@ -58,23 +59,24 @@ class MapAttributionView(context: Context) : AbstractComposeView(context) {
             }
         }
 
-        TrailSenseTheme {
-            Surface(color = Color(0x88000000)) {
-                ClickableText(
-                    text = annotated,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.White,
-                        fontSize = 8.sp
-                    ),
-                    onClick = { offset ->
-                        annotated
-                            .getStringAnnotations(URL_ANNOTATION_TAG, offset, offset)
-                            .firstOrNull()
-                            ?.let { uriHandler.openUri(it.item) }
-                    }
-                )
-            }
+        Surface(
+            modifier = modifier,
+            color = Color(0x88000000)
+        ) {
+            ClickableText(
+                text = annotated,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = Color.White,
+                    fontSize = 8.sp
+                ),
+                onClick = { offset ->
+                    annotated
+                        .getStringAnnotations(URL_ANNOTATION_TAG, offset, offset)
+                        .firstOrNull()
+                        ?.let { uriHandler.openUri(it.item) }
+                }
+            )
         }
     }
 }

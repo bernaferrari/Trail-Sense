@@ -38,8 +38,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dem.DEM
-import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -600,7 +600,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 private data class ViewPhotoMapViews(
     val root: View,
     val map: MapView,
-    val mapAttribution: MapAttributionView,
+    val mapAttribution: MapAttributionState,
     val zoomInBtn: PhotoMapIconButton,
     val zoomOutBtn: PhotoMapIconButton,
     val lockBtn: PhotoMapIconButton,
@@ -632,9 +632,14 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         setBackgroundColor(Resources.color(context, R.color.colorSecondary))
     }
 
-    val attribution = MapAttributionView(context).apply {
+    val attribution = MapAttributionState()
+    val attributionView = ComposeView(context).apply {
         id = R.id.map_attribution
-        visibility = View.GONE
+        setContent {
+            TrailSenseTheme {
+                attribution.Content()
+            }
+        }
     }
 
     val lockBtn = PhotoMapIconButton(context, R.drawable.satellite).apply {
@@ -686,7 +691,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         }
     )
     root.addView(
-        attribution,
+        attributionView,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
