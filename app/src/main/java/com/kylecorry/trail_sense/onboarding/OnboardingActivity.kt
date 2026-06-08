@@ -3,14 +3,13 @@ package com.kylecorry.trail_sense.onboarding
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.fragments.ColorTheme
 import com.kylecorry.trail_sense.R
@@ -30,23 +29,18 @@ class OnboardingActivity : AndromedaActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        setContentView(
-            ComposeView(this).apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-                setContent {
-                    TrailSenseTheme {
-                        val page = pages.getOrNull(pageIdx)
-                        if (page != null) {
-                            OnboardingScreen(
-                                page = page,
-                                onNext = { load(pageIdx + 1) },
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
+        setContent {
+            TrailSenseTheme {
+                val page = pages.getOrNull(pageIdx)
+                if (page != null) {
+                    OnboardingScreen(
+                        page = page,
+                        onNext = { load(pageIdx + 1) },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
-        )
+        }
 
         setupBackPressed()
         load(pageIdx)

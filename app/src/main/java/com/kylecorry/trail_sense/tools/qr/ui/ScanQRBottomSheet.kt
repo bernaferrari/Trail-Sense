@@ -4,9 +4,6 @@ import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -23,58 +20,46 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 
 class ScanQRBottomSheet(
     private val title: String,
     private val onTextScanned: (text: String?) -> Boolean
-) : BottomSheetDialogFragment() {
+) : TrailSenseBottomSheetComposeFragment() {
 
     private val cameraSize = Size(200, 200)
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
     private var camera: CameraView? = null
     private var lastMessage: String? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    QRImportContent(
-                        title = title,
-                        onClose = {
-                            onTextScanned(null)
-                            dismiss()
-                        },
-                        onCameraReady = {
-                            camera = it
-                            it.clipToOutline = true
-                            it.start(cameraSize) { bitmap ->
-                                onCameraUpdate(bitmap)
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
+    @Composable
+    override fun FragmentContent() {
+        QRImportContent(
+            title = title,
+            onClose = {
+                onTextScanned(null)
+                dismiss()
+            },
+            onCameraReady = {
+                camera = it
+                it.clipToOutline = true
+                it.start(cameraSize) { bitmap ->
+                    onCameraUpdate(bitmap)
                 }
-            }
-        }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

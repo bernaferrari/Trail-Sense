@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.tools.widgets
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -27,8 +28,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,26 +74,21 @@ class ToolWidgetConfigureActivity : AndromedaActivity() {
         val prefs = WidgetPreferences(this, widget, appWidgetId)
         val themeItems = getThemeItems()
 
-        setContentView(
-            ComposeView(this).apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-                setContent {
-                    TrailSenseTheme {
-                        var selectedTheme by remember { mutableStateOf(prefs.getTheme()) }
-                        ToolWidgetConfigureScreen(
-                            title = widget.name,
-                            themeItems = themeItems,
-                            selectedTheme = selectedTheme,
-                            onThemeSelected = { selectedTheme = it },
-                            onSave = {
-                                saveWidgetTheme(widget, prefs, selectedTheme)
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
+        setContent {
+            TrailSenseTheme {
+                var selectedTheme by remember { mutableStateOf(prefs.getTheme()) }
+                ToolWidgetConfigureScreen(
+                    title = widget.name,
+                    themeItems = themeItems,
+                    selectedTheme = selectedTheme,
+                    onThemeSelected = { selectedTheme = it },
+                    onSave = {
+                        saveWidgetTheme(widget, prefs, selectedTheme)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-        )
+        }
     }
 
     private fun getThemeItems(): List<WidgetThemeItem> {
