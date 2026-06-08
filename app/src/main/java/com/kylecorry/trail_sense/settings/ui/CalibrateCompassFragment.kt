@@ -2,17 +2,19 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,10 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.compass.ICompass
@@ -83,6 +84,7 @@ class CalibrateCompassFragment : TrailSenseComposeFragment() {
         var declinationOverride by remember {
             mutableStateOf(prefs.declinationOverride)
         }
+        var showCalibrationDialog by remember { mutableStateOf(false) }
 
         setCompassReadings = {
             azimuth = it.azimuth
@@ -127,7 +129,7 @@ class CalibrateCompassFragment : TrailSenseComposeFragment() {
                                 R.string.compass_reported_accuracy,
                                 accuracy
                             ),
-                            onClick = ::showCalibrationDialog,
+                            onClick = { showCalibrationDialog = true },
                             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                         )
                     }
@@ -221,6 +223,38 @@ class CalibrateCompassFragment : TrailSenseComposeFragment() {
                     )
                 }
             }
+        }
+
+        if (showCalibrationDialog) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = {
+                    Text(text = stringResource(R.string.calibrate_compass_dialog_title))
+                },
+                text = {
+                    Column {
+                        Text(
+                            text = stringResource(
+                                R.string.calibrate_compass_dialog_content,
+                                stringResource(android.R.string.ok)
+                            )
+                        )
+                        if (hasCompass) {
+                            CompassCalibrationContent(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .padding(top = TrailSenseSpacing.lg)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showCalibrationDialog = false }) {
+                        Text(text = stringResource(android.R.string.ok))
+                    }
+                }
+            )
         }
     }
 
@@ -328,24 +362,6 @@ class CalibrateCompassFragment : TrailSenseComposeFragment() {
                 accuracy = getCompassAccuracy(),
                 declinationOverride = prefs.declinationOverride
             )
-        )
-    }
-
-    private fun showCalibrationDialog() {
-        dialog(
-            getString(R.string.calibrate_compass_dialog_title),
-            getString(
-                R.string.calibrate_compass_dialog_content,
-                getString(android.R.string.ok)
-            ),
-            contentView = if (hasCompass) compassCalibrationView(
-                requireContext(),
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Resources.dp(requireContext(), 200f).toInt()
-            ) else null,
-            cancelText = null,
-            cancelOnOutsideTouch = false,
-            scrollable = true
         )
     }
 
