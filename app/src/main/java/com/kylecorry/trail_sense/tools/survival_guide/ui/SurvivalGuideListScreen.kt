@@ -1,8 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import android.os.Bundle
-import android.view.View
-import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -32,173 +31,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TextBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
-import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-class FragmentToolSurvivalGuideList : TrailSenseComposeFragment() {
-
-    private var query by mutableStateOf("")
-    private var chapters by mutableStateOf(emptyList<GuideDetails>())
-    private var searchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
-    private var summary by mutableStateOf("")
-    private var searchJob: Job? = null
-
-    private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
-    private val searchService by lazy { SurvivalGuideSearch(requireContext()) }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        query = arguments?.getString("search_query").orEmpty()
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        SurvivalGuideListScreen(
-            query = query,
-            listItems = getListItems(),
-            summary = summary,
-            firstResult = searchResults.firstOrNull(),
-            markdown = markdown,
-            onQueryChange = ::updateQuery,
-            onSummaryClick = ::openSearchResult
-        )
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        CustomUiUtils.disclaimer(
-            requireContext(),
-            getString(R.string.survival_guide),
-            getString(R.string.survival_guide_disclaimer),
-            "pref_survival_guide_disclaimer_shown",
-            cancelText = null
-        )
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (query.isNotBlank()) {
-                        updateQuery("")
-                    } else {
-                        isEnabled = false
-                        requireActivity().onBackPressedDispatcher.onBackPressed()
-                    }
-                }
-            }
-        )
-        loadChapters()
-        if (query.isNotBlank()) {
-            search(query)
-        }
-    }
-
-    override fun onDestroyView() {
-        searchJob?.cancel()
-        super.onDestroyView()
-    }
-
-    private fun loadChapters() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            chapters = GuideLoader(requireContext()).load(includeContent = false)
-        }
-    }
-
-    private fun updateQuery(value: String) {
-        if (query == value) {
-            return
-        }
-        query = value
-        search(value)
-    }
-
-    private fun search(value: String) {
-        searchJob?.cancel()
-        if (value.isBlank()) {
-            searchResults = emptyList()
-            summary = ""
-            return
-        }
-        searchJob = viewLifecycleOwner.lifecycleScope.launch {
-            delay(200)
-            val results = searchService.search(value)
-            if (query != value) {
-                return@launch
-            }
-            searchResults = results
-            val firstResult = results.firstOrNull()
-            summary = if (firstResult != null && firstResult.score >= 0.5f) {
-                searchService.getSummary(value, firstResult)
-            } else {
-                ""
-            }
-        }
-    }
-
-    private fun getListItems(): List<SurvivalGuideListItem> {
-        val context = requireContext()
-        return if (query.isBlank() || searchResults.isEmpty()) {
-            chapters.map {
-                SurvivalGuideListItem(
-                    id = it.chapter.resource.toLong(),
-                    title = it.chapter.title,
-                    subtitle = it.sections.firstOrNull()?.summary,
-                    icon = it.chapter.icon,
-                    tag = null,
-                    onClick = { openChapter(it.chapter.resource) }
-                )
-            }
-        } else {
-            searchResults.map {
-                SurvivalGuideListItem(
-                    id = it.chapter.resource.toLong(),
-                    title = it.heading ?: getString(R.string.overview),
-                    subtitle = it.summary,
-                    icon = it.chapter.icon,
-                    tag = it.chapter.title,
-                    onClick = { openSearchResult(it) }
-                )
-            }
-        }
-    }
-
-    private fun openChapter(chapterResource: Int) {
-        findNavController().navigateWithAnimation(
-            R.id.fragmentToolSurvivalGuideReader,
-            Bundle().apply {
-                putInt("chapter_resource_id", chapterResource)
-            }
-        )
-    }
-
-    private fun openSearchResult(result: SurvivalGuideSearchResult) {
-        findNavController().navigateWithAnimation(
-            R.id.fragmentToolSurvivalGuideReader,
-            Bundle().apply {
-                putInt("chapter_resource_id", result.chapter.resource)
-                putInt("header_index", result.headingIndex)
-            }
-        )
-    }
-}
-
-private data class SurvivalGuideListItem(
+data class SurvivalGuideListItem(
     val id: Long,
     val title: String,
     val subtitle: String?,
@@ -208,7 +51,7 @@ private data class SurvivalGuideListItem(
 )
 
 @Composable
-private fun SurvivalGuideListScreen(
+fun SurvivalGuideListScreen(
     query: String,
     listItems: List<SurvivalGuideListItem>,
     summary: String,

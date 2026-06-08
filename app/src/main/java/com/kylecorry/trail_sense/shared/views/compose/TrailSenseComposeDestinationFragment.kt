@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import android.view.View
 import android.widget.NumberPicker
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.background
@@ -166,6 +167,12 @@ import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListItem
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListScreen
 import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideReaderScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
@@ -179,6 +186,7 @@ import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
 import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -203,6 +211,11 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var noteTitle = ""
     private var noteContent = ""
     private var survivalGuideContent by mutableStateOf<String?>(null)
+    private var survivalGuideQuery by mutableStateOf("")
+    private var survivalGuideChapters by mutableStateOf(emptyList<GuideDetails>())
+    private var survivalGuideSearchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
+    private var survivalGuideSummary by mutableStateOf("")
+    private var survivalGuideSearchJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -228,7 +241,13 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SCREEN_FLASHLIGHT -> initializeScreenFlashlight()
             DESTINATION_NOTE_EDITOR -> promptIfUnsavedChanges(::hasNoteChanges)
             DESTINATION_SURVIVAL_GUIDE_READER -> loadSurvivalGuideChapter()
+            DESTINATION_SURVIVAL_GUIDE_LIST -> initializeSurvivalGuideList()
         }
+    }
+
+    override fun onDestroyView() {
+        survivalGuideSearchJob?.cancel()
+        super.onDestroyView()
     }
 
     override fun onResume() {
@@ -315,6 +334,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_NOTE_EDITOR -> NoteEditor()
             DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
             DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
+            DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
         }
     }
 
@@ -383,6 +403,19 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             headerIndex = requireArguments().getInt("header_index", 0),
             canPrint = isDebug(),
             onPrint = ::printSurvivalGuideChapter
+        )
+    }
+
+    @Composable
+    private fun SurvivalGuideList() {
+        SurvivalGuideListScreen(
+            query = survivalGuideQuery,
+            listItems = getSurvivalGuideListItems(),
+            summary = survivalGuideSummary,
+            firstResult = survivalGuideSearchResults.firstOrNull(),
+            markdown = AppServiceRegistry.get(),
+            onQueryChange = ::updateSurvivalGuideQuery,
+            onSummaryClick = ::openSurvivalGuideSearchResult
         )
     }
 
@@ -2921,6 +2954,117 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         }
     }
 
+    private fun initializeSurvivalGuideList() {
+        survivalGuideQuery = arguments?.getString("search_query").orEmpty()
+        CustomUiUtils.disclaimer(
+            requireContext(),
+            getString(R.string.survival_guide),
+            getString(R.string.survival_guide_disclaimer),
+            "pref_survival_guide_disclaimer_shown",
+            cancelText = null
+        )
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (survivalGuideQuery.isNotBlank()) {
+                        updateSurvivalGuideQuery("")
+                    } else {
+                        isEnabled = false
+                        requireActivity().onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            }
+        )
+        loadSurvivalGuideChapters()
+        if (survivalGuideQuery.isNotBlank()) {
+            searchSurvivalGuide(survivalGuideQuery)
+        }
+    }
+
+    private fun loadSurvivalGuideChapters() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            survivalGuideChapters = GuideLoader(requireContext()).load(includeContent = false)
+        }
+    }
+
+    private fun updateSurvivalGuideQuery(value: String) {
+        if (survivalGuideQuery == value) {
+            return
+        }
+        survivalGuideQuery = value
+        searchSurvivalGuide(value)
+    }
+
+    private fun searchSurvivalGuide(value: String) {
+        survivalGuideSearchJob?.cancel()
+        if (value.isBlank()) {
+            survivalGuideSearchResults = emptyList()
+            survivalGuideSummary = ""
+            return
+        }
+        val searchService = SurvivalGuideSearch(requireContext())
+        survivalGuideSearchJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(200)
+            val results = searchService.search(value)
+            if (survivalGuideQuery != value) {
+                return@launch
+            }
+            survivalGuideSearchResults = results
+            val firstResult = results.firstOrNull()
+            survivalGuideSummary = if (firstResult != null && firstResult.score >= 0.5f) {
+                searchService.getSummary(value, firstResult)
+            } else {
+                ""
+            }
+        }
+    }
+
+    private fun getSurvivalGuideListItems(): List<SurvivalGuideListItem> {
+        return if (survivalGuideQuery.isBlank() || survivalGuideSearchResults.isEmpty()) {
+            survivalGuideChapters.map {
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.chapter.title,
+                    subtitle = it.sections.firstOrNull()?.summary,
+                    icon = it.chapter.icon,
+                    tag = null,
+                    onClick = { openSurvivalGuideChapter(it.chapter.resource) }
+                )
+            }
+        } else {
+            survivalGuideSearchResults.map {
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.heading ?: getString(R.string.overview),
+                    subtitle = it.summary,
+                    icon = it.chapter.icon,
+                    tag = it.chapter.title,
+                    onClick = { openSurvivalGuideSearchResult(it) }
+                )
+            }
+        }
+    }
+
+    private fun openSurvivalGuideChapter(chapterResource: Int) {
+        findNavController().navigateWithAnimation(
+            R.id.fragmentToolSurvivalGuideReader,
+            Bundle().apply {
+                putInt("chapter_resource_id", chapterResource)
+            }
+        )
+    }
+
+    private fun openSurvivalGuideSearchResult(result: SurvivalGuideSearchResult) {
+        findNavController().navigateWithAnimation(
+            R.id.fragmentToolSurvivalGuideReader,
+            Bundle().apply {
+                putInt("chapter_resource_id", result.chapter.resource)
+                putInt("header_index", result.headingIndex)
+            }
+        )
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -3074,5 +3218,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_NOTE_EDITOR = "note_editor"
         const val DESTINATION_WHITE_NOISE = "white_noise"
         const val DESTINATION_SURVIVAL_GUIDE_READER = "survival_guide_reader"
+        const val DESTINATION_SURVIVAL_GUIDE_LIST = "survival_guide_list"
     }
 }
