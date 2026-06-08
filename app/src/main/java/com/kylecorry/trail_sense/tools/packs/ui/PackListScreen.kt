@@ -41,15 +41,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -59,7 +57,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun PackListToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { PackListController(fragment) }
 
     DisposableEffect(controller) {
@@ -80,7 +78,7 @@ fun PackListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class PackListController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class PackListController(private val fragment: TrailSenseDestinationHost) {
 
     private val packRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
     private var isInitialized = false
@@ -97,7 +95,7 @@ private class PackListController(private val fragment: TrailSenseComposeDestinat
     }
 
     private fun loadPacks() {
-        fragment.observe(packRepo.getPacks()) {
+        packRepo.getPacks().observe(fragment.lifecycleOwner) {
             packs = it.sortedWith(compareBy { pack -> -pack.id })
         }
     }

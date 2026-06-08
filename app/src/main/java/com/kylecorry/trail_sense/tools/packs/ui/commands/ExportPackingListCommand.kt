@@ -3,22 +3,20 @@ package com.kylecorry.trail_sense.tools.packs.ui.commands
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.text.slugify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.generic.Command
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 
-class ExportPackingListCommand(private val fragment: TrailSenseComposeDestinationFragment) : Command<Pack> {
+class ExportPackingListCommand(private val fragment: TrailSenseDestinationHost) : Command<Pack> {
 
     private val exportService = LighterPackIOService.create(
         fragment.requireContext(),
-        fragment.requireActivity() as IntentResultRetriever
+        fragment.andromedaActivity
     )
 
     private val repo = PackRepo.getInstance(fragment.requireContext())

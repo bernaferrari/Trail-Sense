@@ -1,27 +1,24 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 
-class ImportPackingListCommand(private val fragment: TrailSenseComposeDestinationFragment) : Command {
+class ImportPackingListCommand(private val fragment: TrailSenseDestinationHost) : Command {
 
     private val importService = LighterPackIOService.create(
         fragment.requireContext(),
-        fragment.requireActivity() as IntentResultRetriever
+        fragment.andromedaActivity
     )
     private val repo = PackRepo.getInstance(fragment.requireContext())
 

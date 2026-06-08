@@ -45,18 +45,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
@@ -75,7 +73,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackItemListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun PackItemListToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { PackItemListController(fragment) }
 
     DisposableEffect(controller) {
@@ -105,7 +103,7 @@ fun PackItemListToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class PackItemListController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class PackItemListController(private val fragment: TrailSenseDestinationHost) {
 
     private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -133,7 +131,7 @@ private class PackItemListController(private val fragment: TrailSenseComposeDest
             return
         }
         isInitialized = true
-        packId = fragment.arguments?.getLong("pack_id") ?: 0L
+        packId = fragment.destinationArguments?.getLong("pack_id") ?: 0L
         setupUI()
         fragment.inBackground {
             loadPack(packId)
@@ -151,7 +149,7 @@ private class PackItemListController(private val fragment: TrailSenseComposeDest
     }
 
     private fun setupUI() {
-        fragment.observe(itemRepo.getItemsFromPack(packId)) {
+        itemRepo.getItemsFromPack(packId).observe(fragment.lifecycleOwner) {
             items = it
             updateItems()
         }
