@@ -70,7 +70,7 @@ import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
-import com.kylecorry.trail_sense.shared.views.DatePickerView
+import com.kylecorry.trail_sense.shared.views.DatePickerContent
 import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
@@ -264,7 +264,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
                             onMain {
                                 val newDate = nextEvent ?: currentDate
                                 displayDate = newDate
-                                views.displayDate.date = newDate
+                                views.displayDate.updateDate(newDate)
                                 refreshAstronomy()
 
                                 if (nextEvent == null) {
@@ -627,7 +627,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 private data class AstronomyViews(
     val root: View,
     val astronomyTitle: Toolbar,
-    val displayDate: DatePickerView,
+    val displayDate: AstronomyDatePickerState,
     val sunMoonChart: Chart,
     val timeSeekerPanel: ScrollView,
     val seekTime: TextView,
@@ -638,6 +638,80 @@ private data class AstronomyViews(
     val astronomyDetailList: ComposeView,
     val button3d: Button
 )
+
+private class AstronomyDatePickerState(context: Context) {
+    private val formatter = FormatService.getInstance(context)
+    private val pickerContext = context
+    private var dayViewDecorator: AstronomyDayViewDecorator? = null
+    private var onDateChange: (LocalDate) -> Unit = {}
+    private var onSearch: () -> Unit = {}
+    private var onCalendarLongPress: () -> Unit = {
+        date = LocalDate.now()
+    }
+
+    var date by mutableStateOf(LocalDate.now())
+        private set
+
+    var searchEnabled by mutableStateOf(false)
+
+    fun updateDate(value: LocalDate) {
+        val changed = date != value
+        date = value
+        if (changed) {
+            onDateChange(value)
+        }
+    }
+
+    fun previous() {
+        updateDate(date.minusDays(1))
+    }
+
+    fun next() {
+        updateDate(date.plusDays(1))
+    }
+
+    fun pickDate() {
+        CustomUiUtils.pickDate(pickerContext, date, dayViewDecorator) {
+            if (it != null) {
+                updateDate(it)
+            }
+        }
+    }
+
+    fun reset() {
+        updateDate(LocalDate.now())
+    }
+
+    fun setOnDateChangeListener(listener: (LocalDate) -> Unit) {
+        onDateChange = listener
+    }
+
+    fun setOnCalendarLongPressListener(listener: () -> Unit) {
+        onCalendarLongPress = listener
+    }
+
+    fun setOnSearchListener(listener: () -> Unit) {
+        onSearch = listener
+    }
+
+    fun setDayViewDecorator(decorator: AstronomyDayViewDecorator?) {
+        dayViewDecorator = decorator
+    }
+
+    @Composable
+    fun Content() {
+        DatePickerContent(
+            date = date,
+            formatter = formatter,
+            searchEnabled = searchEnabled,
+            onPrevious = ::previous,
+            onNext = ::next,
+            onPickDate = ::pickDate,
+            onCalendarLongPress = onCalendarLongPress,
+            onSearch = onSearch
+        )
+    }
+}
 
 @Composable
 private fun AstronomyHost(
@@ -724,11 +798,17 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         }
     )
 
-    val displayDate = DatePickerView(context, null).apply {
+    val displayDate = AstronomyDatePickerState(context)
+    val displayDateView = ComposeView(context).apply {
         id = R.id.display_date
+        setContent {
+            TrailSenseTheme {
+                displayDate.Content()
+            }
+        }
     }
     root.addView(
-        displayDate,
+        displayDateView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

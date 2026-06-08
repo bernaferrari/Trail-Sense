@@ -1,8 +1,5 @@
 package com.kylecorry.trail_sense.shared.views
 
-import android.content.Context
-import android.util.AttributeSet
-import android.widget.FrameLayout
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -16,106 +13,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import java.time.LocalDate
 
-class DatePickerView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
-
-    private var selectedDate by mutableStateOf(LocalDate.now())
-    private var searchEnabledState by mutableStateOf(false)
-    private val formatter = FormatService.getInstance(context)
-
-    var date: LocalDate
-        get() = selectedDate
-        set(value) {
-            val changed = selectedDate != value
-            selectedDate = value
-            if (changed) {
-                onDateChange(value)
-            }
-        }
-
-    var searchEnabled: Boolean
-        get() = searchEnabledState
-        set(value) {
-            searchEnabledState = value
-        }
-
-    private var onDateChange: (LocalDate) -> Unit = {}
-    private var onCalendarLongPress: () -> Unit = {
-        date = LocalDate.now()
-    }
-    private var onSearch: () -> Unit = {}
-    private var dayViewDecorator: AndromedaDayViewDecorator? = null
-
-    init {
-        addView(
-            ComposeView(context).apply {
-                setContent {
-                    TrailSenseTheme {
-                        DatePickerContent(
-                            date = selectedDate,
-                            formatter = formatter,
-                            searchEnabled = searchEnabledState,
-                            onPrevious = { date = selectedDate.minusDays(1) },
-                            onNext = { date = selectedDate.plusDays(1) },
-                            onPickDate = {
-                                CustomUiUtils.pickDate(context, selectedDate, dayViewDecorator) {
-                                    if (it != null) {
-                                        date = it
-                                    }
-                                }
-                            },
-                            onCalendarLongPress = onCalendarLongPress,
-                            onSearch = onSearch
-                        )
-                    }
-                }
-            },
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
-        )
-    }
-
-    fun setOnDateChangeListener(listener: (LocalDate) -> Unit) {
-        onDateChange = listener
-    }
-
-    fun setOnCalendarLongPressListener(listener: () -> Unit) {
-        onCalendarLongPress = listener
-    }
-
-    fun setOnSearchListener(listener: () -> Unit) {
-        onSearch = listener
-    }
-
-    fun setDayViewDecorator(decorator: AndromedaDayViewDecorator?) {
-        dayViewDecorator = decorator
-    }
-
-    fun reset() {
-        date = LocalDate.now()
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DatePickerContent(
+fun DatePickerContent(
     date: LocalDate,
     formatter: FormatService,
     searchEnabled: Boolean,
