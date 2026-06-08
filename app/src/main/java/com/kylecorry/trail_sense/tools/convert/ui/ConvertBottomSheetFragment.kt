@@ -1,33 +1,17 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import androidx.compose.runtime.Composable
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 
-class ConvertBottomSheetFragment : BottomSheetDialogFragment() {
+class ConvertBottomSheetFragment : TrailSenseBottomSheetComposeFragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ConverterTabs(
-                        pages = getPages(),
-                        names = getPageNames()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        ConverterTabs(
+            pages = getPages(),
+            names = getPageNames()
+        )
     }
 
     private fun getPages(): List<ConverterPage> {

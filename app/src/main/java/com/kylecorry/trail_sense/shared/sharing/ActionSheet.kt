@@ -1,10 +1,6 @@
 package com.kylecorry.trail_sense.shared.sharing
 
 import android.content.DialogInterface
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,44 +16,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 
 class ActionSheet(
     private val title: String,
     private val subtitle: String?,
     private val actions: List<ActionItem>,
     private val onAction: (action: ActionItem?, sheet: ActionSheet) -> Unit
-) : BottomSheetDialogFragment() {
+) : TrailSenseBottomSheetComposeFragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(
-                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
-            setContent {
-                TrailSenseTheme {
-                    ActionSheetContent(
-                        title = title,
-                        subtitle = subtitle,
-                        actions = actions,
-                        onAction = { onAction(it, this@ActionSheet) },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        ActionSheetContent(
+            title = title,
+            subtitle = subtitle,
+            actions = actions,
+            onAction = { onAction(it, this@ActionSheet) },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDismiss(dialog: DialogInterface) {
