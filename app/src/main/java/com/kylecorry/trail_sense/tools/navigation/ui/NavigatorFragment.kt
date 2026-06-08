@@ -975,8 +975,7 @@ private fun createNavigatorViews(
         isFocusable = false
     }
 
-    val linearCompass = LinearSightingCompassView(context, null).apply {
-        id = R.id.linear_compass
+    val linearCompass = LinearSightingCompassView(context).apply {
         this.requestCameraPermission = requestCameraPermission
         this.onCameraPermissionDenied = onCameraPermissionDenied
     }

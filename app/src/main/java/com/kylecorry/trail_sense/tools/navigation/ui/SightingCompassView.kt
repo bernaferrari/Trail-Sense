@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.view.View
 import androidx.camera.view.PreviewView
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
@@ -17,7 +15,6 @@ import kotlinx.coroutines.launch
 
 class SightingCompassView(
     private val camera: CameraState,
-    private val reticle: View,
     private val compass: LinearCompassView,
     private val onClick: () -> Unit = {}
 ) {
@@ -70,8 +67,6 @@ class SightingCompassView(
         camera.setZoom(prefs.getFloat(NavigatorFragment.CACHE_CAMERA_ZOOM) ?: 0.5f)
 
         camera.isVisible = true
-        reticle.isVisible = true
-
 
         val flashlight = FlashlightSubsystem.getInstance(camera.context)
         flashlight.set(FlashlightMode.Off)
@@ -106,7 +101,6 @@ class SightingCompassView(
         fovRunner.cancel()
         zoomRunner.cancel()
         camera.isVisible = false
-        reticle.isVisible = false
     }
 
     fun isRunning(): Boolean {
