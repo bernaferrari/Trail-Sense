@@ -9,16 +9,17 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -361,20 +362,20 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             listOf(layer, myLocationLayer, scaleBarLayer)
         )
 
-        views.pathLineStyle.setOnClickListener {
-            val path = path ?: return@setOnClickListener
+        views.pathStyleControls.onLineStyleClick = lineStyleClick@{
+            val path = path ?: return@lineStyleClick
             val command = ChangePathLineStyleCommand(requireContext(), this)
             command.execute(path)
         }
 
-        views.pathColor.setOnClickListener {
-            val path = path ?: return@setOnClickListener
+        views.pathStyleControls.onColorClick = colorClick@{
+            val path = path ?: return@colorClick
             val command = ChangePathColorCommand(requireContext(), this)
             command.execute(path)
         }
 
-        views.pathPointStyle.setOnClickListener {
-            val path = path ?: return@setOnClickListener
+        views.pathStyleControls.onPointStyleClick = pointStyleClick@{
+            val path = path ?: return@pointStyleClick
             val command = ChangePointStyleCommand(requireContext(), this)
             command.execute(path)
         }
@@ -548,7 +549,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             return
         }
 
-        views.pathLineStyle.text = listOf(
+        views.pathStyleControls.lineStyle = listOf(
             getString(R.string.solid),
             getString(R.string.dotted),
             getString(R.string.arrow),
@@ -619,7 +620,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
                 false
             )
 
-        Colors.setImageColor(views.pathColor, path.style.color)
+        views.pathStyleControls.pathColor = path.style.color
 
         updateMapLayer()
 
@@ -680,7 +681,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
         val factory = getPointFactory()
 
-        views.pathPointStyle.text = listOf(
+        views.pathStyleControls.pointStyle = listOf(
             getString(R.string.none),
             getString(R.string.cell_signal),
             getString(R.string.elevation),
@@ -833,9 +834,7 @@ private data class PathOverviewViews(
     val root: LockableScrollView,
     val pathTitle: PathTitleState,
     val pathTitleMenuAnchor: View,
-    val pathColor: ImageView,
-    val pathLineStyle: TextView,
-    val pathPointStyle: TextView,
+    val pathStyleControls: PathStyleControlsView,
     val pathMapHolder: ConstraintLayout,
     val pathImage: MapView,
     val pathMapFullscreenToggle: PathIconButton,
@@ -852,7 +851,7 @@ private data class PathOverviewViews(
     val chart: Chart,
     val navigateBtn: PathTextButton,
     val addPointBtn: PathTextButton,
-    val pathsTiming: TextView
+    val pathsTiming: PathTimingView
 )
 
 private class PathTitleState {
@@ -983,12 +982,11 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         )
     )
 
-    val styleRow = LinearLayout(context).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
+    val styleControls = PathStyleControlsView(context).apply {
+        id = R.id.path_color
     }
     content.addView(
-        styleRow,
+        styleControls,
         LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -997,38 +995,6 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
             marginEnd = 16.dp(context)
             bottomMargin = 16.dp(context)
         }
-    )
-
-    val pathColor = ImageView(context).apply {
-        id = R.id.path_color
-        setImageResource(R.drawable.bubble)
-        imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.blue))
-    }
-    styleRow.addView(
-        pathColor,
-        LinearLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
-            marginEnd = 8.dp(context)
-        }
-    )
-
-    val pathLineStyle = createDropdownText(context, R.id.path_line_style)
-    styleRow.addView(
-        pathLineStyle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            marginEnd = 8.dp(context)
-        }
-    )
-
-    val pathPointStyle = createDropdownText(context, R.id.path_point_style)
-    styleRow.addView(
-        pathPointStyle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
     )
 
     val mapHolder = ConstraintLayout(context).apply {
@@ -1142,9 +1108,18 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     val min = addDataPoint(grid, context, R.id.path_elevation_min, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
     val max = addDataPoint(grid, context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
 
-    val elevationTitle = TextView(context).apply {
-        text = context.getString(R.string.elevation)
-        gravity = Gravity.CENTER
+    val elevationTitle = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Text(
+                    text = context.getString(R.string.elevation),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
     content.addView(
         elevationTitle,
@@ -1218,7 +1193,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         )
     )
 
-    val timing = TextView(context).apply {
+    val timing = PathTimingView(context).apply {
         id = R.id.paths_timing
         visibility = View.GONE
     }
@@ -1238,9 +1213,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         root = root,
         pathTitle = title,
         pathTitleMenuAnchor = titleView,
-        pathColor = pathColor,
-        pathLineStyle = pathLineStyle,
-        pathPointStyle = pathPointStyle,
+        pathStyleControls = styleControls,
         pathMapHolder = mapHolder,
         pathImage = pathImage,
         pathMapFullscreenToggle = fullscreenToggle,
@@ -1259,6 +1232,84 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         addPointBtn = addPoint,
         pathsTiming = timing
     )
+}
+
+private class PathStyleControlsView(context: Context) : AbstractComposeView(context) {
+    var pathColor by mutableIntStateOf(ContextCompat.getColor(context, R.color.blue))
+    var lineStyle by mutableStateOf("")
+    var pointStyle by mutableStateOf("")
+    var onColorClick by mutableStateOf({})
+    var onLineStyleClick by mutableStateOf({})
+    var onPointStyleClick by mutableStateOf({})
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(ComposeColor(pathColor), CircleShape)
+                        .clickable(onClick = onColorClick)
+                )
+                PathStyleDropdownText(
+                    text = lineStyle,
+                    onClick = onLineStyleClick,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+                PathStyleDropdownText(
+                    text = pointStyle,
+                    onClick = onPointStyleClick,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PathStyleDropdownText(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_drop_down),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(18.dp)
+        )
+    }
+}
+
+private class PathTimingView(context: Context) : AbstractComposeView(context) {
+    var text by mutableStateOf("")
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Text(
+                text = text,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 private class PathTextButton(
@@ -1308,15 +1359,6 @@ private class PathIconButton(
                 )
             }
         }
-    }
-}
-
-private fun createDropdownText(context: Context, id: Int): TextView {
-    return TextView(context).apply {
-        this.id = id
-        compoundDrawablePadding = 16.dp(context)
-        setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_drop_down, 0)
-        compoundDrawableTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
     }
 }
 
