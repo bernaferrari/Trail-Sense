@@ -13,7 +13,6 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -88,24 +87,22 @@ object CustomUiUtils {
         description: String? = null,
         onDistancePick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
-        val view = createPromptContainer(context)
         var distance: Distance? = default
         val distanceInput = DistanceInputView(context).apply {
             id = R.id.prompt_distance
+            defaultHint = hint
+            setOnValueChangeListener {
+                distance = it
+            }
+            this.units = units
+            value = default
+            if (default == null) {
+                unit = units.firstOrNull()
+            }
+            this.showFeetAndInches = showFeetAndInches
+            this.allowNegative = allowNegative
         }
-        view.addPromptContent(distanceInput)
-        distanceInput.defaultHint = hint
-        distanceInput.setOnValueChangeListener {
-            distance = it
-        }
-        distanceInput.units = units
-        distanceInput.value = default
-        if (default == null) {
-            distanceInput.unit = units.firstOrNull()
-        }
-
-        distanceInput.showFeetAndInches = showFeetAndInches
-        distanceInput.allowNegative = allowNegative
+        val view = createPromptContent(context, distanceInput)
 
         Alerts.dialog(
             context,
@@ -128,17 +125,16 @@ object CustomUiUtils {
         hint: String = context.getString(R.string.elevation),
         onElevationPick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
-        val view = createPromptContainer(context)
         var elevation: Distance? = default
         val elevationInputView = ElevationInputView(context).apply {
             id = R.id.prompt_elevation
+            this.hint = hint
+            setOnElevationChangeListener {
+                elevation = it
+            }
+            this.elevation = default
         }
-        view.addPromptContent(elevationInputView)
-        elevationInputView.hint = hint
-        elevationInputView.setOnElevationChangeListener {
-            elevation = it
-        }
-        elevationInputView.elevation = default
+        val view = createPromptContent(context, elevationInputView)
 
         Alerts.dialog(
             context,
@@ -449,30 +445,18 @@ object CustomUiUtils {
         )
     }
 
-    private fun createPromptContainer(context: Context): ConstraintLayout {
-        val padding = Resources.dp(context, 16f).toInt()
-        return ConstraintLayout(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+    private fun createPromptContent(context: Context, content: View): View {
+        return TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            AndroidView(
+                factory = { content },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
-            setPadding(padding, padding, padding, padding)
         }
-    }
-
-    private fun ConstraintLayout.addPromptContent(view: View) {
-        addView(
-            view,
-            ConstraintLayout.LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            }
-        )
     }
 
     fun Resources.getPrimaryColor(context: Context): Int {
