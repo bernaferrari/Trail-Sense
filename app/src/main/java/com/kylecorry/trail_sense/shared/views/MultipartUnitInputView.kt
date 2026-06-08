@@ -3,10 +3,8 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
@@ -20,7 +18,7 @@ import com.kylecorry.trail_sense.R
 class MultipartUnitInputView<Units : Enum<*>>(
     context: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(context, attrs) {
+) : ConstraintLayout(context, attrs) {
 
     private var _unit: Units? = null
     private var _amount: Number? = null
@@ -148,18 +146,6 @@ class MultipartUnitInputView<Units : Enum<*>>(
     }
 
     init {
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-        addView(
-            root,
-            LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
-        )
-
         amountEditHolder = TextInputLayout(context).apply {
             id = R.id.amount_holder
         }
@@ -174,13 +160,17 @@ class MultipartUnitInputView<Units : Enum<*>>(
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         )
-        root.addView(
+        addView(
             amountEditHolder,
-            LinearLayout.LayoutParams(
+            LayoutParams(
                 0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                startToStart = LayoutParams.PARENT_ID
+                endToStart = R.id.secondary_amount_holder
+                topToTop = LayoutParams.PARENT_ID
+                bottomToBottom = LayoutParams.PARENT_ID
+            }
         )
 
         secondaryAmountEditHolder = TextInputLayout(context).apply {
@@ -197,13 +187,16 @@ class MultipartUnitInputView<Units : Enum<*>>(
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         )
-        root.addView(
+        addView(
             secondaryAmountEditHolder,
-            LinearLayout.LayoutParams(
+            LayoutParams(
                 0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
+                startToEnd = R.id.amount_holder
+                endToStart = R.id.units
+                topToTop = R.id.amount_holder
+                bottomToBottom = R.id.amount_holder
                 marginStart = Resources.dp(context, 8f).toInt()
             }
         )
@@ -218,12 +211,15 @@ class MultipartUnitInputView<Units : Enum<*>>(
         unitBtn = UnitPickerButton(context).apply {
             id = R.id.units
         }
-        root.addView(
+        addView(
             unitBtn,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
+                endToEnd = LayoutParams.PARENT_ID
+                topToTop = R.id.amount_holder
+                bottomToBottom = R.id.amount_holder
                 marginStart = Resources.dp(context, 8f).toInt()
             }
         )
