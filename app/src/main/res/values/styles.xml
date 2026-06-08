@@ -132,15 +132,4 @@
         <item name="colorOnContainer">?attr/colorOnPrimary</item>
     </style>
 
-    <style name="Widget.App.MapButton" parent="Widget.Material3Expressive.Button.IconButton.Tonal">
-        <item name="materialSizeOverlay">
-            @style/SizeOverlay.Material3Expressive.Button.IconButton.Small.Square
-        </item>
-    </style>
-
-    <style name="AppTheme.ListViewWithFab">
-        <item name="android:clipToPadding">false</item>
-        <item name="android:paddingBottom">96dp</item>
-    </style>
-
 </resources>
