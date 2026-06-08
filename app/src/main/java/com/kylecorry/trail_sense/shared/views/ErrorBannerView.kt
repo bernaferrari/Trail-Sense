@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.view.isVisible
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -32,7 +30,6 @@ class ErrorBannerState(context: Context) {
     private val errors: MutableList<UserError> = mutableListOf()
     private val prefs = UserPreferences(context)
     private var currentError by mutableStateOf<UserError?>(null)
-    var view: View? = null
 
     fun report(error: UserError) {
         if (!prefs.errors.canShowError(error.reason)) {
@@ -44,7 +41,6 @@ class ErrorBannerState(context: Context) {
             errors.sortBy { it.reason.id }
         }
         displayNextError()
-        show()
     }
 
     fun dismiss(reason: ErrorBannerReason) {
@@ -69,16 +65,7 @@ class ErrorBannerState(context: Context) {
             currentError = first
         } else {
             currentError = null
-            hide()
         }
-    }
-
-    fun show() {
-        view?.isVisible = true
-    }
-
-    fun hide() {
-        view?.isVisible = false
     }
 
     @Composable

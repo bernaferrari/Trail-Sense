@@ -663,9 +663,6 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
     val errorBanner = ErrorBannerState(context)
     val errorBannerView = ComposeView(context).apply {
         id = R.id.error_banner
-        isVisible = false
-        minimumHeight = Resources.dp(context, 64f).toInt()
-        errorBanner.view = this
         setContent {
             TrailSenseTheme {
                 errorBanner.Content()
