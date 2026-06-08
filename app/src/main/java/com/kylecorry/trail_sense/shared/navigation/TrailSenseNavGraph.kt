@@ -69,8 +69,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_weather
-            setClassName("com.kylecorry.trail_sense.tools.weather.ui.WeatherFragment")
-            label = "activity_weather"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "WeatherScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WEATHER)
+                .build())
             graph.addDestination(this)
         }
 

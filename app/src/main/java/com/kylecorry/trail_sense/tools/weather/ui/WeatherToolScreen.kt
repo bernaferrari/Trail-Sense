@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
 import android.content.Context
-import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.fragments.inBackground
@@ -65,7 +68,6 @@ import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrict
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -98,21 +100,50 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
-class WeatherFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun WeatherToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { WeatherController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private var weatherViews: WeatherViews? = null
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier)
+}
+
+private class WeatherController(
+    private val fragment: Fragment
+) {
+    private var weatherViews: WeatherViews? =
+        createWeatherViews(fragment.requireContext())
     private val views: WeatherViews
         get() = weatherViews ?: error("Weather views are not ready")
     private val isViewReady: Boolean
-        get() = weatherViews != null && view != null
+        get() = weatherViews != null
 
     private var useSeaLevelPressure = false
     private var units = PressureUnits.Hpa
 
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val temperatureUnits by lazy { prefs.temperatureUnits }
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
 
     private var history: List<WeatherObservation> = emptyList()
     private var pressureForecast: List<Reading<Pressure>> = emptyList()
@@ -125,7 +156,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
     private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
     private var showWeatherFrequencyPicker by mutableStateOf(false)
 
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
     private var weather: CurrentWeather? = null
     private val loadingIndicator by lazy {
         ResettableLoadingIndicator(
@@ -135,7 +166,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 
     private val logger by lazy {
         WeatherLogger(
-            requireContext(),
+            fragment.requireContext(),
             Duration.ofSeconds(30),
             Duration.ofMillis(500),
             loadingIndicator
@@ -143,15 +174,11 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private val weatherMonitorService by lazy {
-        Tools.getService(requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
-    }
-
-    override fun beforeCreateContent() {
-        weatherViews = createWeatherViews(requireContext())
+        Tools.getService(fragment.requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
     }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         val weatherFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
         WeatherHost(
             views = views,
@@ -167,7 +194,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
             },
             onPressureMarkerSelected = ::onPressureMarkerSelected,
             onToggleMonitor = ::toggleWeatherMonitor,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
 
         if (showWeatherFrequencyPicker) {
@@ -189,37 +216,34 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onDestroyView() {
-        weatherViews = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    fun onCreate() {
         WeatherQuickActionBinder(
-            this,
+            fragment,
             views.weatherTitle.leftButton,
             views.weatherTitle.rightButton,
             prefs.weather
         ).bind()
 
-        observe(weatherSubsystem.weatherChanged) {
+        fragment.observe(weatherSubsystem.weatherChanged) {
             updateWeather()
         }
 
         updateStatusBar()
 
-        Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
             updateStatusBar()
             true
         }
 
-        Tools.observe(this, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
+        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
             updateStatusBar()
             true
         }
 
+    }
+
+    fun onDestroy() {
+        weatherViews = null
     }
 
     private fun updateStatusBar() {
@@ -228,35 +252,33 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun changeWeatherFrequency(frequency: Duration) {
-        ChangeWeatherFrequencyCommand(requireContext()) { updateStatusBar() }.execute(frequency)
+        ChangeWeatherFrequencyCommand(fragment.requireContext()) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleWeatherMonitor() {
-        inBackground {
+        fragment.inBackground {
             when (weatherMonitorService.getFeatureState()) {
                 FeatureState.On -> weatherMonitorService.disable()
                 FeatureState.Off -> {
                     weatherMonitorService.enable()
-                    RequestRemoveBatteryRestrictionCommand(this@WeatherFragment).execute()
+                    RequestRemoveBatteryRestrictionCommand(fragment).execute()
                 }
 
-                FeatureState.Unavailable -> toast(getString(R.string.weather_monitoring_disabled))
+                FeatureState.Unavailable -> fragment.toast(fragment.getString(R.string.weather_monitoring_disabled))
             }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         loadingIndicator.reset()
         logger.start()
         useSeaLevelPressure = prefs.weather.useSeaLevelPressure
         units = prefs.pressureUnits
-        ShowHistoricTemperatureDisclaimerCommand(requireContext()).execute()
+        ShowHistoricTemperatureDisclaimerCommand(fragment.requireContext()).execute()
         updateWeather()
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         logger.stop()
         loadingIndicator.hide()
     }
@@ -289,12 +311,12 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
             FrontWeatherField(weather.prediction.front),
         )
 
-        weatherItems = fields.mapNotNull { it.getListItem(requireContext()) }
+        weatherItems = fields.mapNotNull { it.getListItem(fragment.requireContext()) }
     }
 
 
     private fun updateWeather() {
-        inBackground {
+        fragment.inBackground {
             val nextHistory = onIO {
                 weatherSubsystem.getHistory().filter {
                     Duration.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
@@ -364,7 +386,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
                 Pressure.from(pressure, units),
                 Units.getDecimalPlaces(units)
             )
-            getString(
+            fragment.getString(
                 R.string.pressure_reading_time_ago,
                 formatted,
                 formatService.formatDuration(timeAgo, false)
@@ -383,13 +405,13 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
                     val conditions = prediction.hourly.joinToString("\n") {
                         formatService.formatWeather(it)
                     }
-                    dialog(getString(R.string.weather), conditions, cancelText = null)
+                    fragment.dialog(fragment.getString(R.string.weather), conditions, cancelText = null)
                 }
             }
             views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
             val arrival =
                 formatService.formatWeatherArrival(weather.prediction.hourlyArrival)
-            val then = getString(
+            val then = fragment.getString(
                 R.string.then_weather,
                 formatService.formatWeather(prediction.primaryDaily).lowercase()
             )
@@ -417,7 +439,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
         CustomUiUtils.showChart(
-            this, getString(
+            fragment, fragment.getString(
                 R.string.humidity_history,
                 formatService.formatDuration(readingDuration, true)
             )
@@ -428,8 +450,8 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun showTemperatureForecast() {
-        inBackground {
-            ShowHighLowTemperatureDialogCommand(this@WeatherFragment).execute()
+        fragment.inBackground {
+            ShowHighLowTemperatureDialogCommand(fragment).execute()
         }
     }
 
@@ -442,7 +464,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
         CustomUiUtils.showChart(
-            this, getString(
+            fragment, fragment.getString(
                 R.string.temperature_history,
                 formatService.formatDuration(readingDuration, true)
             )

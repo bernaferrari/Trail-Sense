@@ -239,6 +239,7 @@ import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
 import com.kylecorry.trail_sense.tools.weather.ui.WeatherSettingsToolScreen
+import com.kylecorry.trail_sense.tools.weather.ui.WeatherToolScreen
 import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -440,6 +441,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
                 fragment = this,
                 onController = { clinometerLockController = it }
             )
+            DESTINATION_WEATHER -> WeatherToolScreen(this)
         }
     }
 
@@ -3499,5 +3501,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CREATE_FIELD_GUIDE_SIGHTING = "create_field_guide_sighting"
         const val DESTINATION_PHOTO_MAPS = "photo_maps"
         const val DESTINATION_CLINOMETER = "clinometer"
+        const val DESTINATION_WEATHER = "weather"
     }
 }
