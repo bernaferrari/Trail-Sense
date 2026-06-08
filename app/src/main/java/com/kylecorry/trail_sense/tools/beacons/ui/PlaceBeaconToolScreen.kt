@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
@@ -30,6 +29,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +46,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -72,7 +76,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.BeaconIconPickerDialog
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
@@ -87,11 +90,41 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PlaceBeaconFragment : TrailSenseComposeFragment() {
+@Composable
+fun PlaceBeaconToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { PlaceBeaconController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val beaconService by lazy { BeaconService(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class PlaceBeaconController(private val fragment: Fragment) {
+
+    private val beaconService by lazy { BeaconService(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
 
     private val isComplete = IsBeaconFormDataComplete()
@@ -107,26 +140,48 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
     private var elevationAutofillRequest by mutableStateOf(0)
     private var compassBearingText by mutableStateOf("")
 
-    private val compass by lazy { SensorService(requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(requireContext()).hasCompass() }
+    private val compass by lazy { SensorService(fragment.requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
+    private var isInitialized = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val beaconId = arguments?.getLong("edit_beacon") ?: 0L
-        val groupId = arguments?.getLong("initial_group") ?: 0L
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+
+        val beaconId = fragment.arguments?.getLong("edit_beacon") ?: 0L
+        val groupId = fragment.arguments?.getLong("initial_group") ?: 0L
         initialLocation = BundleCompat.getParcelable(
-            arguments ?: Bundle(),
+            fragment.arguments ?: Bundle(),
             "initial_location",
             GeoUri::class.java
         )
 
         editingBeaconId = if (beaconId == 0L) null else beaconId
         data = data.copy(groupId = if (groupId == 0L) null else groupId)
+        backCallback = fragment.promptIfUnsavedChanges { hasChanges.isSatisfiedBy(data) }
+
+        updateBeaconGroupName()
+
+        editingBeaconId?.let {
+            loadExistingBeacon(it)
+        } ?: run {
+            val defaultColor = prefs.beacons.defaultBeaconColor
+            updateData(data.copy(color = defaultColor))
+            hasChanges = DoesBeaconFormDataHaveChanges(
+                CreateBeaconData.empty.copy(color = defaultColor)
+            )
+        }
+
+        initialLocation?.let {
+            updateData(CreateBeaconData.from(it).copy(groupId = data.groupId, color = data.color))
+        }
     }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         var showColorPicker by remember { mutableStateOf(false) }
         var showIconPicker by remember { mutableStateOf(false) }
         val colorTitle = stringResource(R.string.color)
@@ -172,7 +227,8 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
             compassBearingText = compassBearingText,
             hasCompass = hasCompass,
             onCompassBearingClick = ::setBearingFromCompass,
-            onCameraBearingClick = ::setBearingFromCamera
+            onCameraBearingClick = ::setBearingFromCamera,
+            modifier = modifier
         )
 
         if (showColorPicker) {
@@ -208,29 +264,10 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        backCallback = promptIfUnsavedChanges { hasChanges.isSatisfiedBy(data) }
-
-        updateBeaconGroupName()
-
-        editingBeaconId?.let {
-            loadExistingBeacon(it)
-        } ?: run {
-            val defaultColor = prefs.beacons.defaultBeaconColor
-            updateData(data.copy(color = defaultColor))
-            hasChanges = DoesBeaconFormDataHaveChanges(
-                CreateBeaconData.empty.copy(color = defaultColor)
-            )
+    fun onResume() {
+        if (!isInitialized) {
+            return
         }
-
-        initialLocation?.let {
-            updateData(CreateBeaconData.from(it).copy(groupId = data.groupId, color = data.color))
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
         compass.start {
             val bearing = compass.rawBearing
             compassBearingText = formatter.formatDegrees(bearing, replace360 = true)
@@ -239,18 +276,20 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onPause() {
+    fun onPause() {
         compass.stop(null)
-        super.onPause()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
+        onPause()
+        backCallback?.remove()
+        backCallback = null
         cameraSheet = null
-        super.onDestroyView()
+        isInitialized = false
     }
 
     private fun loadExistingBeacon(beaconId: Long) {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val beacon = withContext(Dispatchers.IO) {
                 beaconService.getBeacon(beaconId)
             }
@@ -268,9 +307,9 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
     }
 
     private fun pickGroup() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val result = BeaconPickers.pickGroup(
-                requireContext(),
+                fragment.requireContext(),
                 initialGroup = data.groupId
             )
             if (result.first) {
@@ -290,10 +329,10 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
     }
 
     private fun setBearingFromCamera() {
-        requestCamera { hasPermission ->
+        fragment.requestCamera { hasPermission ->
             if (hasPermission) {
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(this) {
+                    cameraSheet = SightingCompassDialog(fragment) {
                         updateData(
                             data.copy(
                                 bearingTo = it,
@@ -304,17 +343,17 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
                 }
                 cameraSheet?.show()
             } else {
-                alertNoCameraPermission()
+                fragment.alertNoCameraPermission()
             }
         }
     }
 
     private fun updateBeaconGroupName() {
         val parent = data.groupId
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             groupName = withContext(Dispatchers.IO) {
                 if (parent == null) {
-                    getString(R.string.no_group)
+                    fragment.getString(R.string.no_group)
                 } else {
                     beaconService.getGroup(parent)?.name ?: ""
                 }
@@ -324,13 +363,13 @@ class PlaceBeaconFragment : TrailSenseComposeFragment() {
 
     private fun onSubmit() {
         val beacon = data.toBeacon() ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 beaconService.add(beacon)
             }
 
             backCallback?.remove()
-            findNavController().navigateUp()
+            fragment.findNavController().navigateUp()
         }
     }
 }

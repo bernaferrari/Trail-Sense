@@ -156,6 +156,7 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.beacons.ui.BeaconDetailsToolScreen
+import com.kylecorry.trail_sense.tools.beacons.ui.PlaceBeaconToolScreen
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsToolScreen
@@ -417,6 +418,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_ASTRONOMY -> AstronomyToolScreen(this)
             DESTINATION_ASTRONOMY_SETTINGS -> AstronomySettingsToolScreen(this)
             DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
+            DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
@@ -3481,6 +3483,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_ASTRONOMY = "astronomy"
         const val DESTINATION_ASTRONOMY_SETTINGS = "astronomy_settings"
         const val DESTINATION_BEACON_DETAILS = "beacon_details"
+        const val DESTINATION_PLACE_BEACON = "place_beacon"
         const val DESTINATION_SCAN_QR = "scan_qr"
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"

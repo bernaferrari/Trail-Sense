@@ -366,8 +366,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.placeBeaconFragment
-            setClassName("com.kylecorry.trail_sense.tools.beacons.ui.PlaceBeaconFragment")
-            label = "PlaceBeaconFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PlaceBeaconScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PLACE_BEACON)
+                .build())
             addArgument("edit_beacon", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)
