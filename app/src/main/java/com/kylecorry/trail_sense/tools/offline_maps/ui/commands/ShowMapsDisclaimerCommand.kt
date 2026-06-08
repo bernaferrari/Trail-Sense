@@ -1,18 +1,20 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
+import android.content.Context
 import android.text.util.Linkify
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
+import androidx.navigation.NavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
-class ShowMapsDisclaimerCommand(private val fragment: Fragment) : Command {
+class ShowMapsDisclaimerCommand(
+    private val context: Context,
+    private val navController: NavController
+) : Command {
     override fun execute() {
-        val context = fragment.requireContext()
         val message = context.getString(R.string.photo_map_disclaimer).toSpannable()
         LinkifyCompat.addLinks(message, Linkify.WEB_URLS)
         CustomUiUtils.disclaimer(
@@ -28,7 +30,7 @@ class ShowMapsDisclaimerCommand(private val fragment: Fragment) : Command {
             if (showUserGuide) {
                 UserGuideUtils.showGuide(
                     context,
-                    fragment.findNavController(),
+                    navController,
                     R.raw.guide_tool_offline_maps
                 )
             }

@@ -1,19 +1,21 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import android.content.Context
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
+import androidx.navigation.NavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
-class ShowTideDisclaimerCommand(private val fragment: Fragment, private val onAgree: () -> Unit) :
+class ShowTideDisclaimerCommand(
+    private val context: Context,
+    private val navController: NavController,
+    private val onAgree: () -> Unit
+) :
     Command {
     override fun execute() {
-        val context = fragment.requireContext()
-
         val disclaimer = context.getString(R.string.disclaimer_estimated_tide)
         val tideInstructions = context.getString(R.string.tide_instructions)
         val tideTableLocation = context.getString(R.string.tide_user_guide_recommendation)
@@ -38,7 +40,7 @@ class ShowTideDisclaimerCommand(private val fragment: Fragment, private val onAg
             if (showGuide) {
                 UserGuideUtils.openGuide(
                     context,
-                    fragment.findNavController(),
+                    navController,
                     R.raw.guide_tool_tides
                 )
             } else {

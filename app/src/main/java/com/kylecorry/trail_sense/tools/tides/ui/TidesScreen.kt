@@ -135,7 +135,7 @@ private class TidesController(private val fragment: Fragment) {
     fun onResume() {
         if (table == null) {
             displayDate = LocalDate.now()
-            ShowTideDisclaimerCommand(fragment) {
+            ShowTideDisclaimerCommand(fragment.requireContext(), fragment.findNavController()) {
                 loadTideTable()
             }.execute()
         } else {

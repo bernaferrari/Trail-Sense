@@ -228,7 +228,7 @@ private class OfflineMapListController(private val fragment: Fragment) {
             )
         }
 
-        ShowMapsDisclaimerCommand(fragment).execute()
+        ShowMapsDisclaimerCommand(fragment.requireContext(), fragment.findNavController()).execute()
 
         sort = prefs.photoMaps.mapSort
         sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
