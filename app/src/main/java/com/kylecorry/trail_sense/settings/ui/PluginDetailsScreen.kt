@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Intent
@@ -29,36 +31,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.launch
 
-class PluginDetailsFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        PluginDetailsScreen(
-            packageId = arguments?.getString("package_id").orEmpty(),
-            pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
-            onNavigateUp = {
-                tryOrNothing {
-                    findNavController().navigateUp()
-                }
-            }
-        )
-    }
-}
-
 @Composable
-private fun PluginDetailsScreen(
+internal fun PluginDetailsScreen(
     packageId: String,
     pluginSubsystem: PluginSubsystem,
     onNavigateUp: () -> Unit

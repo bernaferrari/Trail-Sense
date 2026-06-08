@@ -84,6 +84,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
+import com.kylecorry.trail_sense.settings.ui.PluginDetailsScreen
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
@@ -216,6 +217,15 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_BACKUP_SETTINGS -> BackupSettings()
             DESTINATION_THEME_SETTINGS -> ThemeSettings()
             DESTINATION_EXPERIMENTAL_SETTINGS -> ExperimentalSettings()
+            DESTINATION_PLUGIN_DETAILS -> PluginDetailsScreen(
+                packageId = requireArguments().getString("package_id").orEmpty(),
+                pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
+                onNavigateUp = {
+                    tryOrNothing {
+                        findNavController().navigateUp()
+                    }
+                }
+            )
         }
     }
 
@@ -2172,5 +2182,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_BACKUP_SETTINGS = "backup_settings"
         const val DESTINATION_THEME_SETTINGS = "theme_settings"
         const val DESTINATION_EXPERIMENTAL_SETTINGS = "experimental_settings"
+        const val DESTINATION_PLUGIN_DETAILS = "plugin_details"
     }
 }

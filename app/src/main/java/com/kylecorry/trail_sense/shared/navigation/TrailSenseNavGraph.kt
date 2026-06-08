@@ -427,8 +427,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pluginDetailsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.PluginDetailsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "PluginDetailsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PLUGIN_DETAILS)
+                .build())
             addArgument("package_id", NavArgument.Builder()
                 .setType(NavType.StringType)
                 .build())
