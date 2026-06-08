@@ -47,21 +47,12 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ToolDeclinationFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        DeclinationScreen()
-    }
-}
-
 @Composable
-private fun DeclinationScreen(
+fun DeclinationScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

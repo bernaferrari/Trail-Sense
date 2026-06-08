@@ -285,8 +285,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolDeclinationFragment
-            setClassName("com.kylecorry.trail_sense.tools.declination.ui.ToolDeclinationFragment")
-            label = "ToolDeclinationFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "DeclinationScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_DECLINATION)
+                .build())
             graph.addDestination(this)
         }
 
