@@ -17,7 +17,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -50,6 +51,7 @@ import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.canvas.InteractionUtils
 import com.kylecorry.trail_sense.shared.canvas.PixelCircle
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
+import com.kylecorry.trail_sense.shared.getViewBounds
 import com.kylecorry.trail_sense.shared.safeRoundPlaces
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
@@ -70,10 +72,63 @@ import kotlin.math.atan2
 // TODO: Notify location change
 // TODO: This needs a parent view that has the camera, this, and any buttons (like the freeform button)
 class AugmentedRealityView @JvmOverloads constructor(
-    context: Context,
+    val context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr) {
+) {
+
+    val view = ComposeView(context, attrs, defStyleAttr).apply {
+        setContent {
+            Content()
+        }
+        setOnTouchListener { _, event ->
+            onTouchEvent(event)
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    val width: Int
+        get() = view.width
+
+    val height: Int
+        get() = view.height
+
+    val x: Float
+        get() = view.x
+
+    val y: Float
+        get() = view.y
+
+    var layoutParams: ViewGroup.LayoutParams?
+        get() = view.layoutParams
+        set(value) {
+            view.layoutParams = value
+        }
+
+    fun post(action: () -> Unit) {
+        view.post {
+            action()
+        }
+    }
+
+    fun getViewBounds(rotation: Float = 0f) = view.getViewBounds(rotation)
 
     var fov: Size = Size(45f, 45f)
         private set
@@ -291,9 +346,17 @@ class AugmentedRealityView @JvmOverloads constructor(
 
 
     @Composable
-    override fun Content() {
+    private fun Content() {
         TrailSenseTheme {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onSizeChanged {
+                        previewRect = null
+                        syncWithCamera()
+                        requestRedraw()
+                    }
+            ) {
                 renderVersion
                 if (!isVisible) {
                     return@Canvas
@@ -575,7 +638,7 @@ class AugmentedRealityView @JvmOverloads constructor(
 
     private val mGestureDetector = GestureDetector(context, gestureListener)
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
+    fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isVisible) {
             return false
         }
@@ -603,7 +666,7 @@ class AugmentedRealityView @JvmOverloads constructor(
         )
     ) {
         this.camera = camera
-        owner = lifecycleOwner ?: this.findViewTreeLifecycleOwner() ?: return
+        owner = lifecycleOwner ?: view.findViewTreeLifecycleOwner() ?: return
 
         if (layoutParams == null) {
             layoutParams = defaultLayoutParams
@@ -611,13 +674,6 @@ class AugmentedRealityView @JvmOverloads constructor(
 
         // Cancel fovRunner on pause
         owner?.lifecycle?.addObserver(lifecycleObserver)
-    }
-
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        previewRect = null
-        syncWithCamera()
-        requestRedraw()
     }
 
     fun switchToGyro() {

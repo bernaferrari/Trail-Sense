@@ -818,7 +818,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         }
     )
     cameraFrame.addView(
-        arView,
+        arView.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID

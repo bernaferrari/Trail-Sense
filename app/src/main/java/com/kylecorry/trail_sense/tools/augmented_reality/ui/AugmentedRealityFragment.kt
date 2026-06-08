@@ -828,7 +828,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         id = R.id.ar_view
     }
     root.addView(
-        arView,
+        arView.view,
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
