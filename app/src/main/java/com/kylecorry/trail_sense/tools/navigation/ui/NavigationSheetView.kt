@@ -8,20 +8,35 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.extensions.flatten
-import com.kylecorry.trail_sense.shared.views.Toolbar
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
@@ -65,7 +80,7 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
     private var useTrueNorthOverride: Boolean? = null
 
     // VIEWS
-    private val toolbar: Toolbar
+    private val toolbar: NavigationSheetToolbarState
     private val distanceDataView: NavigationDataPointState
     private val bearingDataView: NavigationDataPointState
     private val elevationDataView: NavigationDataPointState
@@ -90,13 +105,17 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
             )
         )
 
-        toolbar = Toolbar(context, null).apply {
+        toolbar = NavigationSheetToolbarState()
+        val toolbarView = ComposeView(context).apply {
             id = R.id.navigation_sheet_title
-            leftButton.setIconResource(R.drawable.ic_tool_notes)
-            rightButton.setIconResource(R.drawable.ic_cancel)
+            setContent {
+                TrailSenseTheme {
+                    toolbar.Content()
+                }
+            }
         }
         root.addView(
-            toolbar,
+            toolbarView,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -132,7 +151,6 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
         etaDataView = addNavigationDataPoint(dataRow, R.id.navigation_eta, R.drawable.ic_tool_clock)
 
         bearingDataView.setShowDescription(false)
-        toolbar.leftButton.flatten()
     }
 
     private fun addNavigationDataPoint(
@@ -235,11 +253,8 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
             return
         }
         isVisible = true
-        toolbar.title.maxWidth = Resources.dp(context, 250f).toInt()
-        toolbar.rightButton.isVisible = isNavigating
-        toolbar.rightButton.setOnClickListener {
-            requestCancelNavigation()
-        }
+        toolbar.rightVisible = isNavigating
+        toolbar.onRightClick = ::requestCancelNavigation
 
         if (destination is Destination.Beacon) {
             updateBeaconNavigation(destination, values)
@@ -256,10 +271,11 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
         updateDestinationDirection(bearing.value, true)
         updateDestinationElevation(null, null)
         etaDataView.isVisible = false
-        toolbar.title.text = context.getString(R.string.bearing)
-        toolbar.subtitle.isVisible = false
-        toolbar.leftButton.isVisible = false
-        toolbar.title.setOnClickListener(null)
+        toolbar.title = context.getString(R.string.bearing)
+        toolbar.subtitleVisible = false
+        toolbar.leftVisible = false
+        toolbar.onTitleClick = null
+        toolbar.onSubtitleClick = null
     }
 
     private fun updateBeaconNavigation(
@@ -284,13 +300,13 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
         )
 
         // TODO: These don't change
-        toolbar.title.text = beacon.name
-        toolbar.subtitle.isVisible = true
+        toolbar.title = beacon.name
+        toolbar.subtitleVisible = true
 
         val hasComment = !beacon.comment.isNullOrEmpty()
-        toolbar.leftButton.isVisible = hasComment
+        toolbar.leftVisible = hasComment
 
-        toolbar.leftButton.setOnClickListener {
+        toolbar.onLeftClick = {
             Alerts.dialog(context, beacon.name, beacon.comment, cancelText = null)
         }
 
@@ -298,7 +314,7 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
             Distance.meters(it).convertTo(prefs.baseDistanceUnits)
         }
 
-        toolbar.subtitle.text = formatter.join(
+        toolbar.subtitle = formatter.join(
             *listOfNotNull(
                 formatter.formatLocation(beacon.coordinate),
                 if (elevationDistance != null) context.getString(
@@ -312,11 +328,11 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
             separator = FormatService.Separator.NewLine
         )
 
-        toolbar.title.setOnClickListener {
+        toolbar.onTitleClick = {
             openBeacon(beacon.id)
         }
 
-        toolbar.subtitle.setOnClickListener {
+        toolbar.onSubtitleClick = {
             openBeacon(beacon.id)
         }
     }
@@ -386,6 +402,85 @@ class NavigationSheetView(context: Context, attrs: AttributeSet? = null) :
                     false
                 )
             )
+        }
+    }
+}
+
+private class NavigationSheetToolbarState {
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+    var leftVisible by mutableStateOf(false)
+    var rightVisible by mutableStateOf(false)
+    var subtitleVisible by mutableStateOf(true)
+    var onLeftClick by mutableStateOf<(() -> Unit)?>(null)
+    var onRightClick by mutableStateOf<(() -> Unit)?>(null)
+    var onTitleClick by mutableStateOf<(() -> Unit)?>(null)
+    var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
+
+    @Composable
+    fun Content() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (leftVisible) {
+                IconButton(onClick = { onLeftClick?.invoke() }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_tool_notes),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.size(48.dp))
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = title,
+                    modifier = Modifier
+                        .widthIn(max = 250.dp)
+                        .clickable(enabled = onTitleClick != null) {
+                            onTitleClick?.invoke()
+                        },
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                if (subtitleVisible && subtitle.isNotEmpty()) {
+                    Text(
+                        text = subtitle,
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clickable(enabled = onSubtitleClick != null) {
+                                onSubtitleClick?.invoke()
+                            },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            if (rightVisible) {
+                IconButton(onClick = { onRightClick?.invoke() }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cancel),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.size(48.dp))
+            }
         }
     }
 }
