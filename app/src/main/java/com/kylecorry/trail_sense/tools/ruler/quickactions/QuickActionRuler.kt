@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
-import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Resources
@@ -69,16 +68,7 @@ class QuickActionRuler(
             Resources.dp(context, 80f).toInt(),
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        val bottomNavigation = activity.getBottomNavigationView()
-        if (bottomNavigation.height > 0) {
-            layoutParams.bottomMargin = bottomNavigation.height
-        } else {
-            bottomNavigation.doOnLayout {
-                val params = ruler.layoutParams as? CoordinatorLayout.LayoutParams ?: return@doOnLayout
-                params.bottomMargin = it.height
-                ruler.layoutParams = params
-            }
-        }
+        layoutParams.bottomMargin = activity.getBottomNavigationHeight()
         ruler.layoutParams = layoutParams
 
         activity.addOverlayView(ruler)

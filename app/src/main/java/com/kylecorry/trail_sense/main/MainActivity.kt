@@ -590,8 +590,9 @@ class MainActivity : AndromedaActivity() {
         views.bottomNavigation.isEnabled = isEnabled
     }
 
-    fun getBottomNavigationView(): View {
-        return views.bottomNavigationView
+    fun getBottomNavigationHeight(): Int {
+        val navigationHeight = if (userPrefs.useCompactMode) 55f else 80f
+        return Resources.dp(this, navigationHeight).toInt() + bottomInsets
     }
 
     fun addOverlayView(view: View) {
@@ -657,8 +658,7 @@ private data class MainActivityViews(
     val errorBanner: ErrorBannerState,
     val fragmentHolder: FragmentContainerView,
     val quickActionsSheet: QuickActionSheetState,
-    val bottomNavigation: MainBottomNavigationState,
-    val bottomNavigationView: View
+    val bottomNavigation: MainBottomNavigationState
 )
 
 private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
@@ -705,7 +705,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
 
     val bottomNavigation = MainBottomNavigationState()
     val quickActionsSheet = QuickActionSheetState(context)
-    val bottomNavigationView = TrailSenseComposeRootView(
+    val bottomNavigationContent = TrailSenseComposeRootView(
         context,
         ViewCompositionStrategy.DisposeOnDetachedFromWindow
     ) {
@@ -720,7 +720,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         id = R.id.bottom_navigation
     }
     colorFilter.addView(
-        bottomNavigationView,
+        bottomNavigationContent,
         LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -773,8 +773,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         errorBanner,
         fragmentHolder,
         quickActionsSheet,
-        bottomNavigation,
-        bottomNavigationView
+        bottomNavigation
     )
 }
 
