@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -194,9 +195,9 @@ open class EnhancedImageView @JvmOverloads constructor(
                         contentHeight = it.height
                     }
             ) {
-                PlatformView(
+                AndroidView(
                     factory = { imageView },
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize()
                 )
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     renderVersion
