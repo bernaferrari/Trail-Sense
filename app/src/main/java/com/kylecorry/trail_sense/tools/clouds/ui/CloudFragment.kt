@@ -57,6 +57,7 @@ import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
@@ -87,6 +88,7 @@ class CloudFragment : TrailSenseAndromedaComposeFragment() {
 
     private var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
     private var subtitle by mutableStateOf("")
+    private var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
 
     @Composable
     override fun FragmentContent() {
@@ -100,6 +102,8 @@ class CloudFragment : TrailSenseAndromedaComposeFragment() {
             onCloudClick = ::showCloudDetails,
             onCloudImageClick = ::showCloudImage,
             onDeleteCloud = ::delete,
+            selectedCloudImage = selectedCloudImage,
+            onDismissCloudImage = { selectedCloudImage = null },
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -135,7 +139,7 @@ class CloudFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun showCloudImage(reading: Reading<CloudObservation>) {
-        CloudImageModal(requireContext()).show(reading.value.genus)
+        selectedCloudImage = reading.value.genus
     }
 
     private fun addFromCamera() {
@@ -209,9 +213,21 @@ private fun CloudScreen(
     onCloudClick: (Reading<CloudObservation>) -> Unit,
     onCloudImageClick: (Reading<CloudObservation>) -> Unit,
     onDeleteCloud: (Reading<CloudObservation>) -> Unit,
+    selectedCloudImage: CloudGenus?,
+    onDismissCloudImage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isCreateMenuOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val details = remember(context) { CloudDetailsService(context) }
+
+    selectedCloudImage?.let { cloud ->
+        CloudImageDialog(
+            title = details.getCloudName(cloud),
+            drawable = details.getCloudImage(context, cloud),
+            onDismiss = onDismissCloudImage
+        )
+    }
 
     Scaffold(
         modifier = modifier,
@@ -463,7 +479,9 @@ private fun CloudScreenPreview() {
             onManualClick = {},
             onCloudClick = {},
             onCloudImageClick = {},
-            onDeleteCloud = {}
+            onDeleteCloud = {},
+            selectedCloudImage = null,
+            onDismissCloudImage = {}
         )
     }
 }

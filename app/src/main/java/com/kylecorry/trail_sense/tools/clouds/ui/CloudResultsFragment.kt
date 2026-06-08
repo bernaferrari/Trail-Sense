@@ -352,13 +352,26 @@ private fun CloudSelectionList(
     onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val details = remember(context) { CloudDetailsService(context) }
+    var selectedCloudImage by remember { mutableStateOf<CloudGenus?>(null) }
+
+    selectedCloudImage?.let { cloud ->
+        CloudImageDialog(
+            title = details.getCloudName(cloud),
+            drawable = details.getCloudImage(context, cloud),
+            onDismiss = { selectedCloudImage = null }
+        )
+    }
+
     LazyColumn(
         modifier = modifier.testTag("cloud_list")
     ) {
         items(selection, key = { it.genus?.ordinal ?: -1 }) { cloud ->
             CloudSelectionRow(
                 selection = cloud,
-                onSelectionChanged = onSelectionChanged
+                onSelectionChanged = onSelectionChanged,
+                onCloudImageClick = { selectedCloudImage = it }
             )
         }
     }
@@ -367,12 +380,12 @@ private fun CloudSelectionList(
 @Composable
 private fun CloudSelectionRow(
     selection: CloudSelection,
-    onSelectionChanged: (CloudGenus?, Boolean) -> Unit
+    onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
+    onCloudImageClick: (CloudGenus?) -> Unit
 ) {
     val context = LocalContext.current
     val details = remember(context) { CloudDetailsService(context) }
     val formatter = remember(context) { FormatService.getInstance(context) }
-    val imageModal = remember(context) { CloudImageModal(context) }
     val detailsModal = remember(context) { CloudDetailsModal(context) }
     val unreliable = remember {
         listOf(
@@ -398,7 +411,7 @@ private fun CloudSelectionRow(
         )
         CloudSelectionThumbnail(
             drawable = details.getCloudImage(context, selection.genus),
-            onClick = { imageModal.show(selection.genus) }
+            onClick = { onCloudImageClick(selection.genus) }
         )
         Column(
             modifier = Modifier
