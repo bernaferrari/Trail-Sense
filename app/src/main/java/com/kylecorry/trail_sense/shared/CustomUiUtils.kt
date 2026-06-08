@@ -23,7 +23,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.commit
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -45,6 +44,7 @@ import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.andromeda_temp.dismissOnPause
 import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
@@ -674,12 +674,6 @@ object CustomUiUtils {
     fun Context.isDarkThemeOn(): Boolean {
         return resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-    }
-
-    fun Fragment.replaceChildFragment(fragment: Fragment, containerId: Int) {
-        childFragmentManager.commit {
-            replace(containerId, fragment)
-        }
     }
 
 }
