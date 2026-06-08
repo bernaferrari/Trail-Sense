@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -23,12 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -48,7 +51,6 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.views.chart.Chart
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -71,6 +73,7 @@ import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DatePickerContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
@@ -194,7 +197,10 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         AstronomyQuickActionBinder(
-            this, views.astronomyTitle, prefs.astronomy
+            this,
+            views.astronomyTitle.leftButton,
+            views.astronomyTitle.rightButton,
+            prefs.astronomy
         ).bind()
 
         chart = AstroChart(views.sunMoonChart, this::showTimeSeeker)
@@ -544,19 +550,19 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
         withContext(Dispatchers.Main) {
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
-                views.astronomyTitle.title.text =
+                views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
-                views.astronomyTitle.subtitle.text = getString(R.string.until_sunrise)
+                views.astronomyTitle.subtitle = getString(R.string.until_sunrise)
             } else if (nextSunset != null) {
-                views.astronomyTitle.title.text =
+                views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunset))
-                views.astronomyTitle.subtitle.text = getString(R.string.until_sunset)
+                views.astronomyTitle.subtitle = getString(R.string.until_sunset)
             } else if (astronomyService.isSunUp(location)) {
-                views.astronomyTitle.title.text = getString(R.string.sun_up_no_set)
-                views.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_set)
+                views.astronomyTitle.title = getString(R.string.sun_up_no_set)
+                views.astronomyTitle.subtitle = getString(R.string.sun_does_not_set)
             } else {
-                views.astronomyTitle.title.text = getString(R.string.sun_down_no_set)
-                views.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_rise)
+                views.astronomyTitle.title = getString(R.string.sun_down_no_set)
+                views.astronomyTitle.subtitle = getString(R.string.sun_does_not_rise)
             }
         }
     }
@@ -626,7 +632,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
 private data class AstronomyViews(
     val root: View,
-    val astronomyTitle: Toolbar,
+    val astronomyTitle: AstronomyTitleState,
     val displayDate: AstronomyDatePickerState,
     val sunMoonChart: Chart,
     val timeSeekerPanel: ScrollView,
@@ -638,6 +644,13 @@ private data class AstronomyViews(
     val astronomyDetailList: ComposeView,
     val button3d: Button
 )
+
+private class AstronomyTitleState {
+    val leftButton = ComposeQuickActionButtonView()
+    val rightButton = ComposeQuickActionButtonView()
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+}
 
 private class AstronomyDatePickerState(context: Context) {
     private val formatter = FormatService.getInstance(context)
@@ -714,6 +727,41 @@ private class AstronomyDatePickerState(context: Context) {
 }
 
 @Composable
+private fun AstronomyTitle(
+    state: AstronomyTitleState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        state.leftButton.Content()
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = state.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            if (state.subtitle.isNotEmpty()) {
+                Text(
+                    text = state.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        state.rightButton.Content()
+    }
+}
+
+@Composable
 private fun AstronomyHost(
     views: AstronomyViews,
     modifier: Modifier = Modifier
@@ -786,11 +834,17 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         )
     }
 
-    val title = Toolbar(context, null).apply {
+    val title = AstronomyTitleState()
+    val titleView = ComposeView(context).apply {
         id = R.id.astronomy_title
+        setContent {
+            TrailSenseTheme {
+                AstronomyTitle(title)
+            }
+        }
     }
     root.addView(
-        title,
+        titleView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
