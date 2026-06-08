@@ -257,7 +257,7 @@ class AugmentedRealityFragment : TrailSenseAndromedaComposeFragment() {
         views.camera.setShowTorch(false)
 
         views.arView.infiniteFocusWhenPointedUp = true
-        views.arView.bind(views.camera)
+        views.arView.bind(views.camera, viewLifecycleOwner)
 
         val arguments = requireArguments()
         val modeId = arguments.getLong("mode", ARMode.Normal.id)
@@ -877,9 +877,7 @@ private fun AugmentedRealityHost(
 private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews {
     val camera = CameraState(context)
 
-    val arView = AugmentedRealityView(context, null).apply {
-        id = R.id.ar_view
-    }
+    val arView = AugmentedRealityView(context)
 
     val cameraToggle = createArIconButton(R.drawable.ic_camera)
     val calibrate = createArIconButton(R.drawable.ic_compass_icon)

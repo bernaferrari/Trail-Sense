@@ -5,25 +5,22 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
 import android.graphics.RectF
-import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
@@ -41,6 +38,7 @@ import com.kylecorry.sol.math.Euler
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
@@ -51,7 +49,6 @@ import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.canvas.InteractionUtils
 import com.kylecorry.trail_sense.shared.canvas.PixelCircle
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
-import com.kylecorry.trail_sense.shared.getViewBounds
 import com.kylecorry.trail_sense.shared.safeRoundPlaces
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
@@ -71,68 +68,34 @@ import kotlin.math.atan2
 
 // TODO: Notify location change
 // TODO: This needs a parent view that has the camera, this, and any buttons (like the freeform button)
-class AugmentedRealityView @JvmOverloads constructor(
-    val context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) {
-
-    val view = ComposeView(context, attrs, defStyleAttr).apply {
-        setContent {
-            Content()
-        }
-        setOnTouchListener { _, event ->
-            onTouchEvent(event)
-        }
-    }
-
-    var id: Int
-        get() = view.id
-        set(value) {
-            view.id = value
-        }
-
-    var visibility: Int
-        get() = view.visibility
-        set(value) {
-            view.visibility = value
-        }
+class AugmentedRealityView(val context: Context) {
 
     var isVisible: Boolean
-        get() = view.isVisible
+        get() = contentVisible
         set(value) {
-            view.isVisible = value
+            contentVisible = value
         }
 
     val width: Int
-        get() = view.width.takeIf { it > 0 } ?: contentWidth
+        get() = contentWidth
 
     val height: Int
-        get() = view.height.takeIf { it > 0 } ?: contentHeight
+        get() = contentHeight
 
     val x: Float
-        get() = view.x
+        get() = 0f
 
     val y: Float
-        get() = view.y
-
-    var layoutParams: ViewGroup.LayoutParams?
-        get() = view.layoutParams
-        set(value) {
-            view.layoutParams = value
-        }
+        get() = 0f
 
     fun post(action: () -> Unit) {
-        if (!view.isAttachedToWindow) {
-            action()
-            return
-        }
-        view.post {
-            action()
-        }
+        action()
     }
 
-    fun getViewBounds(rotation: Float = 0f) = view.getViewBounds(rotation)
+    fun getViewBounds(rotation: Float = 0f): Rectangle {
+        val rectangle = Rectangle(0f, height.toFloat(), width.toFloat(), 0f)
+        return if (rotation != 0f) rectangle.rotate(rotation) else rectangle
+    }
 
     var fov: Size = Size(45f, 45f)
         private set
@@ -259,6 +222,7 @@ class AugmentedRealityView @JvmOverloads constructor(
     private var renderVersion by mutableIntStateOf(0)
     private var contentWidth by mutableIntStateOf(0)
     private var contentHeight by mutableIntStateOf(0)
+    private var contentVisible by mutableStateOf(true)
     private val updateTimer = CoroutineTimer(observeOn = Dispatchers.Default) {
         if (!isSetup) {
             return@CoroutineTimer
@@ -357,6 +321,9 @@ class AugmentedRealityView @JvmOverloads constructor(
             Canvas(
                 modifier = modifier
                     .fillMaxSize()
+                    .pointerInteropFilter { event ->
+                        onTouchEvent(event)
+                    }
                     .onSizeChanged {
                         contentWidth = it.width
                         contentHeight = it.height
@@ -667,18 +634,10 @@ class AugmentedRealityView @JvmOverloads constructor(
 
     fun bind(
         camera: CameraState,
-        lifecycleOwner: LifecycleOwner? = null,
-        defaultLayoutParams: ViewGroup.LayoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        lifecycleOwner: LifecycleOwner? = null
     ) {
         this.camera = camera
-        owner = lifecycleOwner ?: view.findViewTreeLifecycleOwner() ?: return
-
-        if (layoutParams == null) {
-            layoutParams = defaultLayoutParams
-        }
+        owner = lifecycleOwner ?: return
 
         // Cancel fovRunner on pause
         owner?.lifecycle?.addObserver(lifecycleObserver)

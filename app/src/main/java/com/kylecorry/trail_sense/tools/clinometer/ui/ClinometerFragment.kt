@@ -182,7 +182,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         views.arView.showPosition = false
         views.arView.passThroughTouchEvents = true
 
-        views.arView.bind(views.camera)
+        views.arView.bind(views.camera, viewLifecycleOwner)
 
         observe(sideClinometer) { updateUI() }
         observe(cameraClinometer) { updateUI() }
@@ -758,9 +758,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     val clinometer = ClinometerView()
     val cameraViewHolder = ClinometerVisibilityState(initialVisible = false)
     val camera = CameraState(context)
-    val arView = AugmentedRealityView(context).apply {
-        id = R.id.ar_view
-    }
+    val arView = AugmentedRealityView(context)
     val cameraClinometer = CameraClinometerView()
 
     val clinometerInstructions = ClinometerVisibilityState()
