@@ -4,9 +4,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
@@ -45,15 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.dialog
@@ -63,8 +58,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -75,7 +70,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FieldGuideFragment : Fragment() {
+class FieldGuideFragment : TrailSenseComposeFragment() {
 
     private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(requireContext()) }
@@ -114,28 +109,18 @@ class FieldGuideFragment : Fragment() {
         FieldGuidePageTag.Other to R.drawable.ic_help
     )
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    FieldGuideScreen(
-                        query = filter,
-                        items = getListItems(),
-                        onQueryChange = { filter = it },
-                        onViewPage = ::viewPage,
-                        onEditPage = ::editPage,
-                        onDeletePage = ::deletePage,
-                        loadThumbnail = ::loadThumbnail,
-                        onCreate = { createPage(tagFilter) }
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        FieldGuideScreen(
+            query = filter,
+            items = getListItems(),
+            onQueryChange = { filter = it },
+            onViewPage = ::viewPage,
+            onEditPage = ::editPage,
+            onDeletePage = ::deletePage,
+            loadThumbnail = ::loadThumbnail,
+            onCreate = { createPage(tagFilter) }
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

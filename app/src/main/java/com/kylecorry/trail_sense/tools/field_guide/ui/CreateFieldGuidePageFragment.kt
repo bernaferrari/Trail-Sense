@@ -4,9 +4,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Size
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -42,8 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,7 +51,6 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -65,6 +60,7 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -74,7 +70,7 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import java.util.UUID
 
-class CreateFieldGuidePageFragment : AndromedaFragment() {
+class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
 
     private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
     private val tagNameMapper by lazy { FieldGuideTagNameMapper(requireContext()) }
@@ -89,36 +85,26 @@ class CreateFieldGuidePageFragment : AndromedaFragment() {
     private val tags =
         FieldGuidePageTag.entries.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CreateFieldGuidePageContent(
-                        page = page,
-                        image = imagePreview,
-                        tagNames = tags.associateWith { tagNameMapper.getName(it) },
-                        tags = tags,
-                        onNameChange = { updatePage(page.copy(name = it)) },
-                        onNotesChange = { updatePage(page.copy(notes = it)) },
-                        onTagsChange = { type, selected -> updateTags(type, selected) },
-                        onTakePhoto = ::takePhoto,
-                        onSelectPhoto = ::selectPhoto,
-                        onDeleteImage = {
-                            inBackground {
-                                deleteImage()
-                            }
-                        },
-                        onSave = ::save,
-                        modifier = Modifier.fillMaxSize()
-                    )
+    @Composable
+    override fun FragmentContent() {
+        CreateFieldGuidePageContent(
+            page = page,
+            image = imagePreview,
+            tagNames = tags.associateWith { tagNameMapper.getName(it) },
+            tags = tags,
+            onNameChange = { updatePage(page.copy(name = it)) },
+            onNotesChange = { updatePage(page.copy(notes = it)) },
+            onTagsChange = { type, selected -> updateTags(type, selected) },
+            onTakePhoto = ::takePhoto,
+            onSelectPhoto = ::selectPhoto,
+            onDeleteImage = {
+                inBackground {
+                    deleteImage()
                 }
-            }
-        }
+            },
+            onSave = ::save,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

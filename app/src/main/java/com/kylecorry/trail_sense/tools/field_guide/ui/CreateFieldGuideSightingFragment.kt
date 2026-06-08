@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
@@ -40,15 +38,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -71,6 +66,7 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -82,7 +78,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
-class CreateFieldGuideSightingFragment : Fragment() {
+class CreateFieldGuideSightingFragment : TrailSenseComposeFragment() {
 
     private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
@@ -109,46 +105,36 @@ class CreateFieldGuideSightingFragment : Fragment() {
         sightingId = arguments?.getLong("sighting_id") ?: 0L
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CreateFieldGuideSightingScreen(
-                        datetime = datetime,
-                        location = location,
-                        elevation = this@CreateFieldGuideSightingFragment.elevation,
-                        notes = notes,
-                        harvested = harvested,
-                        showOnMap = showOnMap,
-                        onDatetimeChange = { datetime = it },
-                        onLocationChange = { location = it },
-                        onElevationChange = { this@CreateFieldGuideSightingFragment.elevation = it },
-                        onNotesChange = { notes = it },
-                        onHarvestedChange = { harvested = it },
-                        onShowOnMapChange = { showOnMap = it },
-                        onSave = ::save,
-                        locationAutofillRequest = locationAutofillRequest,
-                        onAutoLocationClick = {
-                            if (this@CreateFieldGuideSightingFragment.elevation == null) {
-                                elevationAutofillRequest++
-                            }
-                        },
-                        onBeaconSelected = ::onCoordinateBeaconSelected,
-                        elevationAutofillRequest = elevationAutofillRequest,
-                        onAutoElevationClick = {
-                            if (location == null) {
-                                locationAutofillRequest++
-                            }
-                        }
-                    )
+    @Composable
+    override fun FragmentContent() {
+        CreateFieldGuideSightingScreen(
+            datetime = datetime,
+            location = location,
+            elevation = this@CreateFieldGuideSightingFragment.elevation,
+            notes = notes,
+            harvested = harvested,
+            showOnMap = showOnMap,
+            onDatetimeChange = { datetime = it },
+            onLocationChange = { location = it },
+            onElevationChange = { this@CreateFieldGuideSightingFragment.elevation = it },
+            onNotesChange = { notes = it },
+            onHarvestedChange = { harvested = it },
+            onShowOnMapChange = { showOnMap = it },
+            onSave = ::save,
+            locationAutofillRequest = locationAutofillRequest,
+            onAutoLocationClick = {
+                if (this@CreateFieldGuideSightingFragment.elevation == null) {
+                    elevationAutofillRequest++
+                }
+            },
+            onBeaconSelected = ::onCoordinateBeaconSelected,
+            elevationAutofillRequest = elevationAutofillRequest,
+            onAutoElevationClick = {
+                if (location == null) {
+                    locationAutofillRequest++
                 }
             }
-        }
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
