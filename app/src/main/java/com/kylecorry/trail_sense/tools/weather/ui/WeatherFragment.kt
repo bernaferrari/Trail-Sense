@@ -42,15 +42,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.views.toolbar.Toolbar
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Pressure
@@ -67,6 +62,7 @@ import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
@@ -180,7 +176,8 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 
         WeatherQuickActionBinder(
             this,
-            views.weatherTitle,
+            views.weatherTitle.leftButton,
+            views.weatherTitle.rightButton,
             prefs.weather
         ).bind()
 
@@ -357,8 +354,8 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
         val weather = weather ?: return
         val prediction = weather.prediction
         onMain {
-            views.weatherTitle.title.text = formatService.formatWeather(prediction.primaryHourly)
-            views.weatherTitle.title.setOnClickListener {
+            views.weatherTitle.title = formatService.formatWeather(prediction.primaryHourly)
+            views.weatherTitle.onTitleClick = {
                 if (prediction.hourly.isNotEmpty()) {
                     val conditions = prediction.hourly.joinToString("\n") {
                         formatService.formatWeather(it)
@@ -366,10 +363,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
                     dialog(getString(R.string.weather), conditions, cancelText = null)
                 }
             }
-            views.weatherTitle.title.setCompoundDrawables(
-                size = Resources.dp(requireContext(), 24f).toInt(),
-                left = formatService.getWeatherImage(prediction.primaryHourly)
-            )
+            views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
             val arrival =
                 formatService.formatWeatherArrival(weather.prediction.hourlyArrival)
             val then = getString(
@@ -379,7 +373,7 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 
             val hourlySameAsDaily = prediction.primaryDaily == prediction.primaryHourly
 
-            views.weatherTitle.subtitle.text =
+            views.weatherTitle.subtitle =
                 if (arrival.isNotEmpty() && (prediction.primaryDaily == null || hourlySameAsDaily)) {
                     arrival
                 } else if (arrival.isNotEmpty()) {
@@ -389,8 +383,6 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
                 } else {
                     ""
                 }
-            views.weatherTitle.subtitle.isVisible =
-                views.weatherTitle.subtitle.text.isNotEmpty()
         }
     }
 
@@ -440,8 +432,17 @@ class WeatherFragment : TrailSenseAndromedaComposeFragment() {
 }
 
 data class WeatherViews(
-    val weatherTitle: Toolbar
+    val weatherTitle: WeatherTitleState
 )
+
+class WeatherTitleState {
+    val leftButton = ComposeQuickActionButtonView()
+    val rightButton = ComposeQuickActionButtonView()
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+    var icon by mutableStateOf<Int?>(null)
+    var onTitleClick by mutableStateOf<(() -> Unit)?>(null)
+}
 
 @Composable
 private fun WeatherHost(
@@ -463,9 +464,9 @@ private fun WeatherHost(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                modifier = Modifier.fillMaxWidth(),
-                factory = { views.weatherTitle }
+            WeatherTitle(
+                state = views.weatherTitle,
+                modifier = Modifier.fillMaxWidth()
             )
 
             WeatherPressureChart(
@@ -747,13 +748,62 @@ private fun WeatherListItemRow(item: WeatherListItem) {
     )
 }
 
-private fun createWeatherViews(context: Context): WeatherViews {
-    val title = Toolbar(context, null).apply {
-        id = R.id.weather_title
-    }
+@Composable
+private fun WeatherTitle(
+    state: WeatherTitleState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        state.leftButton.Content()
 
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(enabled = state.onTitleClick != null) {
+                    state.onTitleClick?.invoke()
+                }
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            state.icon?.let {
+                Icon(
+                    painter = painterResource(it),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(24.dp)
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = state.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                if (state.subtitle.isNotEmpty()) {
+                    Text(
+                        text = state.subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        state.rightButton.Content()
+    }
+}
+
+private fun createWeatherViews(context: Context): WeatherViews {
     return WeatherViews(
-        weatherTitle = title
+        weatherTitle = WeatherTitleState()
     )
 }
 
