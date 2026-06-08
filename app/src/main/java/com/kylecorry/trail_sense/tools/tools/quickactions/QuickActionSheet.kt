@@ -2,21 +2,25 @@ package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import com.google.android.flexbox.AlignItems
@@ -139,10 +143,17 @@ class QuickActionSheet @JvmOverloads constructor(
         )
 
         quickActionsContainer.addView(
-            ImageView(context).apply {
-                setImageResource(R.drawable.rectangle)
-                scaleType = ImageView.ScaleType.FIT_XY
-                imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
+            ComposeView(context).apply {
+                setContent {
+                    TrailSenseTheme {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                    }
+                }
             },
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
