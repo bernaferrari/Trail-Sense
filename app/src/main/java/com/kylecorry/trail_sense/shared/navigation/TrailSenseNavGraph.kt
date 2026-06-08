@@ -390,8 +390,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateGPSFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.CalibrateGPSFragment")
-            label = "CalibrateGPSFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "CalibrateGPSScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CALIBRATE_GPS)
+                .build())
             graph.addDestination(this)
         }
 

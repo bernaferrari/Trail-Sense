@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.settings.ui
 
-import android.os.Bundle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
@@ -48,7 +53,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -57,56 +61,240 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import kotlinx.coroutines.launch
 
-class CalibrateGPSFragment : TrailSenseComposeFragment() {
+@Composable
+fun CalibrateGPSToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CalibrateGPSController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val sensorService by lazy { SensorService(requireContext()) }
+    androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+            controller.onDestroy()
+        }
+    }
+
+    CalibrateGPSContent(controller)
+}
+
+private class CalibrateGPSController(private val fragment: Fragment) {
+
+    val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val throttle = Throttle(20)
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
 
-    private lateinit var gps: IGPS
-    private lateinit var realGps: IGPS
-    private var locationOverride by mutableStateOf(Coordinate.zero)
-    private var isOverrideLocationLoading by mutableStateOf(false)
+    private var gps: IGPS = sensorService.getGPS()
+    private var realGps: IGPS = getRealGPS()
+    var locationOverride by mutableStateOf(prefs.locationOverride)
+        private set
+    var isOverrideLocationLoading by mutableStateOf(false)
+        private set
 
-    private var wasUsingRealGPS = false
-    private var wasUsingCachedGPS = false
+    private var wasUsingRealGPS = shouldUseRealGPS()
+    private var wasUsingCachedGPS = shouldUseCachedGPS()
 
     private var setLocationSummary: ((String) -> Unit)? = null
     private var setPermissionVisible: ((Boolean) -> Unit)? = null
     private var setAutoLocationEnabled: ((Boolean) -> Unit)? = null
     private var setOverrideEnabled: ((Boolean) -> Unit)? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        wasUsingRealGPS = shouldUseRealGPS()
-        wasUsingCachedGPS = shouldUseCachedGPS()
-        gps = sensorService.getGPS()
-        realGps = getRealGPS()
-        locationOverride = prefs.locationOverride
+    fun setLocationSummary(updater: (String) -> Unit) {
+        setLocationSummary = updater
     }
 
-    @Composable
-    override fun FragmentContent() {
+    fun setPermissionVisible(updater: (Boolean) -> Unit) {
+        setPermissionVisible = updater
+    }
+
+    fun setAutoLocationEnabled(updater: (Boolean) -> Unit) {
+        setAutoLocationEnabled = updater
+    }
+
+    fun setOverrideEnabled(updater: (Boolean) -> Unit) {
+        setOverrideEnabled = updater
+    }
+
+    fun onResume() {
+        if (gps.hasValidReading) {
+            update()
+        }
+        startGPS()
+    }
+
+    fun onPause() {
+        stopGPS()
+        stopOverrideLocationAutofill()
+    }
+
+    fun onDestroy() {
+        setLocationSummary = null
+        setPermissionVisible = null
+        setAutoLocationEnabled = null
+        setOverrideEnabled = null
+    }
+
+    fun formatLocation(): String {
+        return formatService.formatLocation(gps.location)
+    }
+
+    fun isLocationOverrideEnabled(): Boolean {
+        return !isAutoGPSPreferenceEnabled() || !prefs.useAutoLocation
+    }
+
+    fun isAutoGPSPreferenceEnabled(): Boolean {
+        return sensorService.hasLocationPermission()
+    }
+
+    fun openAppSettings() {
+        fragment.startActivity(Intents.appSettings(fragment.requireContext()))
+    }
+
+    fun onAutoLocationChanged() {
+        resetGPS()
+        update()
+    }
+
+    fun clearCache() {
+        val cache = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
+        cache.remove(CustomGPS.LAST_ALTITUDE)
+        cache.remove(CustomGPS.LAST_UPDATE)
+        cache.remove(CustomGPS.LAST_SPEED)
+        cache.remove(CustomGPS.LAST_LONGITUDE)
+        cache.remove(CustomGPS.LAST_LATITUDE)
+    }
+
+    fun setLocationOverride(coordinate: Coordinate?) {
+        val updated = coordinate ?: Coordinate.zero
+        locationOverride = updated
+        prefs.locationOverride = updated
+        resetGPS()
+        update()
+    }
+
+    fun autofillOverrideLocation() {
+        if (isOverrideLocationLoading) {
+            return
+        }
+        isOverrideLocationLoading = true
+        realGps.start(::onOverrideLocationUpdate)
+    }
+
+    fun realLocation(): Coordinate {
+        return realGps.location
+    }
+
+    fun putBoolean(key: Int, value: Boolean) {
+        PreferencesSubsystem.getInstance(fragment.requireContext()).preferences.putBoolean(
+            fragment.getString(key),
+            value
+        )
+    }
+
+    private fun resetGPS() {
+        stopGPS()
+        gps = sensorService.getGPS()
+        startGPS()
+    }
+
+    private fun startGPS() {
+        gps.start(::onLocationUpdate)
+    }
+
+    private fun stopGPS() {
+        gps.stop(::onLocationUpdate)
+    }
+
+    private fun onLocationUpdate(): Boolean {
+        update()
+        return true
+    }
+
+    private fun resetRealGPS() {
+        stopOverrideLocationAutofill()
+        realGps = getRealGPS()
+    }
+
+    private fun getRealGPS(): IGPS {
+        return when {
+            shouldUseRealGPS() -> CustomGPS(fragment.requireContext())
+            shouldUseCachedGPS() -> CachedGPS(fragment.requireContext())
+            else -> OverrideGPS(fragment.requireContext())
+        }
+    }
+
+    private fun shouldUseCachedGPS(): Boolean {
+        return sensorService.hasLocationPermission() && !GPS.isAvailable(fragment.requireContext())
+    }
+
+    private fun shouldUseRealGPS(): Boolean {
+        return GPS.isAvailable(fragment.requireContext())
+    }
+
+    private fun onOverrideLocationUpdate(): Boolean {
+        setLocationOverride(realGps.location)
+        isOverrideLocationLoading = false
+        return false
+    }
+
+    private fun stopOverrideLocationAutofill() {
+        realGps.stop(::onOverrideLocationUpdate)
+        isOverrideLocationLoading = false
+    }
+
+    private fun update() {
+        if (throttle.isThrottled()) {
+            return
+        }
+
+        val useReal = shouldUseRealGPS()
+        val useCached = shouldUseCachedGPS()
+
+        if (useReal != wasUsingRealGPS || useCached != wasUsingCachedGPS) {
+            resetRealGPS()
+            resetGPS()
+            wasUsingCachedGPS = useCached
+            wasUsingRealGPS = useReal
+        }
+
+        setPermissionVisible?.invoke(!isAutoGPSPreferenceEnabled())
+        setAutoLocationEnabled?.invoke(isAutoGPSPreferenceEnabled())
+        setOverrideEnabled?.invoke(isLocationOverrideEnabled())
+        setLocationSummary?.invoke(formatService.formatLocation(gps.location))
+    }
+}
+
+@Composable
+private fun CalibrateGPSContent(controller: CalibrateGPSController) {
+        val prefs = controller.prefs
         var locationSummary by remember {
-            mutableStateOf(formatService.formatLocation(gps.location))
+            mutableStateOf(controller.formatLocation())
         }
         var autoLocation by remember { mutableStateOf(prefs.useAutoLocation) }
         var requireSatellites by remember { mutableStateOf(prefs.requiresSatellites) }
         var permissionVisible by remember {
-            mutableStateOf(!isAutoGPSPreferenceEnabled())
+            mutableStateOf(!controller.isAutoGPSPreferenceEnabled())
         }
         var autoLocationEnabled by remember {
-            mutableStateOf(isAutoGPSPreferenceEnabled())
+            mutableStateOf(controller.isAutoGPSPreferenceEnabled())
         }
         var overrideEnabled by remember {
-            mutableStateOf(isLocationOverrideEnabled())
+            mutableStateOf(controller.isLocationOverrideEnabled())
         }
 
-        setLocationSummary = { locationSummary = it }
-        setPermissionVisible = { permissionVisible = it }
-        setAutoLocationEnabled = { autoLocationEnabled = it }
-        setOverrideEnabled = { overrideEnabled = it }
+        controller.setLocationSummary { locationSummary = it }
+        controller.setPermissionVisible { permissionVisible = it }
+        controller.setAutoLocationEnabled { autoLocationEnabled = it }
+        controller.setOverrideEnabled { overrideEnabled = it }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -142,9 +330,8 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                         onCheckedChange = {
                             autoLocation = it
                             prefs.useAutoLocation = it
-                            overrideEnabled = isLocationOverrideEnabled()
-                            resetGPS()
-                            update()
+                            overrideEnabled = controller.isLocationOverrideEnabled()
+                            controller.onAutoLocationChanged()
                         },
                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                     )
@@ -158,7 +345,7 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                         enabled = autoLocation,
                         onCheckedChange = {
                             requireSatellites = it
-                            putBoolean(R.string.pref_require_satellites, it)
+                            controller.putBoolean(R.string.pref_require_satellites, it)
                         },
                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                     )
@@ -168,9 +355,7 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                     item("permission") {
                         SettingsActionRow(
                             label = stringResource(R.string.request_permission),
-                            onClick = {
-                                startActivity(Intents.appSettings(requireContext()))
-                            },
+                            onClick = controller::openAppSettings,
                             modifier = Modifier.padding(
                                 horizontal = TrailSenseSpacing.lg
                             )
@@ -181,7 +366,7 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                     SettingsActionRow(
                         label = stringResource(R.string.clear_cache),
                         enabled = autoLocation,
-                        onClick = ::clearCache,
+                        onClick = controller::clearCache,
                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                     )
                 }
@@ -198,12 +383,12 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         GPSOverrideCoordinateInput(
-                            coordinate = locationOverride,
+                            coordinate = controller.locationOverride,
                             enabled = overrideEnabled,
-                            isLoading = isOverrideLocationLoading,
-                            locationProvider = { realGps.location },
-                            onCoordinateChange = ::setLocationOverride,
-                            onAutoFill = ::autofillOverrideLocation,
+                            isLoading = controller.isOverrideLocationLoading,
+                            locationProvider = controller::realLocation,
+                            onCoordinateChange = controller::setLocationOverride,
+                            onAutoFill = controller::autofillOverrideLocation,
                             modifier = Modifier.padding(top = TrailSenseSpacing.sm)
                         )
                     }
@@ -211,143 +396,6 @@ class CalibrateGPSFragment : TrailSenseComposeFragment() {
                 }
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (gps.hasValidReading) {
-            update()
-        }
-        startGPS()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        stopGPS()
-        stopOverrideLocationAutofill()
-    }
-
-    override fun onDestroyView() {
-        setLocationSummary = null
-        setPermissionVisible = null
-        setAutoLocationEnabled = null
-        setOverrideEnabled = null
-        super.onDestroyView()
-    }
-
-    private fun resetGPS() {
-        stopGPS()
-        gps = sensorService.getGPS()
-        startGPS()
-    }
-
-    private fun startGPS() {
-        gps.start(this::onLocationUpdate)
-    }
-
-    private fun stopGPS() {
-        gps.stop(this::onLocationUpdate)
-    }
-
-    private fun onLocationUpdate(): Boolean {
-        update()
-        return true
-    }
-
-    private fun resetRealGPS() {
-        stopOverrideLocationAutofill()
-        realGps = getRealGPS()
-    }
-
-    private fun getRealGPS(): IGPS {
-        return when {
-            shouldUseRealGPS() -> CustomGPS(requireContext())
-            shouldUseCachedGPS() -> CachedGPS(requireContext())
-            else -> OverrideGPS(requireContext())
-        }
-    }
-
-    private fun isLocationOverrideEnabled(): Boolean {
-        return !isAutoGPSPreferenceEnabled() || !prefs.useAutoLocation
-    }
-
-    private fun isAutoGPSPreferenceEnabled(): Boolean {
-        return sensorService.hasLocationPermission()
-    }
-
-    private fun shouldUseCachedGPS(): Boolean {
-        return sensorService.hasLocationPermission() && !GPS.isAvailable(requireContext())
-    }
-
-    private fun shouldUseRealGPS(): Boolean {
-        return GPS.isAvailable(requireContext())
-    }
-
-    private fun clearCache() {
-        val cache = PreferencesSubsystem.getInstance(requireContext()).preferences
-        cache.remove(CustomGPS.LAST_ALTITUDE)
-        cache.remove(CustomGPS.LAST_UPDATE)
-        cache.remove(CustomGPS.LAST_SPEED)
-        cache.remove(CustomGPS.LAST_LONGITUDE)
-        cache.remove(CustomGPS.LAST_LATITUDE)
-    }
-
-    private fun setLocationOverride(coordinate: Coordinate?) {
-        val updated = coordinate ?: Coordinate.zero
-        locationOverride = updated
-        prefs.locationOverride = updated
-        resetGPS()
-        update()
-    }
-
-    private fun autofillOverrideLocation() {
-        if (isOverrideLocationLoading) {
-            return
-        }
-        isOverrideLocationLoading = true
-        realGps.start(this::onOverrideLocationUpdate)
-    }
-
-    private fun onOverrideLocationUpdate(): Boolean {
-        setLocationOverride(realGps.location)
-        isOverrideLocationLoading = false
-        return false
-    }
-
-    private fun stopOverrideLocationAutofill() {
-        if (::realGps.isInitialized) {
-            realGps.stop(this::onOverrideLocationUpdate)
-        }
-        isOverrideLocationLoading = false
-    }
-
-    private fun update() {
-        if (throttle.isThrottled()) {
-            return
-        }
-
-        val useReal = shouldUseRealGPS()
-        val useCached = shouldUseCachedGPS()
-
-        if (useReal != wasUsingRealGPS || useCached != wasUsingCachedGPS) {
-            resetRealGPS()
-            resetGPS()
-            wasUsingCachedGPS = useCached
-            wasUsingRealGPS = useReal
-        }
-
-        setPermissionVisible?.invoke(!isAutoGPSPreferenceEnabled())
-        setAutoLocationEnabled?.invoke(isAutoGPSPreferenceEnabled())
-        setOverrideEnabled?.invoke(isLocationOverrideEnabled())
-        setLocationSummary?.invoke(formatService.formatLocation(gps.location))
-    }
-
-    private fun putBoolean(key: Int, value: Boolean) {
-        PreferencesSubsystem.getInstance(requireContext()).preferences.putBoolean(
-            getString(key),
-            value
-        )
-    }
 }
 
 @Composable
