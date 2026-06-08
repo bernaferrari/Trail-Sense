@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -62,7 +62,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
-fun CalibrateBarometerToolScreen(fragment: Fragment) {
+fun CalibrateBarometerToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CalibrateBarometerController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -87,7 +87,7 @@ fun CalibrateBarometerToolScreen(fragment: Fragment) {
     CalibrateBarometerContent(controller)
 }
 
-private class CalibrateBarometerController(private val fragment: Fragment) {
+private class CalibrateBarometerController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }

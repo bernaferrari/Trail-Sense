@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -62,7 +62,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 @Composable
-fun CalibrateAltimeterToolScreen(fragment: Fragment) {
+fun CalibrateAltimeterToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { CalibrateAltimeterController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -85,7 +85,7 @@ fun CalibrateAltimeterToolScreen(fragment: Fragment) {
     controller.Content()
 }
 
-private class CalibrateAltimeterController(private val fragment: Fragment) {
+private class CalibrateAltimeterController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private lateinit var barometer: IBarometer
     private lateinit var gps: IGPS

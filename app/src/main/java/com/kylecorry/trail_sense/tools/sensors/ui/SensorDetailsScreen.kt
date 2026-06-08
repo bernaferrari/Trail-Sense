@@ -37,7 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -81,7 +81,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun SensorDetailsToolScreen(fragment: Fragment) {
+fun SensorDetailsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     val controller = remember(fragment) { SensorDetailsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -107,7 +107,7 @@ fun SensorDetailsToolScreen(fragment: Fragment) {
     )
 }
 
-private class SensorDetailsController(private val fragment: Fragment) {
+private class SensorDetailsController(private val fragment: TrailSenseComposeDestinationFragment) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
