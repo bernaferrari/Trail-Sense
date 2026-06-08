@@ -29,11 +29,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +47,7 @@ import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.clipboard.Clipboard
@@ -60,6 +63,8 @@ import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
+import com.kylecorry.trail_sense.plugins.PluginSubsystem
+import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.receivers.StartOnBootController
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
@@ -95,6 +100,7 @@ import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
+import kotlinx.coroutines.launch
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
 
@@ -144,6 +150,89 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_GUIDE_LIST -> GuideList()
             DESTINATION_DIAGNOSTICS -> Diagnostics()
             DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
+            DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
+        }
+    }
+
+    @Composable
+    private fun PluginsSettings() {
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val scope = rememberCoroutineScope()
+        val pluginSubsystem = remember { PluginSubsystem.getInstance(requireContext()) }
+        var plugins by remember { mutableStateOf<PluginSettingsState?>(null) }
+
+        fun refresh() {
+            scope.launch {
+                plugins = loadPlugins(pluginSubsystem)
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            plugins = loadPlugins(pluginSubsystem)
+        }
+
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    refresh()
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+
+        SettingsList(title = stringResource(R.string.connected_plugins)) {
+            val connected = plugins?.connected.orEmpty()
+            if (connected.isEmpty()) {
+                item("connected_none") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.none),
+                        enabled = false,
+                        onClick = {},
+                        trailing = {},
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            } else {
+                items(connected, key = { "connected_${it.packageId}" }) { plugin ->
+                    SettingsActionRow(
+                        label = plugin.name,
+                        summary = plugin.packageId,
+                        onClick = { openPluginDetails(plugin) },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
+
+            item("available_header") {
+                TrailSenseSectionHeader(
+                    title = stringResource(R.string.available_plugins),
+                    modifier = Modifier.padding(top = TrailSenseSpacing.md)
+                )
+            }
+            val available = plugins?.available.orEmpty()
+            if (available.isEmpty()) {
+                item("available_none") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.none),
+                        enabled = false,
+                        onClick = {},
+                        trailing = {},
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            } else {
+                items(available, key = { "available_${it.packageId}" }) { plugin ->
+                    SettingsActionRow(
+                        label = plugin.name,
+                        summary = plugin.packageId,
+                        onClick = { confirmConnect(pluginSubsystem, plugin, ::refresh) },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
         }
     }
 
@@ -1092,6 +1181,53 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         return tools.firstOrNull { it.id == id }?.name ?: getString(R.string.none)
     }
 
+    private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSettingsState {
+        return PluginSettingsState(
+            connected = pluginSubsystem.getConnectedPlugins().sortedPlugins(),
+            available = pluginSubsystem.getUnconnectedPlugins().sortedPlugins()
+        )
+    }
+
+    private fun confirmConnect(
+        pluginSubsystem: PluginSubsystem,
+        plugin: Plugin,
+        onConnected: () -> Unit
+    ) {
+        Alerts.dialog(
+            requireContext(),
+            getString(R.string.plugin_connect_title),
+            getString(R.string.plugin_connect_message, plugin.name)
+        ) { cancelled ->
+            if (!cancelled) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    pluginSubsystem.connect(plugin)
+                    onConnected()
+                }
+            }
+        }
+    }
+
+    private fun openPluginDetails(plugin: Plugin) {
+        findNavController().navigateWithAnimation(
+            R.id.pluginDetailsFragment,
+            Bundle().apply {
+                putString("package_id", plugin.packageId)
+            }
+        )
+    }
+
+    private data class PluginSettingsState(
+        val connected: List<Plugin>,
+        val available: List<Plugin>
+    )
+
+    private fun List<Plugin>.sortedPlugins(): List<Plugin> {
+        return sortedWith(
+            compareBy<Plugin, String>(String.CASE_INSENSITIVE_ORDER) { it.name }
+                .thenBy { it.packageId }
+        )
+    }
+
     private fun projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
         return mapOf(
             CameraPreferences.ProjectionType.EstimatedIntrinsics to
@@ -1208,5 +1344,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_GUIDE_LIST = "guide_list"
         const val DESTINATION_DIAGNOSTICS = "diagnostics"
         const val DESTINATION_TOOLS_SETTINGS = "tools_settings"
+        const val DESTINATION_PLUGINS_SETTINGS = "plugins_settings"
     }
 }
