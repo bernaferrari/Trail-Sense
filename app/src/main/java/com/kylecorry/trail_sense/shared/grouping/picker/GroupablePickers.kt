@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.grouping.picker
 
 import android.content.Context
-import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
@@ -52,7 +50,7 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (item: T?) -> Unit
     ) {
-        val view = createAlertContent(context)
+        val view = ComposeView(context)
         var root by mutableStateOf<T?>(null)
         var items by mutableStateOf<List<T>>(emptyList())
         var resetKey by mutableIntStateOf(0)
@@ -67,34 +65,30 @@ object GroupablePickers {
             }
         }
 
-        view.addView(
-            ComposeView(context).apply {
-                setContent {
-                    TrailSenseTheme {
-                        GroupableSelectContent(
-                            root = root,
-                            items = items,
-                            emptyText = emptyText,
-                            resetKey = resetKey,
-                            titleProvider = titleProvider,
-                            itemTitleProvider = itemTitleProvider,
-                            searchEnabled = searchEnabled,
-                            onNavigateUp = { manager.up() },
-                            onSearch = { manager.search(it) },
-                            onClick = {
-                                if (it.isGroup) {
-                                    manager.open(it.id)
-                                } else {
-                                    selected = it
-                                    onPick.invoke(it)
-                                    alert?.dismiss()
-                                }
-                            }
-                        )
+        view.setContent {
+            TrailSenseTheme {
+                GroupableSelectContent(
+                    root = root,
+                    items = items,
+                    emptyText = emptyText,
+                    resetKey = resetKey,
+                    titleProvider = titleProvider,
+                    itemTitleProvider = itemTitleProvider,
+                    searchEnabled = searchEnabled,
+                    onNavigateUp = { manager.up() },
+                    onSearch = { manager.search(it) },
+                    onClick = {
+                        if (it.isGroup) {
+                            manager.open(it.id)
+                        } else {
+                            selected = it
+                            onPick.invoke(it)
+                            alert?.dismiss()
+                        }
                     }
-                }
+                )
             }
-        )
+        }
 
         manager.open(initialGroup)
         alert = Alerts.dialog(context, title ?: "", contentView = view, okText = null) {
@@ -114,7 +108,7 @@ object GroupablePickers {
         searchEnabled: Boolean = true,
         onPick: (cancelled: Boolean, item: T?) -> Unit
     ) {
-        val view = createAlertContent(context)
+        val view = ComposeView(context)
         var root by mutableStateOf<T?>(null)
         var items by mutableStateOf<List<T>>(emptyList())
         var resetKey by mutableIntStateOf(0)
@@ -127,41 +121,30 @@ object GroupablePickers {
             }
         }
 
-        view.addView(
-            ComposeView(context).apply {
-                setContent {
-                    TrailSenseTheme {
-                        GroupableSelectContent(
-                            root = root,
-                            items = items,
-                            emptyText = emptyText,
-                            resetKey = resetKey,
-                            titleProvider = titleProvider,
-                            itemTitleProvider = itemTitleProvider,
-                            searchEnabled = searchEnabled,
-                            onNavigateUp = { manager.up() },
-                            onSearch = { manager.search(it) },
-                            onClick = {
-                                if (it.isGroup) {
-                                    manager.open(it.id)
-                                }
-                            }
-                        )
+        view.setContent {
+            TrailSenseTheme {
+                GroupableSelectContent(
+                    root = root,
+                    items = items,
+                    emptyText = emptyText,
+                    resetKey = resetKey,
+                    titleProvider = titleProvider,
+                    itemTitleProvider = itemTitleProvider,
+                    searchEnabled = searchEnabled,
+                    onNavigateUp = { manager.up() },
+                    onSearch = { manager.search(it) },
+                    onClick = {
+                        if (it.isGroup) {
+                            manager.open(it.id)
+                        }
                     }
-                }
+                )
             }
-        )
+        }
 
         manager.open(initialGroup)
         Alerts.dialog(context, title ?: "", contentView = view, okText = okText) {
             onPick.invoke(it, root)
-        }
-    }
-
-    private fun createAlertContent(context: Context): FrameLayout {
-        val padding = Resources.dp(context, 16f).toInt()
-        return FrameLayout(context).apply {
-            setPadding(padding, padding, padding, padding)
         }
     }
 
@@ -180,7 +163,7 @@ private fun <T : Groupable> GroupableSelectContent(
     onSearch: (String) -> Unit,
     onClick: (T) -> Unit
 ) {
-    Column {
+    Column(modifier = Modifier.padding(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
