@@ -40,7 +40,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
+import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -289,11 +289,11 @@ object CustomUiUtils {
 
             val prefs = UserPreferences(fragment.requireContext()).camera
 
-            val sheet = PhotoImportBottomSheetFragment(size, prefs.useZeroShutterLag) { uri ->
+            val sheet = PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
                 onCapture(uri)
             }
 
-            sheet.show(fragment)
+            sheet.show()
         }
     }
 

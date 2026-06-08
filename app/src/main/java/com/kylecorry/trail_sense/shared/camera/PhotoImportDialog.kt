@@ -1,13 +1,17 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Bundle
 import android.util.Size
 import android.view.KeyEvent
-import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import androidx.camera.core.ImageCapture
 import androidx.camera.view.PreviewView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Box
@@ -47,6 +51,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
+import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.fragments.inBackground
@@ -60,56 +65,69 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseFullscreenComposeDialogFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class PhotoImportBottomSheetFragment(
+class PhotoImportDialog(
+    private val fragment: Fragment,
     private val resolution: Size? = null,
     private val useZeroShutterLag: Boolean = false,
     private val onCapture: (uri: Uri?) -> Unit
-) : TrailSenseFullscreenComposeDialogFragment() {
+) {
 
     private var isCapturing by mutableStateOf(false)
     private var camera: CameraState? = null
-    private var isViewCreated = false
     private var isCameraStarted = false
+    private var dialog: Dialog? = null
 
     private var orientation = DeviceOrientation.Orientation.Portrait
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    fun show(): Dialog {
         isCapturing = false
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        PhotoImportContent(
-            isCapturing = isCapturing,
-            onClose = {
-                onCapture(null)
-                dismiss()
-            },
-            onCapture = ::takePhoto,
-            onCameraReady = {
-                camera = it
-                if (isViewCreated) {
-                    startCamera(it)
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
+        val context = fragment.requireContext()
+        val newDialog = Dialog(context)
+        dialog = newDialog
+        newDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        newDialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                PhotoImportContent(
+                    isCapturing = isCapturing,
+                    onClose = {
+                        onCapture(null)
+                        dismiss()
+                    },
+                    onCapture = ::takePhoto,
+                    onCameraReady = {
+                        camera = it
+                        startCamera(it)
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                )
+            }
         )
+        newDialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+        }
+        initializeDialog(newDialog)
+        newDialog.show()
+        newDialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
+        return newDialog
     }
 
     @SuppressLint("UnsafeOptInUsageError")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        isViewCreated = true
-
-        val orientationSensor = SensorService(requireContext()).getDeviceOrientationSensor()
+    private fun initializeDialog(dialog: Dialog) {
+        val orientationSensor = SensorService(fragment.requireContext()).getDeviceOrientationSensor()
         orientation = DeviceOrientation.Orientation.Portrait
-        observe(orientationSensor) {
+        fragment.observe(orientationSensor) {
             val newOrientation = orientationSensor.orientation
             if (newOrientation == DeviceOrientation.Orientation.Landscape || newOrientation == DeviceOrientation.Orientation.LandscapeInverse) {
                 orientation = newOrientation
@@ -119,7 +137,7 @@ class PhotoImportBottomSheetFragment(
         }
 
         val volumeKeys = listOf(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP)
-        dialog?.setOnKeyListener { _, keyCode, event ->
+        dialog.setOnKeyListener { _, keyCode, event ->
             if (!volumeKeys.contains(keyCode) || event.action != KeyEvent.ACTION_DOWN) {
                 return@setOnKeyListener false
             }
@@ -127,8 +145,15 @@ class PhotoImportBottomSheetFragment(
             true
         }
 
-        dialog?.setOnCancelListener { onCapture(null) }
-        camera?.let(::startCamera)
+        dialog.setOnCancelListener { onCapture(null) }
+        dialog.setOnDismissListener {
+            stopCamera()
+        }
+        camera?.let {
+            if (!isCameraStarted) {
+                startCamera(it)
+            }
+        }
     }
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -141,7 +166,7 @@ class PhotoImportBottomSheetFragment(
         camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
         camera.start(
             resolution,
-            lifecycleOwner = this,
+            lifecycleOwner = fragment.viewLifecycleOwner,
             readFrames = false,
             captureSettings = ImageCaptureSettings(
                 captureMode = if (useZeroShutterLag) {
@@ -161,8 +186,8 @@ class PhotoImportBottomSheetFragment(
             return
         }
         isCapturing = true
-        inBackground {
-            val file = FileSubsystem.getInstance(requireContext()).createTemp("jpg")
+        fragment.inBackground {
+            val file = FileSubsystem.getInstance(fragment.requireContext()).createTemp("jpg")
             val success = onIO {
                 val saved = camera.capture(file)
 
@@ -184,7 +209,7 @@ class PhotoImportBottomSheetFragment(
                 saved
             }
             onMain {
-                if (this@PhotoImportBottomSheetFragment.camera == null) {
+                if (this@PhotoImportDialog.camera == null) {
                     file.delete()
                     return@onMain
                 }
@@ -199,17 +224,15 @@ class PhotoImportBottomSheetFragment(
         }
     }
 
-    override fun onDestroyView() {
+    fun dismiss() {
+        dialog?.dismiss()
+    }
+
+    private fun stopCamera() {
         camera?.stop()
         camera = null
         isCameraStarted = false
-        isViewCreated = false
-        super.onDestroyView()
-    }
-
-    override fun onDismiss(dialog: android.content.DialogInterface) {
-        super.onDismiss(dialog)
-        camera?.stop()
+        dialog = null
     }
 }
 
