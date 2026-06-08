@@ -56,7 +56,7 @@ import com.kylecorry.trail_sense.shared.extensions.useIntPreference
 import com.kylecorry.trail_sense.shared.extensions.useNavController
 import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
 import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -99,16 +99,23 @@ fun MapToolScreen(
             controller.onDestroy()
         }
     }
-    MapHost(
-        views = controller.views,
-        modifier = modifier.fillMaxSize()
-    )
+    controller.Content(modifier = modifier.fillMaxSize())
 }
 
 private class MapController(private val fragment: TrailSenseComposeDestinationFragment) : MapControllerHost {
 
     val views = createMapViews(fragment.requireContext())
     private var wasViewCreated = true
+    private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
+
+    @Composable
+    fun Content(modifier: Modifier = Modifier) {
+        MapHost(
+            views = views,
+            modifier = modifier
+        )
+        layerEditSheet.Content(fragment)
+    }
 
     override fun onPause() {
         fragment.cleanupReactiveEffects()
@@ -235,16 +242,10 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
             }
         }
 
-        val layerEditSheet = fragment.useMemo(prefs) {
-            MapLayersBottomSheet(
-                MapToolRegistration.MAP_ID
-            )
-        }
-
         fragment.usePauseEffect(layerEditSheet) {
             tryOrNothing {
                 layerEditSheet.setOnDismissListener(null)
-                layerEditSheet.dismiss()
+                layerEditSheet.dismissAndUpdateWidgets(context)
             }
         }
 
@@ -255,7 +256,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
             setHasTimeDependentLayers(
                     mapView.layerManager.getLayers().any { it.isTimeDependent })
             }
-            layerEditSheet.show(fragment)
+            layerEditSheet.show()
         }
 
         // Distance

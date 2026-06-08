@@ -77,7 +77,7 @@ import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -217,7 +217,7 @@ private class NavigatorController(private val fragment: Fragment) {
     private val loadBeaconsRunner = CoroutineQueueRunner()
 
     private val layers = NavigationCompassLayerManager()
-    private var layerSheet: MapLayersBottomSheet? = null
+    private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
 
     // Compass layers
     private val beaconCompassLayer = BeaconCompassLayer()
@@ -332,6 +332,7 @@ private class NavigatorController(private val fragment: Fragment) {
                 }
             }
         }
+        layerSheet.Content(fragment)
     }
 
     fun onCreate() {
@@ -458,13 +459,12 @@ private class NavigatorController(private val fragment: Fragment) {
         }
 
         views.radarCompassMap.setOnLongPressListener {
-            layerSheet?.dismiss()
-            layerSheet = MapLayersBottomSheet(NavigationToolRegistration.MAP_ID)
+            layerSheet.dismiss()
             layers.pause(views.radarCompassMap)
-            layerSheet?.setOnDismissListener {
+            layerSheet.setOnDismissListener {
                 layers.resume(fragment.requireContext(), views.radarCompassMap, fragment)
             }
-            layerSheet?.show(fragment)
+            layerSheet.show()
         }
 
         views.linearCompass.setOnClickListener {
@@ -662,8 +662,8 @@ private class NavigatorController(private val fragment: Fragment) {
         errors.reset()
         updateTimer.stop()
         compassLayerTimer.stop()
-        layerSheet?.setOnDismissListener(null)
-        layerSheet?.dismiss()
+        layerSheet.setOnDismissListener(null)
+        layerSheet.dismiss()
         if (isViewReady) {
             layers.pause(views.radarCompassMap)
         }

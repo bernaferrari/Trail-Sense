@@ -43,7 +43,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dem.DEM
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -129,7 +129,10 @@ class ViewPhotoMapController(
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
-    private var layerSheet: MapLayersBottomSheet? = null
+    private val layerSheet = MapLayersSheetState(
+        OfflineMapsToolRegistration.PHOTO_MAPS_ID,
+        PhotoMapToolLayerManager.alwaysEnabledLayers
+    )
 
     // Paths
     private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
@@ -152,6 +155,7 @@ class ViewPhotoMapController(
             views = views,
             modifier = modifier
         )
+        layerSheet.Content(fragment)
     }
 
     fun onCreate() {
@@ -378,16 +382,12 @@ class ViewPhotoMapController(
     }
 
     fun adjustLayers() {
-        layerSheet?.dismiss()
-        layerSheet = MapLayersBottomSheet(
-            OfflineMapsToolRegistration.PHOTO_MAPS_ID,
-            PhotoMapToolLayerManager.alwaysEnabledLayers
-        )
+        layerSheet.dismissAndUpdateWidgets(fragment.requireContext())
         layerManager.pause(views.map)
-        layerSheet?.setOnDismissListener {
+        layerSheet.setOnDismissListener {
             resetLayerManager()
         }
-        layerSheet?.show(fragment)
+        layerSheet.show()
     }
 
     private fun navigateTo(location: Coordinate) {
@@ -546,8 +546,8 @@ class ViewPhotoMapController(
 
     fun onPause() {
         updateTimer.stop()
-        layerSheet?.setOnDismissListener(null)
-        layerSheet?.dismiss()
+        layerSheet.setOnDismissListener(null)
+        layerSheet.dismissAndUpdateWidgets(fragment.requireContext())
         photoMapViews?.let {
             layerManager.pause(it.map)
         }

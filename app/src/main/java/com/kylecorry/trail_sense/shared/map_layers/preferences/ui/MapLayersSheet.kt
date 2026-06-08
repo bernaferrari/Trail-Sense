@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 import android.content.Context
 import android.text.Spanned
 import android.text.style.URLSpan
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,9 +20,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,7 +49,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -71,7 +71,6 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullPrefe
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -83,129 +82,134 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-class MapLayersBottomSheet(
+class MapLayersSheetState(
     private val mapId: String,
     private val alwaysEnabledLayerIds: List<String> = emptyList()
 ) {
 
     private var onDismissListener: (() -> Unit)? = null
     private val repo by lazy { AppServiceRegistry.get<MapLayerPreferenceRepo>() }
-    private var sheet: BottomSheetDialog? = null
-    private var fragment: Fragment? = null
+    private var isVisible by mutableStateOf(false)
 
     fun setOnDismissListener(listener: (() -> Unit)?) {
         onDismissListener = listener
     }
 
-    fun show(fragment: Fragment): BottomSheetDialog {
-        this.fragment = fragment
-        val context = fragment.requireContext()
-        val dialog = BottomSheetDialog(context)
-        sheet = dialog
-        dialog.setContentView(
-            TrailSenseComposeRootView(
-                context,
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow
-            ) {
-                    val context = LocalContext.current
-                    val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
-                    val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
-                    val listState = rememberLazyListState()
-                    val coroutineScope = rememberCoroutineScope()
-                    var layers by remember { mutableStateOf<List<MapLayerDefinition>?>(null) }
-                    var selectedLayerIds by remember { mutableStateOf(repo.getActiveLayerIds(mapId)) }
-                    var expandedLayerIds by remember { mutableStateOf(emptySet<String>()) }
-                    var refreshKey by remember { mutableIntStateOf(0) }
-
-                    fun refresh() {
-                        selectedLayerIds = repo.getActiveLayerIds(mapId)
-                        refreshKey++
-                    }
-
-                    LaunchedEffect(loader) {
-                        layers = onDefault {
-                            loader.getDefinitions().values.filter { it.isConfigurable }
-                        }
-                    }
-
-                    MapLayersBottomSheetContent(
-                        mapId = mapId,
-                        layers = layers,
-                        selectedLayerIds = selectedLayerIds,
-                        expandedLayerIds = expandedLayerIds,
-                        alwaysEnabledLayerIds = alwaysEnabledLayerIds,
-                        refreshKey = refreshKey,
-                        listState = listState,
-                        onClose = ::dismiss,
-                        onToggleLayerExpansion = { layer ->
-                            expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
-                                expandedLayerIds - layer.id
-                            } else {
-                                expandedLayerIds + layer.id
-                            }
-                        },
-                        onMoveLayerUp = { layer ->
-                            moveLayer(layer, moveTowardTop = true, selectedLayerIds)
-                            expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
-                                setOf(layer.id)
-                            } else {
-                                emptySet()
-                            }
-                            refresh()
-                        },
-                        onMoveLayerDown = { layer ->
-                            moveLayer(layer, moveTowardTop = false, selectedLayerIds)
-                            expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
-                                setOf(layer.id)
-                            } else {
-                                emptySet()
-                            }
-                            refresh()
-                        },
-                        onPreferenceChanged = {
-                            refreshKey++
-                        },
-                        onNavigate = { action ->
-                            (fragment.requireActivity() as? MainActivity)
-                                ?.findNavController()
-                                ?.navigateWithAnimation(action)
-                        },
-                        onCopySettings = { layer ->
-                            pickDestinationMaps(context, layer)
-                        },
-                        onRemoveLayer = { layer ->
-                            removeLayer(context, layer, selectedLayerIds) {
-                                expandedLayerIds = emptySet()
-                                refresh()
-                            }
-                        },
-                        onAddLayers = {
-                            pickAdditionalLayers(context, layers.orEmpty(), selectedLayerIds) {
-                                expandedLayerIds = emptySet()
-                                refresh()
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(0)
-                                }
-                            }
-                        },
-                        markdown = markdown
-                    )
-            }
-        )
-        dialog.setOnDismissListener {
-            onDismissListener?.invoke()
-            if (mapId == MapToolRegistration.MAP_ID) {
-                Tools.triggerWidgetUpdate(context, MapToolRegistration.WIDGET_MAP)
-            }
-            sheet = null
-            this.fragment = null
-        }
-        dialog.show()
-        return dialog
+    fun show() {
+        isVisible = true
     }
 
     fun dismiss() {
-        sheet?.dismiss()
+        if (!isVisible) {
+            return
+        }
+        isVisible = false
+        onDismissListener?.invoke()
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun Content(fragment: Fragment, modifier: Modifier = Modifier) {
+        if (!isVisible) {
+            return
+        }
+
+        val context = fragment.requireContext()
+        val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
+        val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+        var layers by remember { mutableStateOf<List<MapLayerDefinition>?>(null) }
+        var selectedLayerIds by remember { mutableStateOf(repo.getActiveLayerIds(mapId)) }
+        var expandedLayerIds by remember { mutableStateOf(emptySet<String>()) }
+        var refreshKey by remember { mutableIntStateOf(0) }
+
+        fun refresh() {
+            selectedLayerIds = repo.getActiveLayerIds(mapId)
+            refreshKey++
+        }
+
+        LaunchedEffect(loader) {
+            layers = onDefault {
+                loader.getDefinitions().values.filter { it.isConfigurable }
+            }
+        }
+
+        ModalBottomSheet(onDismissRequest = { dismissAndUpdateWidgets(context) }) {
+            MapLayersContent(
+                mapId = mapId,
+                layers = layers,
+                selectedLayerIds = selectedLayerIds,
+                expandedLayerIds = expandedLayerIds,
+                alwaysEnabledLayerIds = alwaysEnabledLayerIds,
+                refreshKey = refreshKey,
+                listState = listState,
+                onClose = { dismissAndUpdateWidgets(context) },
+                onToggleLayerExpansion = { layer ->
+                    expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
+                        expandedLayerIds - layer.id
+                    } else {
+                        expandedLayerIds + layer.id
+                    }
+                },
+                onMoveLayerUp = { layer ->
+                    moveLayer(layer, moveTowardTop = true, selectedLayerIds)
+                    expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
+                        setOf(layer.id)
+                    } else {
+                        emptySet()
+                    }
+                    refresh()
+                },
+                onMoveLayerDown = { layer ->
+                    moveLayer(layer, moveTowardTop = false, selectedLayerIds)
+                    expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
+                        setOf(layer.id)
+                    } else {
+                        emptySet()
+                    }
+                    refresh()
+                },
+                onPreferenceChanged = {
+                    refreshKey++
+                },
+                onNavigate = { action ->
+                    (fragment.requireActivity() as? MainActivity)
+                        ?.findNavController()
+                        ?.navigateWithAnimation(action)
+                },
+                onCopySettings = { layer ->
+                    pickDestinationMaps(context, layer)
+                },
+                onRemoveLayer = { layer ->
+                    removeLayer(context, layer, selectedLayerIds) {
+                        expandedLayerIds = emptySet()
+                        refresh()
+                    }
+                },
+                onAddLayers = {
+                    pickAdditionalLayers(context, layers.orEmpty(), selectedLayerIds) {
+                        expandedLayerIds = emptySet()
+                        refresh()
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(0)
+                        }
+                    }
+                },
+                markdown = markdown,
+                modifier = modifier.fillMaxSize()
+            )
+        }
+    }
+
+    fun dismissAndUpdateWidgets(context: Context) {
+        val wasVisible = isVisible
+        dismiss()
+        if (wasVisible) {
+            if (mapId == MapToolRegistration.MAP_ID) {
+                Tools.triggerWidgetUpdate(context, MapToolRegistration.WIDGET_MAP)
+            }
+        }
     }
 
     private fun moveLayer(
@@ -314,7 +318,7 @@ class MapLayersBottomSheet(
 }
 
 @Composable
-private fun MapLayersBottomSheetContent(
+private fun MapLayersContent(
     mapId: String,
     layers: List<MapLayerDefinition>?,
     selectedLayerIds: List<String>,
@@ -910,10 +914,10 @@ private const val UrlAnnotationTag = "url"
 
 @Preview(showBackground = true)
 @Composable
-private fun MapLayersBottomSheetContentPreview() {
+private fun MapLayersContentPreview() {
     TrailSenseTheme {
         val context = LocalContext.current
-        MapLayersBottomSheetContent(
+        MapLayersContent(
             mapId = "map",
             layers = listOf(
                 MapLayerDefinition(

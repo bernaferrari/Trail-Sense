@@ -33,7 +33,7 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -53,10 +53,11 @@ fun NavigationSettingsToolScreen(fragment: Fragment) {
         }
     }
     NavigationSettingsContent(controller)
+    controller.LayerSheet()
 }
 
 private class NavigationSettingsController(private val fragment: Fragment) {
-    private var layerSheet: MapLayersBottomSheet? = null
+    private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
 
     val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
     val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
@@ -68,13 +69,17 @@ private class NavigationSettingsController(private val fragment: Fragment) {
     }
 
     fun onDispose() {
-        layerSheet?.dismiss()
+        layerSheet.dismiss()
     }
 
     fun showLayerSheet() {
-        layerSheet?.dismiss()
-        layerSheet = MapLayersBottomSheet(NavigationToolRegistration.MAP_ID)
-        layerSheet?.show(fragment)
+        layerSheet.dismiss()
+        layerSheet.show()
+    }
+
+    @Composable
+    fun LayerSheet() {
+        layerSheet.Content(fragment)
     }
 
     fun onCurrentPaceSpeedometerSelected() {

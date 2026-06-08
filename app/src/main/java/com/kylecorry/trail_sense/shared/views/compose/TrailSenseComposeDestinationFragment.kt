@@ -136,7 +136,7 @@ import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
@@ -268,7 +268,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost {
 
-    private var layerSheet: MapLayersBottomSheet? = null
+    private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
     private val screenFlashlight by lazy { ScreenTorch(requireActivity().window) }
     private val screenFlashlightCache by lazy {
@@ -359,7 +359,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             mapController?.onPause()
         }
         super.onPause()
-        layerSheet?.dismiss()
+        layerSheet?.dismissAndUpdateWidgets(requireContext())
     }
 
     override fun onUpdate() {
@@ -371,25 +371,27 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     @Composable
     private fun FragmentContent() {
-        when (requireArguments().getString(ARG_DESTINATION)) {
-            DESTINATION_LEVEL -> LevelScreen()
-            DESTINATION_WHISTLE -> WhistleScreen()
-            DESTINATION_CELL_SIGNAL_SETTINGS -> CellSignalSettings()
-            DESTINATION_CLOCK_SETTINGS -> ClockSettings()
-            DESTINATION_TIDE_SETTINGS -> TideSettings()
-            DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
-            DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
-            DESTINATION_LICENSES -> LicensesScreen()
-            DESTINATION_BEACON_SETTINGS -> BeaconSettings()
-            DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
-            DESTINATION_CAMERA_SETTINGS -> CameraSettings()
-            DESTINATION_ERROR_SETTINGS -> ErrorSettings()
-            DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
-            DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
-            DESTINATION_SENSOR_SETTINGS -> SensorSettings()
-            DESTINATION_RULER_SETTINGS -> RulerSettings()
-            DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
-            DESTINATION_POWER_SETTINGS -> PowerSettings()
+        Box(Modifier.fillMaxSize()) {
+            with(this@TrailSenseComposeDestinationFragment) {
+                when (requireArguments().getString(ARG_DESTINATION)) {
+                DESTINATION_LEVEL -> LevelScreen()
+                DESTINATION_WHISTLE -> WhistleScreen()
+                DESTINATION_CELL_SIGNAL_SETTINGS -> CellSignalSettings()
+                DESTINATION_CLOCK_SETTINGS -> ClockSettings()
+                DESTINATION_TIDE_SETTINGS -> TideSettings()
+                DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
+                DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
+                DESTINATION_LICENSES -> LicensesScreen()
+                DESTINATION_BEACON_SETTINGS -> BeaconSettings()
+                DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
+                DESTINATION_CAMERA_SETTINGS -> CameraSettings()
+                DESTINATION_ERROR_SETTINGS -> ErrorSettings()
+                DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
+                DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
+                DESTINATION_SENSOR_SETTINGS -> SensorSettings()
+                DESTINATION_RULER_SETTINGS -> RulerSettings()
+                DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
+                DESTINATION_POWER_SETTINGS -> PowerSettings()
             DESTINATION_GUIDE -> GuideScreen(
                 name = requireArguments().getString("guide_name", ""),
                 resource = requireArguments().getInt("guide_contents")
@@ -501,6 +503,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
                 onController = { clinometerLockController = it }
             )
             DESTINATION_WEATHER -> WeatherToolScreen(this)
+                }
+            }
+            layerSheet?.Content(this@TrailSenseComposeDestinationFragment, Modifier.fillMaxSize())
         }
     }
 
@@ -2621,18 +2626,18 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     private fun showMapLayerSheet() {
-        layerSheet?.dismiss()
-        layerSheet = MapLayersBottomSheet(MapToolRegistration.MAP_ID)
-        layerSheet?.show(this)
+        layerSheet?.dismissAndUpdateWidgets(requireContext())
+        layerSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
+        layerSheet?.show()
     }
 
     private fun showPhotoMapLayerSheet() {
-        layerSheet?.dismiss()
-        layerSheet = MapLayersBottomSheet(
+        layerSheet?.dismissAndUpdateWidgets(requireContext())
+        layerSheet = MapLayersSheetState(
             OfflineMapsToolRegistration.PHOTO_MAPS_ID,
             PhotoMapToolLayerManager.alwaysEnabledLayers
         )
-        layerSheet?.show(this)
+        layerSheet?.show()
     }
 
     private fun onReduceMapResolutionChange(shouldReduce: Boolean) {
