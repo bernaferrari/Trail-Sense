@@ -1,142 +1,138 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.content.Context
-import android.graphics.Color
+import android.graphics.Paint
 import android.util.AttributeSet
-import com.kylecorry.andromeda.canvas.CanvasView
-import com.kylecorry.andromeda.canvas.TextMode
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-class CameraClinometerView : CanvasView {
+class CameraClinometerView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : AbstractComposeView(context, attrs, defStyleAttr) {
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+    var inclination by mutableStateOf(0f)
+    var startInclination by mutableStateOf<Float?>(null)
 
-    init {
-        runEveryCycle = false
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            CameraClinometerContent(
+                inclination = inclination,
+                startInclination = startInclination,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
+}
 
-    var inclination = 0f
-        set(value) {
-            field = value
-            invalidate()
+@Composable
+private fun CameraClinometerContent(
+    inclination: Float,
+    startInclination: Float?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val formatter = FormatService.getInstance(context)
+    val dialColor = Color(Resources.color(context, R.color.colorSecondary))
+    val density = LocalDensity.current
+    val tickLength = with(density) { 4.dp.toPx() }
+    val tickStroke = with(density) { 2.dp.toPx() }
+    val needleStroke = with(density) { 4.dp.toPx() }
+    val textSize = with(density) { 10.sp.toPx() }
+    val tickInterval = 10
+    val labelInterval = 30
+
+    Canvas(modifier = modifier) {
+        fun getY(incline: Float): Float {
+            val padding = 20f
+            val height = size.height - 2 * padding
+            return height - (map(incline, -90f, 90f, 0f, 1f) * height) + padding
         }
 
-    var startInclination: Float? = null
-        set(value) {
-            field = value
-            invalidate()
+        drawRect(dialColor)
+
+        fun zone(start: Float, end: Float, color: Int) {
+            drawRect(
+                color = Color(color).copy(alpha = 150f / 255f),
+                topLeft = Offset(0f, min(getY(start), getY(end))),
+                size = Size(tickLength, (getY(start) - getY(end)).absoluteValue)
+            )
         }
 
-    private val formatter = FormatService.getInstance(context)
-    private val tickInterval = 10
-    private var tickLength = 1f
-    private val labelInterval = 30
-    private var dialColor = Color.BLACK
+        zone(45f, 30f, AppColor.Red.color)
+        zone(-30f, -45f, AppColor.Red.color)
+        zone(60f, 45f, AppColor.Yellow.color)
+        zone(-45f, -60f, AppColor.Yellow.color)
+        zone(90f, 60f, AppColor.Green.color)
+        zone(-60f, -90f, AppColor.Green.color)
+        zone(30f, -30f, AppColor.Green.color)
 
-
-    override fun setup() {
-        dialColor = Resources.color(context, R.color.colorSecondary)
-        tickLength = dp(4f)
-        textSize(sp(10f))
-    }
-
-    override fun draw() {
-        drawBackground()
-        drawTicks()
-        drawNeedle()
-    }
-
-    private fun drawBackground() {
-        background(dialColor)
-        val alpha = 150
-
-        noStroke()
-        val w = tickLength
-
-        // High
-        fill(AppColor.Red.color)
-        opacity(alpha)
-        rect(0f, getY(45f), w, (getY(30f) - getY(45f)))
-        rect(0f, getY(-30f), w, (getY(-45f) - getY(-30f)))
-
-        // Moderate
-        fill(AppColor.Yellow.color)
-        opacity(alpha)
-        rect(0f, getY(60f), w, (getY(45f) - getY(60f)))
-        rect(0f, getY(-45f), w, (getY(-60f) - getY(-45f)))
-
-        // Low
-        fill(AppColor.Green.color)
-        opacity(alpha)
-        rect(0f, getY(90f), w, (getY(60f) - getY(90f)))
-        rect(0f, getY(-60f), w, (getY(-90f) - getY(-60f)))
-        rect(0f, getY(30f), w, (getY(-30f) - getY(30f)))
-
-        opacity(255)
-    }
-
-    private fun drawTicks() {
-        strokeWeight(dp(2f))
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            textAlign = Paint.Align.CENTER
+            this.textSize = textSize
+        }
         for (i in -90..90 step tickInterval) {
-            stroke(Color.WHITE)
             val y = getY(i.toFloat())
-
-            line(0f, y, tickLength, y)
+            drawLine(
+                Color.White,
+                Offset(0f, y),
+                Offset(tickLength, y),
+                tickStroke,
+                StrokeCap.Round
+            )
             if (i % labelInterval == 0) {
-                noStroke()
-                fill(Color.WHITE)
-                val degrees = i.absoluteValue
-                val degreeText = formatter.formatDegrees(degrees.toFloat())
-                textMode(TextMode.Center)
-                val offset = textWidth(degreeText)
-                val x = tickLength + offset
-                text(degreeText, x, y)
+                val degreeText = formatter.formatDegrees(i.absoluteValue.toFloat())
+                drawContext.canvas.nativeCanvas.drawText(
+                    degreeText,
+                    tickLength + textPaint.measureText(degreeText),
+                    y,
+                    textPaint
+                )
             }
         }
-    }
 
-    private fun drawNeedle() {
         val start = startInclination?.let { getY(it) }
         val current = getY(inclination)
-
-        when {
-            start != null -> {
-                fill(Color.WHITE)
-                opacity(100)
-                noStroke()
-                rect(
-                    0f,
-                    min(start, current),
-                    width.toFloat(),
-                    (start - current).absoluteValue
-                )
-                opacity(255)
-            }
-
-            else -> {
-                stroke(Color.WHITE)
-                strokeWeight(dp(4f))
-                line(0f, current, width.toFloat(), current)
-            }
+        if (start != null) {
+            drawRect(
+                color = Color.White.copy(alpha = 100f / 255f),
+                topLeft = Offset(0f, min(start, current)),
+                size = Size(size.width, (start - current).absoluteValue)
+            )
+        } else {
+            drawLine(
+                Color.White,
+                Offset(0f, current),
+                Offset(size.width, current),
+                needleStroke,
+                StrokeCap.Round
+            )
         }
     }
-
-    private fun getY(inclination: Float): Float {
-        val padding = 20f//textHeight("9")
-        val h = height - 2 * padding
-        return h - (map(inclination, -90f, 90f, 0f, 1f) * h) + padding
-    }
-
 }

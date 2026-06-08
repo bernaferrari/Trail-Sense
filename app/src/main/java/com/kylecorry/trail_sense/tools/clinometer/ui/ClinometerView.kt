@@ -1,216 +1,197 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Path
+import android.graphics.Paint
 import android.util.AttributeSet
-import com.kylecorry.andromeda.canvas.CanvasView
-import com.kylecorry.andromeda.canvas.TextMode
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.canvas.Dial
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
-class ClinometerView : CanvasView, IClinometerView {
+class ClinometerView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : AbstractComposeView(context, attrs, defStyleAttr), IClinometerView {
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+    private var displayAngle by mutableStateOf(90f)
+    private var displayStartAngle by mutableStateOf<Float?>(null)
 
-    init {
-        runEveryCycle = false
-    }
-
-    override var angle = 0f
+    override var angle: Float
+        get() = displayAngle - 90f
         set(value) {
-            field = value + 90f
-            invalidate()
+            displayAngle = value + 90f
         }
 
-    override var startAngle: Float? = null
+    override var startAngle: Float?
+        get() = displayStartAngle?.minus(90f)
         set(value) {
-            field = if (value == null) null else value + 90
-            invalidate()
+            displayStartAngle = value?.plus(90f)
         }
 
-    private val formatter = FormatService.getInstance(context)
-    private var dialColor = Color.BLACK
-    private val tickInterval = 10
-    private var tickLength = 1f
-    private val needlePercent = 0.75f
-    private val dividerPercent = 0.8f
-    private val avalancheIndicatorPercent = 0.97f
-    private val tickRadiusPercent = 0.9f
-    private val tickLengthPercent = 0.03f
-    private val labelInterval = 30
-    private var radius = 1f
-
-    private lateinit var tickPath: Path
-
-    private val avalancheRiskClipPath = Path()
-
-
-    override fun setup() {
-        dialColor = Resources.color(context, R.color.colorSecondary)
-        textSize(sp(10f))
-        radius = min(width.toFloat(), height.toFloat()) / 2
-        tickLength = radius * tickLengthPercent
-
-        avalancheRiskClipPath.addCircle(
-            width / 2f,
-            height / 2f,
-            radius * avalancheIndicatorPercent,
-            Path.Direction.CW
-        )
-        tickPath =
-            Dial.ticks(
-                PixelCoordinate(width / 2f, height / 2f),
-                radius * tickRadiusPercent - tickLength / 2f,
-                tickLength,
-                tickInterval
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            ClinometerContent(
+                angle = displayAngle,
+                startAngle = displayStartAngle,
+                modifier = Modifier.fillMaxSize()
             )
-    }
-
-    override fun draw() {
-        push()
-        drawBackground()
-        drawTicks()
-        drawNeedle(angle)
-
-        drawLabels()
-
-        push()
-        rotate(180f)
-        drawLabels()
-        pop()
-
-        pop()
-    }
-
-    private fun drawAvalancheZone(start: Float, stop: Float, color: Int) {
-        val x = width / 2f - radius
-        val y = height / 2f - radius
-        val d = radius * 2
-        noStroke()
-        fill(color)
-        opacity(150)
-        arc(x, y, d, d, start, stop)
-    }
-
-    private fun drawBackground() {
-        fill(dialColor)
-        noStroke()
-        circle(width / 2f, height / 2f, radius * 2)
-
-        fill(Color.WHITE)
-        opacity(10)
-        strokeWeight(3f)
-        circle(width / 2f, height / 2f, radius * 2 * dividerPercent)
-
-        push()
-
-        clipInverse(avalancheRiskClipPath)
-
-        // High
-        drawAvalancheZone(30f, 45f, AppColor.Red.color)
-        drawAvalancheZone(-30f, -45f, AppColor.Red.color)
-        drawAvalancheZone(210f, 225f, AppColor.Red.color)
-        drawAvalancheZone(-210f, -225f, AppColor.Red.color)
-
-        // Moderate
-        drawAvalancheZone(45f, 60f, AppColor.Yellow.color)
-        drawAvalancheZone(-45f, -60f, AppColor.Yellow.color)
-        drawAvalancheZone(225f, 240f, AppColor.Yellow.color)
-        drawAvalancheZone(-225f, -240f, AppColor.Yellow.color)
-
-        // Low
-        drawAvalancheZone(-30f, 30f, AppColor.Green.color)
-        drawAvalancheZone(-60f, -90f, AppColor.Green.color)
-        drawAvalancheZone(60f, 90f, AppColor.Green.color)
-        drawAvalancheZone(-210f, -150f, AppColor.Green.color)
-        drawAvalancheZone(-240f, -270f, AppColor.Green.color)
-        drawAvalancheZone(240f, 270f, AppColor.Green.color)
-
-        opacity(255)
-
-        pop()
-
-    }
-
-    private fun drawTicks() {
-        strokeWeight(dp(2f))
-        stroke(Color.WHITE)
-        opacity(255)
-        noFill()
-        path(tickPath)
-    }
-
-    private fun drawLabels() {
-        strokeWeight(dp(2f))
-        stroke(dialColor)
-        fill(Color.WHITE)
-
-        for (i in 0..180 step labelInterval) {
-            push()
-            rotate(i.toFloat())
-            val degrees = if (i <= 90) {
-                90 - i
-            } else {
-                i - 90
-            }
-
-            val degreeText = formatter.formatDegrees(degrees.toFloat())
-            textMode(TextMode.Center)
-            val offset = textHeight(degreeText)
-            push()
-            val x = width / 2f
-            val y = height / 2f - radius * dividerPercent + tickLength + offset
-            rotate(180f, x, y)
-            text(degreeText, x, y)
-            pop()
-            pop()
         }
     }
+}
 
-    private fun drawNeedle(angle: Float) {
+@Composable
+private fun ClinometerContent(
+    angle: Float,
+    startAngle: Float?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val formatter = FormatService.getInstance(context)
+    val dialColor = Color(Resources.color(context, R.color.colorSecondary))
+    val density = LocalDensity.current
+    val tickInterval = 10
+    val labelInterval = 30
+    val needlePercent = 0.75f
+    val dividerPercent = 0.8f
+    val avalancheIndicatorPercent = 0.97f
+    val tickRadiusPercent = 0.9f
+    val tickLengthPercent = 0.03f
+    val tickStroke = with(density) { 2.dp.toPx() }
+    val needleStroke = with(density) { 4.dp.toPx() }
+    val centerStroke = with(density) { 1.dp.toPx() }
+    val centerRadius = with(density) { 6.dp.toPx() }
+    val textSize = with(density) { 10.sp.toPx() }
+
+    Canvas(modifier = modifier) {
+        val radius = min(size.width, size.height) / 2f
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val tickLength = radius * tickLengthPercent
+        val topLeft = Offset(center.x - radius, center.y - radius)
+        val arcSize = Size(radius * 2, radius * 2)
+
+        drawCircle(dialColor, radius, center)
+        drawCircle(
+            Color.White.copy(alpha = 10f / 255f),
+            radius * dividerPercent,
+            center,
+            style = Stroke(width = 3f)
+        )
+
+        fun avalancheZone(start: Float, stop: Float, color: Int) {
+            drawArc(
+                color = Color(color).copy(alpha = 150f / 255f),
+                startAngle = start,
+                sweepAngle = stop - start,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = radius * (1 - avalancheIndicatorPercent) * 2f)
+            )
+        }
+
+        avalancheZone(30f, 45f, AppColor.Red.color)
+        avalancheZone(-30f, -45f, AppColor.Red.color)
+        avalancheZone(210f, 225f, AppColor.Red.color)
+        avalancheZone(-210f, -225f, AppColor.Red.color)
+        avalancheZone(45f, 60f, AppColor.Yellow.color)
+        avalancheZone(-45f, -60f, AppColor.Yellow.color)
+        avalancheZone(225f, 240f, AppColor.Yellow.color)
+        avalancheZone(-225f, -240f, AppColor.Yellow.color)
+        avalancheZone(-30f, 30f, AppColor.Green.color)
+        avalancheZone(-60f, -90f, AppColor.Green.color)
+        avalancheZone(60f, 90f, AppColor.Green.color)
+        avalancheZone(-210f, -150f, AppColor.Green.color)
+        avalancheZone(-240f, -270f, AppColor.Green.color)
+        avalancheZone(240f, 270f, AppColor.Green.color)
+
+        for (i in 0 until 360 step tickInterval) {
+            val radians = Math.toRadians((i - 90).toDouble())
+            val tickRadius = radius * tickRadiusPercent
+            val start = Offset(
+                center.x + cos(radians).toFloat() * (tickRadius - tickLength / 2f),
+                center.y + sin(radians).toFloat() * (tickRadius - tickLength / 2f)
+            )
+            val end = Offset(
+                center.x + cos(radians).toFloat() * (tickRadius + tickLength / 2f),
+                center.y + sin(radians).toFloat() * (tickRadius + tickLength / 2f)
+            )
+            drawLine(Color.White, start, end, tickStroke, StrokeCap.Round)
+        }
+
+        fun drawLabels(rotationOffset: Float = 0f) {
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.WHITE
+                textAlign = Paint.Align.CENTER
+                this.textSize = textSize
+            }
+            for (i in 0..180 step labelInterval) {
+                val degrees = if (i <= 90) 90 - i else i - 90
+                val text = formatter.formatDegrees(degrees.toFloat())
+                val x = center.x
+                val y = center.y - radius * dividerPercent + tickLength + paint.textSize
+                drawContext.canvas.nativeCanvas.apply {
+                    save()
+                    rotate(i + rotationOffset, center.x, center.y)
+                    rotate(180f, x, y)
+                    drawText(text, x, y, paint)
+                    restore()
+                }
+            }
+        }
 
         startAngle?.let {
-            val x = width / 2f - radius
-            val y = height / 2f - radius
-            fill(Color.WHITE)
-            noStroke()
-            opacity(127)
-
             val delta = deltaAngle(it, angle)
-
-            val start = it - 90
-            val end = start + delta
-
-            arc(x, y, radius * 2, radius * 2, start, end)
-            opacity(255)
+            drawArc(
+                color = Color.White.copy(alpha = 127f / 255f),
+                startAngle = it - 90f,
+                sweepAngle = delta,
+                useCenter = true,
+                topLeft = topLeft,
+                size = arcSize
+            )
         }
 
+        drawLabels()
+        drawLabels(180f)
+
         val overhang = radius * 0.1f
+        rotate(angle, center) {
+            drawLine(
+                Color.White,
+                Offset(center.x, center.y + overhang),
+                Offset(center.x, center.y - radius * needlePercent),
+                needleStroke,
+                StrokeCap.Round
+            )
+        }
 
-        stroke(Color.WHITE)
-        strokeWeight(dp(4f))
-        push()
-        rotate(angle)
-        line(width / 2f, height / 2f + overhang, width / 2f, height / 2f - radius * needlePercent)
-        pop()
-
-        fill(Color.WHITE)
-        stroke(dialColor)
-        strokeWeight(dp(1f))
-        circle(width / 2f, height / 2f, dp(12f))
+        drawCircle(Color.White, centerRadius, center)
+        drawCircle(dialColor, centerRadius, center, style = Stroke(width = centerStroke))
     }
-
 }
