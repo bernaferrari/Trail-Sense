@@ -7,16 +7,27 @@ import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -121,7 +132,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
             timeButton.isVisible = hasTimeDependentLayers
             if (hasTimeDependentLayers) {
-                CustomUiUtils.setButtonState(timeButton, mapTime != null || timeSheet.isVisible)
+                timeButton.setState(mapTime != null || timeSheet.isVisible)
             } else {
                 if (timeSheet.isVisible) {
                     setMapTime(null)
@@ -137,7 +148,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                     timeSheet.setTime(mapTime)
                     timeSheet.show()
                 }
-                CustomUiUtils.setButtonState(timeButton, mapTime != null || timeSheet.isVisible)
+                timeButton.setState(mapTime != null || timeSheet.isVisible)
             }
 
             timeSheet.onTimeChanged = {
@@ -341,8 +352,8 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         }
 
         useEffect(zoomInButton, zoomOutButton) {
-            CustomUiUtils.setButtonState(zoomInButton, false)
-            CustomUiUtils.setButtonState(zoomOutButton, false)
+            zoomInButton.setState(false)
+            zoomOutButton.setState(false)
 
             zoomInButton.setOnClickListener {
                 mapView.zoom(2f)
@@ -423,7 +434,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
         // Menu
         useEffect(menuButton) {
-            CustomUiUtils.setButtonState(menuButton, false)
+            menuButton.setState(false)
         }
 
         useClickCallback(menuButton, startDistanceMeasurement) {
@@ -475,7 +486,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
     private fun switchMapLockMode(
         mode: MapLockMode,
         map: MapView,
-        button: FloatingActionButton,
+        button: MapIconButton,
         traceViews: List<View>,
         screenLight: ScreenTorch,
         context: android.content.Context
@@ -500,7 +511,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
                 // Show as locked
                 button.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(button, true)
+                button.setState(true)
             }
 
             MapLockMode.Compass -> {
@@ -509,7 +520,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
                 // Show as locked
                 button.setImageResource(R.drawable.ic_compass_icon)
-                CustomUiUtils.setButtonState(button, true)
+                button.setState(true)
             }
 
             MapLockMode.Free -> {
@@ -521,7 +532,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
                 // Show as unlocked
                 button.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(button, false)
+                button.setState(false)
             }
 
             MapLockMode.Trace -> {
@@ -539,7 +550,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 
                 // Show as locked
                 button.setImageResource(R.drawable.lock)
-                CustomUiUtils.setButtonState(button, true)
+                button.setState(true)
 
                 // Full brightness
                 screenLight.on()
@@ -648,11 +659,11 @@ private data class MapViews(
     val root: View,
     val map: MapView,
     val mapAttribution: TextView,
-    val menuButton: FloatingActionButton,
-    val timeButton: FloatingActionButton,
-    val zoomInButton: FloatingActionButton,
-    val zoomOutButton: FloatingActionButton,
-    val lockButton: FloatingActionButton,
+    val menuButton: MapIconButton,
+    val timeButton: MapIconButton,
+    val zoomInButton: MapIconButton,
+    val zoomOutButton: MapIconButton,
+    val lockButton: MapIconButton,
     val sensorStatusBadges: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView,
     val distanceSheet: MapDistanceSheetState,
@@ -869,17 +880,60 @@ private fun smallMapFab(
     context: Context,
     id: Int,
     drawable: Int
-): FloatingActionButton {
-    return FloatingActionButton(
-        context,
-        null,
-        com.google.android.material.R.attr.floatingActionButtonSmallStyle
-    ).apply {
+): MapIconButton {
+    return MapIconButton(context, drawable).apply {
         this.id = id
         alpha = 0.86f
         isClickable = true
         isFocusable = true
-        setImageResource(drawable)
+    }
+}
+
+private class MapIconButton(
+    context: Context,
+    icon: Int
+) : AbstractComposeView(context) {
+    private var iconRes by mutableIntStateOf(icon)
+    private var isOn by mutableStateOf(false)
+
+    fun setImageResource(icon: Int) {
+        iconRes = icon
+    }
+
+    fun setState(isOn: Boolean) {
+        this.isOn = isOn
+    }
+
+    @Composable
+    override fun Content() {
+        val background = if (isOn) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+        val foreground = if (isOn) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        TrailSenseTheme {
+            androidx.compose.material3.Surface(
+                modifier = Modifier.size(40.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = background,
+                shadowElevation = 6.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        tint = foreground,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
