@@ -18,7 +18,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.view.isVisible
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
@@ -197,8 +196,8 @@ class PhotoMapCalibrationFragment : TrailSenseComposeFragment() {
             }
         }
 
-        CustomUiUtils.setButtonState(views.zoomInBtn, false)
-        CustomUiUtils.setButtonState(views.zoomOutBtn, false)
+        views.zoomInBtn.setState(false)
+        views.zoomOutBtn.setState(false)
 
         views.zoomOutBtn.setOnClickListener {
             views.calibrationMap.zoomBy(0.5f)
@@ -480,8 +479,8 @@ private data class PhotoMapCalibrationViews(
     val root: View,
     val previewButton: Button,
     val calibrationMap: MapCalibrationView,
-    val zoomOutBtn: FloatingActionButton,
-    val zoomInBtn: FloatingActionButton,
+    val zoomOutBtn: PhotoMapIconButton,
+    val zoomInBtn: PhotoMapIconButton,
     val mapCalibrationBottomPanel: LinearLayout,
     val mapCalibrationTitle: TextView,
     val mapCalibrationCoordinate: CoordinateInputView,
@@ -518,18 +517,16 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
         id = R.id.calibration_map
     }
 
-    val zoomOutBtn = FloatingActionButton(context).apply {
+    val zoomOutBtn = PhotoMapIconButton(context, R.drawable.ic_zoom_out).apply {
         id = R.id.zoom_out_btn
         alpha = 0.86f
-        setImageResource(R.drawable.ic_zoom_out)
         isClickable = true
         isFocusable = true
     }
 
-    val zoomInBtn = FloatingActionButton(context).apply {
+    val zoomInBtn = PhotoMapIconButton(context, R.drawable.ic_add).apply {
         id = R.id.zoom_in_btn
         alpha = 0.86f
-        setImageResource(R.drawable.ic_add)
         isClickable = true
         isFocusable = true
     }

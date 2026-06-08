@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -183,9 +182,9 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
         views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
         // Set the button states
-        CustomUiUtils.setButtonState(views.lockBtn, false)
-        CustomUiUtils.setButtonState(views.zoomInBtn, false)
-        CustomUiUtils.setButtonState(views.zoomOutBtn, false)
+        views.lockBtn.setState(false)
+        views.zoomInBtn.setState(false)
+        views.zoomOutBtn.setState(false)
 
         // Handle when the lock button is pressed
         views.lockBtn.setOnClickListener {
@@ -450,7 +449,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 
                 // Show as locked
                 views.lockBtn.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(views.lockBtn, true)
+                views.lockBtn.setState(true)
 
                 // Reset brightness
                 screenLight.off()
@@ -468,7 +467,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 
                 // Show as locked
                 views.lockBtn.setImageResource(R.drawable.ic_compass_icon)
-                CustomUiUtils.setButtonState(views.lockBtn, true)
+                views.lockBtn.setState(true)
 
                 // Reset brightness
                 screenLight.off()
@@ -483,7 +482,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 
                 // Show as unlocked
                 views.lockBtn.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(views.lockBtn, false)
+                views.lockBtn.setState(false)
 
                 // Reset brightness
                 screenLight.off()
@@ -504,7 +503,7 @@ class ViewPhotoMapFragment : TrailSenseComposeFragment() {
 
                 // Show as locked
                 views.lockBtn.setImageResource(R.drawable.lock)
-                CustomUiUtils.setButtonState(views.lockBtn, true)
+                views.lockBtn.setState(true)
 
                 // Full brightness
                 screenLight.on()
@@ -607,9 +606,9 @@ private data class ViewPhotoMapViews(
     val root: View,
     val map: MapView,
     val mapAttribution: TextView,
-    val zoomInBtn: FloatingActionButton,
-    val zoomOutBtn: FloatingActionButton,
-    val lockBtn: FloatingActionButton,
+    val zoomInBtn: PhotoMapIconButton,
+    val zoomOutBtn: PhotoMapIconButton,
+    val lockBtn: PhotoMapIconButton,
     val navigationSheet: com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView,
     val distanceSheet: MapDistanceSheetState
 )
@@ -652,24 +651,23 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
         visibility = View.GONE
     }
 
-    val lockBtn = FloatingActionButton(context).apply {
+    val lockBtn = PhotoMapIconButton(context, R.drawable.satellite).apply {
         id = R.id.lock_btn
         alpha = 0.86f
-        setImageResource(R.drawable.satellite)
-    }
-
-    val zoomOutBtn = FloatingActionButton(context).apply {
-        id = R.id.zoom_out_btn
-        alpha = 0.86f
-        setImageResource(R.drawable.ic_zoom_out)
         isClickable = true
         isFocusable = true
     }
 
-    val zoomInBtn = FloatingActionButton(context).apply {
+    val zoomOutBtn = PhotoMapIconButton(context, R.drawable.ic_zoom_out).apply {
+        id = R.id.zoom_out_btn
+        alpha = 0.86f
+        isClickable = true
+        isFocusable = true
+    }
+
+    val zoomInBtn = PhotoMapIconButton(context, R.drawable.ic_add).apply {
         id = R.id.zoom_in_btn
         alpha = 0.86f
-        setImageResource(R.drawable.ic_add)
         isClickable = true
         isFocusable = true
     }
