@@ -915,7 +915,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         visibility = View.GONE
     }
     root.addView(
-        focusAction,
+        focusAction.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -932,7 +932,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         visibility = View.GONE
     }
     root.addView(
-        calibrationPanel,
+        calibrationPanel.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -1143,8 +1143,38 @@ private class ArIconButton(
 private class ArTextButton(
     context: Context,
     text: String = ""
-) : AbstractComposeView(context) {
+) {
     private var label by mutableStateOf(text)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
 
     fun setTextDistinct(text: String) {
         if (label != text) {
@@ -1153,35 +1183,57 @@ private class ArTextButton(
     }
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Button(onClick = { performClick() }) {
-                Text(text = label)
-            }
+    private fun Content() {
+        Button(onClick = { view.performClick() }) {
+            Text(text = label)
         }
     }
 }
 
-private class ArCalibrationPanelView(context: Context) : AbstractComposeView(context) {
+private class ArCalibrationPanelView(private val context: Context) {
     var onConfirmClick by mutableStateOf<(() -> Unit)?>(null)
     var onCancelClick by mutableStateOf<(() -> Unit)?>(null)
 
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = { onConfirmClick?.invoke() }) {
-                    Text(text = context.getString(R.string.calibrate))
-                }
-                Box(modifier = Modifier.width(8.dp))
-                IconButton(onClick = { onCancelClick?.invoke() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_cancel),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+    private fun Content() {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Button(onClick = { onConfirmClick?.invoke() }) {
+                Text(text = context.getString(R.string.calibrate))
+            }
+            Box(modifier = Modifier.width(8.dp))
+            IconButton(onClick = { onCancelClick?.invoke() }) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_cancel),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
