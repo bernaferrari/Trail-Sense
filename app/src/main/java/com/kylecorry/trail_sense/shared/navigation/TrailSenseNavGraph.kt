@@ -872,8 +872,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cloudFragment
-            setClassName("com.kylecorry.trail_sense.tools.clouds.ui.CloudFragment")
-            label = "CloudFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "CloudScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOUDS)
+                .build())
             addArgument("open_scanner", NavArgument.Builder()
                 .setType(NavType.BoolType)
                 .setDefaultValue(false)

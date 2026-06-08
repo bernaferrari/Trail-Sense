@@ -1,9 +1,10 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.clouds.ui
 
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
-import android.view.View
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,8 +52,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
@@ -61,15 +65,14 @@ import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.andromeda_temp.getOrNull
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
@@ -78,80 +81,100 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRe
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import java.time.Duration
 import java.time.Instant
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-class CloudFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun CloudToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CloudController(fragment) }
 
-    private val repo by lazy { CloudRepo.getInstance(requireContext()) }
-    private val cloudDetailsService by lazy { CloudDetailsService(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
-
-    private var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
-    private var subtitle by mutableStateOf("")
-    private var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
-
-    @Composable
-    override fun FragmentContent() {
-        CloudScreen(
-            subtitle = subtitle,
-            clouds = clouds,
-            onGuideClick = ::showGuide,
-            onCameraClick = ::addFromCamera,
-            onFileClick = ::addFromFile,
-            onManualClick = ::addManual,
-            onCloudClick = ::showCloudDetails,
-            onCloudImageClick = ::showCloudImage,
-            onDeleteCloud = ::delete,
-            selectedCloudImage = selectedCloudImage,
-            onDismissCloudImage = { selectedCloudImage = null },
-            modifier = Modifier.fillMaxSize()
-        )
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    CloudScreen(
+        subtitle = controller.subtitle,
+        clouds = controller.clouds,
+        onGuideClick = controller::showGuide,
+        onCameraClick = controller::addFromCamera,
+        onFileClick = controller::addFromFile,
+        onManualClick = controller::addManual,
+        onCloudClick = controller::showCloudDetails,
+        onCloudImageClick = controller::showCloudImage,
+        onDeleteCloud = controller::delete,
+        selectedCloudImage = controller.selectedCloudImage,
+        onDismissCloudImage = { controller.selectedCloudImage = null },
+        modifier = Modifier.fillMaxSize()
+    )
+}
 
-        subtitle = getString(
+private class CloudController(private val fragment: Fragment) {
+
+    private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
+    private val cloudDetailsService by lazy { CloudDetailsService(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private var isInitialized = false
+
+    var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
+        private set
+    var subtitle by mutableStateOf("")
+        private set
+    var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
+
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        subtitle = fragment.getString(
             R.string.last_duration, formatter.formatDuration(
                 Duration.ofHours(48),
                 short = true
             )
         )
 
-        observe(repo.getAllLive()) {
+        fragment.observe(repo.getAllLive()) {
             val since = Instant.now().minus(Duration.ofHours(48))
             clouds = it.sortedByDescending { cloud -> cloud.time }
                 .filter { cloud -> cloud.time >= since }
         }
 
-        val shouldOpenScanner = requireArguments().getBoolean("open_scanner", false)
+        val shouldOpenScanner = fragment.requireArguments().getBoolean("open_scanner", false)
         if (shouldOpenScanner) {
             addFromCamera()
         }
     }
 
-    private fun showGuide() {
-        UserGuideUtils.showGuide(this, R.raw.guide_tool_clouds)
+    fun onDestroy() {
+        selectedCloudImage = null
     }
 
-    private fun showCloudDetails(reading: Reading<CloudObservation>) {
-        CloudDetailsModal(requireContext()).show(reading.value.genus)
+    fun showGuide() {
+        UserGuideUtils.showGuide(fragment, R.raw.guide_tool_clouds)
     }
 
-    private fun showCloudImage(reading: Reading<CloudObservation>) {
+    fun showCloudDetails(reading: Reading<CloudObservation>) {
+        CloudDetailsModal(fragment.requireContext()).show(reading.value.genus)
+    }
+
+    fun showCloudImage(reading: Reading<CloudObservation>) {
         selectedCloudImage = reading.value.genus
     }
 
-    private fun addFromCamera() {
-        requestCamera {
+    fun addFromCamera() {
+        fragment.requestCamera {
             if (it) {
-                inBackground {
-                    val uri = CustomUiUtils.takePhoto(
-                        this@CloudFragment,
+                fragment.inBackground {
+                    val uri = takePhoto(
+                        fragment,
                         Size(SoftmaxCloudClassifier.IMAGE_SIZE, SoftmaxCloudClassifier.IMAGE_SIZE)
                     )
                     uri?.let {
-                        findNavController().navigate(
+                        fragment.findNavController().navigate(
                             R.id.action_cloud_to_cloud_picker,
                             Bundle().apply {
                                 putParcelable("image", uri)
@@ -160,19 +183,21 @@ class CloudFragment : TrailSenseAndromedaComposeFragment() {
                     }
                 }
             } else {
-                alertNoCameraPermission()
+                fragment.alertNoCameraPermission()
             }
         }
     }
 
-    private fun addFromFile() {
-        inBackground(BackgroundMinimumState.Created) {
+    fun addFromFile() {
+        fragment.inBackground(BackgroundMinimumState.Created) {
             val uri =
-                IntentUriPicker(this@CloudFragment, requireContext()).open(listOf("image/*"))
-                    .getOrNull()
+                IntentUriPicker(
+                    fragment.requireActivity() as IntentResultRetriever,
+                    fragment.requireContext()
+                ).open(listOf("image/*"))
             val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
             temp?.let {
-                findNavController().navigate(
+                fragment.findNavController().navigate(
                     R.id.action_cloud_to_cloud_picker,
                     Bundle().apply {
                         putParcelable("image", it)
@@ -182,16 +207,25 @@ class CloudFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun addManual() {
-        findNavController().navigate(R.id.action_cloud_to_cloud_picker)
+    private suspend fun takePhoto(fragment: Fragment, size: Size): android.net.Uri? {
+        return suspendCoroutine { cont ->
+            val prefs = UserPreferences(fragment.requireContext()).camera
+            PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
+                cont.resume(uri)
+            }.show()
+        }
     }
 
-    private fun delete(reading: Reading<CloudObservation>) {
-        inBackground {
+    fun addManual() {
+        fragment.findNavController().navigate(R.id.action_cloud_to_cloud_picker)
+    }
+
+    fun delete(reading: Reading<CloudObservation>) {
+        fragment.inBackground {
             val cancelled = onMain {
                 CoroutineAlerts.dialog(
-                    requireContext(),
-                    getString(R.string.delete),
+                    fragment.requireContext(),
+                    fragment.getString(R.string.delete),
                     cloudDetailsService.getCloudName(reading.value.genus)
                 )
             }
