@@ -14,7 +14,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -74,7 +78,7 @@ import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorScaleView
-import com.kylecorry.trail_sense.shared.views.DataPointView
+import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
@@ -821,19 +825,51 @@ private data class PathOverviewViews(
     val pathMapFullscreenToggle: ImageButton,
     val pathSelectedPoint: FrameLayout,
     val pathLegend: ColorScaleView,
-    val pathDuration: DataPointView,
-    val pathDistance: DataPointView,
-    val pathWaypoints: DataPointView,
-    val pathDifficulty: DataPointView,
-    val pathElevationGain: DataPointView,
-    val pathElevationLoss: DataPointView,
-    val pathElevationMin: DataPointView,
-    val pathElevationMax: DataPointView,
+    val pathDuration: PathDataPointState,
+    val pathDistance: PathDataPointState,
+    val pathWaypoints: PathDataPointState,
+    val pathDifficulty: PathDataPointState,
+    val pathElevationGain: PathDataPointState,
+    val pathElevationLoss: PathDataPointState,
+    val pathElevationMin: PathDataPointState,
+    val pathElevationMax: PathDataPointState,
     val chart: Chart,
     val navigateBtn: MaterialButton,
     val addPointBtn: MaterialButton,
     val pathsTiming: TextView
 )
+
+private class PathDataPointState(
+    initialDescription: String,
+    private val icon: Int
+) {
+    lateinit var view: View
+    var title by mutableStateOf("")
+    var description by mutableStateOf(initialDescription)
+
+    var isVisible: Boolean
+        get() = view.isVisible
+        set(value) {
+            view.isVisible = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
+
+    @Composable
+    fun Content() {
+        DataPointContent(
+            title = title,
+            description = description,
+            icon = icon,
+            tint = MaterialTheme.colorScheme.onSurface,
+            showDescription = true,
+            gravity = Gravity.START,
+            onDescriptionClick = null
+        )
+    }
+}
 
 @Composable
 private fun PathOverviewHost(
@@ -1023,18 +1059,14 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val duration = createDataPoint(context, R.id.path_duration, R.drawable.ic_tool_clock, R.string.duration)
-    val distance = createDataPoint(context, R.id.path_distance, R.drawable.ruler, R.string.distance)
-    val points = createDataPoint(context, R.id.path_waypoints, R.drawable.ic_location, R.string.points)
-    val difficulty = createDataPoint(context, R.id.path_difficulty, R.drawable.steps, R.string.difficulty)
-    val gain = createDataPoint(context, R.id.path_elevation_gain, R.drawable.ic_elevation_gain, R.string.ascent)
-    val loss = createDataPoint(context, R.id.path_elevation_loss, R.drawable.ic_elevation_loss, R.string.descent)
-    val min = createDataPoint(context, R.id.path_elevation_min, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
-    val max = createDataPoint(context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
-
-    listOf(duration, distance, points, difficulty, gain, loss, min, max).forEach {
-        grid.addView(it, createGridDataPointLayoutParams(context))
-    }
+    val duration = addDataPoint(grid, context, R.id.path_duration, R.drawable.ic_tool_clock, R.string.duration)
+    val distance = addDataPoint(grid, context, R.id.path_distance, R.drawable.ruler, R.string.distance)
+    val points = addDataPoint(grid, context, R.id.path_waypoints, R.drawable.ic_location, R.string.points)
+    val difficulty = addDataPoint(grid, context, R.id.path_difficulty, R.drawable.steps, R.string.difficulty)
+    val gain = addDataPoint(grid, context, R.id.path_elevation_gain, R.drawable.ic_elevation_gain, R.string.ascent)
+    val loss = addDataPoint(grid, context, R.id.path_elevation_loss, R.drawable.ic_elevation_loss, R.string.descent)
+    val min = addDataPoint(grid, context, R.id.path_elevation_min, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
+    val max = addDataPoint(grid, context, R.id.path_elevation_max, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
 
     val elevationTitle = TextView(context).apply {
         text = context.getString(R.string.elevation)
@@ -1159,17 +1191,28 @@ private fun createDropdownText(context: Context, id: Int): TextView {
     }
 }
 
-private fun createDataPoint(
+private fun addDataPoint(
+    grid: GridLayout,
     context: Context,
     id: Int,
     icon: Int,
     description: Int
-): DataPointView {
-    return DataPointView(context, null).apply {
+): PathDataPointState {
+    val dataPoint = PathDataPointState(
+        initialDescription = context.getString(description),
+        icon = icon
+    )
+    val view = ComposeView(context).apply {
         this.id = id
-        setImageResource(icon)
-        this.description = context.getString(description)
+        dataPoint.view = this
+        setContent {
+            TrailSenseTheme {
+                dataPoint.Content()
+            }
+        }
     }
+    grid.addView(view, createGridDataPointLayoutParams(context))
+    return dataPoint
 }
 
 private fun createGridDataPointLayoutParams(context: Context): GridLayout.LayoutParams {

@@ -28,14 +28,6 @@
         <attr name="hint" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="DataPointView">
-        <attr name="dataPointIcon" format="reference" />
-        <attr name="dataPointText" format="string" />
-        <attr name="dataPointDescription" format="string" />
-        <attr name="dataPointTint" format="color" />
-        <attr name="android:gravity" />
-    </declare-styleable>
-
     <declare-styleable name="CameraView">
         <attr name="flipEnable" format="boolean" />
     </declare-styleable>
