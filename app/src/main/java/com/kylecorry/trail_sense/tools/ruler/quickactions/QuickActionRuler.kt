@@ -14,6 +14,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
@@ -37,6 +38,7 @@ class QuickActionRuler(
             removeRuler()
         }
 
+        val activity = fragment.activity as? MainActivity ?: return
         val ruler = ComposeView(context)
         this.ruler = ruler
         ruler.isVisible = false
@@ -68,7 +70,7 @@ class QuickActionRuler(
             Resources.dp(context, 80f).toInt(),
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        val bottomNavigation = fragment.requireActivity().findViewById<ViewGroup>(R.id.bottom_navigation)
+        val bottomNavigation = activity.getBottomNavigationView()
         if (bottomNavigation.height > 0) {
             layoutParams.bottomMargin = bottomNavigation.height
         } else {
@@ -80,8 +82,7 @@ class QuickActionRuler(
         }
         ruler.layoutParams = layoutParams
 
-        val root = fragment.requireActivity().findViewById(R.id.coordinator) as? CoordinatorLayout
-        root?.addView(ruler)
+        activity.addOverlayView(ruler)
 
         setIcon(R.drawable.ruler)
     }
@@ -118,9 +119,7 @@ class QuickActionRuler(
 
     private fun removeRuler() {
         ruler?.let {
-            val root =
-                fragment.requireActivity().findViewById(R.id.coordinator) as? CoordinatorLayout
-            root?.removeView(it)
+            (fragment.activity as? MainActivity)?.removeOverlayView(it)
         }
         ruler = null
     }

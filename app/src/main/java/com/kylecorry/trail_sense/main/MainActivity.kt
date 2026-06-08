@@ -582,6 +582,18 @@ class MainActivity : AndromedaActivity() {
         }
     }
 
+    fun getBottomNavigationView(): View {
+        return views.bottomNavigation
+    }
+
+    fun addOverlayView(view: View) {
+        views.root.addView(view)
+    }
+
+    fun removeOverlayView(view: View) {
+        views.root.removeView(view)
+    }
+
     private fun updateFullscreenMode() {
         val isNightMode = userPrefs.theme == UserPreferences.Theme.Night
         val shouldBeFullscreen = isNightMode && userPrefs.nightModeFullscreen
