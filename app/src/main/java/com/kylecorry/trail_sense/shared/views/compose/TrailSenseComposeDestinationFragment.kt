@@ -108,6 +108,8 @@ import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -189,6 +191,112 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                 onRequestCamera = ::requestCameraForMagnifier
             )
             DESTINATION_MIRROR_CAMERA -> MirrorCamera()
+            DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
+        }
+    }
+
+    @Composable
+    private fun PhotoMapSettings() {
+        val prefs = remember { UserPreferences(requireContext()).photoMaps }
+        var reducePhotoResolution by remember {
+            mutableStateOf(prefs.autoReducePhotoMaps)
+        }
+        var reducePdfResolution by remember {
+            mutableStateOf(prefs.autoReducePdfMaps)
+        }
+        var showMapPreviews by remember { mutableStateOf(prefs.showMapPreviews) }
+        var keepMapFacingUp by remember { mutableStateOf(prefs.keepMapFacingUp) }
+        var keepUnlocked by remember {
+            mutableStateOf(prefs.keepScreenUnlockedWhileOpen)
+        }
+        var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
+
+        SettingsList(title = stringResource(R.string.photo_maps)) {
+            item("reduce_photo") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.reduce_photo_resolution),
+                    summary = stringResource(R.string.on_import),
+                    checked = reducePhotoResolution,
+                    onCheckedChange = {
+                        reducePhotoResolution = it
+                        prefs.autoReducePhotoMaps = it
+                        onReduceMapResolutionChange(reducePdfResolution)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("reduce_pdf") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.reduce_pdf_resolution),
+                    summary = stringResource(R.string.on_import),
+                    checked = reducePdfResolution,
+                    onCheckedChange = {
+                        reducePdfResolution = it
+                        prefs.autoReducePdfMaps = it
+                        onReduceMapResolutionChange(reducePhotoResolution)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("previews") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_show_map_previews_title),
+                    checked = showMapPreviews,
+                    onCheckedChange = {
+                        showMapPreviews = it
+                        prefs.showMapPreviews = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("facing_up") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_keep_map_facing_up_title),
+                    summary = stringResource(R.string.pref_keep_map_facing_up_summary),
+                    checked = keepMapFacingUp,
+                    onCheckedChange = {
+                        keepMapFacingUp = it
+                        prefs.keepMapFacingUp = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("keep_unlocked") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
+                    checked = keepUnlocked,
+                    onCheckedChange = {
+                        keepUnlocked = it
+                        prefs.keepScreenUnlockedWhileOpen = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("high_detail") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_high_detail_mode_title),
+                    summary = stringResource(R.string.pref_high_detail_mode_summary),
+                    checked = highDetailMode,
+                    onCheckedChange = {
+                        highDetailMode = it
+                        prefs.highDetailMode = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("layers") {
+                SettingsActionRow(
+                    label = stringResource(R.string.layers),
+                    onClick = ::showPhotoMapLayerSheet,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
         }
     }
 
@@ -1292,6 +1400,29 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         layerSheet?.show(this)
     }
 
+    private fun showPhotoMapLayerSheet() {
+        layerSheet?.dismiss()
+        layerSheet = MapLayersBottomSheet(
+            OfflineMapsToolRegistration.PHOTO_MAPS_ID,
+            PhotoMapToolLayerManager.alwaysEnabledLayers
+        )
+        layerSheet?.show(this)
+    }
+
+    private fun onReduceMapResolutionChange(shouldReduce: Boolean) {
+        if (shouldReduce) {
+            return
+        }
+
+        CustomUiUtils.disclaimer(
+            requireContext(),
+            getString(R.string.reduce_map_resolution),
+            getString(R.string.reduce_map_resolution_crop_disclaimer),
+            getString(R.string.reduce_map_resolution_crop_disclaimer_shown),
+            cancelText = null
+        )
+    }
+
     private fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
         requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
             val isAvailable = Camera.isAvailable(requireContext())
@@ -1480,5 +1611,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_CLIFF_HEIGHT = "cliff_height"
         const val DESTINATION_MAGNIFIER = "magnifier"
         const val DESTINATION_MIRROR_CAMERA = "mirror_camera"
+        const val DESTINATION_PHOTO_MAP_SETTINGS = "photo_map_settings"
     }
 }
