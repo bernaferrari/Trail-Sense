@@ -1,24 +1,19 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Intents
@@ -36,7 +31,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -47,7 +42,7 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.Pedome
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class PedometerSettingsFragment : Fragment() {
+class PedometerSettingsFragment : TrailSenseComposeFragment() {
 
     private val userPrefs by lazy { UserPreferences(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -65,15 +60,8 @@ class PedometerSettingsFragment : Fragment() {
         refreshPermissionState?.invoke()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
+    @Composable
+    override fun FragmentContent() {
                     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }
                     var strideLength by remember {
                         mutableStateOf(
@@ -225,9 +213,6 @@ class PedometerSettingsFragment : Fragment() {
                             }
                         }
                     }
-                }
-            }
-        }
     }
 
     private fun setupAveragePaceTimeSetting() {
