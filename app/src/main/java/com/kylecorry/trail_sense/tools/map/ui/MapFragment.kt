@@ -755,7 +755,6 @@ private fun createMapViews(context: Context): MapViews {
     val lockButton = smallMapFab(R.drawable.satellite)
 
     val sensorStatusBadges = SensorStatusBadgeView(context).apply {
-        id = R.id.sensor_status_badges
         alpha = 0.6f
     }
 

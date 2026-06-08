@@ -887,7 +887,6 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     }
     val time = createArIconButton(R.drawable.ic_tool_clock)
     val accuracy = SensorStatusBadgeView(context).apply {
-        id = R.id.accuracy_view
         alpha = 0.6f
     }
     val focusAction = ArTextButton().apply {

@@ -993,7 +993,6 @@ private fun createNavigatorViews(
     }
 
     val accuracyView = SensorStatusBadgeView(context).apply {
-        id = R.id.accuracy_view
         alpha = 0.6f
     }
 
