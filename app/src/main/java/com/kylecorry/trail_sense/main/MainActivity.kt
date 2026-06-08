@@ -67,6 +67,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 
 class MainActivity : AndromedaActivity() {
@@ -657,7 +658,7 @@ private data class MainActivityViews(
     val colorFilter: ColorFilterConstraintLayout,
     val errorBanner: ErrorBannerState,
     val fragmentHolder: FragmentContainerView,
-    val quickActionsSheet: com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheet,
+    val quickActionsSheet: QuickActionSheetState,
     val bottomNavigation: CustomBottomNavigationView
 )
 
@@ -740,14 +741,17 @@ private fun createMainActivityViews(context: Context): MainActivityViews {
         }
     )
 
-    val quickActionsSheet = com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheet(
+    val quickActionsSheet = QuickActionSheetState(context)
+    val quickActionsSheetView = TrailSenseComposeRootView(
         context,
-        null
-    ).apply {
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        quickActionsSheet.Content()
+    }.apply {
         id = R.id.quick_actions_sheet
     }
     colorFilter.addView(
-        quickActionsSheet,
+        quickActionsSheetView,
         LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
