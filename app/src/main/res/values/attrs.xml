@@ -36,21 +36,6 @@
         <attr name="android:gravity" />
     </declare-styleable>
 
-    <declare-styleable name="PlayBarView">
-        <attr name="playBarIcon" format="reference" />
-        <attr name="playBarTitle" format="string" />
-        <attr name="playBarSubtitle" format="string" />
-    </declare-styleable>
-
-    <declare-styleable name="FloatingActionButtonMenuItem">
-        <attr name="android:src" />
-        <attr name="android:text" />
-    </declare-styleable>
-
-    <declare-styleable name="FloatingActionButtonMenu">
-        <attr name="menu" format="reference" />
-    </declare-styleable>
-
     <declare-styleable name="MaskedProgressView">
         <attr name="android:drawable" />
         <attr name="android:drawableTint" />
