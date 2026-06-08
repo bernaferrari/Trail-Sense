@@ -31,7 +31,11 @@ import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.viewinterop.AndroidView
 import com.google.android.material.navigation.NavigationBarView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
@@ -128,7 +132,12 @@ class MainActivity : AndromedaActivity() {
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
         mainViews = createMainActivityViews(this)
-        setContentView(views.root)
+        setContent {
+            AndroidView(
+                factory = { views.root },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
         setupNavHost()
 
         // Handle black theme
