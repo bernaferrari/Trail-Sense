@@ -90,7 +90,7 @@ import java.time.Instant
 class NavigatorFragment : AndromedaFragment() {
 
     private var navigatorViews: NavigatorViews? = null
-    private val binding: NavigatorViews
+    private val views: NavigatorViews
         get() = navigatorViews ?: error("Navigator views are not ready")
     private val isViewReady: Boolean
         get() = navigatorViews != null && view != null
@@ -168,7 +168,7 @@ class NavigatorFragment : AndromedaFragment() {
 
     private val northReferenceHideTimer = CoroutineTimer {
         if (isViewReady) {
-            binding.northReferenceIndicator.showLabel = false
+            views.northReferenceIndicator.showLabel = false
         }
     }
 
@@ -244,14 +244,14 @@ class NavigatorFragment : AndromedaFragment() {
             }
         }
 
-        binding.linearCompass.setCompassLayers(
+        views.linearCompass.setCompassLayers(
             listOf(
                 astronomyCompassLayer,
                 beaconCompassLayer,
                 navigationCompassLayer
             )
         )
-        binding.radarCompass.setCompassLayers(
+        views.radarCompass.setCompassLayers(
             listOfNotNull(
                 astronomyCompassLayer,
                 if (isNearbyLinearOnly) null else beaconCompassLayer,
@@ -260,12 +260,12 @@ class NavigatorFragment : AndromedaFragment() {
         )
 
 
-        binding.speed.setShowDescription(false)
-        binding.altitude.setShowDescription(false)
+        views.speed.setShowDescription(false)
+        views.altitude.setShowDescription(false)
 
         NavigationQuickActionBinder(
             this,
-            binding.navigationTitle,
+            views.navigationTitle,
             userPrefs.navigation
         ).bind()
 
@@ -280,7 +280,7 @@ class NavigatorFragment : AndromedaFragment() {
         observe(gps) { }
         observe(speedometer) { }
 
-        binding.navigationTitle.subtitle.setOnLongClickListener {
+        views.navigationTitle.subtitle.setOnLongClickListener {
             Share.shareLocation(
                 this,
                 gps.location
@@ -288,27 +288,27 @@ class NavigatorFragment : AndromedaFragment() {
             true
         }
 
-        binding.navigationTitle.subtitle.setOnClickListener {
+        views.navigationTitle.subtitle.setOnClickListener {
             val sheet = LocationBottomSheet()
             sheet.gps = gps
             sheet.show(this)
         }
 
-        binding.altitude.setOnClickListener {
+        views.altitude.setOnClickListener {
             val sheet = AltitudeBottomSheet()
             sheet.currentAltitude = Reading(altimeter.altitude, Instant.now())
             sheet.show(this)
         }
 
-        binding.linearCompass.setOnClickListener {
+        views.linearCompass.setOnClickListener {
             toggleDestinationBearing()
         }
 
-        binding.beaconBtn.setOnClickListener {
+        views.beaconBtn.setOnClickListener {
             findNavController().openTool(Tools.BEACONS)
         }
 
-        binding.beaconBtn.setOnLongClickListener {
+        views.beaconBtn.setOnLongClickListener {
             if (gps.hasValidReading) {
                 val bundle = Bundle().apply {
                     putParcelable("initial_location", GeoUri(
@@ -323,53 +323,53 @@ class NavigatorFragment : AndromedaFragment() {
             true
         }
 
-        binding.accuracyView.setSensors(gps, compass)
-        binding.accuracyView.setOnClickListener { displayAccuracyTips() }
+        views.accuracyView.setSensors(gps, compass)
+        views.accuracyView.setOnClickListener { displayAccuracyTips() }
 
-        binding.mapAttribution.movementMethod = LinkMovementMethod.getInstance()
-        binding.radarCompassMap.setOnSingleTapListener {
+        views.mapAttribution.movementMethod = LinkMovementMethod.getInstance()
+        views.radarCompassMap.setOnSingleTapListener {
             toggleDestinationBearing()
         }
 
-        binding.radarCompassMap.setOnLongPressListener {
+        views.radarCompassMap.setOnLongPressListener {
             layerSheet?.dismiss()
             layerSheet = MapLayersBottomSheet(
                 NavigationToolRegistration.MAP_ID
             )
-            layers.pause(binding.radarCompassMap)
+            layers.pause(views.radarCompassMap)
             layerSheet?.setOnDismissListener {
-                layers.resume(requireContext(), binding.radarCompassMap, this)
+                layers.resume(requireContext(), views.radarCompassMap, this)
             }
             layerSheet?.show(this)
         }
 
-        binding.linearCompass.setOnClickListener {
+        views.linearCompass.setOnClickListener {
             toggleDestinationBearing()
         }
 
-        binding.radarCompassMap.isPanEnabled = false
-        binding.radarCompassMap.isFlingEnabled = false
-        binding.radarCompassMap.backgroundColorOverride =
+        views.radarCompassMap.isPanEnabled = false
+        views.radarCompassMap.isFlingEnabled = false
+        views.radarCompassMap.backgroundColorOverride =
             Resources.color(requireContext(), R.color.colorSecondary)
-        binding.radarCompassMap.minScale = 0.001f
-        binding.radarCompassMap.mapCenter = gps.location
-        binding.radarCompassMap.metersPerProjectedUnit = 1.0
-        binding.radarCompassMap.latitudeScaleFactor = { 1f }
-        binding.radarCompassMap.projection = AzimuthalEquidistantProjection(gps.location)
-        binding.radarCompassMap.resolutionPixels = userPrefs.navigation.radarCompassScale
-        binding.radarCompassMap.setOnScaleChangeListener(true) { resolutionPixels ->
-            val radiusMeters = resolutionPixels * binding.radarCompassMap.width / 2f
-            binding.radarCompass.setRadiusDistance(Distance.meters(radiusMeters))
+        views.radarCompassMap.minScale = 0.001f
+        views.radarCompassMap.mapCenter = gps.location
+        views.radarCompassMap.metersPerProjectedUnit = 1.0
+        views.radarCompassMap.latitudeScaleFactor = { 1f }
+        views.radarCompassMap.projection = AzimuthalEquidistantProjection(gps.location)
+        views.radarCompassMap.resolutionPixels = userPrefs.navigation.radarCompassScale
+        views.radarCompassMap.setOnScaleChangeListener(true) { resolutionPixels ->
+            val radiusMeters = resolutionPixels * views.radarCompassMap.width / 2f
+            views.radarCompass.setRadiusDistance(Distance.meters(radiusMeters))
             userPrefs.navigation.radarCompassScale = resolutionPixels
         }
 
         if (!hasCompass) {
-            binding.radarCompass.shouldDrawDial = userPrefs.navigation.showDialTicksWhenNoCompass
-            binding.radarCompass.shouldDrawAzimuthIndicator = false
-            binding.navigationTitle.title.isVisible = false
-            binding.northReferenceIndicator.isVisible = false
+            views.radarCompass.shouldDrawDial = userPrefs.navigation.showDialTicksWhenNoCompass
+            views.radarCompass.shouldDrawAzimuthIndicator = false
+            views.navigationTitle.title.isVisible = false
+            views.northReferenceIndicator.isVisible = false
         } else {
-            binding.radarCompass.shouldDrawAzimuthIndicator =
+            views.radarCompass.shouldDrawAzimuthIndicator =
                 userPrefs.navigation.showAzimuthIndicator
         }
 
@@ -390,7 +390,7 @@ class NavigatorFragment : AndromedaFragment() {
             } else {
                 onMain {
                     if (isViewReady) {
-                        binding.navigationSheet.requestCancelNavigation()
+                        views.navigationSheet.requestCancelNavigation()
                     }
                 }
             }
@@ -425,15 +425,15 @@ class NavigatorFragment : AndromedaFragment() {
             return
         }
 
-        binding.radarCompassMap.useDensityPixelsForZoom =
+        views.radarCompassMap.useDensityPixelsForZoom =
             !userPrefs.navigation.highDetailMode
-        layers.resume(requireContext(), binding.radarCompassMap, this)
-        binding.radarCompass.bindMapView(binding.radarCompassMap)
+        layers.resume(requireContext(), views.radarCompassMap, this)
+        views.radarCompass.bindMapView(views.radarCompassMap)
 
         // Show the north reference indicator
-        binding.northReferenceIndicator.showDetailsOnClick = true
-        binding.northReferenceIndicator.useTrueNorth = useTrueNorth
-        binding.northReferenceIndicator.showLabel = true
+        views.northReferenceIndicator.showDetailsOnClick = true
+        views.northReferenceIndicator.useTrueNorth = useTrueNorth
+        views.northReferenceIndicator.showLabel = true
         northReferenceHideTimer.once(Duration.ofSeconds(5))
         lastErrorCodes = emptyList()
         updateTimer.interval(NAVIGATION_UPDATE_INTERVAL)
@@ -450,7 +450,7 @@ class NavigatorFragment : AndromedaFragment() {
         layerSheet?.setOnDismissListener(null)
         layerSheet?.dismiss()
         if (isViewReady) {
-            layers.pause(binding.radarCompassMap)
+            layers.pause(views.radarCompassMap)
         }
         northReferenceHideTimer.stop()
     }
@@ -501,14 +501,14 @@ class NavigatorFragment : AndromedaFragment() {
         }
 
         updateNavigationSheet()
-        binding.speed.title = formatService.formatSpeed(speedometer.speed.value)
+        views.speed.title = formatService.formatSpeed(speedometer.speed.value)
         updateCompassBearing()
 
         if (triggers.frequency("compass_invalidation", Duration.ofSeconds(1))) {
-            binding.radarCompass.invalidate()
+            views.radarCompass.invalidate()
         }
 
-        binding.altitude.title = formatService.formatDistance(
+        views.altitude.title = formatService.formatDistance(
             Distance.meters(altimeter.altitude).convertTo(baseDistanceUnits)
         )
         updateLocation()
@@ -534,20 +534,20 @@ class NavigatorFragment : AndromedaFragment() {
         val currentDestination =
             destination ?: getSelectedBeacon(nearbyBeacons)?.let { Destination.Beacon(it) }
         if (currentDestination != null) {
-            binding.navigationSheet.updateNavigationSensorValues(
+            views.navigationSheet.updateNavigationSensorValues(
                 gps.location,
                 altimeter.altitude,
                 speedometer.speed.value,
                 declination
             )
-            binding.navigationSheet.show(currentDestination, destination != null)
+            views.navigationSheet.show(currentDestination, destination != null)
         } else {
-            binding.navigationSheet.hide()
+            views.navigationSheet.hide()
         }
     }
 
     private fun updateMapAttributionIfNeeded() {
-        val isRadarVisible = binding.radarCompass.isVisible
+        val isRadarVisible = views.radarCompass.isVisible
         if (lastAttributionLayerKey == layers.key && lastAttributionRadarVisible == isRadarVisible) {
             return
         }
@@ -557,17 +557,17 @@ class NavigatorFragment : AndromedaFragment() {
 
         inBackground {
             if (isRadarVisible) {
-                val attribution = binding.radarCompassMap.getAttribution(requireContext())
+                val attribution = views.radarCompassMap.getAttribution(requireContext())
                 onMain {
                     if (isViewReady) {
-                        binding.mapAttribution.text = attribution
-                        binding.mapAttribution.isVisible = attribution != null
+                        views.mapAttribution.text = attribution
+                        views.mapAttribution.isVisible = attribution != null
                     }
                 }
             } else {
                 onMain {
                     if (isViewReady) {
-                        binding.mapAttribution.isVisible = false
+                        views.mapAttribution.isVisible = false
                     }
                 }
             }
@@ -582,20 +582,20 @@ class NavigatorFragment : AndromedaFragment() {
         }
         val style = styleChooser.getStyle(deviceOrientation)
 
-        binding.linearCompass.isInvisible = style != CompassStyle.Linear
-        binding.radarCompass.isInvisible = style != CompassStyle.Radar
-        binding.radarCompassMap.isInvisible = style != CompassStyle.Radar
+        views.linearCompass.isInvisible = style != CompassStyle.Linear
+        views.radarCompass.isInvisible = style != CompassStyle.Radar
+        views.radarCompassMap.isInvisible = style != CompassStyle.Radar
     }
 
     private fun updateQuickActionAvailability() {
         // TODO: Extract this logic to the flashlight (if camera is in use)
         if (userPrefs.navigation.rightButton == Tools.QUICK_ACTION_FLASHLIGHT) {
-            binding.navigationTitle.rightButton.isClickable =
-                !binding.linearCompass.isCameraActive
+            views.navigationTitle.rightButton.isClickable =
+                !views.linearCompass.isCameraActive
         }
         if (userPrefs.navigation.leftButton == Tools.QUICK_ACTION_FLASHLIGHT) {
-            binding.navigationTitle.leftButton.isClickable =
-                !binding.linearCompass.isCameraActive
+            views.navigationTitle.leftButton.isClickable =
+                !views.linearCompass.isCameraActive
         }
     }
 
@@ -618,13 +618,13 @@ class NavigatorFragment : AndromedaFragment() {
             val directionText = formatService.formatDirection(CompassDirection.nearest(bearing))
                 .padStart(2, ' ')
             val titleText = "$azimuthText   $directionText"
-            binding.navigationTitle.title.setTextDistinct(titleText)
+            views.navigationTitle.title.setTextDistinct(titleText)
         }
 
         // Compass
         listOf<ICompassView>(
-            binding.radarCompass,
-            binding.linearCompass
+            views.radarCompass,
+            views.linearCompass
         ).forEach {
             it.azimuth = bearing
             it.declination = declination
@@ -635,8 +635,8 @@ class NavigatorFragment : AndromedaFragment() {
         } else {
             compass.bearing.withDeclination(declination)
         }
-        binding.radarCompassMap.userAzimuth = actualBearing
-        binding.radarCompassMap.mapAzimuth = actualBearing.value
+        views.radarCompassMap.userAzimuth = actualBearing
+        views.radarCompassMap.mapAzimuth = actualBearing.value
     }
 
     private fun updateLocation() {
@@ -645,25 +645,25 @@ class NavigatorFragment : AndromedaFragment() {
         declination = declinationProvider.getDeclination()
         compass.declination = declination
 
-        binding.navigationTitle.subtitle.setTextDistinct(
+        views.navigationTitle.subtitle.setTextDistinct(
             formatService.formatLocation(location)
         )
 
-        binding.radarCompassMap.userLocationAccuracy =
+        views.radarCompassMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
         // Compass center point
         listOf<ICompassView>(
-            binding.radarCompass,
-            binding.linearCompass
+            views.radarCompass,
+            views.linearCompass
         ).forEach {
             it.compassCenter = location
         }
 
-        binding.radarCompassMap.mapCenter = location
-        binding.radarCompassMap.userLocation = location
+        views.radarCompassMap.mapCenter = location
+        views.radarCompassMap.userLocation = location
 
-        binding.radarCompassMap.projection = AzimuthalEquidistantProjection(location)
+        views.radarCompassMap.projection = AzimuthalEquidistantProjection(location)
 
         updateNearbyBeacons()
     }

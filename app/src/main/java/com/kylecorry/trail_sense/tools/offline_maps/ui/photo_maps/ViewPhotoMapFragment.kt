@@ -70,7 +70,7 @@ import kotlin.math.roundToInt
 
 class ViewPhotoMapFragment : Fragment() {
     private var photoMapViews: ViewPhotoMapViews? = null
-    private val binding: ViewPhotoMapViews
+    private val views: ViewPhotoMapViews
         get() = photoMapViews ?: error("Photo map views are not ready")
     private val isBound: Boolean
         get() = photoMapViews != null
@@ -140,7 +140,7 @@ class ViewPhotoMapFragment : Fragment() {
         super.onResume()
         layerManager.setOnDistanceChangedCallback(this::showDistance)
         resetLayerManager()
-        binding.map.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
+        views.map.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
 
         if (mapLockMode == MapLockMode.Trace) {
             updateMapLockMode(MapLockMode.Trace, prefs.photoMaps.keepMapFacingUp)
@@ -151,21 +151,21 @@ class ViewPhotoMapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observe(gps) {
-            binding.map.userLocation = gps.location
-            binding.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
+            views.map.userLocation = gps.location
+            views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
             updateDestination()
 
             if (mapLockMode == MapLockMode.Location || mapLockMode == MapLockMode.Compass) {
-                binding.map.mapCenter = gps.location
+                views.map.mapCenter = gps.location
             }
         }
         observe(altimeter) { updateDestination() }
         observe(compass) {
             compass.declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
             val bearing = compass.rawBearing
-            binding.map.userAzimuth = compass.bearing
+            views.map.userAzimuth = compass.bearing
             if (mapLockMode == MapLockMode.Compass) {
-                binding.map.mapAzimuth = bearing
+                views.map.mapAzimuth = bearing
             }
             updateDestination()
         }
@@ -174,39 +174,39 @@ class ViewPhotoMapFragment : Fragment() {
             setDestination(it)
         }
 
-        binding.mapAttribution.movementMethod = LinkMovementMethod.getInstance()
+        views.mapAttribution.movementMethod = LinkMovementMethod.getInstance()
 
         reloadMap()
 
-        binding.map.setOnLongPressListener {
+        views.map.setOnLongPressListener {
             onLongPress(it)
         }
 
-        binding.map.setBackgroundColor(Resources.color(requireContext(), R.color.colorSecondary))
+        views.map.setBackgroundColor(Resources.color(requireContext(), R.color.colorSecondary))
 
         val keepMapUp = prefs.photoMaps.keepMapFacingUp
 
         // TODO: Don't show if location not on map
 
         // Update initial map rotation
-        binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
+        views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
         // Set the button states
-        CustomUiUtils.setButtonState(binding.lockBtn, false)
-        CustomUiUtils.setButtonState(binding.zoomInBtn, false)
-        CustomUiUtils.setButtonState(binding.zoomOutBtn, false)
+        CustomUiUtils.setButtonState(views.lockBtn, false)
+        CustomUiUtils.setButtonState(views.zoomInBtn, false)
+        CustomUiUtils.setButtonState(views.zoomOutBtn, false)
 
         // Handle when the lock button is pressed
-        binding.lockBtn.setOnClickListener {
+        views.lockBtn.setOnClickListener {
             updateMapLockMode(getNextLockMode(mapLockMode), keepMapUp)
         }
 
-        binding.zoomOutBtn.setOnClickListener {
-            binding.map.zoom(0.5f)
+        views.zoomOutBtn.setOnClickListener {
+            views.map.zoom(0.5f)
         }
 
-        binding.zoomInBtn.setOnClickListener {
-            binding.map.zoom(2f)
+        views.zoomInBtn.setOnClickListener {
+            views.map.zoom(2f)
         }
     }
 
@@ -279,14 +279,14 @@ class ViewPhotoMapFragment : Fragment() {
         }
 
         val beacon = destination ?: return
-        binding.navigationSheet.updateNavigationSensorValues(
+        views.navigationSheet.updateNavigationSensorValues(
             gps.location,
             altimeter.altitude,
             gps.speed.value,
             compass.declination
         )
-        binding.navigationSheet.setTrueNorthOverride(true)
-        binding.navigationSheet.show(beacon, true)
+        views.navigationSheet.setTrueNorthOverride(true)
+        views.navigationSheet.show(beacon, true)
     }
 
     private fun selectLocation(location: Coordinate?) {
@@ -304,7 +304,7 @@ class ViewPhotoMapFragment : Fragment() {
         val relative = distance
             .convertTo(prefs.baseDistanceUnits)
             .toRelativeDistance()
-        binding.distanceSheet.setDistance(relative)
+        views.distanceSheet.setDistance(relative)
     }
 
     fun startDistanceMeasurement(initialPoints: Array<Coordinate>) {
@@ -314,11 +314,11 @@ class ViewPhotoMapFragment : Fragment() {
         }
 
         layerManager.startDistanceMeasurement(initialPoints)
-        binding.distanceSheet.show()
-        binding.distanceSheet.cancelListener = {
+        views.distanceSheet.show()
+        views.distanceSheet.cancelListener = {
             stopDistanceMeasurement()
         }
-        binding.distanceSheet.createPathListener = {
+        views.distanceSheet.createPathListener = {
             inBackground {
                 map?.let {
                     val id = CreatePathCommand(
@@ -338,14 +338,14 @@ class ViewPhotoMapFragment : Fragment() {
                 }
             }
         }
-        binding.distanceSheet.undoListener = {
+        views.distanceSheet.undoListener = {
             layerManager.undoLastDistanceMeasurement()
         }
     }
 
     private fun stopDistanceMeasurement() {
         layerManager.stopDistanceMeasurement()
-        binding.distanceSheet.hide()
+        views.distanceSheet.hide()
     }
 
     fun trace() {
@@ -353,12 +353,12 @@ class ViewPhotoMapFragment : Fragment() {
     }
 
     private fun resetLayerManager() {
-        layerManager.resume(requireContext(), binding.map, mapId, this)
+        layerManager.resume(requireContext(), views.map, mapId, this)
 
         // Populate the last known location and map bounds
         layerManager.onBoundsChanged()
-        binding.map.userLocation = gps.location
-        binding.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
+        views.map.userLocation = gps.location
+        views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
     }
 
     fun adjustLayers() {
@@ -367,7 +367,7 @@ class ViewPhotoMapFragment : Fragment() {
             OfflineMapsToolRegistration.PHOTO_MAPS_ID,
             PhotoMapToolLayerManager.alwaysEnabledLayers
         )
-        layerManager.pause(binding.map)
+        layerManager.pause(views.map)
         layerSheet?.setOnDismissListener {
             resetLayerManager()
         }
@@ -404,7 +404,7 @@ class ViewPhotoMapFragment : Fragment() {
         this@ViewPhotoMapFragment.destination = destination
         if (isBound) {
             if (destination == null) {
-                binding.navigationSheet.hide()
+                views.navigationSheet.hide()
             } else {
                 updateDestination()
             }
@@ -413,20 +413,20 @@ class ViewPhotoMapFragment : Fragment() {
     }
 
     private fun onMapLoad(map: PhotoMap) {
-        layerManager.pause(binding.map)
+        layerManager.pause(views.map)
         this.map = map
-        binding.map.minScale = 0f
+        views.map.minScale = 0f
         val bounds = map.boundary() ?: CoordinateBounds(85.0, 180.0, -85.0, -180.0)
-        binding.map.fitIntoView(bounds, paddingFactor = 1.05f)
-        binding.map.constraintBounds = bounds
-        binding.map.minScale = binding.map.scale
-        layerManager.improveResolution(binding.map.mapBounds, binding.map.zoom.roundToInt())
+        views.map.fitIntoView(bounds, paddingFactor = 1.05f)
+        views.map.constraintBounds = bounds
+        views.map.minScale = views.map.scale
+        layerManager.improveResolution(views.map.mapBounds, views.map.zoom.roundToInt())
         if (shouldLockOnMapLoad) {
             updateMapLockMode(MapLockMode.Location, prefs.photoMaps.keepMapFacingUp)
             shouldLockOnMapLoad = false
         }
-        binding.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
-        layerManager.resume(requireContext(), binding.map, map.id, this)
+        views.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
+        layerManager.resume(requireContext(), views.map, map.id, this)
         layerManager.onBoundsChanged()
     }
 
@@ -434,13 +434,13 @@ class ViewPhotoMapFragment : Fragment() {
         mapLockMode = mode
 
         // Show zoom buttons
-        binding.zoomInBtn.isVisible = true
-        binding.zoomOutBtn.isVisible = true
-        binding.map.isZoomEnabled = true
+        views.zoomInBtn.isVisible = true
+        views.zoomOutBtn.isVisible = true
+        views.map.isZoomEnabled = true
 
         // Make it interactive
-        binding.map.isInteractive = true
-        binding.map.isZoomEnabled = true
+        views.map.isInteractive = true
+        views.map.isZoomEnabled = true
 
         // Show the bottom navigation
         requireMainActivity().setBottomNavigationEnabled(true)
@@ -448,18 +448,18 @@ class ViewPhotoMapFragment : Fragment() {
         when (mapLockMode) {
             MapLockMode.Location -> {
                 // Disable pan
-                binding.map.isPanEnabled = false
+                views.map.isPanEnabled = false
 
                 // Zoom in and center on location
-                binding.map.resolution = 2f
-                binding.map.mapCenter = gps.location
+                views.map.resolution = 2f
+                views.map.mapCenter = gps.location
 
                 // Reset the rotation
-                binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
+                views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as locked
-                binding.lockBtn.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(binding.lockBtn, true)
+                views.lockBtn.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(views.lockBtn, true)
 
                 // Reset brightness
                 screenLight.off()
@@ -467,17 +467,17 @@ class ViewPhotoMapFragment : Fragment() {
 
             MapLockMode.Compass -> {
                 // Disable pan
-                binding.map.isPanEnabled = false
+                views.map.isPanEnabled = false
 
                 // Center on location
-                binding.map.mapCenter = gps.location
+                views.map.mapCenter = gps.location
 
                 // Rotate
-                binding.map.mapAzimuth = -compass.rawBearing
+                views.map.mapAzimuth = -compass.rawBearing
 
                 // Show as locked
-                binding.lockBtn.setImageResource(R.drawable.ic_compass_icon)
-                CustomUiUtils.setButtonState(binding.lockBtn, true)
+                views.lockBtn.setImageResource(R.drawable.ic_compass_icon)
+                CustomUiUtils.setButtonState(views.lockBtn, true)
 
                 // Reset brightness
                 screenLight.off()
@@ -485,14 +485,14 @@ class ViewPhotoMapFragment : Fragment() {
 
             MapLockMode.Free -> {
                 // Enable pan
-                binding.map.isPanEnabled = true
+                views.map.isPanEnabled = true
 
                 // Reset the rotation
-                binding.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
+                views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as unlocked
-                binding.lockBtn.setImageResource(R.drawable.satellite)
-                CustomUiUtils.setButtonState(binding.lockBtn, false)
+                views.lockBtn.setImageResource(R.drawable.satellite)
+                CustomUiUtils.setButtonState(views.lockBtn, false)
 
                 // Reset brightness
                 screenLight.off()
@@ -508,19 +508,19 @@ class ViewPhotoMapFragment : Fragment() {
                 )
 
                 // Disable pan
-                binding.map.isInteractive = false
-                binding.map.isZoomEnabled = false
+                views.map.isInteractive = false
+                views.map.isZoomEnabled = false
 
                 // Show as locked
-                binding.lockBtn.setImageResource(R.drawable.lock)
-                CustomUiUtils.setButtonState(binding.lockBtn, true)
+                views.lockBtn.setImageResource(R.drawable.lock)
+                CustomUiUtils.setButtonState(views.lockBtn, true)
 
                 // Full brightness
                 screenLight.on()
 
                 // Hide zoom buttons
-                binding.zoomInBtn.isVisible = false
-                binding.zoomOutBtn.isVisible = false
+                views.zoomInBtn.isVisible = false
+                views.zoomOutBtn.isVisible = false
 
                 // Hide the bottom navigation
                 requireMainActivity().setBottomNavigationEnabled(false)
@@ -547,7 +547,7 @@ class ViewPhotoMapFragment : Fragment() {
         if (mapLockMode == MapLockMode.Trace) {
             return
         }
-        binding.map.recenter()
+        views.map.recenter()
     }
 
     override fun onDestroyView() {

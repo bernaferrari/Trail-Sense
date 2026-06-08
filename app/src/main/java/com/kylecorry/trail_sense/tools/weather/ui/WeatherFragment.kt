@@ -108,7 +108,7 @@ import kotlin.math.max
 class WeatherFragment : AndromedaFragment() {
 
     private var weatherViews: WeatherViews? = null
-    private val binding: WeatherViews
+    private val views: WeatherViews
         get() = weatherViews ?: error("Weather views are not ready")
     private val isViewReady: Boolean
         get() = weatherViews != null && view != null
@@ -192,7 +192,7 @@ class WeatherFragment : AndromedaFragment() {
 
         WeatherQuickActionBinder(
             this,
-            binding.weatherTitle,
+            views.weatherTitle,
             prefs.weather
         ).bind()
 
@@ -369,8 +369,8 @@ class WeatherFragment : AndromedaFragment() {
         val weather = weather ?: return
         val prediction = weather.prediction
         onMain {
-            binding.weatherTitle.title.text = formatService.formatWeather(prediction.primaryHourly)
-            binding.weatherTitle.title.setOnClickListener {
+            views.weatherTitle.title.text = formatService.formatWeather(prediction.primaryHourly)
+            views.weatherTitle.title.setOnClickListener {
                 if (prediction.hourly.isNotEmpty()) {
                     val conditions = prediction.hourly.joinToString("\n") {
                         formatService.formatWeather(it)
@@ -378,7 +378,7 @@ class WeatherFragment : AndromedaFragment() {
                     dialog(getString(R.string.weather), conditions, cancelText = null)
                 }
             }
-            binding.weatherTitle.title.setCompoundDrawables(
+            views.weatherTitle.title.setCompoundDrawables(
                 size = Resources.dp(requireContext(), 24f).toInt(),
                 left = formatService.getWeatherImage(prediction.primaryHourly)
             )
@@ -391,7 +391,7 @@ class WeatherFragment : AndromedaFragment() {
 
             val hourlySameAsDaily = prediction.primaryDaily == prediction.primaryHourly
 
-            binding.weatherTitle.subtitle.text =
+            views.weatherTitle.subtitle.text =
                 if (arrival.isNotEmpty() && (prediction.primaryDaily == null || hourlySameAsDaily)) {
                     arrival
                 } else if (arrival.isNotEmpty()) {
@@ -401,8 +401,8 @@ class WeatherFragment : AndromedaFragment() {
                 } else {
                     ""
                 }
-            binding.weatherTitle.subtitle.isVisible =
-                binding.weatherTitle.subtitle.text.isNotEmpty()
+            views.weatherTitle.subtitle.isVisible =
+                views.weatherTitle.subtitle.text.isNotEmpty()
         }
     }
 

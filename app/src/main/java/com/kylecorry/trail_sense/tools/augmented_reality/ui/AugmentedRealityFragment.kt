@@ -95,7 +95,7 @@ import kotlin.math.hypot
 class AugmentedRealityFragment : AndromedaFragment() {
 
     private var augmentedRealityViews: AugmentedRealityViews? = null
-    private val binding: AugmentedRealityViews
+    private val views: AugmentedRealityViews
         get() = augmentedRealityViews ?: error("Augmented reality views are not ready")
     private val isViewReady: Boolean
         get() = augmentedRealityViews != null && view != null
@@ -145,7 +145,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
     private val satelliteLayer by lazy {
         ARSatelliteLayer(
-            binding.arView.gps,
+            views.arView.gps,
             this::onSatelliteFocused
         )
     }
@@ -178,14 +178,14 @@ class AugmentedRealityFragment : AndromedaFragment() {
     private val layerManagementUpdater = CoroutineTimer(actionBehavior = TimerActionBehavior.Skip) {
         if (!isViewReady) return@CoroutineTimer
         if (!userPrefs.augmentedReality.showPathLayer) return@CoroutineTimer
-        if (binding.arView.location == lastLocation) return@CoroutineTimer
-        lastLocation = binding.arView.location
+        if (views.arView.location == lastLocation) return@CoroutineTimer
+        lastLocation = views.arView.location
         // This is only handling the path layer for now
         val viewDistance = Distance.meters(userPrefs.augmentedReality.pathViewDistance * 2f)
         pathLayerManager?.onBoundsChanged(
             CoordinateBounds.from(
                 Geofence(
-                    binding.arView.location,
+                    views.arView.location,
                     viewDistance
                 )
             )
@@ -243,20 +243,20 @@ class AugmentedRealityFragment : AndromedaFragment() {
             syncBeaconGuidance(it)
         }
 
-        binding.guidancePanel.isVisible = false
-        binding.arGuideCancel.setOnClickListener {
+        views.guidancePanel.isVisible = false
+        views.arGuideCancel.setOnClickListener {
             replaceActiveGuidanceTarget(null)
             setMode(ARMode.Normal)
         }
 
-        binding.accuracyView.setSensors(binding.arView.gps, binding.arView.geomagneticOrientationSensor)
-        binding.accuracyView.setOnClickListener { displayAccuracyTips() }
+        views.accuracyView.setSensors(views.arView.gps, views.arView.geomagneticOrientationSensor)
+        views.accuracyView.setOnClickListener { displayAccuracyTips() }
 
-        binding.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
-        binding.camera.setShowTorch(false)
+        views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
+        views.camera.setShowTorch(false)
 
-        binding.arView.infiniteFocusWhenPointedUp = true
-        binding.arView.bind(binding.camera)
+        views.arView.infiniteFocusWhenPointedUp = true
+        views.arView.bind(views.camera)
 
         val arguments = requireArguments()
         val modeId = arguments.getLong("mode", ARMode.Normal.id)
@@ -264,7 +264,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
         isCameraEnabled = arguments.getBoolean("camera_enabled", true)
 
-        binding.cameraToggle.setOnClickListener {
+        views.cameraToggle.setOnClickListener {
             if (isCameraEnabled) {
                 stopCamera()
             } else {
@@ -272,30 +272,30 @@ class AugmentedRealityFragment : AndromedaFragment() {
             }
         }
 
-        binding.calibrateBtn.setOnClickListener {
+        views.calibrateBtn.setOnClickListener {
             startCalibration()
         }
 
-        binding.layersBtn.setOnClickListener {
+        views.layersBtn.setOnClickListener {
             showLayersSheet()
         }
 
-        binding.arSearchBtn.setOnClickListener {
+        views.searchBtn.setOnClickListener {
             showGuidanceLayerPicker()
         }
 
-        binding.timeBtn.setOnClickListener {
-            if (binding.timeSheet.isVisible) {
+        views.timeBtn.setOnClickListener {
+            if (views.timeSheet.isVisible) {
                 setTimeOverride(null)
-                binding.timeSheet.hide()
+                views.timeSheet.hide()
             } else {
-                binding.timeSheet.setTime(timeOverride)
-                binding.timeSheet.show()
+                views.timeSheet.setTime(timeOverride)
+                views.timeSheet.show()
             }
             updateTimeButtonState()
         }
 
-        binding.timeSheet.onTimeChanged = {
+        views.timeSheet.onTimeChanged = {
             setTimeOverride(it)
             updateTimeButtonState()
             refreshGuidance()
@@ -303,25 +303,25 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
         setMode(desiredMode, requireArguments().getBundle("extras"))
 
-        binding.calibrateBtn.setOnLongClickListener {
+        views.calibrateBtn.setOnLongClickListener {
             dialog(getString(R.string.reset_calibration_question)) { cancelled ->
                 if (!cancelled) {
-                    binding.arView.resetCalibration()
+                    views.arView.resetCalibration()
                 }
             }
             true
         }
 
-        binding.confirmCalibrationButton.setOnClickListener {
+        views.confirmCalibrationButton.setOnClickListener {
             calibrate()
         }
 
-        binding.cancelCalibrationButton.setOnClickListener {
+        views.cancelCalibrationButton.setOnClickListener {
             stopCalibration()
         }
 
-        binding.arView.setOnFocusLostListener {
-            binding.focusActionButton.isVisible = false
+        views.arView.setOnFocusLostListener {
+            views.focusActionButton.isVisible = false
         }
 
         ARCalibrateDisclaimer(requireContext()).alert()
@@ -342,7 +342,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
         pathLayerManager?.start()
         layerManagementUpdater.interval(100)
 
-        binding.arView.start()
+        views.arView.start()
         if (isCameraEnabled) {
             startCamera()
         } else {
@@ -360,38 +360,38 @@ class AugmentedRealityFragment : AndromedaFragment() {
     // TODO: Move this to the AR view
     private fun startCamera() {
         isCameraEnabled = true
-        binding.cameraToggle.setImageResource(R.drawable.ic_camera)
-        binding.arView.backgroundFillColor = Color.TRANSPARENT
+        views.cameraToggle.setImageResource(R.drawable.ic_camera)
+        views.arView.backgroundFillColor = Color.TRANSPARENT
         requestCamera {
             if (it) {
-                binding.camera.isVisible = true
-                binding.camera.start(
+                views.camera.isVisible = true
+                views.camera.start(
                     readFrames = false, shouldStabilizePreview = false
                 )
             } else {
-                binding.camera.isInvisible = true
+                views.camera.isInvisible = true
                 isCameraEnabled = false
-                binding.cameraToggle.setImageResource(R.drawable.ic_camera_off)
-                binding.arView.backgroundFillColor = Color.BLACK
+                views.cameraToggle.setImageResource(R.drawable.ic_camera_off)
+                views.arView.backgroundFillColor = Color.BLACK
                 alertNoCameraPermission()
             }
         }
     }
 
     private fun stopCamera() {
-        binding.cameraToggle.setImageResource(R.drawable.ic_camera_off)
+        views.cameraToggle.setImageResource(R.drawable.ic_camera_off)
         isCameraEnabled = false
-        binding.arView.backgroundFillColor = Color.BLACK
-        binding.camera.stop()
-        binding.camera.isInvisible = true
+        views.arView.backgroundFillColor = Color.BLACK
+        views.camera.stop()
+        views.camera.isInvisible = true
     }
 
     override fun onPause() {
         super.onPause()
-        binding.camera.stop()
-        binding.arView.stop()
+        views.camera.stop()
+        views.arView.stop()
         setTimeOverride(null)
-        binding.timeSheet.hide()
+        views.timeSheet.hide()
         pathLayerManager?.stop()
         layerManagementUpdater.stop()
         guidanceLocationUpdater.stop()
@@ -401,7 +401,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
         if (!isViewReady) {
             return
         }
-        binding.arView.setLayers(visibleLayersOverride ?: visibleLayers)
+        views.arView.setLayers(visibleLayersOverride ?: visibleLayers)
     }
 
     private fun updateExposureCompensation() {
@@ -410,12 +410,12 @@ class AugmentedRealityFragment : AndromedaFragment() {
         }
         val isNight = AstronomySubsystem.getInstance(requireContext()).isNight()
         val shouldIncreaseExposureAtNight = userPrefs.augmentedReality.increaseExposureAtNight
-        binding.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
+        views.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
     }
 
     // TODO: Extract focus formatters
     private fun onSunFocused(time: ZonedDateTime): Boolean {
-        binding.arView.focusText =
+        views.arView.focusText =
             getString(R.string.sun) + "\n" + formatter.formatRelativeDateTime(
                 time,
                 includeSeconds = false
@@ -424,7 +424,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
     }
 
     private fun onMoonFocused(time: ZonedDateTime, phase: MoonPhase): Boolean {
-        binding.arView.focusText =
+        views.arView.focusText =
             getString(R.string.moon) + "\n" + formatter.formatRelativeDateTime(
                 time,
                 includeSeconds = false
@@ -440,35 +440,35 @@ class AugmentedRealityFragment : AndromedaFragment() {
         val constellations = astronomyService.getConstellationsForStar(star)
         val constellationString =
             constellations.joinToString("\n\n\n") { "${getString(R.string.constellation)}\n${it.name}" }
-        binding.arView.focusText =
+        views.arView.focusText =
             "${getString(R.string.star)}\n${star.name}\n\n\n$constellationString".trim()
         return true
     }
 
     private fun onPlanetFocused(planet: Planet): Boolean {
-        binding.arView.focusText = planetMapper.getName(planet)
+        views.arView.focusText = planetMapper.getName(planet)
         return true
     }
 
     private fun onMeteorShowerFocused(shower: MeteorShower): Boolean {
-        binding.arView.focusText = getString(R.string.meteor_shower) + "\n" + shower.readableName()
+        views.arView.focusText = getString(R.string.meteor_shower) + "\n" + shower.readableName()
         return true
     }
 
     private fun onSatelliteFocused(satellite: Satellite): Boolean {
-        binding.arView.focusText = "${satellite.constellation} ${satellite.id}"
+        views.arView.focusText = "${satellite.constellation} ${satellite.id}"
         return true
     }
 
     private fun onPathFocused(path: IMappablePath): Boolean {
-        binding.arView.focusText = path.name
+        views.arView.focusText = path.name
         return true
     }
 
     private fun onBeaconFocused(beacon: Beacon): Boolean {
         val distance = hypot(
-            binding.arView.location.distanceTo(beacon.coordinate),
-            (beacon.elevation ?: binding.arView.altitude) - binding.arView.altitude
+            views.arView.location.distanceTo(beacon.coordinate),
+            (beacon.elevation ?: views.arView.altitude) - views.arView.altitude
         )
         val userDistance = Distance.meters(distance).convertTo(userPrefs.baseDistanceUnits)
             .toRelativeDistance()
@@ -477,17 +477,17 @@ class AugmentedRealityFragment : AndromedaFragment() {
             Units.getDecimalPlaces(userDistance.units),
             strict = false
         )
-        binding.arView.focusText = beacon.name + "\n" + formattedDistance
+        views.arView.focusText = beacon.name + "\n" + formattedDistance
 
         // If the beacon isn't the destination, show the navigate button
         if (navigator.getDestinationId() != beacon.id) {
-            binding.focusActionButton.setTextDistinct(getString(R.string.navigate))
-            binding.focusActionButton.setOnClickListener {
+            views.focusActionButton.setTextDistinct(getString(R.string.navigate))
+            views.focusActionButton.setOnClickListener {
                 replaceActiveGuidanceTarget(BeaconGuidanceTarget(beacon))
             }
-            binding.focusActionButton.isVisible = true
+            views.focusActionButton.isVisible = true
         } else {
-            binding.focusActionButton.isVisible = false
+            views.focusActionButton.isVisible = false
         }
 
         return true
@@ -501,7 +501,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
                 visibleLayersOverride = null
                 if (previousMode == ARMode.Astronomy) {
                     setTimeOverride(null)
-                    binding.timeSheet.hide()
+                    views.timeSheet.hide()
                     updateTimeButtonState()
                 }
             }
@@ -514,8 +514,8 @@ class AugmentedRealityFragment : AndromedaFragment() {
                 }
                 overrideTime?.let {
                     setTimeOverride(it.toInstant())
-                    binding.timeSheet.setTime(timeOverride)
-                    binding.timeSheet.show()
+                    views.timeSheet.setTime(timeOverride)
+                    views.timeSheet.show()
                     updateTimeButtonState()
                 }
                 showAstronomyTargetPicker()
@@ -549,7 +549,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
             }
 
             inBackground {
-                val target = layer.pickGuidanceTarget(binding.arView)
+                val target = layer.pickGuidanceTarget(views.arView)
                 if (target == null) {
                     handleGuidancePickerCancelled()
                     return@inBackground
@@ -562,7 +562,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
     private fun showAstronomyTargetPicker() {
         inBackground {
-            val target = astronomyLayer.pickGuidanceTarget(binding.arView)
+            val target = astronomyLayer.pickGuidanceTarget(views.arView)
             if (target == null) {
                 handleGuidancePickerCancelled()
                 return@inBackground
@@ -582,7 +582,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
         val newBeacon = (target as? ARBeaconGuidanceTarget)?.beacon
 
         activeGuidanceTarget = null
-        binding.arView.clearGuide()
+        views.arView.clearGuide()
         updateGuidancePanel(null)
 
         if (previousBeaconId != null && previousBeaconId != newBeacon?.id) {
@@ -621,7 +621,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
         val target = activeGuidanceTarget
 
         if (target == null) {
-            binding.arView.clearGuide()
+            views.arView.clearGuide()
             updateGuidancePanel(null)
             return
         }
@@ -629,14 +629,14 @@ class AugmentedRealityFragment : AndromedaFragment() {
         inBackground {
             guidanceRefreshRunner.enqueue {
                 tryOrLog {
-                    val state = target.refresh(binding.arView)
+                    val state = target.refresh(views.arView)
                     onMain {
                         if (!isViewReady || activeGuidanceTarget !== target) {
                             return@onMain
                         }
 
                         updateGuidancePanel(state.display)
-                        binding.arView.guideTo(state.point) {
+                        views.arView.guideTo(state.point) {
                             // Guidance targets remain active until cancelled or replaced
                         }
                     }
@@ -647,21 +647,17 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
     private fun updateGuidancePanel(state: ARGuidanceDisplayState?) {
         if (state == null) {
-            binding.guidancePanel.isVisible = false
+            views.guidancePanel.isVisible = false
             return
         }
 
-        binding.guidancePanel.isVisible = true
-        binding.arGuideName.text = state.name
-        if (state.iconBitmap != null) {
-            binding.arGuideIcon.setImageBitmap(state.iconBitmap)
-        } else {
-            binding.arGuideIcon.setImageResource(state.icon)
-        }
-        binding.arGuideIcon.rotation = state.iconRotation
-        binding.arGuideIcon.backgroundTintList =
+        views.guidancePanel.isVisible = true
+        views.arGuideName.text = state.name
+        views.arGuideIcon.setImageResource(state.icon)
+        views.arGuideIcon.rotation = state.iconRotation
+        views.arGuideIcon.backgroundTintList =
             ColorStateList.valueOf(state.iconBackgroundTint ?: Color.TRANSPARENT)
-        Colors.setImageColor(binding.arGuideIcon, state.iconTint)
+        Colors.setImageColor(views.arGuideIcon, state.iconTint)
     }
 
     private fun currentVisibleLayers(): List<ARLayer> {
@@ -670,7 +666,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
 
     private fun updateGuidanceButtonState() {
         val hasGuidanceLayers = currentVisibleLayers().any { it is ARGuidanceLayer }
-        binding.arSearchBtn.isVisible = activeGuidanceTarget != null || hasGuidanceLayers
+        views.searchBtn.isVisible = activeGuidanceTarget != null || hasGuidanceLayers
     }
 
     private fun showLayersSheet() {
@@ -682,8 +678,8 @@ class AugmentedRealityFragment : AndromedaFragment() {
     }
 
     private fun startCalibration() {
-        binding.calibrationPanel.isVisible = true
-        val isSunUp = astronomyService.isSunUp(binding.arView.location)
+        views.calibrationPanel.isVisible = true
+        val isSunUp = astronomyService.isSunUp(views.arView.location)
         dialog(
             getString(R.string.calibrate),
             getString(
@@ -700,18 +696,18 @@ class AugmentedRealityFragment : AndromedaFragment() {
     private fun calibrate() {
         inBackground {
             val useGyro = userPrefs.augmentedReality.useGyroOnlyAfterCalibration
-            val calibrator = if (astronomyService.isSunUp(binding.arView.location)) {
-                calibrationFactory.getSunCalibrator(binding.arView.location)
+            val calibrator = if (astronomyService.isSunUp(views.arView.location)) {
+                calibrationFactory.getSunCalibrator(views.arView.location)
             } else {
-                calibrationFactory.getMoonCalibrator(binding.arView.location)
+                calibrationFactory.getMoonCalibrator(views.arView.location)
             }
-            binding.arView.calibrate(calibrator, useGyro)
+            views.arView.calibrate(calibrator, useGyro)
             stopCalibration()
         }
     }
 
     private fun stopCalibration() {
-        binding.calibrationPanel.isVisible = false
+        views.calibrationPanel.isVisible = false
     }
 
     private fun displayAccuracyTips() {
@@ -721,7 +717,7 @@ class AugmentedRealityFragment : AndromedaFragment() {
             requireContext(),
             getString(R.string.ar_calibration_instructions_hint)
         )
-        alerter.alert(listOf(binding.arView.gps, binding.arView.geomagneticOrientationSensor))
+        alerter.alert(listOf(views.arView.gps, views.arView.geomagneticOrientationSensor))
     }
 
     private fun updateLayerVisibility() {
@@ -742,8 +738,8 @@ class AugmentedRealityFragment : AndromedaFragment() {
     }
 
     private fun updateTimeButtonState() {
-        val isActive = timeOverride != null || binding.timeSheet.isVisible
-        binding.timeBtn.alpha = if (isActive) 1f else 0.7f
+        val isActive = timeOverride != null || views.timeSheet.isVisible
+        views.timeBtn.alpha = if (isActive) 1f else 0.7f
     }
 
     companion object {

@@ -68,15 +68,15 @@ class MainActivity : AndromedaActivity() {
     var isRunning = false
         private set
 
-    private var _binding: MainActivityViews? = null
-    private val binding: MainActivityViews
-        get() = _binding!!
+    private var mainViews: MainActivityViews? = null
+    private val views: MainActivityViews
+        get() = mainViews!!
 
     private val navController: NavController?
         get() = findNavController()
 
     val errorBanner: ErrorBannerView
-        get() = binding.errorBanner
+        get() = views.errorBanner
 
     private val userPrefs = getAppService<UserPreferences>()
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
@@ -125,18 +125,18 @@ class MainActivity : AndromedaActivity() {
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
-        _binding = createMainActivityViews(this)
-        setContentView(binding.root)
+        mainViews = createMainActivityViews(this)
+        setContentView(views.root)
         setupNavHost()
 
         // Handle black theme
         if (isBlackTheme) {
             window.decorView.rootView.setBackgroundColor(Color.BLACK)
-            binding.bottomNavigation.setBackgroundColor(Color.BLACK)
+            views.bottomNavigation.setBackgroundColor(Color.BLACK)
         }
 
         if (userPrefs.theme == UserPreferences.Theme.Night) {
-            binding.colorFilter.setColorFilter(
+            views.colorFilter.setColorFilter(
                 PorterDuffColorFilter(
                     Color.RED,
                     PorterDuff.Mode.MULTIPLY
@@ -150,7 +150,7 @@ class MainActivity : AndromedaActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        _binding = null
+        mainViews = null
     }
 
     private fun setupNavHost() {
@@ -175,7 +175,7 @@ class MainActivity : AndromedaActivity() {
         // If the tool appears in the bottom nav, select it. Otherwise, select the Tools tab
         val idToSelect = if (selectedTool != null) {
             val isToolPinnedToNav =
-                binding.bottomNavigation.menu.findItem(selectedTool.navAction) != null
+                views.bottomNavigation.menu.findItem(selectedTool.navAction) != null
             if (isToolPinnedToNav) {
                 selectedTool.navAction
             } else {
@@ -185,7 +185,7 @@ class MainActivity : AndromedaActivity() {
             R.id.action_experimental_tools
         }
 
-        binding.bottomNavigation.menu.findItem(idToSelect)?.isChecked = true
+        views.bottomNavigation.menu.findItem(idToSelect)?.isChecked = true
 
         lastKnownFragment = getFragment()?.javaClass?.simpleName
     }
@@ -201,7 +201,7 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun setBottomNavLabelsVisibility() {
-        binding.bottomNavigation.apply {
+        views.bottomNavigation.apply {
             if (userPrefs.useCompactMode) {
                 layoutParams.height = Resources.dp(context, 55f).toInt() + bottomInsets
                 labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_UNLABELED
@@ -218,7 +218,7 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun bindLayoutInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(views.root) { v, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -245,12 +245,12 @@ class MainActivity : AndromedaActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (!appInitialized && _binding != null) {
+        if (!appInitialized && mainViews != null) {
             appInitialized = true
             updateBottomNavigation()
 
             navController?.addOnDestinationChangedListener { _, _, _ ->
-                binding.quickActionsSheet.close()
+                views.quickActionsSheet.close()
                 updateBottomNavSelection()
             }
 
@@ -304,7 +304,7 @@ class MainActivity : AndromedaActivity() {
 
         if (shouldReloadNavigation) {
             navController?.navigate(
-                binding.bottomNavigation.selectedItemId,
+                views.bottomNavigation.selectedItemId,
                 null,
                 NavOptions.Builder().setPopUpTo(
                     navController?.currentDestination?.id ?: R.id.action_experimental_tools, true
@@ -320,7 +320,7 @@ class MainActivity : AndromedaActivity() {
         ).execute()
 
         if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
-            val item = binding.bottomNavigation.menu.findItem(R.id.action_weather)
+            val item = views.bottomNavigation.menu.findItem(R.id.action_weather)
             item?.isVisible = false
         }
 
@@ -356,7 +356,7 @@ class MainActivity : AndromedaActivity() {
                 if (navController?.currentDestination?.id != tool.navAction) {
                     navController?.navigate(tool.navAction)
                 }
-                binding.bottomNavigation.selectedItemId = tool.navAction
+                views.bottomNavigation.selectedItemId = tool.navAction
             }
             return
         }
@@ -379,9 +379,9 @@ class MainActivity : AndromedaActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        binding.bottomNavigation.selectedItemId = savedInstanceState.getInt(
+        views.bottomNavigation.selectedItemId = savedInstanceState.getInt(
             "page",
-            binding.bottomNavigation.menu[0].itemId
+            views.bottomNavigation.menu[0].itemId
         )
         if (savedInstanceState.containsKey("navigation")) {
             tryOrNothing {
@@ -394,7 +394,7 @@ class MainActivity : AndromedaActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         tryOrLog {
-            outState.putInt("page", binding.bottomNavigation.selectedItemId)
+            outState.putInt("page", views.bottomNavigation.selectedItemId)
             navController?.currentBackStackEntry?.arguments?.let {
                 outState.putBundle("navigation_arguments", it)
             }
@@ -485,10 +485,10 @@ class MainActivity : AndromedaActivity() {
         val bottomNavTools = userPrefs.bottomNavigationTools
 
         val tools = Tools.getTools(this)
-        binding.bottomNavigation.menu.clear()
+        views.bottomNavigation.menu.clear()
         bottomNavTools.forEachIndexed { index, toolId ->
             val toolItem = tools.firstOrNull { it.id == toolId } ?: return@forEachIndexed
-            binding.bottomNavigation.menu.add(
+            views.bottomNavigation.menu.add(
                 Menu.NONE,
                 toolItem.navAction,
                 index,
@@ -496,14 +496,14 @@ class MainActivity : AndromedaActivity() {
             ).setIcon(toolItem.icon)
         }
 
-        binding.bottomNavigation.menu.add(
+        views.bottomNavigation.menu.add(
             Menu.NONE,
             R.id.action_experimental_tools,
             bottomNavTools.size,
             getString(R.string.tools)
         ).setIcon(R.drawable.apps)
             .setOnMenuItemClickListener {
-                if (navController?.currentDestination?.id == R.id.action_experimental_tools && !binding.quickActionsSheet.isOpen()) {
+                if (navController?.currentDestination?.id == R.id.action_experimental_tools && !views.quickActionsSheet.isOpen()) {
                     val searchinput = findViewById<TextInputEditText>(R.id.search_view_edit_text)
                     if (searchinput?.requestFocus() == true) {
                         val imm = getSystemService(InputMethodManager::class.java)
@@ -515,11 +515,11 @@ class MainActivity : AndromedaActivity() {
             }
 
         // Loop through each item of the bottom navigation and override the long press behavior
-        for (i in 0 until binding.bottomNavigation.menu.size) {
-            val item = binding.bottomNavigation.menu[i]
-            val view = binding.bottomNavigation.findViewById<View>(item.itemId)
+        for (i in 0 until views.bottomNavigation.menu.size) {
+            val item = views.bottomNavigation.menu[i]
+            val view = views.bottomNavigation.findViewById<View>(item.itemId)
             view.setOnLongClickListener {
-                binding.quickActionsSheet.show(this)
+                views.quickActionsSheet.show(this)
                 true
             }
         }
@@ -528,7 +528,7 @@ class MainActivity : AndromedaActivity() {
         val initialItem = if (SafeMode.isEnabled()) {
             tools.first { it.id == Tools.SETTINGS }.navAction
         } else {
-            binding.bottomNavigation.menu[0].itemId
+            views.bottomNavigation.menu[0].itemId
         }
 
         // Only initialize the nav graph once
@@ -536,7 +536,7 @@ class MainActivity : AndromedaActivity() {
             initializeNavGraph(initialItem)
         }
         // Bind to navigation
-        navController?.let { binding.bottomNavigation.setupWithNavController(it, false) }
+        navController?.let { views.bottomNavigation.setupWithNavController(it, false) }
 
         updateBottomNavSelection()
     }
@@ -569,14 +569,14 @@ class MainActivity : AndromedaActivity() {
     }
 
     fun openWidgets() {
-        binding.quickActionsSheet.show(this, 1)
+        views.quickActionsSheet.show(this, 1)
     }
 
     fun setBottomNavigationEnabled(isEnabled: Boolean) {
         if (isEnabled) {
-            binding.bottomNavigation.enable()
+            views.bottomNavigation.enable()
         } else {
-            binding.bottomNavigation.disable()
+            views.bottomNavigation.disable()
         }
     }
 

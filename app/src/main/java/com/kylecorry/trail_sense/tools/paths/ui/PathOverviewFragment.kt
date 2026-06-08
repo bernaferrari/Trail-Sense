@@ -116,7 +116,7 @@ import java.time.Duration
 class PathOverviewFragment : AndromedaFragment() {
 
     private var pathOverviewViews: PathOverviewViews? = null
-    private val binding: PathOverviewViews
+    private val views: PathOverviewViews
         get() = pathOverviewViews ?: error("Path overview views are not ready")
     private val isViewReady: Boolean
         get() = pathOverviewViews != null && view != null
@@ -224,36 +224,36 @@ class PathOverviewFragment : AndromedaFragment() {
     override fun onResume() {
         super.onResume()
         // Populate the last known location
-        binding.pathImage.userLocation = gps.location
-        binding.pathImage.userLocationAccuracy =
+        views.pathImage.userLocation = gps.location
+        views.pathImage.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
-        binding.pathImage.start()
+        views.pathImage.start()
     }
 
     override fun onPause() {
         super.onPause()
-        binding.pathImage.stop()
+        views.pathImage.stop()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        chart = PathElevationChart(binding.chart)
+        chart = PathElevationChart(views.chart)
 
-        binding.pathImage.isInteractive = true
+        views.pathImage.isInteractive = true
 
-        binding.pathImage.setOnTouchListener { v, event ->
-            binding.root.isScrollable = event.action == MotionEvent.ACTION_UP
+        views.pathImage.setOnTouchListener { v, event ->
+            views.root.isScrollable = event.action == MotionEvent.ACTION_UP
             false
         }
 
-        binding.pathMapFullscreenToggle.setOnClickListener {
+        views.pathMapFullscreenToggle.setOnClickListener {
             isFullscreen = !isFullscreen
-            binding.pathMapHolder.layoutParams = if (isFullscreen) {
+            views.pathMapHolder.layoutParams = if (isFullscreen) {
                 val legendHeight = Resources.dp(requireContext(), 72f).toInt()
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    binding.root.height - legendHeight
+                    views.root.height - legendHeight
                 )
             } else {
                 LinearLayout.LayoutParams(
@@ -264,17 +264,17 @@ class PathOverviewFragment : AndromedaFragment() {
                     it.marginEnd = Resources.dp(requireContext(), 16f).toInt()
                 }
             }
-            binding.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
+            views.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
             val timer = CoroutineTimer {
                 if (isViewReady) {
-                    binding.root.scrollTo(0, binding.pathMapHolder.top)
-                    binding.pathImage.fitIntoView(lastBounds)
+                    views.root.scrollTo(0, views.pathMapHolder.top)
+                    views.pathImage.fitIntoView(lastBounds)
                 }
             }
             timer.once(Duration.ofMillis(30))
         }
 
-        binding.addPointBtn.setOnClickListener {
+        views.addPointBtn.setOnClickListener {
             inBackground {
                 var wasSuccessful = false
                 val job = launch {
@@ -294,15 +294,15 @@ class PathOverviewFragment : AndromedaFragment() {
             }
         }
 
-        binding.navigateBtn.setOnClickListener {
+        views.navigateBtn.setOnClickListener {
             navigateToNearestPathPoint()
         }
 
-        binding.pathTitle.rightButton.setOnClickListener {
+        views.pathTitle.rightButton.setOnClickListener {
             showPathMenu()
         }
 
-        binding.pathTitle.subtitle.setOnClickListener {
+        views.pathTitle.subtitle.setOnClickListener {
             movePath()
         }
 
@@ -310,19 +310,19 @@ class PathOverviewFragment : AndromedaFragment() {
             viewWaypoint(it)
         }
 
-        binding.pathElevationMin.setOnClickListener {
+        views.pathElevationMin.setOnClickListener {
             val point = waypoints.filter { it.elevation != null }.minByOrNull { it.elevation!! }
             point?.let { viewWaypoint(it) }
         }
 
-        binding.pathElevationMax.setOnClickListener {
+        views.pathElevationMax.setOnClickListener {
             val point = waypoints.filter { it.elevation != null }.maxByOrNull { it.elevation!! }
             point?.let { viewWaypoint(it) }
         }
 
         observe(pathService.getLivePath(pathId)) {
             path = it
-            binding.root.post {
+            views.root.post {
                 updateParent()
                 updateElevationPlot()
                 updatePointStyleLegend()
@@ -337,33 +337,33 @@ class PathOverviewFragment : AndromedaFragment() {
 
         observe(gps) {
             updateDeclination()
-            binding.pathImage.userLocation = gps.location
-            binding.pathImage.userLocationAccuracy =
+            views.pathImage.userLocation = gps.location
+            views.pathImage.userLocationAccuracy =
                 gps.horizontalAccuracy?.let { Distance.meters(it) }
             onPathChanged()
         }
 
         observe(compass) {
-            binding.pathImage.userAzimuth = compass.bearing
+            views.pathImage.userAzimuth = compass.bearing
         }
 
-        binding.pathImage.setLayers(
+        views.pathImage.setLayers(
             listOf(layer, myLocationLayer, scaleBarLayer)
         )
 
-        binding.pathLineStyle.setOnClickListener {
+        views.pathLineStyle.setOnClickListener {
             val path = path ?: return@setOnClickListener
             val command = ChangePathLineStyleCommand(requireContext(), this)
             command.execute(path)
         }
 
-        binding.pathColor.setOnClickListener {
+        views.pathColor.setOnClickListener {
             val path = path ?: return@setOnClickListener
             val command = ChangePathColorCommand(requireContext(), this)
             command.execute(path)
         }
 
-        binding.pathPointStyle.setOnClickListener {
+        views.pathPointStyle.setOnClickListener {
             val path = path ?: return@setOnClickListener
             val command = ChangePointStyleCommand(requireContext(), this)
             command.execute(path)
@@ -403,7 +403,7 @@ class PathOverviewFragment : AndromedaFragment() {
         inBackground {
             val parent = onIO { pathService.getGroup(path.parentId) }
             if (isViewReady) {
-                binding.pathTitle.subtitle.text = parent?.name ?: getString(R.string.no_group)
+                views.pathTitle.subtitle.text = parent?.name ?: getString(R.string.no_group)
             }
         }
     }
@@ -466,7 +466,7 @@ class PathOverviewFragment : AndromedaFragment() {
         )
 
         Pickers.menu(
-            binding.pathTitle.rightButton, listOf(
+            views.pathTitle.rightButton, listOf(
                 getString(R.string.rename),
                 if (path.temporary) getString(R.string.keep_forever) else null,
                 if (path.style.visible) getString(R.string.hide) else getString(
@@ -527,7 +527,7 @@ class PathOverviewFragment : AndromedaFragment() {
             return
         }
         lastBounds = Geography.getBounds(waypoints.map { it.coordinate })
-        binding.pathImage.fitIntoView(lastBounds)
+        views.pathImage.fitIntoView(lastBounds)
         updateMapLayer()
     }
 
@@ -538,7 +538,7 @@ class PathOverviewFragment : AndromedaFragment() {
             return
         }
 
-        binding.pathLineStyle.text = listOf(
+        views.pathLineStyle.text = listOf(
             getString(R.string.solid),
             getString(R.string.dotted),
             getString(R.string.arrow),
@@ -555,7 +555,7 @@ class PathOverviewFragment : AndromedaFragment() {
         val end = path.metadata.duration?.end
 
 
-        binding.pathTitle.title.text = PathNameFactory(requireContext()).getName(path)
+        views.pathTitle.title.text = PathNameFactory(requireContext()).getName(path)
 
         val duration = if (start != null && end != null && Duration.between(
                 start,
@@ -567,49 +567,49 @@ class PathOverviewFragment : AndromedaFragment() {
             calculatedDuration
         }
 
-        binding.pathDuration.title = formatService.formatDuration(duration, false)
-        binding.pathWaypoints.title = path.metadata.waypoints.toString()
+        views.pathDuration.title = formatService.formatDuration(duration, false)
+        views.pathWaypoints.title = path.metadata.waypoints.toString()
 
         // Elevations
-        binding.pathElevationGain.title = formatService.formatDistance(
+        views.pathElevationGain.title = formatService.formatDistance(
             elevationGain,
             Units.getDecimalPlaces(elevationGain.units),
             false
         )
-        binding.pathElevationLoss.title = formatService.formatDistance(
+        views.pathElevationLoss.title = formatService.formatDistance(
             elevationLoss,
             Units.getDecimalPlaces(elevationLoss.units),
             false
         )
 
         val elevationRange = elevationRange
-        binding.pathElevationMin.isVisible = elevationRange != null
-        binding.pathElevationMax.isVisible = elevationRange != null
+        views.pathElevationMin.isVisible = elevationRange != null
+        views.pathElevationMax.isVisible = elevationRange != null
 
         elevationRange?.let {
-            binding.pathElevationMin.title = formatService.formatDistance(
+            views.pathElevationMin.title = formatService.formatDistance(
                 it.start,
                 Units.getDecimalPlaces(it.start.units),
                 false
             )
 
-            binding.pathElevationMax.title = formatService.formatDistance(
+            views.pathElevationMax.title = formatService.formatDistance(
                 it.end,
                 Units.getDecimalPlaces(it.end.units),
                 false
             )
         }
 
-        binding.pathDifficulty.title = formatService.formatHikingDifficulty(difficulty)
+        views.pathDifficulty.title = formatService.formatHikingDifficulty(difficulty)
 
-        binding.pathDistance.title =
+        views.pathDistance.title =
             formatService.formatDistance(
                 distance,
                 Units.getDecimalPlaces(distance.units),
                 false
             )
 
-        Colors.setImageColor(binding.pathColor, path.style.color)
+        Colors.setImageColor(views.pathColor, path.style.color)
 
         updateMapLayer()
 
@@ -659,7 +659,7 @@ class PathOverviewFragment : AndromedaFragment() {
 
     private fun deselectPoint() {
         selectedPointId = null
-        binding.pathSelectedPoint.isVisible = false
+        views.pathSelectedPoint.isVisible = false
         chart.removeHighlight()
         updateMapLayer()
     }
@@ -670,7 +670,7 @@ class PathOverviewFragment : AndromedaFragment() {
 
         val factory = getPointFactory()
 
-        binding.pathPointStyle.text = listOf(
+        views.pathPointStyle.text = listOf(
             getString(R.string.none),
             getString(R.string.cell_signal),
             getString(R.string.elevation),
@@ -678,14 +678,14 @@ class PathOverviewFragment : AndromedaFragment() {
             getString(R.string.path_slope)
         )[path.style.point.ordinal]
 
-        binding.pathLegend.colorScale = factory.createColorScale(waypoints)
-        binding.pathLegend.labels = factory.createLabelMap(waypoints)
-        binding.pathLegend.isVisible = path.style.point != PathPointColoringStyle.None
+        views.pathLegend.colorScale = factory.createColorScale(waypoints)
+        views.pathLegend.labels = factory.createLabelMap(waypoints)
+        views.pathLegend.isVisible = path.style.point != PathPointColoringStyle.None
     }
 
     // Waypoints
     private fun viewPoints() {
-        binding.root.scrollTo(0, 0)
+        views.root.scrollTo(0, 0)
         pointSheet = PathPointsListFragment()
         pointSheet?.show(this)
         pointSheet?.onCreateBeaconListener = { createBeacon(it) }
@@ -702,12 +702,12 @@ class PathOverviewFragment : AndromedaFragment() {
             point.id
         }
 
-        binding.pathSelectedPoint.removeAllViews()
+        views.pathSelectedPoint.removeAllViews()
 
         if (selectedPointId != null) {
-            binding.pathSelectedPoint.isVisible = true
+            views.pathSelectedPoint.isVisible = true
             chart.highlight(point)
-            binding.pathSelectedPoint.addView(
+            views.pathSelectedPoint.addView(
                 ComposeView(requireContext()).apply {
                     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
                     setContent {
@@ -786,7 +786,7 @@ class PathOverviewFragment : AndromedaFragment() {
             return
         }
 
-        binding.pathsTiming.isVisible = true
+        views.pathsTiming.isVisible = true
 
         inBackground {
             onDefault {
@@ -807,7 +807,7 @@ class PathOverviewFragment : AndromedaFragment() {
                 val quantile90 = Statistics.quantile(readings, 0.9f).roundPlaces(2)
                 onMain {
                     @Suppress("SetTextI18n")
-                    binding.pathsTiming.text = "Mean: $mean\n" +
+                    views.pathsTiming.text = "Mean: $mean\n" +
                             "Stdev: $stdev\n" +
                             "Max: $max\n" +
                             "Median: $median\n" +

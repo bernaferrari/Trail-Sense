@@ -108,7 +108,7 @@ import java.time.ZonedDateTime
 class AstronomyFragment : AndromedaFragment() {
 
     private var astronomyViews: AstronomyViews? = null
-    private val binding: AstronomyViews
+    private val views: AstronomyViews
         get() = astronomyViews ?: error("Astronomy views are not ready")
     private val isViewReady: Boolean
         get() = astronomyViews != null && view != null
@@ -202,20 +202,20 @@ class AstronomyFragment : AndromedaFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         AstronomyQuickActionBinder(
-            this, binding.astronomyTitle, prefs.astronomy
+            this, views.astronomyTitle, prefs.astronomy
         ).bind()
 
-        chart = AstroChart(binding.sunMoonChart, this::showTimeSeeker)
+        chart = AstroChart(views.sunMoonChart, this::showTimeSeeker)
 
-        binding.button3d.isVisible =
+        views.button3d.isVisible =
             Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
-        binding.button3d.setOnClickListener {
+        views.button3d.setOnClickListener {
             val time = if (isSeeking) {
                 currentSeekChartTime
-            } else if (binding.displayDate.date == LocalDate.now()) {
+            } else if (views.displayDate.date == LocalDate.now()) {
                 ZonedDateTime.now()
             } else {
-                binding.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
+                views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
             AugmentedRealityFragment.open(
                 findNavController(),
@@ -227,13 +227,13 @@ class AstronomyFragment : AndromedaFragment() {
             )
         }
 
-        binding.displayDate.setOnDateChangeListener {
+        views.displayDate.setOnDateChangeListener {
             displayDate = it
             refreshAstronomy()
         }
 
-        binding.displayDate.searchEnabled = true
-        binding.displayDate.setOnSearchListener {
+        views.displayDate.searchEnabled = true
+        views.displayDate.setOnSearchListener {
             val options = listOfNotNull(
                 AstronomyEvent.FullMoon,
                 AstronomyEvent.NewMoon,
@@ -263,7 +263,7 @@ class AstronomyFragment : AndromedaFragment() {
                 if (it != null) {
                     val search = options[it]
                     lastAstronomyEventSearch = search
-                    val currentDate = binding.displayDate.date
+                    val currentDate = views.displayDate.date
                     inBackground {
                         val job = launch {
                             val nextEvent = astronomyService.findNextEvent(
@@ -272,7 +272,7 @@ class AstronomyFragment : AndromedaFragment() {
                             onMain {
                                 val newDate = nextEvent ?: currentDate
                                 displayDate = newDate
-                                binding.displayDate.date = newDate
+                                views.displayDate.date = newDate
                                 refreshAstronomy()
 
                                 if (nextEvent == null) {
@@ -301,11 +301,11 @@ class AstronomyFragment : AndromedaFragment() {
 
         sunTimesMode = prefs.astronomy.sunTimesMode
 
-        binding.timeSeeker.valueFrom = 0f
-        binding.timeSeeker.valueTo = maxProgress.toFloat()
-        binding.timeSeeker.labelBehavior = LabelFormatter.LABEL_GONE
+        views.timeSeeker.valueFrom = 0f
+        views.timeSeeker.valueTo = maxProgress.toFloat()
+        views.timeSeeker.labelBehavior = LabelFormatter.LABEL_GONE
 
-        binding.timeSeeker.addOnChangeListener { _, value, _ ->
+        views.timeSeeker.addOnChangeListener { _, value, _ ->
             val progress = value.toInt()
             val seconds = (Duration.between(
                 minChartTime, maxChartTime
@@ -322,23 +322,23 @@ class AstronomyFragment : AndromedaFragment() {
             return
         }
         isSeeking = true
-        binding.timeSeekerPanel.isVisible = true
-        binding.astronomyDetailList.isVisible = false
-        binding.button3d.isVisible = false
+        views.timeSeekerPanel.isVisible = true
+        views.astronomyDetailList.isVisible = false
+        views.button3d.isVisible = false
         currentSeekChartTime = time ?: ZonedDateTime.now()
-        binding.seekTime.text =
+        views.seekTime.text =
             formatService.formatTime(currentSeekChartTime.toLocalTime(), includeSeconds = false)
 
-        binding.timeSeeker.value = getSeekProgress().toFloat()
+        views.timeSeeker.value = getSeekProgress().toFloat()
 
-        binding.closeSeek.setOnClickListener {
+        views.closeSeek.setOnClickListener {
             hideTimeSeeker()
         }
     }
 
     private fun updateSeekPositions() {
         val positions = getSunMoonPositions(currentSeekChartTime)
-        binding.sunPositionText.text = markdownService.toMarkdown(
+        views.sunPositionText.text = markdownService.toMarkdown(
             getString(
                 R.string.sun_moon_position_template,
                 getString(R.string.sun),
@@ -347,7 +347,7 @@ class AstronomyFragment : AndromedaFragment() {
             )
         )
 
-        binding.moonPositionText.text = markdownService.toMarkdown(
+        views.moonPositionText.text = markdownService.toMarkdown(
             getString(
                 R.string.sun_moon_position_template,
                 getString(R.string.moon),
@@ -366,11 +366,11 @@ class AstronomyFragment : AndromedaFragment() {
 
     private fun hideTimeSeeker() {
         isSeeking = false
-        binding.timeSeekerPanel.isVisible = false
-        binding.astronomyDetailList.isVisible = true
-        binding.button3d.isVisible =
+        views.timeSeekerPanel.isVisible = false
+        views.astronomyDetailList.isVisible = true
+        views.button3d.isVisible =
             Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
-        val displayDate = binding.displayDate.date
+        val displayDate = views.displayDate.date
         if (displayDate == LocalDate.now()) {
             plotMoonImage(data.moon)
             plotSunImage(data.sun)
@@ -401,9 +401,9 @@ class AstronomyFragment : AndromedaFragment() {
     override fun onResume() {
         super.onResume()
         chart.setBands(prefs.astronomy.showAstronomyBands)
-        binding.displayDate.reset()
+        views.displayDate.reset()
         requestLocationUpdate()
-        binding.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
+        views.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
         detectAndShowGPSError()
         periodicUpdater.interval(60000)
         refreshAstronomy()
@@ -447,12 +447,14 @@ class AstronomyFragment : AndromedaFragment() {
             return
         }
 
-        val time = if (isSeeking) {
-            currentSeekChartTime
-        } else if (displayDate == LocalDate.now()) {
-            ZonedDateTime.now()
-        } else {
-            displayDate.atStartOfDay(ZoneId.systemDefault())
+        val displayDate = views.displayDate.date
+
+        val moonPhase = withContext(Dispatchers.Default) {
+            if (displayDate == LocalDate.now()) {
+                astronomyService.getCurrentMoonPhase()
+            } else {
+                astronomyService.getMoonPhase(displayDate)
+            }
         }
 
         val moonPhase = onDefault { astronomyService.getMoonPhase(time) }
@@ -472,7 +474,7 @@ class AstronomyFragment : AndromedaFragment() {
     }
 
     private suspend fun updateAstronomyChart() {
-        val displayDate = binding.displayDate.date
+        val displayDate = views.displayDate.date
 
         data = onDefault {
             val time =
@@ -523,7 +525,7 @@ class AstronomyFragment : AndromedaFragment() {
             return
         }
 
-        val displayDate = binding.displayDate.date
+        val displayDate = views.displayDate.date
 
         onDefault {
             val declination = if (!prefs.compass.useTrueNorth) getDeclination() else 0f
@@ -550,19 +552,19 @@ class AstronomyFragment : AndromedaFragment() {
 
         withContext(Dispatchers.Main) {
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
-                binding.astronomyTitle.title.text =
+                views.astronomyTitle.title.text =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
-                binding.astronomyTitle.subtitle.text = getString(R.string.until_sunrise)
+                views.astronomyTitle.subtitle.text = getString(R.string.until_sunrise)
             } else if (nextSunset != null) {
-                binding.astronomyTitle.title.text =
+                views.astronomyTitle.title.text =
                     formatService.formatDuration(Duration.between(currentTime, nextSunset))
-                binding.astronomyTitle.subtitle.text = getString(R.string.until_sunset)
+                views.astronomyTitle.subtitle.text = getString(R.string.until_sunset)
             } else if (astronomyService.isSunUp(location)) {
-                binding.astronomyTitle.title.text = getString(R.string.sun_up_no_set)
-                binding.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_set)
+                views.astronomyTitle.title.text = getString(R.string.sun_up_no_set)
+                views.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_set)
             } else {
-                binding.astronomyTitle.title.text = getString(R.string.sun_down_no_set)
-                binding.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_rise)
+                views.astronomyTitle.title.text = getString(R.string.sun_down_no_set)
+                views.astronomyTitle.subtitle.text = getString(R.string.sun_does_not_rise)
             }
         }
     }
@@ -600,7 +602,7 @@ class AstronomyFragment : AndromedaFragment() {
             return
         }
         updateSeekPositions()
-        binding.seekTime.text = formatService.formatTime(
+        views.seekTime.text = formatService.formatTime(
             currentSeekChartTime.toLocalTime(),
             includeSeconds = false
         )
@@ -616,7 +618,7 @@ class AstronomyFragment : AndromedaFragment() {
             return
         }
         detectAndShowGPSError()
-        binding.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
+        views.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
         inBackground {
             updateAstronomyDetails()
             updateAstronomyChart()

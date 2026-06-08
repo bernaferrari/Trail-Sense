@@ -74,7 +74,7 @@ import kotlin.math.min
 class ClinometerFragment : Fragment() {
 
     private var clinometerViews: ClinometerViews? = null
-    private val binding: ClinometerViews
+    private val views: ClinometerViews
         get() = clinometerViews ?: error("Clinometer views are not ready")
 
     private val sensorService by lazy { SensorService(requireContext()) }
@@ -147,15 +147,15 @@ class ClinometerFragment : Fragment() {
 
         toast(getString(R.string.set_inclination_instructions))
 
-        CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
-        CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, false)
+        CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
+        CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, false)
 
-        binding.cameraViewHolder.clipToOutline = true
-        binding.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
-        binding.camera.setShowTorch(false)
-        binding.camera.passThroughTouchEvents = true
+        views.cameraViewHolder.clipToOutline = true
+        views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
+        views.camera.setShowTorch(false)
+        views.camera.passThroughTouchEvents = true
 
-        binding.clinometerTitle.leftButton.setOnClickListener {
+        views.clinometerTitle.leftButton.setOnClickListener {
             if (useCamera) {
                 startSideClinometer()
             } else {
@@ -163,11 +163,11 @@ class ClinometerFragment : Fragment() {
             }
         }
 
-        binding.clinometerTitle.rightButton.setOnClickListener {
+        views.clinometerTitle.rightButton.setOnClickListener {
             askForHeightOrDistance()
         }
 
-        binding.root.setOnTouchListener { _, event ->
+        views.root.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 onTouchDown()
             } else if (event.action == MotionEvent.ACTION_UP) {
@@ -176,12 +176,12 @@ class ClinometerFragment : Fragment() {
             true
         }
 
-        binding.arView.setLayers(listOf(lineLayer, markerLayer))
-        binding.arView.showReticle = false
-        binding.arView.showPosition = false
-        binding.arView.passThroughTouchEvents = true
+        views.arView.setLayers(listOf(lineLayer, markerLayer))
+        views.arView.showReticle = false
+        views.arView.showPosition = false
+        views.arView.passThroughTouchEvents = true
 
-        binding.arView.bind(binding.camera)
+        views.arView.bind(views.camera)
 
         observe(sideClinometer) { updateUI() }
         observe(cameraClinometer) { updateUI() }
@@ -189,10 +189,10 @@ class ClinometerFragment : Fragment() {
     }
 
     private fun startSideClinometer() {
-        binding.camera.stop()
-        binding.arView.stop()
-        binding.clinometerTitle.leftButton.setImageResource(R.drawable.ic_camera)
-        CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
+        views.camera.stop()
+        views.arView.stop()
+        views.clinometerTitle.leftButton.setImageResource(R.drawable.ic_camera)
+        CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
         useCamera = false
     }
 
@@ -200,12 +200,12 @@ class ClinometerFragment : Fragment() {
         requestCamera { hasPermission ->
             if (hasPermission) {
                 useCamera = true
-                binding.camera.start(
+                views.camera.start(
                     readFrames = false, shouldStabilizePreview = false
                 )
-                binding.arView.start(false)
-                binding.clinometerTitle.leftButton.setImageResource(R.drawable.ic_phone_portrait)
-                CustomUiUtils.setButtonState(binding.clinometerTitle.leftButton, false)
+                views.arView.start(false)
+                views.clinometerTitle.leftButton.setImageResource(R.drawable.ic_phone_portrait)
+                CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
             } else {
                 startSideClinometer()
                 if (showAlert) {
@@ -250,7 +250,7 @@ class ClinometerFragment : Fragment() {
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
-                CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, true)
+                CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, true)
                 CustomUiUtils.disclaimer(
                     requireContext(),
                     getString(R.string.instructions),
@@ -279,7 +279,7 @@ class ClinometerFragment : Fragment() {
             if (distance != null) {
                 knownHeight = distance
                 distanceAway = null
-                CustomUiUtils.setButtonState(binding.clinometerTitle.rightButton, true)
+                CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, true)
 
                 CustomUiUtils.disclaimer(
                     requireContext(),
@@ -300,7 +300,7 @@ class ClinometerFragment : Fragment() {
         if (distanceAway == null && knownHeight == null) {
             distanceAway = prefs.clinometer.baselineDistance
             CustomUiUtils.setButtonState(
-                binding.clinometerTitle.rightButton, distanceAway != null
+                views.clinometerTitle.rightButton, distanceAway != null
             )
         }
 
@@ -314,13 +314,13 @@ class ClinometerFragment : Fragment() {
     override fun onPause() {
         super.onPause()
         if (useCamera) {
-            binding.camera.stop()
-            binding.arView.stop()
+            views.camera.stop()
+            views.arView.stop()
         }
     }
 
     override fun onDestroyView() {
-        binding.arView.unbind()
+        views.arView.unbind()
         clinometerViews = null
         super.onDestroyView()
     }
@@ -335,42 +335,42 @@ class ClinometerFragment : Fragment() {
         lockState.write(lockedAngle1 != null)
 
         if (lockState.hasChanges) {
-            binding.clinometerTitle.title.setCompoundDrawables(
+            views.clinometerTitle.title.setCompoundDrawables(
                 Resources.dp(requireContext(), 24f).toInt(),
                 right = if (lockState.read()) R.drawable.lock else null
             )
         }
 
         CustomUiUtils.setImageColor(
-            binding.clinometerTitle.title, Resources.androidTextColorPrimary(requireContext())
+            views.clinometerTitle.title, Resources.androidTextColorPrimary(requireContext())
         )
 
         if (!isOrientationValid() && !lockState.peek()) {
-            binding.clinometerInstructions.isVisible = !useCamera
-            binding.cameraClinometerInstructions.isVisible = useCamera
-            binding.cameraViewHolder.isVisible = false
-            binding.clinometer.isInvisible = true
+            views.clinometerInstructions.isVisible = !useCamera
+            views.cameraClinometerInstructions.isVisible = useCamera
+            views.cameraViewHolder.isVisible = false
+            views.clinometer.isInvisible = true
             return
         }
 
-        binding.clinometerInstructions.isVisible = false
-        binding.cameraClinometerInstructions.isVisible = false
-        binding.cameraViewHolder.isVisible = useCamera
-        binding.clinometer.isInvisible = useCamera
+        views.clinometerInstructions.isVisible = false
+        views.cameraClinometerInstructions.isVisible = false
+        views.cameraViewHolder.isVisible = useCamera
+        views.clinometer.isInvisible = useCamera
 
         val angle = lockedAngle2 ?: (if (!isHolding) lockedAngle1 else null) ?: getCurrentAngle()
         val incline =
             lockedIncline2 ?: (if (!isHolding) lockedIncline1 else null) ?: clinometer.incline
 
-        binding.clinometer.angle = angle
-        binding.cameraClinometer.inclination = incline
+        views.clinometer.angle = angle
+        views.cameraClinometer.inclination = incline
 
-        binding.clinometerTitle.title.setTextDistinct(formatter.formatDegrees(incline))
-        binding.clinometerTitle.subtitle.setTextDistinct(
+        views.clinometerTitle.title.setTextDistinct(formatter.formatDegrees(incline))
+        views.clinometerTitle.subtitle.setTextDistinct(
             getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
         )
 
-        binding.avalancheRisk.title = getAvalancheRiskString(Geology.getAvalancheRisk(incline))
+        views.avalancheRisk.title = getAvalancheRiskString(Geology.getAvalancheRisk(incline))
 
         updateMeasurement()
         updateARLine()
@@ -382,21 +382,21 @@ class ClinometerFragment : Fragment() {
 
         when {
             distanceAway != null -> {
-                binding.estimatedHeight.description = getString(R.string.height)
-                binding.estimatedHeight.title = formatter.formatDistance(
+                views.estimatedHeight.description = getString(R.string.height)
+                views.estimatedHeight.title = formatter.formatDistance(
                     getHeight(distanceAway).toRelativeDistance(), 1, false
                 )
             }
 
             knownHeight != null -> {
-                binding.estimatedHeight.description = getString(R.string.distance)
-                binding.estimatedHeight.title = formatter.formatDistance(
+                views.estimatedHeight.description = getString(R.string.distance)
+                views.estimatedHeight.title = formatter.formatDistance(
                     getDistance(knownHeight).toRelativeDistance(), 1, false
                 )
             }
 
             else -> {
-                binding.estimatedHeight.title = getString(R.string.distance_unset)
+                views.estimatedHeight.title = getString(R.string.distance_unset)
             }
         }
     }
@@ -408,8 +408,8 @@ class ClinometerFragment : Fragment() {
                     ARLine(
                         listOfNotNull(
                             startMarker, endMarker ?: SphericalARPoint(
-                                binding.arView.azimuth,
-                                binding.arView.inclination,
+                                views.arView.azimuth,
+                                views.arView.inclination,
                                 isTrueNorth = prefs.compass.useTrueNorth,
                                 distance = distanceAway?.meters()?.value ?: 10f
                             )
@@ -481,8 +481,8 @@ class ClinometerFragment : Fragment() {
         lockStartTime = Instant.now()
 
         // Update the UI
-        binding.cameraClinometer.startInclination = lockedIncline1
-        binding.clinometer.startAngle = lockedAngle1
+        views.cameraClinometer.startInclination = lockedIncline1
+        views.clinometer.startAngle = lockedAngle1
         startMarker = addMarker()
     }
 
@@ -497,8 +497,8 @@ class ClinometerFragment : Fragment() {
         if (deltaAngle < minimumHoldAngle || deltaTime < minimumHoldDuration) {
 
             // These aren't needed for a single angle mode
-            binding.cameraClinometer.startInclination = null
-            binding.clinometer.startAngle = null
+            views.cameraClinometer.startInclination = null
+            views.clinometer.startAngle = null
 
             // If there was a lock, clear it instead of setting a new one
             if (hadLock) {
@@ -530,8 +530,8 @@ class ClinometerFragment : Fragment() {
         endMarker = null
         lineLayer.clearLines()
         markerLayer.clearMarkers()
-        binding.cameraClinometer.startInclination = null
-        binding.clinometer.startAngle = null
+        views.cameraClinometer.startInclination = null
+        views.clinometer.startAngle = null
     }
 
     private fun addMarker(): ARPoint {
@@ -540,8 +540,8 @@ class ClinometerFragment : Fragment() {
         val adjacent = distanceAway?.meters()?.value ?: 10f
         val hypotenuse = adjacent / cosDegrees(clinometer.incline)
         val point = SphericalARPoint(
-            binding.arView.azimuth,
-            binding.arView.inclination,
+            views.arView.azimuth,
+            views.arView.inclination,
             isTrueNorth = prefs.compass.useTrueNorth,
             distance = hypotenuse,
             angularDiameter = 1f

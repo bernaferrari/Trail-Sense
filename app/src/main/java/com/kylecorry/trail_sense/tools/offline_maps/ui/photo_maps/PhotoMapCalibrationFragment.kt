@@ -62,7 +62,7 @@ class PhotoMapCalibrationFragment : Fragment() {
     private val service = getAppService<OfflineMapService>()
     private val prefs by lazy { UserPreferences(requireContext()) }
     private var calibrationViews: PhotoMapCalibrationViews? = null
-    private val binding: PhotoMapCalibrationViews
+    private val views: PhotoMapCalibrationViews
         get() = calibrationViews ?: error("Photo map calibration views are not ready")
     private val isBound: Boolean
         get() = calibrationViews != null
@@ -122,20 +122,20 @@ class PhotoMapCalibrationFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         // Populate the last known location
-        binding.calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
-        binding.calibrationMap.userLocation = gps.location
-        binding.calibrationMap.userLocationAccuracy =
+        views.calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
+        views.calibrationMap.userLocation = gps.location
+        views.calibrationMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
         observe(gps) {
-            binding.calibrationMap.userLocation = gps.location
-            binding.calibrationMap.userLocationAccuracy =
+            views.calibrationMap.userLocation = gps.location
+            views.calibrationMap.userLocationAccuracy =
                 gps.horizontalAccuracy?.let { Distance.meters(it) }
             compass.declination = declinationStrategy.getDeclination()
         }
 
         observe(compass) {
-            binding.calibrationMap.userAzimuth = compass.bearing
+            views.calibrationMap.userAzimuth = compass.bearing
         }
     }
 
@@ -160,7 +160,7 @@ class PhotoMapCalibrationFragment : Fragment() {
             cancelText = null
         )
 
-        binding.mapCalibrationTitle.setOnClickListener {
+        views.mapCalibrationTitle.setOnClickListener {
             dialog(
                 getString(R.string.map_calibration),
                 getString(R.string.map_calibration_instructions),
@@ -170,7 +170,7 @@ class PhotoMapCalibrationFragment : Fragment() {
 
         reloadMap()
 
-        binding.calibrationNext.setOnClickListener {
+        views.calibrationNext.setOnClickListener {
             if (calibrationIndex == (maxPoints - 1)) {
                 inBackground {
                     map = map?.let { save(service.getPhotoMap(it.id) ?: it) }
@@ -184,21 +184,21 @@ class PhotoMapCalibrationFragment : Fragment() {
             }
         }
 
-        binding.calibrationPrev.setOnClickListener {
+        views.calibrationPrev.setOnClickListener {
             calibrationIndex--
             selectPoint(calibrationIndex)
         }
 
 
-        binding.mapCalibrationCoordinate.setOnCoordinateChangeListener {
+        views.mapCalibrationCoordinate.setOnCoordinateChangeListener {
             manager.calibrate(calibrationIndex, it)
         }
 
-        binding.calibrationMap.onMapClick = {
+        views.calibrationMap.onMapClick = {
             manager.calibrate(calibrationIndex, it)
         }
 
-        binding.previewButton.setOnClickListener {
+        views.previewButton.setOnClickListener {
             val validation = validateCalibration()
             if (validation == MapCalibrationValidationResult.Valid) {
                 setPreviewMode(!showPreview)
@@ -207,15 +207,15 @@ class PhotoMapCalibrationFragment : Fragment() {
             }
         }
 
-        CustomUiUtils.setButtonState(binding.zoomInBtn, false)
-        CustomUiUtils.setButtonState(binding.zoomOutBtn, false)
+        CustomUiUtils.setButtonState(views.zoomInBtn, false)
+        CustomUiUtils.setButtonState(views.zoomOutBtn, false)
 
-        binding.zoomOutBtn.setOnClickListener {
-            binding.calibrationMap.zoomBy(0.5f)
+        views.zoomOutBtn.setOnClickListener {
+            views.calibrationMap.zoomBy(0.5f)
         }
 
-        binding.zoomInBtn.setOnClickListener {
-            binding.calibrationMap.zoomBy(2f)
+        views.zoomInBtn.setOnClickListener {
+            views.calibrationMap.zoomBy(2f)
         }
 
         backCallback = promptIfUnsavedChanges {
@@ -243,9 +243,9 @@ class PhotoMapCalibrationFragment : Fragment() {
     private fun onMapLoad(map: PhotoMap) {
         this.map = map
         originalRotation = map.georeference.rotation
-        binding.calibrationMap.mapAzimuth = 0f
-        binding.calibrationMap.keepMapUp = true
-        binding.calibrationMap.showMap(map)
+        views.calibrationMap.mapAzimuth = 0f
+        views.calibrationMap.keepMapUp = true
+        views.calibrationMap.showMap(map)
         calibrateMap()
     }
 
@@ -255,9 +255,9 @@ class PhotoMapCalibrationFragment : Fragment() {
         }
 
         val isCalibrated = isFullyCalibrated()
-        if (binding.previewButton.isVisible != isCalibrated) {
-            binding.previewButton.isVisible = isCalibrated
-            CustomUiUtils.setButtonState(binding.previewButton, showPreview)
+        if (views.previewButton.isVisible != isCalibrated) {
+            views.previewButton.isVisible = isCalibrated
+            CustomUiUtils.setButtonState(views.previewButton, showPreview)
         }
 
         map = map?.copy(
@@ -268,7 +268,7 @@ class PhotoMapCalibrationFragment : Fragment() {
 
         val validation = validateCalibration()
         val isValid = validation == MapCalibrationValidationResult.Valid
-        binding.previewButton.isEnabled = isValid
+        views.previewButton.isEnabled = isValid
 
         if ((!isCalibrated || !isValid) && showPreview) {
             setPreviewMode(false)
@@ -280,10 +280,10 @@ class PhotoMapCalibrationFragment : Fragment() {
             )
         )
         val map = map ?: return
-        binding.calibrationMap.mapAzimuth = 0f
-        binding.calibrationMap.keepMapUp = true
-        binding.calibrationMap.showMap(map)
-        binding.calibrationMap.highlightedIndex = calibrationIndex
+        views.calibrationMap.mapAzimuth = 0f
+        views.calibrationMap.keepMapUp = true
+        views.calibrationMap.showMap(map)
+        views.calibrationMap.highlightedIndex = calibrationIndex
         updateCompletionState()
         updateRotation()
     }
@@ -313,20 +313,21 @@ class PhotoMapCalibrationFragment : Fragment() {
     }
 
     fun recenter() {
-        binding.calibrationMap.recenter()
+        views.calibrationMap.recenter()
     }
 
     private fun selectPoint(index: Int) {
-        binding.mapCalibrationTitle.text =
-            getString(R.string.calibrate_map_point_title, index + 1, maxPoints)
-        binding.mapCalibrationCoordinate.coordinate = if (manager.isCalibrated(index)) {
+        views.mapCalibrationTitle.text =
+            getString(R.string.calibrate_map_point, index + 1, maxPoints)
+        views.mapCalibrationCoordinate.coordinate = if (manager.isCalibrated(index)) {
             manager.getCalibrationPoint(index).location
         } else {
             null
         }
-        binding.mapCalibrationBottomPanel.isVisible = true
-        updateNextButtonText()
-        binding.calibrationPrev.isVisible = index == 1
+        views.mapCalibrationBottomPanel.isVisible = true
+        views.calibrationNext.text =
+            if (index == (maxPoints - 1)) getString(R.string.done) else getString(R.string.next)
+        views.calibrationPrev.isVisible = index == 1
 
         updateCompletionState()
     }
@@ -337,29 +338,28 @@ class PhotoMapCalibrationFragment : Fragment() {
         updateCalibrationText(notice)
 
         val isValid = validation == MapCalibrationValidationResult.Valid
-        binding.previewButton.isEnabled = isValid
-        updateNextButtonText()
+        views.previewButton.isEnabled = isValid
 
         // If it is calibrated, replace the info icon with a green checkmark
         if (notice.isNotBlank()) {
-            binding.mapCalibrationTitle.setCompoundDrawables(
+            views.mapCalibrationTitle.setCompoundDrawables(
                 Resources.dp(requireContext(), 24f).toInt(),
                 left = R.drawable.ic_alert
             )
-            Colors.setImageColor(binding.mapCalibrationTitle, getErrorColor())
+            Colors.setImageColor(views.mapCalibrationTitle, getErrorColor())
         } else if (manager.isCalibrated(calibrationIndex)) {
-            binding.mapCalibrationTitle.setCompoundDrawables(
+            views.mapCalibrationTitle.setCompoundDrawables(
                 Resources.dp(requireContext(), 24f).toInt(),
                 left = R.drawable.ic_check_outline
             )
-            Colors.setImageColor(binding.mapCalibrationTitle, AppColor.Green.color)
+            Colors.setImageColor(views.mapCalibrationTitle, AppColor.Green.color)
         } else {
-            binding.mapCalibrationTitle.setCompoundDrawables(
+            views.mapCalibrationTitle.setCompoundDrawables(
                 Resources.dp(requireContext(), 24f).toInt(),
                 left = R.drawable.ic_info
             )
             Colors.setImageColor(
-                binding.mapCalibrationTitle,
+                views.mapCalibrationTitle,
                 Resources.androidTextColorSecondary(requireContext())
             )
         }
@@ -378,12 +378,12 @@ class PhotoMapCalibrationFragment : Fragment() {
             return
         }
 
-        CustomUiUtils.setButtonState(binding.previewButton, enabled)
+        CustomUiUtils.setButtonState(views.previewButton, enabled)
 
         showPreview = enabled
         updateMapCalibration()
 
-        binding.calibrationMap.stop()
+        views.calibrationMap.stop()
 
         val layers = if (enabled) listOf(
             PathGeoJsonSource.SOURCE_ID,
@@ -391,13 +391,13 @@ class PhotoMapCalibrationFragment : Fragment() {
             BeaconGeoJsonSource.SOURCE_ID
         ) else emptyList()
         inBackground {
-            binding.calibrationMap.setLayersWithPreferences(
+            views.calibrationMap.setLayersWithPreferences(
                 OfflineMapsToolRegistration.PHOTO_MAPS_ID,
                 layers
             )
 
             if (showPreview) {
-                binding.calibrationMap.start()
+                views.calibrationMap.start()
             }
         }
 
@@ -433,11 +433,10 @@ class PhotoMapCalibrationFragment : Fragment() {
         }
     }
 
-    private fun updateCalibrationText(notice: String) {
-        binding.mapCalibrationTitle.text =
-            getString(R.string.calibrate_map_point_title, calibrationIndex + 1, maxPoints)
-        binding.mapCalibrationSubtitle.text = if (notice.isBlank()) {
-            getString(R.string.calibrate_map_point_instructions)
+    private fun updateCalibrationTitle(notice: String) {
+        val title = getString(R.string.calibrate_map_point, calibrationIndex + 1, maxPoints)
+        views.mapCalibrationTitle.text = if (notice.isBlank()) {
+            title
         } else {
             buildSpannedString {
                 append(getString(R.string.calibrate_map_point_instructions))
