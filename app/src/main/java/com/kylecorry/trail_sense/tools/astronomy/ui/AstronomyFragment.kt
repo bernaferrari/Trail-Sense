@@ -3,13 +3,14 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
-import android.widget.ScrollView
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,23 +29,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.slider.LabelFormatter
-import com.google.android.material.slider.Slider
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -171,22 +166,14 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     override fun beforeCreateContent() {
-        val views = createAstronomyViews(requireContext())
-        astronomyViews = views
-        views.astronomyDetailList.setContent {
-            TrailSenseTheme {
-                AstronomyDetailList(
-                    items = astronomyItems,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+        astronomyViews = createAstronomyViews(requireContext())
     }
 
     @Composable
     override fun FragmentContent() {
-        AstronomyHost(
+        AstronomyScreen(
             views = views,
+            astronomyItems = astronomyItems,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -210,7 +197,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
         views.button3d.isVisible =
             Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
-        views.button3d.setOnClickListener {
+        views.button3d.onClick = {
             val time = if (isSeeking) {
                 currentSeekChartTime
             } else if (views.displayDate.date == LocalDate.now()) {
@@ -302,11 +289,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
         sunTimesMode = prefs.astronomy.sunTimesMode
 
-        views.timeSeeker.valueFrom = 0f
-        views.timeSeeker.valueTo = maxProgress.toFloat()
-        views.timeSeeker.labelBehavior = LabelFormatter.LABEL_GONE
-
-        views.timeSeeker.addOnChangeListener { _, value, _ ->
+        views.timeSeeker.onValueChange = { value ->
             val progress = value.toInt()
             val seconds = (Duration.between(
                 minChartTime, maxChartTime
@@ -323,9 +306,8 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             return
         }
         isSeeking = true
-        views.timeSeekerPanel.isVisible = true
-        views.astronomyDetailList.isVisible = false
         views.button3d.isVisible = false
+        views.timeSeeker.isVisible = true
         currentSeekChartTime = time ?: ZonedDateTime.now()
         views.timeSeekerDetails.time =
             formatService.formatTime(currentSeekChartTime.toLocalTime(), includeSeconds = false)
@@ -367,8 +349,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun hideTimeSeeker() {
         isSeeking = false
-        views.timeSeekerPanel.isVisible = false
-        views.astronomyDetailList.isVisible = true
+        views.timeSeeker.isVisible = false
         views.button3d.isVisible =
             Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
         val displayDate = views.displayDate.date
@@ -634,15 +615,12 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 }
 
 private data class AstronomyViews(
-    val root: View,
     val astronomyTitle: AstronomyTitleState,
     val displayDate: AstronomyDatePickerState,
     val sunMoonChart: Chart,
-    val timeSeekerPanel: ScrollView,
-    val timeSeekerDetails: AstronomyTimeSeekerDetailsView,
-    val timeSeeker: Slider,
-    val astronomyDetailList: ComposeView,
-    val button3d: View
+    val timeSeekerDetails: AstronomyTimeSeekerDetailsState,
+    val timeSeeker: AstronomyTimeSeekerState,
+    val button3d: AstronomyTextButtonState
 )
 
 private class AstronomyTitleState {
@@ -762,17 +740,6 @@ private fun AstronomyTitle(
 }
 
 @Composable
-private fun AstronomyHost(
-    views: AstronomyViews,
-    modifier: Modifier = Modifier
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
-}
-
-@Composable
 private fun AstronomyDetailList(
     items: List<AstronomyListItem>,
     modifier: Modifier = Modifier
@@ -826,218 +793,145 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
     }
 }
 
+@Composable
+private fun AstronomyScreen(
+    views: AstronomyViews,
+    astronomyItems: List<AstronomyListItem>,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        AstronomyTitle(views.astronomyTitle)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+        ) {
+            views.displayDate.Content()
+        }
+        AndroidView(
+            factory = { views.sunMoonChart },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.chart_height))
+                .padding(horizontal = 16.dp)
+                .testTag("sunMoonChart")
+        )
+        if (views.timeSeeker.isVisible) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 8.dp)
+            ) {
+                views.timeSeekerDetails.Content()
+                Slider(
+                    value = views.timeSeeker.value,
+                    onValueChange = views.timeSeeker::updateValue,
+                    valueRange = 0f..views.timeSeeker.maxValue,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .testTag("time_seeker")
+                )
+            }
+        } else {
+            AstronomyDetailList(
+                items = astronomyItems,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 16.dp)
+            )
+            if (views.button3d.isVisible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensionResource(R.dimen.default_bottom_margin)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    views.button3d.Content()
+                }
+            }
+        }
+    }
+}
+
 private fun createAstronomyViews(context: Context): AstronomyViews {
-    val root = ConstraintLayout(context).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val title = AstronomyTitleState()
-    val titleView = ComposeView(context).apply {
-        id = R.id.astronomy_title
-        setContent {
-            TrailSenseTheme {
-                AstronomyTitle(title)
-            }
-        }
-    }
-    root.addView(
-        titleView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val displayDate = AstronomyDatePickerState(context)
-    val displayDateView = ComposeView(context).apply {
-        id = R.id.display_date
-        setContent {
-            TrailSenseTheme {
-                displayDate.Content()
-            }
-        }
-    }
-    root.addView(
-        displayDateView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.astronomy_title
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            topMargin = 16.dp(context)
-        }
-    )
-
-    val chart = Chart(context).apply {
-        id = R.id.sunMoonChart
-    }
-    root.addView(
-        chart,
-        ConstraintLayout.LayoutParams(
-            0,
-            context.resources.getDimensionPixelSize(R.dimen.chart_height)
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.display_date
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val timeSeekerPanel = ScrollView(context).apply {
-        id = R.id.time_seeker_panel
-        visibility = View.GONE
-    }
-    root.addView(
-        timeSeekerPanel,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.sunMoonChart
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            topMargin = 8.dp(context)
-        }
-    )
-
-    val seekContent = ConstraintLayout(context)
-    timeSeekerPanel.addView(
-        seekContent,
-        ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-
-    val timeSeekerDetails = AstronomyTimeSeekerDetailsView(context).apply {
-        id = R.id.seek_time
-    }
-    seekContent.addView(
-        timeSeekerDetails,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
-
-    val timeSeeker = Slider(context).apply {
-        id = R.id.time_seeker
-    }
-    seekContent.addView(
-        timeSeeker,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.seek_time
-            topMargin = 16.dp(context)
-        }
-    )
-
-    val list = ComposeView(context).apply {
-        id = R.id.astronomy_detail_list
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-    }
-    root.addView(
-        list,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.sunMoonChart
-            bottomToTop = R.id.button_3d
-            topMargin = 16.dp(context)
-        }
-    )
-
-    val button3d = AstronomyTextButton(context, context.getString(R.string.view_in_3d)).apply {
-        id = R.id.button_3d
-    }
-    root.addView(
-        button3d,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
-        }
-    )
-
     return AstronomyViews(
-        root = root,
-        astronomyTitle = title,
-        displayDate = displayDate,
-        sunMoonChart = chart,
-        timeSeekerPanel = timeSeekerPanel,
-        timeSeekerDetails = timeSeekerDetails,
-        timeSeeker = timeSeeker,
-        astronomyDetailList = list,
-        button3d = button3d
+        astronomyTitle = AstronomyTitleState(),
+        displayDate = AstronomyDatePickerState(context),
+        sunMoonChart = Chart(context).apply { id = R.id.sunMoonChart },
+        timeSeekerDetails = AstronomyTimeSeekerDetailsState(),
+        timeSeeker = AstronomyTimeSeekerState(maxValue = (60 * 24).toFloat()),
+        button3d = AstronomyTextButtonState(context.getString(R.string.view_in_3d))
     )
 }
 
-private class AstronomyTimeSeekerDetailsView(context: Context) : AbstractComposeView(context) {
+private class AstronomyTimeSeekerDetailsState {
     var time by mutableStateOf("")
     var sunPosition by mutableStateOf<CharSequence>("")
     var moonPosition by mutableStateOf<CharSequence>("")
     var onClose by mutableStateOf({})
 
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = time,
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-                    IconButton(
-                        onClick = onClose,
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(32.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_cancel),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-
-                Row(
+    fun Content() {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = time,
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                IconButton(
+                    onClick = onClose,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        .align(Alignment.CenterEnd)
+                        .size(32.dp)
                 ) {
-                    AstronomyPositionText(
-                        text = sunPosition.toString(),
-                        modifier = Modifier.weight(1f)
-                    )
-                    AstronomyPositionText(
-                        text = moonPosition.toString(),
-                        modifier = Modifier.weight(1f)
+                    Icon(
+                        painter = painterResource(R.drawable.ic_cancel),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AstronomyPositionText(
+                    text = sunPosition.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+                AstronomyPositionText(
+                    text = moonPosition.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
+    }
+}
+
+private class AstronomyTimeSeekerState(
+    val maxValue: Float
+) {
+    var isVisible by mutableStateOf(false)
+    var value by mutableStateOf(0f)
+    var onValueChange by mutableStateOf<(Float) -> Unit>({})
+
+    fun updateValue(newValue: Float) {
+        value = newValue
+        onValueChange(newValue)
     }
 }
 
@@ -1054,16 +948,16 @@ private fun AstronomyPositionText(
     )
 }
 
-private class AstronomyTextButton(
-    context: Context,
+private class AstronomyTextButtonState(
     private val text: String
-) : AbstractComposeView(context) {
+) {
+    var isVisible by mutableStateOf(false)
+    var onClick by mutableStateOf({})
+
     @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Button(onClick = { performClick() }) {
-                Text(text = text)
-            }
+    fun Content() {
+        Button(onClick = onClick) {
+            Text(text = text)
         }
     }
 }
@@ -1076,8 +970,9 @@ private fun Int.dp(context: Context): Int {
 @Composable
 private fun AstronomyHostPreview() {
     TrailSenseTheme {
-        AstronomyHost(
-            views = createAstronomyViews(LocalContext.current)
+        AstronomyScreen(
+            views = createAstronomyViews(LocalContext.current),
+            astronomyItems = emptyList()
         )
     }
 }
