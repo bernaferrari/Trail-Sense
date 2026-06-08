@@ -55,7 +55,6 @@ import com.kylecorry.trail_sense.shared.camera.PhotoImportBottomSheetFragment
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.BeaconIconPickerContent
 import com.kylecorry.trail_sense.shared.views.ColorPickerContent
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.DurationInput
@@ -63,7 +62,6 @@ import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRBottomSheet
 import com.kylecorry.trail_sense.tools.qr.ui.ViewQRBottomSheet
 import java.time.Duration
@@ -195,46 +193,6 @@ object CustomUiUtils {
                 onColorPick.invoke(null)
             } else {
                 onColorPick.invoke(color)
-            }
-        }
-    }
-
-    // TODO: Make this generic - pick icon, takes in a list of resouces, returns selected (and allows user to pick none)
-    fun pickBeaconIcon(
-        context: Context,
-        default: BeaconIcon? = null,
-        title: String,
-        onIconPick: (icon: BeaconIcon?) -> Unit
-    ) {
-        val view = createPromptContainer(context)
-        var icon = default
-        val iconPicker = ComposeView(context).apply {
-            id = R.id.prompt_icon_picker
-            setContent {
-                TrailSenseTheme {
-                    var selectedIcon by remember { mutableStateOf(default) }
-                    BeaconIconPickerContent(
-                        selectedIcon = selectedIcon,
-                        icons = BeaconIcon.values().filter { it.isUserSelectable },
-                        onIconSelected = {
-                            selectedIcon = it
-                            icon = it
-                        }
-                    )
-                }
-            }
-        }
-        view.addPromptContent(iconPicker)
-
-        Alerts.dialog(
-            context,
-            title,
-            contentView = view
-        ) { cancelled ->
-            if (cancelled) {
-                onIconPick.invoke(null)
-            } else {
-                onIconPick.invoke(icon)
             }
         }
     }
