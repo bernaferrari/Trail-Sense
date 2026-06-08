@@ -41,8 +41,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
@@ -50,7 +48,6 @@ import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -65,7 +62,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -100,7 +97,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExport
 
 @Composable
 fun OfflineMapListToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { OfflineMapListController(fragment) }
@@ -128,7 +125,7 @@ fun OfflineMapListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class OfflineMapListController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class OfflineMapListController(private val fragment: TrailSenseDestinationHost) {
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
@@ -151,7 +148,10 @@ private class OfflineMapListController(private val fragment: TrailSenseComposeDe
     private var isInitialized = false
 
     private val uriPicker by lazy {
-        IntentUriPicker(fragment.requireActivity() as IntentResultRetriever, fragment.requireContext())
+        IntentUriPicker(
+            fragment.andromedaActivity as IntentResultRetriever,
+            fragment.requireContext()
+        )
     }
     private val mapImportingIndicator by lazy {
         AlertLoadingIndicator(
@@ -208,15 +208,19 @@ private class OfflineMapListController(private val fragment: TrailSenseComposeDe
         }
         isInitialized = true
         manager = GroupListManager(
-            fragment.viewLifecycleOwner.lifecycleScope,
+            fragment.lifecycleScope,
             mapLoader,
             lastRoot,
             this::sortMaps
         )
 
         val mapIntentUri =
-            BundleCompat.getParcelable(fragment.arguments ?: Bundle(), "map_intent_uri", Uri::class.java)
-        fragment.arguments?.remove("map_intent_uri")
+            BundleCompat.getParcelable(
+                fragment.destinationArguments ?: Bundle(),
+                "map_intent_uri",
+                Uri::class.java
+            )
+        fragment.destinationArguments?.remove("map_intent_uri")
         if (mapIntentUri != null) {
             createMap(
                 CreateMapFromUriCommand(
@@ -239,12 +243,18 @@ private class OfflineMapListController(private val fragment: TrailSenseComposeDe
             title = (root as MapGroup?)?.name ?: fragment.getString(R.string.offline_maps)
         }
 
-        backPressedCallback = fragment.onBackPressed {
-            if (!manager.up()) {
-                remove()
-                fragment.findNavController().navigateUp()
+        backPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (!manager.up()) {
+                    remove()
+                    fragment.findNavController().navigateUp()
+                }
             }
         }
+        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+            fragment.lifecycleOwner,
+            backPressedCallback!!
+        )
         updateBackPressedCallback()
         title = fragment.getString(R.string.offline_maps)
     }
@@ -517,7 +527,7 @@ private class OfflineMapListController(private val fragment: TrailSenseComposeDe
     }
 
     private fun updateBackPressedCallback() {
-        backPressedCallback?.isEnabled = !fragment.isHidden
+        backPressedCallback?.isEnabled = isInitialized
     }
 
     private fun createMap(command: ICreateMapCommand) {

@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.io.ExternalUriService
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.MapExportService
@@ -16,9 +16,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.co
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.TrailMapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.commands.ExportTrailMapCommand
 
-class PhotoMapExportService(private val fragment: TrailSenseComposeDestinationFragment) {
+class PhotoMapExportService(private val fragment: TrailSenseDestinationHost) {
     private val uriPicker = IntentUriPicker(
-        fragment.requireActivity() as IntentResultRetriever,
+        fragment.andromedaActivity as IntentResultRetriever,
         fragment.requireContext()
     )
     private val loading = AlertLoadingIndicator(
