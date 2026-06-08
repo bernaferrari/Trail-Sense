@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.annotation.SuppressLint
-import android.os.Bundle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -42,6 +44,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -55,7 +61,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
@@ -69,46 +74,68 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
-class TidesFragment : TrailSenseComposeFragment() {
+@Composable
+fun TidesToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { TidesController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val tideService by lazy { TideService(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_DESTROY -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+        }
+    }
+
+    TidesScreen(
+        title = controller.getCurrentTideTitle(),
+        subtitle = controller.getTableSubtitle(),
+        isRising = controller.current?.rising ?: true,
+        isLoading = controller.isLoading,
+        displayDate = controller.displayDate,
+        daily = controller.daily,
+        tides = controller.getDisplayTides(),
+        onDateChange = controller::onDisplayDateSelected,
+        onOpenTideList = controller::openTideList
+    )
+}
+
+private class TidesController(private val fragment: Fragment) {
+
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val tideService by lazy { TideService(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
     private val currentTideCommand by lazy { CurrentTideCommand(tideService) }
     private val dailyTideCommand by lazy { DailyTideCommand(tideService) }
-    private val loadTideCommand by lazy { LoadTideTableCommand(requireContext()) }
+    private val loadTideCommand by lazy { LoadTideTableCommand(fragment.requireContext()) }
 
     private var table by mutableStateOf<TideTable?>(null)
-    private var current by mutableStateOf<CurrentTideData?>(null)
-    private var daily by mutableStateOf<DailyTideData?>(null)
-    private var displayDate by mutableStateOf(LocalDate.now())
-    private var isLoading by mutableStateOf(true)
+    var current by mutableStateOf<CurrentTideData?>(null)
+        private set
+    var daily by mutableStateOf<DailyTideData?>(null)
+        private set
+    var displayDate by mutableStateOf(LocalDate.now())
+        private set
+    var isLoading by mutableStateOf(true)
+        private set
 
     private var currentTideJob: Job? = null
     private var dailyTideJob: Job? = null
     private var currentRefreshJob: Job? = null
 
-    @Composable
-    override fun FragmentContent() {
-        TidesScreen(
-            title = getCurrentTideTitle(),
-            subtitle = getTableSubtitle(),
-            isRising = current?.rising ?: true,
-            isLoading = isLoading,
-            displayDate = displayDate,
-            daily = daily,
-            tides = getDisplayTides(),
-            onDateChange = ::onDisplayDateSelected,
-            onOpenTideList = ::openTideList
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         if (table == null) {
             displayDate = LocalDate.now()
-            ShowTideDisclaimerCommand(this) {
+            ShowTideDisclaimerCommand(fragment) {
                 loadTideTable()
             }.execute()
         } else {
@@ -116,26 +143,18 @@ class TidesFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onPause() {
+    fun onPause() {
         currentTideJob?.cancel()
         dailyTideJob?.cancel()
         currentRefreshJob?.cancel()
-        super.onPause()
     }
 
-    override fun onDestroyView() {
-        currentTideJob?.cancel()
-        dailyTideJob?.cancel()
-        currentRefreshJob?.cancel()
-        super.onDestroyView()
-    }
-
-    private fun openTideList() {
+    fun openTideList() {
         table = null
-        findNavController().navigate(R.id.action_tides_to_tideList)
+        fragment.findNavController().navigate(R.id.action_tides_to_tideList)
     }
 
-    private fun onDisplayDateSelected(date: LocalDate) {
+    fun onDisplayDateSelected(date: LocalDate) {
         displayDate = date
         updateDailyTide()
     }
@@ -145,9 +164,9 @@ class TidesFragment : TrailSenseComposeFragment() {
         daily = null
         current = null
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val updatedTable = newTable ?: loadTideCommand.execute()
-            val locationSubsystem = LocationSubsystem.getInstance(requireContext())
+            val locationSubsystem = LocationSubsystem.getInstance(fragment.requireContext())
             if (updatedTable?.isAutomaticNearbyTide == true &&
                 locationSubsystem.locationAge > Duration.ofMinutes(30)
             ) {
@@ -159,12 +178,12 @@ class TidesFragment : TrailSenseComposeFragment() {
 
             if (updatedTable == null) {
                 val cancelled = CoroutineAlerts.dialog(
-                    requireContext(),
-                    getString(R.string.no_tides),
-                    getString(R.string.calibrate_new_tide)
+                    fragment.requireContext(),
+                    fragment.getString(R.string.no_tides),
+                    fragment.getString(R.string.calibrate_new_tide)
                 )
                 if (!cancelled) {
-                    findNavController().navigate(R.id.action_tides_to_tideList)
+                    fragment.findNavController().navigate(R.id.action_tides_to_tideList)
                 }
                 return@launch
             }
@@ -179,7 +198,7 @@ class TidesFragment : TrailSenseComposeFragment() {
         val currentTable = table ?: return
         val date = displayDate
         dailyTideJob?.cancel()
-        dailyTideJob = viewLifecycleOwner.lifecycleScope.launch {
+        dailyTideJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             daily = dailyTideCommand.execute(currentTable, date)
         }
     }
@@ -187,14 +206,14 @@ class TidesFragment : TrailSenseComposeFragment() {
     private fun updateCurrentTide() {
         val currentTable = table ?: return
         currentTideJob?.cancel()
-        currentTideJob = viewLifecycleOwner.lifecycleScope.launch {
+        currentTideJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             current = currentTideCommand.execute(currentTable)
         }
     }
 
     private fun startCurrentRefresh() {
         currentRefreshJob?.cancel()
-        currentRefreshJob = viewLifecycleOwner.lifecycleScope.launch {
+        currentRefreshJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             while (isActive) {
                 updateCurrentTide()
                 delay(Duration.ofMinutes(1).toMillis())
@@ -202,7 +221,7 @@ class TidesFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun getDisplayTides(): List<Tide> {
+    fun getDisplayTides(): List<Tide> {
         val currentDaily = daily ?: return emptyList()
         val currentTable = table
         return currentDaily.tides.map {
@@ -215,9 +234,9 @@ class TidesFragment : TrailSenseComposeFragment() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun getCurrentTideTitle(): String {
-        val current = current ?: return getString(R.string.tides)
-        val name = TideFormatter(requireContext()).getTideTypeName(current.type)
+    fun getCurrentTideTitle(): String {
+        val current = current ?: return fragment.getString(R.string.tides)
+        val name = TideFormatter(fragment.requireContext()).getTideTypeName(current.type)
         val waterLevel = if (current.waterLevel != null) {
             val height = Distance.meters(current.waterLevel).convertTo(units)
             " (${formatService.formatDistance(height, 2, true)})"
@@ -227,11 +246,11 @@ class TidesFragment : TrailSenseComposeFragment() {
         return name + waterLevel
     }
 
-    private fun getTableSubtitle(): String {
+    fun getTableSubtitle(): String {
         val table = table ?: return ""
         return table.name
             ?: table.location?.let { formatService.formatLocation(it) }
-            ?: getString(android.R.string.untitled)
+            ?: fragment.getString(android.R.string.untitled)
     }
 }
 

@@ -199,6 +199,7 @@ import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.sensors.ui.SensorDetailsToolScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.tides.ui.TideListToolScreen
+import com.kylecorry.trail_sense.tools.tides.ui.TidesToolScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
@@ -398,6 +399,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CALIBRATE_COMPASS -> CalibrateCompassToolScreen(this)
             DESTINATION_CALIBRATE_GPS -> CalibrateGPSToolScreen(this)
             DESTINATION_SENSOR_DETAILS -> SensorDetailsToolScreen(this)
+            DESTINATION_TIDES -> TidesToolScreen(this)
             DESTINATION_TIDE_LIST -> TideListToolScreen(this)
         }
     }
@@ -3431,6 +3433,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CALIBRATE_COMPASS = "calibrate_compass"
         const val DESTINATION_CALIBRATE_GPS = "calibrate_gps"
         const val DESTINATION_SENSOR_DETAILS = "sensor_details"
+        const val DESTINATION_TIDES = "tides"
         const val DESTINATION_TIDE_LIST = "tide_list"
     }
 }
