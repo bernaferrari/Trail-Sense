@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,8 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -34,7 +30,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onDefault
@@ -50,6 +45,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -60,7 +56,7 @@ import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
-class AltitudeBottomSheet : BottomSheetDialogFragment() {
+class AltitudeBottomSheet : TrailSenseBottomSheetComposeFragment() {
 
     private val pathService by lazy { PathService.getInstance(requireContext()) }
     private val weatherRepo by lazy { WeatherRepo.getInstance(requireContext()) }
@@ -78,43 +74,34 @@ class AltitudeBottomSheet : BottomSheetDialogFragment() {
     private val maxFilterHistoryDuration = maxHistoryDuration.plusHours(6)
     private var historyDuration = maxHistoryDuration
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        units = prefs.baseDistanceUnits
+    @Composable
+    override fun FragmentContent() {
+        val initialUnits = remember {
+            prefs.baseDistanceUnits.also { units = it }
+        }
+        var historySummary by remember {
+            mutableStateOf(formatHistoryDuration())
+        }
+        var chartReadings by remember {
+            mutableStateOf<List<Reading<Float>>>(emptyList())
+        }
 
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    var historySummary by remember {
-                        mutableStateOf(formatHistoryDuration())
-                    }
-                    var chartReadings by remember {
-                        mutableStateOf<List<Reading<Float>>>(emptyList())
-                    }
-
-                    DisposableEffect(Unit) {
-                        setHistorySummary = { historySummary = it }
-                        setChartReadings = { chartReadings = it }
-                        onDispose {
-                            setHistorySummary = null
-                            setChartReadings = null
-                        }
-                    }
-
-                    AltitudeContent(
-                        historySummary = historySummary,
-                        readings = chartReadings,
-                        units = units,
-                        onHistoryClick = ::pickHistoryDuration,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+        DisposableEffect(Unit) {
+            setHistorySummary = { historySummary = it }
+            setChartReadings = { chartReadings = it }
+            onDispose {
+                setHistorySummary = null
+                setChartReadings = null
             }
         }
+
+        AltitudeContent(
+            historySummary = historySummary,
+            readings = chartReadings,
+            units = initialUnits,
+            onHistoryClick = ::pickHistoryDuration,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

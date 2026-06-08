@@ -2,11 +2,7 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.provider.Settings
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,13 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -45,32 +38,22 @@ import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.launch
 
-class PluginDetailsFragment : Fragment() {
+class PluginDetailsFragment : TrailSenseComposeFragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PluginDetailsScreen(
-                        packageId = arguments?.getString("package_id").orEmpty(),
-                        pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
-                        onNavigateUp = {
-                            tryOrNothing {
-                                findNavController().navigateUp()
-                            }
-                        }
-                    )
+    @Composable
+    override fun FragmentContent() {
+        PluginDetailsScreen(
+            packageId = arguments?.getString("package_id").orEmpty(),
+            pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
+            onNavigateUp = {
+                tryOrNothing {
+                    findNavController().navigateUp()
                 }
             }
-        }
+        )
     }
 }
 

@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.sol.units.Distance
@@ -54,12 +47,13 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
 
-class LocationBottomSheet : BottomSheetDialogFragment() {
+class LocationBottomSheet : TrailSenseBottomSheetComposeFragment() {
 
     var gps: ISatelliteGPS? = null
 
@@ -67,31 +61,23 @@ class LocationBottomSheet : BottomSheetDialogFragment() {
     private val prefs by lazy { UserPreferences(requireContext()) }
     private var format = BuiltInCoordinateFormat.DecimalDegrees
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        format = prefs.navigation.coordinateFormat
-
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    LocationSheet(
-                        initialFormat = format,
-                        getState = ::getState,
-                        onFormatSelected = { format = it },
-                        onPickFormat = ::pickFormat,
-                        onShare = share@{
-                            val location = gps?.location ?: return@share
-                            Share.shareLocation(this@LocationBottomSheet, location, format)
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
+    @Composable
+    override fun FragmentContent() {
+        val initialFormat = remember {
+            prefs.navigation.coordinateFormat.also { format = it }
         }
+
+        LocationSheet(
+            initialFormat = initialFormat,
+            getState = ::getState,
+            onFormatSelected = { format = it },
+            onPickFormat = ::pickFormat,
+            onShare = share@{
+                val location = gps?.location ?: return@share
+                Share.shareLocation(this@LocationBottomSheet, location, format)
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     private fun pickFormat(

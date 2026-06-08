@@ -2,12 +2,8 @@ package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
 import android.content.Context
 import android.content.DialogInterface
-import android.os.Bundle
 import android.text.Spanned
 import android.text.style.URLSpan
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,10 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -53,7 +47,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -76,6 +69,7 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullPrefe
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -90,7 +84,7 @@ import kotlin.math.roundToInt
 class MapLayersBottomSheet(
     private val mapId: String,
     private val alwaysEnabledLayerIds: List<String> = emptyList()
-) : BottomSheetDialogFragment() {
+) : TrailSenseBottomSheetComposeFragment() {
 
     private var onDismissListener: (() -> Unit)? = null
     private val repo by lazy { AppServiceRegistry.get<MapLayerPreferenceRepo>() }
@@ -99,15 +93,8 @@ class MapLayersBottomSheet(
         onDismissListener = listener
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
+    @Composable
+    override fun FragmentContent() {
                     val context = LocalContext.current
                     val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
                     val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
@@ -191,9 +178,6 @@ class MapLayersBottomSheet(
                         },
                         markdown = markdown
                     )
-                }
-            }
-        }
     }
 
     override fun onDismiss(dialog: DialogInterface) {
