@@ -42,10 +42,13 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.map
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
@@ -69,6 +72,8 @@ import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.data.DataUtils
+import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
@@ -84,6 +89,7 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DataPointContent
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -106,9 +112,11 @@ import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.BeaconCompas
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.MarkerCompassLayer
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.NavigationCompassLayer
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import java.time.Duration
 import java.time.Instant
 
@@ -182,6 +190,8 @@ private class NavigatorController(private val fragment: Fragment) {
     private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
 
     private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
+    private val weatherRepo by lazy { WeatherRepo.getInstance(fragment.requireContext()) }
 
     private val navigationService = NavigationService()
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -235,6 +245,14 @@ private class NavigatorController(private val fragment: Fragment) {
     private var lastAttributionRadarVisible: Boolean? = null
     private var showLocationSheet by mutableStateOf(false)
     private var locationFormat = BuiltInCoordinateFormat.DecimalDegrees
+    private var showAltitudeSheet by mutableStateOf(false)
+    private var showAltitudeHistoryDurationPicker by mutableStateOf(false)
+    private var altitudeHistorySummary by mutableStateOf("")
+    private var altitudeChartReadings by mutableStateOf<List<Reading<Float>>>(emptyList())
+    private var altitudeUnits = baseDistanceUnits
+    private var altitudeHistoryDuration = MAX_ALTITUDE_HISTORY_DURATION
+    private var backtrackAltitudeReadings = listOf<Reading<Float>>()
+    private var weatherAltitudeReadings = listOf<Reading<Float>>()
 
     private val northReferenceHideTimer = CoroutineTimer {
         if (isViewReady) {
@@ -278,6 +296,40 @@ private class NavigatorController(private val fragment: Fragment) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+        }
+        if (showAltitudeSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showAltitudeSheet = false
+                }
+            ) {
+                val historyDurationTitle = fragment.getString(R.string.elevation_history_length)
+                AltitudeContent(
+                    historySummary = altitudeHistorySummary,
+                    readings = altitudeChartReadings,
+                    units = altitudeUnits,
+                    onHistoryClick = {
+                        showAltitudeHistoryDurationPicker = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (showAltitudeHistoryDurationPicker) {
+                    DurationPickerDialog(
+                        title = historyDurationTitle,
+                        duration = altitudeHistoryDuration,
+                        onDurationPicked = {
+                            if (it != null) {
+                                altitudeHistoryDuration = it
+                                updateAltitudeChart()
+                            }
+                            showAltitudeHistoryDurationPicker = false
+                        },
+                        onDismiss = {
+                            showAltitudeHistoryDurationPicker = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -347,6 +399,14 @@ private class NavigatorController(private val fragment: Fragment) {
         fragment.observe(altimeter) { }
         fragment.observe(gps) { }
         fragment.observe(speedometer) { }
+        fragment.observe(getBacktrackAltitudeReadings()) {
+            backtrackAltitudeReadings = it
+            updateAltitudeChart()
+        }
+        fragment.observe(getWeatherAltitudeReadings()) {
+            weatherAltitudeReadings = it
+            updateAltitudeChart()
+        }
 
         views.navigationTitle.onSubtitleLongClick = {
             Share.shareLocation(
@@ -362,7 +422,10 @@ private class NavigatorController(private val fragment: Fragment) {
         }
 
         views.altitude.onClick = {
-            AltitudeBottomSheet(fragment, Reading(altimeter.altitude, Instant.now())).show()
+            altitudeUnits = baseDistanceUnits
+            altitudeHistorySummary = formatAltitudeHistoryDuration()
+            updateAltitudeChart()
+            showAltitudeSheet = true
         }
 
         views.linearCompass.setOnClickListener {
@@ -503,6 +566,63 @@ private class NavigatorController(private val fragment: Fragment) {
             satellites = fragment.getString(R.string.num_satellites, gps.satellites ?: 0),
             time = fragment.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
             datum = fragment.getString(R.string.wgs84)
+        )
+    }
+
+    private fun updateAltitudeChart(readings: List<Reading<Float>>) {
+        altitudeChartReadings = readings
+        altitudeHistorySummary = formatAltitudeHistoryDuration()
+    }
+
+    private fun updateAltitudeChart() {
+        fragment.inBackground {
+            val currentAltitude = Reading(altimeter.altitude, Instant.now())
+            val filteredReadings = onDefault {
+                val readings =
+                    (backtrackAltitudeReadings + weatherAltitudeReadings + currentAltitude).sortedBy { it.time }
+                        .filter {
+                            Duration.between(
+                                it.time,
+                                Instant.now()
+                            ) < MAX_ALTITUDE_FILTER_HISTORY_DURATION
+                        }
+
+                val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
+
+                onIO {
+                    DebugElevationsCommand(fragment.requireContext(), readings, smoothed).execute()
+                }
+
+                smoothed.filter {
+                    Duration.between(it.time, Instant.now()).abs() <= altitudeHistoryDuration
+                }
+            }
+
+            onMain { updateAltitudeChart(filteredReadings) }
+        }
+    }
+
+    private fun formatAltitudeHistoryDuration(): String {
+        return fragment.getString(
+            R.string.last_duration,
+            formatService.formatDuration(altitudeHistoryDuration)
+        )
+    }
+
+    private fun getWeatherAltitudeReadings(): LiveData<List<Reading<Float>>> {
+        return weatherRepo.getAllLive().map { readings ->
+            readings.mapNotNull { reading ->
+                if (reading.value.altitude == 0f) {
+                    return@mapNotNull null
+                }
+                Reading(reading.value.altitude, reading.time)
+            }
+        }
+    }
+
+    private fun getBacktrackAltitudeReadings(): LiveData<List<Reading<Float>>> {
+        return pathService.getRecentAltitudesLive(
+            Instant.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION)
         )
     }
 
@@ -828,6 +948,8 @@ private class NavigatorController(private val fragment: Fragment) {
     companion object {
         private val ASTRONOMY_UPDATE_DISTANCE = Distance.kilometers(1f).meters()
         private val ASTRONOMY_UPDATE_FREQUENCY = Duration.ofMinutes(1)
+        private val MAX_ALTITUDE_HISTORY_DURATION = Duration.ofDays(1)
+        private val MAX_ALTITUDE_FILTER_HISTORY_DURATION = MAX_ALTITUDE_HISTORY_DURATION.plusHours(6)
         private const val NAVIGATION_UPDATE_INTERVAL = 33L
     }
 }
