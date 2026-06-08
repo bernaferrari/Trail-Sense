@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isInvisible
 import com.kylecorry.andromeda.core.system.Resources
@@ -33,6 +34,8 @@ abstract class BaseCompassView @JvmOverloads constructor(
     private var _useTrueNorth by mutableStateOf(false)
     private var _declination by mutableFloatStateOf(0f)
     private var _azimuth by mutableFloatStateOf(0f)
+    private var contentWidth by mutableIntStateOf(0)
+    private var contentHeight by mutableIntStateOf(0)
 
     override var compassCenter: Coordinate
         get() = _compassCenter
@@ -111,10 +114,10 @@ abstract class BaseCompassView @JvmOverloads constructor(
         }
 
     val width: Int
-        get() = view.width
+        get() = view.width.takeIf { it > 0 } ?: contentWidth
 
     val height: Int
-        get() = view.height
+        get() = view.height.takeIf { it > 0 } ?: contentHeight
 
     fun setOnClickListener(listener: View.OnClickListener?) {
         view.setOnClickListener(listener)
@@ -126,10 +129,15 @@ abstract class BaseCompassView @JvmOverloads constructor(
     }
 
     @Composable
-    abstract fun Content()
+    abstract fun Content(modifier: Modifier = Modifier)
 
     protected fun requestRedraw() {
         renderVersion++
+    }
+
+    protected fun updateContentSize(width: Int, height: Int) {
+        contentWidth = width
+        contentHeight = height
     }
 
     protected open fun finalize() {

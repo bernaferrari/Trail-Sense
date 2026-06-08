@@ -9,17 +9,24 @@ import com.kylecorry.andromeda.core.system.Resources
 import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
 import androidx.core.view.isVisible
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,6 +34,7 @@ import androidx.fragment.app.findFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.luna.hooks.Hooks
@@ -55,6 +63,9 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     private val viewCameraLine: View
     private val linearCompass: LinearCompassView
     private val sightingCompassButton: SightingCompassButton
+    var requestCameraPermission: (((Boolean) -> Unit) -> Unit)? = null
+    var onCameraPermissionDenied: (() -> Unit)? = null
+    private var compassInvisible by mutableStateOf(false)
 
     private val sightingCompass by lazy {
         SightingCompassView(
@@ -91,14 +102,29 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     }
 
     private val globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-        hooks.effect("visibility", isVisible) {
-            if (isVisible) {
+        hooks.effect("visibility", isCompassVisible) {
+            if (isCompassVisible) {
                 start()
             } else {
                 stop()
             }
         }
     }
+
+    private val isCompassVisible: Boolean
+        get() = !compassInvisible
+
+    var isInvisible: Boolean
+        get() = compassInvisible
+        set(value) {
+            compassInvisible = value
+            super.setVisibility(if (value) INVISIBLE else VISIBLE)
+            if (value) {
+                stop()
+            } else if (isResumed) {
+                start()
+            }
+        }
 
     init {
         viewCamera = CameraState(context).apply {
@@ -211,7 +237,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             showSightingCompass = false
             viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
         }
-        if (isVisible) {
+        if (isCompassVisible) {
             start()
         }
     }
@@ -266,12 +292,20 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             sightingCompassButton.setState(false)
         } else if (!sightingCompass.isRunning()) {
             sightingCompassButton.setState(true)
-            val fragment = findFragment<AndromedaFragment>()
-            fragment.requestCamera { hasPermission ->
+            val permissionRequester = requestCameraPermission ?: { onResult: (Boolean) -> Unit ->
+                runCatching {
+                    findFragment<AndromedaFragment>().requestCamera(onResult)
+                }.getOrElse {
+                    onResult(false)
+                }
+            }
+            permissionRequester { hasPermission ->
                 if (hasPermission) {
                     sightingCompass.start()
                 } else {
-                    fragment.alertNoCameraPermission()
+                    onCameraPermissionDenied?.invoke() ?: runCatching {
+                        findFragment<AndromedaFragment>().alertNoCameraPermission()
+                    }
                     setSightingCompass(false)
                 }
             }
@@ -319,10 +353,67 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
         linearCompass.draw(bearing, stopAt)
     }
 
+    @Composable
+    fun Content(modifier: Modifier = Modifier) {
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val lifecycle = lifecycleOwner.lifecycle
+            lifecycle.addObserver(lifecycleListener)
+            resume()
+            onDispose {
+                lifecycle.removeObserver(lifecycleListener)
+                pause()
+            }
+        }
+
+        if (!isCompassVisible) {
+            return
+        }
+
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { callOnClick() }
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+                    .height(200.dp)
+            ) {
+                CameraPreview(
+                    state = viewCamera,
+                    modifier = Modifier.fillMaxSize()
+                )
+                if (viewCamera.isVisible) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .width(1.dp)
+                            .height(200.dp)
+                            .background(ComposeColor(Resources.getPrimaryColor(context)))
+                    )
+                }
+                linearCompass.Content(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .height(100.dp)
+                )
+            }
+            sightingCompassButton.Content(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(40.dp)
+            )
+        }
+    }
+
 }
 
 private class SightingCompassButton(context: Context) {
     private var isOn by mutableStateOf(false)
+    private var clickListener: View.OnClickListener? = null
 
     val view = ComposeView(context).apply {
         setContent {
@@ -354,9 +445,10 @@ private class SightingCompassButton(context: Context) {
         get() = view.isFocusable
         set(value) {
             view.isFocusable = value
-        }
+    }
 
     fun setOnClickListener(listener: View.OnClickListener?) {
+        clickListener = listener
         view.setOnClickListener(listener)
     }
 
@@ -365,7 +457,7 @@ private class SightingCompassButton(context: Context) {
     }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -378,7 +470,9 @@ private class SightingCompassButton(context: Context) {
         }
 
         androidx.compose.material3.Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = modifier
+                .size(40.dp)
+                .clickable { clickListener?.onClick(view) ?: view.performClick() },
             shape = androidx.compose.foundation.shape.CircleShape,
             color = background,
             shadowElevation = 6.dp

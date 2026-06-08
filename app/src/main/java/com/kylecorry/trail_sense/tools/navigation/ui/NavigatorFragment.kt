@@ -6,7 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Gravity
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -67,6 +69,8 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBotto
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -200,7 +204,9 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             requireContext(),
             onNorthReferenceSettingsClick = {
                 findNavController().navigate(R.id.calibrateCompassFragment)
-            }
+            },
+            requestCameraPermission = { callback -> requestCamera(callback) },
+            onCameraPermissionDenied = { alertNoCameraPermission() }
         )
     }
 
@@ -783,7 +789,6 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 }
 
 private data class NavigatorViews(
-    val root: View,
     val navigationTitle: NavigationTitleState,
     val altitude: NavigatorDataPointState,
     val altitudeView: View,
@@ -814,16 +819,18 @@ private class NavigatorDataPointState(
     var title by mutableStateOf("")
 
     @Composable
-    fun Content() {
-        DataPointContent(
-            title = title,
-            description = "",
-            icon = icon,
-            tint = MaterialTheme.colorScheme.onSurface,
-            showDescription = false,
-            gravity = Gravity.START,
-            onDescriptionClick = null
-        )
+    fun Content(modifier: Modifier = Modifier) {
+        Box(modifier = modifier) {
+            DataPointContent(
+                title = title,
+                description = "",
+                icon = icon,
+                tint = MaterialTheme.colorScheme.onSurface,
+                showDescription = false,
+                gravity = Gravity.START,
+                onDescriptionClick = null
+            )
+        }
     }
 }
 
@@ -874,24 +881,82 @@ private fun NavigatorHost(
     views: NavigatorViews,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
+    Column(modifier = modifier) {
+        NavigationTitle(views.navigationTitle)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            views.altitude.Content(
+                Modifier
+                    .weight(1f)
+                    .clickable { views.altitudeView.performClick() }
+            )
+            views.speed.Content(Modifier.weight(1f))
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            val radarModifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .aspectRatio(1f)
+            views.radarCompassMap.Content(radarModifier)
+            views.radarCompass.Content(radarModifier)
+            views.linearCompass.Content(
+                Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+            views.mapAttribution.Content(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            views.accuracyView.Content(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp)
+            )
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                views.northReferenceIndicator.Content()
+            }
+            NavigatorIconButton(
+                icon = R.drawable.ic_beacon,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp)
+                    .combinedClickable(
+                        onClick = { views.beaconBtn.performClick() },
+                        onLongClick = { views.beaconBtn.performLongClick() }
+                    )
+            )
+        }
+        views.navigationSheet.Content()
+    }
 }
 
 private fun createNavigatorViews(
     context: Context,
-    onNorthReferenceSettingsClick: (() -> Unit)? = null
+    onNorthReferenceSettingsClick: (() -> Unit)? = null,
+    requestCameraPermission: (((Boolean) -> Unit) -> Unit)? = null,
+    onCameraPermissionDenied: (() -> Unit)? = null
 ): NavigatorViews {
-    val root = ConstraintLayout(context).apply {
-        id = R.id.navigator_layout
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
     val title = NavigationTitleState()
     val titleView = ComposeView(context).apply {
         id = R.id.navigation_title
@@ -901,14 +966,6 @@ private fun createNavigatorViews(
             }
         }
     }
-    root.addView(
-        titleView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
     val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
     val altitudeView = ComposeView(context).apply {
@@ -920,17 +977,6 @@ private fun createNavigatorViews(
             }
         }
     }
-    root.addView(
-        altitudeView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToStart = R.id.speed
-            topToBottom = R.id.navigation_title
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            topMargin = 8.dp(context)
-        }
-    )
 
     val speed = NavigatorDataPointState(R.drawable.ic_speed)
     val speedView = ComposeView(context).apply {
@@ -942,29 +988,10 @@ private fun createNavigatorViews(
             }
         }
     }
-    root.addView(
-        speedView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToEnd = R.id.altitude
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = R.id.altitude
-            bottomToBottom = R.id.altitude
-            marginEnd = 16.dp(context)
-        }
-    )
 
     val radarCompassMap = MapView(context).apply {
         id = R.id.radar_compass_map
     }
-    root.addView(
-        radarCompassMap.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = R.id.radar_compass
-            endToEnd = R.id.radar_compass
-            topToTop = R.id.radar_compass
-            bottomToBottom = R.id.radar_compass
-        }
-    )
 
     val radarCompass = RadarCompassView(context, null).apply {
         id = R.id.radar_compass
@@ -972,33 +999,12 @@ private fun createNavigatorViews(
         isClickable = false
         isFocusable = false
     }
-    root.addView(
-        radarCompass.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.altitude
-            bottomToTop = R.id.spacer
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            topMargin = 8.dp(context)
-            dimensionRatio = "W,1:1"
-            verticalBias = 0f
-        }
-    )
 
     val linearCompass = LinearSightingCompassView(context, null).apply {
         id = R.id.linear_compass
+        this.requestCameraPermission = requestCameraPermission
+        this.onCameraPermissionDenied = onCameraPermissionDenied
     }
-    root.addView(
-        linearCompass,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = R.id.radar_compass
-            bottomToBottom = R.id.radar_compass
-        }
-    )
 
     val mapAttribution = MapAttributionState()
     val mapAttributionView = ComposeView(context).apply {
@@ -1009,40 +1015,6 @@ private fun createNavigatorViews(
             }
         }
     }
-    root.addView(
-        mapAttributionView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.radar_compass
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
-
-    val spacer = View(context).apply {
-        id = R.id.spacer
-    }
-    root.addView(
-        spacer,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.bottom_details
-        }
-    )
-
-    val bottomDetails = ConstraintLayout(context).apply {
-        id = R.id.bottom_details
-    }
-    root.addView(
-        bottomDetails,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.navigation_sheet
-        }
-    )
 
     val northReferenceIndicator = NorthReferenceBadgeState(context).apply {
         onSettingsClick = onNorthReferenceSettingsClick
@@ -1055,68 +1027,23 @@ private fun createNavigatorViews(
             }
         }
     }
-    bottomDetails.addView(
-        northReferenceIndicatorView,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
-        }
-    )
 
     val beaconBtn = navigatorIconButton(context, R.drawable.ic_beacon).apply {
         id = R.id.beaconBtn
         isClickable = true
         isFocusable = true
     }
-    bottomDetails.addView(
-        beaconBtn,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginEnd = 16.dp(context)
-            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
-        }
-    )
 
     val accuracyView = SensorStatusBadgeView(context).apply {
         id = R.id.accuracy_view
         alpha = 0.6f
     }
-    bottomDetails.addView(
-        accuracyView.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            marginStart = 16.dp(context)
-            bottomMargin = context.resources.getDimensionPixelSize(R.dimen.default_bottom_margin)
-        }
-    )
 
     val navigationSheet = NavigationSheetView(context).apply {
         id = R.id.navigation_sheet
     }
-    root.addView(
-        navigationSheet.view,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
     return NavigatorViews(
-        root = root,
         navigationTitle = title,
         altitude = altitude,
         altitudeView = altitudeView,
@@ -1132,6 +1059,28 @@ private fun createNavigatorViews(
     )
 }
 
+@Composable
+private fun NavigatorIconButton(
+    icon: Int,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.material3.Surface(
+        modifier = modifier.size(56.dp),
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 6.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
 private fun navigatorIconButton(
     context: Context,
     icon: Int
@@ -1139,21 +1088,7 @@ private fun navigatorIconButton(
     return ComposeView(context).apply {
         setContent {
             TrailSenseTheme {
-                androidx.compose.material3.Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    shadowElevation = 6.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(icon),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+                NavigatorIconButton(icon)
             }
         }
     }

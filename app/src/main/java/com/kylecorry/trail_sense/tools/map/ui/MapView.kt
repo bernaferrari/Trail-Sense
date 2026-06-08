@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.core.view.isInvisible
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -430,6 +431,9 @@ class MapView(private val context: Context, attrs: AttributeSet? = null) : IMapV
             Canvas(
                 modifier = modifier
                     .fillMaxSize()
+                    .pointerInteropFilter {
+                        onTouchEvent(it)
+                    }
                     .onSizeChanged {
                         contentWidth = it.width
                         contentHeight = it.height

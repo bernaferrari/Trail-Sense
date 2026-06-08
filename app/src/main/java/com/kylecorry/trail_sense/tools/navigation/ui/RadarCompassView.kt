@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
@@ -86,9 +87,15 @@ class RadarCompassView @JvmOverloads constructor(
         }
 
     @Composable
-    override fun Content() {
+    override fun Content(modifier: Modifier) {
         TrailSenseTheme {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Canvas(
+                modifier = modifier
+                    .fillMaxSize()
+                    .onSizeChanged {
+                        updateContentSize(it.width, it.height)
+                    }
+            ) {
                 renderVersion
                 if (!isVisible) {
                     return@Canvas
