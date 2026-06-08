@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import android.os.Bundle
@@ -14,6 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Intents
@@ -31,7 +37,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -42,26 +47,164 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.Pedome
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
-class PedometerSettingsFragment : TrailSenseComposeFragment() {
+@Composable
+fun PedometerSettingsToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { PedometerSettingsController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
-    private val userPrefs by lazy { UserPreferences(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
+    PedometerSettingsContent(controller, fragment)
+}
+
+private class PedometerSettingsController(private val fragment: Fragment) {
+
+    val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val strideLengthUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
     }
 
-    private var setEnabledState: ((Boolean) -> Unit)? = null
-    private var refreshPermissionState: (() -> Unit)? = null
-    private var refreshNotificationState: (() -> Unit)? = null
+    var setEnabledState: ((Boolean) -> Unit)? = null
+    var refreshPermissionState: (() -> Unit)? = null
+    var refreshNotificationState: (() -> Unit)? = null
 
     private val intervalometer = CoroutineTimer {
         refreshPermissionState?.invoke()
     }
 
-    @Composable
-    override fun FragmentContent() {
+    fun onResume() {
+        refreshPermissionState?.invoke()
+        refreshNotificationState?.invoke()
+        intervalometer.interval(20)
+        Tools.subscribe(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED, ::onPedometerEnabled)
+        Tools.subscribe(
+            PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED,
+            ::onPedometerDisabled
+        )
+    }
+
+    fun onPause() {
+        intervalometer.stop()
+        Tools.unsubscribe(
+            PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED,
+            ::onPedometerEnabled
+        )
+        Tools.unsubscribe(
+            PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED,
+            ::onPedometerDisabled
+        )
+    }
+
+    fun onDestroy() {
+        onPause()
+        setEnabledState = null
+        refreshPermissionState = null
+        refreshNotificationState = null
+    }
+
+    fun onPedometerEnabledChanged(
+        enabled: Boolean,
+        updateEnabled: (Boolean) -> Unit
+    ) {
+        if (enabled) {
+            fragment.requestActivityRecognition { hasPermission ->
+                if (hasPermission) {
+                    if (cache.getBoolean("pedometer_battery_sent") != true) {
+                        Alerts.dialog(
+                            fragment.requireContext(),
+                            fragment.getString(R.string.pedometer),
+                            fragment.getString(R.string.pedometer_disclaimer),
+                            cancelText = null
+                        )
+                        cache.putBoolean("pedometer_battery_sent", true)
+                    }
+                    PedometerSubsystem.getInstance(fragment.requireContext()).enable()
+                } else {
+                    PedometerSubsystem.getInstance(fragment.requireContext()).disable()
+                    updateEnabled(false)
+                    fragment.alertNoActivityRecognitionPermission()
+                }
+            }
+        } else {
+            PedometerSubsystem.getInstance(fragment.requireContext()).disable()
+        }
+    }
+
+    fun pickStrideLength(
+        current: Distance,
+        onPicked: (Distance) -> Unit
+    ) {
+        CustomUiUtils.pickDistance(
+            fragment.requireContext(),
+            strideLengthUnits,
+            current,
+            fragment.getString(R.string.pref_stride_length_title),
+            showFeetAndInches = true
+        ) { distance, cancelled ->
+            if (cancelled || distance == null || distance.value <= 0f) {
+                return@pickDistance
+            }
+
+            onPicked(distance)
+        }
+    }
+
+    fun formatStrideLength(distance: Distance): String {
+        return formatter.formatDistance(distance, 2)
+    }
+
+    fun isPermissionRequestVisible(enabled: Boolean): Boolean {
+        return (enabled && !Permissions.canRecognizeActivity(fragment.requireContext())) ||
+                (!enabled && !Permissions.isBackgroundLocationEnabled(fragment.requireContext()))
+    }
+
+    fun notificationSummary(): String {
+        val isBlocked = Notify.isChannelBlocked(fragment.requireContext(), StepCounterService.CHANNEL_ID)
+        return if (isBlocked) fragment.getString(R.string.off) else fragment.getString(R.string.on)
+    }
+
+    fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
+        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+    }
+
+    fun putBoolean(key: Int, value: Boolean) {
+        cache.putBoolean(fragment.getString(key), value)
+    }
+
+    private fun onPedometerEnabled(data: Bundle): Boolean {
+        setEnabledState?.invoke(true)
+        return true
+    }
+
+    private fun onPedometerDisabled(data: Bundle): Boolean {
+        setEnabledState?.invoke(false)
+        return true
+    }
+}
+
+@Composable
+private fun PedometerSettingsContent(
+    controller: PedometerSettingsController,
+    fragment: Fragment
+) {
+                    val userPrefs = controller.userPrefs
                     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }
                     var strideLength by remember {
                         mutableStateOf(
@@ -69,29 +212,29 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                         )
                     }
                     var resetDaily by remember {
-                        mutableStateOf(getBoolean(R.string.pref_odometer_reset_daily))
+                        mutableStateOf(controller.getBoolean(R.string.pref_odometer_reset_daily))
                     }
                     var useAlarm by remember {
                         mutableStateOf(
-                            getBoolean(R.string.pref_pedometer_use_alarm_for_distance_alert)
+                            controller.getBoolean(R.string.pref_pedometer_use_alarm_for_distance_alert)
                         )
                     }
                     var permissionVisible by remember {
-                        mutableStateOf(isPermissionRequestVisible(enabled))
+                        mutableStateOf(controller.isPermissionRequestVisible(enabled))
                     }
                     var notificationSummary by remember {
-                        mutableStateOf(notificationSummary())
+                        mutableStateOf(controller.notificationSummary())
                     }
 
-                    setEnabledState = {
+                    controller.setEnabledState = {
                         enabled = it
-                        permissionVisible = isPermissionRequestVisible(it)
+                        permissionVisible = controller.isPermissionRequestVisible(it)
                     }
-                    refreshPermissionState = {
-                        permissionVisible = isPermissionRequestVisible(enabled)
+                    controller.refreshPermissionState = {
+                        permissionVisible = controller.isPermissionRequestVisible(enabled)
                     }
-                    refreshNotificationState = {
-                        notificationSummary = notificationSummary()
+                    controller.refreshNotificationState = {
+                        notificationSummary = controller.notificationSummary()
                     }
 
                     Surface(
@@ -117,12 +260,12 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                                     onCheckedChange = {
                                         enabled = it
                                         userPrefs.pedometer.isEnabled = it
-                                        onPedometerEnabledChanged(it) { newEnabled ->
+                                        controller.onPedometerEnabledChanged(it) { newEnabled ->
                                             enabled = newEnabled
                                             permissionVisible =
-                                                isPermissionRequestVisible(newEnabled)
+                                                controller.isPermissionRequestVisible(newEnabled)
                                         }
-                                        permissionVisible = isPermissionRequestVisible(it)
+                                        permissionVisible = controller.isPermissionRequestVisible(it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -131,9 +274,9 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                             item("stride_length") {
                                 SettingsActionRow(
                                     label = stringResource(R.string.pref_stride_length_title),
-                                    summary = formatStrideLength(strideLength),
+                                    summary = controller.formatStrideLength(strideLength),
                                     onClick = {
-                                        pickStrideLength(strideLength) {
+                                        controller.pickStrideLength(strideLength) {
                                             strideLength = it
                                             userPrefs.pedometer.strideLength = it
                                         }
@@ -145,7 +288,7 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                                 SettingsActionRow(
                                     label = stringResource(R.string.estimate_stride_length),
                                     onClick = {
-                                        findNavController().navigate(
+                                        fragment.findNavController().navigate(
                                             R.id.action_calibrate_pedometer_to_estimate_stride_length
                                         )
                                     },
@@ -154,15 +297,15 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("notifications") {
                                 SettingsActionRow(
-                                    label = getString(
+                                    label = fragment.getString(
                                         R.string.notifications_channel,
-                                        getString(R.string.pedometer)
+                                        fragment.getString(R.string.pedometer)
                                     ),
                                     summary = notificationSummary,
                                     onClick = {
-                                        startActivity(
+                                        fragment.startActivity(
                                             Intents.notificationSettings(
-                                                requireContext(),
+                                                fragment.requireContext(),
                                                 StepCounterService.CHANNEL_ID
                                             )
                                         )
@@ -175,7 +318,7 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                                     SettingsActionRow(
                                         label = stringResource(R.string.request_permission),
                                         onClick = {
-                                            startActivity(Intents.appSettings(requireContext()))
+                                            fragment.startActivity(Intents.appSettings(fragment.requireContext()))
                                         },
                                         modifier = Modifier.padding(
                                             horizontal = TrailSenseSpacing.lg
@@ -189,7 +332,7 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                                     checked = resetDaily,
                                     onCheckedChange = {
                                         resetDaily = it
-                                        putBoolean(R.string.pref_odometer_reset_daily, it)
+                                        controller.putBoolean(R.string.pref_odometer_reset_daily, it)
                                     },
                                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                 )
@@ -202,7 +345,7 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                                     checked = useAlarm,
                                     onCheckedChange = {
                                         useAlarm = it
-                                        putBoolean(
+                                        controller.putBoolean(
                                             R.string.pref_pedometer_use_alarm_for_distance_alert,
                                             it
                                         )
@@ -213,149 +356,4 @@ class PedometerSettingsFragment : TrailSenseComposeFragment() {
                             }
                         }
                     }
-    }
-
-    private fun setupAveragePaceTimeSetting() {
-        val names = mapOf(
-            AveragePaceTimeMode.Active to getString(R.string.active_time),
-            AveragePaceTimeMode.Elapsed to getString(R.string.elapsed_time)
-        )
-        val averagePaceTime = list(R.string.pref_pedometer_average_pace_time)
-        averagePaceTime?.entries = names.values.toTypedArray()
-        averagePaceTime?.entryValues = names.keys.map { it.id.toString() }.toTypedArray()
-    }
-
-    private fun setupStepHistorySetting() {
-        val stepHistory = preference(R.string.pref_pedometer_history_days)
-        stepHistory?.summary =
-            formatService.formatDays(userPrefs.pedometer.stepHistory.toDays().toInt())
-        stepHistory?.setOnPreferenceClickListener {
-            Pickers.number(
-                requireContext(),
-                it.title.toString(),
-                null,
-                userPrefs.pedometer.stepHistory.toDays().toInt(),
-                allowDecimals = false,
-                allowNegative = false,
-                hint = getString(R.string.days)
-            ) { days ->
-                if (days != null) {
-                    userPrefs.pedometer.stepHistory = Duration.ofDays(days.toLong())
-                    it.summary = formatService.formatDays(if (days.toInt() > 0) days.toInt() else 1)
-                }
-            }
-            true
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        refreshPermissionState?.invoke()
-        refreshNotificationState?.invoke()
-        intervalometer.interval(20)
-        Tools.subscribe(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED, ::onPedometerEnabled)
-        Tools.subscribe(
-            PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED,
-            ::onPedometerDisabled
-        )
-    }
-
-    override fun onPause() {
-        intervalometer.stop()
-        super.onPause()
-        Tools.unsubscribe(
-            PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED,
-            ::onPedometerEnabled
-        )
-        Tools.unsubscribe(
-            PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED,
-            ::onPedometerDisabled
-        )
-    }
-
-    override fun onDestroyView() {
-        setEnabledState = null
-        refreshPermissionState = null
-        refreshNotificationState = null
-        super.onDestroyView()
-    }
-
-    private fun onPedometerEnabledChanged(
-        enabled: Boolean,
-        updateEnabled: (Boolean) -> Unit
-    ) {
-        if (enabled) {
-            requestActivityRecognition { hasPermission ->
-                if (hasPermission) {
-                    if (cache.getBoolean("pedometer_battery_sent") != true) {
-                        Alerts.dialog(
-                            requireContext(),
-                            getString(R.string.pedometer),
-                            getString(R.string.pedometer_disclaimer),
-                            cancelText = null
-                        )
-                        cache.putBoolean("pedometer_battery_sent", true)
-                    }
-                    PedometerSubsystem.getInstance(requireContext()).enable()
-                } else {
-                    PedometerSubsystem.getInstance(requireContext()).disable()
-                    updateEnabled(false)
-                    alertNoActivityRecognitionPermission()
-                }
-            }
-        } else {
-            PedometerSubsystem.getInstance(requireContext()).disable()
-        }
-    }
-
-    private fun pickStrideLength(
-        current: Distance,
-        onPicked: (Distance) -> Unit
-    ) {
-        CustomUiUtils.pickDistance(
-            requireContext(),
-            strideLengthUnits,
-            current,
-            getString(R.string.pref_stride_length_title),
-            showFeetAndInches = true
-        ) { distance, cancelled ->
-            if (cancelled || distance == null || distance.value <= 0f) {
-                return@pickDistance
-            }
-
-            onPicked(distance)
-        }
-    }
-
-    private fun formatStrideLength(distance: Distance): String {
-        return formatter.formatDistance(distance, 2)
-    }
-
-    private fun isPermissionRequestVisible(enabled: Boolean): Boolean {
-        return (enabled && !Permissions.canRecognizeActivity(requireContext())) ||
-                (!enabled && !Permissions.isBackgroundLocationEnabled(requireContext()))
-    }
-
-    private fun notificationSummary(): String {
-        val isBlocked = Notify.isChannelBlocked(requireContext(), StepCounterService.CHANNEL_ID)
-        return if (isBlocked) getString(R.string.off) else getString(R.string.on)
-    }
-
-    private fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(getString(key)) ?: defaultValue
-    }
-
-    private fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(getString(key), value)
-    }
-
-    private fun onPedometerEnabled(data: Bundle): Boolean {
-        setEnabledState?.invoke(true)
-        return true
-    }
-
-    private fun onPedometerDisabled(data: Bundle): Boolean {
-        setEnabledState?.invoke(false)
-        return true
-    }
 }

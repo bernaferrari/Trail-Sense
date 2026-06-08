@@ -942,8 +942,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateOdometerFragment
-            setClassName("com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "CalibrateOdometerFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PEDOMETER_SETTINGS)
+                .build())
             putAction(
                 R.id.action_calibrate_pedometer_to_estimate_stride_length,
                 NavAction(R.id.fragmentStrideLengthEstimation, NavOptions.Builder()

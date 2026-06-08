@@ -180,6 +180,7 @@ import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
@@ -375,6 +376,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
             DESTINATION_SETTINGS -> SettingsToolScreen(this)
             DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
+            DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
         }
     }
 
@@ -3396,5 +3398,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_TURN_BACK = "turn_back"
         const val DESTINATION_SETTINGS = "settings"
         const val DESTINATION_STRIDE_LENGTH_ESTIMATION = "stride_length_estimation"
+        const val DESTINATION_PEDOMETER_SETTINGS = "pedometer_settings"
     }
 }
