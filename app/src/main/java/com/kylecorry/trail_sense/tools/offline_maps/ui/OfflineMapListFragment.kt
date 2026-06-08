@@ -790,7 +790,7 @@ private fun PhotoMapRow(
     val formatter = getAppService<FormatService>()
     val subtitle = formatter.join(
         map.createdOn?.let { formatter.formatDate(it.toZonedDateTime(), includeWeekDay = false) },
-        formatter.formatFileSize(map.metadata.fileSize),
+        formatter.formatFileSize(map.fileSizeBytes),
         separator = FormatService.Separator.Dot
     )
 

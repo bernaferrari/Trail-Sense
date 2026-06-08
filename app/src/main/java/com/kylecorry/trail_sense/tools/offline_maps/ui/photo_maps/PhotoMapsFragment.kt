@@ -255,7 +255,7 @@ class PhotoMapsFragment : AndromedaFragment() {
             requireContext(),
             getString(R.string.change_map_projection),
             projectionNames,
-            projections.indexOf(map?.metadata?.projection)
+            projections.indexOf(map?.georeference?.projectionType)
         ) {
             it ?: return@item
             val newProjection = projections[it]
@@ -357,8 +357,7 @@ class PhotoMapsFragment : AndromedaFragment() {
 
         val rotated = updatedMap.copy(
             georeference = updatedMap.georeference.copy(
-                rotation = newRotation,
-                isRotationCompleted = true
+                rotation = newRotation
             )
         )
 
