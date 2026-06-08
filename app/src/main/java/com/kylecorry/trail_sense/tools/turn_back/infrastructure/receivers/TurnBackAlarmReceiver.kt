@@ -3,12 +3,9 @@ package com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.core.app.NotificationCompat
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.fragments.IPermissionRequester
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -18,6 +15,7 @@ import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.permissions.requestScheduleExactAlarms
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
 
@@ -94,10 +92,10 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         /**
          * Enable turn back alerts and request permissions if needed
          */
-        fun <T> enable(
-            fragment: T,
+        fun enable(
+            fragment: TrailSenseComposeDestinationFragment,
             shouldRequestPermissions: Boolean
-        ) where T : Fragment, T : IPermissionRequester {
+        ) {
             if (shouldRequestPermissions) {
                 fragment.requestScheduleExactAlarms {
                     start(fragment.requireContext())

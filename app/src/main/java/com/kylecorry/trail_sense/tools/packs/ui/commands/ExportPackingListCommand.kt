@@ -12,9 +12,9 @@ import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 
-class ExportPackingListCommand(private val fragment: Fragment) : Command<Pack> {
+class ExportPackingListCommand(private val fragment: TrailSenseComposeDestinationFragment) : Command<Pack> {
 
     private val exportService = LighterPackIOService.create(
         fragment.requireContext(),

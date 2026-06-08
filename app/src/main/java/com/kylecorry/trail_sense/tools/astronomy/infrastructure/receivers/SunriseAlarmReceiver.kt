@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -60,7 +60,7 @@ class SunriseAlarmReceiver : BroadcastReceiver() {
          * Enable sunrise alerts and request permissions if needed
          */
         suspend fun enable(
-            fragment: Fragment,
+            fragment: TrailSenseComposeDestinationFragment,
             shouldRequestPermissions: Boolean
         ) {
             val service = Tools.getService(

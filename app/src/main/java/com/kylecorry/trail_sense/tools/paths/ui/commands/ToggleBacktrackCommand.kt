@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
 class ToggleBacktrackCommand(
-    private val fragment: Fragment,
+    private val fragment: TrailSenseComposeDestinationFragment,
     private val onPermissionDenied: () -> Unit = {}
 ) : Command {
     override fun execute() {
