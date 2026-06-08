@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
-import androidx.fragment.compose.AndroidFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -63,7 +62,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private var mapId = 0L
     private var autoLockLocation = false
     private var map: PhotoMap? = null
-    private var currentFragment: Fragment? = null
+    private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null
     private var title by mutableStateOf("")
     private var subtitle by mutableStateOf<String?>(null)
@@ -101,7 +100,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
                     loadMap()
                 }
             },
-            onViewFragment = ::onViewFragment,
+            onViewController = ::onViewController,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -115,14 +114,13 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     override fun onDestroyView() {
-        currentFragment = null
+        currentViewController = null
         currentCalibrationController = null
         super.onDestroyView()
     }
 
     private fun showMenu(anchor: View) {
-        val fragment = currentFragment
-        val isMapView = fragment != null && fragment is ViewPhotoMapFragment
+        val isMapView = currentViewController != null
         val isCalibrationFragment = currentCalibrationController != null
 
         val actions = listOf(
@@ -168,7 +166,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun calibrate() {
         showRecenter = true
-        currentFragment = null
+        currentViewController = null
         childSpec = PhotoMapChildSpec.Calibration(mapId)
     }
 
@@ -209,24 +207,15 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun measure() {
-        val fragment = currentFragment
-        if (fragment != null && fragment is ViewPhotoMapFragment) {
-            fragment.startDistanceMeasurement(emptyArray())
-        }
+        currentViewController?.startDistanceMeasurement(emptyArray())
     }
 
     private fun trace() {
-        val fragment = currentFragment
-        if (fragment != null && fragment is ViewPhotoMapFragment) {
-            fragment.trace()
-        }
+        currentViewController?.trace()
     }
 
     private fun adjustLayers() {
-        val fragment = currentFragment
-        if (fragment != null && fragment is ViewPhotoMapFragment) {
-            fragment.adjustLayers()
-        }
+        currentViewController?.adjustLayers()
     }
 
     private fun rename() {
@@ -285,19 +274,13 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun recenter() {
-        val fragment = currentFragment
-        if (fragment != null && fragment is ViewPhotoMapFragment) {
-            fragment.recenter()
-        }
+        currentViewController?.recenter()
 
         currentCalibrationController?.recenter()
     }
 
     private fun reload() {
-        val fragment = currentFragment
-        if (fragment != null && fragment is ViewPhotoMapFragment) {
-            fragment.reloadMap()
-        }
+        currentViewController?.reloadMap()
 
         currentCalibrationController?.reloadMap()
     }
@@ -322,7 +305,7 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
     private fun warp() {
         hideRotation()
         showRecenter = false
-        currentFragment = null
+        currentViewController = null
         currentCalibrationController = null
         childSpec = PhotoMapChildSpec.Warp(mapId)
     }
@@ -354,23 +337,15 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
         hideRotation()
         showRecenter = true
         currentCalibrationController = null
-        val fragment = ViewPhotoMapFragment.create(mapId, autoLockLocation)
-        setFragment(fragment)
-    }
-
-    private fun setFragment(fragment: Fragment) {
-        childSpec = when (fragment) {
-            is ViewPhotoMapFragment -> PhotoMapChildSpec.View(mapId, autoLockLocation)
-            else -> null
-        }
+        childSpec = PhotoMapChildSpec.View(mapId, autoLockLocation)
     }
 
     private fun onCalibrationController(controller: PhotoMapCalibrationController) {
         currentCalibrationController = controller
     }
 
-    private fun onViewFragment(fragment: ViewPhotoMapFragment) {
-        currentFragment = fragment
+    private fun onViewController(controller: ViewPhotoMapController) {
+        currentViewController = controller
     }
 }
 
@@ -387,7 +362,7 @@ private fun PhotoMapsScreen(
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationController: (PhotoMapCalibrationController) -> Unit,
     onCalibrationComplete: () -> Unit,
-    onViewFragment: (ViewPhotoMapFragment) -> Unit,
+    onViewController: (ViewPhotoMapController) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -426,13 +401,12 @@ private fun PhotoMapsScreen(
                                 onController = onCalibrationController
                             )
 
-                            is PhotoMapChildSpec.View -> AndroidFragment<ViewPhotoMapFragment>(
+                            is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
                                 modifier = Modifier.fillMaxSize(),
-                                arguments = Bundle().apply {
-                                    putLong("mapId", spec.mapId)
-                                    putBoolean("autoLockLocation", spec.autoLockLocation)
-                                },
-                                onUpdate = onViewFragment
+                                fragment = fragment,
+                                mapId = spec.mapId,
+                                autoLockLocation = spec.autoLockLocation,
+                                onController = onViewController
                             )
                         }
                     }
@@ -548,7 +522,7 @@ private fun PhotoMapsScreenPreview() {
             onCalibrationRotation = {},
             onCalibrationController = {},
             onCalibrationComplete = {},
-            onViewFragment = {}
+            onViewController = {}
         )
     }
 }
