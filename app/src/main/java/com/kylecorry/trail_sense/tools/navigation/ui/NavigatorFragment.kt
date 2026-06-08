@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -703,40 +702,56 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                 Resources.dp(requireContext(), 200f).toInt()
             )
             var doNotAskAgain = false
-            val contentView = ComposeView(requireContext()).apply {
+            val contentView = ConstraintLayout(requireContext())
+            calibrationView.id = View.generateViewId()
+            contentView.addView(
+                calibrationView,
+                ConstraintLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    Resources.dp(requireContext(), 200f).toInt()
+                ).apply {
+                    startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                    endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                    topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                }
+            )
+            val checkboxView = ComposeView(requireContext()).apply {
+                id = View.generateViewId()
                 setContent {
                     TrailSenseTheme {
                         var checked by remember { mutableStateOf(false) }
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            AndroidView(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                factory = { calibrationView }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = {
+                                    checked = it
+                                    doNotAskAgain = it
+                                }
                             )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = checked,
-                                    onCheckedChange = {
-                                        checked = it
-                                        doNotAskAgain = it
-                                    }
-                                )
-                                Text(
-                                    text = getString(R.string.do_not_ask_again),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                            Text(
+                                text = getString(R.string.do_not_ask_again),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
             }
+            contentView.addView(
+                checkboxView,
+                ConstraintLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                    endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                    topToBottom = calibrationView.id
+                    topMargin = Resources.dp(requireContext(), 8f).toInt()
+                }
+            )
             dialog(
                 getString(R.string.calibrate_compass_dialog_title),
                 getString(
