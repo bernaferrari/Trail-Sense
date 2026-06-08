@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +39,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.SleepSound
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
@@ -48,18 +48,12 @@ import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 
-class FragmentToolWhiteNoise : TrailSenseComposeFragment() {
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-
-    @Composable
-    override fun FragmentContent() {
-        WhiteNoiseScreen(cache)
-    }
-}
-
 @Composable
-private fun WhiteNoiseScreen(cache: IPreferences) {
+fun WhiteNoiseScreen(
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
+    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
     val soundTypes = remember {
         listOf(
             SleepSound.WhiteNoise to context.getString(R.string.sleep_sound_white_noise),
@@ -124,7 +118,7 @@ private fun WhiteNoiseScreen(cache: IPreferences) {
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(

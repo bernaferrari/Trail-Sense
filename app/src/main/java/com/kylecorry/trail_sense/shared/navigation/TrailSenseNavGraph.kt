@@ -763,8 +763,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolWhiteNoise
-            setClassName("com.kylecorry.trail_sense.tools.whitenoise.ui.FragmentToolWhiteNoise")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolWhiteNoise"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WHITE_NOISE)
+                .build())
             graph.addDestination(this)
         }
 

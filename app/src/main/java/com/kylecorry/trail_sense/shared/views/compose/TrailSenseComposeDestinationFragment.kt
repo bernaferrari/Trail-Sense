@@ -163,6 +163,7 @@ import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
+import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -295,6 +296,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_LIGHTNING -> LightningScreen()
             DESTINATION_NOTES -> Notes()
             DESTINATION_NOTE_EDITOR -> NoteEditor()
+            DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
         }
     }
 
@@ -2984,5 +2986,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_LIGHTNING = "lightning"
         const val DESTINATION_NOTES = "notes"
         const val DESTINATION_NOTE_EDITOR = "note_editor"
+        const val DESTINATION_WHITE_NOISE = "white_noise"
     }
 }
