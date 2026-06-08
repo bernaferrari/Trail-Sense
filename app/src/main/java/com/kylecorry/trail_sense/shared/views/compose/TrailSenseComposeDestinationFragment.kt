@@ -63,6 +63,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController as fragmentFindNavController
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.clipboard.Clipboard
@@ -318,6 +319,23 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         onAction: (ActionItem?) -> Unit
     ) {
         actionSheet = ActionSheetState(title, subtitle, actions, onAction)
+    }
+
+    override fun showSnackbar(
+        text: String,
+        duration: Int,
+        action: String?,
+        onAction: () -> Unit
+    ): Snackbar {
+        val playBar = view?.findViewWithTag<View>(getString(R.string.tag_play_bar))
+        return Alerts.snackbar(
+            this,
+            playBar ?: requireView(),
+            text,
+            duration,
+            action,
+            onAction
+        )
     }
 
     override fun showPhotoImport(

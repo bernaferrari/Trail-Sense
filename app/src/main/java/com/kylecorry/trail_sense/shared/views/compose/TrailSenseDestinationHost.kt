@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Size
 import androidx.annotation.StringRes
 import androidx.navigation.NavController
+import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 
 interface TrailSenseDestinationHost {
@@ -25,4 +26,11 @@ interface TrailSenseDestinationHost {
         actions: List<ActionItem>,
         onAction: (ActionItem?) -> Unit
     )
+
+    fun showSnackbar(
+        text: String,
+        duration: Int = Snackbar.LENGTH_SHORT,
+        action: String? = null,
+        onAction: () -> Unit = {}
+    ): Snackbar
 }

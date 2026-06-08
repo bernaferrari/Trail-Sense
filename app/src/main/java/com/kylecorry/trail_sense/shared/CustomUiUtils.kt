@@ -46,7 +46,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import com.kylecorry.trail_sense.shared.views.PressureInputView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
@@ -218,26 +217,13 @@ object CustomUiUtils {
     }
 
     fun snackbar(
-        fragment: TrailSenseComposeDestinationFragment,
+        fragment: TrailSenseDestinationHost,
         text: String,
         duration: Int = Snackbar.LENGTH_SHORT,
         action: String? = null,
         onAction: () -> Unit = {}
     ): Snackbar {
-
-        val playBar =
-            fragment.view?.findViewWithTag<View>(fragment.getString(R.string.tag_play_bar))
-
-        val view = playBar ?: fragment.requireView()
-
-        return Alerts.snackbar(
-            fragment,
-            view,
-            text,
-            duration,
-            action,
-            onAction
-        )
+        return fragment.showSnackbar(text, duration, action, onAction)
     }
 
     fun showQR(
