@@ -52,7 +52,7 @@
 
         <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
         <item name="alertDialogTheme">@style/AlertDialogTheme</item>
-        <item name="quickActionButtonStyle">@style/Widget.App.QuickActionButton</item>
+        <item name="snackbarButtonStyle">@style/SnackBarButtonTheme</item>
         <item name="floatingActionButtonStyle">@style/Widget.App.FloatingActionButton</item>
         <item name="floatingActionButtonSmallStyle">@style/Widget.App.FloatingActionButtonSmall
         </item>
