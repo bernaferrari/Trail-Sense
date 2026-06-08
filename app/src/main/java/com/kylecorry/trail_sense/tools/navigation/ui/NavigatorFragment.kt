@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.view.Gravity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -34,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
@@ -58,8 +57,8 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.ui.CompassCalibrationContent
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
-import com.kylecorry.trail_sense.settings.ui.compassCalibrationView
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -714,62 +713,48 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun showCalibrationDialog() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
-            val calibrationView = compassCalibrationView(
-                requireContext(),
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                Resources.dp(requireContext(), 200f).toInt()
-            )
             var doNotAskAgain = false
-            val contentView = ConstraintLayout(requireContext())
-            calibrationView.id = View.generateViewId()
-            contentView.addView(
-                calibrationView,
-                ConstraintLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    Resources.dp(requireContext(), 200f).toInt()
-                ).apply {
-                    startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                    endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                    topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-                }
-            )
-            val checkboxView = ComposeView(requireContext()).apply {
-                id = View.generateViewId()
+            val doNotAskAgainText = getString(R.string.do_not_ask_again)
+            val contentView = ComposeView(requireContext()).apply {
                 setContent {
                     TrailSenseTheme {
                         var checked by remember { mutableStateOf(false) }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
                         ) {
-                            Checkbox(
-                                checked = checked,
-                                onCheckedChange = {
-                                    checked = it
-                                    doNotAskAgain = it
-                                }
+                            CompassCalibrationContent(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
                             )
-                            Text(
-                                text = getString(R.string.do_not_ask_again),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        checked = !checked
+                                        doNotAskAgain = checked
+                                    },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = checked,
+                                    onCheckedChange = {
+                                        checked = it
+                                        doNotAskAgain = it
+                                    }
+                                )
+                                Text(
+                                    text = doNotAskAgainText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }
             }
-            contentView.addView(
-                checkboxView,
-                ConstraintLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-                    endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-                    topToBottom = calibrationView.id
-                    topMargin = Resources.dp(requireContext(), 8f).toInt()
-                }
-            )
             dialog(
                 getString(R.string.calibrate_compass_dialog_title),
                 getString(

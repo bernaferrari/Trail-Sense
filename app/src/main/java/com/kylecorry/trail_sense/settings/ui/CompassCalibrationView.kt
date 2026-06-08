@@ -47,7 +47,7 @@ fun compassCalibrationView(
 }
 
 @Composable
-private fun CompassCalibrationContent() {
+fun CompassCalibrationContent(modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "compass_calibration")
     val progress = transition.animateFloat(
         initialValue = 0f,
@@ -60,7 +60,7 @@ private fun CompassCalibrationContent() {
     )
     val primary = androidx.compose.material3.MaterialTheme.colorScheme.primary
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    Canvas(modifier = modifier.fillMaxSize()) {
         drawRect(Color(AppColor.Blue.color))
 
         val figure8Width = size.width * 0.8f / 2f
