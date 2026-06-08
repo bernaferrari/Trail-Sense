@@ -2,12 +2,8 @@ package com.kylecorry.trail_sense.tools.clock.ui
 
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,13 +35,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
@@ -64,7 +57,7 @@ import com.kylecorry.trail_sense.shared.permissions.alertExactAlarmsDenied
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import kotlinx.coroutines.delay
 import java.time.Duration
@@ -77,33 +70,23 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class ToolClockFragment : Fragment() {
+class ToolClockFragment : TrailSenseComposeFragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val sensorService by lazy { SensorService(requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val prefs by lazy { UserPreferences(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ClockScreen(
-                        formatService = formatService,
-                        prefs = prefs,
-                        gps = gps,
-                        getGpsTime = ::getGPSTime,
-                        requestExactAlarms = { requestExactAlarms(it) },
-                        onScheduleNextMinute = ::sendNextMinuteNotification
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        ClockScreen(
+            formatService = formatService,
+            prefs = prefs,
+            gps = gps,
+            getGpsTime = ::getGPSTime,
+            requestExactAlarms = { requestExactAlarms(it) },
+            onScheduleNextMinute = ::sendNextMinuteNotification
+        )
     }
 
     private fun getGPSTime(): Instant {

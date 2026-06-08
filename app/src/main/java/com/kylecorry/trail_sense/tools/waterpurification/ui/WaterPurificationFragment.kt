@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,14 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Distance
@@ -44,7 +37,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 import kotlinx.coroutines.delay
@@ -52,32 +45,22 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 import java.time.Instant
 
-class WaterPurificationFragment : Fragment() {
+class WaterPurificationFragment : TrailSenseComposeFragment() {
     private val sensorService by lazy { SensorService(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val altimeter by lazy { sensorService.getAltimeter() }
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
     private val waterService = WaterService()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    WaterPurificationScreen(
-                        cache = cache,
-                        formatService = formatService,
-                        getSelectedDuration = { selection ->
-                            getSelectedDuration(selection)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        WaterPurificationScreen(
+            cache = cache,
+            formatService = formatService,
+            getSelectedDuration = { selection ->
+                getSelectedDuration(selection)
             }
-        }
+        )
     }
 
     private suspend fun getSelectedDuration(selection: TimeSelection): Duration = onDefault {
