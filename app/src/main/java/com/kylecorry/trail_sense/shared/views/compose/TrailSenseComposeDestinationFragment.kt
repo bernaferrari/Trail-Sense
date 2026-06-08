@@ -165,6 +165,7 @@ import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightScreen
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuideSightingToolScreen
+import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuidePageToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuidePageToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListToolScreen
@@ -418,6 +419,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_FIELD_GUIDE -> FieldGuideToolScreen(this)
             DESTINATION_FIELD_GUIDE_PAGE -> FieldGuidePageToolScreen(this)
             DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
+            DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)
         }
     }
@@ -3461,6 +3463,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_FIELD_GUIDE = "field_guide"
         const val DESTINATION_FIELD_GUIDE_PAGE = "field_guide_page"
         const val DESTINATION_SIGHTING_LIST = "sighting_list"
+        const val DESTINATION_CREATE_FIELD_GUIDE_PAGE = "create_field_guide_page"
         const val DESTINATION_CREATE_FIELD_GUIDE_SIGHTING = "create_field_guide_sighting"
     }
 }

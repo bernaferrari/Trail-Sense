@@ -1,10 +1,10 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Bundle
 import android.util.Size
-import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -32,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,22 +46,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
 import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
+import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -69,50 +73,69 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun CreateFieldGuidePageToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { CreateFieldGuidePageController(fragment) }
 
-    private val repo by lazy { FieldGuideRepo.getInstance(requireContext()) }
-    private val tagNameMapper by lazy { FieldGuideTagNameMapper(requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(requireContext()) }
-    private val uriPicker by lazy { IntentUriPicker(this, requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
 
-    private var originalPage by mutableStateOf(FieldGuidePage(0))
-    private var page by mutableStateOf(originalPage)
-    private var imagePreview by mutableStateOf<Bitmap?>(null)
-    private var backCallback: OnBackPressedCallback? = null
+    CreateFieldGuidePageContent(
+        page = controller.page,
+        image = controller.imagePreview,
+        tagNames = controller.tags.associateWith { controller.getTagName(it) },
+        tags = controller.tags,
+        onNameChange = { controller.updatePage(controller.page.copy(name = it)) },
+        onNotesChange = { controller.updatePage(controller.page.copy(notes = it)) },
+        onTagsChange = controller::updateTags,
+        onTakePhoto = controller::takePhoto,
+        onSelectPhoto = controller::selectPhoto,
+        onDeleteImage = controller::deleteImage,
+        onSave = controller::save,
+        modifier = Modifier.fillMaxSize()
+    )
+}
 
-    private val tags =
-        FieldGuidePageTag.entries.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
+private class CreateFieldGuidePageController(private val fragment: Fragment) {
 
-    @Composable
-    override fun FragmentContent() {
-        CreateFieldGuidePageContent(
-            page = page,
-            image = imagePreview,
-            tagNames = tags.associateWith { tagNameMapper.getName(it) },
-            tags = tags,
-            onNameChange = { updatePage(page.copy(name = it)) },
-            onNotesChange = { updatePage(page.copy(notes = it)) },
-            onTagsChange = { type, selected -> updateTags(type, selected) },
-            onTakePhoto = ::takePhoto,
-            onSelectPhoto = ::selectPhoto,
-            onDeleteImage = {
-                inBackground {
-                    deleteImage()
-                }
-            },
-            onSave = ::save,
-            modifier = Modifier.fillMaxSize()
+    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
+    private val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private val uriPicker by lazy {
+        IntentUriPicker(
+            fragment.requireActivity() as IntentResultRetriever,
+            fragment.requireContext()
         )
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
+    private var isInitialized = false
+
+    private var originalPage by mutableStateOf(FieldGuidePage(0))
+    var page by mutableStateOf(originalPage)
+        private set
+    var imagePreview by mutableStateOf<Bitmap?>(null)
+        private set
+    private var backCallback: OnBackPressedCallback? = null
+
+    val tags =
+        FieldGuidePageTag.entries.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
+
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        fragment.arguments?.let {
             val pageId = it.getLong(ARG_PAGE_ID, 0L)
             if (pageId != 0L) {
-                inBackground {
+                fragment.inBackground {
                     repo.getPage(pageId)?.let { loaded ->
                         onMain {
                             originalPage = loaded
@@ -127,20 +150,21 @@ class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
                 updatePage(page.copy(directTags = page.directTags + tag))
             }
         }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        backCallback = promptIfUnsavedChanges(this::hasChanges)
+        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
         refreshImagePreview()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
+        backCallback?.remove()
+        backCallback = null
         imagePreview = null
-        super.onDestroyView()
     }
 
-    private fun updatePage(updated: FieldGuidePage) {
+    fun getTagName(tag: FieldGuidePageTag): String {
+        return tagNameMapper.getName(tag)
+    }
+
+    fun updatePage(updated: FieldGuidePage) {
         val oldImage = page.images.firstOrNull()
         page = updated
         if (oldImage != updated.images.firstOrNull()) {
@@ -148,16 +172,16 @@ class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private fun updateTags(type: FieldGuidePageTagType, selected: List<FieldGuidePageTag>) {
+    fun updateTags(type: FieldGuidePageTagType, selected: List<FieldGuidePageTag>) {
         updatePage(page.copy(directTags = page.directTags.filter { it.type != type } + selected))
     }
 
-    private fun save() {
-        inBackground {
+    fun save() {
+        fragment.inBackground {
             repo.add(page)
             onMain {
                 backCallback?.remove()
-                findNavController().navigateUp()
+                fragment.findNavController().navigateUp()
             }
         }
     }
@@ -166,17 +190,28 @@ class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
         return originalPage != page
     }
 
-    private fun takePhoto() {
-        inBackground {
-            val uri = CustomUiUtils.takePhoto(this@CreateFieldGuidePageFragment)
+    fun takePhoto() {
+        fragment.requestCamera {
+            if (!it) {
+                return@requestCamera
+            }
+            fragment.inBackground {
+                val uri = takePhoto(fragment)
+                uploadPhoto(uri)
+            }
+        }
+    }
+
+    fun selectPhoto() {
+        fragment.inBackground(BackgroundMinimumState.Created) {
+            val uri = uriPicker.open(listOf("image/*"))
             uploadPhoto(uri)
         }
     }
 
-    private fun selectPhoto() {
-        inBackground(BackgroundMinimumState.Created) {
-            val uri = uriPicker.open(listOf("image/*"))
-            uploadPhoto(uri)
+    fun deleteImage() {
+        fragment.inBackground {
+            deleteImageInternal()
         }
     }
 
@@ -187,9 +222,18 @@ class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
             return
         }
 
-        inBackground {
+        fragment.inBackground {
             val bitmap = onIO { files.bitmap(image, Size(500, 500)) }
             onMain { imagePreview = bitmap }
+        }
+    }
+
+    private suspend fun takePhoto(fragment: Fragment): Uri? {
+        return suspendCoroutine { cont ->
+            val prefs = UserPreferences(fragment.requireContext()).camera
+            PhotoImportDialog(fragment, null, prefs.useZeroShutterLag) { uri ->
+                cont.resume(uri)
+            }.show()
         }
     }
 
@@ -226,7 +270,7 @@ class CreateFieldGuidePageFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    private suspend fun deleteImage() = onIO {
+    private suspend fun deleteImageInternal() = onIO {
         val originalImages = originalPage.images
         val imagesToDelete = page.images.filter { it !in originalImages }
         imagesToDelete.forEach { files.delete(it) }
