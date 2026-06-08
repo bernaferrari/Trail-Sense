@@ -32,7 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -51,7 +51,7 @@ import java.io.IOException
 
 @Composable
 fun WarpMapToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     mapId: Long,
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,7 +79,7 @@ fun WarpMapToolScreen(
 }
 
 private class WarpMapController(
-    private val fragment: Fragment,
+    private val fragment: TrailSenseComposeDestinationFragment,
     private val mapId: Long,
     private val onComplete: () -> Unit
 ) {

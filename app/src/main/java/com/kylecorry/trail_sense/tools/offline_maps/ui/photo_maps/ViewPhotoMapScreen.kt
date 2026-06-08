@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -70,7 +70,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun ViewPhotoMapToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     mapId: Long,
     autoLockLocation: Boolean,
     onController: (ViewPhotoMapController) -> Unit,
@@ -102,7 +102,7 @@ fun ViewPhotoMapToolScreen(
 }
 
 class ViewPhotoMapController(
-    private val fragment: Fragment,
+    private val fragment: TrailSenseComposeDestinationFragment,
     private val mapId: Long,
     private val autoLockLocation: Boolean
 ) {

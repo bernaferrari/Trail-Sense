@@ -2,14 +2,13 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.io.ExternalUriService
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMap
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.MapExportService
@@ -17,7 +16,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.co
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.TrailMapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.commands.ExportTrailMapCommand
 
-class PhotoMapExportService(private val fragment: Fragment) {
+class PhotoMapExportService(private val fragment: TrailSenseComposeDestinationFragment) {
     private val uriPicker = IntentUriPicker(
         fragment.requireActivity() as IntentResultRetriever,
         fragment.requireContext()

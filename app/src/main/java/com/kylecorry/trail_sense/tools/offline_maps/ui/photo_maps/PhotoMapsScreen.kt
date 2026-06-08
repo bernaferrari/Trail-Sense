@@ -30,7 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -56,7 +56,7 @@ import kotlin.math.absoluteValue
 
 @Composable
 fun PhotoMapsToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PhotoMapsController(fragment) }
@@ -72,7 +72,7 @@ fun PhotoMapsToolScreen(
 }
 
 private class PhotoMapsController(
-    private val fragment: Fragment
+    private val fragment: TrailSenseComposeDestinationFragment
 ) {
 
     private val service = getAppService<MapService>()
@@ -371,7 +371,7 @@ private fun PhotoMapsScreen(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
     childSpec: PhotoMapChildSpec?,
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment?,
     onWarpComplete: () -> Unit,
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationController: (PhotoMapCalibrationController) -> Unit,
@@ -396,32 +396,34 @@ private fun PhotoMapsScreen(
                     .fillMaxSize()
                     .testTag("map_fragment")
             ) {
-                childSpec?.let { spec ->
-                    key(spec.key) {
-                        when (spec) {
-                            is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                fragment = fragment,
-                                mapId = spec.mapId,
-                                onComplete = onWarpComplete
-                            )
+                if (fragment != null) {
+                    childSpec?.let { spec ->
+                        key(spec.key) {
+                            when (spec) {
+                                is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
+                                    modifier = Modifier.fillMaxSize(),
+                                    fragment = fragment,
+                                    mapId = spec.mapId,
+                                    onComplete = onWarpComplete
+                                )
 
-                            is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                fragment = fragment,
-                                mapId = spec.mapId,
-                                onRotation = onCalibrationRotation,
-                                onComplete = onCalibrationComplete,
-                                onController = onCalibrationController
-                            )
+                                is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
+                                    modifier = Modifier.fillMaxSize(),
+                                    fragment = fragment,
+                                    mapId = spec.mapId,
+                                    onRotation = onCalibrationRotation,
+                                    onComplete = onCalibrationComplete,
+                                    onController = onCalibrationController
+                                )
 
-                            is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                fragment = fragment,
-                                mapId = spec.mapId,
-                                autoLockLocation = spec.autoLockLocation,
-                                onController = onViewController
-                            )
+                                is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
+                                    modifier = Modifier.fillMaxSize(),
+                                    fragment = fragment,
+                                    mapId = spec.mapId,
+                                    autoLockLocation = spec.autoLockLocation,
+                                    onController = onViewController
+                                )
+                            }
                         }
                     }
                 }
@@ -531,7 +533,7 @@ private fun PhotoMapsScreenPreview() {
             onRecenter = {},
             onMenuClick = {},
             childSpec = null,
-            fragment = Fragment(),
+            fragment = null,
             onWarpComplete = {},
             onCalibrationRotation = {},
             onCalibrationController = {},

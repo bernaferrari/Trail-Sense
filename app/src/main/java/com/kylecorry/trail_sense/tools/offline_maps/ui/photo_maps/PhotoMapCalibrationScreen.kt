@@ -39,7 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoMapCalibrationToolScreen(
-    fragment: Fragment,
+    fragment: TrailSenseComposeDestinationFragment,
     mapId: Long,
     onRotation: (Float) -> Unit,
     onComplete: () -> Unit,
@@ -121,7 +121,7 @@ fun PhotoMapCalibrationToolScreen(
 }
 
 class PhotoMapCalibrationController(
-    private val fragment: Fragment,
+    private val fragment: TrailSenseComposeDestinationFragment,
     private val mapId: Long,
     private var showRotation: (Float) -> Unit,
     private var onDone: () -> Unit
