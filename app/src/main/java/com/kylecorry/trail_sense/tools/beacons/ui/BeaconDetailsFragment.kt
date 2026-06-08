@@ -29,14 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -49,6 +46,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
@@ -64,7 +62,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-class BeaconDetailsFragment : Fragment() {
+class BeaconDetailsFragment : TrailSenseComposeFragment() {
 
     private val beaconRepo by lazy { BeaconRepo.getInstance(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
@@ -90,33 +88,23 @@ class BeaconDetailsFragment : Fragment() {
         beaconId = requireArguments().getLong("beacon_id")
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: android.view.ViewGroup?,
-        savedInstanceState: Bundle?
-    ): android.view.View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    BeaconDetailsScreen(
-                        beacon = beacon,
-                        distance = distance,
-                        altitude = altitude,
-                        temperature = temperature,
-                        sunrise = sunrise,
-                        sunset = sunset,
-                        tide = tide,
-                        tideIcon = tideIcon,
-                        onShare = ::shareBeacon,
-                        onDelete = ::confirmDelete,
-                        onNavigate = ::navigateToBeacon,
-                        onEdit = ::editBeacon,
-                        onTemperatureClick = ::showTemperatureDetails
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        BeaconDetailsScreen(
+            beacon = beacon,
+            distance = distance,
+            altitude = altitude,
+            temperature = temperature,
+            sunrise = sunrise,
+            sunset = sunset,
+            tide = tide,
+            tideIcon = tideIcon,
+            onShare = ::shareBeacon,
+            onDelete = ::confirmDelete,
+            onNavigate = ::navigateToBeacon,
+            onEdit = ::editBeacon,
+            onTemperatureClick = ::showTemperatureDetails
+        )
     }
 
     override fun onViewCreated(view: android.view.View, savedInstanceState: Bundle?) {

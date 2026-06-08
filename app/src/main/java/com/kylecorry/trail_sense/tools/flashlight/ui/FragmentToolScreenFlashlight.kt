@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,19 +23,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class FragmentToolScreenFlashlight : Fragment() {
+class FragmentToolScreenFlashlight : TrailSenseComposeFragment() {
 
     private val flashlight by lazy { ScreenTorch(requireActivity().window) }
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
@@ -53,57 +49,49 @@ class FragmentToolScreenFlashlight : Fragment() {
         brightness = (cache.getInt(getString(R.string.pref_screen_torch_brightness)) ?: 100).toFloat()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                val view = LocalView.current
-                view.keepScreenOn = true
+    @Composable
+    override fun FragmentContent() {
+        val view = LocalView.current
+        view.keepScreenOn = true
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(if (isRedLight) Color.Red else Color.White)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(TrailSenseSpacing.md)
-                            .size(32.dp)
-                            .background(if (isRedLight) Color.White else Color.Red)
-                            .clickable { toggleColor() }
-                    )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(if (isRedLight) Color.Red else Color.White)
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(TrailSenseSpacing.md)
+                    .size(32.dp)
+                    .background(if (isRedLight) Color.White else Color.Red)
+                    .clickable { toggleColor() }
+            )
 
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(TrailSenseSpacing.lg),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Slider(
-                            value = brightness,
-                            onValueChange = { setBrightness(it.toInt()) },
-                            valueRange = 0f..100f,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(TrailSenseSpacing.md))
-                        Button(
-                            onClick = {
-                                flashlight.off()
-                                requireActivity().onBackPressedDispatcher.onBackPressed()
-                            }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.turn_off),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(TrailSenseSpacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Slider(
+                    value = brightness,
+                    onValueChange = { setBrightness(it.toInt()) },
+                    valueRange = 0f..100f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(TrailSenseSpacing.md))
+                Button(
+                    onClick = {
+                        flashlight.off()
+                        requireActivity().onBackPressedDispatcher.onBackPressed()
                     }
+                ) {
+                    Text(
+                        text = stringResource(R.string.turn_off),
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

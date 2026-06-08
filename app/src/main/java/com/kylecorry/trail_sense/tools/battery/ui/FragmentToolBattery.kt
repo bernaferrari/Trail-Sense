@@ -4,9 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,13 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -54,7 +49,7 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryUsage
 import com.kylecorry.trail_sense.tools.battery.domain.RunningService
@@ -69,7 +64,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.absoluteValue
 
-class FragmentToolBattery : Fragment() {
+class FragmentToolBattery : TrailSenseComposeFragment() {
 
     private val currentFilterSize = 100
     private val batteryService by lazy { BatteryService() }
@@ -119,39 +114,29 @@ class FragmentToolBattery : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    BatteryScreen(
-                        percent = percent,
-                        capacity = capacity,
-                        health = health,
-                        current = current,
-                        chargingStatus = chargingStatus,
-                        chargeMethod = chargeMethod,
-                        readings = readings,
-                        services = runningServices,
-                        tips = systemTips,
-                        isLowPowerEnabled = isLowPowerEnabled,
-                        formatter = formatter,
-                        battery = battery,
-                        batteryService = batteryService,
-                        canOpenSystemBatterySettings = canOpenSystemBatterySettings(),
-                        onShowHistory = ::showHistory,
-                        onOpenBatterySettings = ::openBatterySettings,
-                        onToggleLowPower = ::toggleLowPower,
-                        onDisableService = ::disableService,
-                        onOpenTip = ::openTip
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        BatteryScreen(
+            percent = percent,
+            capacity = capacity,
+            health = health,
+            current = current,
+            chargingStatus = chargingStatus,
+            chargeMethod = chargeMethod,
+            readings = readings,
+            services = runningServices,
+            tips = systemTips,
+            isLowPowerEnabled = isLowPowerEnabled,
+            formatter = formatter,
+            battery = battery,
+            batteryService = batteryService,
+            canOpenSystemBatterySettings = canOpenSystemBatterySettings(),
+            onShowHistory = ::showHistory,
+            onOpenBatterySettings = ::openBatterySettings,
+            onToggleLowPower = ::toggleLowPower,
+            onDisableService = ::disableService,
+            onOpenTip = ::openTip
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

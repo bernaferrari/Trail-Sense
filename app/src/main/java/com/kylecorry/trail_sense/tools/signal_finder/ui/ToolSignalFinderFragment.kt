@@ -3,9 +3,6 @@ package com.kylecorry.trail_sense.tools.signal_finder.ui
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,14 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -57,8 +51,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -67,7 +61,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ToolSignalFinderFragment : Fragment() {
+class ToolSignalFinderFragment : TrailSenseComposeFragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val cellSignal by lazy { sensorService.getCellSignal() }
@@ -96,29 +90,19 @@ class ToolSignalFinderFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SignalFinderScreen(
-                        signals = signals,
-                        towers = nearbyTowers,
-                        location = location,
-                        loading = loading,
-                        disclaimer = markdown.toMarkdown(getString(R.string.cell_tower_disclaimer)),
-                        formatter = formatter,
-                        prefs = prefs,
-                        onNavigateToTower = ::navigateToTower,
-                        onCreateBeacon = ::createBeacon
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        SignalFinderScreen(
+            signals = signals,
+            towers = nearbyTowers,
+            location = location,
+            loading = loading,
+            disclaimer = markdown.toMarkdown(getString(R.string.cell_tower_disclaimer)),
+            formatter = formatter,
+            prefs = prefs,
+            onNavigateToTower = ::navigateToTower,
+            onCreateBeacon = ::createBeacon
+        )
     }
 
     override fun onResume() {
