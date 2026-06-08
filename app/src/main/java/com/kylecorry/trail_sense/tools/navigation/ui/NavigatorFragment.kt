@@ -11,11 +11,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,8 +27,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,7 +39,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
@@ -758,7 +762,7 @@ private data class NavigatorViews(
     val linearCompass: LinearSightingCompassView,
     val mapAttribution: TextView,
     val northReferenceIndicator: NorthReferenceBadge,
-    val beaconBtn: FloatingActionButton,
+    val beaconBtn: NavigatorIconButton,
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
 )
@@ -1026,11 +1030,10 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val beaconBtn = FloatingActionButton(context).apply {
+    val beaconBtn = NavigatorIconButton(context, R.drawable.ic_beacon).apply {
         id = R.id.beaconBtn
         isClickable = true
         isFocusable = true
-        setImageResource(R.drawable.ic_beacon)
     }
     bottomDetails.addView(
         beaconBtn,
@@ -1089,6 +1092,32 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         accuracyView = accuracyView,
         navigationSheet = navigationSheet
     )
+}
+
+private class NavigatorIconButton(
+    context: Context,
+    private val icon: Int
+) : AbstractComposeView(context) {
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            androidx.compose.material3.Surface(
+                modifier = Modifier.size(56.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = MaterialTheme.colorScheme.primary,
+                shadowElevation = 6.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
 }
 
 private fun Int.dp(context: Context): Int {
