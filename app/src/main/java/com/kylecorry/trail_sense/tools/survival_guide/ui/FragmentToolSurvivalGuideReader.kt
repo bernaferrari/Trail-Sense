@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.survival_guide.ui
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +40,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pdf.PdfConvert
 import com.kylecorry.andromeda.print.ColorMode
@@ -57,6 +55,7 @@ import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import kotlinx.coroutines.Dispatchers
@@ -115,7 +114,7 @@ class FragmentToolSurvivalGuideReader : TrailSenseComposeFragment() {
                 )
                 val file = files.createTemp("pdf")
                 val parsed = markdown.toMarkdown(content)
-                val textView = Views.text(context, null) as TextView
+                val textView = TrailSenseTextView(context)
                 textView.textSize = 6f
                 textView.setTextColor(Color.BLACK)
                 markdown.setParsedMarkdown(textView, parsed)
