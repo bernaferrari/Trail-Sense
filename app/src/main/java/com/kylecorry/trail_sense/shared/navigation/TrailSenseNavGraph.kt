@@ -1037,8 +1037,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.unitSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.UnitSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "UnitSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_UNIT_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1164,8 +1168,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.augmentedRealitySettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealitySettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "AugmentedRealitySettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 

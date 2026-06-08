@@ -72,6 +72,9 @@ import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.sol.units.PressureUnits
+import com.kylecorry.sol.units.TemperatureUnits
+import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
@@ -91,12 +94,14 @@ import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.settings.ui.SingleSwitchSettingsScreen
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
 import com.kylecorry.trail_sense.shared.debugging.isDebug
+import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.requireMainActivity
@@ -106,6 +111,7 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sharing.MapSite
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
@@ -226,6 +232,393 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
                     }
                 }
             )
+            DESTINATION_UNIT_SETTINGS -> UnitSettings()
+            DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
+        }
+    }
+
+    @Composable
+    private fun UnitSettings() {
+        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
+        val userPrefs = remember { UserPreferences(requireContext()) }
+        val hasBarometer = remember { Sensors.hasBarometer(requireContext()) }
+        val distanceOptions = remember {
+            settingsOptions(R.array.distance_unit_entries, R.array.distance_unit_values)
+        }
+        val pressureOptions = remember {
+            settingsOptions(R.array.pressure_unit_entries, R.array.pressure_unit_values)
+        }
+        val temperatureOptions = remember {
+            settingsOptions(R.array.temperature_unit_entries, R.array.temperature_unit_values)
+        }
+        val weightOptions = remember {
+            settingsOptions(R.array.weight_entries, R.array.weight_values)
+        }
+        val coordinateOptions = remember {
+            settingsOptions(R.array.coordinate_format_entries, R.array.coordinate_format_values)
+        }
+        val mapOptions = remember {
+            settingsOptions(R.array.map_url_entries, R.array.map_url_values)
+        }
+
+        var distanceUnits by remember {
+            mutableStateOf(distanceUnitsValue(userPrefs.distanceUnits))
+        }
+        var pressureUnits by remember {
+            mutableStateOf(pressureUnitsValue(userPrefs.pressureUnits))
+        }
+        var temperatureUnits by remember {
+            mutableStateOf(temperatureUnitsValue(userPrefs.temperatureUnits))
+        }
+        var weightUnits by remember {
+            mutableStateOf(weightUnitsValue(userPrefs.weightUnits))
+        }
+        var coordinateFormat by remember {
+            mutableStateOf(coordinateFormatValue(userPrefs.navigation.coordinateFormat))
+        }
+        var mapSite by remember {
+            mutableStateOf(mapSiteValue(userPrefs.mapSite))
+        }
+        var use24HourTime by remember { mutableStateOf(userPrefs.use24HourTime) }
+        var includeLeadingZero by remember {
+            mutableStateOf(userPrefs.addLeadingZeroToTime)
+        }
+
+        SettingsList(title = stringResource(R.string.units)) {
+            item("distance") {
+                UnitPickerRow(
+                    label = stringResource(R.string.distance),
+                    options = distanceOptions,
+                    selected = distanceUnits,
+                    onSelected = {
+                        distanceUnits = it
+                        putString(cache, R.string.pref_distance_units, it)
+                    }
+                )
+            }
+            if (hasBarometer) {
+                item("pressure") {
+                    UnitPickerRow(
+                        label = stringResource(R.string.pressure),
+                        options = pressureOptions,
+                        selected = pressureUnits,
+                        onSelected = {
+                            pressureUnits = it
+                            putString(cache, R.string.pref_pressure_units, it)
+                        }
+                    )
+                }
+            }
+            item("temperature") {
+                UnitPickerRow(
+                    label = stringResource(R.string.temperature),
+                    options = temperatureOptions,
+                    selected = temperatureUnits,
+                    onSelected = {
+                        temperatureUnits = it
+                        putString(cache, R.string.pref_temperature_units, it)
+                    }
+                )
+            }
+            item("weight") {
+                UnitPickerRow(
+                    label = stringResource(R.string.weight),
+                    options = weightOptions,
+                    selected = weightUnits,
+                    onSelected = {
+                        weightUnits = it
+                        putString(cache, R.string.pref_weight_units, it)
+                    }
+                )
+            }
+            item("coordinate") {
+                UnitPickerRow(
+                    label = stringResource(R.string.pref_coordinate_format_title),
+                    options = coordinateOptions,
+                    selected = coordinateFormat,
+                    onSelected = {
+                        coordinateFormat = it
+                        putString(cache, R.string.pref_coordinate_format, it)
+                    }
+                )
+            }
+            item("map_url") {
+                UnitPickerRow(
+                    label = stringResource(R.string.pref_map_url_source_title),
+                    options = mapOptions,
+                    selected = mapSite,
+                    onSelected = {
+                        mapSite = it
+                        putString(cache, R.string.pref_map_url_source, it)
+                    }
+                )
+            }
+            item("use_24_hour") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_use_24_hour_title),
+                    checked = use24HourTime,
+                    onCheckedChange = {
+                        use24HourTime = it
+                        putBoolean(cache, R.string.pref_use_24_hour, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("leading_zero") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_include_leading_zero_title),
+                    checked = includeLeadingZero,
+                    onCheckedChange = {
+                        includeLeadingZero = it
+                        putBoolean(cache, R.string.pref_include_leading_zero, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+    }
+
+    @Composable
+    private fun AugmentedRealitySettings() {
+        val userPrefs = remember { UserPreferences(requireContext()) }
+        val formatter = remember { FormatService.getInstance(requireContext()) }
+        val distanceUnits = remember {
+            formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
+        }
+        val arPrefs = userPrefs.augmentedReality
+        val hasGyro = remember { Sensors.hasGyroscope(requireContext()) }
+        val pathDistanceDescription = remember {
+            getString(
+                R.string.path_distance_performance_disclaimer,
+                formatter.formatDistance(
+                    relativeDistance(
+                        userPrefs,
+                        Distance.meters(arPrefs.maxRecommendedPathViewDistanceMeters)
+                    )
+                )
+            )
+        }
+
+        var showBeaconLayer by remember { mutableStateOf(arPrefs.showBeaconLayer) }
+        var showPathLayer by remember { mutableStateOf(arPrefs.showPathLayer) }
+        var showAstronomyLayer by remember { mutableStateOf(arPrefs.showAstronomyLayer) }
+        var showStars by remember { mutableStateOf(arPrefs.showStars) }
+        var showLowBrightnessObjects by remember {
+            mutableStateOf(arPrefs.showLowBrightnessObjects)
+        }
+        var showConstellations by remember { mutableStateOf(arPrefs.showConstellations) }
+        var showAstronomyBelowHorizon by remember {
+            mutableStateOf(arPrefs.showAstronomyBelowHorizon)
+        }
+        var showGridLayer by remember { mutableStateOf(arPrefs.showGridLayer) }
+        var useGyroOnlyAfterCalibration by remember {
+            mutableStateOf(arPrefs.useGyroOnlyAfterCalibration)
+        }
+        var increaseExposureAtNight by remember {
+            mutableStateOf(arPrefs.increaseExposureAtNight)
+        }
+        var adjustForPathElevation by remember {
+            mutableStateOf(arPrefs.adjustForPathElevation)
+        }
+        var beaconViewDistance by remember {
+            mutableStateOf(relativeDistance(userPrefs, Distance.meters(arPrefs.beaconViewDistance)))
+        }
+        var pathViewDistance by remember {
+            mutableStateOf(relativeDistance(userPrefs, Distance.meters(arPrefs.pathViewDistance)))
+        }
+
+        SettingsList(title = stringResource(R.string.augmented_reality)) {
+            item("beacons_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.beacons))
+            }
+            item("beacons_visible") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showBeaconLayer,
+                    onCheckedChange = {
+                        showBeaconLayer = it
+                        arPrefs.showBeaconLayer = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("beacon_view_distance") {
+                SettingsActionRow(
+                    label = stringResource(R.string.view_distance),
+                    summary = formatDistance(formatter, beaconViewDistance),
+                    onClick = {
+                        pickDistance(
+                            distanceUnits,
+                            title = getString(R.string.view_distance),
+                            current = beaconViewDistance
+                        ) {
+                            beaconViewDistance = it
+                            arPrefs.beaconViewDistance = it.meters().value
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("paths_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.paths))
+            }
+            item("paths_visible") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showPathLayer,
+                    onCheckedChange = {
+                        showPathLayer = it
+                        arPrefs.showPathLayer = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("path_view_distance") {
+                SettingsActionRow(
+                    label = stringResource(R.string.view_distance),
+                    summary = formatDistance(formatter, pathViewDistance),
+                    onClick = {
+                        pickDistance(
+                            distanceUnits,
+                            title = getString(R.string.view_distance),
+                            current = pathViewDistance,
+                            description = pathDistanceDescription
+                        ) {
+                            pathViewDistance = it
+                            arPrefs.pathViewDistance = it.meters().value
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("path_elevation") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.use_path_elevation),
+                    checked = adjustForPathElevation,
+                    onCheckedChange = {
+                        adjustForPathElevation = it
+                        arPrefs.adjustForPathElevation = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("astronomy_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.astronomy))
+            }
+            item("astronomy_visible") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showAstronomyLayer,
+                    onCheckedChange = {
+                        showAstronomyLayer = it
+                        arPrefs.showAstronomyLayer = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("stars") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.show_stars),
+                    checked = showStars,
+                    onCheckedChange = {
+                        showStars = it
+                        arPrefs.showStars = it
+                    },
+                    enabled = showAstronomyLayer,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("low_brightness") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.show_low_brightness_objects),
+                    checked = showLowBrightnessObjects,
+                    onCheckedChange = {
+                        showLowBrightnessObjects = it
+                        arPrefs.showLowBrightnessObjects = it
+                    },
+                    enabled = showAstronomyLayer && showStars,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("constellations") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.show_constellations),
+                    checked = showConstellations,
+                    onCheckedChange = {
+                        showConstellations = it
+                        arPrefs.showConstellations = it
+                    },
+                    enabled = showAstronomyLayer,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("below_horizon") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.show_below_horizon),
+                    checked = showAstronomyBelowHorizon,
+                    onCheckedChange = {
+                        showAstronomyBelowHorizon = it
+                        arPrefs.showAstronomyBelowHorizon = it
+                    },
+                    enabled = showAstronomyLayer,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("grid_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.grid))
+            }
+            item("grid_visible") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.visible),
+                    checked = showGridLayer,
+                    onCheckedChange = {
+                        showGridLayer = it
+                        arPrefs.showGridLayer = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("advanced_header") {
+                TrailSenseSectionHeader(title = stringResource(R.string.advanced))
+            }
+            if (hasGyro) {
+                item("gyro_after_calibration") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.use_gyroscope_after_calibration),
+                        summary = stringResource(R.string.use_gyroscope_after_calibration_description),
+                        checked = useGyroOnlyAfterCalibration,
+                        onCheckedChange = {
+                            useGyroOnlyAfterCalibration = it
+                            arPrefs.useGyroOnlyAfterCalibration = it
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+            }
+            item("increase_exposure") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.increase_exposure_at_night),
+                    checked = increaseExposureAtNight,
+                    onCheckedChange = {
+                        increaseExposureAtNight = it
+                        arPrefs.increaseExposureAtNight = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
         }
     }
 
@@ -2004,6 +2397,104 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         cache.putBoolean(getString(key), value)
     }
 
+    @Composable
+    private fun UnitPickerRow(
+        label: String,
+        options: List<SettingsOption>,
+        selected: String,
+        onSelected: (String) -> Unit
+    ) {
+        SettingsPickerRow(
+            label = label,
+            selected = optionLabel(options, selected),
+            onClick = {
+                pickOption(label, options, selected, onSelected)
+            },
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        )
+    }
+
+    private fun pickDistance(
+        units: List<DistanceUnits>,
+        title: String,
+        current: Distance,
+        description: String? = null,
+        onPicked: (Distance) -> Unit
+    ) {
+        CustomUiUtils.pickDistance(
+            requireContext(),
+            units,
+            current,
+            title,
+            description = description
+        ) { distance, cancelled ->
+            if (cancelled || distance == null || distance.value <= 0) {
+                return@pickDistance
+            }
+
+            onPicked(distance)
+        }
+    }
+
+    private fun relativeDistance(prefs: UserPreferences, distance: Distance): Distance {
+        return distance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
+    }
+
+    private fun distanceUnitsValue(units: UserPreferences.DistanceUnits): String {
+        return when (units) {
+            UserPreferences.DistanceUnits.Meters -> "meters"
+            UserPreferences.DistanceUnits.Feet -> "feet_miles"
+        }
+    }
+
+    private fun pressureUnitsValue(units: PressureUnits): String {
+        return when (units) {
+            PressureUnits.Hpa -> "hpa"
+            PressureUnits.Inhg -> "in"
+            PressureUnits.MmHg -> "mm"
+            PressureUnits.Mbar -> "mbar"
+            PressureUnits.Psi -> "psi"
+        }
+    }
+
+    private fun temperatureUnitsValue(units: TemperatureUnits): String {
+        return when (units) {
+            TemperatureUnits.Celsius -> "c"
+            TemperatureUnits.Fahrenheit -> "f"
+        }
+    }
+
+    private fun weightUnitsValue(units: WeightUnits): String {
+        return when (units) {
+            WeightUnits.Kilograms -> "kg"
+            WeightUnits.Pounds -> "lbs"
+            WeightUnits.Stone -> "stone"
+            else -> "kg"
+        }
+    }
+
+    private fun coordinateFormatValue(format: BuiltInCoordinateFormat): String {
+        return when (format) {
+            BuiltInCoordinateFormat.DecimalDegrees -> "dd"
+            BuiltInCoordinateFormat.DegreesDecimalMinutes -> "ddm"
+            BuiltInCoordinateFormat.DegreesMinutesSeconds -> "dms"
+            BuiltInCoordinateFormat.UTM -> "utm"
+            BuiltInCoordinateFormat.MGRS -> "mgrs"
+            BuiltInCoordinateFormat.USNG -> "usng"
+            BuiltInCoordinateFormat.OSGB -> "osng"
+        }
+    }
+
+    private fun mapSiteValue(site: MapSite): String {
+        return when (site) {
+            MapSite.Apple -> "apple"
+            MapSite.Bing -> "bing"
+            MapSite.Caltopo -> "caltopo"
+            MapSite.Google -> "google"
+            MapSite.OSM -> "osm"
+        }
+    }
+
     private data class SettingsOption(
         val value: String,
         val label: String
@@ -2183,5 +2674,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_THEME_SETTINGS = "theme_settings"
         const val DESTINATION_EXPERIMENTAL_SETTINGS = "experimental_settings"
         const val DESTINATION_PLUGIN_DETAILS = "plugin_details"
+        const val DESTINATION_UNIT_SETTINGS = "unit_settings"
+        const val DESTINATION_AUGMENTED_REALITY_SETTINGS = "augmented_reality_settings"
     }
 }
