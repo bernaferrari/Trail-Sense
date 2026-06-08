@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.View
 import android.view.Gravity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -22,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +34,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
@@ -80,7 +84,6 @@ import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.map.ui.MapView
@@ -105,13 +108,56 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.Magnetom
 import java.time.Duration
 import java.time.Instant
 
-class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun NavigatorToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { NavigatorController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private var navigatorViews: NavigatorViews? = null
-    private val views: NavigatorViews
-        get() = navigatorViews ?: error("Navigator views are not ready")
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class NavigatorController(private val fragment: Fragment) {
+
+    private val views = createNavigatorViews(
+        fragment.requireContext(),
+        onNorthReferenceSettingsClick = {
+            fragment.findNavController().navigate(R.id.calibrateCompassFragment)
+        },
+        requestCameraPermission = { callback -> fragment.requestCamera(callback) },
+        onCameraPermissionDenied = { fragment.alertNoCameraPermission() },
+        onOpenBeacon = { beaconId ->
+            fragment.findNavController().navigateWithAnimation(
+                R.id.beaconDetailsFragment,
+                Bundle().apply {
+                    putLong("beacon_id", beaconId)
+                }
+            )
+        }
+    )
     private val isViewReady: Boolean
-        get() = navigatorViews != null && view != null
+        get() = isCreated
 
     private val orientation by lazy { sensorService.getOrientation() }
     private val compass by lazy { sensorService.getCompass(orientation) }
@@ -127,23 +173,23 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
     private var declination = 0f
 
-    private val userPrefs by lazy { UserPreferences(requireContext()) }
+    private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(requireContext()) }
+    private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
 
-    private val sensorService by lazy { SensorService(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
 
     private val navigationService = NavigationService()
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
 
     private var beacons: Collection<Beacon> = listOf()
     private var nearbyBeacons: List<Beacon> = listOf()
 
     private var destination: Destination? = null
-    private val navigator by lazy { Navigator.getInstance(requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
 
     // Diagnostics
-    private val errors by lazy { NavigatorUserErrors(this) }
+    private val errors by lazy { NavigatorUserErrors(fragment, this::displayAccuracyTips) }
 
     // Data commands
     private val updateAstronomyLayerCommand by lazy {
@@ -199,58 +245,30 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private val triggers = HookTriggers()
-
-    override fun beforeCreateContent() {
-        navigatorViews = createNavigatorViews(
-            requireContext(),
-            onNorthReferenceSettingsClick = {
-                findNavController().navigate(R.id.calibrateCompassFragment)
-            },
-            requestCameraPermission = { callback -> requestCamera(callback) },
-            onCameraPermissionDenied = { alertNoCameraPermission() },
-            onOpenBeacon = { beaconId ->
-                findNavController().navigateWithAnimation(
-                    R.id.beaconDetailsFragment,
-                    Bundle().apply {
-                        putLong("beacon_id", beaconId)
-                    }
-                )
-            }
-        )
-    }
+    private var isCreated = false
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         NavigatorHost(
             views = views,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
-    override fun onDestroyView() {
-        activity?.let { screenLock.releaseLock(it) }
-        updateTimer.stop()
-        compassLayerTimer.stop()
-        northReferenceHideTimer.stop()
-        navigatorViews = null
-        super.onDestroyView()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val beaconId = arguments?.getLong("destination") ?: 0L
+    fun onCreate() {
+        if (isCreated) {
+            return
+        }
+        isCreated = true
+        val beaconId = fragment.arguments?.getLong("destination") ?: 0L
 
         // Load the destination and start navigation
         if (beaconId != 0L) {
             showCalibrationDialog()
             navigator.navigateTo(beaconId)
         }
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        observeFlow(navigator.destination2) {
+        fragment.observeFlow(navigator.destination2) {
             destination = it
             updateNearbyBeacons()
             handleShowWhenLocked()
@@ -261,8 +279,8 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
             GPSDiagnosticScanner(gps),
             MagnetometerDiagnosticScanner()
         ).mapIndexed { index, scanner ->
-            observeFlow(
-                scanner.fullScan(requireContext()),
+            fragment.observeFlow(
+                scanner.fullScan(fragment.requireContext()),
                 BackgroundMinimumState.Resumed
             ) { results ->
                 diagnosticResults = diagnosticResults + (index to results.map { it.id })
@@ -286,37 +304,37 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
 
         NavigationQuickActionBinder(
-            this,
+            fragment,
             views.navigationTitle.leftButton,
             views.navigationTitle.rightButton,
             userPrefs.navigation
         ).bind()
 
-        observeFlow(beaconRepo.getBeacons()) {
+        fragment.observeFlow(beaconRepo.getBeacons()) {
             beacons = it
             updateNearbyBeacons()
         }
 
-        observe(compass) { }
-        observe(clinometer) { }
-        observe(altimeter) { }
-        observe(gps) { }
-        observe(speedometer) { }
+        fragment.observe(compass) { }
+        fragment.observe(clinometer) { }
+        fragment.observe(altimeter) { }
+        fragment.observe(gps) { }
+        fragment.observe(speedometer) { }
 
         views.navigationTitle.onSubtitleLongClick = {
             Share.shareLocation(
-                this,
+                fragment,
                 gps.location
             )
             true
         }
 
         views.navigationTitle.onSubtitleClick = {
-            LocationBottomSheet(this, gps).show()
+            LocationBottomSheet(fragment, gps).show()
         }
 
         views.altitude.onClick = {
-            AltitudeBottomSheet(this, Reading(altimeter.altitude, Instant.now())).show()
+            AltitudeBottomSheet(fragment, Reading(altimeter.altitude, Instant.now())).show()
         }
 
         views.linearCompass.setOnClickListener {
@@ -324,7 +342,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.onBeaconClick = {
-            findNavController().openTool(Tools.BEACONS)
+            fragment.findNavController().openTool(Tools.BEACONS)
         }
 
         views.onBeaconLongClick = {
@@ -335,9 +353,9 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                         if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
                     ))
                 }
-                findNavController().openTool(Tools.BEACONS, bundle)
+                fragment.findNavController().openTool(Tools.BEACONS, bundle)
             } else {
-                findNavController().openTool(Tools.BEACONS)
+                fragment.findNavController().openTool(Tools.BEACONS)
             }
         }
 
@@ -350,14 +368,12 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
         views.radarCompassMap.setOnLongPressListener {
             layerSheet?.dismiss()
-            layerSheet = MapLayersBottomSheet(
-                NavigationToolRegistration.MAP_ID
-            )
+            layerSheet = MapLayersBottomSheet(NavigationToolRegistration.MAP_ID)
             layers.pause(views.radarCompassMap)
             layerSheet?.setOnDismissListener {
-                layers.resume(requireContext(), views.radarCompassMap, this)
+                layers.resume(fragment.requireContext(), views.radarCompassMap, fragment)
             }
-            layerSheet?.show(this)
+            layerSheet?.show(fragment)
         }
 
         views.linearCompass.setOnClickListener {
@@ -367,7 +383,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         views.radarCompassMap.isPanEnabled = false
         views.radarCompassMap.isFlingEnabled = false
         views.radarCompassMap.backgroundColorOverride =
-            Resources.color(requireContext(), R.color.colorSecondary)
+            Resources.color(fragment.requireContext(), R.color.colorSecondary)
         views.radarCompassMap.minScale = 0.001f
         views.radarCompassMap.mapCenter = gps.location
         views.radarCompassMap.metersPerProjectedUnit = 1.0
@@ -394,7 +410,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun toggleDestinationBearing() {
-        inBackground {
+        fragment.inBackground {
             if (destination is Destination.Beacon) {
                 // TODO: Prompt to cancel navigation?
                 // Don't set destination bearing while navigating to a beacon
@@ -415,18 +431,18 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun handleShowWhenLocked() {
-        activity?.let { screenLock.updateLock(it) }
+        fragment.activity?.let { screenLock.updateLock(it) }
     }
 
     fun displayAccuracyTips() {
-        context ?: return
+        fragment.context ?: return
 
-        val alerter = ImproveAccuracyAlerter(requireContext())
+        val alerter = ImproveAccuracyAlerter(fragment.requireContext())
         alerter.alert(listOf(gps, compass))
     }
 
     private fun updateAstronomyData() {
-        inBackground {
+        fragment.inBackground {
             if (gps.location == Coordinate.zero) {
                 return@inBackground
             }
@@ -435,16 +451,14 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
+    fun onResume() {
         if (!isViewReady) {
             return
         }
 
         views.radarCompassMap.useDensityPixelsForZoom =
             !userPrefs.navigation.highDetailMode
-        layers.resume(requireContext(), views.radarCompassMap, this)
+        layers.resume(fragment.requireContext(), views.radarCompassMap, fragment)
         views.radarCompass.bindMapView(views.radarCompassMap)
 
         // Show the north reference indicator
@@ -458,8 +472,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         refreshNavigation()
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         loadBeaconsRunner.cancel()
         errors.reset()
         updateTimer.stop()
@@ -472,8 +485,14 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         northReferenceHideTimer.stop()
     }
 
+    fun onDestroy() {
+        onPause()
+        fragment.activity?.let { screenLock.releaseLock(it) }
+        isCreated = false
+    }
+
     private fun updateNearbyBeacons() {
-        inBackground {
+        fragment.inBackground {
             onIO {
                 loadBeaconsRunner.skipIfRunning {
                     val destinationBeacon = (destination as? Destination.Beacon)?.beacon
@@ -572,9 +591,9 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         lastAttributionLayerKey = layers.key
         lastAttributionRadarVisible = isRadarVisible
 
-        inBackground {
+        fragment.inBackground {
             if (isRadarVisible) {
-                val attribution = views.radarCompassMap.getAttribution(requireContext())
+                val attribution = views.radarCompassMap.getAttribution(fragment.requireContext())
                 onMain {
                     if (isViewReady) {
                         views.mapAttribution.text = attribution
@@ -684,7 +703,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun updateCompassLayers() {
-        inBackground {
+        fragment.inBackground {
             val destBearing = getDestinationBearing()
             val destinationBeacon = (destination as? Destination.Beacon)?.beacon
             val destColor = destinationBeacon?.color ?: AppColor.Blue.color
@@ -711,9 +730,9 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     private fun showCalibrationDialog() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
             var doNotAskAgain = false
-            val doNotAskAgainText = getString(R.string.do_not_ask_again)
+            val doNotAskAgainText = fragment.getString(R.string.do_not_ask_again)
             val contentView = TrailSenseComposeRootView(
-                requireContext(),
+                fragment.requireContext(),
                 ViewCompositionStrategy.DisposeOnDetachedFromWindow
             ) {
                 NavigationCalibrationDialogContent(
@@ -723,11 +742,11 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                     }
                 )
             }
-            dialog(
-                getString(R.string.calibrate_compass_dialog_title),
-                getString(
+            fragment.dialog(
+                fragment.getString(R.string.calibrate_compass_dialog_title),
+                fragment.getString(
                     R.string.calibrate_compass_on_navigate_dialog_content,
-                    getString(android.R.string.ok)
+                    fragment.getString(android.R.string.ok)
                 ),
                 contentView = contentView,
                 cancelText = null,
@@ -742,7 +761,6 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     companion object {
-        const val CACHE_CAMERA_ZOOM = "sighting_compass_camera_zoom"
         private val ASTRONOMY_UPDATE_DISTANCE = Distance.kilometers(1f).meters()
         private val ASTRONOMY_UPDATE_FREQUENCY = Duration.ofMinutes(1)
         private const val NAVIGATION_UPDATE_INTERVAL = 33L

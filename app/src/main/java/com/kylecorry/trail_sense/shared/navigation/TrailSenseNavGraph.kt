@@ -22,8 +22,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_navigation
-            setClassName("com.kylecorry.trail_sense.tools.navigation.ui.NavigatorFragment")
-            label = "activity_navigator"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "NavigationScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NAVIGATION)
+                .build())
             addArgument("destination", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)

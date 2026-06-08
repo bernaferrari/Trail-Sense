@@ -200,6 +200,7 @@ import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.metaldetector.ui.MetalDetectorToolScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSettingsToolScreen
+import com.kylecorry.trail_sense.tools.navigation.ui.NavigatorToolScreen
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
@@ -434,6 +435,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_OFFLINE_MAP_LIST -> OfflineMapListToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
+            DESTINATION_NAVIGATION -> NavigatorToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
             DESTINATION_PATHS -> PathsToolScreen(this)
             DESTINATION_PATHS_SETTINGS -> PathsSettingsToolScreen(this)
@@ -3507,6 +3509,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_OFFLINE_MAP_LIST = "offline_map_list"
         const val DESTINATION_SCAN_QR = "scan_qr"
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
+        const val DESTINATION_NAVIGATION = "navigation"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"
         const val DESTINATION_PATHS = "paths"
         const val DESTINATION_PATHS_SETTINGS = "paths_settings"

@@ -55,7 +55,7 @@ class SightingCompassView(
         camera.setOnZoomChangeListener {
             scope.launch {
                 zoomRunner.enqueue {
-                    prefs.putFloat(NavigatorFragment.CACHE_CAMERA_ZOOM, it)
+                    prefs.putFloat(CACHE_CAMERA_ZOOM, it)
                 }
             }
         }
@@ -64,7 +64,7 @@ class SightingCompassView(
             onClick()
         }
 
-        camera.setZoom(prefs.getFloat(NavigatorFragment.CACHE_CAMERA_ZOOM) ?: 0.5f)
+        camera.setZoom(prefs.getFloat(CACHE_CAMERA_ZOOM) ?: 0.5f)
 
         camera.isVisible = true
 

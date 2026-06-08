@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.navigation.quickactions
 
+import androidx.fragment.app.Fragment
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
-import com.kylecorry.trail_sense.tools.navigation.ui.NavigatorFragment
 
 class NavigationQuickActionBinder(
-    private val fragment: NavigatorFragment,
+    private val fragment: Fragment,
     private val leftButton: ComposeQuickActionButtonView,
     private val rightButton: ComposeQuickActionButtonView,
     private val prefs: NavigationPreferences
