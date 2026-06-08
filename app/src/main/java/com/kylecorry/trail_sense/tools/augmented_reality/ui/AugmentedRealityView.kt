@@ -9,13 +9,22 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ViewGroup
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import com.kylecorry.andromeda.camera.ICamera
-import com.kylecorry.andromeda.canvas.CanvasView
+import com.kylecorry.andromeda.canvas.CanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
@@ -46,6 +55,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
 import com.kylecorry.trail_sense.shared.textDimensions
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.IARCalibrator
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapperFactory
@@ -59,15 +69,11 @@ import kotlin.math.atan2
 
 // TODO: Notify location change
 // TODO: This needs a parent view that has the camera, this, and any buttons (like the freeform button)
-class AugmentedRealityView : CanvasView {
-
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+class AugmentedRealityView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : AbstractComposeView(context, attrs, defStyleAttr) {
 
     var fov: Size = Size(45f, 45f)
         private set
@@ -190,6 +196,8 @@ class AugmentedRealityView : CanvasView {
 
     private val pointedUpTrigger = SchmittTrigger(30f, 5f)
     private var isSetup = false
+    private lateinit var drawer: ICanvasDrawer
+    private var renderVersion by mutableIntStateOf(0)
     private val updateTimer = CoroutineTimer(observeOn = Dispatchers.Default) {
         if (!isSetup) {
             return@CoroutineTimer
@@ -207,7 +215,14 @@ class AugmentedRealityView : CanvasView {
 
         val layers = synchronized(layerLock) { layers.toList() }
         layers.forEach {
-            it.update(this, this)
+            it.update(drawer, this)
+        }
+        requestRedraw()
+    }
+
+    private fun requestRedraw() {
+        post {
+            renderVersion++
         }
     }
 
@@ -241,6 +256,7 @@ class AugmentedRealityView : CanvasView {
             this.layers.clear()
             this.layers.addAll(layers)
         }
+        requestRedraw()
     }
 
     fun setExposureCompensation(compensation: Float) {
@@ -255,12 +271,14 @@ class AugmentedRealityView : CanvasView {
         this.guidePoint = guidePoint
         guideThreshold = thresholdDegrees
         onGuideReached = onReached
+        requestRedraw()
     }
 
     fun clearGuide() {
         guidePoint = null
         guideThreshold = null
         onGuideReached = null
+        requestRedraw()
     }
 
     fun setOnFocusLostListener(listener: (() -> Unit)?) {
@@ -272,24 +290,46 @@ class AugmentedRealityView : CanvasView {
     }
 
 
-    override fun setup() {
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                renderVersion
+                if (!isVisible) {
+                    return@Canvas
+                }
+                if (::drawer.isInitialized) {
+                    drawer.canvas = drawContext.canvas.nativeCanvas
+                } else {
+                    drawer = CanvasDrawer(context, drawContext.canvas.nativeCanvas)
+                }
+                setupIfNeeded()
+                render()
+            }
+        }
+    }
+
+    private fun setupIfNeeded() {
+        if (isSetup) {
+            return
+        }
         if (reticleDiameter == 0f) {
-            reticleDiameter = dp(InteractionUtils.CLICK_SIZE_DP * 2f)
+            reticleDiameter = drawer.dp(InteractionUtils.CLICK_SIZE_DP * 2f)
         }
         isSetup = true
         updateOrientation()
     }
 
-    override fun draw() {
-        background(backgroundFillColor)
+    private fun render() {
+        drawer.background(backgroundFillColor)
         val layers = synchronized(layerLock) { layers.toList() }
         layers.forEach {
-            it.draw(this, this)
+            it.draw(drawer, this)
         }
 
         var hasFocus = false
         for (layer in layers.reversed()) {
-            if (layer.onFocus(this, this)) {
+            if (layer.onFocus(drawer, this)) {
                 hasFocus = true
                 break
             }
@@ -359,11 +399,11 @@ class AugmentedRealityView : CanvasView {
         }
 
         val angle = atan2(point.y - center.y, point.x - center.x).toDegrees()
-        push()
-        rotate(angle, center.x, center.y)
+        drawer.push()
+        drawer.rotate(angle, center.x, center.y)
         val size = drawer.dp(16f)
-        translate(center.x + reticleDiameter / 2f + size / 2f + dp(4f), center.y)
-        rotate(90f, 0f, 0f)
+        drawer.translate(center.x + reticleDiameter / 2f + size / 2f + drawer.dp(4f), center.y)
+        drawer.rotate(90f, 0f, 0f)
         // Draw an arrow
         val path = Path()
 
@@ -380,24 +420,24 @@ class AugmentedRealityView : CanvasView {
         path.lineTo(0f, size / 3f)
 
         path.close()
-        noStroke()
-        fill(Color.WHITE.withAlpha(127))
-        path(path)
-        pop()
+        drawer.noStroke()
+        drawer.fill(Color.WHITE.withAlpha(127))
+        drawer.path(path)
+        drawer.pop()
     }
 
     private fun drawText(text: String?, x: Float, y: Float, size: Float) {
         if (text.isNullOrBlank()) return
 
-        val padding = dp(8f)
-        val lineSpacing = dp(4f)
-        val radius = dp(4f)
+        val padding = drawer.dp(8f)
+        val lineSpacing = drawer.dp(4f)
+        val radius = drawer.dp(4f)
 
         // Background
-        noStroke()
-        fill(Color.BLACK.withAlpha(127))
-        val totalDimensions = textDimensions(text, lineSpacing)
-        rect(
+        drawer.noStroke()
+        drawer.fill(Color.BLACK.withAlpha(127))
+        val totalDimensions = drawer.textDimensions(text, lineSpacing)
+        drawer.rect(
             x - totalDimensions.first / 2f - padding,
             y,
             totalDimensions.first + padding * 2,
@@ -406,15 +446,15 @@ class AugmentedRealityView : CanvasView {
         )
 
 
-        fill(Color.WHITE)
-        textSize(size)
-        textMode(TextMode.Corner)
-        textAlign(TextAlign.Center)
+        drawer.fill(Color.WHITE)
+        drawer.textSize(size)
+        drawer.textMode(TextMode.Corner)
+        drawer.textAlign(TextAlign.Center)
 
         // X is centered, Y is the bottom of the text
-        val firstLineHeight = textHeight(text.split("\n").first())
+        val firstLineHeight = drawer.textHeight(text.split("\n").first())
 
-        text(
+        drawer.text(
             text,
             x,
             y + padding + firstLineHeight,
@@ -428,16 +468,16 @@ class AugmentedRealityView : CanvasView {
         drawText(
             textToRender,
             width / 2f,
-            height / 2f + reticleDiameter / 2f + dp(8f),
+            height / 2f + reticleDiameter / 2f + drawer.dp(8f),
             drawer.sp(16f)
         )
     }
 
     private fun drawReticle() {
-        stroke(reticleColor)
-        strokeWeight(dp(2f))
-        noFill()
-        circle(width / 2f, height / 2f, reticleDiameter)
+        drawer.stroke(reticleColor)
+        drawer.strokeWeight(drawer.dp(2f))
+        drawer.noFill()
+        drawer.circle(width / 2f, height / 2f, reticleDiameter)
     }
 
     /**
@@ -525,7 +565,7 @@ class AugmentedRealityView : CanvasView {
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
             val pixel = PixelCoordinate(e.x, e.y)
             for (layer in layers.reversed()) {
-                if (layer.onClick(this@AugmentedRealityView, this@AugmentedRealityView, pixel)) {
+                if (::drawer.isInitialized && layer.onClick(drawer, this@AugmentedRealityView, pixel)) {
                     return true
                 }
             }
@@ -574,8 +614,10 @@ class AugmentedRealityView : CanvasView {
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
         previewRect = null
         syncWithCamera()
+        requestRedraw()
     }
 
     fun switchToGyro() {
@@ -628,6 +670,7 @@ class AugmentedRealityView : CanvasView {
                     }
                     lastActiveCamera = activeCamera
                 }
+                requestRedraw()
             }
         }
     }
