@@ -3,14 +3,16 @@ package com.kylecorry.trail_sense.tools.weather.widgets
 import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
-import android.widget.TextView
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.ComposeView
 import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
@@ -46,9 +48,7 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             val pressureChart = PressureChart(chart)
             pressureChart.plot(displayReadings)
 
-            val text = Views.text(context, context.getString(R.string.pressure)) as TextView
-            text.textAlignment = View.TEXT_ALIGNMENT_CENTER
-            text.setTextColor(Resources.androidTextColorPrimary(context))
+            val text = createPressureChartTitle(context)
             val layout = Views.linear(listOf(text, chart))
 
             renderChart(context, views, layout)
@@ -61,5 +61,20 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             NavigationUtils.toolPendingIntent(context, Tools.WEATHER)
         )
         return views
+    }
+
+    private fun createPressureChartTitle(context: Context): ComposeView {
+        return ComposeView(context).apply {
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setContent {
+                TrailSenseTheme {
+                    Text(
+                        text = context.getString(R.string.pressure),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
     }
 }

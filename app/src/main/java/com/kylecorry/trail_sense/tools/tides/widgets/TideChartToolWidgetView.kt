@@ -3,13 +3,15 @@ package com.kylecorry.trail_sense.tools.tides.widgets
 import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
-import android.widget.TextView
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.ComposeView
 import com.kylecorry.andromeda.core.ui.Views
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
 import com.kylecorry.trail_sense.tools.tides.ui.TideChart
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -45,12 +47,10 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
                 }
             }
 
-            val text = Views.text(
+            val text = createTideChartTitle(
                 context,
-                if (tide == null) context.getString(R.string.no_tides) else tide.table.name
-            ) as TextView
-            text.setTextColor(Resources.androidTextColorPrimary(context))
-            text.textAlignment = View.TEXT_ALIGNMENT_CENTER
+                if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: ""
+            )
             val layout = Views.linear(listOf(text, chart))
 
             renderChart(context, views, layout)
@@ -63,5 +63,20 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
             NavigationUtils.toolPendingIntent(context, Tools.TIDES)
         )
         return views
+    }
+
+    private fun createTideChartTitle(context: Context, title: String): ComposeView {
+        return ComposeView(context).apply {
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            setContent {
+                TrailSenseTheme {
+                    Text(
+                        text = title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
     }
 }
