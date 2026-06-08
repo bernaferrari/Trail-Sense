@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -68,35 +71,20 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     private var changeListener: ((elevation: Distance?) -> Unit)? = null
     private var autofillListener: (() -> Unit)? = null
 
+    private val gpsBtnState = ElevationInputButtonState()
     private lateinit var elevationInput: DistanceInputView
     private lateinit var gpsBtn: View
-
-    private lateinit var gpsLoadingIndicator: View
 
     init {
         context?.let {
             val iconSize = Resources.dp(it, 32f).toInt()
             val iconPadding = Resources.dp(it, 8f).toInt()
-            gpsBtn = createElevationIconButton(it).apply {
+            gpsBtn = createElevationIconButton(it, gpsBtnState).apply {
                 id = R.id.gps_btn
                 elevation = Resources.dp(it, 4f)
             }
             addView(
                 gpsBtn,
-                LayoutParams(iconSize, iconSize).apply {
-                    startToStart = LayoutParams.PARENT_ID
-                    topToTop = R.id.elevation_input
-                    bottomToBottom = R.id.elevation_input
-                    marginEnd = iconPadding
-                }
-            )
-
-            gpsLoadingIndicator = createElevationLoadingIndicator(it).apply {
-                id = R.id.gps_loading
-                visibility = View.INVISIBLE
-            }
-            addView(
-                gpsLoadingIndicator,
                 LayoutParams(iconSize, iconSize).apply {
                     startToStart = LayoutParams.PARENT_ID
                     topToTop = R.id.elevation_input
@@ -133,7 +121,7 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
 
             // Set up buttons
             gpsBtn.isVisible = true
-            gpsLoadingIndicator.isVisible = false
+            gpsBtnState.isLoading = false
 
             gpsBtn.setOnLongClickListener {
                 autofillWithAltimeter()
@@ -190,7 +178,8 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     private fun onAltimeterUpdate(): Boolean {
         changeElevation(Distance.meters(altimeter.altitude))
         gpsBtn.visibility = View.VISIBLE
-        gpsLoadingIndicator.visibility = View.GONE
+        gpsBtn.isEnabled = true
+        gpsBtnState.isLoading = false
         elevationInput.isEnabled = true
         return false
     }
@@ -199,9 +188,9 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
      * Autofill the elevation from the altimeter
      */
     fun autofill() {
-        if (!gpsBtn.isVisible) return
-        gpsBtn.visibility = View.INVISIBLE
-        gpsLoadingIndicator.isVisible = true
+        if (!gpsBtn.isVisible || gpsBtnState.isLoading) return
+        gpsBtn.isEnabled = false
+        gpsBtnState.isLoading = true
         elevationInput.isEnabled = false
         altimeter.start(this::onAltimeterUpdate)
     }
@@ -212,7 +201,8 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
     fun pause() {
         altimeter.stop(this::onAltimeterUpdate)
         gpsBtn.isVisible = true
-        gpsLoadingIndicator.isVisible = false
+        gpsBtn.isEnabled = true
+        gpsBtnState.isLoading = false
         elevationInput.isEnabled = true
     }
 
@@ -233,7 +223,10 @@ class ElevationInputView(context: Context?, attrs: AttributeSet? = null) :
 
 }
 
-private fun createElevationIconButton(context: Context): ComposeView {
+private fun createElevationIconButton(
+    context: Context,
+    state: ElevationInputButtonState
+): ComposeView {
     return ComposeView(context).apply {
         background = Resources.drawable(context, R.drawable.rounded_rectangle)
         setContent {
@@ -242,32 +235,25 @@ private fun createElevationIconButton(context: Context): ComposeView {
                     modifier = Modifier.size(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_altitude),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_altitude),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-private fun createElevationLoadingIndicator(context: Context): ComposeView {
-    return ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Box(
-                    modifier = Modifier.size(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-    }
+private class ElevationInputButtonState {
+    var isLoading by mutableStateOf(false)
 }

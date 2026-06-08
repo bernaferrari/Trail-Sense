@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -82,9 +85,9 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
     private val mapPicker = MapLocationPicker()
     private lateinit var locationEdit: TextInputEditText
     private lateinit var locationEditHolder: TextInputLayout
+    private val gpsBtnState = CoordinateInputButtonState()
     private lateinit var gpsBtn: View
     private lateinit var helpBtn: View
-    private lateinit var gpsLoadingIndicator: View
 
     init {
         context?.let {
@@ -94,26 +97,13 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
                 it,
                 id = R.id.gps_btn,
                 icon = R.drawable.ic_location,
-                showBackground = true
+                showBackground = true,
+                state = gpsBtnState
             ).apply {
                 elevation = Resources.dp(it, 4f)
             }
             addView(
                 gpsBtn,
-                LayoutParams(iconSize, iconSize).apply {
-                    startToStart = LayoutParams.PARENT_ID
-                    topToTop = R.id.location_edit_holder
-                    bottomToBottom = R.id.location_edit_holder
-                    marginEnd = iconPadding
-                }
-            )
-
-            gpsLoadingIndicator = createCoordinateLoadingIndicator(it).apply {
-                id = R.id.gps_loading
-                visibility = View.INVISIBLE
-            }
-            addView(
-                gpsLoadingIndicator,
                 LayoutParams(iconSize, iconSize).apply {
                     startToStart = LayoutParams.PARENT_ID
                     topToTop = R.id.location_edit_holder
@@ -154,7 +144,8 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
                 it,
                 id = R.id.coordinate_input_help_btn,
                 icon = R.drawable.ic_help,
-                showBackground = false
+                showBackground = false,
+                state = CoordinateInputButtonState()
             )
             addView(
                 helpBtn,
@@ -168,7 +159,7 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
             gps = sensorService.getGPS()
 
             gpsBtn.visibility = View.VISIBLE
-            gpsLoadingIndicator.visibility = View.GONE
+            gpsBtnState.isLoading = false
 
             locationEdit.addTextChangedListener {
                 onChange()
@@ -243,7 +234,8 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
     private fun onGPSUpdate(): Boolean {
         coordinate = gps.location
         gpsBtn.visibility = View.VISIBLE
-        gpsLoadingIndicator.visibility = View.GONE
+        gpsBtn.isEnabled = true
+        gpsBtnState.isLoading = false
         locationEdit.isEnabled = true
         return false
     }
@@ -263,15 +255,16 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
     fun pause() {
         gps.stop(this::onGPSUpdate)
         gpsBtn.visibility = View.VISIBLE
-        gpsLoadingIndicator.visibility = View.GONE
+        gpsBtn.isEnabled = true
+        gpsBtnState.isLoading = false
         locationEdit.isEnabled = true
         errorHandler.stop()
     }
 
     fun autofill() {
-        if (!gpsBtn.isVisible) return
-        gpsBtn.visibility = View.INVISIBLE
-        gpsLoadingIndicator.visibility = View.VISIBLE
+        if (!gpsBtn.isVisible || gpsBtnState.isLoading) return
+        gpsBtn.isEnabled = false
+        gpsBtnState.isLoading = true
         locationEdit.isEnabled = false
         gps.start(this::onGPSUpdate)
     }
@@ -294,7 +287,8 @@ private fun createCoordinateIconButton(
     context: Context,
     id: Int,
     icon: Int,
-    showBackground: Boolean
+    showBackground: Boolean,
+    state: CoordinateInputButtonState
 ): ComposeView {
     return ComposeView(context).apply {
         this.id = id
@@ -307,32 +301,25 @@ private fun createCoordinateIconButton(
                     modifier = Modifier.size(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(icon),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-private fun createCoordinateLoadingIndicator(context: Context): ComposeView {
-    return ComposeView(context).apply {
-        setContent {
-            TrailSenseTheme {
-                Box(
-                    modifier = Modifier.size(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-    }
+private class CoordinateInputButtonState {
+    var isLoading by mutableStateOf(false)
 }
