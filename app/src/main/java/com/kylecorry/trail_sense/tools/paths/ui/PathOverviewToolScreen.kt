@@ -3,10 +3,8 @@ package com.kylecorry.trail_sense.tools.paths.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ScrollState
@@ -27,9 +25,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +45,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -56,6 +60,7 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.fragments.show
@@ -96,7 +101,6 @@ import com.kylecorry.trail_sense.shared.views.ColorScaleState
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -133,20 +137,47 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Duration
 
+@Composable
+fun PathOverviewToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { PathOverviewController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
-    private var pathOverviewViews: PathOverviewViews? = null
-    private val views: PathOverviewViews
-        get() = pathOverviewViews ?: error("Path overview views are not ready")
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class PathOverviewController(private val fragment: Fragment) {
+
+    private val views = createPathOverviewViews(fragment.requireContext())
     private val isViewReady: Boolean
-        get() = pathOverviewViews != null && view != null
+        get() = isCreated
 
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val throttle = Throttle(20)
 
-    private val sensorService by lazy { SensorService(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val compass by lazy { sensorService.getCompass() }
     private val declinationProvider by lazy {
@@ -157,7 +188,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     }
     private var declination = 0f
     private val hikingService = HikingService()
-    private val pathService by lazy { PathService.getInstance(requireContext()) }
+    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
 
     private var pointSheet: PathPointsSheet? = null
 
@@ -186,29 +217,26 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     private var isFullscreen = false
     private var pathColorPickerTarget by mutableStateOf<Path?>(null)
+    private var isCreated = false
 
     private val converter: IPathPointBeaconConverter by lazy {
         TemporaryPathPointBeaconConverter(
-            getString(R.string.waypoint)
+            fragment.getString(R.string.waypoint)
         )
     }
 
     private val beaconNavigator: IBeaconNavigator by lazy {
         BeaconNavigator(
-            BeaconService(requireContext()),
-            NavControllerAppNavigation(findNavController())
+            BeaconService(fragment.requireContext()),
+            NavControllerAppNavigation(fragment.findNavController())
         )
     }
 
-    override fun beforeCreateContent() {
-        pathOverviewViews = createPathOverviewViews(requireContext())
-    }
-
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         PathOverviewHost(
             views = views,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
 
         val colorPickerPath = pathColorPickerTarget
@@ -221,7 +249,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
                 onColorPicked = {
                     if (it != null) {
                         ChangePathColorCommand(
-                            this@PathOverviewFragment,
+                            fragment,
                             pathService
                         ).execute(colorPickerPath, it)
                     }
@@ -234,14 +262,12 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onDestroyView() {
-        pathOverviewViews = null
-        super.onDestroyView()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        pathId = requireArguments().getLong("path_id")
+    fun onCreate() {
+        if (isCreated) {
+            return
+        }
+        isCreated = true
+        pathId = fragment.requireArguments().getLong("path_id")
         layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.navigation.useFastPathRendering)
         layer.setOnClickListener {
             if (selectedPointId != null) {
@@ -256,10 +282,13 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
                 false
             }
         }
+        setupView()
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
+        if (!isViewReady) {
+            return
+        }
         // Populate the last known location
         views.pathImage.userLocation = gps.location
         views.pathImage.userLocationAccuracy =
@@ -268,16 +297,22 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         views.pathImage.start()
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
+        if (!isViewReady) {
+            return
+        }
         views.pathImage.stop()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onDestroy() {
+        onPause()
+        isCreated = false
+    }
+
+    private fun setupView() {
         views.pathImage.isInteractive = true
 
-        views.pathImage.setOnTouchListener { v, event ->
+        views.pathImage.setOnTouchListener { _, event ->
             views.root.isScrollable = event.action == MotionEvent.ACTION_UP
             false
         }
@@ -285,10 +320,10 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         views.pathMapFullscreenToggle.onClick = {
             isFullscreen = !isFullscreen
             views.pathMapHolder.height = if (isFullscreen) {
-                val legendHeight = Resources.dp(requireContext(), 72f).toInt()
+                val legendHeight = Resources.dp(fragment.requireContext(), 72f).toInt()
                 views.root.height - legendHeight
             } else {
-                Resources.dp(requireContext(), 250f).toInt()
+                Resources.dp(fragment.requireContext(), 250f).toInt()
             }
             views.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
             val timer = CoroutineTimer {
@@ -301,20 +336,20 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.pathActions.onAddPointClick = {
-            inBackground {
+            fragment.inBackground {
                 var wasSuccessful = false
                 val job = launch {
-                    BacktrackCommand(requireContext(), pathId).execute()
+                    BacktrackCommand(fragment.requireContext(), pathId).execute()
                     wasSuccessful = true
                 }
 
                 Alerts.withCancelableLoading(
-                    requireContext(),
-                    getString(R.string.loading),
+                    fragment.requireContext(),
+                    fragment.getString(R.string.loading),
                     onCancel = { job.cancel() }) {
                     job.join()
                     if (wasSuccessful) {
-                        toast(getString(R.string.point_added))
+                        fragment.toast(fragment.getString(R.string.point_added))
                     }
                 }
             }
@@ -346,7 +381,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             point?.let { viewWaypoint(it) }
         }
 
-        observe(pathService.getLivePath(pathId)) {
+        fragment.observe(pathService.getLivePath(pathId)) {
             path = it
             views.root.post {
                 updateParent()
@@ -357,11 +392,11 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             }
         }
 
-        observe(pathService.getWaypointsLive(pathId)) {
+        fragment.observe(pathService.getWaypointsLive(pathId)) {
             onWaypointsChanged(it)
         }
 
-        observe(gps) {
+        fragment.observe(gps) {
             updateDeclination()
             views.pathImage.userLocation = gps.location
             views.pathImage.userLocationAccuracy =
@@ -369,7 +404,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             onPathChanged()
         }
 
-        observe(compass) {
+        fragment.observe(compass) {
             views.pathImage.userAzimuth = compass.bearing
         }
 
@@ -379,7 +414,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
         views.pathStyleControls.onLineStyleClick = lineStyleClick@{
             val path = path ?: return@lineStyleClick
-            val command = ChangePathLineStyleCommand(requireContext(), this)
+            val command = ChangePathLineStyleCommand(fragment.requireContext(), fragment)
             command.execute(path)
         }
 
@@ -390,22 +425,22 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
         views.pathStyleControls.onPointStyleClick = pointStyleClick@{
             val path = path ?: return@pointStyleClick
-            val command = ChangePointStyleCommand(requireContext(), this)
+            val command = ChangePointStyleCommand(fragment.requireContext(), fragment)
             command.execute(path)
         }
     }
 
     private fun onWaypointsChanged(waypoints: List<PathPoint>) {
-        inBackground {
+        fragment.inBackground {
             onDefault {
-                this@PathOverviewFragment.waypoints =
+                this@PathOverviewController.waypoints =
                     hikingService.correctElevations(waypoints.sortedBy { it.id }).reversed()
             }
             onIO {
                 DebugPathElevationsCommand(
-                    requireContext(),
+                    fragment.requireContext(),
                     waypoints,
-                    this@PathOverviewFragment.waypoints
+                    this@PathOverviewController.waypoints
                 ).execute()
             }
             onMain {
@@ -413,7 +448,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
                 if (selected != null && waypoints.find { it.id == selected } == null) {
                     deselectPoint()
                 }
-                pointSheet?.setPoints(this@PathOverviewFragment.waypoints)
+                pointSheet?.setPoints(this@PathOverviewController.waypoints)
                 updateElevationOverview()
                 updateHikingStats()
                 updatePathMap()
@@ -425,10 +460,10 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun updateParent() {
         val path = path ?: return
-        inBackground {
+        fragment.inBackground {
             val parent = onIO { pathService.getGroup(path.parentId) }
             if (isViewReady) {
-                views.pathTitle.subtitle = parent?.name ?: getString(R.string.no_group)
+                views.pathTitle.subtitle = parent?.name ?: fragment.getString(R.string.no_group)
             }
         }
     }
@@ -449,8 +484,8 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun movePath() {
         val path = path ?: return
-        val command = MoveIPathCommand(requireContext(), pathService)
-        inBackground {
+        val command = MoveIPathCommand(fragment.requireContext(), pathService)
+        fragment.inBackground {
             command.execute(path)
         }
     }
@@ -491,15 +526,15 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         )
 
         Pickers.menu(
-            requireView(), listOf(
-                getString(R.string.rename),
-                if (path.temporary) getString(R.string.keep_forever) else null,
-                if (path.style.visible) getString(R.string.hide) else getString(
+            fragment.requireView(), listOf(
+                fragment.getString(R.string.rename),
+                if (path.temporary) fragment.getString(R.string.keep_forever) else null,
+                if (path.style.visible) fragment.getString(R.string.hide) else fragment.getString(
                     R.string.show
                 ),
-                getString(R.string.export),
-                getString(R.string.simplify),
-                getString(R.string.points)
+                fragment.getString(R.string.export),
+                fragment.getString(R.string.simplify),
+                fragment.getString(R.string.points)
             )
         ) {
             when (actions[it]) {
@@ -518,32 +553,32 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun simplifyPath(path: Path) {
-        val command = SimplifyPathCommand(requireContext(), this, pathService)
+        val command = SimplifyPathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun exportPath(path: Path) {
         val command = ExportPathCommand(
-            requireContext(),
-            this,
-            IOFactory().createGpxService(this),
+            fragment.requireContext(),
+            fragment,
+            IOFactory().createGpxService(fragment as AndromedaFragment),
             pathService
         )
         command.execute(path)
     }
 
     private fun togglePathVisibility(path: Path) {
-        val command = TogglePathVisibilityCommand(requireContext(), this, pathService)
+        val command = TogglePathVisibilityCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun renamePath(path: Path) {
-        val command = RenamePathCommand(requireContext(), this, pathService)
+        val command = RenamePathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
     private fun keepPath(path: Path) {
-        val command = KeepPathCommand(requireContext(), this, pathService)
+        val command = KeepPathCommand(fragment.requireContext(), fragment, pathService)
         command.execute(path)
     }
 
@@ -564,13 +599,13 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         views.pathStyleControls.lineStyle = listOf(
-            getString(R.string.solid),
-            getString(R.string.dotted),
-            getString(R.string.arrow),
-            getString(R.string.dashed),
-            getString(R.string.square),
-            getString(R.string.diamond),
-            getString(R.string.cross)
+            fragment.getString(R.string.solid),
+            fragment.getString(R.string.dotted),
+            fragment.getString(R.string.arrow),
+            fragment.getString(R.string.dashed),
+            fragment.getString(R.string.square),
+            fragment.getString(R.string.diamond),
+            fragment.getString(R.string.cross)
         )[path.style.line.ordinal]
 
         val distance =
@@ -580,7 +615,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         val end = path.metadata.duration?.end
 
 
-        views.pathTitle.title = PathNameFactory(requireContext()).getName(path)
+        views.pathTitle.title = PathNameFactory(fragment.requireContext()).getName(path)
 
         val duration = if (start != null && end != null && Duration.between(
                 start,
@@ -644,7 +679,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private fun updateMapLayer() {
         val path = path ?: return
         val waypointFeatures = waypoints.asBeacons(
-            requireContext(),
+            fragment.requireContext(),
             path.style.point,
             selectedPointId
         ).map {
@@ -674,7 +709,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun updateDeclination() {
-        inBackground {
+        fragment.inBackground {
             onIO {
                 declination = declinationProvider.getDeclination()
                 compass.declination = declination
@@ -697,11 +732,11 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
         val factory = getPointFactory()
 
         views.pathStyleControls.pointStyle = listOf(
-            getString(R.string.none),
-            getString(R.string.cell_signal),
-            getString(R.string.elevation),
-            getString(R.string.time),
-            getString(R.string.path_slope)
+            fragment.getString(R.string.none),
+            fragment.getString(R.string.cell_signal),
+            fragment.getString(R.string.elevation),
+            fragment.getString(R.string.time),
+            fragment.getString(R.string.path_slope)
         )[path.style.point.ordinal]
 
         views.pathLegend.colorScale = factory.createColorScale(waypoints)
@@ -713,7 +748,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private fun viewPoints() {
         views.root.scrollTo(0, 0)
         pointSheet = PathPointsSheet()
-        pointSheet?.show(this)
+        pointSheet?.show(fragment)
         pointSheet?.onCreateBeaconListener = { createBeacon(it) }
         pointSheet?.onDeletePointListener = { deleteWaypoint(it) }
         pointSheet?.onNavigateToPointListener = { navigateToWaypoint(it) }
@@ -747,7 +782,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
     private fun navigateToWaypoint(point: PathPoint) {
         val path = path ?: return
         val command = NavigateToPointCommand(
-            this,
+            fragment,
             converter,
             beaconNavigator
         )
@@ -766,27 +801,27 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
             beaconNavigator
         )
 
-        toast(getString(R.string.navigating_to_nearest_path_point))
+        fragment.toast(fragment.getString(R.string.navigating_to_nearest_path_point))
 
-        inBackground {
+        fragment.inBackground {
             command.execute(path, points)
         }
     }
 
     private fun deleteWaypoint(point: PathPoint) {
         val path = path ?: return
-        val command = DeletePointCommand(requireContext(), this)
+        val command = DeletePointCommand(fragment.requireContext(), fragment)
         command.execute(path, point)
     }
 
     private fun createBeacon(point: PathPoint) {
         val path = path ?: return
-        val command = CreateBeaconFromPointCommand(requireContext())
+        val command = CreateBeaconFromPointCommand(fragment.requireContext())
         command.execute(path, point)
     }
 
     private fun getPointFactory(): IPointDisplayFactory {
-        return getPointFactory(requireContext(), path?.style?.point ?: PathPointColoringStyle.None)
+        return getPointFactory(fragment.requireContext(), path?.style?.point ?: PathPointColoringStyle.None)
     }
 
     private fun updateDebugStats() {
@@ -796,7 +831,7 @@ class PathOverviewFragment : TrailSenseAndromedaComposeFragment() {
 
         views.pathsTiming.isVisible = true
 
-        inBackground {
+        fragment.inBackground {
             onDefault {
                 val readings = waypoints
                     .filter { it.time != null }

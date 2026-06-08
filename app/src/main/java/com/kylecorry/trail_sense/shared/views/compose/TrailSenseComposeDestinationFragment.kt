@@ -209,6 +209,7 @@ import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen
+import com.kylecorry.trail_sense.tools.paths.ui.PathOverviewToolScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
@@ -437,6 +438,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
             DESTINATION_NAVIGATION -> NavigatorToolScreen(this)
             DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
+            DESTINATION_PATH_OVERVIEW -> PathOverviewToolScreen(this)
             DESTINATION_PATHS -> PathsToolScreen(this)
             DESTINATION_PATHS_SETTINGS -> PathsSettingsToolScreen(this)
             DESTINATION_CALIBRATE_ALTIMETER -> CalibrateAltimeterToolScreen(this)
@@ -3511,6 +3513,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_VECTOR_MAP_VIEW = "vector_map_view"
         const val DESTINATION_NAVIGATION = "navigation"
         const val DESTINATION_NAVIGATION_SETTINGS = "navigation_settings"
+        const val DESTINATION_PATH_OVERVIEW = "path_overview"
         const val DESTINATION_PATHS = "paths"
         const val DESTINATION_PATHS_SETTINGS = "paths_settings"
         const val DESTINATION_CALIBRATE_ALTIMETER = "calibrate_altimeter"

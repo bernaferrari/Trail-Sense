@@ -1367,9 +1367,17 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pathDetailsFragment
-            setClassName("com.kylecorry.trail_sense.tools.paths.ui.PathOverviewFragment")
-            label = "PathDetailsFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "PathOverviewScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATH_OVERVIEW)
+                .build())
             addArgument("destination", NavArgument.Builder()
+                .setType(NavType.LongType)
+                .setDefaultValue(0L)
+                .build())
+            addArgument("path_id", NavArgument.Builder()
                 .setType(NavType.LongType)
                 .setDefaultValue(0L)
                 .build())
