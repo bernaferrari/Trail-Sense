@@ -16,11 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
@@ -46,7 +45,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun PedometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun PedometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { PedometerSettingsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
@@ -70,7 +69,7 @@ fun PedometerSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) 
     PedometerSettingsContent(controller, fragment)
 }
 
-private class PedometerSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class PedometerSettingsController(private val fragment: TrailSenseDestinationHost) {
 
     val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
     val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
@@ -200,7 +199,7 @@ private class PedometerSettingsController(private val fragment: TrailSenseCompos
 @Composable
 private fun PedometerSettingsContent(
     controller: PedometerSettingsController,
-    fragment: TrailSenseComposeDestinationFragment
+    fragment: TrailSenseDestinationHost
 ) {
                     val userPrefs = controller.userPrefs
                     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }

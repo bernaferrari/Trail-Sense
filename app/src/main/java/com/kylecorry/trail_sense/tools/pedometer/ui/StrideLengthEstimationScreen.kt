@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.andromeda.alerts.Alerts
@@ -42,7 +42,7 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.St
 import kotlinx.coroutines.delay
 
 @Composable
-fun StrideLengthEstimationToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun StrideLengthEstimationToolScreen(fragment: TrailSenseDestinationHost) {
     val estimator = remember(fragment) {
         StrideLengthEstimatorFactory(fragment.requireContext()).getEstimator()
     }
