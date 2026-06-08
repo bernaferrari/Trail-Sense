@@ -8,11 +8,12 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
 class TrailSenseComposeRootView(
     context: Context,
+    compositionStrategy: ViewCompositionStrategy = ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
     private val content: @Composable () -> Unit
 ) : AbstractComposeView(context) {
 
     init {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setViewCompositionStrategy(compositionStrategy)
     }
 
     @Composable
