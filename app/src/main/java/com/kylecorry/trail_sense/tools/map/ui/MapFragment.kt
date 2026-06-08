@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -190,7 +189,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             screenLock.releaseLock(activity)
         }
 
-        useClickCallback(lockButton, lockMode, hasCompass) {
+        useClickCallback(lockButton.view, lockMode, hasCompass) {
             setLockMode(getNextLockMode(lockMode, hasCompass))
         }
 
@@ -310,10 +309,10 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         val traceViews =
             useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
                 listOfNotNull(
-                    zoomInButton,
-                    zoomOutButton,
-                    if (hasTimeDependentLayers) timeButton else null,
-                    menuButton,
+                    zoomInButton.view,
+                    zoomOutButton.view,
+                    if (hasTimeDependentLayers) timeButton.view else null,
+                    menuButton.view,
                     sensorStatusBadges
                 )
             }
@@ -432,7 +431,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             menuButton.setState(false)
         }
 
-        useClickCallback(menuButton, startDistanceMeasurement) {
+        useClickCallback(menuButton.view, startDistanceMeasurement) {
             val actions = listOf(
                 MapAction.Measure to getString(R.string.measure),
                 MapAction.CreatePath to getString(R.string.create_path),
@@ -441,7 +440,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
             )
 
             Pickers.menu(
-                menuButton,
+                menuButton.view,
                 actions.map { action -> action.second }
             ) { index ->
                 when (actions[index].first) {
@@ -720,7 +719,7 @@ private fun createMapViews(context: Context): MapViews {
 
     val menuButton = smallMapFab(context, R.id.menu_btn, R.drawable.ic_menu_dots)
     root.addView(
-        menuButton,
+        menuButton.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -736,7 +735,7 @@ private fun createMapViews(context: Context): MapViews {
         visibility = View.GONE
     }
     root.addView(
-        timeButton,
+        timeButton.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -748,7 +747,7 @@ private fun createMapViews(context: Context): MapViews {
 
     val zoomInButton = smallMapFab(context, R.id.zoom_in_btn, R.drawable.ic_add)
     root.addView(
-        zoomInButton,
+        zoomInButton.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -760,7 +759,7 @@ private fun createMapViews(context: Context): MapViews {
 
     val zoomOutButton = smallMapFab(context, R.id.zoom_out_btn, R.drawable.ic_zoom_out)
     root.addView(
-        zoomOutButton,
+        zoomOutButton.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -774,7 +773,7 @@ private fun createMapViews(context: Context): MapViews {
 
     val lockButton = smallMapFab(context, R.id.lock_btn, R.drawable.satellite)
     root.addView(
-        lockButton,
+        lockButton.view,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -888,9 +887,57 @@ private fun smallMapFab(
 private class MapIconButton(
     context: Context,
     icon: Int
-) : AbstractComposeView(context) {
+) {
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
+
+    val view = ComposeView(context).apply {
+        setContent {
+            TrailSenseTheme {
+                Content()
+            }
+        }
+    }
+
+    var id: Int
+        get() = view.id
+        set(value) {
+            view.id = value
+        }
+
+    var alpha: Float
+        get() = view.alpha
+        set(value) {
+            view.alpha = value
+        }
+
+    var isClickable: Boolean
+        get() = view.isClickable
+        set(value) {
+            view.isClickable = value
+        }
+
+    var isFocusable: Boolean
+        get() = view.isFocusable
+        set(value) {
+            view.isFocusable = value
+        }
+
+    var isVisible: Boolean
+        get() = view.visibility == View.VISIBLE
+        set(value) {
+            view.visibility = if (value) View.VISIBLE else View.GONE
+        }
+
+    var visibility: Int
+        get() = view.visibility
+        set(value) {
+            view.visibility = value
+        }
+
+    fun setOnClickListener(listener: View.OnClickListener?) {
+        view.setOnClickListener(listener)
+    }
 
     fun setImageResource(icon: Int) {
         iconRes = icon
@@ -901,7 +948,7 @@ private class MapIconButton(
     }
 
     @Composable
-    override fun Content() {
+    private fun Content() {
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -913,21 +960,19 @@ private class MapIconButton(
             MaterialTheme.colorScheme.onSurfaceVariant
         }
 
-        TrailSenseTheme {
-            androidx.compose.material3.Surface(
-                modifier = Modifier.size(40.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = background,
-                shadowElevation = 6.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(iconRes),
-                        contentDescription = null,
-                        tint = foreground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+        androidx.compose.material3.Surface(
+            modifier = Modifier.size(40.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = background,
+            shadowElevation = 6.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
