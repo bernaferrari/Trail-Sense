@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
-import androidx.fragment.app.Fragment
+import android.content.Context
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Weight
@@ -150,13 +150,16 @@ class LighterPackIOService(uriPicker: UriPicker, uriService: UriService) :
             WeightUnits.Pounds to "pound",
         )
 
-        fun create(fragment: Fragment): LighterPackIOService {
+        fun create(
+            context: Context,
+            resultRetriever: IntentResultRetriever
+        ): LighterPackIOService {
             return LighterPackIOService(
                 IntentUriPicker(
-                    fragment.requireActivity() as IntentResultRetriever,
-                    fragment.requireContext()
+                    resultRetriever,
+                    context
                 ),
-                ExternalUriService(fragment.requireContext())
+                ExternalUriService(context)
             )
         }
     }

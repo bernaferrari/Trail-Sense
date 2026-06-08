@@ -6,6 +6,7 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.CoroutinePickers
 import com.kylecorry.trail_sense.R
@@ -18,7 +19,10 @@ import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 
 class ImportPackingListCommand(private val fragment: Fragment) : Command {
 
-    private val importService = LighterPackIOService.create(fragment)
+    private val importService = LighterPackIOService.create(
+        fragment.requireContext(),
+        fragment.requireActivity() as IntentResultRetriever
+    )
     private val repo = PackRepo.getInstance(fragment.requireContext())
 
     override fun execute() {
