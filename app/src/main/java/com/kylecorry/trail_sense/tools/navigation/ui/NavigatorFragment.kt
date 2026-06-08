@@ -2,28 +2,27 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import android.view.Gravity
-import android.widget.CheckBox
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +66,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
+import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -331,7 +331,6 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         views.accuracyView.setSensors(gps, compass)
         views.accuracyView.setOnClickListener { displayAccuracyTips() }
 
-        views.mapAttribution.movementMethod = LinkMovementMethod.getInstance()
         views.radarCompassMap.setOnSingleTapListener {
             toggleDestinationBearing()
         }
@@ -703,27 +702,40 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Resources.dp(requireContext(), 200f).toInt()
             )
-            val doNotAskAgain = CheckBox(requireContext()).apply {
-                text = getString(R.string.do_not_ask_again)
-            }
-            val contentView = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                addView(
-                    calibrationView,
-                    LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        Resources.dp(requireContext(), 200f).toInt()
-                    )
-                )
-                addView(
-                    doNotAskAgain,
-                    LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        topMargin = Resources.dp(requireContext(), 8f).toInt()
+            var doNotAskAgain = false
+            val contentView = ComposeView(requireContext()).apply {
+                setContent {
+                    TrailSenseTheme {
+                        var checked by remember { mutableStateOf(false) }
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            AndroidView(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                factory = { calibrationView }
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = checked,
+                                    onCheckedChange = {
+                                        checked = it
+                                        doNotAskAgain = it
+                                    }
+                                )
+                                Text(
+                                    text = getString(R.string.do_not_ask_again),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
-                )
+                }
             }
             dialog(
                 getString(R.string.calibrate_compass_dialog_title),
@@ -736,7 +748,7 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
                 cancelOnOutsideTouch = false,
                 scrollable = true
             ) { cancelled ->
-                if (!cancelled && doNotAskAgain.isChecked) {
+                if (!cancelled && doNotAskAgain) {
                     userPrefs.navigation.showCalibrationOnNavigateDialog = false
                 }
             }
@@ -760,7 +772,7 @@ private data class NavigatorViews(
     val radarCompassMap: MapView,
     val radarCompass: RadarCompassView,
     val linearCompass: LinearSightingCompassView,
-    val mapAttribution: TextView,
+    val mapAttribution: MapAttributionView,
     val northReferenceIndicator: NorthReferenceBadge,
     val beaconBtn: NavigatorIconButton,
     val accuracyView: SensorStatusBadgeView,
@@ -876,23 +888,6 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val grid = LinearLayout(context).apply {
-        id = R.id.navigation_grid
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER
-    }
-    root.addView(
-        grid,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.navigation_title
-            marginStart = 16.dp(context)
-            marginEnd = 16.dp(context)
-            topMargin = 8.dp(context)
-        }
-    )
-
     val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
     val altitudeView = ComposeView(context).apply {
         id = R.id.altitude
@@ -903,10 +898,15 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
             }
         }
     }
-    grid.addView(
+    root.addView(
         altitudeView,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToStart = R.id.speed
+            topToBottom = R.id.navigation_title
+            marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
+            topMargin = 8.dp(context)
         }
     )
 
@@ -920,9 +920,15 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
             }
         }
     }
-    grid.addView(
+    root.addView(
         speedView,
-        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToEnd = R.id.altitude
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = R.id.altitude
+            bottomToBottom = R.id.altitude
+            marginEnd = 16.dp(context)
+        }
     )
 
     val radarCompassMap = MapView(context).apply {
@@ -949,7 +955,7 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         ConstraintLayout.LayoutParams(0, 0).apply {
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
             endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToBottom = R.id.navigation_grid
+            topToBottom = R.id.altitude
             bottomToTop = R.id.spacer
             marginStart = 16.dp(context)
             marginEnd = 16.dp(context)
@@ -972,12 +978,8 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val mapAttribution = TextView(context).apply {
+    val mapAttribution = MapAttributionView(context).apply {
         id = R.id.map_attribution
-        gravity = Gravity.CENTER
-        linksClickable = true
-        setTextColor(Resources.androidTextColorSecondary(context))
-        textSize = 8f
     }
     root.addView(
         mapAttribution,
