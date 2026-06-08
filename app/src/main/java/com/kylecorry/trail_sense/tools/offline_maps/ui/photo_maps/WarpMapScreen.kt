@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.os.Bundle
-import android.view.View
+import android.graphics.Color
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.dialog
 import androidx.compose.foundation.clickable
@@ -19,8 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -36,7 +40,6 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.rememberPerspectiveCorrectionState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -46,60 +49,72 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 
-class WarpMapFragment : TrailSenseComposeFragment() {
-
-    private val service = getAppService<OfflineMapService>()
-
-    private var mapId = 0L
-    private var map by mutableStateOf<PhotoMap?>(null)
-    private var isPreview by mutableStateOf(false)
-    private var perspectiveState: PerspectiveCorrectionState? = null
-
-    private var onDone: () -> Unit = {}
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mapId = requireArguments().getLong("mapId")
+@Composable
+fun WarpMapToolScreen(
+    fragment: Fragment,
+    mapId: Long,
+    onComplete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment, mapId, onComplete) {
+        WarpMapController(fragment, mapId, onComplete)
     }
 
-    @Composable
-    override fun FragmentContent() {
-        WarpMapScreen(
-            map = map,
-            isPreview = isPreview,
-            onTogglePreview = ::togglePreview,
-            onInstructionsClick = ::showInstructions,
-            onNext = ::next,
-            onPerspectiveReady = { perspectiveState = it },
-            modifier = Modifier.fillMaxSize()
-        )
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    WarpMapScreen(
+        map = controller.map,
+        isPreview = controller.isPreview,
+        onTogglePreview = controller::togglePreview,
+        onInstructionsClick = controller::showInstructions,
+        onNext = controller::next,
+        onPerspectiveReady = { controller.perspectiveState = it },
+        modifier = modifier
+    )
+}
+
+private class WarpMapController(
+    private val fragment: Fragment,
+    private val mapId: Long,
+    private val onComplete: () -> Unit
+) {
+    private val service = getAppService<MapService>()
+    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+
+    var map by mutableStateOf<PhotoMap?>(null)
+        private set
+    var isPreview by mutableStateOf(false)
+        private set
+    var perspectiveState: PerspectiveCorrectionState? = null
+
+    fun onCreate() {
         loadMap()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         perspectiveState?.clearImage()
         perspectiveState = null
-        super.onDestroyView()
     }
 
-    private fun showInstructions() {
-        dialog(
-            getString(R.string.map_perspective_instructions),
-            getString(R.string.crop_map_instructions_long),
+    fun showInstructions() {
+        fragment.dialog(
+            fragment.getString(R.string.map_perspective_instructions),
+            fragment.getString(R.string.crop_map_instructions_long),
             cancelText = null
         )
     }
 
-    private fun togglePreview() {
+    fun togglePreview() {
         isPreview = !isPreview
     }
 
     private fun loadMap() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getPhotoMap(mapId)
             }
@@ -114,18 +129,17 @@ class WarpMapFragment : TrailSenseComposeFragment() {
         this.map = map
     }
 
-    fun setOnCompleteListener(listener: () -> Unit) {
-        onDone = listener
-    }
-
-    private fun next() {
+    fun next() {
         val currentMap = map ?: return
         val perspective = perspectiveState ?: return
         val percentBounds = perspective.getPercentBounds() ?: return
         val hasChanges = perspective.hasChanges
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            val loading = Alerts.loading(requireContext(), getString(R.string.saving))
+        fragment.viewLifecycleOwner.lifecycleScope.launch {
+            val loading = Alerts.loading(
+                fragment.requireContext(),
+                fragment.getString(R.string.saving)
+            )
             val saved = withContext(Dispatchers.IO) {
                 if (hasChanges) {
                     val bitmap = files.bitmap(currentMap.filename) ?: return@withContext false
@@ -153,7 +167,7 @@ class WarpMapFragment : TrailSenseComposeFragment() {
             loading.dismiss()
             if (saved) {
                 perspective.clearImage()
-                onDone.invoke()
+                onComplete.invoke()
             }
         }
     }

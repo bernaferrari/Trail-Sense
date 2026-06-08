@@ -86,7 +86,12 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
             onRecenter = ::recenter,
             onMenuClick = ::showMenu,
             childSpec = childSpec,
-            onWarpFragment = ::onWarpFragment,
+            fragment = this,
+            onWarpComplete = {
+                inBackground {
+                    loadMap()
+                }
+            },
             onCalibrationFragment = ::onCalibrationFragment,
             onViewFragment = ::onViewFragment,
             modifier = Modifier.fillMaxSize()
@@ -316,20 +321,9 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun warp() {
         hideRotation()
-        val fragment = WarpMapFragment().apply {
-            arguments = Bundle().apply {
-                putLong("mapId", mapId)
-            }
-        }.also {
-            showRecenter = false
-            it.setOnCompleteListener {
-                inBackground {
-                    loadMap()
-                }
-            }
-        }
-
-        setFragment(fragment)
+        showRecenter = false
+        currentFragment = null
+        childSpec = PhotoMapChildSpec.Warp(mapId)
     }
 
     private suspend fun autoRotate() {
@@ -364,19 +358,9 @@ class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun setFragment(fragment: Fragment) {
         childSpec = when (fragment) {
-            is WarpMapFragment -> PhotoMapChildSpec.Warp(mapId)
             is PhotoMapCalibrationFragment -> PhotoMapChildSpec.Calibration(mapId)
             is ViewPhotoMapFragment -> PhotoMapChildSpec.View(mapId, autoLockLocation)
             else -> null
-        }
-    }
-
-    private fun onWarpFragment(fragment: WarpMapFragment) {
-        currentFragment = fragment
-        fragment.setOnCompleteListener {
-            inBackground {
-                loadMap()
-            }
         }
     }
 
@@ -404,7 +388,8 @@ private fun PhotoMapsScreen(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
     childSpec: PhotoMapChildSpec?,
-    onWarpFragment: (WarpMapFragment) -> Unit,
+    fragment: Fragment,
+    onWarpComplete: () -> Unit,
     onCalibrationFragment: (PhotoMapCalibrationFragment) -> Unit,
     onViewFragment: (ViewPhotoMapFragment) -> Unit,
     modifier: Modifier = Modifier
@@ -429,12 +414,11 @@ private fun PhotoMapsScreen(
                 childSpec?.let { spec ->
                     key(spec.key) {
                         when (spec) {
-                            is PhotoMapChildSpec.Warp -> AndroidFragment<WarpMapFragment>(
+                            is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
                                 modifier = Modifier.fillMaxSize(),
-                                arguments = Bundle().apply {
-                                    putLong("mapId", spec.mapId)
-                                },
-                                onUpdate = onWarpFragment
+                                fragment = fragment,
+                                mapId = spec.mapId,
+                                onComplete = onWarpComplete
                             )
 
                             is PhotoMapChildSpec.Calibration -> AndroidFragment<PhotoMapCalibrationFragment>(
@@ -562,7 +546,8 @@ private fun PhotoMapsScreenPreview() {
             onRecenter = {},
             onMenuClick = {},
             childSpec = null,
-            onWarpFragment = {},
+            fragment = Fragment(),
+            onWarpComplete = {},
             onCalibrationFragment = {},
             onViewFragment = {}
         )
