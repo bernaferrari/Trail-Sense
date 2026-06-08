@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
-import android.content.DialogInterface
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,63 +23,76 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class ARLayersBottomSheet : TrailSenseBottomSheetComposeFragment() {
+class ARLayersBottomSheet {
 
     private var onDismissListener: (() -> Unit)? = null
-    private val prefs by lazy { UserPreferences(requireContext()).augmentedReality }
+    private var sheet: BottomSheetDialog? = null
 
     fun setOnDismissListener(listener: (() -> Unit)?) {
         onDismissListener = listener
     }
 
-    @Composable
-    override fun FragmentContent() {
-        var showBeaconLayer by remember {
-            mutableStateOf(prefs.showBeaconLayer)
-        }
-        var showPathLayer by remember { mutableStateOf(prefs.showPathLayer) }
-        var showAstronomyLayer by remember {
-            mutableStateOf(prefs.showAstronomyLayer)
-        }
-        var showGridLayer by remember { mutableStateOf(prefs.showGridLayer) }
+    fun show(fragment: Fragment): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val prefs = UserPreferences(context).augmentedReality
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                var showBeaconLayer by remember {
+                    mutableStateOf(prefs.showBeaconLayer)
+                }
+                var showPathLayer by remember { mutableStateOf(prefs.showPathLayer) }
+                var showAstronomyLayer by remember {
+                    mutableStateOf(prefs.showAstronomyLayer)
+                }
+                var showGridLayer by remember { mutableStateOf(prefs.showGridLayer) }
 
-        ARLayersBottomSheetContent(
-            showBeaconLayer = showBeaconLayer,
-            onShowBeaconLayerChange = {
-                showBeaconLayer = it
-                prefs.showBeaconLayer = it
-            },
-            showPathLayer = showPathLayer,
-            onShowPathLayerChange = {
-                showPathLayer = it
-                prefs.showPathLayer = it
-            },
-            showAstronomyLayer = showAstronomyLayer,
-            onShowAstronomyLayerChange = {
-                showAstronomyLayer = it
-                prefs.showAstronomyLayer = it
-            },
-            showGridLayer = showGridLayer,
-            onShowGridLayerChange = {
-                showGridLayer = it
-                prefs.showGridLayer = it
-            },
-            onClose = ::dismiss
+                ARLayersBottomSheetContent(
+                    showBeaconLayer = showBeaconLayer,
+                    onShowBeaconLayerChange = {
+                        showBeaconLayer = it
+                        prefs.showBeaconLayer = it
+                    },
+                    showPathLayer = showPathLayer,
+                    onShowPathLayerChange = {
+                        showPathLayer = it
+                        prefs.showPathLayer = it
+                    },
+                    showAstronomyLayer = showAstronomyLayer,
+                    onShowAstronomyLayerChange = {
+                        showAstronomyLayer = it
+                        prefs.showAstronomyLayer = it
+                    },
+                    showGridLayer = showGridLayer,
+                    onShowGridLayerChange = {
+                        showGridLayer = it
+                        prefs.showGridLayer = it
+                    },
+                    onClose = { sheet?.dismiss() }
+                )
+            }
         )
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        onDismissListener?.invoke()
+        dialog.setOnDismissListener {
+            onDismissListener?.invoke()
+            sheet = null
+        }
+        dialog.show()
+        return dialog
     }
 }
 
