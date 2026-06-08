@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,14 +28,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
@@ -53,8 +47,8 @@ import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -63,7 +57,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import kotlinx.coroutines.launch
 
-class CalibrateGPSFragment : Fragment() {
+class CalibrateGPSFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val sensorService by lazy { SensorService(requireContext()) }
@@ -83,144 +77,137 @@ class CalibrateGPSFragment : Fragment() {
     private var setAutoLocationEnabled: ((Boolean) -> Unit)? = null
     private var setOverrideEnabled: ((Boolean) -> Unit)? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         wasUsingRealGPS = shouldUseRealGPS()
         wasUsingCachedGPS = shouldUseCachedGPS()
         gps = sensorService.getGPS()
         realGps = getRealGPS()
         locationOverride = prefs.locationOverride
+    }
 
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    var locationSummary by remember {
-                        mutableStateOf(formatService.formatLocation(gps.location))
-                    }
-                    var autoLocation by remember { mutableStateOf(prefs.useAutoLocation) }
-                    var requireSatellites by remember { mutableStateOf(prefs.requiresSatellites) }
-                    var permissionVisible by remember {
-                        mutableStateOf(!isAutoGPSPreferenceEnabled())
-                    }
-                    var autoLocationEnabled by remember {
-                        mutableStateOf(isAutoGPSPreferenceEnabled())
-                    }
-                    var overrideEnabled by remember {
-                        mutableStateOf(isLocationOverrideEnabled())
-                    }
+    @Composable
+    override fun FragmentContent() {
+        var locationSummary by remember {
+            mutableStateOf(formatService.formatLocation(gps.location))
+        }
+        var autoLocation by remember { mutableStateOf(prefs.useAutoLocation) }
+        var requireSatellites by remember { mutableStateOf(prefs.requiresSatellites) }
+        var permissionVisible by remember {
+            mutableStateOf(!isAutoGPSPreferenceEnabled())
+        }
+        var autoLocationEnabled by remember {
+            mutableStateOf(isAutoGPSPreferenceEnabled())
+        }
+        var overrideEnabled by remember {
+            mutableStateOf(isLocationOverrideEnabled())
+        }
 
-                    setLocationSummary = { locationSummary = it }
-                    setPermissionVisible = { permissionVisible = it }
-                    setAutoLocationEnabled = { autoLocationEnabled = it }
-                    setOverrideEnabled = { overrideEnabled = it }
+        setLocationSummary = { locationSummary = it }
+        setPermissionVisible = { permissionVisible = it }
+        setAutoLocationEnabled = { autoLocationEnabled = it }
+        setOverrideEnabled = { overrideEnabled = it }
 
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                )
+            ) {
+                item("header") {
+                    TrailSenseSectionHeader(title = stringResource(R.string.gps))
+                }
+                item("location") {
+                    TrailSenseListItem(
+                        title = stringResource(R.string.location),
+                        subtitle = locationSummary,
+                        icon = painterResource(R.drawable.satellite),
+                        animateEntrance = false,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("auto_location") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_auto_location_title),
+                        checked = autoLocation,
+                        enabled = autoLocationEnabled,
+                        onCheckedChange = {
+                            autoLocation = it
+                            prefs.useAutoLocation = it
+                            overrideEnabled = isLocationOverrideEnabled()
+                            resetGPS()
+                            update()
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("require_satellites") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_require_satellites_title),
+                        summary = stringResource(R.string.pref_require_satellites_description),
+                        checked = requireSatellites,
+                        enabled = autoLocation,
+                        onCheckedChange = {
+                            requireSatellites = it
+                            putBoolean(R.string.pref_require_satellites, it)
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                if (permissionVisible) {
+                    item("permission") {
+                        SettingsActionRow(
+                            label = stringResource(R.string.request_permission),
+                            onClick = {
+                                startActivity(Intents.appSettings(requireContext()))
+                            },
+                            modifier = Modifier.padding(
+                                horizontal = TrailSenseSpacing.lg
                             )
-                        ) {
-                            item("header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.gps))
-                            }
-                            item("location") {
-                                TrailSenseListItem(
-                                    title = stringResource(R.string.location),
-                                    subtitle = locationSummary,
-                                    icon = painterResource(R.drawable.satellite),
-                                    animateEntrance = false,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("auto_location") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_auto_location_title),
-                                    checked = autoLocation,
-                                    enabled = autoLocationEnabled,
-                                    onCheckedChange = {
-                                        autoLocation = it
-                                        prefs.useAutoLocation = it
-                                        overrideEnabled = isLocationOverrideEnabled()
-                                        resetGPS()
-                                        update()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("require_satellites") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_require_satellites_title),
-                                    summary = stringResource(R.string.pref_require_satellites_description),
-                                    checked = requireSatellites,
-                                    enabled = autoLocation,
-                                    onCheckedChange = {
-                                        requireSatellites = it
-                                        putBoolean(R.string.pref_require_satellites, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            if (permissionVisible) {
-                                item("permission") {
-                                    SettingsActionRow(
-                                        label = stringResource(R.string.request_permission),
-                                        onClick = {
-                                            startActivity(Intents.appSettings(requireContext()))
-                                        },
-                                        modifier = Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
-                                }
-                            }
-                            item("clear_cache") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.clear_cache),
-                                    enabled = autoLocation,
-                                    onClick = ::clearCache,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("override") {
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = TrailSenseSpacing.xl,
-                                        vertical = TrailSenseSpacing.md
-                                    )
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.pref_gps_override_title),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    GPSOverrideCoordinateInput(
-                                        coordinate = locationOverride,
-                                        enabled = overrideEnabled,
-                                        isLoading = isOverrideLocationLoading,
-                                        locationProvider = { realGps.location },
-                                        onCoordinateChange = ::setLocationOverride,
-                                        onAutoFill = ::autofillOverrideLocation,
-                                        modifier = Modifier.padding(top = TrailSenseSpacing.sm)
-                                    )
-                                }
-                                TrailSenseDivider()
-                            }
-                        }
+                        )
                     }
+                }
+                item("clear_cache") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.clear_cache),
+                        enabled = autoLocation,
+                        onClick = ::clearCache,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("override") {
+                    Column(
+                        modifier = Modifier.padding(
+                            horizontal = TrailSenseSpacing.xl,
+                            vertical = TrailSenseSpacing.md
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.pref_gps_override_title),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        GPSOverrideCoordinateInput(
+                            coordinate = locationOverride,
+                            enabled = overrideEnabled,
+                            isLoading = isOverrideLocationLoading,
+                            locationProvider = { realGps.location },
+                            onCoordinateChange = ::setLocationOverride,
+                            onAutoFill = ::autofillOverrideLocation,
+                            modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+                        )
+                    }
+                    TrailSenseDivider()
                 }
             }
         }

@@ -4,9 +4,6 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,15 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -59,7 +53,7 @@ import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.views.CameraView
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
@@ -67,7 +61,7 @@ import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ScanQRFragment : Fragment() {
+class ScanQRFragment : TrailSenseComposeFragment() {
 
     private val cameraSize = Size(200, 200)
 
@@ -82,29 +76,19 @@ class ScanQRFragment : Fragment() {
     private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
     private val scanLock = Any()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    QrScannerScreen(
-                        history = history,
-                        scrollRequest = historyScrollRequest,
-                        onCameraReady = ::onCameraReady,
-                        onCopy = ::copy,
-                        onCreateNote = ::createNote,
-                        onOpenMap = ::openMap,
-                        onCreateBeacon = ::createBeacon,
-                        onOpenUrl = ::openUrl,
-                        onDelete = ::deleteResult
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        QrScannerScreen(
+            history = history,
+            scrollRequest = historyScrollRequest,
+            onCameraReady = ::onCameraReady,
+            onCopy = ::copy,
+            onCreateNote = ::createNote,
+            onOpenMap = ::openMap,
+            onCreateBeacon = ::createBeacon,
+            onOpenUrl = ::openUrl,
+            onDelete = ::deleteResult
+        )
     }
 
     private fun onCameraReady(cameraView: CameraView) {
