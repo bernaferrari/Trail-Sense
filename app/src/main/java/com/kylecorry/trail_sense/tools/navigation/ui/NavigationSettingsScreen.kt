@@ -17,9 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.fragments.show
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -45,7 +43,7 @@ import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
-fun NavigationSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun NavigationSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { NavigationSettingsController(fragment) }
     DisposableEffect(controller) {
         onDispose {
@@ -56,7 +54,7 @@ fun NavigationSettingsToolScreen(fragment: TrailSenseComposeDestinationFragment)
     controller.LayerSheet()
 }
 
-private class NavigationSettingsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class NavigationSettingsController(private val fragment: TrailSenseDestinationHost) {
     private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
 
     val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
@@ -145,8 +143,8 @@ private class NavigationSettingsController(private val fragment: TrailSenseCompo
     }
 
     fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
-        val entries = fragment.resources.getStringArray(entriesId)
-        val values = fragment.resources.getStringArray(valuesId)
+        val entries = fragment.getResources().getStringArray(entriesId)
+        val values = fragment.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             NavigationOption(value, entries.getOrElse(index) { value })
         }
