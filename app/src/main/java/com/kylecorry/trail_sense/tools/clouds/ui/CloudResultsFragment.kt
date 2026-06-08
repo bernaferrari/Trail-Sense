@@ -4,9 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,9 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,7 +46,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
@@ -69,7 +63,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
@@ -81,7 +75,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.abs
 
-class CloudResultsFragment : Fragment() {
+class CloudResultsFragment : TrailSenseComposeFragment() {
 
     private var image by mutableStateOf<Bitmap?>(null)
     private var classifier: ICloudClassifier = SoftmaxCloudClassifier(this::debugLogFeatures)
@@ -99,33 +93,23 @@ class CloudResultsFragment : Fragment() {
         uri = BundleCompat.getParcelable(arguments ?: Bundle(), "image", Uri::class.java)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CloudResultsScreen(
-                        image = image,
-                        selection = selection,
-                        title = stringResource(R.string.clouds),
-                        subtitle = formatter.formatDateTime(
-                            time.toZonedDateTime(),
-                            relative = true,
-                            abbreviateMonth = true
-                        ),
-                        isLoading = isLoading,
-                        canSave = selection.any { it.isSelected },
-                        onDateClick = ::pickTime,
-                        onSave = ::save,
-                        onSelectionChanged = ::setSelection
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        CloudResultsScreen(
+            image = image,
+            selection = selection,
+            title = stringResource(R.string.clouds),
+            subtitle = formatter.formatDateTime(
+                time.toZonedDateTime(),
+                relative = true,
+                abbreviateMonth = true
+            ),
+            isLoading = isLoading,
+            canSave = selection.any { it.isSelected },
+            onDateClick = ::pickTime,
+            onSave = ::save,
+            onSelectionChanged = ::setSelection
+        )
     }
 
     override fun onResume() {

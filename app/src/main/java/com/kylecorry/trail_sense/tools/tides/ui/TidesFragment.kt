@@ -2,9 +2,6 @@ package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -37,9 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -47,7 +42,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
@@ -61,6 +55,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
@@ -74,7 +69,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
-class TidesFragment : Fragment() {
+class TidesFragment : TrailSenseComposeFragment() {
 
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
     private val tideService by lazy { TideService(requireContext()) }
@@ -94,29 +89,19 @@ class TidesFragment : Fragment() {
     private var dailyTideJob: Job? = null
     private var currentRefreshJob: Job? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    TidesScreen(
-                        title = getCurrentTideTitle(),
-                        subtitle = getTableSubtitle(),
-                        isRising = current?.rising ?: true,
-                        isLoading = isLoading,
-                        displayDate = displayDate,
-                        daily = daily,
-                        tides = getDisplayTides(),
-                        onDateChange = ::onDisplayDateSelected,
-                        onOpenTideList = ::openTideList
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        TidesScreen(
+            title = getCurrentTideTitle(),
+            subtitle = getTableSubtitle(),
+            isRising = current?.rising ?: true,
+            isLoading = isLoading,
+            displayDate = displayDate,
+            daily = daily,
+            tides = getDisplayTides(),
+            onDateChange = ::onDisplayDateSelected,
+            onOpenTideList = ::openTideList
+        )
     }
 
     override fun onResume() {

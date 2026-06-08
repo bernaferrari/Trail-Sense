@@ -4,7 +4,6 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,9 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,7 +53,6 @@ import androidx.core.net.toUri
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.luna.concurrency.onIO
@@ -72,6 +68,7 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
@@ -81,7 +78,7 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import java.time.Duration
 import java.time.Instant
 
-class CloudFragment : AndromedaFragment() {
+class CloudFragment : TrailSenseAndromedaComposeFragment() {
 
     private val repo by lazy { CloudRepo.getInstance(requireContext()) }
     private val cloudDetailsService by lazy { CloudDetailsService(requireContext()) }
@@ -91,30 +88,20 @@ class CloudFragment : AndromedaFragment() {
     private var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
     private var subtitle by mutableStateOf("")
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    CloudScreen(
-                        subtitle = subtitle,
-                        clouds = clouds,
-                        onGuideClick = ::showGuide,
-                        onCameraClick = ::addFromCamera,
-                        onFileClick = ::addFromFile,
-                        onManualClick = ::addManual,
-                        onCloudClick = ::showCloudDetails,
-                        onCloudImageClick = ::showCloudImage,
-                        onDeleteCloud = ::delete,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        CloudScreen(
+            subtitle = subtitle,
+            clouds = clouds,
+            onGuideClick = ::showGuide,
+            onCameraClick = ::addFromCamera,
+            onFileClick = ::addFromFile,
+            onManualClick = ::addManual,
+            onCloudClick = ::showCloudDetails,
+            onCloudImageClick = ::showCloudImage,
+            onDeleteCloud = ::delete,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,25 +24,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
-class FragmentToolNotesCreate : Fragment() {
+class FragmentToolNotesCreate : TrailSenseComposeFragment() {
 
     private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
     private var editingNote: Note? = null
@@ -57,30 +52,20 @@ class FragmentToolNotesCreate : Fragment() {
         noteId = arguments?.getLong("edit_note_id") ?: 0L
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    NoteEditorScreen(
-                        noteId = noteId,
-                        loadNote = { notesRepo.getNote(it) },
-                        onStateChanged = { newTitle, newContent, note ->
-                            title = newTitle
-                            content = newContent
-                            editingNote = note
-                        },
-                        onSave = { newTitle, newContent ->
-                            saveNote(newTitle, newContent)
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        NoteEditorScreen(
+            noteId = noteId,
+            loadNote = { notesRepo.getNote(it) },
+            onStateChanged = { newTitle, newContent, note ->
+                title = newTitle
+                content = newContent
+                editingNote = note
+            },
+            onSave = { newTitle, newContent ->
+                saveNote(newTitle, newContent)
             }
-        }
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
