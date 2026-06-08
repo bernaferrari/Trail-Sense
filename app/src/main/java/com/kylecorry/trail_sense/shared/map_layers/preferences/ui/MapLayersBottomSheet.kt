@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
 import android.content.Context
-import android.content.DialogInterface
 import android.text.Spanned
 import android.text.style.URLSpan
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +47,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -69,7 +71,7 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullPrefe
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -84,17 +86,27 @@ import kotlin.math.roundToInt
 class MapLayersBottomSheet(
     private val mapId: String,
     private val alwaysEnabledLayerIds: List<String> = emptyList()
-) : TrailSenseBottomSheetComposeFragment() {
+) {
 
     private var onDismissListener: (() -> Unit)? = null
     private val repo by lazy { AppServiceRegistry.get<MapLayerPreferenceRepo>() }
+    private var sheet: BottomSheetDialog? = null
+    private var fragment: Fragment? = null
 
     fun setOnDismissListener(listener: (() -> Unit)?) {
         onDismissListener = listener
     }
 
-    @Composable
-    override fun FragmentContent() {
+    fun show(fragment: Fragment): BottomSheetDialog {
+        this.fragment = fragment
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
                     val context = LocalContext.current
                     val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
                     val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
@@ -154,7 +166,7 @@ class MapLayersBottomSheet(
                             refreshKey++
                         },
                         onNavigate = { action ->
-                            (requireActivity() as? MainActivity)
+                            (fragment.requireActivity() as? MainActivity)
                                 ?.findNavController()
                                 ?.navigateWithAnimation(action)
                         },
@@ -178,14 +190,22 @@ class MapLayersBottomSheet(
                         },
                         markdown = markdown
                     )
+            }
+        )
+        dialog.setOnDismissListener {
+            onDismissListener?.invoke()
+            if (mapId == MapToolRegistration.MAP_ID) {
+                Tools.triggerWidgetUpdate(context, MapToolRegistration.WIDGET_MAP)
+            }
+            sheet = null
+            this.fragment = null
+        }
+        dialog.show()
+        return dialog
     }
 
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        onDismissListener?.invoke()
-        if (mapId == MapToolRegistration.MAP_ID) {
-            Tools.triggerWidgetUpdate(requireContext(), MapToolRegistration.WIDGET_MAP)
-        }
+    fun dismiss() {
+        sheet?.dismiss()
     }
 
     private fun moveLayer(
