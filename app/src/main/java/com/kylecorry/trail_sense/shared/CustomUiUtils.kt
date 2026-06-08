@@ -27,6 +27,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -260,10 +261,19 @@ object CustomUiUtils {
         title: String,
         qr: String
     ) {
+        showQR(fragment.requireContext(), fragment.findNavController(), title, qr)
+    }
+
+    fun showQR(
+        context: Context,
+        navController: NavController,
+        title: String,
+        qr: String
+    ) {
         if (qr.length > QR_SHARE_MAX_LENGTH) {
-            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.qr_text_too_long))
+            Alerts.toast(context, context.getString(R.string.qr_text_too_long))
         }
-        fragment.findNavController().navigate(
+        navController.navigate(
             R.id.viewQrFragment,
             Bundle().apply {
                 putString("qr_title", title)

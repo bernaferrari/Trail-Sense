@@ -3175,7 +3175,8 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     private fun showNoteQR(note: Note) {
         CustomUiUtils.showQR(
-            this,
+            requireContext(),
+            findNavController(),
             note.title ?: getString(android.R.string.untitled),
             NoteQREncoder().encode(note)
         )

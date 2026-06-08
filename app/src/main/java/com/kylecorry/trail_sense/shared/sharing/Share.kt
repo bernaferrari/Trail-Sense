@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.sharing
 
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -21,7 +22,7 @@ object Share {
     ) {
         val locationSenders = mapOf(
             ShareAction.Copy to LocationCopy(fragment.requireContext()),
-            ShareAction.QR to LocationQRSender(fragment),
+            ShareAction.QR to LocationQRSender(fragment.requireContext(), fragment.findNavController()),
             ShareAction.Maps to LocationGeoSender(fragment.requireContext()),
             ShareAction.Send to LocationSharesheet(fragment.requireContext())
         )
