@@ -1,147 +1,131 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Path
-import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
-import com.kylecorry.andromeda.canvas.CanvasView
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Vector2
-import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.interpolation.Interpolation
-import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 
-
-class CompassCalibrationView : CanvasView {
-
-    private val figure8Path = Path()
-    private var figure8Width: Float = 0f
-    private var figure8Height: Float = 0f
-    private var phoneHeight: Float = 0f
-    private var phoneWidth: Float = 0f
-    private var arrowColor: Int = Color.BLACK
-
-    private val tMin = -(PI / 2).toFloat()
-    private val tMax = ((3 * PI) / 2).toFloat()
-
-    private var start = System.currentTimeMillis()
-    private val loopTime = 5f
-
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
-
-    override fun setup() {
-        arrowColor = Resources.getPrimaryColor(context)
-        figure8Width = width.toFloat() * 0.8f / 2f
-        figure8Height = height.toFloat() * 0.8f / 2f
-
-        phoneWidth = dp(20f)
-        phoneHeight = 2 * phoneWidth
-
-        var j = tMin
-        val step = 0.01f
-        figure8Path.apply {
-            moveTo(0f, 0f)
-            while (j < tMax) {
-                val pos = figure8(j)
-                lineTo(pos.x * figure8Width, pos.y * figure8Height)
-                j += step
+fun compassCalibrationView(
+    context: Context,
+    width: Int,
+    height: Int
+): View {
+    return ComposeView(context).apply {
+        layoutParams = ViewGroup.LayoutParams(width, height)
+        setContent {
+            TrailSenseTheme {
+                CompassCalibrationContent()
             }
-            close()
         }
-
-        start = System.currentTimeMillis()
     }
+}
 
-    override fun draw() {
-        background(AppColor.Blue.color)
+@Composable
+private fun CompassCalibrationContent() {
+    val transition = rememberInfiniteTransition(label = "compass_calibration")
+    val progress = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "compass_calibration_progress"
+    )
+    val primary = androidx.compose.material3.MaterialTheme.colorScheme.primary
 
-        val time = (System.currentTimeMillis() - start) / 1000f
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawRect(Color(AppColor.Blue.color))
 
-        if (time >= loopTime) {
-            // TODO: Pause for a little
-            start = System.currentTimeMillis()
+        val figure8Width = size.width * 0.8f / 2f
+        val figure8Height = size.height * 0.8f / 2f
+        val radius = min(size.width, size.height)
+        val tMin = -(PI / 2).toFloat()
+        val tMax = ((3 * PI) / 2).toFloat()
+        val t = Interpolation.map(progress.value, 0f, 1f, tMin, tMax)
+
+        val path = Path()
+        var pathT = tMin
+        var first = true
+        while (pathT < tMax) {
+            val point = figure8(pathT)
+            val x = point.x * figure8Width + size.width / 2f
+            val y = point.y * figure8Height + size.height / 2f
+            if (first) {
+                path.moveTo(x, y)
+                first = false
+            } else {
+                path.lineTo(x, y)
+            }
+            pathT += 0.01f
         }
+        drawPath(path, Color.Black, style = androidx.compose.ui.graphics.drawscope.Stroke(5.dp.toPx()))
 
-        push()
-        translate(width / 2f, height / 2f)
-        loop()
-
-        val pos = figure8(getT(time)).let {
+        val pos = figure8(t).let {
             Vector2(it.x * figure8Width, it.y * figure8Height)
         }
-        val nextPos =
-            figure8(getT(time + 0.001f)).let {
-                Vector2(it.x * figure8Width, it.y * figure8Height)
-            }
-
-        val vec = nextPos.minus(pos)
-        val heading = atan2(vec.y, vec.x).toDegrees()
-
-        translate(pos.x, pos.y)
-        rotate(heading + 90, 0f, 0f)
-        // Simulates tilting the phone
-//        scale((time / loopTime).coerceAtLeast(0.2f), 1f)
-        phone()
-        pop()
-    }
-
-    private fun getT(time: Float): Float {
-        return Arithmetic.wrap(Interpolation.map(time, 0f, loopTime, tMin, tMax), tMin, tMax)
-    }
-
-    private fun loop() {
-        noFill()
-        stroke(Color.BLACK)
-        strokeWeight(dp(5f))
-        path(figure8Path)
-    }
-
-    private fun phone() {
-        fill(Color.BLACK)
-        noStroke()
-        rect(-phoneWidth / 2f, -phoneHeight / 2f, phoneWidth, phoneHeight)
-        fill(Color.WHITE)
+        val nextPos = figure8(t + 0.001f).let {
+            Vector2(it.x * figure8Width, it.y * figure8Height)
+        }
+        val heading = atan2(nextPos.y - pos.y, nextPos.x - pos.x).toDegrees()
+        val phoneWidth = radius * 0.08f
+        val phoneHeight = phoneWidth * 2f
         val screenWidth = phoneWidth * 0.8f
         val screenHeight = phoneHeight * 0.8f
-        rect(-screenWidth / 2f, -screenHeight / 2f, screenWidth, screenHeight)
 
-        fill(arrowColor)
-        triangle(-15f, 0f, 0f, -15f, 15f, 0f)
-    }
-
-    private fun figure8(t: Float): Vector2 {
-        val x = cos(t)
-        val y = -sin(t) * cos(t)
-        return Vector2(x, y)
-    }
-
-    companion object {
-
-        fun sized(
-            context: Context,
-            width: Int,
-            height: Int
-        ): CompassCalibrationView {
-            val view = CompassCalibrationView(context)
-            view.layoutParams = ViewGroup.LayoutParams(
-                width,
-                height
-            )
-            return view
+        translate(size.width / 2f + pos.x, size.height / 2f + pos.y) {
+            rotate(heading + 90f) {
+                drawRect(
+                    Color.Black,
+                    topLeft = Offset(-phoneWidth / 2f, -phoneHeight / 2f),
+                    size = androidx.compose.ui.geometry.Size(phoneWidth, phoneHeight)
+                )
+                drawRect(
+                    Color.White,
+                    topLeft = Offset(-screenWidth / 2f, -screenHeight / 2f),
+                    size = androidx.compose.ui.geometry.Size(screenWidth, screenHeight)
+                )
+                val arrowSize = phoneWidth * 0.75f
+                val arrow = Path().apply {
+                    moveTo(-arrowSize, 0f)
+                    lineTo(0f, -arrowSize)
+                    lineTo(arrowSize, 0f)
+                    close()
+                }
+                drawPath(arrow, primary)
+            }
         }
     }
+}
 
+private fun figure8(t: Float): Vector2 {
+    val x = cos(t)
+    val y = -sin(t) * cos(t)
+    return Vector2(x, y)
 }

@@ -338,7 +338,7 @@ class CalibrateCompassFragment : TrailSenseComposeFragment() {
                 R.string.calibrate_compass_dialog_content,
                 getString(android.R.string.ok)
             ),
-            contentView = if (hasCompass) CompassCalibrationView.sized(
+            contentView = if (hasCompass) compassCalibrationView(
                 requireContext(),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Resources.dp(requireContext(), 200f).toInt()

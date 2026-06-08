@@ -58,7 +58,7 @@ class ImproveAccuracyAlerter(
             context,
             context.getString(R.string.accuracy_info_title),
             content,
-            contentView = if (hasCompass) CompassCalibrationView.sized(
+            contentView = if (hasCompass) compassCalibrationView(
                 context,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Resources.dp(context, 200f).toInt()

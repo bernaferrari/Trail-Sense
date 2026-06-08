@@ -47,8 +47,8 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.CompassCalibrationView
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import com.kylecorry.trail_sense.settings.ui.compassCalibrationView
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -686,7 +686,11 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun showCalibrationDialog() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
-            val calibrationView = CompassCalibrationView(requireContext())
+            val calibrationView = compassCalibrationView(
+                requireContext(),
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Resources.dp(requireContext(), 200f).toInt()
+            )
             val doNotAskAgain = CheckBox(requireContext()).apply {
                 text = getString(R.string.do_not_ask_again)
             }
