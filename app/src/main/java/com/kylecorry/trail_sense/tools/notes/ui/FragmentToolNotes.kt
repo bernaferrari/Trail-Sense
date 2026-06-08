@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,13 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -50,7 +44,7 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
@@ -58,32 +52,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class FragmentToolNotes : Fragment() {
+class FragmentToolNotes : TrailSenseComposeFragment() {
 
     private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    NotesScreen(
-                        notes = notesRepo.getNotes(),
-                        lifecycleOwner = viewLifecycleOwner,
-                        onAdd = {
-                            findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
-                        },
-                        onEdit = ::editNote,
-                        onDelete = ::deleteNote,
-                        onShowQR = ::showQR
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        NotesScreen(
+            notes = notesRepo.getNotes(),
+            lifecycleOwner = viewLifecycleOwner,
+            onAdd = {
+                findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
+            },
+            onEdit = ::editNote,
+            onDelete = ::deleteNote,
+            onShowQR = ::showQR
+        )
     }
 
     private fun showQR(note: Note) {

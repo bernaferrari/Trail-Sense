@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,11 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
@@ -63,7 +56,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
@@ -73,32 +66,22 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.LocalDate
 
-class FragmentToolPedometer : Fragment() {
+class FragmentToolPedometer : TrailSenseComposeFragment() {
 
     private val pedometer by lazy { PedometerSubsystem.getInstance(requireContext()) }
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PedometerScreen(
-                        pedometer = pedometer,
-                        prefs = prefs,
-                        formatService = formatService,
-                        onReset = ::resetCounter,
-                        onTogglePedometer = ::togglePedometer,
-                        onToggleDistanceAlert = ::toggleDistanceAlert
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PedometerScreen(
+            pedometer = pedometer,
+            prefs = prefs,
+            formatService = formatService,
+            onReset = ::resetCounter,
+            onTogglePedometer = ::togglePedometer,
+            onToggleDistanceAlert = ::toggleDistanceAlert
+        )
     }
 
     private fun resetCounter(counter: StepCounter) {

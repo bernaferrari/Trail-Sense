@@ -2,10 +2,6 @@ package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import android.Manifest
 import android.os.Build
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,13 +23,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -57,7 +50,7 @@ import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import kotlinx.coroutines.Dispatchers
@@ -70,37 +63,27 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class TurnBackFragment : Fragment() {
+class TurnBackFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val sharedPrefs by lazy { PreferencesSubsystem.getInstance(requireContext()) }
     private val formatter by lazy { FormatService.getInstance(requireContext()) }
     private val astronomy = AstronomyService()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    TurnBackScreen(
-                        formatter = formatter,
-                        loadTurnBackTime = {
-                            sharedPrefs.preferences.getInstant(PREF_TURN_BACK_TIME)
-                        },
-                        loadReturnTime = {
-                            sharedPrefs.preferences.getInstant(PREF_TURN_BACK_RETURN_TIME)
-                        },
-                        onPickReturnTime = ::pickReturnTime,
-                        onUseSunset = ::setReturnTimeToSunset,
-                        onCancel = ::cancelTurnBack
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        TurnBackScreen(
+            formatter = formatter,
+            loadTurnBackTime = {
+                sharedPrefs.preferences.getInstant(PREF_TURN_BACK_TIME)
+            },
+            loadReturnTime = {
+                sharedPrefs.preferences.getInstant(PREF_TURN_BACK_RETURN_TIME)
+            },
+            onPickReturnTime = ::pickReturnTime,
+            onUseSunset = ::setReturnTimeToSunset,
+            onCancel = ::cancelTurnBack
+        )
     }
 
     private fun pickReturnTime(currentReturnTime: Instant?) {

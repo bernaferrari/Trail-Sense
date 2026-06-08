@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,12 +29,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.science.meteorology.Meteorology
@@ -56,7 +49,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -66,7 +59,7 @@ private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnit
     MetersPerSecond(DistanceUnits.Meters, TimeUnits.Seconds)
 }
 
-class TemperatureEstimationFragment : Fragment() {
+class TemperatureEstimationFragment : TrailSenseComposeFragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val thermometer by lazy { sensorService.getThermometer() }
@@ -74,34 +67,24 @@ class TemperatureEstimationFragment : Fragment() {
     private val location by lazy { LocationSubsystem.getInstance(requireContext()) }
     private val formatService by lazy { FormatService.getInstance(requireContext()) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    TemperatureEstimationScreen(
-                        prefs = prefs,
-                        formatService = formatService,
-                        initialElevation = location.elevation.convertTo(prefs.baseDistanceUnits),
-                        sensorTemperature = { thermometer.temperature },
-                        hasThermometerReading = {
-                            thermometer.hasValidReading || thermometer.temperature != 0f
-                        },
-                        readThermometer = {
-                            readAll(
-                                listOf(thermometer),
-                                Duration.ofSeconds(10),
-                                forceStopOnCompletion = true
-                            )
-                        }
-                    )
-                }
+    @Composable
+    override fun FragmentContent() {
+        TemperatureEstimationScreen(
+            prefs = prefs,
+            formatService = formatService,
+            initialElevation = location.elevation.convertTo(prefs.baseDistanceUnits),
+            sensorTemperature = { thermometer.temperature },
+            hasThermometerReading = {
+                thermometer.hasValidReading || thermometer.temperature != 0f
+            },
+            readThermometer = {
+                readAll(
+                    listOf(thermometer),
+                    Duration.ofSeconds(10),
+                    forceStopOnCompletion = true
+                )
             }
-        }
+        )
     }
 }
 
