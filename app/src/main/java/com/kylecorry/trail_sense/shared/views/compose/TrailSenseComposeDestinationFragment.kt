@@ -324,7 +324,13 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         useZeroShutterLag: Boolean,
         onCapture: (android.net.Uri?) -> Unit
     ) {
-        photoImportDialog = PhotoImportDialog(this, resolution, useZeroShutterLag) {
+        photoImportDialog = PhotoImportDialog(
+            requireContext(),
+            viewLifecycleOwner,
+            viewLifecycleOwner.lifecycleScope,
+            resolution,
+            useZeroShutterLag
+        ) {
             photoImportDialog = null
             onCapture(it)
         }.also {

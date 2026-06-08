@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.util.Size
 import androidx.camera.core.ImageCapture
@@ -54,11 +55,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
-import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -69,9 +70,13 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class PhotoImportDialog(
-    private val fragment: Fragment,
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner,
+    private val coroutineScope: CoroutineScope,
     private val resolution: Size? = null,
     private val useZeroShutterLag: Boolean = false,
     private val onCapture: (uri: Uri?) -> Unit
@@ -83,6 +88,17 @@ class PhotoImportDialog(
     private var isVisible by mutableStateOf(false)
 
     private var orientation = DeviceOrientation.Orientation.Portrait
+    private val orientationSensor by lazy {
+        SensorService(context).getDeviceOrientationSensor()
+    }
+    private val lifecycleObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> startOrientationSensor()
+            Lifecycle.Event.ON_PAUSE -> stopOrientationSensor()
+            Lifecycle.Event.ON_DESTROY -> stopOrientationSensor()
+            else -> {}
+        }
+    }
 
     init {
         initialize()
@@ -139,15 +155,10 @@ class PhotoImportDialog(
 
     @SuppressLint("UnsafeOptInUsageError")
     fun initialize() {
-        val orientationSensor = SensorService(fragment.requireContext()).getDeviceOrientationSensor()
         orientation = DeviceOrientation.Orientation.Portrait
-        fragment.observe(orientationSensor) {
-            val newOrientation = orientationSensor.orientation
-            if (newOrientation == DeviceOrientation.Orientation.Landscape || newOrientation == DeviceOrientation.Orientation.LandscapeInverse) {
-                orientation = newOrientation
-            } else if (newOrientation == DeviceOrientation.Orientation.Portrait || newOrientation == DeviceOrientation.Orientation.PortraitInverse) {
-                orientation = newOrientation
-            }
+        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            startOrientationSensor()
         }
     }
 
@@ -161,7 +172,7 @@ class PhotoImportDialog(
         camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
         camera.start(
             resolution,
-            lifecycleOwner = fragment.viewLifecycleOwner,
+            lifecycleOwner = lifecycleOwner,
             readFrames = false,
             captureSettings = ImageCaptureSettings(
                 captureMode = if (useZeroShutterLag) {
@@ -181,8 +192,8 @@ class PhotoImportDialog(
             return
         }
         isCapturing = true
-        fragment.inBackground {
-            val file = FileSubsystem.getInstance(fragment.requireContext()).createTemp("jpg")
+        coroutineScope.launch {
+            val file = FileSubsystem.getInstance(context).createTemp("jpg")
             val success = onIO {
                 val saved = camera.capture(file)
 
@@ -232,12 +243,36 @@ class PhotoImportDialog(
         }
         isVisible = false
         stopCamera()
+        stopOrientationSensor()
+        lifecycleOwner.lifecycle.removeObserver(lifecycleObserver)
     }
 
     private fun stopCamera() {
         camera?.stop()
         camera = null
         isCameraStarted = false
+    }
+
+    private fun startOrientationSensor() {
+        orientationSensor.start(this::onOrientationReading)
+    }
+
+    private fun stopOrientationSensor() {
+        orientationSensor.stop(this::onOrientationReading)
+    }
+
+    private fun onOrientationReading(): Boolean {
+        val newOrientation = orientationSensor.orientation
+        if (newOrientation == DeviceOrientation.Orientation.Landscape ||
+            newOrientation == DeviceOrientation.Orientation.LandscapeInverse
+        ) {
+            orientation = newOrientation
+        } else if (newOrientation == DeviceOrientation.Orientation.Portrait ||
+            newOrientation == DeviceOrientation.Orientation.PortraitInverse
+        ) {
+            orientation = newOrientation
+        }
+        return true
     }
 }
 

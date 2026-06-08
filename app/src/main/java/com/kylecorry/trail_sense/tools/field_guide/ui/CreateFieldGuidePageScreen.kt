@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -241,7 +242,13 @@ private class CreateFieldGuidePageController(private val fragment: Fragment) {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
             fragment.requireActivity().runOnUiThread {
-                photoImportDialog = PhotoImportDialog(fragment, null, prefs.useZeroShutterLag) { uri ->
+                photoImportDialog = PhotoImportDialog(
+                    fragment.requireContext(),
+                    fragment.viewLifecycleOwner,
+                    fragment.viewLifecycleOwner.lifecycleScope,
+                    null,
+                    prefs.useZeroShutterLag
+                ) { uri ->
                     photoImportDialog = null
                     cont.resume(uri)
                 }.also {

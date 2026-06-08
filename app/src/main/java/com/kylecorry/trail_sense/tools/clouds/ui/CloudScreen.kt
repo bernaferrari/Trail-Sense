@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -220,7 +221,13 @@ private class CloudController(private val fragment: Fragment) {
         return suspendCoroutine { cont ->
             val prefs = UserPreferences(fragment.requireContext()).camera
             fragment.requireActivity().runOnUiThread {
-                photoImportDialog = PhotoImportDialog(fragment, size, prefs.useZeroShutterLag) { uri ->
+                photoImportDialog = PhotoImportDialog(
+                    fragment.requireContext(),
+                    fragment.viewLifecycleOwner,
+                    fragment.viewLifecycleOwner.lifecycleScope,
+                    size,
+                    prefs.useZeroShutterLag
+                ) { uri ->
                     photoImportDialog = null
                     cont.resume(uri)
                 }.also {
