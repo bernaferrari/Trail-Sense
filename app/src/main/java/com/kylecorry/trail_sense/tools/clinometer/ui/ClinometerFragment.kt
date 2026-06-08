@@ -5,25 +5,35 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.graphics.Typeface
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -33,7 +43,6 @@ import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.ui.setCompoundDrawables
-import com.kylecorry.andromeda.core.ui.setTextDistinct
 import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
@@ -143,15 +152,15 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
         toast(getString(R.string.set_inclination_instructions))
 
-        CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
-        CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, false)
+        views.clinometerTitle.isLeftButtonSelected = false
+        views.clinometerTitle.isRightButtonSelected = false
 
         views.cameraViewHolder.clipToOutline = true
         views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
         views.camera.setShowTorch(false)
         views.camera.passThroughTouchEvents = true
 
-        views.clinometerTitle.leftButton.setOnClickListener {
+        views.clinometerTitle.onLeftButtonClick = {
             if (useCamera) {
                 startSideClinometer()
             } else {
@@ -159,7 +168,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
             }
         }
 
-        views.clinometerTitle.rightButton.setOnClickListener {
+        views.clinometerTitle.onRightButtonClick = {
             askForHeightOrDistance()
         }
 
@@ -187,8 +196,8 @@ class ClinometerFragment : TrailSenseComposeFragment() {
     private fun startSideClinometer() {
         views.camera.stop()
         views.arView.stop()
-        views.clinometerTitle.leftButton.setImageResource(R.drawable.ic_camera)
-        CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
+        views.clinometerTitle.leftButtonIcon = R.drawable.ic_camera
+        views.clinometerTitle.isLeftButtonSelected = false
         useCamera = false
     }
 
@@ -200,8 +209,8 @@ class ClinometerFragment : TrailSenseComposeFragment() {
                     readFrames = false, shouldStabilizePreview = false
                 )
                 views.arView.start(false)
-                views.clinometerTitle.leftButton.setImageResource(R.drawable.ic_phone_portrait)
-                CustomUiUtils.setButtonState(views.clinometerTitle.leftButton, false)
+                views.clinometerTitle.leftButtonIcon = R.drawable.ic_phone_portrait
+                views.clinometerTitle.isLeftButtonSelected = false
             } else {
                 startSideClinometer()
                 if (showAlert) {
@@ -246,7 +255,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
-                CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, true)
+                views.clinometerTitle.isRightButtonSelected = true
                 CustomUiUtils.disclaimer(
                     requireContext(),
                     getString(R.string.instructions),
@@ -275,7 +284,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
             if (distance != null) {
                 knownHeight = distance
                 distanceAway = null
-                CustomUiUtils.setButtonState(views.clinometerTitle.rightButton, true)
+                views.clinometerTitle.isRightButtonSelected = true
 
                 CustomUiUtils.disclaimer(
                     requireContext(),
@@ -295,9 +304,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         super.onResume()
         if (distanceAway == null && knownHeight == null) {
             distanceAway = prefs.clinometer.baselineDistance
-            CustomUiUtils.setButtonState(
-                views.clinometerTitle.rightButton, distanceAway != null
-            )
+            views.clinometerTitle.isRightButtonSelected = distanceAway != null
         }
 
         if (useCamera) {
@@ -331,15 +338,8 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         lockState.write(lockedAngle1 != null)
 
         if (lockState.hasChanges) {
-            views.clinometerTitle.title.setCompoundDrawables(
-                Resources.dp(requireContext(), 24f).toInt(),
-                right = if (lockState.read()) R.drawable.lock else null
-            )
+            views.clinometerTitle.isLocked = lockState.read()
         }
-
-        CustomUiUtils.setImageColor(
-            views.clinometerTitle.title, Resources.androidTextColorPrimary(requireContext())
-        )
 
         if (!isOrientationValid() && !lockState.peek()) {
             views.clinometerInstructions.isVisible = !useCamera
@@ -361,10 +361,9 @@ class ClinometerFragment : TrailSenseComposeFragment() {
         views.clinometer.angle = angle
         views.cameraClinometer.inclination = incline
 
-        views.clinometerTitle.title.setTextDistinct(formatter.formatDegrees(incline))
-        views.clinometerTitle.subtitle.setTextDistinct(
+        views.clinometerTitle.title = formatter.formatDegrees(incline)
+        views.clinometerTitle.subtitle =
             getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
-        )
 
         views.avalancheRisk.title = getAvalancheRiskString(Geology.getAvalancheRisk(incline))
 
@@ -555,7 +554,7 @@ class ClinometerFragment : TrailSenseComposeFragment() {
 
 private data class ClinometerViews(
     val root: View,
-    val clinometerTitle: ClinometerTitle,
+    val clinometerTitle: ClinometerTitleState,
     val clinometer: ClinometerView,
     val cameraViewHolder: LinearLayout,
     val camera: CameraState,
@@ -588,13 +587,90 @@ private class ClinometerDataPointState(
     }
 }
 
-private data class ClinometerTitle(
-    val root: View,
-    val leftButton: ImageButton,
-    val rightButton: ImageButton,
-    val title: TextView,
-    val subtitle: TextView
-)
+private class ClinometerTitleState {
+    var leftButtonIcon by mutableIntStateOf(R.drawable.ic_camera)
+    var rightButtonIcon by mutableIntStateOf(R.drawable.ruler)
+    var isLeftButtonSelected by mutableStateOf(false)
+    var isRightButtonSelected by mutableStateOf(false)
+    var title by mutableStateOf("")
+    var subtitle by mutableStateOf("")
+    var isLocked by mutableStateOf(false)
+    var onLeftButtonClick by mutableStateOf<(() -> Unit)?>(null)
+    var onRightButtonClick by mutableStateOf<(() -> Unit)?>(null)
+}
+
+@Composable
+private fun ClinometerTitle(
+    state: ClinometerTitleState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ClinometerTitleButton(
+            icon = state.leftButtonIcon,
+            isSelected = state.isLeftButtonSelected,
+            onClick = { state.onLeftButtonClick?.invoke() }
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = state.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                if (state.isLocked) {
+                    Icon(
+                        painter = painterResource(R.drawable.lock),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(24.dp)
+                    )
+                }
+            }
+            Text(
+                text = state.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        ClinometerTitleButton(
+            icon = state.rightButtonIcon,
+            isSelected = state.isRightButtonSelected,
+            onClick = { state.onRightButtonClick?.invoke() }
+        )
+    }
+}
+
+@Composable
+private fun ClinometerTitleButton(
+    icon: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(onClick = onClick) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
 
 @Composable
 private fun ClinometerHost(
@@ -616,9 +692,17 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         )
     }
 
-    val title = createClinometerTitle(context)
+    val title = ClinometerTitleState()
+    val titleView = ComposeView(context).apply {
+        id = R.id.clinometer_title
+        setContent {
+            TrailSenseTheme {
+                ClinometerTitle(title)
+            }
+        }
+    }
     root.addView(
-        title.root,
+        titleView,
         ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
             topToTop = ConstraintLayout.LayoutParams.PARENT_ID
             startToStart = ConstraintLayout.LayoutParams.PARENT_ID
@@ -802,67 +886,6 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         estimatedHeight = estimatedHeight,
         clinometerInstructions = clinometerInstructions,
         cameraClinometerInstructions = cameraClinometerInstructions
-    )
-}
-
-private fun createClinometerTitle(context: Context): ClinometerTitle {
-    val root = LinearLayout(context).apply {
-        id = R.id.clinometer_title
-        gravity = Gravity.CENTER_VERTICAL
-        orientation = LinearLayout.HORIZONTAL
-        setPadding(8.dp(context), 8.dp(context), 8.dp(context), 8.dp(context))
-    }
-    val leftButton = ImageButton(context).apply {
-        id = R.id.clinometer_mode_btn
-        setImageResource(R.drawable.ic_camera)
-        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-    }
-    val textHolder = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-    }
-    val title = TextView(context).apply {
-        gravity = Gravity.CENTER
-        textSize = 24f
-        typeface = Typeface.DEFAULT_BOLD
-        setTextColor(Resources.androidTextColorPrimary(context))
-    }
-    val subtitle = TextView(context).apply {
-        gravity = Gravity.CENTER
-        textSize = 14f
-        setTextColor(Resources.androidTextColorSecondary(context))
-    }
-    textHolder.addView(
-        title,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-    textHolder.addView(
-        subtitle,
-        LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    )
-    val rightButton = ImageButton(context).apply {
-        id = R.id.clinometer_measure_btn
-        setImageResource(R.drawable.ruler)
-        backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-    }
-    root.addView(leftButton, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
-    root.addView(textHolder, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-    root.addView(rightButton, LinearLayout.LayoutParams(48.dp(context), 48.dp(context)))
-
-    return ClinometerTitle(
-        root = root,
-        leftButton = leftButton,
-        rightButton = rightButton,
-        title = title,
-        subtitle = subtitle
     )
 }
 
