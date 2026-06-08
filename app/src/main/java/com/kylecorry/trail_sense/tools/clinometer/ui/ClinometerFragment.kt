@@ -9,7 +9,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -754,7 +753,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         }
     )
 
-    val instrumentFrame = FrameLayout(context).apply {
+    val instrumentFrame = ConstraintLayout(context).apply {
         id = View.generateViewId()
     }
     root.addView(
@@ -774,10 +773,12 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     }
     instrumentFrame.addView(
         clinometer,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 
     val cameraViewHolder = ConstraintLayout(context).apply {
@@ -787,7 +788,7 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
         clipToOutline = true
     }
-    val cameraFrame = FrameLayout(context).apply {
+    val cameraFrame = ConstraintLayout(context).apply {
         id = View.generateViewId()
     }
     val camera = CameraState(context)
@@ -810,22 +811,30 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     }
     cameraFrame.addView(
         cameraPreview,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     cameraFrame.addView(
         arView,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            Gravity.CENTER
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     cameraFrame.addView(
         reticle,
-        FrameLayout.LayoutParams(60.dp(context), 1.dp(context), Gravity.CENTER)
+        ConstraintLayout.LayoutParams(60.dp(context), 1.dp(context)).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     val cameraClinometer = CameraClinometerView(context).apply {
         id = R.id.camera_clinometer
@@ -849,10 +858,12 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     )
     instrumentFrame.addView(
         cameraViewHolder,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        ConstraintLayout.LayoutParams(0, 0).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 
     val clinometerInstructions = createInstructionView(
@@ -867,19 +878,21 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     )
     instrumentFrame.addView(
         clinometerInstructions,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.CENTER
-        )
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
     instrumentFrame.addView(
         cameraClinometerInstructions,
-        FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            Gravity.CENTER
-        )
+        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+        }
     )
 
     return ClinometerViews(
