@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -37,11 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
@@ -73,7 +77,6 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.views.DatePickerContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -103,13 +106,41 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
+@Composable
+fun AstronomyToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier
+) {
+    val controller = remember(fragment) { AstronomyController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    private var astronomyViews: AstronomyViews? = null
-    private val views: AstronomyViews
-        get() = astronomyViews ?: error("Astronomy views are not ready")
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class AstronomyController(private val fragment: Fragment) {
+
+    private val views = createAstronomyViews(fragment.requireContext(), this::showTimeSeeker)
     private val isViewReady: Boolean
-        get() = astronomyViews != null && view != null
+        get() = isCreated
 
     private lateinit var gps: IGPS
 
@@ -118,10 +149,10 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
     private lateinit var sunTimesMode: SunTimesMode
 
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
     private val astronomyService = AstronomyService()
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     private val markdownService by lazy { DependencyRegistry.get<MarkdownService>() }
 
@@ -142,6 +173,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
     private var currentSeekChartTime = ZonedDateTime.now()
     private var isSeeking = false
     private var currentMoonTilt = 0f
+    private var isCreated = false
 
     private val astroChartDataProvider by lazy {
         if (prefs.astronomy.centerSunAndMoon) {
@@ -156,44 +188,38 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
     private val producers by lazy {
         listOf(
-            SunListItemProducer(requireContext()),
-            MoonListItemProducer(requireContext()),
-            MeteorShowerListItemProducer(requireContext()),
-            LunarEclipseListItemProducer(requireContext()),
-            SolarEclipseListItemProducer(requireContext())
+            SunListItemProducer(fragment.requireContext()),
+            MoonListItemProducer(fragment.requireContext()),
+            MeteorShowerListItemProducer(fragment.requireContext()),
+            LunarEclipseListItemProducer(fragment.requireContext()),
+            SolarEclipseListItemProducer(fragment.requireContext())
         )
-    }
-
-    override fun beforeCreateContent() {
-        astronomyViews = createAstronomyViews(requireContext(), this::showTimeSeeker)
     }
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         AstronomyScreen(
             views = views,
             astronomyItems = astronomyItems,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
-    override fun onDestroyView() {
-        astronomyViews = null
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
+        if (isCreated) {
+            return
+        }
+        isCreated = true
 
         AstronomyQuickActionBinder(
-            this,
+            fragment,
             views.astronomyTitle.leftButton,
             views.astronomyTitle.rightButton,
             prefs.astronomy
         ).bind()
 
         views.button3d.isVisible =
-            Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
         views.button3d.onClick = {
             val time = if (isSeeking) {
                 currentSeekChartTime
@@ -203,7 +229,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
                 views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
             AugmentedRealityFragment.open(
-                findNavController(),
+                fragment.findNavController(),
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
                 Bundle().apply {
@@ -230,18 +256,18 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             )
 
             val optionNames = listOfNotNull(
-                getString(R.string.full_moon),
-                getString(R.string.new_moon),
-                getString(R.string.quarter_moon),
-                getString(R.string.meteor_shower),
-                getString(R.string.lunar_eclipse),
-                getString(R.string.solar_eclipse),
-                getString(R.string.supermoon)
+                fragment.getString(R.string.full_moon),
+                fragment.getString(R.string.new_moon),
+                fragment.getString(R.string.quarter_moon),
+                fragment.getString(R.string.meteor_shower),
+                fragment.getString(R.string.lunar_eclipse),
+                fragment.getString(R.string.solar_eclipse),
+                fragment.getString(R.string.supermoon)
             ).map { it.capitalizeWords() }
 
             Pickers.item(
-                requireContext(),
-                getString(R.string.find_next_occurrence),
+                fragment.requireContext(),
+                fragment.getString(R.string.find_next_occurrence),
                 optionNames,
                 options.indexOf(lastAstronomyEventSearch)
             ) {
@@ -249,11 +275,13 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
                     val search = options[it]
                     lastAstronomyEventSearch = search
                     val currentDate = views.displayDate.date
-                    inBackground {
-                        val job = launch {
-                            val nextEvent = astronomyService.findNextEvent(
-                                search, location, currentDate
-                            )
+                    fragment.inBackground {
+                        Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+                            val nextEvent = onDefault {
+                                astronomyService.findNextEvent(
+                                    search, location, currentDate
+                                )
+                            }
                             onMain {
                                 val newDate = nextEvent ?: currentDate
                                 displayDate = newDate
@@ -261,8 +289,8 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
                                 refreshAstronomy()
 
                                 if (nextEvent == null) {
-                                    toast(
-                                        getString(
+                                    fragment.toast(
+                                        fragment.getString(
                                             R.string.unable_to_find_next_astronomy,
                                             optionNames[it].lowercase()
                                         )
@@ -298,6 +326,11 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         refreshAstronomy()
     }
 
+    fun onDestroy() {
+        onPause()
+        isCreated = false
+    }
+
     private fun showTimeSeeker(time: ZonedDateTime?) {
         if (isSeeking && time == null) {
             return
@@ -319,18 +352,18 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
     private fun updateSeekPositions() {
         val positions = getSunMoonPositions(currentSeekChartTime)
         views.timeSeekerDetails.sunPosition = markdownService.toMarkdown(
-            getString(
+            fragment.getString(
                 R.string.sun_moon_position_template,
-                getString(R.string.sun),
+                fragment.getString(R.string.sun),
                 formatService.formatDegrees(positions.sunAltitude),
                 formatService.formatDegrees(positions.sunAzimuth)
             )
         )
 
         views.timeSeekerDetails.moonPosition = markdownService.toMarkdown(
-            getString(
+            fragment.getString(
                 R.string.sun_moon_position_template,
-                getString(R.string.moon),
+                fragment.getString(R.string.moon),
                 formatService.formatDegrees(positions.moonAltitude),
                 formatService.formatDegrees(positions.moonAzimuth)
             )
@@ -348,7 +381,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         isSeeking = false
         views.timeSeeker.isVisible = false
         views.button3d.isVisible =
-            Tools.isToolAvailable(requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
         val displayDate = views.displayDate.date
         if (displayDate == LocalDate.now()) {
             plotMoonImage(data.moon)
@@ -377,8 +410,10 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         )
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
+        if (!isCreated) {
+            return
+        }
         chart.setBands(prefs.astronomy.showAstronomyBands)
         views.displayDate.reset()
         requestLocationUpdate()
@@ -388,15 +423,16 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         refreshAstronomy()
 
         CustomUiUtils.oneTimeToast(
-            requireContext(),
-            getString(R.string.tap_sun_moon_hint),
+            fragment.requireContext(),
+            fragment.getString(R.string.tap_sun_moon_hint),
             "cache_tap_sun_moon_shown"
         )
     }
 
-    override fun onPause() {
-        super.onPause()
-        gps.stop(this::onLocationUpdate)
+    fun onPause() {
+        if (this::gps.isInitialized) {
+            gps.stop(this::onLocationUpdate)
+        }
         periodicUpdater.stop()
         gpsErrorShown = false
     }
@@ -533,17 +569,17 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
-                views.astronomyTitle.subtitle = getString(R.string.until_sunrise)
+                views.astronomyTitle.subtitle = fragment.getString(R.string.until_sunrise)
             } else if (nextSunset != null) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunset))
-                views.astronomyTitle.subtitle = getString(R.string.until_sunset)
+                views.astronomyTitle.subtitle = fragment.getString(R.string.until_sunset)
             } else if (astronomyService.isSunUp(location)) {
-                views.astronomyTitle.title = getString(R.string.sun_up_no_set)
-                views.astronomyTitle.subtitle = getString(R.string.sun_does_not_set)
+                views.astronomyTitle.title = fragment.getString(R.string.sun_up_no_set)
+                views.astronomyTitle.subtitle = fragment.getString(R.string.sun_does_not_set)
             } else {
-                views.astronomyTitle.title = getString(R.string.sun_down_no_set)
-                views.astronomyTitle.subtitle = getString(R.string.sun_does_not_rise)
+                views.astronomyTitle.title = fragment.getString(R.string.sun_down_no_set)
+                views.astronomyTitle.subtitle = fragment.getString(R.string.sun_does_not_rise)
             }
         }
     }
@@ -554,13 +590,13 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         }
 
         if (gps is MockedGPS && prefs.locationOverride == Coordinate.zero) {
-            val activity = requireActivity() as MainActivity
-            val navController = findNavController()
+            val activity = fragment.requireActivity() as MainActivity
+            val navController = fragment.findNavController()
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
-                getString(R.string.location_not_set),
+                fragment.getString(R.string.location_not_set),
                 R.drawable.satellite,
-                getString(R.string.set)
+                fragment.getString(R.string.set)
             ) {
                 activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
                 navController.navigate(R.id.calibrateGPSFragment)
@@ -569,9 +605,9 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
             gpsErrorShown = true
         } else if (gps is CachedGPS && location == Coordinate.zero) {
             val error = UserError(
-                ErrorBannerReason.NoGPS, getString(R.string.location_disabled), R.drawable.satellite
+                ErrorBannerReason.NoGPS, fragment.getString(R.string.location_disabled), R.drawable.satellite
             )
-            (requireActivity() as MainActivity).errorBanner.report(error)
+            (fragment.requireActivity() as MainActivity).errorBanner.report(error)
             gpsErrorShown = true
         }
     }
@@ -598,7 +634,7 @@ class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
         }
         detectAndShowGPSError()
         views.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
-        inBackground {
+        fragment.inBackground {
             updateAstronomyDetails()
             updateAstronomyChart()
             displayTimeUntilNextSunEvent()
@@ -959,10 +995,6 @@ private class AstronomyTextButtonState(
             Text(text = text)
         }
     }
-}
-
-private fun Int.dp(context: Context): Int {
-    return com.kylecorry.andromeda.core.system.Resources.dp(context, toFloat()).toInt()
 }
 
 @Preview(showBackground = true)

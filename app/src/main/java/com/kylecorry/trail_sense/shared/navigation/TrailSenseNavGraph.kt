@@ -42,8 +42,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_astronomy
-            setClassName("com.kylecorry.trail_sense.tools.astronomy.ui.AstronomyFragment")
-            label = "AstronomyFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "AstronomyScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ASTRONOMY)
+                .build())
             putAction(
                 R.id.action_astronomyFragment_to_calibrateGPSFragment,
                 NavAction(R.id.calibrateGPSFragment, NavOptions.Builder()
