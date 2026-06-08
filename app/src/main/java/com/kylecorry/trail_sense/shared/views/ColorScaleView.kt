@@ -1,70 +1,75 @@
 package com.kylecorry.trail_sense.shared.views
 
-import android.content.Context
-import android.graphics.Color
-import android.util.AttributeSet
-import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.CanvasView
-import com.kylecorry.andromeda.canvas.TextMode
+import android.view.View
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.scales.IColorScale
 
-class ColorScaleView(context: Context, attrs: AttributeSet? = null) : CanvasView(context, attrs) {
+class ColorScaleState {
+    var view: View? = null
 
-    var colorScale: IColorScale? = null
+    var colorScale by mutableStateOf<IColorScale?>(null)
+    var labels by mutableStateOf<Map<Float, String>>(emptyMap())
+
+    var isVisible: Boolean
+        get() = view?.isVisible == true
         set(value) {
-            field = value
-            invalidate()
+            view?.isVisible = value
         }
+}
 
-    var labels: Map<Float, String> = emptyMap()
-        set(value) {
-            field = value
-            invalidate()
+@Composable
+fun ColorScaleContent(
+    state: ColorScaleState,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val textColor = Color(Resources.androidTextColorSecondary(context))
+    val textSize = 12.sp
+
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val colorScale = state.colorScale ?: return@Canvas
+        val labelPadding = 2.5.dp.toPx()
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = textColor.toArgb()
+            textAlign = android.graphics.Paint.Align.CENTER
+            this.textSize = textSize.toPx()
         }
+        val labelHeight = paint.fontMetrics.run { bottom - top }
+        val scaleHeight = size.height - labelHeight - labelPadding * 2
 
-    init {
-        runEveryCycle = false
-    }
-
-    @ColorInt
-    private var textColor: Int = Color.BLACK
-
-    override fun setup() {
-        textColor = Resources.androidTextColorSecondary(context)
-    }
-
-    override fun draw() {
-        clear()
-        val colorScale = colorScale ?: return
-
-        textSize(sp(12f))
-        val labelPadding = dp(2.5f)
-        val labelHeight = (labels.maxOfOrNull { textHeight(it.value) } ?: 0f) + labelPadding * 2
-
-        noFill()
-        strokeWeight(1f)
-        val scaleHeight = height - labelHeight
-
-        for (i in 0..width) {
-            val pct = i / width.toFloat()
-            val color = colorScale.getColor(pct)
-            stroke(color)
-            line(i.toFloat(), 0f, i.toFloat(), scaleHeight)
-        }
-
-        textMode(TextMode.Center)
-
-        noStroke()
-        fill(textColor)
-        for (label in labels) {
-            text(
-                label.value,
-                width * label.key,
-                height.toFloat() - textHeight(label.value) / 2 - labelPadding
+        for (i in 0..size.width.toInt()) {
+            val pct = i / size.width
+            drawLine(
+                color = Color(colorScale.getColor(pct)),
+                start = androidx.compose.ui.geometry.Offset(i.toFloat(), 0f),
+                end = androidx.compose.ui.geometry.Offset(i.toFloat(), scaleHeight)
             )
         }
 
-
+        drawIntoCanvas { canvas ->
+            state.labels.forEach { label ->
+                canvas.nativeCanvas.drawText(
+                    label.value,
+                    size.width * label.key,
+                    size.height - labelPadding,
+                    paint
+                )
+            }
+        }
     }
 }

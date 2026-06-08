@@ -77,7 +77,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
-import com.kylecorry.trail_sense.shared.views.ColorScaleView
+import com.kylecorry.trail_sense.shared.views.ColorScaleContent
+import com.kylecorry.trail_sense.shared.views.ColorScaleState
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
@@ -824,7 +825,7 @@ private data class PathOverviewViews(
     val pathImage: MapView,
     val pathMapFullscreenToggle: ImageButton,
     val pathSelectedPoint: FrameLayout,
-    val pathLegend: ColorScaleView,
+    val pathLegend: ColorScaleState,
     val pathDuration: PathDataPointState,
     val pathDistance: PathDataPointState,
     val pathWaypoints: PathDataPointState,
@@ -1027,11 +1028,21 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         }
     )
 
-    val legend = ColorScaleView(context, null).apply {
+    val legend = ColorScaleState()
+    val legendView = ComposeView(context).apply {
         id = R.id.path_legend
+        legend.view = this
+        setContent {
+            TrailSenseTheme {
+                ColorScaleContent(
+                    state = legend,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
     content.addView(
-        legend,
+        legendView,
         LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             40.dp(context)
