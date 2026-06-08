@@ -64,8 +64,10 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.torch.ScreenTorch
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
@@ -90,6 +92,7 @@ import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -115,7 +118,12 @@ import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
+import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
+import com.kylecorry.trail_sense.tools.waterpurification.ui.TimeSelection
+import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationScreen
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.time.Duration
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
 
@@ -192,7 +200,42 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             )
             DESTINATION_MIRROR_CAMERA -> MirrorCamera()
             DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
+            DESTINATION_WATER_PURIFICATION -> WaterPurification()
         }
+    }
+
+    @Composable
+    private fun WaterPurification() {
+        val sensorService = remember { SensorService(requireContext()) }
+        val formatService = remember { FormatService.getInstance(requireContext()) }
+        val altimeter = remember { sensorService.getAltimeter() }
+        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
+        val waterService = remember { WaterService() }
+        WaterPurificationScreen(
+            cache = cache,
+            formatService = formatService,
+            getSelectedDuration = { selection ->
+                onDefault {
+                    if (selection == TimeSelection.Auto) {
+                        if (!altimeter.hasValidReading) {
+                            withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
+                                altimeter.read()
+                            }
+                        }
+
+                        if (altimeter.hasValidReading) {
+                            return@onDefault waterService.getPurificationTime(
+                                Distance.from(altimeter.altitude, DistanceUnits.Meters)
+                            )
+                        }
+                    } else if (selection == TimeSelection.LowAltitude) {
+                        return@onDefault Duration.ofMinutes(1)
+                    }
+
+                    Duration.ofMinutes(3)
+                }
+            }
+        )
     }
 
     @Composable
@@ -1612,5 +1655,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_MAGNIFIER = "magnifier"
         const val DESTINATION_MIRROR_CAMERA = "mirror_camera"
         const val DESTINATION_PHOTO_MAP_SETTINGS = "photo_map_settings"
+        const val DESTINATION_WATER_PURIFICATION = "water_purification"
     }
 }

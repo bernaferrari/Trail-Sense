@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -30,66 +32,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.preferences.IPreferences
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
-import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 import java.time.Instant
 
-class WaterPurificationFragment : TrailSenseComposeFragment() {
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val altimeter by lazy { sensorService.getAltimeter() }
-    private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
-    private val waterService = WaterService()
-
-    @Composable
-    override fun FragmentContent() {
-        WaterPurificationScreen(
-            cache = cache,
-            formatService = formatService,
-            getSelectedDuration = { selection ->
-                getSelectedDuration(selection)
-            }
-        )
-    }
-
-    private suspend fun getSelectedDuration(selection: TimeSelection): Duration = onDefault {
-        if (selection == TimeSelection.Auto) {
-            if (!altimeter.hasValidReading) {
-                withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
-                    altimeter.read()
-                }
-            }
-
-            if (altimeter.hasValidReading) {
-                return@onDefault waterService.getPurificationTime(
-                    Distance.from(altimeter.altitude, DistanceUnits.Meters)
-                )
-            }
-        } else if (selection == TimeSelection.LowAltitude) {
-            return@onDefault Duration.ofMinutes(1)
-        }
-
-        Duration.ofMinutes(3)
-    }
-
-    companion object {
-        const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
-    }
-}
+const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
 
 @Composable
-private fun WaterPurificationScreen(
+internal fun WaterPurificationScreen(
     cache: IPreferences,
     formatService: FormatService,
     getSelectedDuration: suspend (TimeSelection) -> Duration
@@ -113,7 +66,7 @@ private fun WaterPurificationScreen(
     }
 
     fun stop() {
-        cache.remove(WaterPurificationFragment.WATER_PURIFICATION_END_TIME_KEY)
+        cache.remove(WATER_PURIFICATION_END_TIME_KEY)
         WaterPurificationTimerService.stop(context)
         remaining = null
     }
@@ -159,7 +112,7 @@ private fun WaterPurificationScreen(
                             } else {
                                 val selectedDuration = duration ?: Duration.ofMinutes(3)
                                 cache.putInstant(
-                                    WaterPurificationFragment.WATER_PURIFICATION_END_TIME_KEY,
+                                    WATER_PURIFICATION_END_TIME_KEY,
                                     Instant.now().plus(selectedDuration)
                                 )
                                 WaterPurificationTimerService.start(
@@ -235,12 +188,12 @@ private fun TimeChip(
 
 private fun getRemainingTime(cache: IPreferences): Duration? {
     val lastEndTime =
-        cache.getInstant(WaterPurificationFragment.WATER_PURIFICATION_END_TIME_KEY) ?: return null
+        cache.getInstant(WATER_PURIFICATION_END_TIME_KEY) ?: return null
     val duration = Duration.between(Instant.now(), lastEndTime)
     return if (!duration.isNegative && !duration.isZero) duration else null
 }
 
-private enum class TimeSelection {
+internal enum class TimeSelection {
     Auto,
     LowAltitude,
     HighAltitude

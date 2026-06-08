@@ -584,8 +584,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.waterPurificationFragment
-            setClassName("com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "WaterPurificationFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WATER_PURIFICATION)
+                .build())
             graph.addDestination(this)
         }
 
