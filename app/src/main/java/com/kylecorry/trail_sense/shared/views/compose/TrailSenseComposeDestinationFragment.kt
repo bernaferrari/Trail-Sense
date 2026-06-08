@@ -108,6 +108,7 @@ import com.kylecorry.trail_sense.settings.ui.CalibrateBarometerToolScreen
 import com.kylecorry.trail_sense.settings.ui.CalibrateCompassToolScreen
 import com.kylecorry.trail_sense.settings.ui.CalibrateGPSToolScreen
 import com.kylecorry.trail_sense.settings.ui.SettingsToolScreen
+import com.kylecorry.trail_sense.settings.ui.ThermometerSettingsToolScreen
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
@@ -399,6 +400,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
             DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
             DESTINATION_SETTINGS -> SettingsToolScreen(this)
+            DESTINATION_THERMOMETER_SETTINGS -> ThermometerSettingsToolScreen(this)
             DESTINATION_WEATHER_SETTINGS -> WeatherSettingsToolScreen(this)
             DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
             DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
@@ -3445,6 +3447,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SIGNAL_FINDER = "signal_finder"
         const val DESTINATION_TURN_BACK = "turn_back"
         const val DESTINATION_SETTINGS = "settings"
+        const val DESTINATION_THERMOMETER_SETTINGS = "thermometer_settings"
         const val DESTINATION_WEATHER_SETTINGS = "weather_settings"
         const val DESTINATION_STRIDE_LENGTH_ESTIMATION = "stride_length_estimation"
         const val DESTINATION_PEDOMETER_SETTINGS = "pedometer_settings"
