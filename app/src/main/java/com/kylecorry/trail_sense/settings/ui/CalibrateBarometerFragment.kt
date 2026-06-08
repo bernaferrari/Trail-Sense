@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,12 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.observe
@@ -48,8 +43,8 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
@@ -62,7 +57,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-class CalibrateBarometerFragment : Fragment() {
+class CalibrateBarometerFragment : TrailSenseComposeFragment() {
 
     private val prefs by lazy { UserPreferences(requireContext()) }
     private val cache by lazy { PreferencesSubsystem.getInstance(requireContext()).preferences }
@@ -91,158 +86,148 @@ class CalibrateBarometerFragment : Fragment() {
     private var setChartState: ((PressureChartData) -> Unit)? = null
     private var setBarometerOffset: ((Float) -> Unit)? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    var pressure by remember { mutableStateOf(getString(R.string.dash)) }
-                    var pressureAvailable by remember { mutableStateOf(false) }
-                    var chartData by remember {
-                        mutableStateOf(PressureChartData(emptyList(), emptyList()))
-                    }
-                    var useSeaLevelPressure by remember {
-                        mutableStateOf(getBoolean(R.string.pref_use_sea_level_pressure, true))
-                    }
-                    var pressureSmoothing by remember {
-                        mutableStateOf(getInt(R.string.pref_barometer_pressure_smoothing, 150))
-                    }
-                    var adjustForTemperature by remember {
-                        mutableStateOf(getBoolean(R.string.pref_adjust_for_temperature, false))
-                    }
-                    var barometerOffset by remember {
-                        mutableStateOf(prefs.weather.barometerOffset)
-                    }
+    @Composable
+    override fun FragmentContent() {
+        var pressure by remember { mutableStateOf(getString(R.string.dash)) }
+        var pressureAvailable by remember { mutableStateOf(false) }
+        var chartData by remember {
+            mutableStateOf(PressureChartData(emptyList(), emptyList()))
+        }
+        var useSeaLevelPressure by remember {
+            mutableStateOf(getBoolean(R.string.pref_use_sea_level_pressure, true))
+        }
+        var pressureSmoothing by remember {
+            mutableStateOf(getInt(R.string.pref_barometer_pressure_smoothing, 150))
+        }
+        var adjustForTemperature by remember {
+            mutableStateOf(getBoolean(R.string.pref_adjust_for_temperature, false))
+        }
+        var barometerOffset by remember {
+            mutableStateOf(prefs.weather.barometerOffset)
+        }
 
-                    setPressureState = {
-                        pressure = it.pressure
-                        pressureAvailable = it.pressureAvailable
-                    }
-                    setChartState = {
-                        chartData = it
-                    }
-                    setBarometerOffset = {
-                        barometerOffset = it
-                    }
+        setPressureState = {
+            pressure = it.pressure
+            pressureAvailable = it.pressureAvailable
+        }
+        setChartState = {
+            chartData = it
+        }
+        setBarometerOffset = {
+            barometerOffset = it
+        }
 
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            )
-                        ) {
-                            item("header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.barometer))
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                )
+            ) {
+                item("header") {
+                    TrailSenseSectionHeader(title = stringResource(R.string.barometer))
+                }
+                item("pressure") {
+                    SettingsInfoRow(
+                        label = stringResource(R.string.pressure),
+                        summary = pressure,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("chart") {
+                    PressureChartView(
+                        data = chartData.data,
+                        raw = chartData.raw,
+                        modifier = Modifier
+                            .padding(horizontal = TrailSenseSpacing.lg)
+                            .padding(vertical = TrailSenseSpacing.sm)
+                    )
+                }
+                item("sea_level") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_use_sea_level_pressure_title),
+                        checked = useSeaLevelPressure,
+                        onCheckedChange = {
+                            useSeaLevelPressure = it
+                            putBoolean(R.string.pref_use_sea_level_pressure, it)
+                            updateChart()
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("smoothing") {
+                    BarometerSmoothingRow(
+                        smoothing = pressureSmoothing,
+                        summary = formatService.formatPercentage(
+                            pressureSmoothing / 10f
+                        ),
+                        onSmoothingChange = {
+                            pressureSmoothing = it
+                            putInt(R.string.pref_barometer_pressure_smoothing, it)
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("temperature_adjustment") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_adjust_for_temperature_title),
+                        summary = stringResource(R.string.pref_adjust_for_temperature_summary),
+                        checked = adjustForTemperature,
+                        enabled = useSeaLevelPressure,
+                        onCheckedChange = {
+                            adjustForTemperature = it
+                            putBoolean(R.string.pref_adjust_for_temperature, it)
+                            updateChart()
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("offset") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.barometer_offset),
+                        summary = formatOffset(barometerOffset),
+                        enabled = pressureAvailable,
+                        onClick = {
+                            pickBarometerOffset {
+                                barometerOffset = it
                             }
-                            item("pressure") {
-                                SettingsInfoRow(
-                                    label = stringResource(R.string.pressure),
-                                    summary = pressure,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("reset") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.reset_calibration),
+                        onClick = {
+                            Alerts.dialog(
+                                requireContext(),
+                                getString(R.string.reset_calibration_question)
+                            ) { cancelled ->
+                                if (!cancelled) {
+                                    prefs.weather.barometerOffset = 0f
+                                    barometerOffset = 0f
+                                    update()
+                                }
                             }
-                            item("chart") {
-                                PressureChartView(
-                                    data = chartData.data,
-                                    raw = chartData.raw,
-                                    modifier = Modifier
-                                        .padding(horizontal = TrailSenseSpacing.lg)
-                                        .padding(vertical = TrailSenseSpacing.sm)
-                                )
-                            }
-                            item("sea_level") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_use_sea_level_pressure_title),
-                                    checked = useSeaLevelPressure,
-                                    onCheckedChange = {
-                                        useSeaLevelPressure = it
-                                        putBoolean(R.string.pref_use_sea_level_pressure, it)
-                                        updateChart()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("smoothing") {
-                                BarometerSmoothingRow(
-                                    smoothing = pressureSmoothing,
-                                    summary = formatService.formatPercentage(
-                                        pressureSmoothing / 10f
-                                    ),
-                                    onSmoothingChange = {
-                                        pressureSmoothing = it
-                                        putInt(R.string.pref_barometer_pressure_smoothing, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("temperature_adjustment") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_adjust_for_temperature_title),
-                                    summary = stringResource(R.string.pref_adjust_for_temperature_summary),
-                                    checked = adjustForTemperature,
-                                    enabled = useSeaLevelPressure,
-                                    onCheckedChange = {
-                                        adjustForTemperature = it
-                                        putBoolean(R.string.pref_adjust_for_temperature, it)
-                                        updateChart()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("offset") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.barometer_offset),
-                                    summary = formatOffset(barometerOffset),
-                                    enabled = pressureAvailable,
-                                    onClick = {
-                                        pickBarometerOffset {
-                                            barometerOffset = it
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("reset") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.reset_calibration),
-                                    onClick = {
-                                        Alerts.dialog(
-                                            requireContext(),
-                                            getString(R.string.reset_calibration_question)
-                                        ) { cancelled ->
-                                            if (!cancelled) {
-                                                prefs.weather.barometerOffset = 0f
-                                                barometerOffset = 0f
-                                                update()
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("info") {
-                                SettingsInfoRow(
-                                    label = "",
-                                    summary = stringResource(R.string.pref_barometer_info_summary),
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                        }
-                    }
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+                item("info") {
+                    SettingsInfoRow(
+                        label = "",
+                        summary = stringResource(R.string.pref_barometer_info_summary),
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
                 }
             }
         }
