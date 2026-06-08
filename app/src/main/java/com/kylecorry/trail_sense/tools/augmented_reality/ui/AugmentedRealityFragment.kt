@@ -7,17 +7,27 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -756,11 +766,11 @@ private data class AugmentedRealityViews(
     val root: View,
     val camera: CameraState,
     val arView: AugmentedRealityView,
-    val cameraToggle: ImageButton,
-    val calibrateBtn: ImageButton,
-    val layersBtn: ImageButton,
-    val timeBtn: ImageButton,
-    val searchBtn: ImageButton,
+    val cameraToggle: ArIconButton,
+    val calibrateBtn: ArIconButton,
+    val layersBtn: ArIconButton,
+    val timeBtn: ArIconButton,
+    val searchBtn: ArIconButton,
     val accuracyView: SensorStatusBadgeView,
     val focusActionButton: Button,
     val calibrationPanel: LinearLayout,
@@ -769,7 +779,7 @@ private data class AugmentedRealityViews(
     val guidancePanel: ConstraintLayout,
     val arGuideIcon: ImageView,
     val arGuideName: TextView,
-    val arGuideCancel: ImageButton,
+    val arGuideCancel: ArIconButton,
     val timeSheet: DateTimeSliderSheetState
 )
 
@@ -999,9 +1009,12 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
         }
     )
 
-    val guideCancel = createTransparentIconButton(context, R.id.ar_guide_cancel, R.drawable.ic_cancel).apply {
-        imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-    }
+    val guideCancel = createTransparentIconButton(
+        context,
+        R.id.ar_guide_cancel,
+        R.drawable.ic_cancel,
+        Resources.androidTextColorSecondary(context)
+    )
     guidancePanel.addView(
         guideCancel,
         ConstraintLayout.LayoutParams(24.dp(context), 24.dp(context)).apply {
@@ -1070,17 +1083,47 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     )
 }
 
-private fun createArIconButton(context: Context, id: Int, icon: Int): ImageButton {
-    return createTransparentIconButton(context, id, icon).apply {
-        imageTintList = ColorStateList.valueOf(Color.WHITE)
+private fun createArIconButton(context: Context, id: Int, icon: Int): ArIconButton {
+    return createTransparentIconButton(context, id, icon, Color.WHITE)
+}
+
+private fun createTransparentIconButton(
+    context: Context,
+    id: Int,
+    icon: Int,
+    tint: Int
+): ArIconButton {
+    return ArIconButton(context, icon, tint).apply {
+        this.id = id
     }
 }
 
-private fun createTransparentIconButton(context: Context, id: Int, icon: Int): ImageButton {
-    return ImageButton(context).apply {
-        this.id = id
-        setImageResource(icon)
-        setBackgroundColor(Color.TRANSPARENT)
+private class ArIconButton(
+    context: Context,
+    icon: Int,
+    private val tint: Int
+) : AbstractComposeView(context) {
+    private var iconRes by mutableIntStateOf(icon)
+
+    fun setImageResource(icon: Int) {
+        iconRes = icon
+    }
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Box(
+                modifier = Modifier.size(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = ComposeColor(tint),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
 
