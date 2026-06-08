@@ -20,9 +20,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -190,12 +192,12 @@ private class PathOverviewController(private val fragment: Fragment) {
     private val hikingService = HikingService()
     private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
 
-    private var pointSheet: PathPointsSheet? = null
-
     private val chart: PathElevationChart
         get() = views.chart
     private var path: Path? = null
     private var waypoints: List<PathPoint> = emptyList()
+    private var pathPointsSheetPoints by mutableStateOf<List<PathPoint>>(emptyList())
+    private var showPathPointsSheet by mutableStateOf(false)
     private var pathId: Long = 0L
     private var selectedPointId: Long? = null
     private var calculatedDuration = Duration.ZERO
@@ -232,12 +234,43 @@ private class PathOverviewController(private val fragment: Fragment) {
         )
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         PathOverviewHost(
             views = views,
             modifier = modifier
         )
+
+        if (showPathPointsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showPathPointsSheet = false
+                }
+            ) {
+                PathPointsContent(
+                    points = pathPointsSheetPoints,
+                    formatService = formatService,
+                    baseDistanceUnits = prefs.baseDistanceUnits,
+                    onCreateBeacon = {
+                        createBeacon(it)
+                        showPathPointsSheet = false
+                    },
+                    onDelete = {
+                        deleteWaypoint(it)
+                    },
+                    onNavigate = {
+                        navigateToWaypoint(it)
+                        showPathPointsSheet = false
+                    },
+                    onView = {
+                        viewWaypoint(it)
+                        showPathPointsSheet = false
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
 
         val colorPickerPath = pathColorPickerTarget
         if (colorPickerPath != null) {
@@ -448,7 +481,7 @@ private class PathOverviewController(private val fragment: Fragment) {
                 if (selected != null && waypoints.find { it.id == selected } == null) {
                     deselectPoint()
                 }
-                pointSheet?.setPoints(this@PathOverviewController.waypoints)
+                pathPointsSheetPoints = this@PathOverviewController.waypoints
                 updateElevationOverview()
                 updateHikingStats()
                 updatePathMap()
@@ -744,16 +777,11 @@ private class PathOverviewController(private val fragment: Fragment) {
         views.pathLegend.isVisible = path.style.point != PathPointColoringStyle.None
     }
 
-        // Waypoints
+    // Waypoints
     private fun viewPoints() {
         views.root.scrollTo(0, 0)
-        pointSheet = PathPointsSheet()
-        pointSheet?.show(fragment)
-        pointSheet?.onCreateBeaconListener = { createBeacon(it) }
-        pointSheet?.onDeletePointListener = { deleteWaypoint(it) }
-        pointSheet?.onNavigateToPointListener = { navigateToWaypoint(it) }
-        pointSheet?.onViewPointListener = { viewWaypoint(it) }
-        pointSheet?.setPoints(waypoints)
+        pathPointsSheetPoints = waypoints
+        showPathPointsSheet = true
     }
 
     private fun viewWaypoint(point: PathPoint) {
