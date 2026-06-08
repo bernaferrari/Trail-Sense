@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -46,7 +45,6 @@ import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.andromeda.views.toolbar.Toolbar
@@ -76,6 +74,7 @@ import com.kylecorry.trail_sense.shared.views.DatePickerView
 import com.kylecorry.trail_sense.shared.views.Slider
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -105,7 +104,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-class AstronomyFragment : AndromedaFragment() {
+class AstronomyFragment : TrailSenseAndromedaComposeFragment() {
 
     private var astronomyViews: AstronomyViews? = null
     private val views: AstronomyViews
@@ -165,11 +164,7 @@ class AstronomyFragment : AndromedaFragment() {
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun beforeCreateContent() {
         val views = createAstronomyViews(requireContext())
         astronomyViews = views
         views.astronomyDetailList.setContent {
@@ -180,17 +175,14 @@ class AstronomyFragment : AndromedaFragment() {
                 )
             }
         }
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    AstronomyHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        AstronomyHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onDestroyView() {

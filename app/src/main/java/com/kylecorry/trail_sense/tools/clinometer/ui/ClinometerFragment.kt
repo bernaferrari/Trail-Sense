@@ -18,15 +18,12 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
@@ -57,6 +54,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraView
 import com.kylecorry.trail_sense.shared.views.DataPointView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
@@ -71,7 +69,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class ClinometerFragment : Fragment() {
+class ClinometerFragment : TrailSenseComposeFragment() {
 
     private var clinometerViews: ClinometerViews? = null
     private val views: ClinometerViews
@@ -121,24 +119,16 @@ class ClinometerFragment : Fragment() {
     private val clinometer: IClinometer
         get() = if (useCamera) cameraClinometer else sideClinometer
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val views = createClinometerViews(requireContext())
-        clinometerViews = views
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    ClinometerHost(
-                        views = views,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    override fun beforeCreateContent() {
+        clinometerViews = createClinometerViews(requireContext())
+    }
+
+    @Composable
+    override fun FragmentContent() {
+        ClinometerHost(
+            views = views,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
