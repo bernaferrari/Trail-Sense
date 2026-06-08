@@ -705,8 +705,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolMetalDetector
-            setClassName("com.kylecorry.trail_sense.tools.metaldetector.ui.FragmentToolMetalDetector")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolMetalDetector"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_METAL_DETECTOR)
+                .build())
             graph.addDestination(this)
         }
 

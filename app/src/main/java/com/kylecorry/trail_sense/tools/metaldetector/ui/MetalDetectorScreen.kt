@@ -1,7 +1,8 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
-import android.os.Bundle
-import android.view.View
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,8 +23,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +43,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
@@ -59,22 +65,62 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
 import java.time.Duration
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
 
-class FragmentToolMetalDetector : TrailSenseComposeFragment() {
-    private val sensors by lazy { SensorService(requireContext()) }
+@Composable
+fun MetalDetectorToolScreen(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val view = LocalView.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    val controller = remember {
+        MetalDetectorController(context, scope)
+    }
+
+    DisposableEffect(lifecycleOwner, controller) {
+        val previousKeepScreenOn = view.keepScreenOn
+        view.keepScreenOn = true
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            view.keepScreenOn = previousKeepScreenOn
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onPause()
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier)
+}
+
+private class MetalDetectorController(
+    private val context: Context,
+    private val scope: CoroutineScope
+) {
+    private val sensors by lazy { SensorService(context) }
     private val magnetometer by lazy { sensors.getMagnetometer() }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
     private val lowPassMagnetometer by lazy { sensors.getMagnetometer(true) }
-    private val orientation by lazy { SensorService(requireContext()).getGyroscope() }
+    private val orientation by lazy { SensorService(context).getGyroscope() }
     private val gravity by lazy { sensors.getGravity() }
 
     private val filter = LowPassFilter(0.2f, 0f)
@@ -86,7 +132,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
     private val readings = mutableListOf<Float>()
 
     private val throttle = Throttle(20)
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
 
     private var isHighSensitivity by mutableStateOf(false)
     private var calibratedField = Vector3.zero
@@ -97,7 +143,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
         calibrate()
     }
 
-    private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(context) }
 
     private val isMetalDetected = Debouncer(Duration.ofMillis(100))
 
@@ -119,9 +165,14 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
     private var lowerThreshold by mutableStateOf(0f)
     private var upperThreshold by mutableStateOf(0f)
 
+    init {
+        audioEnabled = prefs.metalDetector.isMetalAudioEnabled
+        vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
+        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
+    }
+
     @Composable
-    override fun FragmentContent() {
-        LocalView.current.keepScreenOn = true
+    fun Content(modifier: Modifier = Modifier) {
         MetalDetectorScreen(
             title = title,
             thresholdText = thresholdText,
@@ -145,19 +196,12 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
             showSinglePoleDirection = showSinglePoleDirection,
             metalDirectionSensitivity = metalDirectionSensitivity,
             magnetometer = magnetometer,
-            onAccuracyClick = ::displayAccuracyTips
+            onAccuracyClick = ::displayAccuracyTips,
+            modifier = modifier
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        audioEnabled = prefs.metalDetector.isMetalAudioEnabled
-        vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
-        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
-    }
-
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         showSinglePoleDirection = prefs.metalDetector.showSinglePole
         magnetometer.start(this::onMagnetometerUpdate)
         if (prefs.metalDetector.showMetalDirection) {
@@ -172,8 +216,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         magnetometer.stop(this::onMagnetometerUpdate)
         if (prefs.metalDetector.showMetalDirection) {
             lowPassMagnetometer.stop(this::onLowPassMagnetometerUpdate)
@@ -186,12 +229,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
         audio?.off()
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
+    fun onDestroy() {
         audio?.release()
     }
 
@@ -346,7 +384,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
     }
 
     private fun initializeAudio() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        scope.launch {
             val initialized = onDefault {
                 try {
                     synchronized(audioLock) {
@@ -369,8 +407,7 @@ class FragmentToolMetalDetector : TrailSenseComposeFragment() {
     }
 
     private fun displayAccuracyTips() {
-        context ?: return
-        val alerter = ImproveAccuracyAlerter(requireContext())
+        val alerter = ImproveAccuracyAlerter(context)
         alerter.alert(listOf(magnetometer))
     }
 
@@ -404,10 +441,11 @@ private fun MetalDetectorScreen(
     showSinglePoleDirection: Boolean,
     metalDirectionSensitivity: Float,
     magnetometer: ISensor,
-    onAccuracyClick: () -> Unit
+    onAccuracyClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

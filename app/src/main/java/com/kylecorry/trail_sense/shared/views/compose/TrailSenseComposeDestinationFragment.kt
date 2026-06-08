@@ -168,6 +168,7 @@ import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
+import com.kylecorry.trail_sense.tools.metaldetector.ui.MetalDetectorToolScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
@@ -355,6 +356,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_PEDOMETER -> Pedometer()
             DESTINATION_FLASHLIGHT -> Flashlight()
             DESTINATION_BATTERY -> BatteryTool()
+            DESTINATION_METAL_DETECTOR -> MetalDetectorToolScreen()
         }
     }
 
@@ -3366,5 +3368,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_PEDOMETER = "pedometer"
         const val DESTINATION_FLASHLIGHT = "flashlight"
         const val DESTINATION_BATTERY = "battery"
+        const val DESTINATION_METAL_DETECTOR = "metal_detector"
     }
 }
