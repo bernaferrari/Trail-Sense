@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
 import android.annotation.SuppressLint

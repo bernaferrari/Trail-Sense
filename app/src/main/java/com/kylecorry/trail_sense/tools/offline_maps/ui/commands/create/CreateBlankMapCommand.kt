@@ -1,4 +1,6 @@
-package com.kylecorry.trail_sense.tools.offline_maps.ui.commands.create
+@file:Suppress("FunctionName")
+
+package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
 import android.content.Context
 import android.graphics.Canvas
@@ -205,6 +207,7 @@ private fun BlankMapLabel(text: String) {
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun BlankMapCoordinateInput(
     coordinate: Coordinate?,
     onCoordinateChange: (Coordinate?) -> Unit
@@ -320,6 +323,7 @@ private fun BlankMapCoordinateInput(
 }
 
 @Composable
+@Suppress("LongMethod")
 private fun BlankMapDistanceInput(
     distance: Distance?,
     units: List<DistanceUnits>,
