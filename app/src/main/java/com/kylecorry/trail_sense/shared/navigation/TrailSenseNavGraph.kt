@@ -589,8 +589,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolSolarPanel
-            setClassName("com.kylecorry.trail_sense.tools.solarpanel.ui.FragmentToolSolarPanel")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolSolarPanel"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SOLAR_PANEL)
+                .build())
             graph.addDestination(this)
         }
 

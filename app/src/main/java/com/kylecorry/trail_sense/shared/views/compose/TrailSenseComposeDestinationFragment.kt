@@ -145,6 +145,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLa
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
+import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
@@ -275,6 +276,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_BALLISTICS -> BallisticsScreen()
             DESTINATION_PERMITS -> PermitsScreen()
             DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
+            DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
         }
     }
 
@@ -2868,5 +2870,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_BALLISTICS = "ballistics"
         const val DESTINATION_PERMITS = "permits"
         const val DESTINATION_SCREEN_FLASHLIGHT = "screen_flashlight"
+        const val DESTINATION_SOLAR_PANEL = "solar_panel"
     }
 }

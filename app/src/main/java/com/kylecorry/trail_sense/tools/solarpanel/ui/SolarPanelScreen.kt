@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
 import androidx.compose.foundation.layout.Arrangement
@@ -52,7 +54,6 @@ import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -61,16 +62,8 @@ import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import kotlin.math.absoluteValue
 
-class FragmentToolSolarPanel : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        SolarPanelScreen()
-    }
-}
-
 @Composable
-private fun SolarPanelScreen(
+fun SolarPanelScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
