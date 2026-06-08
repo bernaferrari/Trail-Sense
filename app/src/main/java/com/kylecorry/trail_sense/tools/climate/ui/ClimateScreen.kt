@@ -1,7 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.climate.ui
 
-import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -31,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.annotation.StringRes
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -77,7 +80,6 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
@@ -98,12 +100,26 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-class ClimateFragment : TrailSenseComposeFragment() {
+@Composable
+fun ClimateToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { ClimateController(fragment) }
 
-    private val locationSubsystem by lazy { LocationSubsystem.getInstance(requireContext()) }
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    DisposableEffect(controller) {
+        controller.onCreate()
+        onDispose {
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content()
+}
+
+private class ClimateController(private val fragment: Fragment) {
+
+    private val locationSubsystem by lazy { LocationSubsystem.getInstance(fragment.requireContext()) }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
 
     private val temperatureUnits: TemperatureUnits
         get() = prefs.temperatureUnits
@@ -131,13 +147,13 @@ class ClimateFragment : TrailSenseComposeFragment() {
     private var loadJob: Job? = null
 
     @Composable
-    override fun FragmentContent() {
+    fun Content() {
         ClimateScreen(
-            title = stringResource(R.string.tool_climate),
-            subtitle = stringResource(R.string.historic_temperature_years, 30),
+            title = fragment.getString(R.string.tool_climate),
+            subtitle = fragment.getString(R.string.historic_temperature_years, 30),
             date = date,
             location = location,
-            elevation = this@ClimateFragment.elevation,
+            elevation = this@ClimateController.elevation,
             temperatureTitle = getTemperatureTitle(),
             precipitationTitle = getPrecipitationTitle(),
             climateZoneTitle = climateClassification?.first.orEmpty(),
@@ -155,7 +171,7 @@ class ClimateFragment : TrailSenseComposeFragment() {
             onElevationChange = ::setElevationFromInput,
             locationAutofillRequest = locationAutofillRequest,
             onAutoLocationClick = {
-                if (this@ClimateFragment.elevation == null) {
+                if (this@ClimateController.elevation == null) {
                     elevationAutofillRequest++
                 }
             },
@@ -168,7 +184,7 @@ class ClimateFragment : TrailSenseComposeFragment() {
             },
             elevationAutofillRequest = elevationAutofillRequest,
             onAutoElevationClick = {
-                if (this@ClimateFragment.location == null) {
+                if (this@ClimateController.location == null) {
                     locationAutofillRequest++
                 }
             },
@@ -176,16 +192,14 @@ class ClimateFragment : TrailSenseComposeFragment() {
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onCreate() {
         location = locationSubsystem.location
         elevation = roundedElevation(locationSubsystem.elevation.convertTo(distanceUnits))
         loadClimateData()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         loadJob?.cancel()
-        super.onDestroyView()
     }
 
     private fun onDateSelected(newDate: LocalDate) {
@@ -223,7 +237,7 @@ class ClimateFragment : TrailSenseComposeFragment() {
         val currentElevation = elevation
 
         loadJob?.cancel()
-        loadJob = viewLifecycleOwner.lifecycleScope.launch {
+        loadJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             val result = coroutineScope {
                 val temperatures = async {
                     weatherSubsystem.getTemperatureRanges(
@@ -304,8 +318,12 @@ class ClimateFragment : TrailSenseComposeFragment() {
         }
 
         if (fullText.isNotBlank()) {
-            dialog(getString(R.string.ecology), fullText, cancelText = null)
+            fragment.dialog(getString(R.string.ecology), fullText, cancelText = null)
         }
+    }
+
+    private fun getString(@StringRes id: Int, vararg args: Any): String {
+        return fragment.getString(id, *args)
     }
 
     private fun isActivityWrapped(activePeriods: List<Range<LocalDate>>): Boolean {

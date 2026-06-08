@@ -1429,8 +1429,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.climateFragment
-            setClassName("com.kylecorry.trail_sense.tools.climate.ui.ClimateFragment")
-            label = "ClimateFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "ClimateScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLIMATE)
+                .build())
             graph.addDestination(this)
         }
 

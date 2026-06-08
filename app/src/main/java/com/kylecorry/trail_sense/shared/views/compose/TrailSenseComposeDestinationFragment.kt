@@ -156,6 +156,7 @@ import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudToolScreen
+import com.kylecorry.trail_sense.tools.climate.ui.ClimateToolScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
@@ -413,6 +414,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_TIDES -> TidesToolScreen(this)
             DESTINATION_TIDE_LIST -> TideListToolScreen(this)
             DESTINATION_CREATE_TIDE -> CreateTideToolScreen(this)
+            DESTINATION_CLIMATE -> ClimateToolScreen(this)
             DESTINATION_PACK_LIST -> PackListToolScreen(this)
             DESTINATION_PACK_ITEM_LIST -> PackItemListToolScreen(this)
             DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
@@ -3457,6 +3459,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_TIDES = "tides"
         const val DESTINATION_TIDE_LIST = "tide_list"
         const val DESTINATION_CREATE_TIDE = "create_tide"
+        const val DESTINATION_CLIMATE = "climate"
         const val DESTINATION_PACK_LIST = "pack_list"
         const val DESTINATION_PACK_ITEM_LIST = "pack_item_list"
         const val DESTINATION_CREATE_PACK_ITEM = "create_pack_item"
