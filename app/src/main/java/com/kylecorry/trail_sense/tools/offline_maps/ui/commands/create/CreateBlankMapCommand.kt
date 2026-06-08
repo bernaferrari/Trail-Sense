@@ -4,8 +4,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.ViewGroup
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.ComposeView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
@@ -27,9 +30,11 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.CoordinateInputView
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
-import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
-import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapRequest
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationPoint
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 
 class CreateBlankMapCommand(
     private val context: Context
@@ -107,41 +112,52 @@ class CreateBlankMapCommand(
         val padding = Resources.dp(context, 16f).toInt()
         val smallSpacing = Resources.dp(context, 4f).toInt()
         val spacing = Resources.dp(context, 8f).toInt()
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+        val root = ConstraintLayout(context).apply {
             setPadding(padding, padding, padding, padding)
         }
 
+        val centerLabelId = View.generateViewId()
         root.addView(
-            TextView(context).apply {
-                text = context.getString(R.string.center)
+            createBlankMapLabel(context, context.getString(R.string.center)).apply {
+                id = centerLabelId
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+            }
         )
 
         root.addView(
             CoordinateInputView(context).apply {
                 id = R.id.coordinate_input
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToBottom = centerLabelId
                 topMargin = smallSpacing
             }
         )
 
+        val sizeLabelId = View.generateViewId()
         root.addView(
-            TextView(context).apply {
-                text = context.getString(R.string.size)
+            createBlankMapLabel(context, context.getString(R.string.size)).apply {
+                id = sizeLabelId
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToBottom = R.id.coordinate_input
                 topMargin = spacing
             }
         )
@@ -150,15 +166,33 @@ class CreateBlankMapCommand(
             DistanceInputView(context).apply {
                 id = R.id.distance_input
             },
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+            ConstraintLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+                topToBottom = sizeLabelId
+                bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
                 topMargin = smallSpacing
             }
         )
 
         return root
+    }
+
+    private fun createBlankMapLabel(context: Context, text: String): ComposeView {
+        return ComposeView(context).apply {
+            setContent {
+                TrailSenseTheme {
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
     }
 
 }
