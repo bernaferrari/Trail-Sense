@@ -46,12 +46,12 @@ import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
 import kotlinx.coroutines.delay
@@ -87,6 +87,7 @@ private fun SolarPanelScreen(
     var position by remember { mutableStateOf<Pair<Float, Bearing>?>(null) }
     var nowDuration by remember { mutableStateOf(Duration.ofHours(2)) }
     var alignToRestOfDay by remember { mutableStateOf(true) }
+    var showDurationPicker by remember { mutableStateOf(false) }
     var gpsUpdateKey by remember { mutableIntStateOf(0) }
     var frame by remember { mutableIntStateOf(0) }
     var isResumed by remember {
@@ -168,6 +169,7 @@ private fun SolarPanelScreen(
             delay(33)
         }
     }
+    val durationOfChargeTitle = stringResource(R.string.duration_of_charge)
 
     LaunchedEffect(alignToRestOfDay, nowDuration, gpsUpdateKey) {
         position = null
@@ -233,16 +235,7 @@ private fun SolarPanelScreen(
                         text = formatter.formatDuration(nowDuration),
                         selected = !alignToRestOfDay,
                         onClick = {
-                            CustomUiUtils.pickDuration(
-                                context,
-                                nowDuration,
-                                context.getString(R.string.duration_of_charge)
-                            ) {
-                                if (it != null) {
-                                    nowDuration = it
-                                    alignToRestOfDay = false
-                                }
-                            }
+                            showDurationPicker = true
                         },
                         modifier = Modifier.testTag("solar_now_btn")
                     )
@@ -290,6 +283,23 @@ private fun SolarPanelScreen(
                 )
             }
         }
+    }
+
+    if (showDurationPicker) {
+        DurationPickerDialog(
+            title = durationOfChargeTitle,
+            duration = nowDuration,
+            onDurationPicked = {
+                if (it != null) {
+                    nowDuration = it
+                    alignToRestOfDay = false
+                }
+                showDurationPicker = false
+            },
+            onDismiss = {
+                showDurationPicker = false
+            }
+        )
     }
 }
 
