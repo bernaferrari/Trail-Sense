@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import android.view.View
@@ -20,11 +21,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,8 +52,10 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.receivers.StartOnBootController
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.licenses.Library
@@ -63,8 +71,13 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.WhistleScreen
+import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
+import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
@@ -103,6 +116,9 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
             DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
             DESTINATION_SENSOR_SETTINGS -> SensorSettings()
+            DESTINATION_RULER_SETTINGS -> RulerSettings()
+            DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
+            DESTINATION_POWER_SETTINGS -> PowerSettings()
         }
     }
 
@@ -360,6 +376,267 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
     }
 
     @Composable
+    private fun RulerSettings() {
+        val prefs = remember { UserPreferences(requireContext()).ruler }
+        var scale by remember { mutableFloatStateOf(prefs.rulerScale) }
+        var flipped by remember { mutableStateOf(prefs.rulerFlipped) }
+        var showCalibrationDialog by remember { mutableStateOf(false) }
+        val calibrationTitle = stringResource(R.string.pref_ruler_calibration_title)
+
+        SettingsList(title = stringResource(R.string.tool_ruler_title)) {
+            item("calibration") {
+                SettingsActionRow(
+                    label = calibrationTitle,
+                    summary = formatScale(scale),
+                    onClick = {
+                        showCalibrationDialog = true
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+            }
+            item("flip") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_ruler_flip_direction_title),
+                    checked = flipped,
+                    onCheckedChange = {
+                        flipped = it
+                        prefs.rulerFlipped = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+
+        if (showCalibrationDialog) {
+            RulerScaleDialog(
+                title = calibrationTitle,
+                current = scale,
+                onDismiss = { showCalibrationDialog = false },
+                onConfirm = {
+                    scale = it
+                    prefs.rulerScale = it
+                    showCalibrationDialog = false
+                }
+            )
+        }
+    }
+
+    @Composable
+    private fun FlashlightSettings() {
+        val formatter = remember { FormatService.getInstance(requireContext()) }
+        val prefs = remember { UserPreferences(requireContext()).flashlight }
+        val hasFlashlight = remember {
+            FlashlightSubsystem.getInstance(requireContext()).isAvailable()
+        }
+        var toggleWithVolume by remember {
+            mutableStateOf(prefs.toggleWithVolumeButtons)
+        }
+        var shouldTimeout by remember { mutableStateOf(prefs.shouldTimeout) }
+        var timeout by remember { mutableStateOf(prefs.timeout) }
+        var controlScreenWithVolume by remember {
+            mutableStateOf(prefs.controlScreenFlashlightWithVolumeButtons)
+        }
+        var showTimeoutPicker by remember { mutableStateOf(false) }
+        val timeoutTitle = stringResource(R.string.pref_flashlight_timeout_title)
+
+        SettingsList(title = stringResource(R.string.flashlight_title)) {
+            if (hasFlashlight) {
+                item("toggle_volume") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_flashlight_toggle_with_volume_title),
+                        summary = stringResource(R.string.pref_flashlight_toggle_with_volume_summary),
+                        checked = toggleWithVolume,
+                        onCheckedChange = {
+                            toggleWithVolume = it
+                            prefs.toggleWithVolumeButtons = it
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("should_timeout") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_flashlight_should_timeout_title),
+                        checked = shouldTimeout,
+                        onCheckedChange = {
+                            shouldTimeout = it
+                            prefs.shouldTimeout = it
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+                item("timeout") {
+                    SettingsActionRow(
+                        label = timeoutTitle,
+                        summary = formatter.formatDuration(
+                            timeout,
+                            short = false,
+                            includeSeconds = true
+                        ),
+                        enabled = shouldTimeout,
+                        onClick = {
+                            showTimeoutPicker = true
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+            }
+            item("screen_volume") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_flashlight_control_screen_with_volume_title),
+                    checked = controlScreenWithVolume,
+                    onCheckedChange = {
+                        controlScreenWithVolume = it
+                        prefs.controlScreenFlashlightWithVolumeButtons = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+
+        if (showTimeoutPicker) {
+            DurationPickerDialog(
+                title = timeoutTitle,
+                duration = timeout,
+                showSeconds = true,
+                onDurationPicked = {
+                    if (it != null && !it.isZero) {
+                        prefs.timeout = it
+                        timeout = it
+                    }
+                    showTimeoutPicker = false
+                },
+                onDismiss = {
+                    showTimeoutPicker = false
+                }
+            )
+        }
+    }
+
+    @Composable
+    private fun PowerSettings() {
+        val prefs = remember { UserPreferences(requireContext()) }
+        var lowPowerMode by remember { mutableStateOf(prefs.isLowPowerModeOn) }
+        var autoLowPower by remember { mutableStateOf(prefs.power.autoLowPower) }
+        var startOnBoot by remember { mutableStateOf(prefs.power.startOnBoot) }
+        var tilesEnabled by remember { mutableStateOf(prefs.power.areTilesEnabled) }
+        var batteryLogEnabled by remember { mutableStateOf(prefs.power.enableBatteryLog) }
+
+        SettingsList(title = stringResource(R.string.tool_battery_title)) {
+            item("low_power") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_low_power_mode_title),
+                    summary = stringResource(R.string.pref_low_power_mode_summary),
+                    checked = lowPowerMode,
+                    onCheckedChange = {
+                        lowPowerMode = it
+                        setLowPowerMode(prefs, it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("auto_low_power") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_auto_low_power_title),
+                    summary = stringResource(R.string.pref_auto_low_power_summary),
+                    checked = autoLowPower,
+                    onCheckedChange = {
+                        autoLowPower = it
+                        prefs.power.autoLowPower = it
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            item("start_on_boot") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_start_on_boot_title),
+                    checked = startOnBoot,
+                    onCheckedChange = {
+                        startOnBoot = it
+                        prefs.power.startOnBoot = it
+                        setStartOnBoot(it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                item("tiles") {
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_tiles_enabled_title),
+                        summary = stringResource(R.string.pref_tiles_enabled_summary),
+                        checked = tilesEnabled,
+                        onCheckedChange = {
+                            tilesEnabled = it
+                            prefs.power.areTilesEnabled = it
+                            TileManager().setTilesEnabled(requireContext(), it)
+                        },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                    TrailSenseDivider()
+                }
+            }
+            item("battery_log") {
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_tiles_battery_log),
+                    summary = stringResource(R.string.pref_tiles_enabled_battery_log_summary),
+                    checked = batteryLogEnabled,
+                    onCheckedChange = {
+                        batteryLogEnabled = it
+                        prefs.power.enableBatteryLog = it
+                        BatteryLogWorker.enableBatteryLog(requireContext(), it)
+                    },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                )
+                TrailSenseDivider()
+            }
+        }
+    }
+
+    @Composable
+    private fun RulerScaleDialog(
+        title: String,
+        current: Float,
+        onDismiss: () -> Unit,
+        onConfirm: (Float) -> Unit
+    ) {
+        var value by remember(current) { mutableStateOf(formatScale(current)) }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(text = title)
+            },
+            text = {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = { Text(text = stringResource(R.string.pref_ruler_calibration_summary)) },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirm((value.toFloatCompat() ?: 1f).coerceAtLeast(0f))
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+
+    @Composable
     private fun SettingsList(
         title: String,
         content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit
@@ -559,6 +836,29 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         return !prefs.useAutoLocation || !SensorService(requireContext()).hasLocationPermission()
     }
 
+    private fun setLowPowerMode(prefs: UserPreferences, enabled: Boolean) {
+        if (enabled) {
+            prefs.power.userEnabledLowPower = true
+            LowPowerMode(requireContext()).enable()
+        } else {
+            prefs.power.userEnabledLowPower = false
+            LowPowerMode(requireContext()).disable()
+        }
+    }
+
+    private fun setStartOnBoot(enabled: Boolean) {
+        val controller = StartOnBootController(requireContext())
+        if (enabled) {
+            controller.enable()
+        } else {
+            controller.disable()
+        }
+    }
+
+    private fun formatScale(scale: Float): String {
+        return scale.toString()
+    }
+
     private fun projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
         return mapOf(
             CameraPreferences.ProjectionType.EstimatedIntrinsics to
@@ -666,5 +966,8 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_CLINOMETER_SETTINGS = "clinometer_settings"
         const val DESTINATION_PRIVACY_SETTINGS = "privacy_settings"
         const val DESTINATION_SENSOR_SETTINGS = "sensor_settings"
+        const val DESTINATION_RULER_SETTINGS = "ruler_settings"
+        const val DESTINATION_FLASHLIGHT_SETTINGS = "flashlight_settings"
+        const val DESTINATION_POWER_SETTINGS = "power_settings"
     }
 }

@@ -901,8 +901,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.flashlightSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FlashlightSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FLASHLIGHT_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -982,8 +986,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.powerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.settings.ui.PowerSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "PowerSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_POWER_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
@@ -1003,8 +1011,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolRulerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.tools.ruler.ui.ToolRulerSettingsFragment")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "RulerSettingsFragment"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_RULER_SETTINGS)
+                .build())
             graph.addDestination(this)
         }
 
