@@ -26,11 +26,10 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -103,6 +102,8 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                     var fastPathRendering by remember {
                         mutableStateOf(getBoolean(R.string.pref_fast_path_rendering, false))
                     }
+                    var showPathColorPicker by remember { mutableStateOf(false) }
+                    val pathColorTitle = stringResource(R.string.pref_default_path_color_title)
 
                     setBacktrackEnabledState = {
                         backtrackEnabled = it
@@ -241,12 +242,9 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                             }
                             item("path_color") {
                                 SettingsActionRow(
-                                    label = stringResource(R.string.pref_default_path_color_title),
+                                    label = pathColorTitle,
                                     onClick = {
-                                        pickPathColor(pathColor) {
-                                            pathColor = it
-                                            prefs.navigation.defaultPathColor = it
-                                        }
+                                        showPathColorPicker = true
                                     },
                                     trailing = {
                                         Box(
@@ -297,6 +295,23 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                                 TrailSenseDivider()
                             }
                         }
+                    }
+
+                    if (showPathColorPicker) {
+                        ColorPickerDialog(
+                            title = pathColorTitle,
+                            selectedColor = pathColor,
+                            onColorPicked = {
+                                if (it != null) {
+                                    pathColor = it
+                                    prefs.navigation.defaultPathColor = it
+                                }
+                                showPathColorPicker = false
+                            },
+                            onDismiss = {
+                                showPathColorPicker = false
+                            }
+                        )
                     }
     }
 
@@ -363,18 +378,6 @@ class PathsSettingsFragment : TrailSenseComposeFragment() {
                 val dayCount = days.toInt()
                 prefs.navigation.backtrackHistory = Duration.ofDays(days.toLong())
                 onPicked(dayCount)
-            }
-        }
-    }
-
-    private fun pickPathColor(current: AppColor, onPicked: (AppColor) -> Unit) {
-        CustomUiUtils.pickColor(
-            requireContext(),
-            current,
-            getString(R.string.pref_default_path_color_title)
-        ) {
-            if (it != null) {
-                onPicked(it)
             }
         }
     }

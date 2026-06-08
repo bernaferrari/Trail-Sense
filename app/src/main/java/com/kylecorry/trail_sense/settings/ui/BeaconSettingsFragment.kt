@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -35,6 +35,8 @@ class BeaconSettingsFragment : TrailSenseComposeFragment() {
         var defaultColor by remember {
             mutableStateOf(prefs.beacons.defaultBeaconColor)
         }
+        var showDefaultColorPicker by remember { mutableStateOf(false) }
+        val defaultColorTitle = stringResource(R.string.pref_default_beacon_color_title)
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -52,21 +54,10 @@ class BeaconSettingsFragment : TrailSenseComposeFragment() {
                     TrailSenseSectionHeader(title = stringResource(R.string.beacons))
                 }
                 item("default_color") {
-                    val title =
-                        stringResource(R.string.pref_default_beacon_color_title)
                     SettingsActionRow(
-                        label = title,
+                        label = defaultColorTitle,
                         onClick = {
-                            CustomUiUtils.pickColor(
-                                requireContext(),
-                                defaultColor,
-                                title
-                            ) {
-                                if (it != null) {
-                                    prefs.beacons.defaultBeaconColor = it
-                                    defaultColor = it
-                                }
-                            }
+                            showDefaultColorPicker = true
                         },
                         trailing = {
                             Box(
@@ -82,6 +73,23 @@ class BeaconSettingsFragment : TrailSenseComposeFragment() {
                     )
                 }
             }
+        }
+
+        if (showDefaultColorPicker) {
+            ColorPickerDialog(
+                title = defaultColorTitle,
+                selectedColor = defaultColor,
+                onColorPicked = {
+                    if (it != null) {
+                        prefs.beacons.defaultBeaconColor = it
+                        defaultColor = it
+                    }
+                    showDefaultColorPicker = false
+                },
+                onDismiss = {
+                    showDefaultColorPicker = false
+                }
+            )
         }
     }
 }
