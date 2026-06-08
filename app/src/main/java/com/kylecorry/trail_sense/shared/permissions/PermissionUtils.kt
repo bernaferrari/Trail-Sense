@@ -6,7 +6,6 @@ import android.os.Build
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.IPermissionRequester
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -106,12 +105,6 @@ fun TrailSenseComposeDestinationFragment.requestScheduleExactAlarms(action: (has
             alertExactAlarmsDenied()
         }
         action(isGranted)
-    }
-}
-
-fun TrailSenseComposeDestinationFragment.requestCamera(action: (hasPermission: Boolean) -> Unit) {
-    requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
-        action(Camera.isAvailable(requireContext()))
     }
 }
 

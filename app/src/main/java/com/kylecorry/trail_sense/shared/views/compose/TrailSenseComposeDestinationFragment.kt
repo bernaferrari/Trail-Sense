@@ -60,7 +60,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController as fragmentFindNavController
 import com.google.android.material.color.DynamicColors
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
@@ -273,7 +274,7 @@ import kotlin.math.roundToInt
 
 class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
-    BeaconListControllerHost {
+    BeaconListControllerHost, TrailSenseDestinationHost {
 
     private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
@@ -319,7 +320,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         actionSheet = ActionSheetState(title, subtitle, actions, onAction)
     }
 
-    fun showPhotoImport(
+    override fun showPhotoImport(
         resolution: android.util.Size?,
         useZeroShutterLag: Boolean,
         onCapture: (android.net.Uri?) -> Unit
@@ -336,6 +337,16 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         }.also {
             it.show()
         }
+    }
+
+    override fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
+        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+            action(Camera.isAvailable(requireContext()))
+        }
+    }
+
+    override fun findNavController(): NavController {
+        return fragmentFindNavController()
     }
 
     override fun onCreateView(
