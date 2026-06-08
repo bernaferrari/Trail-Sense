@@ -16,9 +16,9 @@ import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
@@ -42,6 +42,8 @@ class FlashlightSettingsFragment : TrailSenseComposeFragment() {
         var controlScreenWithVolume by remember {
             mutableStateOf(prefs.controlScreenFlashlightWithVolumeButtons)
         }
+        var showTimeoutPicker by remember { mutableStateOf(false) }
+        val timeoutTitle = stringResource(R.string.pref_flashlight_timeout_title)
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -88,10 +90,8 @@ class FlashlightSettingsFragment : TrailSenseComposeFragment() {
                         TrailSenseDivider()
                     }
                     item("timeout") {
-                        val title =
-                            stringResource(R.string.pref_flashlight_timeout_title)
                         SettingsActionRow(
-                            label = title,
+                            label = timeoutTitle,
                             summary = formatter.formatDuration(
                                 timeout,
                                 short = false,
@@ -99,16 +99,7 @@ class FlashlightSettingsFragment : TrailSenseComposeFragment() {
                             ),
                             enabled = shouldTimeout,
                             onClick = {
-                                CustomUiUtils.pickDuration(
-                                    requireContext(),
-                                    timeout,
-                                    title
-                                ) {
-                                    if (it != null && !it.isZero) {
-                                        prefs.timeout = it
-                                        timeout = it
-                                    }
-                                }
+                                showTimeoutPicker = true
                             },
                             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                         )
@@ -127,6 +118,24 @@ class FlashlightSettingsFragment : TrailSenseComposeFragment() {
                     TrailSenseDivider()
                 }
             }
+        }
+
+        if (showTimeoutPicker) {
+            DurationPickerDialog(
+                title = timeoutTitle,
+                duration = timeout,
+                showSeconds = true,
+                onDurationPicked = {
+                    if (it != null && !it.isZero) {
+                        prefs.timeout = it
+                        timeout = it
+                    }
+                    showTimeoutPicker = false
+                },
+                onDismiss = {
+                    showTimeoutPicker = false
+                }
+            )
         }
     }
 }

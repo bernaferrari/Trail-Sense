@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -8,10 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +30,56 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import java.time.Duration
+
+@Composable
+fun DurationPickerDialog(
+    title: String,
+    duration: Duration?,
+    onDurationPicked: (Duration?) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    message: String? = null,
+    hint: String = stringResource(R.string.duration),
+    showSeconds: Boolean = false
+) {
+    var selectedDuration by remember(duration) { mutableStateOf(duration) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = title)
+        },
+        text = {
+            Column(modifier = modifier.fillMaxWidth()) {
+                if (!message.isNullOrBlank()) {
+                    Text(
+                        text = message,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+                DurationInput(
+                    duration = duration,
+                    onDurationChange = {
+                        selectedDuration = it
+                    },
+                    hint = hint,
+                    showSeconds = showSeconds,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onDurationPicked(selectedDuration) }) {
+                Text(text = stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(android.R.string.cancel))
+            }
+        }
+    )
+}
 
 @Composable
 fun DurationInput(
