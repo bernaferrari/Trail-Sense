@@ -30,7 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,7 +45,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 
 @SuppressLint("ClickableViewAccessibility")
@@ -53,7 +53,7 @@ class QuickActionSheet @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ConstraintLayout(context, attrs) {
 
-    private val content: QuickActionSheetContentView
+    private val content: TrailSenseComposeRootView
     private val widgetsContainer: ScrollView
     private val widgets: FlexboxLayout
     private val quickActionState = MainActivityQuickActionState()
@@ -80,19 +80,23 @@ class QuickActionSheet @JvmOverloads constructor(
         isFocusable = true
         setOnTouchListener { _, _ -> true }
 
-        content = QuickActionSheetContentView(
-            context = context,
-            state = quickActionState,
-            selectedTabProvider = { selectedTab },
-            onTabSelected = {
+        content = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            QuickActionSheetContent(
+                selectedTab = selectedTab,
+                state = quickActionState,
+                onTabSelected = {
                 if (it == 0) {
                     showQuickActions()
                 } else {
                     showWidgets()
                 }
             },
-            onClose = { close() }
-        ).apply {
+                onClose = { close() }
+            )
+        }.apply {
             id = R.id.tabs
         }
         addView(
@@ -210,27 +214,6 @@ class QuickActionSheet @JvmOverloads constructor(
         widgetsContainer.isVisible = true
     }
 
-}
-
-private class QuickActionSheetContentView(
-    context: Context,
-    private val state: MainActivityQuickActionState,
-    private val selectedTabProvider: () -> Int,
-    private val onTabSelected: (Int) -> Unit,
-    private val onClose: () -> Unit
-) : AbstractComposeView(context) {
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            QuickActionSheetContent(
-                selectedTab = selectedTabProvider(),
-                state = state,
-                onTabSelected = onTabSelected,
-                onClose = onClose
-            )
-        }
-    }
 }
 
 @Composable

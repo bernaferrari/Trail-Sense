@@ -24,11 +24,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -78,6 +79,7 @@ import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
@@ -710,11 +712,16 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
             var doNotAskAgain = false
             val doNotAskAgainText = getString(R.string.do_not_ask_again)
-            val contentView = NavigationCalibrationDialogView(
+            val contentView = TrailSenseComposeRootView(
                 requireContext(),
-                doNotAskAgainText
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
             ) {
-                doNotAskAgain = it
+                NavigationCalibrationDialogContent(
+                    doNotAskAgainText = doNotAskAgainText,
+                    onDoNotAskAgainChanged = {
+                        doNotAskAgain = it
+                    }
+                )
             }
             dialog(
                 getString(R.string.calibrate_compass_dialog_title),
@@ -742,52 +749,46 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     }
 }
 
-private class NavigationCalibrationDialogView(
-    context: Context,
-    private val doNotAskAgainText: String,
-    private val onDoNotAskAgainChanged: (Boolean) -> Unit
-) : AbstractComposeView(context) {
+@Composable
+private fun NavigationCalibrationDialogContent(
+    doNotAskAgainText: String,
+    onDoNotAskAgainChanged: (Boolean) -> Unit
+) {
+    var checked by remember { mutableStateOf(false) }
 
-    private var checked by mutableStateOf(false)
-
-    @Composable
-    override fun Content() {
-        TrailSenseTheme {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                CompassCalibrationContent(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            updateChecked(!checked)
-                        },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = checked,
-                        onCheckedChange = ::updateChecked
-                    )
-                    Text(
-                        text = doNotAskAgainText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-
-    private fun updateChecked(value: Boolean) {
+    fun updateChecked(value: Boolean) {
         checked = value
         onDoNotAskAgainChanged(value)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+    ) {
+        CompassCalibrationContent(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    updateChecked(!checked)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = ::updateChecked
+            )
+            Text(
+                text = doNotAskAgainText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
