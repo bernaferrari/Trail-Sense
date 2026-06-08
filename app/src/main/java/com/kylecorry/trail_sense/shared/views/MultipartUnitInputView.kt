@@ -4,6 +4,7 @@ import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -33,6 +34,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
         amountEditHolder.isEnabled = enabled
         secondaryAmountEditHolder.isEnabled = enabled
         unitBtn.isEnabled = enabled
+        unitBtnState.isEnabled = enabled
     }
 
     var units: List<DisplayUnit<Units>> = listOf()
@@ -113,19 +115,20 @@ class MultipartUnitInputView<Units : Enum<*>>(
     private var amountEditHolder: TextInputLayout
     private var secondaryAmountEdit: TextInputEditText
     private var secondaryAmountEditHolder: TextInputLayout
-    private var unitBtn: UnitPickerButton
+    private var unitBtn: ComposeView
+    private var unitBtnState: UnitPickerButtonState
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
             val displayUnit = units.firstOrNull { it.unit == unit }
             if (displayUnit == null) {
                 _unit = null
-                unitBtn.text = ""
+                unitBtnState.text = ""
             } else {
-                unitBtn.text = displayUnit.shortName
+                unitBtnState.text = displayUnit.shortName
             }
         } else {
-            unitBtn.text = ""
+            unitBtnState.text = ""
         }
     }
 
@@ -208,8 +211,14 @@ class MultipartUnitInputView<Units : Enum<*>>(
 
         secondaryAmountEditHolder.isVisible = _showSecondary
 
-        unitBtn = UnitPickerButton(context).apply {
+        unitBtnState = UnitPickerButtonState()
+        unitBtn = ComposeView(context).apply {
             id = R.id.units
+            setContent {
+                TrailSenseTheme {
+                    unitBtnState.Content()
+                }
+            }
         }
         addView(
             unitBtn,
@@ -233,7 +242,7 @@ class MultipartUnitInputView<Units : Enum<*>>(
             onChange?.invoke(amount, secondaryAmount, unit)
         }
 
-        unitBtn.setOnClickListener {
+        unitBtnState.onClick = {
             Pickers.item(
                 getContext(),
                 unitPickerTitle,

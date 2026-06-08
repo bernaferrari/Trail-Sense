@@ -4,6 +4,7 @@ import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
@@ -28,6 +29,7 @@ class UnitInputView<Units : Enum<*>>(
     override fun setEnabled(enabled: Boolean) {
         amountEdit.isEnabled = enabled
         unitBtn.isEnabled = enabled
+        unitBtnState.isEnabled = enabled
     }
 
     var units: List<DisplayUnit<Units>> = listOf()
@@ -82,19 +84,20 @@ class UnitInputView<Units : Enum<*>>(
 
     private var amountEdit: TextInputEditText
     private var amountEditHolder: TextInputLayout
-    private var unitBtn: UnitPickerButton
+    private var unitBtn: ComposeView
+    private var unitBtnState: UnitPickerButtonState
 
     private fun setSelectedUnitText(unit: Units?) {
         if (unit != null) {
             val displayUnit = units.firstOrNull { it.unit == unit }
             if (displayUnit == null) {
                 _unit = null
-                unitBtn.text = ""
+                unitBtnState.text = ""
             } else {
-                unitBtn.text = displayUnit.shortName
+                unitBtnState.text = displayUnit.shortName
             }
         } else {
-            unitBtn.text = ""
+            unitBtnState.text = ""
         }
     }
 
@@ -130,8 +133,14 @@ class UnitInputView<Units : Enum<*>>(
             }
         )
 
-        unitBtn = UnitPickerButton(context).apply {
+        unitBtnState = UnitPickerButtonState()
+        unitBtn = ComposeView(context).apply {
             id = R.id.units
+            setContent {
+                TrailSenseTheme {
+                    unitBtnState.Content()
+                }
+            }
         }
         addView(
             unitBtn,
@@ -152,7 +161,7 @@ class UnitInputView<Units : Enum<*>>(
             onChange?.invoke(amount, unit)
         }
 
-        unitBtn.setOnClickListener {
+        unitBtnState.onClick = {
             Pickers.item(
                 getContext(),
                 unitPickerTitle,
