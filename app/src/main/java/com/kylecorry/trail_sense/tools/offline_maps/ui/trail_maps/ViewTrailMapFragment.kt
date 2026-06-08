@@ -2,9 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.trail_maps
 
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,15 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.doOnLayout
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.luna.concurrency.onMain
@@ -44,7 +38,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -57,7 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ViewVectorMapFragment : Fragment() {
+class ViewVectorMapFragment : TrailSenseComposeFragment() {
 
     private val service by lazy { getAppService<MapService>() }
     private var map by mutableStateOf<VectorMap?>(null)
@@ -67,27 +61,17 @@ class ViewVectorMapFragment : Fragment() {
     private val mapId: Long
         get() = requireArguments().getLong("offline_map_file_id")
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    VectorMapScreen(
-                        map = map,
-                        onMapReady = ::onMapReady,
-                        onZoomIn = { mapView?.zoom(2f) },
-                        onZoomOut = { mapView?.zoom(0.5f) },
-                        onRename = { map?.let { rename(it) } },
-                        onEditAttribution = { map?.let { editAttribution(it) } },
-                        onDelete = { map?.let { delete(it) } }
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        VectorMapScreen(
+            map = map,
+            onMapReady = ::onMapReady,
+            onZoomIn = { mapView?.zoom(2f) },
+            onZoomOut = { mapView?.zoom(0.5f) },
+            onRename = { map?.let { rename(it) } },
+            onEditAttribution = { map?.let { editAttribution(it) } },
+            onDelete = { map?.let { delete(it) } }
+        )
     }
 
     override fun onResume() {

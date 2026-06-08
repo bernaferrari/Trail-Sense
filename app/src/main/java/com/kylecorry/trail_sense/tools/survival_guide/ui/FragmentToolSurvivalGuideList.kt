@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
@@ -31,12 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -44,9 +39,9 @@ import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TextBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
@@ -57,7 +52,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class FragmentToolSurvivalGuideList : Fragment() {
+class FragmentToolSurvivalGuideList : TrailSenseComposeFragment() {
 
     private var query by mutableStateOf("")
     private var chapters by mutableStateOf(emptyList<GuideDetails>())
@@ -73,27 +68,17 @@ class FragmentToolSurvivalGuideList : Fragment() {
         query = arguments?.getString("search_query").orEmpty()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    SurvivalGuideListScreen(
-                        query = query,
-                        listItems = getListItems(),
-                        summary = summary,
-                        firstResult = searchResults.firstOrNull(),
-                        markdown = markdown,
-                        onQueryChange = ::updateQuery,
-                        onSummaryClick = ::openSearchResult
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        SurvivalGuideListScreen(
+            query = query,
+            listItems = getListItems(),
+            summary = summary,
+            firstResult = searchResults.firstOrNull(),
+            markdown = markdown,
+            onQueryChange = ::updateQuery,
+            onSummaryClick = ::openSearchResult
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

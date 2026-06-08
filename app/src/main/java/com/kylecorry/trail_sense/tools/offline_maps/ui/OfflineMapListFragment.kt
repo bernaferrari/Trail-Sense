@@ -2,9 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,7 +45,6 @@ import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.luna.concurrency.onDefault
@@ -71,6 +66,7 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
@@ -98,7 +94,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.TrailMapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.FragmentMapExportService
 
-class OfflineMapListFragment : AndromedaFragment() {
+class OfflineMapListFragment : TrailSenseAndromedaComposeFragment() {
 
     private val sensorService by lazy { SensorService(requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
@@ -128,49 +124,39 @@ class OfflineMapListFragment : AndromedaFragment() {
     }
     private val exportService by lazy { FragmentMapExportService(this) }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    OfflineMapListScreen(
-                        title = title.ifBlank { stringResource(R.string.offline_maps) },
-                        sortMenuText = sortMenuText.ifBlank {
-                            stringResource(R.string.sort_by, stringResource(R.string.closest))
-                        },
-                        searchText = searchText,
-                        items = mapItems,
-                        isEmpty = mapItems.isEmpty(),
-                        resetKey = mapListResetKey,
-                        isCreateMenuOpen = isCreateMenuOpen,
-                        isCreateEnabled = isCreateEnabled,
-                        gpsLocationOnMap = { map ->
-                            when (map) {
-                                is PhotoMap -> map.boundary()?.contains(gps.location) ?: false
-                                is VectorMap -> map.bounds?.contains(gps.location) ?: false
-                                else -> false
-                            }
-                        },
-                        onSearchChange = {
-                            searchText = it
-                            manager.search(it)
-                        },
-                        onHelp = { UserGuideUtils.showGuide(this@OfflineMapListFragment, R.raw.guide_tool_offline_maps) },
-                        onToolbarAction = ::handleToolbarAction,
-                        onCreateMenuOpenChange = { isCreateMenuOpen = it },
-                        onCreateAction = ::handleCreateAction,
-                        onPhotoMapAction = ::onPhotoMapAction,
-                        onVectorMapAction = ::onVectorMapAction,
-                        onMapGroupAction = ::onMapGroupAction,
-                        modifier = Modifier.fillMaxSize()
-                    )
+    @Composable
+    override fun FragmentContent() {
+        OfflineMapListScreen(
+            title = title.ifBlank { stringResource(R.string.offline_maps) },
+            sortMenuText = sortMenuText.ifBlank {
+                stringResource(R.string.sort_by, stringResource(R.string.closest))
+            },
+            searchText = searchText,
+            items = mapItems,
+            isEmpty = mapItems.isEmpty(),
+            resetKey = mapListResetKey,
+            isCreateMenuOpen = isCreateMenuOpen,
+            isCreateEnabled = isCreateEnabled,
+            gpsLocationOnMap = { map ->
+                when (map) {
+                    is PhotoMap -> map.boundary()?.contains(gps.location) ?: false
+                    is VectorMap -> map.bounds?.contains(gps.location) ?: false
+                    else -> false
                 }
-            }
-        }
+            },
+            onSearchChange = {
+                searchText = it
+                manager.search(it)
+            },
+            onHelp = { UserGuideUtils.showGuide(this@OfflineMapListFragment, R.raw.guide_tool_offline_maps) },
+            onToolbarAction = ::handleToolbarAction,
+            onCreateMenuOpenChange = { isCreateMenuOpen = it },
+            onCreateAction = ::handleCreateAction,
+            onPhotoMapAction = ::onPhotoMapAction,
+            onVectorMapAction = ::onVectorMapAction,
+            onMapGroupAction = ::onMapGroupAction,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

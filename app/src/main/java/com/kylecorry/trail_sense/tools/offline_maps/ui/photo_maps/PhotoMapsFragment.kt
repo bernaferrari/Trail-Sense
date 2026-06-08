@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,9 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,7 +36,6 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.print.Printer
@@ -48,6 +44,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -58,7 +55,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import kotlin.math.absoluteValue
 
-class PhotoMapsFragment : AndromedaFragment() {
+class PhotoMapsFragment : TrailSenseAndromedaComposeFragment() {
 
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
@@ -80,30 +77,20 @@ class PhotoMapsFragment : AndromedaFragment() {
         autoLockLocation = requireArguments().getBoolean("autoLockLocation", false)
     }
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                TrailSenseTheme {
-                    PhotoMapsScreen(
-                        title = title,
-                        subtitle = subtitle,
-                        showRecenter = showRecenter,
-                        onRecenter = ::recenter,
-                        onMenuClick = ::showMenu,
-                        childSpec = childSpec,
-                        onWarpFragment = ::onWarpFragment,
-                        onCalibrationFragment = ::onCalibrationFragment,
-                        onViewFragment = ::onViewFragment,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun FragmentContent() {
+        PhotoMapsScreen(
+            title = title,
+            subtitle = subtitle,
+            showRecenter = showRecenter,
+            onRecenter = ::recenter,
+            onMenuClick = ::showMenu,
+            childSpec = childSpec,
+            onWarpFragment = ::onWarpFragment,
+            onCalibrationFragment = ::onCalibrationFragment,
+            onViewFragment = ::onViewFragment,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
