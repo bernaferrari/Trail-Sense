@@ -6,7 +6,6 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.tools.convert.infrastructure.ConvertUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionConvert(btn: QuickActionButtonView, fragment: Fragment) :
@@ -18,7 +17,7 @@ class QuickActionConvert(btn: QuickActionButtonView, fragment: Fragment) :
 
     override fun onClick() {
         super.onClick()
-        ConvertUtils.showConvert(fragment)
+        fragment.findNavController().openTool(Tools.CONVERT)
     }
 
     override fun onLongClick(): Boolean {
