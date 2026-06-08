@@ -53,6 +53,7 @@ import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.text.toFloatCompat
@@ -84,6 +85,10 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
+import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
+import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
+import com.kylecorry.trail_sense.tools.guide.ui.GuideListScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -133,7 +138,39 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
             )
             DESTINATION_EXPERIMENTATION -> ExperimentationContent()
             DESTINATION_ERROR_HANDLER -> ErrorHandler()
+            DESTINATION_GUIDE_LIST -> GuideList()
+            DESTINATION_DIAGNOSTICS -> Diagnostics()
         }
+    }
+
+    @Composable
+    private fun GuideList() {
+        GuideListScreen(
+            guides = Guides.guides(requireContext()),
+            onOpenGuide = {
+                tryOrNothing {
+                    findNavController().navigate(
+                        R.id.action_guideListFragment_to_guideFragment,
+                        Bundle().apply {
+                            putString("guide_name", it.name)
+                            putInt("guide_contents", it.contents)
+                        }
+                    )
+                }
+            }
+        )
+    }
+
+    @Composable
+    private fun Diagnostics() {
+        DiagnosticsScreen(
+            onShowSensorDetails = {
+                findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
+            },
+            onShowDiagnostic = {
+                DiagnosticAlerter(this).alert(it)
+            }
+        )
     }
 
     @Composable
@@ -1029,5 +1066,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment() {
         const val DESTINATION_GUIDE = "guide"
         const val DESTINATION_EXPERIMENTATION = "experimentation"
         const val DESTINATION_ERROR_HANDLER = "error_handler"
+        const val DESTINATION_GUIDE_LIST = "guide_list"
+        const val DESTINATION_DIAGNOSTICS = "diagnostics"
     }
 }

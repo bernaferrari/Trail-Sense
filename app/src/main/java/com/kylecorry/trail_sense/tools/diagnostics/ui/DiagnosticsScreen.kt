@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
 import androidx.compose.foundation.clickable
@@ -35,10 +37,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
@@ -46,24 +46,9 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiag
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 import kotlinx.coroutines.launch
 
-class DiagnosticsFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        DiagnosticsScreen(
-            onShowSensorDetails = {
-                findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
-            },
-            onShowDiagnostic = {
-                DiagnosticAlerter(this@DiagnosticsFragment).alert(it)
-            }
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DiagnosticsScreen(
+internal fun DiagnosticsScreen(
     onShowSensorDetails: () -> Unit,
     onShowDiagnostic: (DiagnosticItem) -> Unit,
     modifier: Modifier = Modifier

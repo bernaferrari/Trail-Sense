@@ -1,6 +1,7 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.guide.ui
 
-import android.os.Bundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,37 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
-import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
-
-class GuideListFragment : TrailSenseComposeFragment() {
-
-    @Composable
-    override fun FragmentContent() {
-        GuideListScreen(
-            guides = Guides.guides(requireContext()),
-            onOpenGuide = {
-                tryOrNothing {
-                    findNavController().navigate(
-                        R.id.action_guideListFragment_to_guideFragment,
-                        Bundle().apply {
-                            putString("guide_name", it.name)
-                            putInt("guide_contents", it.contents)
-                        }
-                    )
-                }
-            }
-        )
-    }
-}
 
 @Composable
-private fun GuideListScreen(
+internal fun GuideListScreen(
     guides: List<UserGuideCategory>,
     onOpenGuide: (UserGuide) -> Unit
 ) {
