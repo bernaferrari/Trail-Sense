@@ -225,8 +225,8 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
     override val layerScale: Float
         get() = min(1f, max(scale, 0.9f))
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     override fun setup() {
         super.setup()

@@ -1,13 +1,24 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.graphics.Canvas
+import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -23,15 +34,90 @@ import com.kylecorry.trail_sense.shared.canvas.tiles.PdfImageRegionDecoder
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import kotlin.math.max
 
-open class EnhancedImageView : SubsamplingScaleImageView {
+open class EnhancedImageView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : AbstractComposeView(context, attrs, defStyleAttr) {
 
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
+    private var renderVersion by mutableIntStateOf(0)
+
+    private val imageView = TiledImageView(context, attrs)
+
+    private inner class TiledImageView(
+        context: Context,
+        attrs: AttributeSet?
+    ) : SubsamplingScaleImageView(context, attrs) {
+        override fun invalidate() {
+            super.invalidate()
+            requestRedraw()
+        }
+
+        override fun tileVisible(tile: Tile?): Boolean {
+            if (imageRotation == 0f && rotationOffset == 0f) {
+                return super.tileVisible(tile)
+            }
+
+            val rect = tile?.sRect ?: return false
+
+            val topLeftSource = toSource(0f, 0f, true)
+            val topRightSource = toSource(width.toFloat(), 0f, true)
+            val bottomRightSource = toSource(width.toFloat(), height.toFloat(), true)
+            val bottomLeftSource = toSource(0f, height.toFloat(), true)
+
+            val sVisLeft = minOf(
+                topLeftSource?.x ?: 0f,
+                topRightSource?.x ?: 0f,
+                bottomRightSource?.x ?: 0f,
+                bottomLeftSource?.x ?: 0f
+            )
+            val sVisRight = maxOf(
+                topLeftSource?.x ?: 0f,
+                topRightSource?.x ?: 0f,
+                bottomRightSource?.x ?: 0f,
+                bottomLeftSource?.x ?: 0f
+            )
+            val sVisTop = minOf(
+                topLeftSource?.y ?: 0f,
+                topRightSource?.y ?: 0f,
+                bottomRightSource?.y ?: 0f,
+                bottomLeftSource?.y ?: 0f
+            )
+            val sVisBottom = maxOf(
+                topLeftSource?.y ?: 0f,
+                topRightSource?.y ?: 0f,
+                bottomRightSource?.y ?: 0f,
+                bottomLeftSource?.y ?: 0f
+            )
+
+            return sVisLeft > rect.right || rect.left > sVisRight || sVisTop > rect.bottom || rect.top <= sVisBottom
+        }
+
+        override fun onImageLoaded() {
+            super.onImageLoaded()
+            this@EnhancedImageView.onImageLoaded()
+        }
+
+        override fun onTouchEvent(event: MotionEvent): Boolean {
+            val consumed = gestureDetector.onTouchEvent(event)
+            return consumed || super.onTouchEvent(event)
+        }
+
+        fun refreshTiles() {
+            refreshRequiredTiles(true)
+        }
+
+        fun isInteractingWithZoom(): Boolean {
+            return isZooming || isQuickScaling
+        }
+    }
 
     protected var imageRotation = 0f
         set(value) {
             field = value
-            refreshRequiredTiles(true)
+            imageView.refreshTiles()
             invalidate()
         }
 
@@ -43,32 +129,80 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     private var lastTranslateX = 0f
     private var lastTranslateY = 0f
     private var rotationOffset = 0f
+
     protected val imageSize: Size
         get() = Size(imageWidth.toFloat(), imageHeight.toFloat())
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    val orientation: Int
+        get() = imageView.orientation
 
-    override fun onDraw(canvas: Canvas) {
-        if (isSetup) {
-            drawer.canvas = canvas
-            drawer.push()
-            drawer.rotate(-imageRotation + rotationOffset)
+    val scale: Float
+        get() = imageView.scale
+
+    protected var minScale: Float
+        get() = imageView.minScale
+        set(value) {
+            imageView.minScale = value
         }
 
-        super.onDraw(canvas)
-        if (!isReady) {
+    protected var maxScale: Float
+        get() = imageView.maxScale
+        set(value) {
+            imageView.maxScale = value
+        }
+
+    protected val center: PointF?
+        get() = imageView.center
+
+    protected val isImageLoaded: Boolean
+        get() = imageView.isImageLoaded
+
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { imageView }
+                )
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    renderVersion
+                    if (::drawer.isInitialized) {
+                        drawer.canvas = drawContext.canvas.nativeCanvas
+                    } else {
+                        drawer = CanvasDrawer(context, drawContext.canvas.nativeCanvas)
+                    }
+                    renderOverlay(drawContext.canvas.nativeCanvas)
+                }
+            }
+        }
+    }
+
+    override fun invalidate() {
+        super.invalidate()
+        requestRedraw()
+    }
+
+    private fun requestRedraw() {
+        post {
+            renderVersion++
+        }
+    }
+
+    private fun renderOverlay(canvas: AndroidCanvas) {
+        if (!imageView.isReady) {
             return
         }
 
         if (!isSetup) {
-            drawer = CanvasDrawer(context, canvas)
             mySetup()
             isSetup = true
         }
 
+        drawer.canvas = canvas
+        drawer.push()
+        drawer.rotate(-imageRotation + rotationOffset)
         myDraw()
-        // TODO: Use a flag instead
         tryOrNothing {
             drawer.pop()
         }
@@ -77,10 +211,10 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     }
 
     private fun mySetup() {
-        setPanLimit(PAN_LIMIT_OUTSIDE)
-        maxScale = 6f
-        alwaysZoomDoubleTap = true
-        alwaysZoomDoubleTapZoomScale = 2f
+        imageView.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_OUTSIDE)
+        imageView.maxScale = 6f
+        imageView.alwaysZoomDoubleTap = true
+        imageView.alwaysZoomDoubleTapZoomScale = 2f
         setup()
     }
 
@@ -103,7 +237,7 @@ open class EnhancedImageView : SubsamplingScaleImageView {
             lastScale = scale
         }
 
-        vTranslate?.let {
+        imageView.vTranslate?.let {
             if (it.x != lastTranslateX || it.y != lastTranslateY) {
                 onTranslateChanged(lastTranslateX, lastTranslateY, it.x, it.y)
                 lastTranslateX = it.x
@@ -143,12 +277,12 @@ open class EnhancedImageView : SubsamplingScaleImageView {
 
     fun setImage(filename: String, rotation: Float = 0f) {
         val baseRotation = getBaseRotation(rotation)
-        if (orientation != baseRotation) {
-            orientation = when (baseRotation) {
-                90 -> ORIENTATION_90
-                180 -> ORIENTATION_180
-                270 -> ORIENTATION_270
-                else -> ORIENTATION_0
+        if (imageView.orientation != baseRotation) {
+            imageView.orientation = when (baseRotation) {
+                90 -> SubsamplingScaleImageView.ORIENTATION_90
+                180 -> SubsamplingScaleImageView.ORIENTATION_180
+                270 -> SubsamplingScaleImageView.ORIENTATION_270
+                else -> SubsamplingScaleImageView.ORIENTATION_0
             }
         }
         rotationOffset = Trigonometry.deltaAngle(
@@ -159,16 +293,15 @@ open class EnhancedImageView : SubsamplingScaleImageView {
         if (lastImage != filename) {
             val uri = files.uri(filename)
 
-            // If the image is a PDF, use the PDF renderer
             if (filename.lowercase().endsWith(".pdf")) {
-                setBitmapDecoderClass(PdfImageDecoder::class.java)
-                setRegionDecoderClass(PdfImageRegionDecoder::class.java)
+                imageView.setBitmapDecoderClass(PdfImageDecoder::class.java)
+                imageView.setRegionDecoderClass(PdfImageRegionDecoder::class.java)
             } else {
-                setBitmapDecoderClass(SkiaImageDecoder::class.java)
-                setRegionDecoderClass(SkiaImageRegionDecoder::class.java)
+                imageView.setBitmapDecoderClass(SkiaImageDecoder::class.java)
+                imageView.setRegionDecoderClass(SkiaImageRegionDecoder::class.java)
             }
 
-            setImage(ImageSource.uri(uri))
+            imageView.setImage(ImageSource.uri(uri))
             lastImage = filename
         }
         invalidate()
@@ -178,60 +311,15 @@ open class EnhancedImageView : SubsamplingScaleImageView {
         return rotation.roundNearestAngle(90f).toInt()
     }
 
-    override fun tileVisible(tile: Tile?): Boolean {
-        // No need to check if the image is not rotated
-        if (imageRotation == 0f && rotationOffset == 0f) {
-            return super.tileVisible(tile)
-        }
-
-        val rect = tile?.sRect ?: return false
-
-        // Calculate the bounds of the visible source area (factoring in rotation)
-        val topLeftSource = toSource(0f, 0f, true)
-        val topRightSource = toSource(width.toFloat(), 0f, true)
-        val bottomRightSource = toSource(width.toFloat(), height.toFloat(), true)
-        val bottomLeftSource = toSource(0f, height.toFloat(), true)
-
-        val sVisLeft = minOf(
-            topLeftSource?.x ?: 0f,
-            topRightSource?.x ?: 0f,
-            bottomRightSource?.x ?: 0f,
-            bottomLeftSource?.x ?: 0f
-        )
-        val sVisRight = maxOf(
-            topLeftSource?.x ?: 0f,
-            topRightSource?.x ?: 0f,
-            bottomRightSource?.x ?: 0f,
-            bottomLeftSource?.x ?: 0f
-        )
-        val sVisTop = minOf(
-            topLeftSource?.y ?: 0f,
-            topRightSource?.y ?: 0f,
-            bottomRightSource?.y ?: 0f,
-            bottomLeftSource?.y ?: 0f
-        )
-        val sVisBottom = maxOf(
-            topLeftSource?.y ?: 0f,
-            topRightSource?.y ?: 0f,
-            bottomRightSource?.y ?: 0f,
-            bottomLeftSource?.y ?: 0f
-        )
-
-        // Check to see if the tile is within the visible source area
-        return sVisLeft > rect.right || rect.left > sVisRight || sVisTop > rect.bottom || rect.top <= sVisBottom
-
-    }
-
-    override fun onImageLoaded() {
-        super.onImageLoaded()
+    protected open fun onImageLoaded() {
         val rotatedImageSize =
             Size(imageWidth.toFloat(), imageHeight.toFloat()).rotate(rotationOffset)
         val percentIncrease = max(
             rotatedImageSize.width / imageWidth,
             rotatedImageSize.height / imageHeight
         )
-        setMinimumScaleType(SCALE_TYPE_CUSTOM)
-        minScale /= percentIncrease
+        imageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CUSTOM)
+        imageView.minScale /= percentIncrease
         invalidate()
     }
 
@@ -249,16 +337,23 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     }
 
     fun recenter() {
-        // TODO: Center the rotated image
-        resetScaleAndCenter()
+        imageView.resetScaleAndCenter()
     }
 
     fun moveTo(x: Float, y: Float) {
-        setScaleAndCenter(scale, PointF(x, y))
+        imageView.setScaleAndCenter(scale, PointF(x, y))
     }
 
     fun zoomBy(multiple: Float) {
         requestScale((scale * multiple).coerceIn(minScale, max(2 * minScale, maxScale)))
+    }
+
+    protected fun requestScale(scale: Float) {
+        imageView.requestScale(scale)
+    }
+
+    protected fun requestCenter(point: PointF) {
+        imageView.requestCenter(point)
     }
 
     protected fun toView(
@@ -266,12 +361,8 @@ open class EnhancedImageView : SubsamplingScaleImageView {
         sourceY: Float,
         withRotation: Boolean = false
     ): PointF? {
-        val source = PointF(sourceX, sourceY)
+        val view = imageView.sourceToViewCoord(sourceX, sourceY) ?: return null
 
-        // Apply the scale and translate
-        val view = sourceToViewCoord(source.x, source.y) ?: return null
-
-        // Apply the rotation
         if (withRotation) {
             transform(view, inPlace = true) {
                 postRotate(-imageRotation + rotationOffset, width / 2f, height / 2f)
@@ -288,32 +379,30 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     ): PointF? {
         val view = PointF(viewX, viewY)
 
-        // Remove the rotation
         if (withRotation) {
             transform(view, invert = true, inPlace = true) {
                 postRotate(-imageRotation + rotationOffset, width / 2f, height / 2f)
             }
         }
 
-        // Remove the scale and translate
-        return viewToSourceCoord(view.x, view.y)
+        return imageView.viewToSourceCoord(view.x, view.y)
     }
 
     val imageWidth: Int
         get() {
-            return if (orientation == 90 || orientation == 270) {
-                sHeight
+            return if (imageView.orientation == 90 || imageView.orientation == 270) {
+                imageView.sHeight
             } else {
-                sWidth
+                imageView.sWidth
             }
         }
 
     val imageHeight: Int
         get() {
-            return if (orientation == 90 || orientation == 270) {
-                sWidth
+            return if (imageView.orientation == 90 || imageView.orientation == 270) {
+                imageView.sWidth
             } else {
-                sHeight
+                imageView.sHeight
             }
         }
 
@@ -329,8 +418,7 @@ open class EnhancedImageView : SubsamplingScaleImageView {
         override fun onLongPress(e: MotionEvent) {
             super.onLongPress(e)
 
-            // Don't invoke if it is currently scaling
-            if (isZooming || isQuickScaling) return
+            if (imageView.isInteractingWithZoom()) return
 
             this@EnhancedImageView.onLongPress(e)
         }
@@ -342,11 +430,6 @@ open class EnhancedImageView : SubsamplingScaleImageView {
     }
 
     private val gestureDetector = GestureDetector(context, gestureListener)
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        val consumed = gestureDetector.onTouchEvent(event)
-        return consumed || super.onTouchEvent(event)
-    }
 
     private fun transform(
         point: PointF,
@@ -372,5 +455,4 @@ open class EnhancedImageView : SubsamplingScaleImageView {
             return PointF(pointArray[0], pointArray[1])
         }
     }
-
 }

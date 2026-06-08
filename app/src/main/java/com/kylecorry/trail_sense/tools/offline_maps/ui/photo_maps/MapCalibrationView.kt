@@ -28,8 +28,8 @@ class MapCalibrationView : BasePhotoMapView {
 
     private var highlightedColor: Int = Color.WHITE
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     override fun setup() {
         super.setup()
