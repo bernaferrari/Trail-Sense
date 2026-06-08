@@ -656,8 +656,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolBattery
-            setClassName("com.kylecorry.trail_sense.tools.battery.ui.FragmentToolBattery")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolBattery"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BATTERY)
+                .build())
             putAction(
                 R.id.action_settings_to_power_settings,
                 NavAction(R.id.powerSettingsFragment, NavOptions.Builder()

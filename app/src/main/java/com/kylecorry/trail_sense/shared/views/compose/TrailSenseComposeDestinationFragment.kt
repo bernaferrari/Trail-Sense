@@ -141,8 +141,11 @@ import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
+import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
+import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
+import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
@@ -351,6 +354,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
             DESTINATION_PEDOMETER -> Pedometer()
             DESTINATION_FLASHLIGHT -> Flashlight()
+            DESTINATION_BATTERY -> BatteryTool()
         }
     }
 
@@ -466,6 +470,16 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             onSelectedModeChanged = { selectedFlashlightMode = it },
             onOpenScreenFlashlight = {
                 findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
+            }
+        )
+    }
+
+    @Composable
+    private fun BatteryTool() {
+        BatteryToolScreen(
+            onShowHistory = ::showBatteryHistory,
+            onOpenPowerSettings = {
+                findNavController().navigate(R.id.action_settings_to_power_settings)
             }
         )
     }
@@ -3181,6 +3195,20 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         }
     }
 
+    private fun showBatteryHistory(readings: List<BatteryReading>, formatter: FormatService) {
+        val readingDuration = Duration.between(
+            readings.firstOrNull()?.time,
+            readings.lastOrNull()?.time
+        )
+        CustomUiUtils.showChart(
+            this,
+            getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
+        ) {
+            val chart = BatteryChart(it)
+            chart.plot(readings, false)
+        }
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -3337,5 +3365,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_SURVIVAL_GUIDE_LIST = "survival_guide_list"
         const val DESTINATION_PEDOMETER = "pedometer"
         const val DESTINATION_FLASHLIGHT = "flashlight"
+        const val DESTINATION_BATTERY = "battery"
     }
 }

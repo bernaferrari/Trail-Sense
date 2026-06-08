@@ -1,10 +1,10 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.battery.ui
 
 import android.content.Intent
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,9 +25,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,8 +38,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
@@ -45,11 +50,9 @@ import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.sol.math.filters.MedianFilter
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryUsage
 import com.kylecorry.trail_sense.tools.battery.domain.RunningService
@@ -64,122 +67,53 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.absoluteValue
 
-class FragmentToolBattery : TrailSenseComposeFragment() {
+private const val CURRENT_FILTER_SIZE = 100
 
-    private val currentFilterSize = 100
-    private val batteryService by lazy { BatteryService() }
-    private val battery by lazy { Battery(requireContext()) }
-    private val batteryRepo by lazy { BatteryRepo.getInstance(requireContext()) }
-    private val lowPowerMode by lazy { LowPowerMode(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(requireContext()) }
-    private val handler = Handler(Looper.getMainLooper())
-    private var currentFilter = MedianFilter(currentFilterSize)
+@Composable
+fun BatteryToolScreen(
+    onShowHistory: (List<BatteryReading>, FormatService) -> Unit,
+    onOpenPowerSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val batteryService = remember { BatteryService() }
+    val battery = remember { Battery(context) }
+    val batteryRepo = remember { BatteryRepo.getInstance(context) }
+    val lowPowerMode = remember { LowPowerMode(context) }
+    val prefs = remember { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance(context) }
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    var currentFilter by remember { mutableStateOf(MedianFilter(CURRENT_FILTER_SIZE)) }
 
-    private var percent by mutableStateOf(0f)
-    private var capacity by mutableStateOf(0f)
-    private var health by mutableStateOf(BatteryHealth.Unknown)
-    private var current by mutableStateOf(0f)
-    private var chargingStatus by mutableStateOf(BatteryChargingStatus.Unknown)
-    private var chargeMethod by mutableStateOf(BatteryChargingMethod.Unknown)
-    private var rawReadings by mutableStateOf(emptyList<BatteryReading>())
-    private var readings by mutableStateOf(emptyList<BatteryReading>())
-    private var runningServices by mutableStateOf(emptyList<RunningService>())
-    private var systemTips by mutableStateOf(emptyList<SystemBatteryTip>())
-    private var isLowPowerEnabled by mutableStateOf(false)
+    var percent by remember { mutableStateOf(0f) }
+    var capacity by remember { mutableStateOf(0f) }
+    var health by remember { mutableStateOf(BatteryHealth.Unknown) }
+    var current by remember { mutableStateOf(0f) }
+    var chargingStatus by remember { mutableStateOf(BatteryChargingStatus.Unknown) }
+    var chargeMethod by remember { mutableStateOf(BatteryChargingMethod.Unknown) }
+    var rawReadings by remember { mutableStateOf(emptyList<BatteryReading>()) }
+    var readings by remember { mutableStateOf(emptyList<BatteryReading>()) }
+    var runningServices by remember { mutableStateOf(emptyList<RunningService>()) }
+    var systemTips by remember { mutableStateOf(emptyList<SystemBatteryTip>()) }
+    var isLowPowerEnabled by remember { mutableStateOf(false) }
 
-    private val batteryListener = {
-        refreshBattery()
-        true
-    }
-
-    private val batteryRefreshRunnable = object : Runnable {
-        override fun run() {
-            refreshBattery()
-            handler.postDelayed(this, 500)
-        }
-    }
-
-    private val servicesRefreshRunnable = object : Runnable {
-        override fun run() {
-            refreshRunningServices()
-            handler.postDelayed(this, 1000)
-        }
-    }
-
-    private val tipsRefreshRunnable = object : Runnable {
-        override fun run() {
-            refreshSystemTips()
-            handler.postDelayed(this, 10000)
-        }
-    }
-
-    @Composable
-    override fun FragmentContent() {
-        BatteryScreen(
-            percent = percent,
-            capacity = capacity,
-            health = health,
-            current = current,
-            chargingStatus = chargingStatus,
-            chargeMethod = chargeMethod,
-            readings = readings,
-            services = runningServices,
-            tips = systemTips,
-            isLowPowerEnabled = isLowPowerEnabled,
-            formatter = formatter,
-            battery = battery,
-            batteryService = batteryService,
-            canOpenSystemBatterySettings = canOpenSystemBatterySettings(),
-            onShowHistory = ::showHistory,
-            onOpenBatterySettings = ::openBatterySettings,
-            onToggleLowPower = ::toggleLowPower,
-            onDisableService = ::disableService,
-            onOpenTip = ::openTip
+    fun updateReadings() {
+        readings = rawReadings + listOfNotNull(
+            if (battery.hasValidReading) {
+                BatteryReading(
+                    Instant.now(),
+                    percent,
+                    capacity,
+                    chargingStatus == BatteryChargingStatus.Charging
+                )
+            } else {
+                null
+            }
         )
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        batteryRepo.get().observe(viewLifecycleOwner) { allReadings ->
-            rawReadings = allReadings.sortedBy { it.time }
-            updateReadings()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        currentFilter = MedianFilter(currentFilterSize)
-        battery.start(batteryListener)
-        refreshBattery()
-        refreshRunningServices()
-        refreshSystemTips()
-        isLowPowerEnabled = lowPowerMode.isEnabled()
-        handler.removeCallbacks(batteryRefreshRunnable)
-        handler.removeCallbacks(servicesRefreshRunnable)
-        handler.removeCallbacks(tipsRefreshRunnable)
-        handler.postDelayed(batteryRefreshRunnable, 500)
-        handler.postDelayed(servicesRefreshRunnable, 1000)
-        handler.postDelayed(tipsRefreshRunnable, 10000)
-    }
-
-    override fun onPause() {
-        handler.removeCallbacks(batteryRefreshRunnable)
-        handler.removeCallbacks(servicesRefreshRunnable)
-        handler.removeCallbacks(tipsRefreshRunnable)
-        battery.stop(batteryListener)
-        super.onPause()
-    }
-
-    override fun onDestroyView() {
-        handler.removeCallbacks(batteryRefreshRunnable)
-        handler.removeCallbacks(servicesRefreshRunnable)
-        handler.removeCallbacks(tipsRefreshRunnable)
-        battery.stop(batteryListener)
-        super.onDestroyView()
-    }
-
-    private fun refreshBattery() {
+    fun refreshBattery() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             handler.post { refreshBattery() }
             return
@@ -187,7 +121,7 @@ class FragmentToolBattery : TrailSenseComposeFragment() {
 
         val newChargingStatus = battery.chargingStatus
         if (newChargingStatus != chargingStatus) {
-            currentFilter = MedianFilter(currentFilterSize)
+            currentFilter = MedianFilter(CURRENT_FILTER_SIZE)
         }
         chargingStatus = newChargingStatus
         val isCharging = newChargingStatus == BatteryChargingStatus.Charging
@@ -199,72 +133,52 @@ class FragmentToolBattery : TrailSenseComposeFragment() {
         updateReadings()
     }
 
-    private fun updateReadings() {
-        readings = rawReadings + listOfNotNull(
-            if (battery.hasValidReading) {
-                BatteryReading(Instant.now(), percent, capacity, chargingStatus == BatteryChargingStatus.Charging)
-            } else {
-                null
-            }
-        )
-    }
-
-    private fun refreshRunningServices() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun refreshRunningServices() {
+        lifecycleOwner.lifecycleScope.launch {
             runningServices = withContext(Dispatchers.IO) {
-                batteryService.getRunningServices(requireContext())
+                batteryService.getRunningServices(context)
             }
         }
     }
 
-    private fun refreshSystemTips() {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun refreshSystemTips() {
+        lifecycleOwner.lifecycleScope.launch {
             systemTips = withContext(Dispatchers.IO) {
-                batteryService.getSystemBatteryTips(requireContext())
+                batteryService.getSystemBatteryTips(context)
             }
         }
     }
 
-    private fun showHistory() {
+    fun showHistory() {
         if (prefs.power.enableBatteryLog) {
-            val readingDuration = Duration.between(
-                readings.firstOrNull()?.time,
-                readings.lastOrNull()?.time
-            )
-            CustomUiUtils.showChart(
-                this,
-                getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
-            ) {
-                val chart = BatteryChart(it)
-                chart.plot(readings, false)
-            }
+            onShowHistory(readings, formatter)
         } else {
             Alerts.dialog(
-                requireContext(),
-                getString(R.string.pref_tiles_battery_log),
-                getString(R.string.pref_dialog_battery_log_summary),
-                okText = getString(R.string.settings),
+                context,
+                context.getString(R.string.pref_tiles_battery_log),
+                context.getString(R.string.pref_dialog_battery_log_summary),
+                okText = context.getString(R.string.settings),
                 onClose = {
                     if (!it) {
-                        findNavController().navigate(R.id.action_settings_to_power_settings)
+                        onOpenPowerSettings()
                     }
                 }
             )
         }
     }
 
-    private fun openBatterySettings() {
+    fun openBatterySettings() {
         val settingsIntent = Intent(Intent.ACTION_POWER_USAGE_SUMMARY)
-        if (Intents.hasReceiver(requireContext(), settingsIntent)) {
-            startActivity(settingsIntent)
+        if (Intents.hasReceiver(context, settingsIntent)) {
+            context.startActivity(settingsIntent)
         }
     }
 
-    private fun canOpenSystemBatterySettings(): Boolean {
-        return Intents.hasReceiver(requireContext(), Intent(Intent.ACTION_POWER_USAGE_SUMMARY))
+    fun canOpenSystemBatterySettings(): Boolean {
+        return Intents.hasReceiver(context, Intent(Intent.ACTION_POWER_USAGE_SUMMARY))
     }
 
-    private fun toggleLowPower() {
+    fun toggleLowPower() {
         if (lowPowerMode.isEnabled()) {
             prefs.power.userEnabledLowPower = false
             lowPowerMode.disable()
@@ -276,8 +190,8 @@ class FragmentToolBattery : TrailSenseComposeFragment() {
         refreshRunningServices()
     }
 
-    private fun disableService(service: RunningService) {
-        viewLifecycleOwner.lifecycleScope.launch {
+    fun disableService(service: RunningService) {
+        lifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 service.disable()
             }
@@ -285,9 +199,108 @@ class FragmentToolBattery : TrailSenseComposeFragment() {
         }
     }
 
-    private fun openTip(tip: SystemBatteryTip) {
-        tip.manage?.invoke(requireContext())
+    fun openTip(tip: SystemBatteryTip) {
+        tip.manage?.invoke(context)
     }
+
+    DisposableEffect(lifecycleOwner, batteryRepo) {
+        val observer = androidx.lifecycle.Observer<List<BatteryReading>> { allReadings ->
+            rawReadings = allReadings.sortedBy { it.time }
+            updateReadings()
+        }
+        batteryRepo.get().observe(lifecycleOwner, observer)
+        onDispose {
+            batteryRepo.get().removeObserver(observer)
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, battery) {
+        val batteryListener = {
+            refreshBattery()
+            true
+        }
+        val batteryRefreshRunnable = object : Runnable {
+            override fun run() {
+                refreshBattery()
+                handler.postDelayed(this, 500)
+            }
+        }
+        val servicesRefreshRunnable = object : Runnable {
+            override fun run() {
+                refreshRunningServices()
+                handler.postDelayed(this, 1000)
+            }
+        }
+        val tipsRefreshRunnable = object : Runnable {
+            override fun run() {
+                refreshSystemTips()
+                handler.postDelayed(this, 10000)
+            }
+        }
+
+        fun start() {
+            currentFilter = MedianFilter(CURRENT_FILTER_SIZE)
+            battery.start(batteryListener)
+            refreshBattery()
+            refreshRunningServices()
+            refreshSystemTips()
+            isLowPowerEnabled = lowPowerMode.isEnabled()
+            handler.removeCallbacks(batteryRefreshRunnable)
+            handler.removeCallbacks(servicesRefreshRunnable)
+            handler.removeCallbacks(tipsRefreshRunnable)
+            handler.postDelayed(batteryRefreshRunnable, 500)
+            handler.postDelayed(servicesRefreshRunnable, 1000)
+            handler.postDelayed(tipsRefreshRunnable, 10000)
+        }
+
+        fun stop() {
+            handler.removeCallbacks(batteryRefreshRunnable)
+            handler.removeCallbacks(servicesRefreshRunnable)
+            handler.removeCallbacks(tipsRefreshRunnable)
+            battery.stop(batteryListener)
+        }
+
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> start()
+                Lifecycle.Event.ON_PAUSE -> stop()
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            start()
+        }
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            stop()
+        }
+    }
+
+    BatteryScreen(
+        percent = percent,
+        capacity = capacity,
+        health = health,
+        current = current,
+        chargingStatus = chargingStatus,
+        chargeMethod = chargeMethod,
+        readings = readings,
+        services = runningServices,
+        tips = systemTips,
+        isLowPowerEnabled = isLowPowerEnabled,
+        formatter = formatter,
+        battery = battery,
+        batteryService = batteryService,
+        canOpenSystemBatterySettings = canOpenSystemBatterySettings(),
+        onShowHistory = ::showHistory,
+        onOpenBatterySettings = ::openBatterySettings,
+        onToggleLowPower = ::toggleLowPower,
+        onDisableService = ::disableService,
+        onOpenTip = ::openTip,
+        modifier = modifier
+    )
 }
 
 @Composable
