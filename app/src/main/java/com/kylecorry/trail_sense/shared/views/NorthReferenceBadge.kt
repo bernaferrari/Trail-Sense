@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.util.AttributeSet
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -16,22 +15,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
-class NorthReferenceBadge(
-    context: Context,
-    attrs: AttributeSet? = null
-) : AbstractComposeView(context, attrs) {
+class NorthReferenceBadgeState(
+    private val context: Context
+) {
 
     private val formatter = FormatService.getInstance(context)
+
+    var isVisible by mutableStateOf(true)
 
     var useTrueNorth by mutableStateOf(false)
 
@@ -39,8 +36,13 @@ class NorthReferenceBadge(
 
     var showDetailsOnClick by mutableStateOf(false)
 
+    var onSettingsClick by mutableStateOf<(() -> Unit)?>(null)
+
     @Composable
-    override fun Content() {
+    fun Content() {
+        if (!isVisible) {
+            return
+        }
         val text = when {
             !showLabel -> null
             useTrueNorth -> context.getString(R.string.true_north)
@@ -86,18 +88,18 @@ class NorthReferenceBadge(
             context.getString(R.string.magnetic_north_description)
         }
 
-        val controller = tryOrDefault(null) { findNavController() }
+        val settingsClick = onSettingsClick
         Alerts.dialog(
             context,
             title,
             message,
-            okText = if (controller != null) context.getString(R.string.settings) else context.getString(
+            okText = if (settingsClick != null) context.getString(R.string.settings) else context.getString(
                 android.R.string.ok
             ),
-            cancelText = if (controller != null) context.getString(android.R.string.cancel) else null,
+            cancelText = if (settingsClick != null) context.getString(android.R.string.cancel) else null,
         ) { cancelled ->
             if (!cancelled) {
-                controller?.navigate(R.id.calibrateCompassFragment)
+                settingsClick?.invoke()
             }
         }
     }

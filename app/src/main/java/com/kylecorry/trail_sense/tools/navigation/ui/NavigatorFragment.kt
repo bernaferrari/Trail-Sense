@@ -73,7 +73,7 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DataPointContent
-import com.kylecorry.trail_sense.shared.views.NorthReferenceBadge
+import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
@@ -197,7 +197,12 @@ class NavigatorFragment : TrailSenseAndromedaComposeFragment() {
     private val triggers = HookTriggers()
 
     override fun beforeCreateContent() {
-        navigatorViews = createNavigatorViews(requireContext())
+        navigatorViews = createNavigatorViews(
+            requireContext(),
+            onNorthReferenceSettingsClick = {
+                findNavController().navigate(R.id.calibrateCompassFragment)
+            }
+        )
     }
 
     @Composable
@@ -788,7 +793,7 @@ private data class NavigatorViews(
     val radarCompass: RadarCompassView,
     val linearCompass: LinearSightingCompassView,
     val mapAttribution: MapAttributionState,
-    val northReferenceIndicator: NorthReferenceBadge,
+    val northReferenceIndicator: NorthReferenceBadgeState,
     val beaconBtn: NavigatorIconButton,
     val accuracyView: SensorStatusBadgeView,
     val navigationSheet: NavigationSheetView
@@ -876,7 +881,10 @@ private fun NavigatorHost(
     )
 }
 
-private fun createNavigatorViews(context: Context): NavigatorViews {
+private fun createNavigatorViews(
+    context: Context,
+    onNorthReferenceSettingsClick: (() -> Unit)? = null
+): NavigatorViews {
     val root = ConstraintLayout(context).apply {
         id = R.id.navigator_layout
         layoutParams = ViewGroup.LayoutParams(
@@ -1037,11 +1045,19 @@ private fun createNavigatorViews(context: Context): NavigatorViews {
         }
     )
 
-    val northReferenceIndicator = NorthReferenceBadge(context).apply {
+    val northReferenceIndicator = NorthReferenceBadgeState(context).apply {
+        onSettingsClick = onNorthReferenceSettingsClick
+    }
+    val northReferenceIndicatorView = ComposeView(context).apply {
         id = R.id.north_reference_indicator
+        setContent {
+            TrailSenseTheme {
+                northReferenceIndicator.Content()
+            }
+        }
     }
     bottomDetails.addView(
-        northReferenceIndicator,
+        northReferenceIndicatorView,
         ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
