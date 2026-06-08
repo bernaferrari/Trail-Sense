@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
 import android.os.Bundle
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -41,44 +43,56 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseBottomSheetComposeFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TextBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SurvivalGuideBottomSheetFragment : TrailSenseBottomSheetComposeFragment() {
+class SurvivalGuideBottomSheet(private val fragment: Fragment) {
 
     private var query by mutableStateOf("")
     private var searchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
     private var summary by mutableStateOf("")
     private var searchJob: Job? = null
+    private var sheet: BottomSheetDialog? = null
 
     private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
-    private val search by lazy { SurvivalGuideSearch(requireContext()) }
+    private val search by lazy { SurvivalGuideSearch(fragment.requireContext()) }
 
-    @Composable
-    override fun FragmentContent() {
-        SurvivalGuideSheetContent(
-            query = query,
-            summary = summary,
-            firstResult = searchResults.firstOrNull(),
-            markdown = markdown,
-            onQueryChange = ::updateQuery,
-            onOpenSearchList = ::openSearchList,
-            onSummaryClick = ::openSummary,
-            modifier = Modifier.fillMaxSize()
+    fun show(): BottomSheetDialog {
+        val context = fragment.requireContext()
+        val dialog = BottomSheetDialog(context)
+        sheet = dialog
+        dialog.setContentView(
+            TrailSenseComposeRootView(
+                context,
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+            ) {
+                SurvivalGuideSheetContent(
+                    query = query,
+                    summary = summary,
+                    firstResult = searchResults.firstOrNull(),
+                    markdown = markdown,
+                    onQueryChange = ::updateQuery,
+                    onOpenSearchList = ::openSearchList,
+                    onSummaryClick = ::openSummary,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         )
-    }
-
-    override fun onDestroyView() {
-        searchJob?.cancel()
-        super.onDestroyView()
+        dialog.setOnDismissListener {
+            searchJob?.cancel()
+            sheet = null
+        }
+        dialog.show()
+        return dialog
     }
 
     private fun updateQuery(value: String) {
@@ -97,7 +111,7 @@ class SurvivalGuideBottomSheetFragment : TrailSenseBottomSheetComposeFragment() 
             return
         }
 
-        searchJob = viewLifecycleOwner.lifecycleScope.launch {
+        searchJob = fragment.lifecycleScope.launch {
             delay(200)
             val (results, newSummary) = onDefault {
                 val results = search.search(value)
@@ -120,8 +134,8 @@ class SurvivalGuideBottomSheetFragment : TrailSenseBottomSheetComposeFragment() 
     }
 
     private fun openSearchList() {
-        dismiss()
-        findNavController().navigateWithAnimation(
+        sheet?.dismiss()
+        fragment.findNavController().navigateWithAnimation(
             R.id.fragmentToolSurvivalGuideList,
             Bundle().apply {
                 putString("search_query", query)
@@ -130,8 +144,8 @@ class SurvivalGuideBottomSheetFragment : TrailSenseBottomSheetComposeFragment() 
     }
 
     private fun openSummary(result: SurvivalGuideSearchResult) {
-        dismiss()
-        findNavController().navigateWithAnimation(
+        sheet?.dismiss()
+        fragment.findNavController().navigateWithAnimation(
             R.id.fragmentToolSurvivalGuideReader,
             Bundle().apply {
                 putInt("chapter_resource_id", result.chapter.resource)
