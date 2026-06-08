@@ -19,11 +19,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -31,7 +38,6 @@ import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.flexbox.JustifyContent
-import com.google.android.material.tabs.TabLayout
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
@@ -45,12 +51,12 @@ class QuickActionSheet @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ConstraintLayout(context, attrs) {
 
-    private val closeButton: View
-    private val tabs: TabLayout
+    private val header: ComposeView
     private val quickActionsContainer: ComposeView
     private val widgetsContainer: ScrollView
     private val widgets: FlexboxLayout
     private val quickActionState = MainActivityQuickActionState()
+    private var selectedTab by mutableIntStateOf(0)
 
     private var quickActionBinder: MainActivityQuickActionBinder? = null
     private var widgetBinder: ToolWidgetViewBinder? = null
@@ -73,45 +79,33 @@ class QuickActionSheet @JvmOverloads constructor(
         isFocusable = true
         setOnTouchListener { _, _ -> true }
 
-        tabs = TabLayout(context).apply {
+        header = ComposeView(context).apply {
             id = R.id.tabs
-            setBackgroundColor(surfaceColor)
-            elevation = 0f
-            tabMode = TabLayout.MODE_AUTO
-        }
-        addView(
-            tabs,
-            LayoutParams(
-                0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                endToStart = R.id.close_button
-                startToStart = LayoutParams.PARENT_ID
-                topToTop = LayoutParams.PARENT_ID
-            }
-        )
-
-        closeButton = ComposeView(context).apply {
-            id = R.id.close_button
             setContent {
                 TrailSenseTheme {
-                    IconButton(onClick = { close() }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_cancel),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    QuickActionHeader(
+                        selectedTab = selectedTab,
+                        onTabSelected = {
+                            if (it == 0) {
+                                showQuickActions()
+                            } else {
+                                showWidgets()
+                            }
+                        },
+                        onClose = {
+                            close()
+                        }
+                    )
                 }
             }
         }
         addView(
-            closeButton,
+            header,
             LayoutParams(
-                Resources.dp(context, 32f).toInt(),
-                Resources.dp(context, 32f).toInt()
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomToBottom = R.id.tabs
+                startToStart = LayoutParams.PARENT_ID
                 endToEnd = LayoutParams.PARENT_ID
                 topToTop = LayoutParams.PARENT_ID
             }
@@ -180,33 +174,6 @@ class QuickActionSheet @JvmOverloads constructor(
                 rightMargin = Resources.dp(context, 16f).toInt()
             }
         )
-        tabs.addTab(
-            tabs.newTab().also { it.text = context.getString(R.string.quick_actions) })
-        tabs.addTab(
-            tabs.newTab().also { it.text = context.getString(R.string.widgets) })
-
-        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                if (tab == null) {
-                    return
-                }
-                when (tab.position) {
-                    0 -> {
-                        showQuickActions()
-                    }
-
-                    1 -> {
-                        showWidgets()
-                    }
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab?) {
-            }
-        })
     }
 
     fun close() {
@@ -257,21 +224,52 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     private fun showQuickActions() {
-        if (tabs.selectedTabPosition != 0) {
-            tabs.selectTab(tabs.getTabAt(0))
-        }
+        selectedTab = 0
         quickActionsContainer.isVisible = true
         widgetsContainer.isVisible = false
     }
 
     private fun showWidgets() {
-        if (tabs.selectedTabPosition != 1) {
-            tabs.selectTab(tabs.getTabAt(1))
-        }
+        selectedTab = 1
         quickActionsContainer.isVisible = false
         widgetsContainer.isVisible = true
     }
 
+}
+
+@Composable
+private fun QuickActionHeader(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    onClose: () -> Unit
+) {
+    androidx.compose.foundation.layout.Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+        PrimaryTabRow(
+            selectedTabIndex = selectedTab,
+            modifier = Modifier.weight(1f)
+        ) {
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { onTabSelected(0) },
+                text = { Text(stringResource(R.string.quick_actions)) }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { onTabSelected(1) },
+                text = { Text(stringResource(R.string.widgets)) }
+            )
+        }
+        IconButton(onClick = onClose) {
+            Icon(
+                painter = painterResource(R.drawable.ic_cancel),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
