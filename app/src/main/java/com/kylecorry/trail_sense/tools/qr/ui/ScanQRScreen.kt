@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.qr.ui
 
 import android.annotation.SuppressLint
@@ -24,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -37,7 +40,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.clipboard.Clipboard
@@ -54,7 +60,6 @@ import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
@@ -62,61 +67,86 @@ import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ScanQRFragment : TrailSenseComposeFragment() {
+@Composable
+fun ScanQRToolScreen(fragment: Fragment) {
+    val controller = remember(fragment) { ScanQRController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            controller.onDestroy()
+        }
+    }
 
+    QrScannerScreen(
+        history = controller.history,
+        scrollRequest = controller.historyScrollRequest,
+        onCameraReady = controller::onCameraReady,
+        onCopy = controller::copy,
+        onCreateNote = controller::createNote,
+        onOpenMap = controller::openMap,
+        onCreateBeacon = controller::createBeacon,
+        onOpenUrl = controller::openUrl,
+        onDelete = controller::deleteResult
+    )
+}
+
+private class ScanQRController(private val fragment: Fragment) {
     private val cameraSize = Size(200, 200)
 
-    private var history by mutableStateOf<List<String>>(emptyList())
-    private var historyScrollRequest by mutableIntStateOf(0)
+    var history by mutableStateOf<List<String>>(emptyList())
+        private set
+    var historyScrollRequest by mutableIntStateOf(0)
+        private set
     private var cameraView: CameraState? = null
     private var shouldStartCamera = false
 
     private val beaconQREncoder = BeaconQREncoder()
     private val noteQREncoder = NoteQREncoder()
 
-    private val haptics by lazy { HapticSubsystem.getInstance(requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
     private val scanLock = Any()
 
-    @Composable
-    override fun FragmentContent() {
-        QrScannerScreen(
-            history = history,
-            scrollRequest = historyScrollRequest,
-            onCameraReady = ::onCameraReady,
-            onCopy = ::copy,
-            onCreateNote = ::createNote,
-            onOpenMap = ::openMap,
-            onCreateBeacon = ::createBeacon,
-            onOpenUrl = ::openUrl,
-            onDelete = ::deleteResult
-        )
-    }
-
-    private fun onCameraReady(cameraView: CameraState) {
+    fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
         cameraView.clipToOutline = true
-        if (shouldStartCamera && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+        if (shouldStartCamera && fragment.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             startCamera()
         }
     }
 
-    private fun copy(text: String) {
-        Clipboard.copy(requireContext(), text, getString(R.string.copied_to_clipboard_toast))
+    fun copy(text: String) {
+        Clipboard.copy(
+            fragment.requireContext(),
+            text,
+            fragment.getString(R.string.copied_to_clipboard_toast)
+        )
     }
 
-    private fun createNote(text: String) {
-        inBackground {
+    fun createNote(text: String) {
+        fragment.inBackground {
             val id = withContext(Dispatchers.IO) {
-                NoteRepo.getInstance(requireContext())
+                NoteRepo.getInstance(fragment.requireContext())
                     .addNote(noteQREncoder.decode(text))
             }
             withContext(Dispatchers.Main) {
                 CustomUiUtils.snackbar(
-                    this@ScanQRFragment,
-                    getString(R.string.saved_to_note),
-                    action = getString(R.string.view)
+                    fragment,
+                    fragment.getString(R.string.saved_to_note),
+                    action = fragment.getString(R.string.view)
                 ) {
-                    findNavController().navigate(
+                    fragment.findNavController().navigate(
                         R.id.fragmentToolNotesCreate,
                         Bundle().apply {
                             putLong("edit_note_id", id)
@@ -127,12 +157,12 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun openMap(text: String) {
+    fun openMap(text: String) {
         val intent = Intents.url(text)
-        Intents.openChooser(requireContext(), intent, text)
+        Intents.openChooser(fragment.requireContext(), intent, text)
     }
 
-    private fun openUrl(text: String) {
+    fun openUrl(text: String) {
         val protocols = listOf("http", "https", "rtsp", "ftp")
         val url = if (protocols.none { text.lowercase().startsWith(it) }) {
             "https://$text"
@@ -140,19 +170,19 @@ class ScanQRFragment : TrailSenseComposeFragment() {
             text
         }
         val intent = Intents.url(url)
-        Intents.openChooser(requireContext(), intent, text)
+        Intents.openChooser(fragment.requireContext(), intent, text)
     }
 
-    private fun createBeacon(text: String) {
+    fun createBeacon(text: String) {
         val beacon = beaconQREncoder.decode(text) ?: return
-        inBackground {
-            val id = BeaconService(requireContext()).add(beacon)
+        fragment.inBackground {
+            val id = BeaconService(fragment.requireContext()).add(beacon)
             CustomUiUtils.snackbar(
-                this@ScanQRFragment,
-                getString(R.string.beacon_created),
-                action = getString(R.string.view)
+                fragment,
+                fragment.getString(R.string.beacon_created),
+                action = fragment.getString(R.string.view)
             ) {
-                findNavController().navigate(
+                fragment.findNavController().navigate(
                     R.id.beaconDetailsFragment,
                     Bundle().apply {
                         putLong("beacon_id", id)
@@ -162,7 +192,7 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         }
     }
 
-    private fun deleteResult(text: String) {
+    fun deleteResult(text: String) {
         val index = history.indexOf(text)
         if (index < 0) {
             return
@@ -171,9 +201,9 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         history = history.filterNot { it == text }
         updateHistoryList(false)
         CustomUiUtils.snackbar(
-            this@ScanQRFragment,
-            getString(R.string.result_deleted),
-            action = getString(R.string.undo)
+            fragment,
+            fragment.getString(R.string.result_deleted),
+            action = fragment.getString(R.string.undo)
         ) {
             if (!history.contains(text)) {
                 val restored = history.toMutableList()
@@ -188,16 +218,15 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         updateHistoryList()
-        requestCamera { hasPermission ->
+        fragment.requestCamera { hasPermission ->
             if (hasPermission) {
                 shouldStartCamera = true
                 startCamera()
             } else {
                 shouldStartCamera = false
-                alertNoCameraPermission()
+                fragment.alertNoCameraPermission()
             }
         }
     }
@@ -213,7 +242,7 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         bitmap: Bitmap,
         isFromGallery: Boolean = false
     ): Boolean = synchronized(scanLock) {
-        if (!isAdded || view == null) {
+        if (!fragment.isAdded || fragment.view == null) {
             bitmap.recycle()
             return true
         }
@@ -229,7 +258,10 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         if (message != null) {
             onQRScanned(message)
         } else if (isFromGallery) {
-            Alerts.toast(requireContext(), getString(R.string.no_qr_code_detected))
+            Alerts.toast(
+                fragment.requireContext(),
+                fragment.getString(R.string.no_qr_code_detected)
+            )
         }
 
         return true
@@ -265,17 +297,15 @@ class ScanQRFragment : TrailSenseComposeFragment() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    fun onPause() {
         shouldStartCamera = false
         cameraView?.stop()
         haptics.off()
     }
 
-    override fun onDestroyView() {
+    fun onDestroy() {
         cameraView?.stop()
         cameraView = null
-        super.onDestroyView()
     }
 
     companion object {

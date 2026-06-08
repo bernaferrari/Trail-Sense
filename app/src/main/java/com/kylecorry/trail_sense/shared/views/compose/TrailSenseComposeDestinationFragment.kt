@@ -186,6 +186,7 @@ import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
+import com.kylecorry.trail_sense.tools.qr.ui.ScanQRToolScreen
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.signal_finder.ui.SignalFinderToolScreen
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
@@ -381,6 +382,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
             DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
             DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
+            DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
         }
     }
 
@@ -3405,5 +3407,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_PEDOMETER_SETTINGS = "pedometer_settings"
         const val DESTINATION_CLOUD_RESULTS = "cloud_results"
         const val DESTINATION_BEACON_DETAILS = "beacon_details"
+        const val DESTINATION_SCAN_QR = "scan_qr"
     }
 }

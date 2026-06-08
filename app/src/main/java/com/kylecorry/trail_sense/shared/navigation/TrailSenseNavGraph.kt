@@ -1305,8 +1305,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.scanQrFragment
-            setClassName("com.kylecorry.trail_sense.tools.qr.ui.ScanQRFragment")
-            label = "ScanQRFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "ScanQRScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SCAN_QR)
+                .build())
             graph.addDestination(this)
         }
 
