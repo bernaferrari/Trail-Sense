@@ -1,19 +1,29 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.kylecorry.andromeda.core.system.Resources
 import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
 import androidx.core.view.isVisible
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.findFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -23,7 +33,6 @@ import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.requestCamera
@@ -46,7 +55,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
     private val viewCamera: CameraState
     private val viewCameraLine: View
     private val linearCompass: LinearCompassView
-    private val sightingCompassButton: FloatingActionButton
+    private val sightingCompassButton: SightingCompassButton
 
     private val sightingCompass by lazy {
         SightingCompassView(
@@ -153,17 +162,11 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             }
         )
 
-        sightingCompassButton = FloatingActionButton(context).apply {
+        sightingCompassButton = SightingCompassButton(context).apply {
             id = R.id.sighting_compass_btn
-            size = FloatingActionButton.SIZE_MINI
             contentDescription = context.getString(R.string.sighting_compass)
             isClickable = true
             isFocusable = true
-            setImageResource(R.drawable.ic_camera)
-            imageTintList = ColorStateList.valueOf(Resources.androidTextColorSecondary(context))
-            backgroundTintList = ColorStateList.valueOf(
-                Resources.getAndroidColorAttr(context, android.R.attr.colorBackgroundFloating)
-            )
         }
         addView(
             sightingCompassButton,
@@ -178,7 +181,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             }
         )
 
-        CustomUiUtils.setButtonState(sightingCompassButton, false)
+        sightingCompassButton.setState(false)
         sightingCompassButton.setOnClickListener {
             setSightingCompass(!showSightingCompass)
         }
@@ -252,7 +255,7 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
             }
             isStarted = false
             sightingCompass.stop()
-            CustomUiUtils.setButtonState(sightingCompassButton, false)
+            sightingCompassButton.setState(false)
             updateTimer.stop()
         }
     }
@@ -261,9 +264,9 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
         showSightingCompass = shouldShow
         if (!shouldShow) {
             sightingCompass.stop()
-            CustomUiUtils.setButtonState(sightingCompassButton, false)
+            sightingCompassButton.setState(false)
         } else if (!sightingCompass.isRunning()) {
-            CustomUiUtils.setButtonState(sightingCompassButton, true)
+            sightingCompassButton.setState(true)
             val fragment = findFragment<AndromedaFragment>()
             fragment.requestCamera { hasPermission ->
                 if (hasPermission) {
@@ -317,4 +320,44 @@ class LinearSightingCompassView(context: Context, attrs: AttributeSet?) :
         linearCompass.draw(bearing, stopAt)
     }
 
+}
+
+private class SightingCompassButton(context: Context) : AbstractComposeView(context) {
+    private var isOn by mutableStateOf(false)
+
+    fun setState(isOn: Boolean) {
+        this.isOn = isOn
+    }
+
+    @Composable
+    override fun Content() {
+        val background = if (isOn) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+        val foreground = if (isOn) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        TrailSenseTheme {
+            androidx.compose.material3.Surface(
+                modifier = Modifier.size(40.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = background,
+                shadowElevation = 6.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_camera),
+                        contentDescription = null,
+                        tint = foreground,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
 }
