@@ -873,8 +873,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolPedometer
-            setClassName("com.kylecorry.trail_sense.tools.pedometer.ui.FragmentToolPedometer")
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
             label = "FragmentToolSpeedometer"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PEDOMETER)
+                .build())
             graph.addDestination(this)
         }
 

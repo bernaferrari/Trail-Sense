@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import androidx.annotation.DrawableRes
@@ -37,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
@@ -46,17 +47,13 @@ import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
-import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeFragment
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
@@ -66,97 +63,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.LocalDate
 
-class FragmentToolPedometer : TrailSenseComposeFragment() {
-
-    private val pedometer by lazy { PedometerSubsystem.getInstance(requireContext()) }
-    private val prefs by lazy { UserPreferences(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-
-    @Composable
-    override fun FragmentContent() {
-        PedometerScreen(
-            pedometer = pedometer,
-            prefs = prefs,
-            formatService = formatService,
-            onReset = ::resetCounter,
-            onTogglePedometer = ::togglePedometer,
-            onToggleDistanceAlert = ::toggleDistanceAlert
-        )
-    }
-
-    private fun resetCounter(counter: StepCounter) {
-        Alerts.dialog(requireContext(), getString(R.string.reset_distance_title)) {
-            if (!it) {
-                counter.reset()
-            }
-        }
-    }
-
-    private fun togglePedometer() {
-        when (pedometer.state.getOrNull()) {
-            FeatureState.On -> pedometer.disable()
-            FeatureState.Off -> startStepCounter()
-            else -> {
-                if (pedometer.isDisabledDueToPermissions()) {
-                    startStepCounter()
-                }
-            }
-        }
-    }
-
-    private fun toggleDistanceAlert() {
-        val alertDistance = prefs.pedometer.alertDistance
-        if (alertDistance == null) {
-            val units = formatService.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
-            CustomUiUtils.pickDistance(
-                requireContext(),
-                units,
-                title = getString(R.string.distance_alert),
-            ) { distance, _ ->
-                if (distance != null) {
-                    prefs.pedometer.alertDistance = distance
-                }
-            }
-        } else {
-            val distance = alertDistance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
-            Alerts.dialog(
-                requireContext(),
-                getString(R.string.distance_alert),
-                getString(
-                    R.string.remove_distance_alert,
-                    formatService.formatDistance(
-                        distance,
-                        Units.getDecimalPlaces(distance.units),
-                        false
-                    )
-                )
-            ) {
-                if (!it) {
-                    prefs.pedometer.alertDistance = null
-                }
-            }
-        }
-        binding.pedometerAveragePace.title = if (averageSpeedometer.hasValidReading) {
-            formatService.formatPace(speed.value)
-        } else {
-            getString(R.string.dash)
-        }
-    }
-
-    private fun startStepCounter() {
-        requestActivityRecognition { hasPermission ->
-            if (hasPermission) {
-                pedometer.enable()
-            } else {
-                pedometer.disable()
-                alertNoActivityRecognitionPermission()
-            }
-        }
-    }
-}
-
 @Composable
-private fun PedometerScreen(
+fun PedometerScreen(
     pedometer: PedometerSubsystem,
     prefs: UserPreferences,
     formatService: FormatService,

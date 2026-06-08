@@ -81,6 +81,7 @@ import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.toFloatCompat
+import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Distance
@@ -110,6 +111,7 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
+import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -125,7 +127,9 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersBottomSheet
 import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
+import com.kylecorry.trail_sense.shared.permissions.alertNoActivityRecognitionPermission
 import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
+import com.kylecorry.trail_sense.shared.permissions.requestActivityRecognition
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.MapSite
@@ -163,6 +167,9 @@ import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
 import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
@@ -335,6 +342,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
             DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
             DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
+            DESTINATION_PEDOMETER -> Pedometer()
         }
     }
 
@@ -416,6 +424,21 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             markdown = AppServiceRegistry.get(),
             onQueryChange = ::updateSurvivalGuideQuery,
             onSummaryClick = ::openSurvivalGuideSearchResult
+        )
+    }
+
+    @Composable
+    private fun Pedometer() {
+        val pedometer = remember { PedometerSubsystem.getInstance(requireContext()) }
+        val prefs = remember { UserPreferences(requireContext()) }
+        val formatter = remember { FormatService.getInstance(requireContext()) }
+        PedometerScreen(
+            pedometer = pedometer,
+            prefs = prefs,
+            formatService = formatter,
+            onReset = ::resetPedometerCounter,
+            onTogglePedometer = { togglePedometer(pedometer) },
+            onToggleDistanceAlert = { togglePedometerDistanceAlert(prefs, formatter) }
         )
     }
 
@@ -3065,6 +3088,71 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         )
     }
 
+    private fun resetPedometerCounter(counter: StepCounter) {
+        Alerts.dialog(requireContext(), getString(R.string.reset_distance_title)) {
+            if (!it) {
+                counter.reset()
+            }
+        }
+    }
+
+    private fun togglePedometer(pedometer: PedometerSubsystem) {
+        when (pedometer.state.getOrNull()) {
+            FeatureState.On -> pedometer.disable()
+            FeatureState.Off -> startStepCounter(pedometer)
+            else -> {
+                if (pedometer.isDisabledDueToPermissions()) {
+                    startStepCounter(pedometer)
+                }
+            }
+        }
+    }
+
+    private fun togglePedometerDistanceAlert(prefs: UserPreferences, formatter: FormatService) {
+        val alertDistance = prefs.pedometer.alertDistance
+        if (alertDistance == null) {
+            val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
+            CustomUiUtils.pickDistance(
+                requireContext(),
+                units,
+                title = getString(R.string.distance_alert),
+            ) { distance, _ ->
+                if (distance != null) {
+                    prefs.pedometer.alertDistance = distance
+                }
+            }
+        } else {
+            val distance = alertDistance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
+            Alerts.dialog(
+                requireContext(),
+                getString(R.string.distance_alert),
+                getString(
+                    R.string.remove_distance_alert,
+                    formatter.formatDistance(
+                        distance,
+                        Units.getDecimalPlaces(distance.units),
+                        false
+                    )
+                )
+            ) {
+                if (!it) {
+                    prefs.pedometer.alertDistance = null
+                }
+            }
+        }
+    }
+
+    private fun startStepCounter(pedometer: PedometerSubsystem) {
+        requestActivityRecognition { hasPermission ->
+            if (hasPermission) {
+                pedometer.enable()
+            } else {
+                pedometer.disable()
+                alertNoActivityRecognitionPermission()
+            }
+        }
+    }
+
     private data class PluginSettingsState(
         val connected: List<Plugin>,
         val available: List<Plugin>
@@ -3219,5 +3307,6 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_WHITE_NOISE = "white_noise"
         const val DESTINATION_SURVIVAL_GUIDE_READER = "survival_guide_reader"
         const val DESTINATION_SURVIVAL_GUIDE_LIST = "survival_guide_list"
+        const val DESTINATION_PEDOMETER = "pedometer"
     }
 }
