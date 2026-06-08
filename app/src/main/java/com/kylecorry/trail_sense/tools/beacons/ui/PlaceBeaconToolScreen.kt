@@ -335,7 +335,11 @@ private class PlaceBeaconController(private val fragment: Fragment) {
         fragment.requestCamera { hasPermission ->
             if (hasPermission) {
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(fragment) {
+                    cameraSheet = SightingCompassDialog(
+                        fragment.requireContext(),
+                        fragment.viewLifecycleOwner,
+                        fragment.viewLifecycleOwner.lifecycleScope
+                    ) {
                         updateData(
                             data.copy(
                                 bearingTo = it,

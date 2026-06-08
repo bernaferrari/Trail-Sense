@@ -56,6 +56,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -330,7 +331,11 @@ private class TriangulateController(
             if (hasPermission) {
                 cameraBearingIndex = index
                 if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(fragment) {
+                    cameraSheet = SightingCompassDialog(
+                        fragment.requireContext(),
+                        fragment.viewLifecycleOwner,
+                        fragment.viewLifecycleOwner.lifecycleScope
+                    ) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
                         }

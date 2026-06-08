@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Paint
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -60,8 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.fragment.app.Fragment
-import com.kylecorry.andromeda.fragments.inBackground
+import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
@@ -71,16 +71,20 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.sol.units.CompassDirection
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.floor
 
 class SightingCompassDialog(
-    private val fragment: Fragment,
+    context: Context,
+    private val lifecycleOwner: LifecycleOwner,
+    private val coroutineScope: CoroutineScope,
     private val onSelect: (bearing: Float?) -> Unit
 ) {
 
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(context) }
     private var camera: CameraState? = null
     private var isCameraStarted = false
     private var isVisible by mutableStateOf(false)
@@ -156,7 +160,7 @@ class SightingCompassDialog(
         isCameraStarted = true
         camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
         camera.start(
-            lifecycleOwner = fragment.viewLifecycleOwner,
+            lifecycleOwner = lifecycleOwner,
             readFrames = false,
             shouldStabilizePreview = false
         )
@@ -170,7 +174,7 @@ class SightingCompassDialog(
     private fun updateCompassRange() {
         val camera = camera ?: return
 
-        fragment.inBackground {
+        coroutineScope.launch {
             fovRunner.enqueue {
                 if (this@SightingCompassDialog.camera == null) {
                     return@enqueue
