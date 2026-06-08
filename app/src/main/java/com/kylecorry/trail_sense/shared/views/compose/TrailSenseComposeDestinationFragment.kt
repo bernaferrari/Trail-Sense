@@ -157,6 +157,8 @@ import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.beacons.ui.BeaconDetailsToolScreen
 import com.kylecorry.trail_sense.tools.beacons.ui.PlaceBeaconToolScreen
+import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
+import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListToolScreen
 import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightScreen
 import com.kylecorry.trail_sense.tools.clock.ui.ClockToolScreen
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudResultsToolScreen
@@ -253,7 +255,8 @@ import java.time.Duration
 import java.time.Instant
 
 class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSearchFocusable,
-    ScreenFlashlightController, FlashlightController, ClinometerLockController {
+    ScreenFlashlightController, FlashlightController, ClinometerLockController,
+    BeaconListControllerHost {
 
     private var layerSheet: MapLayersBottomSheet? = null
     private val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(requireContext())) }
@@ -278,6 +281,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
     private var survivalGuideSearchJob: Job? = null
     private var selectedFlashlightMode = FlashlightMode.Torch
     private var clinometerLockController: ClinometerLockController? = null
+    private var beaconListController: BeaconListControllerHost? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -417,6 +421,10 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
             DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
             DESTINATION_ASTRONOMY -> AstronomyToolScreen(this)
             DESTINATION_ASTRONOMY_SETTINGS -> AstronomySettingsToolScreen(this)
+            DESTINATION_BEACON_LIST -> BeaconListToolScreen(
+                fragment = this,
+                onController = { beaconListController = it }
+            )
             DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
             DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
             DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
@@ -476,6 +484,10 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
 
     override fun onTouchUp() {
         clinometerLockController?.onTouchUp()
+    }
+
+    override fun refreshBeaconList() {
+        beaconListController?.refreshBeaconList()
     }
 
     @Composable
@@ -3482,6 +3494,7 @@ class TrailSenseComposeDestinationFragment : TrailSenseComposeFragment(), ToolSe
         const val DESTINATION_CLOUD_RESULTS = "cloud_results"
         const val DESTINATION_ASTRONOMY = "astronomy"
         const val DESTINATION_ASTRONOMY_SETTINGS = "astronomy_settings"
+        const val DESTINATION_BEACON_LIST = "beacon_list"
         const val DESTINATION_BEACON_DETAILS = "beacon_details"
         const val DESTINATION_PLACE_BEACON = "place_beacon"
         const val DESTINATION_SCAN_QR = "scan_qr"

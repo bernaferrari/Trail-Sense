@@ -18,7 +18,7 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
-import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListFragment
+import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
 import java.time.ZonedDateTime
 import kotlinx.coroutines.launch
 
@@ -82,8 +82,8 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: Fragment) :
                         )
                     }
 
-                    if (fragment is BeaconListFragment) {
-                        fragment.refresh()
+                    if (fragment is BeaconListControllerHost) {
+                        fragment.refreshBeaconList()
                     }
                 }
             }

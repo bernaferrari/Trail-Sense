@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import android.os.Bundle
-import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -25,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,6 +41,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -48,6 +52,7 @@ import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -73,7 +78,6 @@ import com.kylecorry.trail_sense.shared.permissions.requestCamera
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAndromedaComposeFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -106,15 +110,52 @@ import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import java.time.Instant
 
-class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
+interface BeaconListControllerHost {
+    fun refreshBeaconList()
+}
+
+@Composable
+fun BeaconListToolScreen(
+    fragment: Fragment,
+    modifier: Modifier = Modifier,
+    onController: (BeaconListControllerHost?) -> Unit = {}
+) {
+    val controller = remember(fragment) { BeaconListController(fragment) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(controller, lifecycleOwner) {
+        controller.onCreate()
+        onController(controller)
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            controller.onResume()
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            onController(null)
+            controller.onDestroy()
+        }
+    }
+
+    controller.Content(modifier = modifier.fillMaxSize())
+}
+
+private class BeaconListController(private val fragment: Fragment) : BeaconListControllerHost {
 
     private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(requireContext()) }
+    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
 
     private lateinit var navController: NavController
-    private val sensorService by lazy { SensorService(requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(requireContext()) }
-    private val beaconService by lazy { BeaconService(requireContext()) }
+    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val beaconService by lazy { BeaconService(fragment.requireContext()) }
     private val beaconLoader by lazy { BeaconLoader(beaconService, prefs.beacons) }
     private var sort = BeaconSortMethod.Closest
 
@@ -127,14 +168,15 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     private var isCreateMenuOpen by mutableStateOf(false)
 
     private val gpxService by lazy {
-        IOFactory().createGpxService(this)
+        IOFactory().createGpxService(fragment as AndromedaFragment)
     }
 
     private lateinit var manager: GroupListManager<IBeacon>
     private var lastRoot: IBeacon? = null
+    private var isInitialized = false
 
     @Composable
-    override fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         BeaconListScreen(
             title = title.ifBlank { stringResource(R.string.beacons) },
             sortMenuText = sortMenuText.ifBlank {
@@ -157,30 +199,30 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
             onCreateAction = ::handleCreateAction,
             onBeaconAction = ::handleBeaconAction,
             onGroupAction = ::handleBeaconGroupAction,
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         )
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (requireArguments().containsKey("initial_location")) {
+    fun onCreate() {
+        if (isInitialized) {
+            return
+        }
+        isInitialized = true
+        val arguments = fragment.requireArguments()
+        if (arguments.containsKey("initial_location")) {
             initialLocation = BundleCompat.getParcelable(
-                requireArguments(), "initial_location",
+                arguments, "initial_location",
                 GeoUri::class.java
             )
         }
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        navController = findNavController()
+        navController = fragment.findNavController()
 
         sort = prefs.beacons.beaconSort
-        sortMenuText = getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
 
         manager = GroupListManager(
-            lifecycleScope,
+            fragment.viewLifecycleOwner.lifecycleScope,
             beaconLoader,
             lastRoot,
             this::sortBeacons
@@ -191,7 +233,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
             if (rootChanged) {
                 beaconListResetKey++
             }
-            title = root?.name ?: getString(R.string.beacons)
+            title = root?.name ?: fragment.getString(R.string.beacons)
         }
 
         initialLocation?.let {
@@ -199,7 +241,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
             createBeacon(initialLocation = it)
         }
 
-        onBackPressed {
+        fragment.onBackPressed {
             when {
                 isCreateMenuOpen -> {
                     setCreateMenuVisibility(false)
@@ -213,7 +255,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
                 }
             }
         }
-        title = getString(R.string.beacons)
+        title = fragment.getString(R.string.beacons)
     }
 
     private suspend fun sortBeacons(beacons: List<IBeacon>): List<IBeacon> {
@@ -241,11 +283,11 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     private fun handleCreateAction(action: BeaconCreateAction) {
         when (action) {
             BeaconCreateAction.ImportQr -> {
-                requestCamera { hasPermission ->
+                fragment.requestCamera { hasPermission ->
                     if (hasPermission) {
                         importBeaconFromQR()
                     } else {
-                        alertNoCameraPermission()
+                        fragment.alertNoCameraPermission()
                     }
                 }
             }
@@ -253,7 +295,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
             BeaconCreateAction.ImportGpx -> importBeacons()
             BeaconCreateAction.CreateGroup -> {
                 val command =
-                    CreateBeaconGroupCommand(requireContext(), lifecycleScope, beaconService) {
+                    CreateBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) {
                         refresh()
                     }
                 command.execute(manager.root?.id)
@@ -265,12 +307,12 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun onExportBeacons() {
-        inBackground {
+        fragment.inBackground {
             val gpx = getExportGPX()
             onMain {
                 Pickers.items(
-                    requireContext(),
-                    getString(R.string.export),
+                    fragment.requireContext(),
+                    fragment.getString(R.string.export),
                     gpx.waypoints.map { it.name ?: formatService.formatLocation(it.coordinate) },
                     List(gpx.waypoints.size) { it },
                 ) {
@@ -283,19 +325,28 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
+        if (!isInitialized) {
+            return
+        }
         manager.refresh()
         // Get a GPS reading
         gps.start(this::onLocationUpdate)
     }
 
-    override fun onPause() {
+    fun onPause() {
+        if (!isInitialized) {
+            return
+        }
         gps.stop(this::onLocationUpdate)
         tryOrNothing {
             lastRoot = manager.root
         }
-        super.onPause()
+    }
+
+    fun onDestroy() {
+        onPause()
+        isInitialized = false
     }
 
     private fun onLocationUpdate(): Boolean {
@@ -304,7 +355,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun importBeaconFromQR() {
         val encoder = BeaconQREncoder()
-        CustomUiUtils.scanQR(this, getString(R.string.beacon_qr_import_instructions)) {
+        CustomUiUtils.scanQR(fragment, fragment.getString(R.string.beacon_qr_import_instructions)) {
             if (it != null) {
                 val beacon = encoder.decode(it) ?: return@scanQR true
                 createBeacon(group = manager.root?.id, initialLocation = GeoUri.from(beacon))
@@ -316,15 +367,15 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     private fun changeSort() {
         val sortOptions = BeaconSortMethod.values()
         Pickers.item(
-            requireContext(),
-            getString(R.string.sort),
+            fragment.requireContext(),
+            fragment.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.beacons.beaconSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.beacons.beaconSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -332,9 +383,9 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun getSortString(sortMethod: BeaconSortMethod): String {
         return when (sortMethod) {
-            BeaconSortMethod.MostRecent -> getString(R.string.most_recent)
-            BeaconSortMethod.Closest -> getString(R.string.closest)
-            BeaconSortMethod.Name -> getString(R.string.name)
+            BeaconSortMethod.MostRecent -> fragment.getString(R.string.most_recent)
+            BeaconSortMethod.Closest -> fragment.getString(R.string.closest)
+            BeaconSortMethod.Name -> fragment.getString(R.string.name)
         }
     }
 
@@ -343,21 +394,21 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun export(gpx: GPXData) {
-        inBackground(BackgroundMinimumState.Created) {
+        fragment.inBackground(BackgroundMinimumState.Created) {
             val exportFile = "trail-sense-${Instant.now().epochSecond}.gpx"
             val success = gpxService.export(gpx, exportFile)
             onMain {
                 if (success) {
-                    toast(
-                        resources.getQuantityString(
+                    fragment.toast(
+                        fragment.resources.getQuantityString(
                             R.plurals.beacons_exported,
                             gpx.waypoints.size,
                             gpx.waypoints.size
                         )
                     )
                 } else {
-                    toast(
-                        getString(R.string.beacon_export_error)
+                    fragment.toast(
+                        fragment.getString(R.string.beacon_export_error)
                     )
                 }
             }
@@ -365,21 +416,21 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun importBeacons() {
-        val importer = BeaconGpxImporter(requireContext())
-        inBackground(BackgroundMinimumState.Created) {
+        val importer = BeaconGpxImporter(fragment.requireContext())
+        fragment.inBackground(BackgroundMinimumState.Created) {
             val gpx = gpxService.import()
             val waypoints = gpx?.waypoints ?: emptyList()
             onMain {
                 Pickers.items(
-                    requireContext(),
-                    getString(R.string.import_btn),
+                    fragment.requireContext(),
+                    fragment.getString(R.string.import_btn),
                     waypoints.map {
                         it.name ?: formatService.formatLocation(it.coordinate)
                     },
                     List(waypoints.size) { it }
                 ) {
                     if (it != null) {
-                        inBackground {
+                        fragment.inBackground {
                             val gpxToImport =
                                 GPXData(waypoints.filterIndices(it), emptyList(), emptyList())
                             val count = onIO {
@@ -387,8 +438,8 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
                             }
                             onMain {
                                 Alerts.toast(
-                                    requireContext(),
-                                    resources.getQuantityString(
+                                    fragment.requireContext(),
+                                    fragment.resources.getQuantityString(
                                         R.plurals.beacons_imported,
                                         count,
                                         count
@@ -434,7 +485,11 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
         )
     }
 
-    fun refresh() {
+    override fun refreshBeaconList() {
+        refresh()
+    }
+
+    private fun refresh() {
         manager.refresh()
     }
 
@@ -449,7 +504,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun navigate(beacon: Beacon) {
-        val navigator = Navigator.getInstance(requireContext())
+        val navigator = Navigator.getInstance(fragment.requireContext())
         navigator.navigateTo(beacon)
         navController.navigate(R.id.action_navigation)
     }
@@ -461,8 +516,8 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun delete(beacon: Beacon) {
         val command = DeleteBeaconCommand(
-            requireContext(),
-            lifecycleScope,
+            fragment.requireContext(),
+            fragment.viewLifecycleOwner.lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -472,17 +527,17 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun delete(group: BeaconGroup?) {
         Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete),
+            fragment.requireContext(),
+            fragment.getString(R.string.delete),
             group?.name?.let {
-                getString(
+                fragment.getString(
                     R.string.delete_beacon_group_message,
                     it
                 )
-            } ?: getString(R.string.delete_all_beacons),
+            } ?: fragment.getString(R.string.delete_all_beacons),
         ) { cancelled ->
             if (!cancelled) {
-                inBackground {
+                fragment.inBackground {
                     onIO {
                         beaconService.delete(group)
                     }
@@ -501,8 +556,8 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun move(beacon: Beacon) {
         val command = MoveBeaconCommand(
-            requireContext(),
-            lifecycleScope,
+            fragment.requireContext(),
+            fragment.viewLifecycleOwner.lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -512,12 +567,12 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun move(group: BeaconGroup) {
         val command =
-            MoveBeaconGroupCommand(requireContext(), lifecycleScope, beaconService) { refresh() }
+            MoveBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
     private fun toggleVisibility(beacon: Beacon) {
-        inBackground {
+        fragment.inBackground {
             val newBeacon = beacon.copy(visible = !beacon.visible)
 
             onIO {
@@ -531,8 +586,8 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
     }
 
     private fun setGroupVisibility(group: BeaconGroup, visible: Boolean) {
-        inBackground {
-            Alerts.withLoading(requireContext(), getString(R.string.loading)) {
+        fragment.inBackground {
+            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
                 val beacons = onIO {
                     beaconService.loader.getChildren(group.id, null).filterIsInstance<Beacon>()
                 }
@@ -553,20 +608,20 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
 
     private fun rename(group: BeaconGroup) {
         val command =
-            RenameBeaconGroupCommand(requireContext(), lifecycleScope, beaconService) { refresh() }
+            RenameBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
     private fun navigateToNearestCellSignal() {
-        inBackground {
-            val command = NavigateToNearestCellSignal(requireContext())
+        fragment.inBackground {
+            val command = NavigateToNearestCellSignal(fragment.requireContext())
             if (command.execute()) {
                 onMain {
-                    findNavController().navigate(R.id.action_navigation)
+                    fragment.findNavController().navigate(R.id.action_navigation)
                 }
             } else {
                 onMain {
-                    toast(getString(R.string.no_recorded_cell_signal_nearby))
+                    fragment.toast(fragment.getString(R.string.no_recorded_cell_signal_nearby))
                 }
             }
         }
@@ -594,7 +649,7 @@ class BeaconListFragment : TrailSenseAndromedaComposeFragment() {
             BeaconAction.Delete -> delete(beacon)
             BeaconAction.Move -> move(beacon)
             BeaconAction.ToggleVisibility -> toggleVisibility(beacon)
-            BeaconAction.Share -> BeaconSender(this).send(beacon)
+            BeaconAction.Share -> BeaconSender(fragment).send(beacon)
         }
     }
 }

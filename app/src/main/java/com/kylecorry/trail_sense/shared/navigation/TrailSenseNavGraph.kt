@@ -336,8 +336,12 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beacon_list
-            setClassName("com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListFragment")
-            label = "BeaconListFragment"
+            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            label = "BeaconListScreen"
+            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_LIST)
+                .build())
             addArgument("initial_location", NavArgument.Builder()
                 .setType(NavType.ParcelableType(GeoUri::class.java))
                 .setIsNullable(true)
