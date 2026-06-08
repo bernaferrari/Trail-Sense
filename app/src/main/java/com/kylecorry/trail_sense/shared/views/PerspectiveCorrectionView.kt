@@ -2,15 +2,26 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.annotation.ColorInt
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.AbstractComposeView
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
-import com.kylecorry.andromeda.canvas.CanvasView
-import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -25,13 +36,14 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils.fixPerspective
 import kotlin.math.max
 import kotlin.math.min
 
+class PerspectiveCorrectionView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : AbstractComposeView(context, attrs, defStyleAttr) {
 
-// TODO: Extend subsampling image view and disable scrolling
-class PerspectiveCorrectionView : CanvasView {
-
-    private var image: Bitmap? = null
+    private var image by mutableStateOf<Bitmap?>(null)
     private var imagePath: String? = null
-
     private var linesLoaded = false
     private var scale = 0.9f
     private var topLeft = PixelCoordinate(0f, 0f)
@@ -41,95 +53,98 @@ class PerspectiveCorrectionView : CanvasView {
     private var movingCorner: Corner? = null
     private var movingOffset = PixelCoordinate(0f, 0f)
     private var sourceMatrix = Matrix()
+    private var renderVersion by mutableIntStateOf(0)
+
     var mapRotation: Float = 0f
         set(value) {
             field = value
-            invalidate()
+            loadImageIfReady()
+            refresh()
         }
-    var onLoad: (Bitmap) -> Unit = {}
 
+    var onLoad: (Bitmap) -> Unit = {}
     var hasChanges = false
 
     var isPreview = false
         set(value) {
             field = value
-            invalidate()
+            refresh()
         }
 
     @ColorInt
-    private var primaryColor = Color.BLACK
-
+    private var primaryColor = Resources.getPrimaryColor(context)
     private var imageX = 0f
     private var imageY = 0f
     private var calledOnLoad = false
-
     private val files = FileSubsystem.getInstance(context)
+    private val outlinePath = Path()
+    private val imageClipPath = Path()
+    private val overlayPath = Path()
+    private val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+    @Composable
+    override fun Content() {
+        val bitmap = image
+        LaunchedEffect(bitmap) {
+            if (bitmap != null && !calledOnLoad) {
+                calledOnLoad = true
+                onLoad(bitmap)
+            }
+        }
 
-    init {
-        runEveryCycle = false
+        TrailSenseTheme {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                renderVersion
+                loadImageIfReady()
+                val currentImage = image ?: return@Canvas
+                if (!linesLoaded) {
+                    resetLines()
+                }
+
+                imageX = (size.width - currentImage.width * scale) / 2f
+                imageY = (size.height - currentImage.height * scale) / 2f
+
+                drawContext.canvas.nativeCanvas.apply {
+                    save()
+                    rotate(mapRotation, size.width / 2f, size.height / 2f)
+                    translate(imageX, imageY)
+                    scale(scale, scale)
+                    if (isPreview) {
+                        drawPreviewCanvas(this, currentImage, size.width, size.height)
+                    } else {
+                        drawEditCanvas(this, currentImage)
+                        drawMagnify(this, currentImage)
+                    }
+                    restore()
+                }
+            }
+        }
     }
 
-    override fun setup() {
-        primaryColor = Resources.getPrimaryColor(context)
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (w != oldw || h != oldh) {
+            loadImageIfReady()
+            refresh()
+        }
     }
 
-    override fun draw() {
+    private fun refresh() {
+        renderVersion++
+    }
+
+    private fun loadImageIfReady() {
         if (image == null && imagePath != null && width > 0 && height > 0) {
             imagePath?.let { loadImage(it) }
         }
-
-        val bitmap = image ?: return
-
-        if (!linesLoaded) {
-            resetLines()
-        }
-
-        if (!calledOnLoad) {
-            calledOnLoad = true
-            onLoad(bitmap)
-        }
-
-        // Center the image
-        imageX = (width - bitmap.width * scale) / 2f
-        imageY = (height - bitmap.height * scale) / 2f
-
-        push()
-        rotate(mapRotation)
-        translate(imageX, imageY)
-        scale(scale)
-        if (isPreview) {
-            drawPreviewCanvas()
-        } else {
-            drawEditCanvas()
-            drawMagnify()
-        }
-        pop()
     }
 
     private fun loadImage(path: String) {
-
-        val border = dp(48f).toInt()
-
-        val w = if (mapRotation == 0f || mapRotation == 180f) {
-            width
-        } else {
-            height
-        } - border
-
-        val h = if (mapRotation == 0f || mapRotation == 180f) {
-            height
-        } else {
-            width
-        } - border
-
+        val border = Resources.dp(context, 48f).toInt()
+        val isPortraitRotation = mapRotation == 0f || mapRotation == 180f
+        val w = (if (isPortraitRotation) width else height) - border
+        val h = (if (isPortraitRotation) height else width) - border
         val bitmap = files.bitmap(path, w, h) ?: return
         val newImage = bitmap.resizeToFit(w, h)
         image = newImage
@@ -139,14 +154,13 @@ class PerspectiveCorrectionView : CanvasView {
         imageClipPath.lineTo(newImage.width.toFloat(), newImage.height.toFloat())
         imageClipPath.lineTo(newImage.width.toFloat(), 0f)
         imageClipPath.close()
-        if (image != bitmap) {
+        if (newImage != bitmap) {
             bitmap.recycle()
         }
         calledOnLoad = false
     }
 
-    private fun drawMagnify() {
-        val image = image ?: return
+    private fun drawMagnify(canvas: Canvas, image: Bitmap) {
         val corner = movingCorner ?: return
         val center = when (corner) {
             Corner.TopLeft -> topLeft
@@ -162,43 +176,54 @@ class PerspectiveCorrectionView : CanvasView {
         )
         val pos = magnifier.getMagnifierPosition(center)
         val magCenter = PixelCoordinate(pos.x + magnifierSize / 2f, pos.y + magnifierSize / 2f)
-
         val magnifierImage = magnifier.magnify(image, center)
 
-        imageMode(ImageMode.Center)
-        image(magnifierImage, magCenter.x, magCenter.y)
+        canvas.drawBitmap(
+            magnifierImage,
+            magCenter.x - magnifierImage.width / 2f,
+            magCenter.y - magnifierImage.height / 2f,
+            bitmapPaint
+        )
         magnifierImage.recycle()
-        imageMode(ImageMode.Corner)
-        stroke(primaryColor)
-        noFill()
-        strokeWeight(dp(2f))
-        val plusSize = dp(8f)
-        line(magCenter.x - plusSize / 2f, magCenter.y, magCenter.x + plusSize / 2f, magCenter.y)
-        line(magCenter.x, magCenter.y - plusSize / 2f, magCenter.x, magCenter.y + plusSize / 2f)
+
+        overlayPaint.apply {
+            color = primaryColor
+            style = Paint.Style.STROKE
+            strokeWidth = Resources.dp(context, 2f)
+        }
+        val plusSize = Resources.dp(context, 8f)
+        canvas.drawLine(
+            magCenter.x - plusSize / 2f,
+            magCenter.y,
+            magCenter.x + plusSize / 2f,
+            magCenter.y,
+            overlayPaint
+        )
+        canvas.drawLine(
+            magCenter.x,
+            magCenter.y - plusSize / 2f,
+            magCenter.x,
+            magCenter.y + plusSize / 2f,
+            overlayPaint
+        )
     }
 
-    private fun drawPreviewCanvas() {
-        val bitmap = image ?: return
+    private fun drawPreviewCanvas(canvas: Canvas, bitmap: Bitmap, viewWidth: Float, viewHeight: Float) {
         val warped = bitmap.fixPerspective(getBounds(), false, Color.WHITE)
-        push()
-        translate(-imageX, -imageY)
-        val newImageX = (width - warped.width * scale) / 2f
-        val newImageY = (height - warped.height * scale) / 2f
-        translate(newImageX, newImageY)
-        image(warped, 0f, 0f)
-        pop()
+        canvas.save()
+        canvas.translate(-imageX, -imageY)
+        val newImageX = (viewWidth - warped.width * scale) / 2f
+        val newImageY = (viewHeight - warped.height * scale) / 2f
+        canvas.translate(newImageX, newImageY)
+        canvas.drawBitmap(warped, 0f, 0f, bitmapPaint)
+        canvas.restore()
         if (warped != bitmap) {
             warped.recycle()
         }
     }
 
-    private val outlinePath = Path()
-    private val imageClipPath = Path()
-
-    private fun drawEditCanvas() {
-        val bitmap = image ?: return
-
-        image(bitmap, 0f, 0f)
+    private fun drawEditCanvas(canvas: Canvas, bitmap: Bitmap) {
+        canvas.drawBitmap(bitmap, 0f, 0f, bitmapPaint)
 
         outlinePath.reset()
         outlinePath.moveTo(topLeft.x, topLeft.y)
@@ -206,31 +231,43 @@ class PerspectiveCorrectionView : CanvasView {
         outlinePath.lineTo(bottomRight.x, bottomRight.y)
         outlinePath.lineTo(bottomLeft.x, bottomLeft.y)
         outlinePath.close()
-        push()
-        clip(imageClipPath)
-        clipInverse(outlinePath)
-        background(Color.BLACK.withAlpha(128))
-        pop()
 
-        stroke(primaryColor)
-        noFill()
-        strokeWeight(dp(2f))
-        path(outlinePath)
+        overlayPaint.apply {
+            color = Color.BLACK.withAlpha(128)
+            style = Paint.Style.FILL
+        }
+        canvas.save()
+        canvas.clipPath(imageClipPath)
+        overlayPath.reset()
+        overlayPath.addRect(0f, 0f, bitmap.width.toFloat(), bitmap.height.toFloat(), Path.Direction.CW)
+        overlayPath.op(outlinePath, Path.Op.DIFFERENCE)
+        canvas.drawPath(overlayPath, overlayPaint)
+        canvas.restore()
 
-        noStroke()
-        fill(primaryColor)
-        circle(topLeft.x, topLeft.y, dp(10f))
-        circle(topRight.x, topRight.y, dp(10f))
-        circle(bottomLeft.x, bottomLeft.y, dp(10f))
-        circle(bottomRight.x, bottomRight.y, dp(10f))
+        overlayPaint.apply {
+            color = primaryColor
+            style = Paint.Style.STROKE
+            strokeWidth = Resources.dp(context, 2f)
+        }
+        canvas.drawPath(outlinePath, overlayPaint)
+
+        overlayPaint.apply {
+            color = primaryColor
+            style = Paint.Style.FILL
+        }
+        val radius = Resources.dp(context, 10f)
+        canvas.drawCircle(topLeft.x, topLeft.y, radius, overlayPaint)
+        canvas.drawCircle(topRight.x, topRight.y, radius, overlayPaint)
+        canvas.drawCircle(bottomLeft.x, bottomLeft.y, radius, overlayPaint)
+        canvas.drawCircle(bottomRight.x, bottomRight.y, radius, overlayPaint)
     }
 
     private fun resetLines() {
-        val image = image ?: return
+        val currentImage = image ?: return
         topLeft = PixelCoordinate(0f, 0f)
-        topRight = PixelCoordinate(image.width.toFloat(), 0f)
-        bottomLeft = PixelCoordinate(0f, image.height.toFloat())
-        bottomRight = PixelCoordinate(image.width.toFloat(), image.height.toFloat())
+        topRight = PixelCoordinate(currentImage.width.toFloat(), 0f)
+        bottomLeft = PixelCoordinate(0f, currentImage.height.toFloat())
+        bottomRight = PixelCoordinate(currentImage.width.toFloat(), currentImage.height.toFloat())
         linesLoaded = true
     }
 
@@ -238,7 +275,7 @@ class PerspectiveCorrectionView : CanvasView {
         val original = getBounds()
         resetLines()
         hasChanges = original != getBounds()
-        invalidate()
+        refresh()
     }
 
     fun setBounds(bounds: PixelBounds) {
@@ -248,7 +285,7 @@ class PerspectiveCorrectionView : CanvasView {
         bottomLeft = bounds.bottomLeft
         bottomRight = bounds.bottomRight
         hasChanges = original != bounds
-        invalidate()
+        refresh()
     }
 
     private fun getBounds(): PixelBounds {
@@ -256,12 +293,12 @@ class PerspectiveCorrectionView : CanvasView {
     }
 
     fun getPercentBounds(): PercentBounds? {
-        val image = image ?: return null
+        val currentImage = image ?: return null
         return PercentBounds(
-            PercentCoordinate(topLeft.x / image.width, topLeft.y / image.height),
-            PercentCoordinate(topRight.x / image.width, topRight.y / image.height),
-            PercentCoordinate(bottomLeft.x / image.width, bottomLeft.y / image.height),
-            PercentCoordinate(bottomRight.x / image.width, bottomRight.y / image.height),
+            PercentCoordinate(topLeft.x / currentImage.width, topLeft.y / currentImage.height),
+            PercentCoordinate(topRight.x / currentImage.width, topRight.y / currentImage.height),
+            PercentCoordinate(bottomLeft.x / currentImage.width, bottomLeft.y / currentImage.height),
+            PercentCoordinate(bottomRight.x / currentImage.width, bottomRight.y / currentImage.height),
         )
     }
 
@@ -271,7 +308,8 @@ class PerspectiveCorrectionView : CanvasView {
         linesLoaded = false
         calledOnLoad = false
         hasChanges = false
-        invalidate()
+        loadImageIfReady()
+        refresh()
     }
 
     fun clearImage() {
@@ -282,7 +320,7 @@ class PerspectiveCorrectionView : CanvasView {
         linesLoaded = false
         calledOnLoad = false
         hasChanges = false
-        invalidate()
+        refresh()
     }
 
     private fun toSource(pixel: PixelCoordinate): PixelCoordinate {
@@ -300,7 +338,7 @@ class PerspectiveCorrectionView : CanvasView {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val position = toSource(PixelCoordinate(event.x, event.y))
-        val radius = dp(16f)
+        val radius = Resources.dp(context, 16f)
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -369,7 +407,7 @@ class PerspectiveCorrectionView : CanvasView {
                 movingCorner = null
             }
         }
-        invalidate()
+        refresh()
         return true
     }
 
@@ -409,12 +447,10 @@ class PerspectiveCorrectionView : CanvasView {
         )
     }
 
-
     private enum class Corner {
         TopLeft,
         TopRight,
         BottomLeft,
         BottomRight
     }
-
 }
