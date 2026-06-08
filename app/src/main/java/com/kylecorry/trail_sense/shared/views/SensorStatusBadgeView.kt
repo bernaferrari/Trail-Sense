@@ -14,11 +14,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
@@ -27,6 +29,7 @@ import androidx.core.view.doOnAttach
 import androidx.core.view.doOnDetach
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.luna.time.CoroutineTimer
@@ -53,6 +56,9 @@ class SensorStatusBadgeView(
     private var compassSensor: ISensor? = null
 
     private var isStarted = false
+    private var badgeVisible by mutableStateOf(true)
+    private var alphaState by mutableStateOf(1f)
+    private var clickListener: View.OnClickListener? = null
 
     private val updateTimer = CoroutineTimer {
         updateBadges()
@@ -92,25 +98,41 @@ class SensorStatusBadgeView(
         }
 
     var alpha: Float
-        get() = view.alpha
+        get() = alphaState
         set(value) {
+            alphaState = value
             view.alpha = value
         }
 
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = badgeVisible
         set(value) {
+            badgeVisible = value
             view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     fun setOnClickListener(listener: View.OnClickListener?) {
+        clickListener = listener
         view.setOnClickListener(listener)
     }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            lifecycleOwner.lifecycle.addObserver(lifecycleListener)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(lifecycleListener)
+                stop()
+            }
+        }
+        if (!badgeVisible) {
+            return
+        }
         Column(
-            modifier = Modifier.clickable { view.performClick() },
+            modifier = modifier
+                .alpha(alphaState)
+                .clickable { clickListener?.onClick(view) ?: view.performClick() },
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ) {

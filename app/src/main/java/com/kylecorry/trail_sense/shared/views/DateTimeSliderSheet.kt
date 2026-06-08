@@ -30,7 +30,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.view.isVisible
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
@@ -57,14 +56,16 @@ class DateTimeSliderSheetState(context: Context) {
     )
     private var trigger by hooks.state("")
     private var currentTime by mutableStateOf(ZonedDateTime.now())
-    lateinit var view: View
+    var view: View? = null
+    private var sheetVisible by mutableStateOf(false)
 
     var onTimeChanged: ((Instant?) -> Unit)? = null
 
     var isVisible: Boolean
-        get() = view.isVisible
+        get() = sheetVisible
         set(value) {
-            view.isVisible = value
+            sheetVisible = value
+            view?.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     fun setTime(instant: Instant?) {
@@ -77,16 +78,19 @@ class DateTimeSliderSheetState(context: Context) {
 
     fun show() {
         hooks.startStateUpdates()
-        view.isVisible = true
+        isVisible = true
     }
 
     fun hide() {
         hooks.stopStateUpdates()
-        view.isVisible = false
+        isVisible = false
     }
 
     @Composable
-    fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!sheetVisible) {
+            return
+        }
         DateTimeSliderSheetContent(
             currentTime = currentTime,
             formatter = formatter,
@@ -97,7 +101,8 @@ class DateTimeSliderSheetState(context: Context) {
             onTimeChanged = {
                 currentTime = currentTime.with(it)
                 notifyChanged()
-            }
+            },
+            modifier = modifier
         )
     }
 }
@@ -107,14 +112,15 @@ private fun DateTimeSliderSheetContent(
     currentTime: ZonedDateTime,
     formatter: FormatService,
     onDateChanged: (LocalDate) -> Unit,
-    onTimeChanged: (LocalTime) -> Unit
+    onTimeChanged: (LocalTime) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { UserPreferences(context) }
     val minutes = (currentTime.hour * 60 + currentTime.minute).toFloat()
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(

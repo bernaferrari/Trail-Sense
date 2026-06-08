@@ -7,7 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -17,14 +20,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.isVisible
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -309,11 +311,15 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         val traceViews =
             useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
                 listOfNotNull(
-                    zoomInButton.view,
-                    zoomOutButton.view,
-                    if (hasTimeDependentLayers) timeButton.view else null,
-                    menuButton.view,
-                    sensorStatusBadges.view
+                    { visible: Boolean -> zoomInButton.isVisible = visible },
+                    { visible: Boolean -> zoomOutButton.isVisible = visible },
+                    if (hasTimeDependentLayers) {
+                        { visible: Boolean -> timeButton.isVisible = visible }
+                    } else {
+                        null
+                    },
+                    { visible: Boolean -> menuButton.isVisible = visible },
+                    { visible: Boolean -> sensorStatusBadges.isVisible = visible }
                 )
             }
 
@@ -481,14 +487,14 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
         mode: MapLockMode,
         map: MapView,
         button: MapIconButton,
-        traceViews: List<View>,
+        traceViews: List<(Boolean) -> Unit>,
         screenLight: ScreenTorch,
         context: android.content.Context
     ) {
         // Reset trace mode defaults
         map.isInteractive = true
         map.isZoomEnabled = true
-        traceViews.forEach { it.isVisible = true }
+        traceViews.forEach { it(true) }
         screenLight.off()
         requireMainActivity().setBottomNavigationEnabled(true)
 
@@ -550,7 +556,7 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
                 screenLight.on()
 
                 // Hide buttons
-                traceViews.forEach { it.isVisible = false }
+                traceViews.forEach { it(false) }
 
                 // Hide the bottom navigation
                 requireMainActivity().setBottomNavigationEnabled(false)
@@ -650,7 +656,6 @@ class MapFragment : TrailSenseReactiveComposeFragment() {
 }
 
 private data class MapViews(
-    val root: View,
     val map: MapView,
     val mapAttribution: MapAttributionState,
     val menuButton: MapIconButton,
@@ -669,194 +674,94 @@ private fun MapHost(
     views: MapViews,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
-        modifier = modifier,
-        factory = { views.root }
-    )
+    Box(modifier = modifier) {
+        views.map.Content(Modifier.fillMaxSize())
+        if (views.mapAttribution.isVisible) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 96.dp)
+            ) {
+                views.mapAttribution.Content()
+            }
+        }
+        views.menuButton.Content(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 16.dp)
+        )
+        views.timeButton.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 256.dp)
+        )
+        views.zoomInButton.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 200.dp)
+        )
+        views.zoomOutButton.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 144.dp)
+        )
+        views.lockButton.Content(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 88.dp)
+        )
+        views.sensorStatusBadges.Content(
+            Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = 96.dp)
+        )
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            views.timeSheet.Content(Modifier.fillMaxWidth())
+        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            views.navigationSheet.Content(Modifier.fillMaxWidth())
+        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            views.distanceSheet.Content(Modifier.fillMaxWidth())
+        }
+    }
 }
 
 private fun createMapViews(context: Context): MapViews {
-    val root = ConstraintLayout(context).apply {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
     val map = MapView(context).apply {
         id = R.id.map
         keepScreenOn = true
     }
-    root.addView(
-        map.view,
-        ConstraintLayout.LayoutParams(0, 0).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            topToTop = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.time_sheet
-        }
-    )
 
     val attribution = MapAttributionState()
-    val attributionView = ComposeView(context).apply {
-        id = R.id.map_attribution
-        setContent {
-            TrailSenseTheme {
-                attribution.Content()
-            }
-        }
-    }
-    root.addView(
-        attributionView,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = R.id.map
-            bottomToBottom = R.id.map
-        }
-    )
 
     val menuButton = smallMapFab(context, R.id.menu_btn, R.drawable.ic_menu_dots)
-    root.addView(
-        menuButton.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = R.id.map
-            topToTop = R.id.map
-            topMargin = 8.dp(context)
-            marginEnd = 16.dp(context)
-        }
-    )
 
     val timeButton = smallMapFab(context, R.id.time_btn, R.drawable.ic_tool_clock).apply {
         visibility = View.GONE
     }
-    root.addView(
-        timeButton.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            bottomToTop = R.id.zoom_in_btn
-            startToStart = R.id.zoom_in_btn
-        }
-    )
 
     val zoomInButton = smallMapFab(context, R.id.zoom_in_btn, R.drawable.ic_add)
-    root.addView(
-        zoomInButton.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            bottomToTop = R.id.zoom_out_btn
-            startToStart = R.id.zoom_out_btn
-        }
-    )
 
     val zoomOutButton = smallMapFab(context, R.id.zoom_out_btn, R.drawable.ic_zoom_out)
-    root.addView(
-        zoomOutButton.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            bottomToTop = R.id.lock_btn
-            startToStart = R.id.lock_btn
-            endToEnd = R.id.lock_btn
-            bottomMargin = 16.dp(context)
-        }
-    )
 
     val lockButton = smallMapFab(context, R.id.lock_btn, R.drawable.satellite)
-    root.addView(
-        lockButton.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.time_sheet
-            marginEnd = 16.dp(context)
-            bottomMargin = 48.dp(context)
-        }
-    )
 
     val sensorStatusBadges = SensorStatusBadgeView(context).apply {
         id = R.id.sensor_status_badges
         alpha = 0.6f
     }
-    root.addView(
-        sensorStatusBadges.view,
-        ConstraintLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.time_sheet
-            marginStart = 16.dp(context)
-            bottomMargin = 32.dp(context)
-        }
-    )
 
     val navigationSheet = NavigationSheetView(context).apply {
         id = R.id.navigation_sheet
         visibility = View.GONE
     }
-    root.addView(
-        navigationSheet.view,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.distance_sheet
-        }
-    )
 
     val distanceSheet = MapDistanceSheetState(context)
-    val distanceSheetView = ComposeView(context).apply {
-        id = R.id.distance_sheet
-        visibility = View.GONE
-        distanceSheet.view = this
-        setContent {
-            TrailSenseTheme {
-                distanceSheet.Content()
-            }
-        }
-    }
-    root.addView(
-        distanceSheetView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-        }
-    )
 
     val timeSheet = DateTimeSliderSheetState(context)
-    val timeSheetView = ComposeView(context).apply {
-        id = R.id.time_sheet
-        visibility = View.GONE
-        timeSheet.view = this
-        setContent {
-            TrailSenseTheme {
-                timeSheet.Content()
-            }
-        }
-    }
-    root.addView(
-        timeSheetView,
-        ConstraintLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            bottomToTop = R.id.navigation_sheet
-        }
-    )
 
     return MapViews(
-        root = root,
         map = map,
         mapAttribution = attribution,
         menuButton = menuButton,
@@ -890,6 +795,9 @@ private class MapIconButton(
 ) {
     private var iconRes by mutableIntStateOf(icon)
     private var isOn by mutableStateOf(false)
+    private var buttonVisible by mutableStateOf(true)
+    private var alphaState by mutableStateOf(1f)
+    private var clickListener: View.OnClickListener? = null
 
     val view = ComposeView(context).apply {
         setContent {
@@ -906,8 +814,9 @@ private class MapIconButton(
         }
 
     var alpha: Float
-        get() = view.alpha
+        get() = alphaState
         set(value) {
+            alphaState = value
             view.alpha = value
         }
 
@@ -924,18 +833,21 @@ private class MapIconButton(
         }
 
     var isVisible: Boolean
-        get() = view.visibility == View.VISIBLE
+        get() = buttonVisible
         set(value) {
+            buttonVisible = value
             view.visibility = if (value) View.VISIBLE else View.GONE
         }
 
     var visibility: Int
         get() = view.visibility
         set(value) {
+            buttonVisible = value == View.VISIBLE
             view.visibility = value
         }
 
     fun setOnClickListener(listener: View.OnClickListener?) {
+        clickListener = listener
         view.setOnClickListener(listener)
     }
 
@@ -948,7 +860,10 @@ private class MapIconButton(
     }
 
     @Composable
-    private fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
+        if (!buttonVisible) {
+            return
+        }
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -961,7 +876,12 @@ private class MapIconButton(
         }
 
         androidx.compose.material3.Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = modifier
+                .size(40.dp)
+                .alpha(alphaState)
+                .clickable(enabled = isClickable) {
+                    clickListener?.onClick(view)
+                },
             shape = androidx.compose.foundation.shape.CircleShape,
             color = background,
             shadowElevation = 6.dp
