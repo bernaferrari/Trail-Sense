@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -644,7 +645,7 @@ private data class AstronomyViews(
     val sunPositionText: TextView,
     val moonPositionText: TextView,
     val astronomyDetailList: ComposeView,
-    val button3d: Button
+    val button3d: View
 )
 
 private class AstronomyTitleState {
@@ -1021,9 +1022,8 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         }
     )
 
-    val button3d = Button(context).apply {
+    val button3d = AstronomyTextButton(context, context.getString(R.string.view_in_3d)).apply {
         id = R.id.button_3d
-        text = context.getString(R.string.view_in_3d)
     }
     root.addView(
         button3d,
@@ -1052,6 +1052,20 @@ private fun createAstronomyViews(context: Context): AstronomyViews {
         astronomyDetailList = list,
         button3d = button3d
     )
+}
+
+private class AstronomyTextButton(
+    context: Context,
+    private val text: String
+) : AbstractComposeView(context) {
+    @Composable
+    override fun Content() {
+        TrailSenseTheme {
+            Button(onClick = { performClick() }) {
+                Text(text = text)
+            }
+        }
+    }
 }
 
 private fun createAstronomyIconButton(context: Context, id: Int, icon: Int): ComposeView {
