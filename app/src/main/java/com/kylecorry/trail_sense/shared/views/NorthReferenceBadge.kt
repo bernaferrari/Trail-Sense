@@ -1,68 +1,76 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
-import android.widget.FrameLayout
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.views.badge.Badge
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 
 class NorthReferenceBadge(
     context: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(context, attrs) {
+) : AbstractComposeView(context, attrs) {
 
-    private val badge = Badge(context, attrs)
     private val formatter = FormatService.getInstance(context)
 
-    var useTrueNorth: Boolean = false
-        set(value) {
-            field = value
-            updateBadge()
-        }
+    var useTrueNorth by mutableStateOf(false)
 
-    var showLabel: Boolean = true
-        set(value) {
-            field = value
-            updateBadge()
-        }
+    var showLabel by mutableStateOf(true)
 
-    var showDetailsOnClick: Boolean = false
-        set(value) {
-            field = value
-            if (value) {
-                badge.setOnClickListener {
-                    showDescription()
-                }
-            } else {
-                badge.setOnClickListener(null)
-            }
-        }
+    var showDetailsOnClick by mutableStateOf(false)
 
-    init {
-        badge.layoutParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
-        )
-        badge.setBackgroundTint(Color.TRANSPARENT)
-        badge.setForegroundTint(Resources.androidTextColorSecondary(context))
-        useTrueNorth = false
-        addView(badge)
-    }
-
-    private fun updateBadge() {
-        badge.setImageResource(formatter.getCompassReferenceIcon(useTrueNorth))
+    @Composable
+    override fun Content() {
         val text = when {
             !showLabel -> null
             useTrueNorth -> context.getString(R.string.true_north)
             else -> context.getString(R.string.magnetic_north)
         }
-        badge.setStatusText(text)
+
+        TrailSenseTheme {
+            Row(
+                modifier = Modifier.clickable(
+                    enabled = showDetailsOnClick,
+                    onClick = ::showDescription
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(formatter.getCompassReferenceIcon(useTrueNorth)),
+                    contentDescription = text,
+                    tint = Color(Resources.androidTextColorSecondary(context)),
+                    modifier = Modifier.size(16.dp)
+                )
+                if (text != null) {
+                    Text(
+                        text = text,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+        }
     }
 
     private fun showDescription() {
