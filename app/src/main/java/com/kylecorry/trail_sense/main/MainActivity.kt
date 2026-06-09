@@ -17,24 +17,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-import androidx.fragment.app.commitNow
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.get
-import androidx.core.view.size
 import androidx.core.view.updateLayoutParams
+import androidx.fragment.app.commitNow
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
@@ -131,12 +132,7 @@ class MainActivity : AndromedaActivity() {
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
         mainViews = createMainActivityViews(this)
-        setContent {
-            AndroidView(
-                factory = { views.root },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        setContentView(views.root)
         setupNavHost()
 
         // Handle black theme
@@ -663,7 +659,7 @@ class MainActivity : AndromedaActivity() {
 
 private data class MainActivityViews(
     val root: CoordinatorLayout,
-    val colorFilter: ConstraintLayout,
+    val colorFilter: View,
     val errorBanner: ErrorBannerState,
     val fragmentHolder: FrameLayout,
     val quickActionsSheet: QuickActionSheetState,
@@ -680,7 +676,28 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         )
     }
 
-    val colorFilter = ConstraintLayout(context).apply {
+    val errorBanner = ErrorBannerState(context)
+    val bottomNavigation = MainBottomNavigationState()
+    val quickActionsSheet = QuickActionSheetState(context)
+    val fragmentHolder = FrameLayout(context).apply {
+        id = R.id.fragment_holder
+    }
+
+    val colorFilter = TrailSenseComposeRootView(
+        context,
+        ViewCompositionStrategy.DisposeOnDetachedFromWindow
+    ) {
+        MainActivityContent(
+            errorBanner = errorBanner,
+            fragmentHolder = fragmentHolder,
+            quickActionsSheet = quickActionsSheet,
+            bottomNavigation = bottomNavigation,
+            onBottomNavigationItemSelected = activity::onBottomNavigationItemSelected,
+            onBottomNavigationItemLongSelected = {
+                quickActionsSheet.show(activity)
+            }
+        )
+    }.apply {
         id = R.id.color_filter
     }
     root.addView(
@@ -691,91 +708,6 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         )
     )
 
-    val errorBanner = ErrorBannerState(context)
-    val errorBannerView = TrailSenseComposeRootView(
-        context,
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
-    ) {
-        errorBanner.Content()
-    }.apply {
-        id = R.id.error_banner
-    }
-    colorFilter.addView(
-        errorBannerView,
-        LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topToTop = LayoutParams.PARENT_ID
-            startToStart = LayoutParams.PARENT_ID
-            endToEnd = LayoutParams.PARENT_ID
-        }
-    )
-
-    val bottomNavigation = MainBottomNavigationState()
-    val quickActionsSheet = QuickActionSheetState(context)
-    val bottomNavigationContent = TrailSenseComposeRootView(
-        context,
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
-    ) {
-        MainBottomNavigation(
-            state = bottomNavigation,
-            onItemClick = activity::onBottomNavigationItemSelected,
-            onItemLongClick = {
-                quickActionsSheet.show(activity)
-            }
-        )
-    }.apply {
-        id = R.id.bottom_navigation
-    }
-    colorFilter.addView(
-        bottomNavigationContent,
-        LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            bottomToBottom = LayoutParams.PARENT_ID
-            startToStart = LayoutParams.PARENT_ID
-            endToEnd = LayoutParams.PARENT_ID
-        }
-    )
-
-    val fragmentHolder = FrameLayout(context).apply {
-        id = R.id.fragment_holder
-    }
-    colorFilter.addView(
-        fragmentHolder,
-        LayoutParams(
-            0,
-            0
-        ).apply {
-            topToBottom = R.id.error_banner
-            bottomToTop = R.id.bottom_navigation
-            startToStart = LayoutParams.PARENT_ID
-            endToEnd = LayoutParams.PARENT_ID
-        }
-    )
-
-    val quickActionsSheetView = TrailSenseComposeRootView(
-        context,
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
-    ) {
-        quickActionsSheet.Content()
-    }.apply {
-        id = R.id.quick_actions_sheet
-    }
-    colorFilter.addView(
-        quickActionsSheetView,
-        LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            bottomToTop = R.id.bottom_navigation
-            startToStart = LayoutParams.PARENT_ID
-            endToEnd = LayoutParams.PARENT_ID
-        }
-    )
-
     return MainActivityViews(
         root,
         colorFilter,
@@ -784,6 +716,41 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         quickActionsSheet,
         bottomNavigation
     )
+}
+
+@Suppress("FunctionName")
+@Composable
+private fun MainActivityContent(
+    errorBanner: ErrorBannerState,
+    fragmentHolder: FrameLayout,
+    quickActionsSheet: QuickActionSheetState,
+    bottomNavigation: MainBottomNavigationState,
+    onBottomNavigationItemSelected: (Int) -> Unit,
+    onBottomNavigationItemLongSelected: (Int) -> Unit
+) {
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            errorBanner.Content()
+            AndroidView(
+                factory = { fragmentHolder },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+            )
+            MainBottomNavigation(
+                state = bottomNavigation,
+                onItemClick = onBottomNavigationItemSelected,
+                onItemLongClick = onBottomNavigationItemLongSelected
+            )
+        }
+
+        val navigationHeight = if (bottomNavigation.useCompactMode) 55 else 80
+        quickActionsSheet.Content(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = (navigationHeight + bottomNavigation.bottomInsetDp).dp)
+        )
+    }
 }
 
 private fun setColorFilter(view: View, filter: ColorFilter?) {
