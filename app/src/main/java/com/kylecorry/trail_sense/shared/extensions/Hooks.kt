@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleObserver
@@ -202,11 +201,11 @@ fun ReactiveAndromedaFragment.useLocation(refreshPolicy: SensorSubsystem.SensorR
     return location to isUpToDate
 }
 
-fun TrailSenseComposeDestinationFragment.useNavController(): NavController {
+fun ReactiveAndromedaFragment.useNavController(): NavController {
     return useMemo(useRootView()) { findNavController() }
 }
 
-fun TrailSenseComposeDestinationFragment.useBackPressedCallback(
+fun ReactiveAndromedaFragment.useBackPressedCallback(
     vararg values: Any?,
     callback: OnBackPressedCallback.() -> Boolean
 ) {
@@ -226,7 +225,7 @@ fun TrailSenseComposeDestinationFragment.useBackPressedCallback(
     }
 }
 
-fun TrailSenseComposeDestinationFragment.useUnsavedChangesPrompt(hasChanges: Boolean) {
+fun ReactiveAndromedaFragment.useUnsavedChangesPrompt(hasChanges: Boolean) {
     val activity = useActivity() as? ComponentActivity
     useBackPressedCallback(hasChanges, activity) {
         if (hasChanges && activity != null) {
