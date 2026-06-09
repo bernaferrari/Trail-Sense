@@ -621,7 +621,8 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
             DESTINATION_MAP_SETTINGS -> MapSettings()
             DESTINATION_MAP -> MapToolScreen(
-                fragment = this,
+                component = this,
+                host = this,
                 onController = { mapController = it }
             )
             DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(

@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.map.ui
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,11 +28,9 @@ import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
+import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
 import com.kylecorry.andromeda.fragments.useFlow
 import com.kylecorry.andromeda.pickers.Pickers
@@ -50,7 +49,6 @@ import com.kylecorry.trail_sense.shared.extensions.useCoordinatePreference
 import com.kylecorry.trail_sense.shared.extensions.useDestroyEffect
 import com.kylecorry.trail_sense.shared.extensions.useFloatPreference
 import com.kylecorry.trail_sense.shared.extensions.useIntPreference
-import com.kylecorry.trail_sense.shared.extensions.useNavController
 import com.kylecorry.trail_sense.shared.extensions.useNavigationSensors
 import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
@@ -84,11 +82,12 @@ interface MapControllerHost {
 
 @Composable
 fun MapToolScreen(
-    fragment: ReactiveAndromedaFragment,
+    component: ReactiveComponent,
+    host: TrailSenseReactiveDestinationHost,
     onController: (MapControllerHost?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { MapController(fragment) }
+    val controller = remember(component, host) { MapController(component, host) }
     DisposableEffect(controller) {
         onController(controller)
         onDispose {
@@ -99,11 +98,12 @@ fun MapToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class MapController(private val fragment: ReactiveAndromedaFragment) : MapControllerHost {
-
-    val views = createMapViews(fragment.requireContext())
+private class MapController(
+    private val component: ReactiveComponent,
     private val host: TrailSenseReactiveDestinationHost
-        get() = fragment as TrailSenseReactiveDestinationHost
+) : MapControllerHost {
+
+    val views = createMapViews(host.requireContext())
     private var wasViewCreated = true
     private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
 
@@ -113,7 +113,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             views = views,
             modifier = modifier
         )
-        layerEditSheet.Content(fragment.requireContext(), ::navigateFromLayerSheet)
+        layerEditSheet.Content(host.requireContext(), ::navigateFromLayerSheet)
     }
 
     private fun navigateFromLayerSheet(action: Int) {
@@ -146,10 +146,10 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
         val attributionView = views.mapAttribution
         val timeSheet = views.timeSheet
         val sensorStatusBadges = views.sensorStatusBadges
-        val (mapTime, setMapTime) = fragment.useState<Instant?>(null)
-        val (hasTimeDependentLayers, setHasTimeDependentLayers) = fragment.useState(false)
+        val (mapTime, setMapTime) = component.useState<Instant?>(null)
+        val (hasTimeDependentLayers, setHasTimeDependentLayers) = component.useState(false)
 
-        fragment.useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
+        component.useEffect(timeButton, timeSheet, mapTime, hasTimeDependentLayers) {
             timeButton.isVisible = hasTimeDependentLayers
             if (hasTimeDependentLayers) {
                 timeButton.setState(mapTime != null || timeSheet.isVisible)
@@ -176,68 +176,69 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        val navigation = fragment.useNavigationSensors(trueNorth = true)
-        val context = fragment.useAndroidContext()
-        val sensors = fragment.useService<SensorService>()
-        val hasCompass = fragment.useMemo(sensors) { sensors.hasCompass() }
-        val navigator = fragment.useService<Navigator>()
-        val pathService = fragment.useService<PathService>()
-        val destination = fragment.useFlow(navigator.destination2, state = BackgroundMinimumState.Resumed)
-        val prefs = fragment.useService<UserPreferences>()
-        val formatter = fragment.useService<FormatService>()
-        val activity = fragment.useActivity()
-        val navController = fragment.useNavController()
+        val navigation = component.useNavigationSensors(trueNorth = true)
+        val context = component.useAndroidContext()
+        val sensors = component.useService<SensorService>()
+        val hasCompass = component.useMemo(sensors) { sensors.hasCompass() }
+        val navigator = component.useService<Navigator>()
+        val pathService = component.useService<PathService>()
+        val destination = component.useFlow(navigator.destination2, state = BackgroundMinimumState.Resumed)
+        val prefs = component.useService<UserPreferences>()
+        val formatter = component.useService<FormatService>()
+        val activity = component.useActivity()
+        val navController = host.findNavController()
+        val rootView = component.useRootView()
         val (lockMode, setLockMode) = useLockMode()
 
-        val screenLight = fragment.useMemo(activity) {
+        val screenLight = component.useMemo(activity) {
             ScreenTorch(activity.window)
         }
 
-        val screenLock = fragment.useMemo(prefs) {
+        val screenLock = component.useMemo(prefs) {
             NavigationScreenLock(prefs.map.keepScreenUnlockedWhileOpen)
         }
 
-        fragment.useEffect(mapView, prefs, host.hookResetOnResume) {
+        component.useEffect(mapView, prefs, host.hookResetOnResume) {
             mapView.useDensityPixelsForZoom = !prefs.map.highDetailMode
             mapView.layerManager.invalidate()
             mapView.invalidate()
         }
 
-        fragment.useEffect(screenLock, activity, host.hookResetOnResume, destination) {
+        component.useEffect(screenLock, activity, host.hookResetOnResume, destination) {
             screenLock.updateLock(activity)
         }
 
-        fragment.useDestroyEffect(screenLock, activity) {
+        component.useDestroyEffect(screenLock, activity) {
             screenLock.releaseLock(activity)
         }
 
-        fragment.useEffect(lockButton, lockMode, hasCompass) {
+        component.useEffect(lockButton, lockMode, hasCompass) {
             lockButton.setOnClickListener {
                 setLockMode(getNextLockMode(lockMode, hasCompass))
             }
         }
 
         // Layers
-        val manager = fragment.useMemo { MapToolLayerManager() }
-        fragment.useEffect(manager, mapView, mapTime, manager.key) {
+        val manager = component.useMemo { MapToolLayerManager() }
+        component.useEffect(manager, mapView, mapTime, manager.key) {
             manager.setTime(mapView, mapTime)
         }
-        fragment.useEffectWithCleanup(manager, mapView, host.hookResetOnResume) {
+        component.useEffectWithCleanup(manager, mapView, host.hookResetOnResume) {
             manager.resume(context, mapView, host)
             return@useEffectWithCleanup {
                 manager.pause(mapView)
             }
         }
 
-        fragment.useEffect(manager.key, mapView) {
+        component.useEffect(manager.key, mapView) {
             setHasTimeDependentLayers(mapView.layerManager.getLayers().any { it.isTimeDependent })
         }
 
-        fragment.useEffect(mapView) {
+        component.useEffect(mapView) {
             mapView.setBackgroundColor(Color.rgb(127, 127, 127))
         }
 
-        fragment.useBackgroundEffect(mapView, manager.key, attributionView) {
+        component.useBackgroundEffect(mapView, manager.key, attributionView) {
             val attribution = mapView.getAttribution(context)
             onMain {
                 attributionView.text = attribution
@@ -245,14 +246,14 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        fragment.usePauseEffect(layerEditSheet) {
+        component.usePauseEffect(layerEditSheet) {
             tryOrNothing {
                 layerEditSheet.setOnDismissListener(null)
                 layerEditSheet.dismissAndUpdateWidgets(context)
             }
         }
 
-        val adjustLayers = fragment.useCallback<Unit>(manager, layerEditSheet, context, mapView) {
+        val adjustLayers = component.useCallback<Unit>(manager, layerEditSheet, context, mapView) {
             manager.pause(mapView)
             layerEditSheet.setOnDismissListener {
                 manager.resume(context, mapView, host)
@@ -264,13 +265,13 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
         }
 
         // Distance
-        val stopDistanceMeasurement = fragment.useCallback<Unit>(mapDistanceSheetView, manager) {
+        val stopDistanceMeasurement = component.useCallback<Unit>(mapDistanceSheetView, manager) {
             manager.stopDistanceMeasurement()
             mapDistanceSheetView.hide()
         }
 
         val startDistanceMeasurement =
-            fragment.useCallback(
+            component.useCallback(
                 mapDistanceSheetView,
                 stopDistanceMeasurement,
                 navController,
@@ -288,7 +289,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
                     stopDistanceMeasurement()
                 }
                 mapDistanceSheetView.createPathListener = {
-                    fragment.inBackground {
+                    host.inBackground {
                         val id = CreatePathCommand(
                             pathService,
                             prefs.navigation,
@@ -311,22 +312,22 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
 
         // Update layer values
-        fragment.useEffect(mapView, navigation.location, navigation.locationAccuracy) {
+        component.useEffect(mapView, navigation.location, navigation.locationAccuracy) {
             mapView.userLocation = navigation.location
             mapView.userLocationAccuracy = navigation.locationAccuracy
             mapView.invalidate()
         }
 
-        fragment.useEffect(mapView, navigation.bearing) {
+        component.useEffect(mapView, navigation.bearing) {
             mapView.userAzimuth = navigation.bearing
         }
 
-        fragment.useEffect(manager, mapView.mapBounds, manager.key) {
+        component.useEffect(manager, mapView.mapBounds, manager.key) {
             manager.onBoundsChanged()
         }
 
         val traceViews =
-            fragment.useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
+            component.useMemo(zoomInButton, zoomOutButton, timeButton, menuButton, sensorStatusBadges, hasTimeDependentLayers) {
                 listOfNotNull(
                     { visible: Boolean -> zoomInButton.isVisible = visible },
                     { visible: Boolean -> zoomOutButton.isVisible = visible },
@@ -340,18 +341,18 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
                 )
             }
 
-        fragment.useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, host.hookResetOnResume) {
+        component.useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, host.hookResetOnResume) {
             switchMapLockMode(lockMode, mapView, lockButton, traceViews, screenLight, context)
         }
 
-        fragment.usePauseEffect(screenLight) {
+        component.usePauseEffect(screenLight) {
             screenLight.off()
             host.requireMainActivity().setBottomNavigationEnabled(true)
         }
 
         useSavedMapState(mapView)
 
-        fragment.useEffect(mapView, lockMode, navigation.location) {
+        component.useEffect(mapView, lockMode, navigation.location) {
             if (mapView.mapCenter == Coordinate.zero) {
                 mapView.mapCenter = navigation.location
                 mapView.resolution = 2f
@@ -362,13 +363,13 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        fragment.useEffect(mapView, lockMode, navigation.bearing) {
+        component.useEffect(mapView, lockMode, navigation.bearing) {
             if (lockMode == MapLockMode.Compass) {
                 mapView.mapAzimuth = navigation.bearing.value
             }
         }
 
-        fragment.useEffect(zoomInButton, zoomOutButton) {
+        component.useEffect(zoomInButton, zoomOutButton) {
             zoomInButton.setState(false)
             zoomOutButton.setState(false)
 
@@ -381,7 +382,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        fragment.useEffect(navigationSheetView, destination, navigation) {
+        component.useEffect(navigationSheetView, destination, navigation) {
             if (destination != null) {
                 navigationSheetView.updateNavigationSensorValues(navigation)
                 navigationSheetView.setTrueNorthOverride(true)
@@ -391,13 +392,13 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        fragment.useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
+        component.useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
             mapView.setOnLongPressListener { location ->
                 if (manager.isMeasuringDistance()) {
                     return@setOnLongPressListener
                 }
                 manager.setSelectedLocation(location)
-                fragment.inBackground {
+                host.inBackground {
                     val elevation = Distance.meters(DEM.getElevation(location).elevation)
 
                     onMain {
@@ -405,7 +406,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
                             host,
                             formatter.formatLocation(location),
                             listOf(
-                                ActionItem(fragment.getString(R.string.beacon), R.drawable.ic_location) {
+                                ActionItem(host.getString(R.string.beacon), R.drawable.ic_location) {
                                     val bundle = Bundle().apply {
                                         putParcelable("initial_location", GeoUri(location))
                                     }
@@ -415,7 +416,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(fragment.getString(R.string.navigate), R.drawable.ic_beacon) {
+                                ActionItem(host.getString(R.string.navigate), R.drawable.ic_beacon) {
                                     navigator.navigateTo(
                                         location,
                                         formatter.formatLocation(location),
@@ -423,12 +424,12 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(fragment.getString(R.string.distance), R.drawable.ruler) {
+                                ActionItem(host.getString(R.string.distance), R.drawable.ruler) {
                                     startDistanceMeasurement(location, true)
                                     manager.setSelectedLocation(null)
                                 },
                             ),
-                            subtitle = fragment.getString(
+                            subtitle = host.getString(
                                 R.string.elevation_value,
                                 formatter.formatElevation(elevation)
                             ),
@@ -440,7 +441,7 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             }
         }
 
-        fragment.useEffect(mapDistanceSheetView, manager, prefs) {
+        component.useEffect(mapDistanceSheetView, manager, prefs) {
             manager.setOnDistanceChangedCallback { distance ->
                 val relative = distance
                     .convertTo(prefs.baseDistanceUnits)
@@ -450,25 +451,25 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
         }
 
         // Menu
-        fragment.useEffect(menuButton, startDistanceMeasurement) {
+        component.useEffect(menuButton, startDistanceMeasurement) {
             menuButton.setState(false)
             menuButton.setOnClickListener {
-                showMapMenu(startDistanceMeasurement, { adjustLayers() }, setLockMode)
+                showMapMenu(rootView, startDistanceMeasurement, { adjustLayers() }, setLockMode)
             }
         }
 
         // Disclaimer
-        fragment.useEffect(context) {
+        component.useEffect(context) {
             CustomUiUtils.disclaimer(
                 context,
-                fragment.getString(R.string.map),
-                fragment.getString(R.string.map_tool_disclaimer),
+                host.getString(R.string.map),
+                host.getString(R.string.map_tool_disclaimer),
                 "pref_map_tool_disclaimer_shown"
             )
         }
 
         // Sensor status
-        fragment.useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
+        component.useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
             val gps = navigation.gps ?: return@useEffect
             val compass = navigation.compass ?: return@useEffect
             sensorStatusBadges.setSensors(gps as ISatelliteGPS, compass)
@@ -533,8 +534,8 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
             MapLockMode.Trace -> {
                 CustomUiUtils.disclaimer(
                     context,
-                    fragment.getString(R.string.trace),
-                    fragment.getString(R.string.map_trace_instructions),
+                    host.getString(R.string.trace),
+                    host.getString(R.string.map_trace_instructions),
                     "disclaimer_shown_map_trace",
                     cancelText = null
                 )
@@ -560,19 +561,20 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
     }
 
     private fun showMapMenu(
+        anchor: View,
         startDistanceMeasurement: (Coordinate?, Boolean) -> Unit,
         adjustLayers: () -> Unit,
         setLockMode: (MapLockMode) -> Unit
     ) {
         val actions = listOf(
-            MapAction.Measure to fragment.getString(R.string.measure),
-            MapAction.CreatePath to fragment.getString(R.string.create_path),
-            MapAction.AdjustLayers to fragment.getString(R.string.layers),
-            MapAction.Trace to fragment.getString(R.string.trace)
+            MapAction.Measure to host.getString(R.string.measure),
+            MapAction.CreatePath to host.getString(R.string.create_path),
+            MapAction.AdjustLayers to host.getString(R.string.layers),
+            MapAction.Trace to host.getString(R.string.trace)
         )
 
         Pickers.menu(
-            fragment.requireView(),
+            anchor,
             actions.map { action -> action.second }
         ) { index ->
             when (actions[index].first) {
@@ -613,15 +615,15 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
     }
 
     private fun useSavedMapState(mapView: MapView) {
-        val prefs = fragment.useService<UserPreferences>()
-        val shouldSave = fragment.useMemo(prefs, host.hookResetOnResume) {
+        val prefs = component.useService<UserPreferences>()
+        val shouldSave = component.useMemo(prefs, host.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"
-        val (center, setCenter) = fragment.useCoordinatePreference("${key}_coordinate")
-        val (scale, setScale) = fragment.useFloatPreference("${key}_scale")
+        val (center, setCenter) = component.useCoordinatePreference("${key}_coordinate")
+        val (scale, setScale) = component.useFloatPreference("${key}_scale")
 
-        fragment.useEffect(mapView, shouldSave) {
+        component.useEffect(mapView, shouldSave) {
             if (!shouldSave) {
                 setCenter(null)
                 setScale(null)
@@ -645,24 +647,24 @@ private class MapController(private val fragment: ReactiveAndromedaFragment) : M
     }
 
     private fun useLockMode(): Pair<MapLockMode, (MapLockMode) -> Unit> {
-        val prefs = fragment.useService<UserPreferences>()
-        val shouldSave = fragment.useMemo(prefs, host.hookResetOnResume) {
+        val prefs = component.useService<UserPreferences>()
+        val shouldSave = component.useMemo(prefs, host.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"
-        val (savedLockModeId, setSavedLockModeId) = fragment.useIntPreference("${key}_lock_mode")
-        val savedLockMode = fragment.useMemo(savedLockModeId) {
+        val (savedLockModeId, setSavedLockModeId) = component.useIntPreference("${key}_lock_mode")
+        val savedLockMode = component.useMemo(savedLockModeId) {
             MapLockMode.entries.firstOrNull { it.id == savedLockModeId && it != MapLockMode.Trace }
         }
-        val (lockMode, setLockMode) = fragment.useState(savedLockMode ?: MapLockMode.Free)
-        val exposedSetLockMode = fragment.useCallback(shouldSave) { newLockMode: MapLockMode ->
+        val (lockMode, setLockMode) = component.useState(savedLockMode ?: MapLockMode.Free)
+        val exposedSetLockMode = component.useCallback(shouldSave) { newLockMode: MapLockMode ->
             setLockMode(newLockMode)
             if (shouldSave) {
                 setSavedLockModeId(newLockMode.id)
             }
         }
 
-        fragment.useEffect(shouldSave) {
+        component.useEffect(shouldSave) {
             if (!shouldSave) {
                 setSavedLockModeId(null)
             }
