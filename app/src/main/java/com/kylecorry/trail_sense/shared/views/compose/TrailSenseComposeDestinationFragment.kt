@@ -62,7 +62,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController as fragmentFindNavController
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -475,7 +474,8 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     override fun findNavController(): NavController {
-        return fragmentFindNavController()
+        return requireMainActivity().getRootNavController()
+            ?: error("Root NavController is not available")
     }
 
     override fun toast(message: CharSequence, short: Boolean) {
