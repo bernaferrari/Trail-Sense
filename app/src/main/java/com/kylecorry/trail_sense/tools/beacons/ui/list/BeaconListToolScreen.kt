@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.beacons.ui.list
 import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -45,16 +46,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Resources
@@ -63,8 +60,6 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.extensions.filterIndices
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.qr.QR
@@ -79,11 +74,11 @@ import com.kylecorry.trail_sense.shared.from
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.IOFactory
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -123,7 +118,7 @@ interface BeaconListControllerHost {
 
 @Composable
 fun BeaconListToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier,
     onController: (BeaconListControllerHost?) -> Unit = {}
 ) {
@@ -154,7 +149,7 @@ fun BeaconListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class BeaconListController(private val fragment: TrailSenseComposeDestinationFragment) : BeaconListControllerHost {
+private class BeaconListController(private val fragment: TrailSenseDestinationHost) : BeaconListControllerHost {
 
     private val gps by lazy { sensorService.getGPS() }
     private val prefs by lazy { UserPreferences(fragment.requireContext()) }
@@ -180,7 +175,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
     private val gpxService by lazy {
         IOFactory().createGpxService(
             fragment.requireContext(),
-            fragment.requireActivity() as IntentResultRetriever
+            fragment.andromedaActivity as IntentResultRetriever
         )
     }
     private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
@@ -188,6 +183,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
     private lateinit var manager: GroupListManager<IBeacon>
     private var lastRoot: IBeacon? = null
     private var isInitialized = false
+    private var backPressedCallback: OnBackPressedCallback? = null
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -239,7 +235,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
             return
         }
         isInitialized = true
-        val arguments = fragment.requireArguments()
+        val arguments = fragment.destinationArguments ?: Bundle()
         if (arguments.containsKey("initial_location")) {
             initialLocation = BundleCompat.getParcelable(
                 arguments, "initial_location",
@@ -253,7 +249,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
         sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
 
         manager = GroupListManager(
-            fragment.viewLifecycleOwner.lifecycleScope,
+            fragment.lifecycleScope,
             beaconLoader,
             lastRoot,
             this::sortBeacons
@@ -272,20 +268,26 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
             createBeacon(initialLocation = it)
         }
 
-        fragment.onBackPressed {
-            when {
-                isCreateMenuOpen -> {
-                    setCreateMenuVisibility(false)
-                }
+        backPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when {
+                    isCreateMenuOpen -> {
+                        setCreateMenuVisibility(false)
+                    }
 
-                else -> {
-                    if (!manager.up()) {
-                        remove()
-                        navController.navigateUp()
+                    else -> {
+                        if (!manager.up()) {
+                            remove()
+                            navController.navigateUp()
+                        }
                     }
                 }
             }
         }
+        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+            fragment.lifecycleOwner,
+            backPressedCallback!!
+        )
         title = fragment.getString(R.string.beacons)
     }
 
@@ -326,7 +328,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
             BeaconCreateAction.ImportGpx -> importBeacons()
             BeaconCreateAction.CreateGroup -> {
                 val command =
-                    CreateBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) {
+                    CreateBeaconGroupCommand(fragment.requireContext(), fragment.lifecycleScope, beaconService) {
                         refresh()
                     }
                 command.execute(manager.root?.id)
@@ -378,6 +380,8 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
 
     fun onDestroy() {
         onPause()
+        backPressedCallback?.remove()
+        backPressedCallback = null
         isInitialized = false
     }
 
@@ -468,7 +472,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
             onMain {
                 if (success) {
                     fragment.toast(
-                        fragment.resources.getQuantityString(
+                        fragment.getResources().getQuantityString(
                             R.plurals.beacons_exported,
                             gpx.waypoints.size,
                             gpx.waypoints.size
@@ -507,7 +511,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
                             onMain {
                                 Alerts.toast(
                                     fragment.requireContext(),
-                                    fragment.resources.getQuantityString(
+                                    fragment.getResources().getQuantityString(
                                         R.plurals.beacons_imported,
                                         count,
                                         count
@@ -585,7 +589,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
     private fun delete(beacon: Beacon) {
         val command = DeleteBeaconCommand(
             fragment.requireContext(),
-            fragment.viewLifecycleOwner.lifecycleScope,
+            fragment.lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -625,7 +629,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
     private fun move(beacon: Beacon) {
         val command = MoveBeaconCommand(
             fragment.requireContext(),
-            fragment.viewLifecycleOwner.lifecycleScope,
+            fragment.lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -635,7 +639,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
 
     private fun move(group: BeaconGroup) {
         val command =
-            MoveBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) { refresh() }
+            MoveBeaconGroupCommand(fragment.requireContext(), fragment.lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
@@ -676,7 +680,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
 
     private fun rename(group: BeaconGroup) {
         val command =
-            RenameBeaconGroupCommand(fragment.requireContext(), fragment.viewLifecycleOwner.lifecycleScope, beaconService) { refresh() }
+            RenameBeaconGroupCommand(fragment.requireContext(), fragment.lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
@@ -685,7 +689,7 @@ private class BeaconListController(private val fragment: TrailSenseComposeDestin
             val command = NavigateToNearestCellSignal(fragment.requireContext())
             if (command.execute()) {
                 onMain {
-                    fragment.findNavController().navigate(R.id.action_navigation)
+                    navController.navigate(R.id.action_navigation)
                 }
             } else {
                 onMain {
