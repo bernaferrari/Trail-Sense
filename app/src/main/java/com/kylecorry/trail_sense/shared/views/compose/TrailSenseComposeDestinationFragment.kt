@@ -147,9 +147,7 @@ import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission as showNoCameraPermission
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
-import com.kylecorry.trail_sense.shared.permissions.requirePermissionRequester
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
@@ -377,14 +375,14 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     override fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+        requestPermissions(listOf(Manifest.permission.CAMERA)) {
             action(Camera.isAvailable(requireContext()))
         }
     }
 
     override fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
+            requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
                 action(Permissions.canRecognizeActivity(requireContext()))
             }
         } else {
@@ -393,7 +391,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     override fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermission(
+        requestPermission(
             SpecialPermission.SCHEDULE_EXACT_ALARMS,
             PermissionRationale(
                 getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
@@ -428,7 +426,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             return
         }
 
-        requirePermissionRequester().requestPermissions(
+        requestPermissions(
             listOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -443,13 +441,13 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     override fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+        requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
             action(Permissions.isBackgroundLocationEnabled(requireContext()))
         }
     }
 
     override fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermission(
+        requestPermission(
             SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS,
             PermissionRationale(
                 getString(
@@ -501,7 +499,11 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     override fun alertNoCameraPermission() {
-        showNoCameraPermission()
+        Alerts.toast(
+            requireContext(),
+            getString(R.string.camera_permission_denied),
+            short = false
+        )
     }
 
     override fun openWidgets() {
@@ -2946,7 +2948,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     private fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+        requestPermissions(listOf(Manifest.permission.CAMERA)) {
             val isAvailable = Camera.isAvailable(requireContext())
             if (!isAvailable) {
                 alertNoCameraPermission()
@@ -2956,7 +2958,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     }
 
     private fun requestCameraForMirror(action: (hasPermission: Boolean) -> Unit) {
-        requirePermissionRequester().requestPermissions(listOf(Manifest.permission.CAMERA)) {
+        requestPermissions(listOf(Manifest.permission.CAMERA)) {
             val isAvailable = Permissions.isCameraEnabled(requireContext())
             if (!isAvailable) {
                 alertNoCameraPermission()
