@@ -52,12 +52,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
@@ -98,6 +95,7 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
@@ -113,7 +111,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun TriangulateToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -145,7 +143,7 @@ fun TriangulateToolScreen(
 }
 
 private class TriangulateController(
-    private val fragment: TrailSenseComposeDestinationFragment
+    private val fragment: TrailSenseDestinationHost
 ) {
 
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -332,8 +330,8 @@ private class TriangulateController(
                 if (cameraSheet == null) {
                     cameraSheet = SightingCompassDialog(
                         fragment.requireContext(),
-                        fragment.viewLifecycleOwner,
-                        fragment.viewLifecycleOwner.lifecycleScope
+                        fragment.lifecycleOwner,
+                        fragment.lifecycleScope
                     ) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
