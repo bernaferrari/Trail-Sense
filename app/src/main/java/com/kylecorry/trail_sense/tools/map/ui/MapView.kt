@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
-import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -50,7 +49,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class MapView(context: Context, attrs: AttributeSet? = null) : AbstractComposeView(context, attrs), IMapView {
+class MapView(context: Context) : AbstractComposeView(context), IMapView {
     override var isWidget: Boolean = false
     var isInteractive = true
     var isPanEnabled = true

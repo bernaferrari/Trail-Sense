@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.graphics.Color
-import android.util.AttributeSet
 import android.view.MotionEvent
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.system.Resources
@@ -29,7 +28,6 @@ class MapCalibrationView : BasePhotoMapView {
     private var highlightedColor: Int = Color.WHITE
 
     constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     override fun setup() {
         super.setup()

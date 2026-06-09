@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.graphics.PointF
-import android.util.AttributeSet
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.hooks.Hooks
@@ -226,7 +225,6 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
         get() = min(1f, max(scale, 0.9f))
 
     constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
 
     override fun setup() {
         super.setup()

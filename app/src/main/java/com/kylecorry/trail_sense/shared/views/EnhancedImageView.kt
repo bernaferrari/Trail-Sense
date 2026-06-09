@@ -5,7 +5,6 @@ import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
-import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -36,11 +35,9 @@ import com.kylecorry.trail_sense.shared.canvas.tiles.PdfImageRegionDecoder
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import kotlin.math.max
 
-open class EnhancedImageView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : AbstractComposeView(context, attrs, defStyleAttr) {
+open class EnhancedImageView(
+    context: Context
+) : AbstractComposeView(context) {
 
     val view: View
         get() = this
@@ -61,12 +58,11 @@ open class EnhancedImageView @JvmOverloads constructor(
     private var contentWidth by mutableIntStateOf(0)
     private var contentHeight by mutableIntStateOf(0)
 
-    private val imageView = TiledImageView(context, attrs)
+    private val imageView = TiledImageView(context)
 
     private inner class TiledImageView(
-        context: Context,
-        attrs: AttributeSet?
-    ) : SubsamplingScaleImageView(context, attrs) {
+        context: Context
+    ) : SubsamplingScaleImageView(context, null) {
         override fun invalidate() {
             super.invalidate()
             requestRedraw()

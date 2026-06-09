@@ -1150,7 +1150,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
     val styleControls = PathStyleControlsView(context)
     val mapHolder = PathMapHolderState(Resources.dp(context, 250f).toInt())
 
-    val pathImage = MapView(context, null).apply {
+    val pathImage = MapView(context).apply {
         id = R.id.path_image
         setBackgroundResource(R.drawable.rounded_rectangle)
         backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.colorSecondary))
