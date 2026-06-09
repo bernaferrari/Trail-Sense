@@ -39,18 +39,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.observe
 import androidx.annotation.StringRes
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.dialog
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.units.Coordinate
@@ -68,6 +67,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoMapCalibrationToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     mapId: Long,
     onRotation: (Float) -> Unit,
     onComplete: () -> Unit,
@@ -121,7 +121,7 @@ fun PhotoMapCalibrationToolScreen(
 }
 
 class PhotoMapCalibrationController(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val mapId: Long,
     private var showRotation: (Float) -> Unit,
     private var onDone: () -> Unit
@@ -178,7 +178,8 @@ class PhotoMapCalibrationController(
         )
 
         views.mapCalibrationBottomPanel.onTitleClick = {
-            fragment.dialog(
+            Alerts.dialog(
+                fragment.requireContext(),
                 fragment.getString(R.string.map_calibration),
                 fragment.getString(R.string.map_calibration_instructions),
                 cancelText = null
@@ -247,14 +248,14 @@ class PhotoMapCalibrationController(
         views.calibrationMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
-        fragment.observe(gps) {
+        gps.asLiveData().observe(fragment.lifecycleOwner) {
             views.calibrationMap.userLocation = gps.location
             views.calibrationMap.userLocationAccuracy =
                 gps.horizontalAccuracy?.let { Distance.meters(it) }
             compass.declination = declinationStrategy.getDeclination()
         }
 
-        fragment.observe(compass) {
+        compass.asLiveData().observe(fragment.lifecycleOwner) {
             views.calibrationMap.userAzimuth = compass.bearing
         }
     }
