@@ -35,8 +35,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.CoordinateInputView
-import com.kylecorry.trail_sense.shared.views.ElevationInputView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
@@ -320,52 +318,6 @@ fun ReactiveComponent.useSpeedPreference(
     }
 
     return speed to setter
-}
-
-fun ReactiveComponent.useCoordinateInputView(
-    id: Int,
-    lifecycleHookTrigger: LifecycleHookTrigger
-): CoordinateInputView {
-    return useViewWithCleanup(id, lifecycleHookTrigger) {
-        it.pause()
-    }
-}
-
-fun ReactiveComponent.useElevationInputView(
-    id: Int,
-    lifecycleHookTrigger: LifecycleHookTrigger
-): ElevationInputView {
-    return useViewWithCleanup(id, lifecycleHookTrigger) {
-        it.pause()
-    }
-}
-
-fun ReactiveComponent.useBindCoordinateAndElevationViews(
-    coordinateView: CoordinateInputView,
-    elevationView: ElevationInputView
-) {
-    val prefs = useService<UserPreferences>()
-
-    useEffect(coordinateView, elevationView, prefs) {
-        coordinateView.setOnAutoLocationClickListener {
-            if (elevationView.elevation == null) {
-                elevationView.autofill()
-            }
-        }
-
-        elevationView.setOnAutoElevationClickListener {
-            if (coordinateView.coordinate == null) {
-                coordinateView.autofill()
-            }
-        }
-
-        coordinateView.setOnBeaconSelectedListener {
-            it.elevation?.let { elevation ->
-                elevationView.elevation =
-                    Distance.meters(elevation).convertTo(prefs.baseDistanceUnits)
-            }
-        }
-    }
 }
 
 fun <T : View> ReactiveComponent.useViewWithCleanup(

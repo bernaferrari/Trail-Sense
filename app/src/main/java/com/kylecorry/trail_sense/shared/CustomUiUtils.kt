@@ -14,29 +14,43 @@ import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
@@ -45,6 +59,7 @@ import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.text.toFloatCompat
+import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Pressure
@@ -53,14 +68,21 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.DistanceInputView
-import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
+import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import kotlin.math.floor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -87,19 +109,19 @@ object CustomUiUtils {
         onDistancePick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
         var distance: Distance? = default
-        val distanceInput = DistanceInputView(context).apply {
-            id = R.id.prompt_distance
-            defaultHint = hint
-            setOnValueChangeListener {
+        val distanceInput = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            DistancePromptContent(
+                value = default,
+                units = units,
+                hint = hint,
+                showFeetAndInches = showFeetAndInches,
+                allowNegative = allowNegative
+            ) {
                 distance = it
             }
-            this.units = units
-            value = default
-            if (default == null) {
-                unit = units.firstOrNull()
-            }
-            this.showFeetAndInches = showFeetAndInches
-            this.allowNegative = allowNegative
         }
         val view = createPromptContent(context, distanceInput)
 
@@ -125,15 +147,18 @@ object CustomUiUtils {
         onElevationPick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
         var elevation: Distance? = default
-        val elevationInputView = ElevationInputView(context).apply {
-            id = R.id.prompt_elevation
-            this.hint = hint
-            setOnElevationChangeListener {
+        val elevationInput = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            ElevationPromptContent(
+                default = default,
+                hint = hint
+            ) {
                 elevation = it
             }
-            this.elevation = default
         }
-        val view = createPromptContent(context, elevationInputView)
+        val view = createPromptContent(context, elevationInput)
 
         Alerts.dialog(
             context,
@@ -142,11 +167,280 @@ object CustomUiUtils {
         ) { cancelled ->
             if (cancelled) {
                 onElevationPick.invoke(null, true)
-                elevationInputView.pause()
             } else {
                 onElevationPick.invoke(elevation, false)
             }
         }
+    }
+
+    @Composable
+    private fun DistancePromptContent(
+        value: Distance?,
+        units: List<DistanceUnits>,
+        hint: String,
+        showFeetAndInches: Boolean,
+        allowNegative: Boolean,
+        modifier: Modifier = Modifier,
+        onDistanceChange: (Distance?) -> Unit
+    ) {
+        val context = LocalContext.current
+        val formatter = remember(context) { FormatService.getInstance(context) }
+        val initialUnit = value?.units?.takeIf { units.contains(it) } ?: units.firstOrNull()
+        var selectedUnit by remember(units) { mutableStateOf(initialUnit) }
+        var amountText by remember { mutableStateOf(formatNumber(value?.let { getDistanceAmount(it, showFeetAndInches) })) }
+        var secondaryAmountText by remember { mutableStateOf(formatNumber(value?.let { getDistanceSecondaryAmount(it, showFeetAndInches) })) }
+
+        LaunchedEffect(value?.value, value?.units, showFeetAndInches) {
+            selectedUnit = value?.units?.takeIf { units.contains(it) } ?: selectedUnit ?: units.firstOrNull()
+            amountText = formatNumber(value?.let { getDistanceAmount(it, showFeetAndInches) })
+            secondaryAmountText = formatNumber(value?.let { getDistanceSecondaryAmount(it, showFeetAndInches) })
+            onDistanceChange(mapDistance(amountText, secondaryAmountText, selectedUnit, showFeetAndInches, allowNegative))
+        }
+
+        val showSecondaryAmount = showFeetAndInches && selectedUnit == DistanceUnits.Feet
+        val displayUnits = remember(units, formatter) {
+            units.map {
+                DistanceDisplayUnit(
+                    it,
+                    formatter.getDistanceUnitName(it, true),
+                    formatter.getDistanceUnitName(it)
+                )
+            }
+        }
+
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = {
+                    amountText = it
+                    onDistanceChange(
+                        mapDistance(
+                            amountText,
+                            secondaryAmountText,
+                            selectedUnit,
+                            showFeetAndInches,
+                            allowNegative
+                        )
+                    )
+                },
+                label = { Text(if (showSecondaryAmount) context.getString(R.string.unit_feet) else hint) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+            if (showSecondaryAmount) {
+                OutlinedTextField(
+                    value = secondaryAmountText,
+                    onValueChange = {
+                        secondaryAmountText = it
+                        onDistanceChange(
+                            mapDistance(
+                                amountText,
+                                secondaryAmountText,
+                                selectedUnit,
+                                showFeetAndInches,
+                                allowNegative
+                            )
+                        )
+                    },
+                    label = { Text(context.getString(R.string.unit_inches)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            TextButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        "",
+                        displayUnits.map { it.longName },
+                        displayUnits.indexOfFirst { it.unit == selectedUnit }
+                    ) { idx ->
+                        if (idx != null) {
+                            selectedUnit = displayUnits[idx].unit
+                            onDistanceChange(
+                                mapDistance(
+                                    amountText,
+                                    secondaryAmountText,
+                                    selectedUnit,
+                                    showFeetAndInches,
+                                    allowNegative
+                                )
+                            )
+                        }
+                    }
+                },
+                enabled = displayUnits.isNotEmpty()
+            ) {
+                Text(displayUnits.firstOrNull { it.unit == selectedUnit }?.shortName ?: "")
+            }
+        }
+    }
+
+    @Composable
+    private fun ElevationPromptContent(
+        default: Distance?,
+        hint: String,
+        onElevationChange: (Distance?) -> Unit
+    ) {
+        val context = LocalContext.current
+        val formatter = remember(context) { FormatService.getInstance(context) }
+        val sensorService = remember(context) { SensorService(context) }
+        val altimeter = remember(sensorService) { sensorService.getAltimeter() }
+        val location = remember(context) { LocationSubsystem.getInstance(context) }
+        val scope = rememberCoroutineScope()
+        val units = remember(formatter) {
+            formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
+        }
+        var inputValue by remember { mutableStateOf(default) }
+        var selectedElevation by remember { mutableStateOf(default) }
+        var isLoading by remember { mutableStateOf(false) }
+
+        fun changeElevation(elevation: Distance?) {
+            val targetUnit = selectedElevation?.units ?: inputValue?.units ?: units.firstOrNull() ?: DistanceUnits.Meters
+            val converted = elevation?.convertTo(targetUnit)
+            val rounded = converted?.let {
+                Distance.from(
+                    converted.value.roundPlaces(Units.getDecimalPlaces(converted.units)),
+                    converted.units
+                )
+            }
+            inputValue = rounded
+            selectedElevation = rounded
+            onElevationChange(rounded)
+        }
+
+        val altimeterCallback = {
+            changeElevation(Distance.meters(altimeter.altitude))
+            isLoading = false
+            false
+        }
+
+        fun autofillWithAltimeter() {
+            if (isLoading) return
+            isLoading = true
+            altimeter.start(altimeterCallback)
+        }
+
+        DisposableEffect(altimeter) {
+            onDispose {
+                altimeter.stop(altimeterCallback)
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconButton(
+                onClick = {
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.autofill_source),
+                        listOf(
+                            context.getString(R.string.pref_altimeter_calibration_title),
+                            context.getString(R.string.beacon)
+                        ),
+                        0
+                    ) {
+                        when (it) {
+                            0 -> autofillWithAltimeter()
+                            1 -> scope.launch {
+                                val beacon = BeaconPickers.pickBeacon(
+                                    context,
+                                    sort = ClosestBeaconSort(
+                                        BeaconService(context),
+                                        location::location
+                                    )
+                                ) { beacons ->
+                                    beacons.filter { beacon ->
+                                        beacon is BeaconGroup || (beacon is Beacon && beacon.elevation != null)
+                                    }
+                                } ?: return@launch
+                                changeElevation(beacon.elevation?.let { elevation -> Distance.meters(elevation) })
+                            }
+                        }
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier.size(48.dp)
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_altitude),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            DistancePromptContent(
+                value = inputValue,
+                units = units,
+                hint = hint,
+                showFeetAndInches = false,
+                allowNegative = true,
+                modifier = Modifier.weight(1f)
+            ) {
+                selectedElevation = it
+                onElevationChange(it)
+            }
+        }
+    }
+
+    private data class DistanceDisplayUnit(
+        val unit: DistanceUnits,
+        val shortName: String,
+        val longName: String
+    )
+
+    private fun formatNumber(value: Number?): String {
+        return value?.let { DecimalFormatter.format(it, 5, false) } ?: ""
+    }
+
+    private fun getDistanceAmount(value: Distance, showFeetAndInches: Boolean): Number {
+        return if (showFeetAndInches && value.units == DistanceUnits.Feet) {
+            floor(value.value)
+        } else {
+            value.value
+        }
+    }
+
+    private fun getDistanceSecondaryAmount(value: Distance, showFeetAndInches: Boolean): Number? {
+        if (!showFeetAndInches || value.units != DistanceUnits.Feet) {
+            return null
+        }
+        val inches = (value.value % 1f) * 12
+        return if (inches == 0f) null else inches
+    }
+
+    private fun mapDistance(
+        amountText: String,
+        secondaryAmountText: String,
+        unit: DistanceUnits?,
+        showFeetAndInches: Boolean,
+        allowNegative: Boolean
+    ): Distance? {
+        val amount = amountText.toFloatCompat()
+        if (amount == null || unit == null) {
+            return null
+        }
+        if (!allowNegative && amount < 0f) {
+            return null
+        }
+        val value = if (showFeetAndInches && unit == DistanceUnits.Feet) {
+            amount + (secondaryAmountText.toFloatCompat() ?: 0f) / 12f
+        } else {
+            amount
+        }
+        return Distance.from(value, unit)
     }
 
     fun pickDate(
