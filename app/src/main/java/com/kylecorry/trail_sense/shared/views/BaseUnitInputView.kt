@@ -2,13 +2,13 @@ package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.widget.FrameLayout
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 
 abstract class BaseUnitInputView<T, Units : Enum<*>>(
     context: Context,
     attrs: AttributeSet? = null
-) : ConstraintLayout(context, attrs) {
+) : FrameLayout(context, attrs) {
 
     protected abstract fun createDisplayUnit(units: Units): UnitInputView.DisplayUnit<Units>
     protected abstract fun map(amount: Number, unit: Units): T
@@ -79,15 +79,10 @@ abstract class BaseUnitInputView<T, Units : Enum<*>>(
         @Suppress("LeakingThis")
         addView(
             unitInput,
-            LayoutParams(
-                0,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = LayoutParams.PARENT_ID
-                endToEnd = LayoutParams.PARENT_ID
-                topToTop = LayoutParams.PARENT_ID
-                bottomToBottom = LayoutParams.PARENT_ID
-            }
+            )
         )
     }
 

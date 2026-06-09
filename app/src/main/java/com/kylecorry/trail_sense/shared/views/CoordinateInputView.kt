@@ -3,8 +3,10 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -46,7 +47,7 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 
 class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
-    ConstraintLayout(context ?: throw IllegalArgumentException("Context is required"), attrs) {
+    LinearLayout(context ?: throw IllegalArgumentException("Context is required"), attrs) {
 
     private val formatService by lazy { FormatService.getInstance(getContext()) }
     private val sensorService by lazy { SensorService(getContext()) }
@@ -93,6 +94,9 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
 
     init {
         context?.let {
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+
             val iconSize = Resources.dp(it, 32f).toInt()
             val iconPadding = Resources.dp(it, 8f).toInt()
             gpsBtn = createCoordinateIconButton(
@@ -106,10 +110,7 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
             }
             addView(
                 gpsBtn,
-                LayoutParams(iconSize, iconSize).apply {
-                    startToStart = LayoutParams.PARENT_ID
-                    topToTop = R.id.location_edit_holder
-                    bottomToBottom = R.id.location_edit_holder
+                LinearLayout.LayoutParams(iconSize, iconSize).apply {
                     marginEnd = iconPadding
                 }
             )
@@ -131,15 +132,11 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
             )
             addView(
                 locationEditHolder,
-                LayoutParams(
+                LinearLayout.LayoutParams(
                     0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    startToEnd = R.id.gps_btn
-                    endToStart = R.id.coordinate_input_help_btn
-                    topToTop = LayoutParams.PARENT_ID
-                    bottomToBottom = LayoutParams.PARENT_ID
-                }
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
             )
 
             helpBtn = createCoordinateIconButton(
@@ -151,11 +148,7 @@ class CoordinateInputView(context: Context?, attrs: AttributeSet? = null) :
             )
             addView(
                 helpBtn,
-                LayoutParams(iconSize, iconSize).apply {
-                    endToEnd = LayoutParams.PARENT_ID
-                    topToTop = R.id.location_edit_holder
-                    bottomToBottom = R.id.location_edit_holder
-                }
+                LinearLayout.LayoutParams(iconSize, iconSize)
             )
 
             gps = sensorService.getGPS()

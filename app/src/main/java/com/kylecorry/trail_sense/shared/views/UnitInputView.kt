@@ -3,10 +3,11 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -19,7 +20,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 class UnitInputView<Units : Enum<*>>(
     context: Context,
     attrs: AttributeSet? = null
-) : ConstraintLayout(context, attrs) {
+) : LinearLayout(context, attrs) {
 
     private var _unit: Units? = null
     private var _amount: Number? = null
@@ -108,6 +109,9 @@ class UnitInputView<Units : Enum<*>>(
     }
 
     init {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+
         amountEditHolder = TextInputLayout(context).apply {
             id = R.id.amount_holder
         }
@@ -124,15 +128,11 @@ class UnitInputView<Units : Enum<*>>(
         )
         addView(
             amountEditHolder,
-            LayoutParams(
+            LinearLayout.LayoutParams(
                 0,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                startToStart = LayoutParams.PARENT_ID
-                endToStart = R.id.units
-                topToTop = LayoutParams.PARENT_ID
-                bottomToBottom = LayoutParams.PARENT_ID
-            }
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f
+            )
         )
 
         unitBtnState = UnitPickerButtonState()
@@ -146,13 +146,10 @@ class UnitInputView<Units : Enum<*>>(
         }
         addView(
             unitBtn,
-            LayoutParams(
+            LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply {
-                endToEnd = LayoutParams.PARENT_ID
-                topToTop = R.id.amount_holder
-                bottomToBottom = R.id.amount_holder
                 marginStart = Resources.dp(context, 8f).toInt()
             }
         )
