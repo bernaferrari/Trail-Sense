@@ -26,7 +26,7 @@ class TrailSenseExceptionHandler(
             BuildTypeBugReportGenerator(),
             AndroidDetailsBugReportGenerator(),
             DeviceDetailsBugReportGenerator(),
-            FragmentDetailsBugReportGenerator(),
+            DestinationDetailsBugReportGenerator(),
             DiagnosticsBugReportGenerator(),
             StackTraceBugReportGenerator()
         )
