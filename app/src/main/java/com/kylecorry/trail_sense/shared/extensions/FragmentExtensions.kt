@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.extensions
 
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.StringRes
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -36,7 +35,7 @@ fun TrailSenseDestinationHost.promptIfUnsavedChanges(
     return callback
 }
 
-fun TrailSenseComposeDestinationFragment.getMarkdown(@StringRes resId: Int, vararg formatArgs: Any?): CharSequence {
+fun TrailSenseDestinationHost.getMarkdown(@StringRes resId: Int, vararg formatArgs: Any?): CharSequence {
     val service = AppServiceRegistry.get<MarkdownService>()
     return service.toMarkdown(getString(resId, *formatArgs))
 }

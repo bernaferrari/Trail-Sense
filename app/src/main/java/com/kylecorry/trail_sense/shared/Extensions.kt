@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.shared
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.IdRes
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -23,12 +22,13 @@ import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.data.Identifiable
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.math.roundToInt
 
-fun TrailSenseComposeDestinationFragment.requireMainActivity(): MainActivity {
-    return requireActivity() as MainActivity
+fun TrailSenseDestinationHost.requireMainActivity(): MainActivity {
+    return andromedaActivity as MainActivity
 }
 
 fun <T : Identifiable> Array<T>.withId(id: Long): T? {
