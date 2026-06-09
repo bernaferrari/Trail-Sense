@@ -10,9 +10,12 @@ import androidx.navigation.NavType
 import androidx.navigation.fragment.FragmentNavigator
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment as ComposeDestinationFragment
 
 object TrailSenseNavGraph {
+
+    private const val COMPOSE_DESTINATION_FRAGMENT_CLASS =
+        "com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment"
 
     fun create(navController: NavController, startDestination: Int): NavGraph {
         val provider = navController.navigatorProvider
@@ -22,11 +25,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_navigation
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "NavigationScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NAVIGATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_NAVIGATION)
                 .build())
             addArgument("destination", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -46,11 +49,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_astronomy
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AstronomyScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ASTRONOMY)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_ASTRONOMY)
                 .build())
             putAction(
                 R.id.action_astronomyFragment_to_calibrateGPSFragment,
@@ -66,55 +69,55 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_experimental_tools
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TOOLS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TOOLS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_weather
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WeatherScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WEATHER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WEATHER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mapFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MAP)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_MAP)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mapSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MAP_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_MAP_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.offlineMapViewFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ViewVectorMapScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_VECTOR_MAP_VIEW)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_VECTOR_MAP_VIEW)
                 .build())
             addArgument("offline_map_file_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -124,11 +127,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.action_settings
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SETTINGS)
                 .build())
             putAction(
                 R.id.action_settings_to_sensor_settings,
@@ -234,33 +237,33 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.experimentationFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ExperimentationFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_EXPERIMENTATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_EXPERIMENTATION)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fieldGuideFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FieldGuideScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FIELD_GUIDE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_FIELD_GUIDE)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fieldGuidePageFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FieldGuidePageScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FIELD_GUIDE_PAGE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_FIELD_GUIDE_PAGE)
                 .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -271,11 +274,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createFieldGuideSightingFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateFieldGuideSightingScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_FIELD_GUIDE_SIGHTING)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CREATE_FIELD_GUIDE_SIGHTING)
                 .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -289,11 +292,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sightingListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SightingListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SIGHTING_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SIGHTING_LIST)
                 .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -303,11 +306,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createFieldGuidePageFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateFieldGuidePageScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_FIELD_GUIDE_PAGE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CREATE_FIELD_GUIDE_PAGE)
                 .build())
             addArgument("page_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -322,33 +325,33 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.signalFinderFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SignalFinderScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SIGNAL_FINDER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SIGNAL_FINDER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolDeclinationFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "DeclinationScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_DECLINATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_DECLINATION)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beacon_list
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BEACON_LIST)
                 .build())
             addArgument("initial_location", NavArgument.Builder()
                 .setType(NavType.ParcelableType(GeoUri::class.java))
@@ -378,11 +381,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.placeBeaconFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PlaceBeaconScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PLACE_BEACON)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PLACE_BEACON)
                 .build())
             addArgument("edit_beacon", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -402,132 +405,132 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clinometerFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClinometerScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLINOMETER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLINOMETER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateAltimeterFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateAltimeterScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CALIBRATE_ALTIMETER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CALIBRATE_ALTIMETER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateBarometerFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateBarometerScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CALIBRATE_BAROMETER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CALIBRATE_BAROMETER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateCompassFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateCompassScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CALIBRATE_COMPASS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CALIBRATE_COMPASS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateGPSFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateGPSScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CALIBRATE_GPS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CALIBRATE_GPS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.licenseFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "LicenseFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LICENSES)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LICENSES)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.weatherSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WeatherSettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WEATHER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WEATHER_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.navigationSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "NavigationSettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NAVIGATION_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_NAVIGATION_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pathsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathsSettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATHS_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PATHS_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beaconsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BEACON_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pluginsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PluginsSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PLUGINS_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PLUGINS_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pluginDetailsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PluginDetailsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PLUGIN_DETAILS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PLUGIN_DETAILS)
                 .build())
             addArgument("package_id", NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -537,22 +540,22 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.astronomySettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AstronomySettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ASTRONOMY_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_ASTRONOMY_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.guideListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "GuideListFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_GUIDE_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_GUIDE_LIST)
                 .build())
             putAction(
                 R.id.action_guideListFragment_to_guideFragment,
@@ -568,11 +571,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.guideFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "GuideFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_GUIDE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_GUIDE)
                 .build())
             addArgument("guide_name", NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -587,11 +590,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.viewQrFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "QRShareScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_VIEW_QR)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_VIEW_QR)
                 .build())
             addArgument("qr_title", NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -606,22 +609,22 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.levelFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "LevelFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LEVEL)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LEVEL)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.beaconDetailsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconDetailsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BEACON_DETAILS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BEACON_DETAILS)
                 .build())
             addArgument("beacon_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -640,11 +643,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.packItemListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PackItemListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PACK_ITEM_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PACK_ITEM_LIST)
                 .build())
             addArgument("pack_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -664,11 +667,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createItemFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateItemScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_PACK_ITEM)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CREATE_PACK_ITEM)
                 .build())
             addArgument("edit_item_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -683,66 +686,66 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolConvertFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ConvertFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CONVERT)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CONVERT)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolCliffHeightFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolCliffHeightFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLIFF_HEIGHT)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLIFF_HEIGHT)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolWhistleFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolWhistleFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WHISTLE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WHISTLE)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolSolarPanel
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSolarPanel"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SOLAR_PANEL)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SOLAR_PANEL)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.waterPurificationFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WaterPurificationFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WATER_PURIFICATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WATER_PURIFICATION)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolFlashlight
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolFlashlight"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FLASHLIGHT)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_FLASHLIGHT)
                 .build())
             putAction(
                 R.id.action_flashlight_to_screen_flashlight,
@@ -758,44 +761,44 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolClockFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClockScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOCK)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLOCK)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolLightning
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLightning"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LIGHTNING)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LIGHTNING)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.rulerFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "RulerScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_RULER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_RULER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolBattery
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolBattery"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BATTERY)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BATTERY)
                 .build())
             putAction(
                 R.id.action_settings_to_power_settings,
@@ -811,55 +814,55 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolTriangulate
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolTriangulate"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TRIANGULATE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TRIANGULATE)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolBallistics
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolBallistics"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BALLISTICS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BALLISTICS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolPermits
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolPermits"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PERMITS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PERMITS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolMetalDetector
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolMetalDetector"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_METAL_DETECTOR)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_METAL_DETECTOR)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolSurvivalGuideList
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSurvivalGuideList"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SURVIVAL_GUIDE_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SURVIVAL_GUIDE_LIST)
                 .build())
             addArgument("search_query", NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -869,11 +872,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolSurvivalGuideReader
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSurvivalGuideReader"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SURVIVAL_GUIDE_READER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SURVIVAL_GUIDE_READER)
                 .build())
             addArgument("chapter_resource_id", NavArgument.Builder()
                 .setType(NavType.IntType)
@@ -887,11 +890,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolNotes
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolNotes"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NOTES)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_NOTES)
                 .build())
             putAction(
                 R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
@@ -907,11 +910,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolNotesCreate
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolNotesCreate"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_NOTE_EDITOR)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_NOTE_EDITOR)
                 .build())
             addArgument("edit_note_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -922,22 +925,22 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolWhiteNoise
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolWhiteNoise"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WHITE_NOISE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WHITE_NOISE)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentBacktrack
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATHS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PATHS)
                 .build())
             putAction(
                 R.id.action_fragmentBacktrack_to_action_navigation,
@@ -963,11 +966,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cloudFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CloudScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOUDS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLOUDS)
                 .build())
             addArgument("open_scanner", NavArgument.Builder()
                 .setType(NavType.BoolType)
@@ -987,33 +990,33 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sensorDetailsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SensorDetailsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SENSOR_DETAILS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SENSOR_DETAILS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolLightFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolLightFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LIGHT_METER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LIGHT_METER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.tidesFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TidesScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TIDES)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TIDES)
                 .build())
             putAction(
                 R.id.action_tides_to_tideList,
@@ -1029,55 +1032,55 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolScreenFlashlight
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolScreenFlashlight"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SCREEN_FLASHLIGHT)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SCREEN_FLASHLIGHT)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolPedometer
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSpeedometer"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PEDOMETER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PEDOMETER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentTurnBackSettings
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TurnBackSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TURN_BACK_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TURN_BACK_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentWaterBoilTimerSettings
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WaterBoilTimerSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_WATER_BOIL_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_WATER_BOIL_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.calibrateOdometerFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateOdometerFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PEDOMETER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PEDOMETER_SETTINGS)
                 .build())
             putAction(
                 R.id.action_calibrate_pedometer_to_estimate_stride_length,
@@ -1093,11 +1096,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.createTideFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateTideScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CREATE_TIDE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CREATE_TIDE)
                 .build())
             addArgument("edit_tide_id", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -1108,11 +1111,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.tideListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TideListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TIDE_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TIDE_LIST)
                 .build())
             putAction(
                 R.id.action_tideList_to_createTide,
@@ -1128,11 +1131,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.photoMapsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PhotoMapsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PHOTO_MAPS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PHOTO_MAPS)
                 .build())
             addArgument("mapId", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -1156,11 +1159,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mapListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_OFFLINE_MAP_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_OFFLINE_MAP_LIST)
                 .build())
             putAction(
                 R.id.action_mapList_to_maps,
@@ -1176,66 +1179,66 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.flashlightSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FlashlightSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_FLASHLIGHT_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_FLASHLIGHT_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.thermometerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ThermometerSettingsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_THERMOMETER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_THERMOMETER_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cellSignalSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CellSignalSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CELL_SIGNAL_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CELL_SIGNAL_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.bubbleLevelSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BubbleLevelSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BUBBLE_LEVEL_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BUBBLE_LEVEL_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clockSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClockSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOCK_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLOCK_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.privacySettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PrivacySettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PRIVACY_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PRIVACY_SETTINGS)
                 .build())
             putAction(
                 R.id.action_privacy_settings_to_gps_calibration,
@@ -1251,110 +1254,110 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.themeSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ThemeSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_THEME_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_THEME_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.backupSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BackupSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_BACKUP_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_BACKUP_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.powerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PowerSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_POWER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_POWER_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.unitSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "UnitSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_UNIT_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_UNIT_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.experimentalSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ExperimentalSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_EXPERIMENTAL_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_EXPERIMENTAL_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolRulerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "RulerSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_RULER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_RULER_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.sensorSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SensorSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SENSOR_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SENSOR_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.photoMapSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PhotoMapSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PHOTO_MAP_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PHOTO_MAP_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.temperatureEstimationFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TemperatureEstimationScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TEMPERATURE_ESTIMATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TEMPERATURE_ESTIMATION)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.packListFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PackListScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PACK_LIST)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PACK_LIST)
                 .build())
             putAction(
                 R.id.action_pack_to_pack_items,
@@ -1370,11 +1373,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.diagnosticsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "DiagnosticsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_DIAGNOSTICS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_DIAGNOSTICS)
                 .build())
             putAction(
                 R.id.action_diagnostics_to_sensor_details,
@@ -1390,11 +1393,11 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.pathDetailsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathOverviewScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_PATH_OVERVIEW)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_PATH_OVERVIEW)
                 .build())
             addArgument("destination", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -1409,77 +1412,77 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.tideSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TideSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TIDE_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TIDE_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.clinometerSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClinometerSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLINOMETER_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLINOMETER_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.augmentedRealitySettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AugmentedRealitySettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cameraSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CameraSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CAMERA_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CAMERA_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.errorSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ErrorSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ERROR_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_ERROR_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.scanQrFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ScanQRScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_SCAN_QR)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_SCAN_QR)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.augmentedRealityFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AugmentedRealityScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_AUGMENTED_REALITY)
                 .build())
             addArgument("mode", NavArgument.Builder()
                 .setType(NavType.LongType)
@@ -1494,110 +1497,110 @@ object TrailSenseNavGraph {
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentStrideLengthEstimation
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "StrideLengthEstimationScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_STRIDE_LENGTH_ESTIMATION)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_STRIDE_LENGTH_ESTIMATION)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.cloudResultsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CloudResultsScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLOUD_RESULTS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLOUD_RESULTS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.climateFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClimateScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_CLIMATE)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_CLIMATE)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.mirrorCameraFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolMirrorCameraFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MIRROR_CAMERA)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_MIRROR_CAMERA)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.magnifierFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolMagnifierFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_MAGNIFIER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_MAGNIFIER)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.turnBackFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TurnBackScreen"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TURN_BACK)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TURN_BACK)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentLocalMessaging
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLocalMessaging"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LOCAL_MESSAGING)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LOCAL_MESSAGING)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentLocalTalk
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLocalTalk"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_LOCAL_TALK)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_LOCAL_TALK)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.toolsSettingsFragment
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolsSettingsFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_TOOLS_SETTINGS)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_TOOLS_SETTINGS)
                 .build())
             graph.addDestination(this)
         }
 
         fragmentNavigator.createDestination().apply {
             id = R.id.fragmentToolErrorHandler
-            setClassName("com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment")
+            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ErrorHandlerFragment"
-            addArgument(TrailSenseComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
+            addArgument(ComposeDestinationFragment.ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
-                .setDefaultValue(TrailSenseComposeDestinationFragment.DESTINATION_ERROR_HANDLER)
+                .setDefaultValue(ComposeDestinationFragment.DESTINATION_ERROR_HANDLER)
                 .build())
             addArgument("tool_id", NavArgument.Builder()
                 .setType(NavType.LongType)
