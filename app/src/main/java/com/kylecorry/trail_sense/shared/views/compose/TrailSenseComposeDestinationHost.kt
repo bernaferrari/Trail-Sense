@@ -17,6 +17,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -98,6 +101,7 @@ import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.PressureUnits
+import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
@@ -156,6 +160,7 @@ import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstronomySettingsToolScreen
@@ -164,7 +169,6 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityTool
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
-import com.kylecorry.trail_sense.tools.battery.ui.BatteryChart
 import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
 import com.kylecorry.trail_sense.tools.beacons.ui.BeaconDetailsToolScreen
 import com.kylecorry.trail_sense.tools.beacons.ui.PlaceBeaconToolScreen
@@ -3742,12 +3746,20 @@ class TrailSenseComposeDestinationHost(
             readings.firstOrNull()?.time,
             readings.lastOrNull()?.time
         )
-        CustomUiUtils.showChart(
-            this,
-            getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
+        CustomUiUtils.showComposeContentDialog(
+            context = requireContext(),
+            title = getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
         ) {
-            val chart = BatteryChart(it)
-            chart.plot(readings, false)
+            TrailSenseLineChart(
+                readings = readings.map {
+                    Reading(it.percent, it.time)
+                },
+                minimum = 0f,
+                maximum = 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+            )
         }
     }
 

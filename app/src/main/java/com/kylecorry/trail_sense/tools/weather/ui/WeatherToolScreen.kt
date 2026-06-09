@@ -70,6 +70,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
@@ -80,7 +81,6 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWeatherFrequencyCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder
-import com.kylecorry.trail_sense.tools.weather.ui.charts.WeatherLineChart
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
@@ -455,7 +455,7 @@ private class WeatherController(
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
-            WeatherLineChart(
+            TrailSenseLineChart(
                 readings = readings,
                 minimum = 0f,
                 maximum = 100f,
@@ -487,7 +487,7 @@ private class WeatherController(
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
-            WeatherLineChart(
+            TrailSenseLineChart(
                 readings = readings,
                 freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
                 modifier = Modifier

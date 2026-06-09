@@ -1,4 +1,4 @@
-package com.kylecorry.trail_sense.tools.weather.ui.charts
+package com.kylecorry.trail_sense.shared.views.charts
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -20,7 +20,7 @@ import java.time.Instant
 import kotlin.math.max
 
 @Composable
-fun WeatherLineChart(
+fun TrailSenseLineChart(
     readings: List<Reading<Float>>,
     modifier: Modifier = Modifier,
     minimum: Float? = null,
@@ -45,7 +45,7 @@ fun WeatherLineChart(
             return@Box
         }
 
-        val points = weatherLineChartPoints(readings, minimum, maximum, freezingValue)
+        val points = trailSenseLineChartPoints(readings, minimum, maximum, freezingValue)
         Canvas(modifier = Modifier.fillMaxSize()) {
             repeat(5) { index ->
                 val y = index / 4f * size.height
@@ -73,15 +73,15 @@ fun WeatherLineChart(
     }
 }
 
-private fun weatherLineChartPoints(
+private fun trailSenseLineChartPoints(
     readings: List<Reading<Float>>,
     minimum: Float?,
     maximum: Float?,
     freezingValue: Float?
-): WeatherLineChartPoints {
+): TrailSenseLineChartPoints {
     val startTime = readings.firstOrNull()?.time ?: Instant.now()
     val points = readings.map {
-        WeatherLineChartPoint(
+            TrailSenseLineChartPoint(
             Duration.between(startTime, it.time).toMillis() / 3_600_000f,
             it.value
         )
@@ -93,7 +93,7 @@ private fun weatherLineChartPoints(
     val margin = 5f
     val yMinimum = minimum ?: (minYValue - margin)
     val yMaximum = maximum ?: max(maxYValue + margin, yMinimum + 10f)
-    return WeatherLineChartPoints(
+    return TrailSenseLineChartPoints(
         points = points,
         minX = minX,
         xRange = (maxX - minX).takeIf { it > 0f } ?: 1f,
@@ -103,9 +103,9 @@ private fun weatherLineChartPoints(
 }
 
 private fun DrawScope.drawLineSeries(
-    points: List<WeatherLineChartPoint>,
+    points: List<TrailSenseLineChartPoint>,
     color: Color,
-    chartPoints: WeatherLineChartPoints,
+    chartPoints: TrailSenseLineChartPoints,
     strokeWidth: Float
 ) {
     points.zipWithNext().forEach { (start, end) ->
@@ -124,13 +124,13 @@ private fun DrawScope.drawLineSeries(
     }
 }
 
-private data class WeatherLineChartPoint(
+private data class TrailSenseLineChartPoint(
     val x: Float,
     val y: Float
 )
 
-private data class WeatherLineChartPoints(
-    val points: List<WeatherLineChartPoint>,
+private data class TrailSenseLineChartPoints(
+    val points: List<TrailSenseLineChartPoint>,
     val minX: Float,
     val xRange: Float,
     val yMinimum: Float,
