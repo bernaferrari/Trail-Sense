@@ -48,7 +48,6 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R

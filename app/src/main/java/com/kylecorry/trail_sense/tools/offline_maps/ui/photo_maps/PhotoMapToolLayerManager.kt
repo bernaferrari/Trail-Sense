@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.view.View
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.sol.science.geography.Geography

@@ -25,7 +25,6 @@ import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.geology.CoordinateBounds

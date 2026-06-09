@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.science.meteorology.Meteorology

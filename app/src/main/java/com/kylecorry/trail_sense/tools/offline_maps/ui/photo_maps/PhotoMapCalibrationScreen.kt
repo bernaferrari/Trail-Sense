@@ -49,7 +49,6 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.fragments.asLiveData
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.units.Coordinate

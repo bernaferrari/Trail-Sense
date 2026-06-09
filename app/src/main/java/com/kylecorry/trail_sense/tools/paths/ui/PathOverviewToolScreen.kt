@@ -62,7 +62,6 @@ import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.fragments.asLiveData
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.pickers.Pickers
