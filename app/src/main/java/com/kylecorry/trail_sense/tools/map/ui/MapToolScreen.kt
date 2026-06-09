@@ -26,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -34,6 +33,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
+import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
@@ -68,7 +68,7 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveDestinationHost
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -88,7 +88,7 @@ interface MapControllerHost {
 
 @Composable
 fun MapToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: ReactiveAndromedaFragment,
     onController: (MapControllerHost?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -103,9 +103,11 @@ fun MapToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class MapController(private val fragment: TrailSenseComposeDestinationFragment) : MapControllerHost {
+private class MapController(private val fragment: ReactiveAndromedaFragment) : MapControllerHost {
 
     val views = createMapViews(fragment.requireContext())
+    private val host: TrailSenseReactiveDestinationHost
+        get() = fragment as TrailSenseReactiveDestinationHost
     private var wasViewCreated = true
     private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
 
@@ -119,11 +121,11 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
     }
 
     private fun navigateFromLayerSheet(action: Int) {
-        fragment.findNavController().navigateWithAnimation(action)
+        host.findNavController().navigateWithAnimation(action)
     }
 
     override fun onPause() {
-        fragment.cleanupReactiveEffects()
+        host.cleanupReactiveEffects()
     }
 
     fun onDestroy() {
@@ -199,13 +201,13 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
             NavigationScreenLock(prefs.map.keepScreenUnlockedWhileOpen)
         }
 
-        fragment.useEffect(mapView, prefs, fragment.hookResetOnResume) {
+        fragment.useEffect(mapView, prefs, host.hookResetOnResume) {
             mapView.useDensityPixelsForZoom = !prefs.map.highDetailMode
             mapView.layerManager.invalidate()
             mapView.invalidate()
         }
 
-        fragment.useEffect(screenLock, activity, fragment.hookResetOnResume, destination) {
+        fragment.useEffect(screenLock, activity, host.hookResetOnResume, destination) {
             screenLock.updateLock(activity)
         }
 
@@ -224,8 +226,8 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
         fragment.useEffect(manager, mapView, mapTime, manager.key) {
             manager.setTime(mapView, mapTime)
         }
-        fragment.useEffectWithCleanup(manager, mapView, fragment.hookResetOnResume) {
-            manager.resume(context, mapView, fragment)
+        fragment.useEffectWithCleanup(manager, mapView, host.hookResetOnResume) {
+            manager.resume(context, mapView, host)
             return@useEffectWithCleanup {
                 manager.pause(mapView)
             }
@@ -257,9 +259,10 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
         val adjustLayers = fragment.useCallback<Unit>(manager, layerEditSheet, context, mapView) {
             manager.pause(mapView)
             layerEditSheet.setOnDismissListener {
-                manager.resume(context, mapView, fragment)
-            setHasTimeDependentLayers(
-                    mapView.layerManager.getLayers().any { it.isTimeDependent })
+                manager.resume(context, mapView, host)
+                setHasTimeDependentLayers(
+                    mapView.layerManager.getLayers().any { it.isTimeDependent }
+                )
             }
             layerEditSheet.show()
         }
@@ -341,13 +344,13 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
                 )
             }
 
-        fragment.useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, fragment.hookResetOnResume) {
+        fragment.useEffect(lockMode, mapView, lockButton, traceViews, screenLight, context, host.hookResetOnResume) {
             switchMapLockMode(lockMode, mapView, lockButton, traceViews, screenLight, context)
         }
 
         fragment.usePauseEffect(screenLight) {
             screenLight.off()
-            fragment.requireMainActivity().setBottomNavigationEnabled(true)
+            host.requireMainActivity().setBottomNavigationEnabled(true)
         }
 
         useSavedMapState(mapView)
@@ -403,7 +406,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
 
                     onMain {
                         Share.actions(
-                            fragment,
+                            host,
                             formatter.formatLocation(location),
                             listOf(
                                 ActionItem(fragment.getString(R.string.beacon), R.drawable.ic_location) {
@@ -492,7 +495,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
         map.isZoomEnabled = true
         traceViews.forEach { it(true) }
         screenLight.off()
-        fragment.requireMainActivity().setBottomNavigationEnabled(true)
+        host.requireMainActivity().setBottomNavigationEnabled(true)
 
         when (mode) {
             MapLockMode.Location -> {
@@ -555,7 +558,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
                 traceViews.forEach { it(false) }
 
                 // Hide the bottom navigation
-                fragment.requireMainActivity().setBottomNavigationEnabled(false)
+                host.requireMainActivity().setBottomNavigationEnabled(false)
             }
         }
     }
@@ -615,7 +618,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
 
     private fun useSavedMapState(mapView: MapView) {
         val prefs = fragment.useService<UserPreferences>()
-        val shouldSave = fragment.useMemo(prefs, fragment.hookResetOnResume) {
+        val shouldSave = fragment.useMemo(prefs, host.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"
@@ -647,7 +650,7 @@ private class MapController(private val fragment: TrailSenseComposeDestinationFr
 
     private fun useLockMode(): Pair<MapLockMode, (MapLockMode) -> Unit> {
         val prefs = fragment.useService<UserPreferences>()
-        val shouldSave = fragment.useMemo(prefs, fragment.hookResetOnResume) {
+        val shouldSave = fragment.useMemo(prefs, host.hookResetOnResume) {
             prefs.map.saveMapState
         }
         val key = "cache_map_state"

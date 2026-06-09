@@ -70,3 +70,8 @@ interface TrailSenseDestinationHost {
     fun addOverlayView(view: View)
     fun removeOverlayView(view: View)
 }
+
+interface TrailSenseReactiveDestinationHost : TrailSenseDestinationHost {
+    val hookResetOnResume: Int
+    fun cleanupReactiveEffects()
+}

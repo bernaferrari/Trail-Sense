@@ -280,7 +280,7 @@ import kotlin.math.roundToInt
 
 class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
-    BeaconListControllerHost, TrailSenseDestinationHost {
+    BeaconListControllerHost, TrailSenseReactiveDestinationHost {
 
     private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
@@ -322,10 +322,10 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     override val destinationArguments: Bundle?
         get() = arguments
 
-    val hookResetOnResume: Int
+    override val hookResetOnResume: Int
         get() = resetOnResume
 
-    fun cleanupReactiveEffects() {
+    override fun cleanupReactiveEffects() {
         cleanupEffects()
     }
 
