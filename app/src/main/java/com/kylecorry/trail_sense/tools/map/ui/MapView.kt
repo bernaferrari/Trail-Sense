@@ -1,17 +1,20 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
 import android.view.ScaleGestureDetector
+import android.view.View
 import android.widget.OverScroller
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -19,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.LocalView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -49,13 +52,26 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class MapView(context: Context) : AbstractComposeView(context), IMapView {
+class MapView(private val context: Context) : IMapView {
     override var isWidget: Boolean = false
     var isInteractive = true
     var isPanEnabled = true
     var isZoomEnabled = true
     var isFlingEnabled = true
     var useDensityPixelsForZoom = true
+    var id: Int = 0
+    var keepScreenOn: Boolean = false
+    var isInvisible: Boolean = false
+        set(value) {
+            field = value
+            invalidate()
+        }
+    var backgroundTintList: ColorStateList? = null
+        set(value) {
+            field = value
+            backgroundColorOverride = value?.defaultColor
+            invalidate()
+        }
     override val isHighDetailMode: Boolean
         get() = !useDensityPixelsForZoom
     var clipPath: Path? = null
@@ -71,6 +87,7 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
     private var isSetup = false
 
     private val lookupMatrix = Matrix()
+    private var externalTouchListener: ((MapView, MotionEvent) -> Boolean)? = null
 
     override val layerManager = MapViewLayerManager {
         post { invalidate() }
@@ -79,7 +96,6 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
 
     private var onLongPressCallback: ((Coordinate) -> Unit)? = null
     private var onSingleTapCallback: ((Coordinate) -> Unit)? = null
-    private var externalTouchListener: View.OnTouchListener? = null
     private var pendingScaleChangeCallback = false
     private var onScaleChange: ((resolutionPixels: Float) -> Unit)? = null
     private var onCenterChange: ((center: Coordinate) -> Unit)? = null
@@ -103,41 +119,23 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
             invalidate()
         }
 
-    val view: View
-        get() = this
+    val width: Int
+        get() = contentWidth
 
-    init {
-        setOnTouchListener { v, event ->
-            if (externalTouchListener?.onTouch(v, event) == true) {
-                true
-            } else {
-                onTouchEvent(event)
-            }
-        }
-    }
+    val height: Int
+        get() = contentHeight
 
     @Composable
-    override fun Content() {
-        MapContent()
-    }
-
-    @Composable
-    fun Content(modifier: Modifier) {
+    fun Content(modifier: Modifier = Modifier) {
         MapContent(modifier)
     }
 
     fun post(action: () -> Unit): Boolean {
-        if (!isAttachedToWindow) {
-            action()
-            return true
-        }
-        return super.post {
-            action()
-        }
+        action()
+        return true
     }
 
-    override fun invalidate() {
-        super.invalidate()
+    fun invalidate() {
         post {
             renderVersion++
         }
@@ -157,6 +155,39 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
 
     fun setOnSingleTapListener(callback: ((Coordinate) -> Unit)?) {
         onSingleTapCallback = callback
+    }
+
+    fun setOnTouchListener(listener: ((MapView, MotionEvent) -> Boolean)?) {
+        externalTouchListener = listener
+    }
+
+    fun setBackgroundColor(color: Int) {
+        backgroundColorOverride = color
+        invalidate()
+    }
+
+    fun setBackgroundResource(resourceId: Int) {
+        // Background shapes are drawn by the Compose/container layer. Keep this for API compatibility.
+    }
+
+    fun measure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        contentWidth = View.MeasureSpec.getSize(widthMeasureSpec)
+        contentHeight = View.MeasureSpec.getSize(heightMeasureSpec)
+    }
+
+    fun layout(left: Int, top: Int, right: Int, bottom: Int) {
+        contentWidth = right - left
+        contentHeight = bottom - top
+    }
+
+    fun draw(canvas: AndroidCanvas) {
+        if (::drawer.isInitialized) {
+            drawer.canvas = canvas
+        } else {
+            drawer = CanvasDrawer(context, canvas)
+        }
+        setupIfNeeded()
+        render()
     }
 
     override val mapBounds: CoordinateBounds
@@ -369,11 +400,22 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
     @Composable
     fun MapContent(modifier: Modifier = Modifier) {
         TrailSenseTheme {
+            if (isInvisible) {
+                return@TrailSenseTheme
+            }
+            val view = LocalView.current
+            DisposableEffect(view, keepScreenOn) {
+                val previousKeepScreenOn = view.keepScreenOn
+                view.keepScreenOn = keepScreenOn
+                onDispose {
+                    view.keepScreenOn = previousKeepScreenOn
+                }
+            }
             Canvas(
                 modifier = modifier
                     .fillMaxSize()
                     .pointerInteropFilter {
-                        if (externalTouchListener?.onTouch(view, it) == true) {
+                        if (externalTouchListener?.invoke(this@MapView, it) == true) {
                             true
                         } else {
                             onTouchEvent(it)
@@ -638,7 +680,7 @@ class MapView(context: Context) : AbstractComposeView(context), IMapView {
     private val gestureDetector = GestureDetector(context, mGestureListener)
     private val mScaleDetector = ScaleGestureDetector(context, scaleListener)
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
+    fun onTouchEvent(event: MotionEvent): Boolean {
         if (isInteractive) {
             if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                 scroller.forceFinished(true)
