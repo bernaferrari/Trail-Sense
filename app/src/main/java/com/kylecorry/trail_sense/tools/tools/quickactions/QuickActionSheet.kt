@@ -2,10 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.view.View.MeasureSpec
-import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.compose.foundation.layout.Arrangement
@@ -14,9 +11,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.Image
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,21 +33,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayout
-import com.google.android.flexbox.JustifyContent
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetSnapshot
 
 class QuickActionSheetState(private val context: Context) {
 
@@ -53,7 +51,7 @@ class QuickActionSheetState(private val context: Context) {
     private var selectedTab by mutableIntStateOf(0)
     private var open by mutableStateOf(false)
     private var activity: MainActivity? = null
-    private var widgets: FlexboxLayout? = null
+    private var widgets by mutableStateOf(emptyList<ToolWidgetSnapshot>())
 
     private var quickActionBinder: MainActivityQuickActionBinder? = null
     private var widgetBinder: ToolWidgetViewBinder? = null
@@ -64,7 +62,7 @@ class QuickActionSheetState(private val context: Context) {
         open = false
         widgetBinder?.unbind()
         widgetBinder = null
-        widgets = null
+        widgets = emptyList()
         quickActionBinder = null
         backCallback?.remove()
         backCallback = null
@@ -107,15 +105,15 @@ class QuickActionSheetState(private val context: Context) {
 
     private fun bindWidgetsIfReady() {
         val fragment = activity?.getActiveDestinationHost() ?: return
-        val widgets = widgets ?: return
         if (widgetBinder != null) {
             return
         }
         widgetBinder = ToolWidgetViewBinder(
             fragment.requireContext(),
-            fragment.lifecycleOwner,
-            widgets
-        )
+            fragment.lifecycleOwner
+        ) {
+            widgets = it
+        }
         widgetBinder?.bind()
     }
 
@@ -138,10 +136,7 @@ class QuickActionSheetState(private val context: Context) {
                 },
                 onClose = { close() },
                 widgetsContent = {
-                    WidgetsContent { widgets ->
-                        this.widgets = widgets
-                        bindWidgetsIfReady()
-                    }
+                    WidgetsContent(widgets)
                 }
             )
         }
@@ -218,44 +213,36 @@ private fun QuickActionsContent(state: MainActivityQuickActionState) {
     }
 }
 
-@SuppressLint("ClickableViewAccessibility")
 @Composable
-private fun WidgetsContent(onWidgetsCreated: (FlexboxLayout) -> Unit) {
-    AndroidView(
-        modifier = Modifier.fillMaxWidth(),
-        factory = { context ->
-            object : ScrollView(context) {
-                override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                    val maxHeight = Resources.dp(context, 350f).toInt()
-                    super.onMeasure(
-                        widthMeasureSpec,
-                        MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
-                    )
-                }
-            }.apply {
-                isNestedScrollingEnabled = true
-                val widgets = FlexboxLayout(context).apply {
-                    alignItems = AlignItems.CENTER
-                    flexWrap = FlexWrap.WRAP
-                    justifyContent = JustifyContent.FLEX_START
-                    setPadding(
-                        Resources.dp(context, 16f).toInt(),
-                        Resources.dp(context, 16f).toInt(),
-                        Resources.dp(context, 16f).toInt(),
-                        Resources.dp(context, 16f).toInt()
-                    )
-                }
-                addView(
-                    widgets,
-                    android.widget.FrameLayout.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                )
-                onWidgetsCreated(widgets)
+private fun WidgetsContent(widgets: List<ToolWidgetSnapshot>) {
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 350.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalArrangement = Arrangement.Top
+    ) {
+        widgets.forEach { widget ->
+            val modifier = when (widget.size) {
+                ToolSummarySize.Half -> Modifier
+                    .fillMaxWidth(0.5f)
+                    .aspectRatio(172f / 102f)
+                ToolSummarySize.Full -> Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(352f / 204f)
+                ToolSummarySize.TallFull -> Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(352f / 306f)
             }
+            Image(
+                bitmap = widget.bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = modifier.padding(4.dp)
+            )
         }
-    )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
