@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-abstract class AndromedaCoroutineWidget(
+abstract class CoroutineAppWidgetProvider(
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : AppWidgetProvider() {
     override fun onUpdate(

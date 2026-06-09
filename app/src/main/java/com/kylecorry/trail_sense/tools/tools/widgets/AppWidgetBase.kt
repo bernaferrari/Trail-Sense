@@ -7,7 +7,7 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-abstract class AppWidgetBase(private val widgetId: String) : AndromedaCoroutineWidget() {
+abstract class AppWidgetBase(private val widgetId: String) : CoroutineAppWidgetProvider() {
 
     suspend fun getRemoteViews(context: Context, appWidgetId: Int): RemoteViews {
         return getUpdatedRemoteViews(context, AppWidgetManager.getInstance(context), appWidgetId)
