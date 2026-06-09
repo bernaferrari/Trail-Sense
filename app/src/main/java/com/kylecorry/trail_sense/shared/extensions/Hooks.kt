@@ -2,25 +2,17 @@ package com.kylecorry.trail_sense.shared.extensions
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
 import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
 import com.kylecorry.andromeda.fragments.LifecycleHookTrigger
-import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
-import com.kylecorry.andromeda.fragments.onBackPressed
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
 import com.kylecorry.andromeda.fragments.useTopic
 import com.kylecorry.andromeda.preferences.IPreferences
@@ -36,8 +28,6 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
@@ -199,78 +189,6 @@ fun ReactiveComponent.useLocation(refreshPolicy: SensorSubsystem.SensorRefreshPo
     }
 
     return location to isUpToDate
-}
-
-fun ReactiveAndromedaFragment.useNavController(): NavController {
-    return useMemo(useRootView()) { findNavController() }
-}
-
-fun ReactiveAndromedaFragment.useBackPressedCallback(
-    vararg values: Any?,
-    callback: OnBackPressedCallback.() -> Boolean
-) {
-    val navController = useNavController()
-    useEffectWithCleanup(*values) {
-        val listener = onBackPressed {
-            val consumed = callback()
-            if (!consumed) {
-                remove()
-                navController.popBackStack()
-            }
-        }
-
-        return@useEffectWithCleanup {
-            listener.remove()
-        }
-    }
-}
-
-fun ReactiveAndromedaFragment.useUnsavedChangesPrompt(hasChanges: Boolean) {
-    val activity = useActivity() as? ComponentActivity
-    useBackPressedCallback(hasChanges, activity) {
-        if (hasChanges && activity != null) {
-            Alerts.dialog(
-                activity,
-                getString(R.string.unsaved_changes),
-                getString(R.string.unsaved_changes_message),
-                okText = getString(R.string.dialog_leave)
-            ) { cancelled ->
-                if (!cancelled) {
-                    remove()
-                    activity.onBackPressedDispatcher.onBackPressed()
-                }
-            }
-            true
-        } else {
-            false
-        }
-    }
-}
-
-fun ReactiveAndromedaFragment.useShowDisclaimer(
-    title: String,
-    message: CharSequence,
-    shownKey: String,
-    okText: String = getString(android.R.string.ok),
-    cancelText: String? = getString(android.R.string.cancel),
-    considerShownIfCancelled: Boolean = true,
-    shownValue: Boolean = true,
-    onClose: (cancelled: Boolean, agreed: Boolean) -> Unit = { _, _ -> }
-) {
-    val context = useAndroidContext()
-    useEffect {
-        CustomUiUtils.disclaimer(
-            context,
-            title,
-            message,
-            shownKey,
-            okText,
-            cancelText,
-            considerShownIfCancelled,
-            shownValue,
-            onClose
-        )
-    }
 }
 
 fun ReactiveComponent.useLoadingIndicator(isLoading: Boolean, indicator: ILoadingIndicator) {
