@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.util.Size
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
@@ -393,18 +395,19 @@ object CustomUiUtils {
         horizontalPadding: Int = 16,
         verticalPadding: Int = 16
     ): View {
-        return TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            AndroidView(
-                factory = { content },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = horizontalPadding.dp,
-                        vertical = verticalPadding.dp
-                    )
+        return FrameLayout(context).apply {
+            setPadding(
+                Resources.dp(context, horizontalPadding.toFloat()).toInt(),
+                Resources.dp(context, verticalPadding.toFloat()).toInt(),
+                Resources.dp(context, horizontalPadding.toFloat()).toInt(),
+                Resources.dp(context, verticalPadding.toFloat()).toInt()
+            )
+            addView(
+                content,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
             )
         }
     }
