@@ -75,7 +75,7 @@ object FlashlightToolRegistration : ToolRegistration {
                     { context, _, _ ->
                         UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
-                    { ScreenFlashlightBrightnessVolumeAction(it) }
+                    { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }
                 )
             ),
             notificationChannelGroups = listOf(
