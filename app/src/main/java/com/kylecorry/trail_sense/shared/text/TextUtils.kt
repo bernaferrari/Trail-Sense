@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.annotation.RawRes
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.view.setPadding
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -24,7 +25,6 @@ import com.kylecorry.trail_sense.shared.text.nlp.processors.SequentialProcessor
 import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.PostProcessedTokenizer
 import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.SimpleWordTokenizer
 import com.kylecorry.trail_sense.shared.text.search.TextMatchStrategy
-import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 
 object TextUtils {
 
@@ -247,11 +247,11 @@ object TextUtils {
     private fun expandable(
         context: Context,
         title: String,
-        setContent: (TrailSenseTextView) -> Unit
+        setContent: (AppCompatTextView) -> Unit
     ): ExpansionLayout {
         val expandable = ExpansionLayout(context, null)
 
-        val titleView = TrailSenseTextView(context).apply {
+        val titleView = AppCompatTextView(context).apply {
             text = title
         }
         titleView.setCompoundDrawables(right = R.drawable.ic_drop_down)
@@ -313,8 +313,8 @@ object TextUtils {
         }
     }
 
-    private fun defaultTextView(context: Context): TrailSenseTextView {
-        return TrailSenseTextView(context).also {
+    private fun defaultTextView(context: Context): AppCompatTextView {
+        return AppCompatTextView(context).also {
             it.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT

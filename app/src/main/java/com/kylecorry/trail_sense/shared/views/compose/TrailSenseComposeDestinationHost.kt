@@ -12,6 +12,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -155,7 +156,6 @@ import com.kylecorry.trail_sense.shared.tiles.TileManager
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
 import com.kylecorry.trail_sense.tools.WhistleScreen
 import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstronomySettingsToolScreen
@@ -3540,7 +3540,7 @@ class TrailSenseComposeDestinationHost(
                 )
                 val file = files.createTemp("pdf")
                 val parsed = markdown.toMarkdown(content)
-                val textView = TrailSenseTextView(context)
+                val textView = AppCompatTextView(context)
                 textView.textSize = 6f
                 textView.setTextColor(AndroidColor.BLACK)
                 markdown.setParsedMarkdown(textView, parsed)
