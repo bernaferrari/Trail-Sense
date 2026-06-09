@@ -1,22 +1,9 @@
 package com.kylecorry.trail_sense.shared.text
 
 import android.content.Context
-import android.content.res.ColorStateList
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.annotation.RawRes
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.core.text.method.LinkMovementMethodCompat
-import androidx.core.view.setPadding
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.ExpansionLayout
-import com.kylecorry.andromeda.core.ui.setCompoundDrawables
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishContractionSplitter
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishStopWordRemover
 import com.kylecorry.trail_sense.shared.text.nlp.processors.LowercaseProcessor
@@ -97,39 +84,6 @@ object TextUtils {
         return context.resources.openRawResource(resource).use {
             it.bufferedReader().readText()
         }
-    }
-
-    fun getMarkdownView(
-        context: Context,
-        text: String,
-        shouldUppercaseSubheadings: Boolean = false
-    ): View {
-        val markdown = DependencyRegistry.get<MarkdownService>()
-        val sections = groupSections(getSections(text), null)
-        val children = sections.mapNotNull { section ->
-            val first = section.firstOrNull() ?: return@mapNotNull null
-            if (first.level != null && first.title != null) {
-                // Create an expandable section
-                val expandable = expandable(
-                    context, first.title
-                ) {
-                    markdown.setMarkdown(
-                        it,
-                        removeMarkdownComments(first.content) + "\n" + section.drop(1)
-                            .joinToString("\n") { it.toMarkdown(shouldUppercaseSubheadings) })
-                    it.movementMethod = LinkMovementMethodCompat.getInstance()
-                }
-                expandable
-            } else {
-                // Only text nodes
-                val t = defaultTextView(context)
-                markdown.setMarkdown(t, section.joinToString("\n") { it.toMarkdown() })
-                t.movementMethod = LinkMovementMethodCompat.getInstance()
-                t
-            }
-        }
-
-        return createMarkdownContainer(context, children)
     }
 
     fun getMarkdownKeywords(text: String): Set<String> {
@@ -244,83 +198,9 @@ object TextUtils {
         return total / queryKeywords.size
     }
 
-    private fun expandable(
-        context: Context,
-        title: String,
-        setContent: (AppCompatTextView) -> Unit
-    ): ExpansionLayout {
-        val expandable = ExpansionLayout(context, null)
-
-        val titleView = AppCompatTextView(context).apply {
-            text = title
-        }
-        titleView.setCompoundDrawables(right = R.drawable.ic_drop_down)
-        CustomUiUtils.setImageColor(titleView, Resources.androidTextColorSecondary(context))
-        titleView.compoundDrawablePadding = Resources.dp(context, 8f).toInt()
-        val padding = Resources.dp(context, 16f).toInt()
-        val margin = Resources.dp(context, 8f).toInt()
-        titleView.setPadding(padding)
-        titleView.gravity = Gravity.CENTER_VERTICAL
-        titleView.layoutParams = ViewGroup.MarginLayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).also {
-            it.setMargins(0, margin, 0, margin)
-        }
-        titleView.setBackgroundResource(R.drawable.rounded_rectangle)
-        titleView.backgroundTintList = ColorStateList.valueOf(
-            Resources.getAndroidColorAttr(
-                context,
-                com.google.android.material.R.attr.colorSurfaceContainer
-            )
-        )
-
-        expandable.addView(titleView)
-
-        expandable.addView(
-            defaultTextView(context).also {
-                it.setPadding(margin)
-                setContent(it)
-            }
-        )
-
-        expandable.setOnExpandStateChangedListener { isExpanded ->
-            titleView.setCompoundDrawables(right = if (isExpanded) R.drawable.ic_drop_down_expanded else R.drawable.ic_drop_down)
-            CustomUiUtils.setImageColor(titleView, Resources.androidTextColorSecondary(context))
-        }
-
-        return expandable
-    }
-
     fun removeMarkdownComments(text: String): String {
         val commentRegex = Regex("<!--.*?-->")
         return text.replace(commentRegex, "").trim()
-    }
-
-    private fun createMarkdownContainer(context: Context, children: List<View>): View {
-        return LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(Resources.dp(context, 16f).toInt())
-            children.forEach { child ->
-                addView(
-                    child,
-                    LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                )
-            }
-        }
-    }
-
-    private fun defaultTextView(context: Context): AppCompatTextView {
-        return AppCompatTextView(context).also {
-            it.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            it.setTextIsSelectable(true)
-        }
     }
 
 
