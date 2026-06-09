@@ -53,7 +53,6 @@ import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner

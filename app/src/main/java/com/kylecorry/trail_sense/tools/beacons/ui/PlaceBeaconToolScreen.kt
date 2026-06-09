@@ -52,7 +52,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate

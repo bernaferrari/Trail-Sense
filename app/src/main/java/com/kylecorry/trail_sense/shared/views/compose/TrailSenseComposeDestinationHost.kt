@@ -77,7 +77,6 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService

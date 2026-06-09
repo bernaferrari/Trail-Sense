@@ -58,7 +58,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.pickers.Pickers

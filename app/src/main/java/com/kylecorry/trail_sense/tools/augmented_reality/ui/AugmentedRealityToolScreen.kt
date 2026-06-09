@@ -50,7 +50,6 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.location.Satellite
