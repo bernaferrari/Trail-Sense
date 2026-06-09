@@ -10,6 +10,7 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -113,6 +116,8 @@ class CameraState(val context: Context) {
     internal var zoomValue by mutableFloatStateOf(0f)
         private set
     internal var invisibleState by mutableStateOf(false)
+        private set
+    internal var previewBitmap by mutableStateOf<Bitmap?>(null)
         private set
 
     private var backgroundResource: Int? = null
@@ -210,7 +215,7 @@ class CameraState(val context: Context) {
             context,
             owner,
             previewView = preview,
-            analyze = readFrames,
+            analyze = true,
             targetResolution = resolution,
             captureSettings = captureSettings,
             isBackCamera = useBackCamera,
@@ -225,6 +230,7 @@ class CameraState(val context: Context) {
         camera = null
         keepScreenOn = false
         imageListener = null
+        previewBitmap = null
         synchronized(startLock) {
             isStarted = false
         }
@@ -363,7 +369,7 @@ class CameraState(val context: Context) {
             camera?.setTorch(torchOn)
             hasPendingChanges = false
         }
-        if (captureListener == null && imageListener == null) {
+        if (captureListener == null && imageListener == null && invisibleState) {
             camera?.image?.close()
             return true
         }
@@ -371,6 +377,7 @@ class CameraState(val context: Context) {
             val rotation = camera?.image?.imageInfo?.rotationDegrees?.toFloat() ?: 0f
             val bitmap = camera?.image?.image?.toBitmap(rotation)
             bitmap?.let {
+                previewBitmap = it
                 captureListener?.invoke(it)
                 imageListener?.invoke(it)
 
@@ -406,15 +413,20 @@ fun CameraPreview(
             } else {
                 0f
             }
-        )
+        ).pointerInteropFilter {
+            state.dispatchTouchEvent(it)
+            !state.passThroughTouchEvents
+        }
     ) {
-        AndroidView(
-            factory = { state.preview },
-            update = {
-                state.applyViewAttributes()
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+        state.applyViewAttributes()
+        state.previewBitmap?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
         if (state.flipEnabledState) {
             IconButton(
                 onClick = state::flipCamera,
