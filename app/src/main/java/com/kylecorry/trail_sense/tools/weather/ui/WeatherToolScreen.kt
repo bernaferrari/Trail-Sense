@@ -50,6 +50,7 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
+import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -79,8 +80,7 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWeatherFrequencyCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder
-import com.kylecorry.trail_sense.tools.weather.ui.charts.HumidityChart
-import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
+import com.kylecorry.trail_sense.tools.weather.ui.charts.WeatherLineChart
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
@@ -448,14 +448,21 @@ private class WeatherController(
             return
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
-        CustomUiUtils.showChart(
-            fragment, fragment.getString(
+        CustomUiUtils.showComposeContentDialog(
+            context = fragment.requireContext(),
+            title = fragment.getString(
                 R.string.humidity_history,
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
-            val chart = HumidityChart(it)
-            chart.plot(readings)
+            WeatherLineChart(
+                readings = readings,
+                minimum = 0f,
+                maximum = 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+            )
         }
     }
 
@@ -473,14 +480,20 @@ private class WeatherController(
             return
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
-        CustomUiUtils.showChart(
-            fragment, fragment.getString(
+        CustomUiUtils.showComposeContentDialog(
+            context = fragment.requireContext(),
+            title = fragment.getString(
                 R.string.temperature_history,
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
-            val chart = TemperatureChart(it)
-            chart.plot(readings)
+            WeatherLineChart(
+                readings = readings,
+                freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+            )
         }
     }
 

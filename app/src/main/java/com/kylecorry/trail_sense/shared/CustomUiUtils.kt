@@ -738,6 +738,42 @@ object CustomUiUtils {
         )
     }
 
+    fun showComposeContentDialog(
+        context: Context,
+        title: String,
+        content: CharSequence? = null,
+        composeContent: @Composable () -> Unit
+    ) {
+        val view = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                if (content != null) {
+                    Text(
+                        text = content.toString(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                }
+                composeContent()
+            }
+        }
+        Alerts.dialog(
+            context,
+            title,
+            contentView = view,
+            cancelText = null
+        )
+    }
+
     fun Resources.getPrimaryColor(context: Context): Int {
         return try {
             getAndroidColorAttr(context, androidx.appcompat.R.attr.colorPrimary)

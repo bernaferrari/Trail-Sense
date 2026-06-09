@@ -1,17 +1,22 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
 import android.content.Context
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
+import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.ui.charts.TemperatureChart
+import com.kylecorry.trail_sense.tools.weather.ui.charts.WeatherLineChart
 import java.time.ZonedDateTime
 
 class ShowHighLowTemperatureDialogCommand(
@@ -37,10 +42,17 @@ class ShowHighLowTemperatureDialogCommand(
 
         val now = formatter.formatTemperature(forecast.first().value.convertTo(temperatureUnits))
 
-        CustomUiUtils.showChart(
-            context,
-            context.getString(R.string.next_24_hours),
-            context.getString(
+        val readings = forecast.map { reading ->
+            Reading(
+                reading.value.convertTo(temperatureUnits).value,
+                reading.time
+            )
+        }
+
+        CustomUiUtils.showComposeContentDialog(
+            context = context,
+            title = context.getString(R.string.next_24_hours),
+            content = context.getString(
                 R.string.historic_temperatures_full_disclaimer,
                 30
             ) + "\n\n" + context.getString(
@@ -48,13 +60,13 @@ class ShowHighLowTemperatureDialogCommand(
                 now
             )
         ) {
-            val chart = TemperatureChart(it)
-            chart.plot(forecast.map { reading ->
-                Reading(
-                    reading.value.convertTo(temperatureUnits).value,
-                    reading.time
-                )
-            })
+            WeatherLineChart(
+                readings = readings,
+                freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+            )
         }
     }
 }
