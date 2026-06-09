@@ -18,9 +18,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.AbstractComposeView
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -190,17 +190,24 @@ open class EnhancedImageView @JvmOverloads constructor(
             Box(
                 modifier = modifier
                     .fillMaxSize()
+                    .pointerInteropFilter {
+                        imageView.dispatchTouchEvent(it)
+                    }
                     .onSizeChanged {
                         contentWidth = it.width
                         contentHeight = it.height
                     }
             ) {
-                AndroidView(
-                    factory = { imageView },
-                    modifier = Modifier.fillMaxSize()
-                )
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     renderVersion
+                    if (contentWidth > 0 && contentHeight > 0) {
+                        imageView.measure(
+                            View.MeasureSpec.makeMeasureSpec(contentWidth, View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY)
+                        )
+                        imageView.layout(0, 0, contentWidth, contentHeight)
+                        imageView.draw(drawContext.canvas.nativeCanvas)
+                    }
                     if (::drawer.isInitialized) {
                         drawer.canvas = drawContext.canvas.nativeCanvas
                     } else {
