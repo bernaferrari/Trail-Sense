@@ -11,12 +11,10 @@ import android.view.Gravity
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,15 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
@@ -55,7 +49,6 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
@@ -671,71 +664,6 @@ object CustomUiUtils {
                 onPressurePick(null)
             }
         }
-    }
-
-    fun showChart(
-        fragment: TrailSenseDestinationHost,
-        title: String,
-        content: CharSequence? = null,
-        populateFn: (Chart) -> Unit
-    ) {
-        showChart(fragment.requireContext(), title, content, populateFn)
-    }
-
-    fun showChart(
-        context: Context,
-        title: String,
-        content: CharSequence? = null,
-        populateFn: (Chart) -> Unit
-    ) {
-        val view = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            val context = LocalContext.current
-            val chart = remember {
-                Chart(context).also(populateFn)
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                if (content != null) {
-                    Text(
-                        text = content.toString(),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
-                }
-                var chartSize by remember { mutableStateOf(IntSize.Zero) }
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.chart_height))
-                        .onSizeChanged { chartSize = it }
-                ) {
-                    if (chartSize.width <= 0 || chartSize.height <= 0) {
-                        return@Canvas
-                    }
-                    chart.measure(
-                        View.MeasureSpec.makeMeasureSpec(chartSize.width, View.MeasureSpec.EXACTLY),
-                        View.MeasureSpec.makeMeasureSpec(chartSize.height, View.MeasureSpec.EXACTLY)
-                    )
-                    chart.layout(0, 0, chartSize.width, chartSize.height)
-                    chart.draw(drawContext.canvas.nativeCanvas)
-                }
-            }
-        }
-        Alerts.dialog(
-            context,
-            title,
-            contentView = view,
-            cancelText = null
-        )
     }
 
     fun showComposeContentDialog(
