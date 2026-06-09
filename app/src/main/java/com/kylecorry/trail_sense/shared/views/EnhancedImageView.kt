@@ -24,10 +24,10 @@ import androidx.compose.ui.platform.LocalView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.views.subscaleview.ImageSource
-import com.kylecorry.andromeda.views.subscaleview.SubsamplingScaleImageView
-import com.kylecorry.andromeda.views.subscaleview.decoder.SkiaImageDecoder
-import com.kylecorry.andromeda.views.subscaleview.decoder.SkiaImageRegionDecoder
+import com.kylecorry.trail_sense.shared.views.subscaleview.ImageSource
+import com.kylecorry.trail_sense.shared.views.subscaleview.SubsamplingScaleImageView
+import com.kylecorry.trail_sense.shared.views.subscaleview.decoder.SkiaImageDecoder
+import com.kylecorry.trail_sense.shared.views.subscaleview.decoder.SkiaImageRegionDecoder
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.math.trigonometry.Trigonometry
