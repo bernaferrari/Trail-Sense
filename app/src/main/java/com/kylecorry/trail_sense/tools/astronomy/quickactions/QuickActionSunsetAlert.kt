@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.astronomy.quickactions
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -13,6 +12,7 @@ import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.launch
 import java.time.Duration
 
 class QuickActionSunsetAlert(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
@@ -40,7 +40,7 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, fragment: TrailSenseDes
 
     override fun onClick() {
         super.onClick()
-        fragment.inBackground {
+        fragment.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
@@ -55,7 +55,7 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, fragment: TrailSenseDes
                     )
                 }
 
-                else -> return@inBackground
+                else -> return@launch
             }
         }
     }

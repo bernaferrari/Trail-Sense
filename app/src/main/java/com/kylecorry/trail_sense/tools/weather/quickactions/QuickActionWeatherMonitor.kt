@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.weather.quickactions
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
@@ -11,6 +10,7 @@ import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAle
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
+import kotlinx.coroutines.launch
 
 class QuickActionWeatherMonitor(
     btn: QuickActionButtonView,
@@ -36,7 +36,7 @@ class QuickActionWeatherMonitor(
 
     override fun onClick() {
         super.onClick()
-        fragment.inBackground {
+        fragment.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {

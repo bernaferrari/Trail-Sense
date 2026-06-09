@@ -3,8 +3,8 @@ package com.kylecorry.trail_sense.shared.maps.picker
 import android.graphics.Color
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.fragments.inBackground
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.sol.units.Coordinate
@@ -16,6 +16,9 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPrefer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapLocationPickerViewManager {
     private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
@@ -27,19 +30,21 @@ class MapLocationPickerViewManager {
         synchronized(runningLock) {
             isRunning = true
         }
-        owner.inBackground {
+        owner.lifecycleScope.launch(Dispatchers.Default) {
             view.setLayersWithPreferences(
                 MapToolRegistration.MAP_ID,
                 repo.getActiveLayerIds(MapToolRegistration.MAP_ID),
                 listOf(selectedPointLayer)
             )
 
-            synchronized(runningLock) {
-                if (isRunning) {
-                    view.start()
+            withContext(Dispatchers.Main) {
+                synchronized(runningLock) {
+                    if (isRunning) {
+                        view.start()
 
-                    if (view is View) {
-                        view.invalidate()
+                        if (view is View) {
+                            view.invalidate()
+                        }
                     }
                 }
             }
