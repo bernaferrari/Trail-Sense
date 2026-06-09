@@ -15,7 +15,6 @@ import android.view.KeyEvent
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,16 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
-import androidx.fragment.app.commitNow
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import androidx.navigation.fragment.NavHostFragment
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
@@ -53,6 +49,8 @@ import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavHost
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavigator
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
@@ -88,6 +86,7 @@ class MainActivity : AndromedaActivity() {
 
     private val themeProvider = ThemeProvider()
     private var rootNavController: NavController? = null
+    private var composeNavigator: TrailSenseComposeNavigator? = null
     private var activeDestinationHost: TrailSenseDestinationHost? = null
 
     private val permissions = mutableListOf(
@@ -132,9 +131,12 @@ class MainActivity : AndromedaActivity() {
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
-        mainViews = createMainActivityViews(this)
+        setupNavController()
+        mainViews = createMainActivityViews(
+            activity = this,
+            navigator = composeNavigator ?: error("Compose navigator is not initialized")
+        )
         setContentView(views.root)
-        setupNavHost()
 
         // Handle black theme
         if (isBlackTheme) {
@@ -161,20 +163,15 @@ class MainActivity : AndromedaActivity() {
         mainViews = null
     }
 
-    private fun setupNavHost() {
-        val existingNavHost =
-            supportFragmentManager.findFragmentById(R.id.fragment_holder) as? NavHostFragment
-        if (existingNavHost != null) {
-            rootNavController = existingNavHost.navController
-            return
-        }
-
-        val navHost = NavHostFragment()
-        supportFragmentManager.commitNow {
-            replace(R.id.fragment_holder, navHost)
-            setPrimaryNavigationFragment(navHost)
-        }
-        rootNavController = navHost.navController
+    private fun setupNavController() {
+        val navController = NavController(this)
+        val navigator = TrailSenseComposeNavigator()
+        navController.setLifecycleOwner(this)
+        navController.setOnBackPressedDispatcher(onBackPressedDispatcher)
+        navController.setViewModelStore(viewModelStore)
+        navController.navigatorProvider.addNavigator(navigator)
+        rootNavController = navController
+        composeNavigator = navigator
     }
 
     fun getRootNavController(): NavController? {
@@ -677,12 +674,15 @@ private data class MainActivityViews(
     val root: CoordinatorLayout,
     val colorFilter: View,
     val errorBanner: ErrorBannerState,
-    val fragmentHolder: FrameLayout,
+    val navigator: TrailSenseComposeNavigator,
     val quickActionsSheet: QuickActionSheetState,
     val bottomNavigation: MainBottomNavigationState
 )
 
-private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
+private fun createMainActivityViews(
+    activity: MainActivity,
+    navigator: TrailSenseComposeNavigator
+): MainActivityViews {
     val context = activity
     val root = CoordinatorLayout(context).apply {
         id = R.id.coordinator
@@ -695,9 +695,6 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
     val errorBanner = ErrorBannerState(context)
     val bottomNavigation = MainBottomNavigationState()
     val quickActionsSheet = QuickActionSheetState(context)
-    val fragmentHolder = FrameLayout(context).apply {
-        id = R.id.fragment_holder
-    }
 
     val colorFilter = TrailSenseComposeRootView(
         context,
@@ -705,7 +702,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
     ) {
         MainActivityContent(
             errorBanner = errorBanner,
-            fragmentHolder = fragmentHolder,
+            navigator = navigator,
             quickActionsSheet = quickActionsSheet,
             bottomNavigation = bottomNavigation,
             onBottomNavigationItemSelected = activity::onBottomNavigationItemSelected,
@@ -728,7 +725,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
         root,
         colorFilter,
         errorBanner,
-        fragmentHolder,
+        navigator,
         quickActionsSheet,
         bottomNavigation
     )
@@ -738,7 +735,7 @@ private fun createMainActivityViews(activity: MainActivity): MainActivityViews {
 @Composable
 private fun MainActivityContent(
     errorBanner: ErrorBannerState,
-    fragmentHolder: FrameLayout,
+    navigator: TrailSenseComposeNavigator,
     quickActionsSheet: QuickActionSheetState,
     bottomNavigation: MainBottomNavigationState,
     onBottomNavigationItemSelected: (Int) -> Unit,
@@ -747,8 +744,8 @@ private fun MainActivityContent(
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             errorBanner.Content()
-            AndroidView(
-                factory = { fragmentHolder },
+            TrailSenseComposeNavHost(
+                navigator = navigator,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxSize()

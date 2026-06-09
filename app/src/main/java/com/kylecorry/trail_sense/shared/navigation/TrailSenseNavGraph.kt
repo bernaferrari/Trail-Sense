@@ -7,7 +7,6 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavGraphNavigator
 import androidx.navigation.NavOptions
 import androidx.navigation.NavType
-import androidx.navigation.fragment.FragmentNavigator
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.*
@@ -18,11 +17,10 @@ object TrailSenseNavGraph {
         val provider = navController.navigatorProvider
         val graph = NavGraph(provider.getNavigator(NavGraphNavigator::class.java))
         graph.setStartDestination(startDestination)
-        val fragmentNavigator = provider.getNavigator(FragmentNavigator::class.java)
+        val composeNavigator = provider.getNavigator(TrailSenseComposeNavigator::class.java)
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.action_navigation
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "NavigationScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -44,9 +42,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.action_astronomy
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AstronomyScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -64,9 +61,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.action_experimental_tools
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -75,9 +71,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.action_weather
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WeatherScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -86,9 +81,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.mapFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -97,9 +91,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.mapSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -108,9 +101,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.offlineMapViewFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ViewVectorMapScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -122,9 +114,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.action_settings
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -232,9 +223,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.experimentationFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ExperimentationFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -243,9 +233,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fieldGuideFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FieldGuideScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -254,9 +243,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fieldGuidePageFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FieldGuidePageScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -269,9 +257,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.createFieldGuideSightingFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateFieldGuideSightingScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -287,9 +274,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.sightingListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SightingListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -301,9 +287,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.createFieldGuidePageFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateFieldGuidePageScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -320,9 +305,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.signalFinderFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SignalFinderScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -331,9 +315,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolDeclinationFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "DeclinationScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -342,9 +325,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.beacon_list
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -376,9 +358,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.placeBeaconFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PlaceBeaconScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -400,9 +381,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.clinometerFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClinometerScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -411,9 +391,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.calibrateAltimeterFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateAltimeterScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -422,9 +401,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.calibrateBarometerFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateBarometerScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -433,9 +411,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.calibrateCompassFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateCompassScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -444,9 +421,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.calibrateGPSFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateGPSScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -455,9 +431,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.licenseFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "LicenseFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -466,9 +441,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.weatherSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WeatherSettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -477,9 +451,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.navigationSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "NavigationSettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -488,9 +461,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.pathsSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathsSettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -499,9 +471,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.beaconsSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -510,9 +481,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.pluginsSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PluginsSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -521,9 +491,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.pluginDetailsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PluginDetailsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -535,9 +504,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.astronomySettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AstronomySettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -546,9 +514,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.guideListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "GuideListFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -566,9 +533,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.guideFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "GuideFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -585,9 +551,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.viewQrFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "QRShareScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -604,9 +569,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.levelFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "LevelFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -615,9 +579,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.beaconDetailsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BeaconDetailsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -638,9 +601,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.packItemListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PackItemListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -662,9 +624,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.createItemFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateItemScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -681,9 +642,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolConvertFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ConvertFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -692,9 +652,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolCliffHeightFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolCliffHeightFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -703,9 +662,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolWhistleFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolWhistleFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -714,9 +672,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolSolarPanel
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSolarPanel"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -725,9 +682,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.waterPurificationFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WaterPurificationFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -736,9 +692,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolFlashlight
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolFlashlight"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -756,9 +711,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolClockFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClockScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -767,9 +721,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolLightning
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLightning"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -778,9 +731,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.rulerFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "RulerScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -789,9 +741,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolBattery
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolBattery"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -809,9 +760,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolTriangulate
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolTriangulate"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -820,9 +770,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolBallistics
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolBallistics"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -831,9 +780,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolPermits
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolPermits"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -842,9 +790,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolMetalDetector
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolMetalDetector"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -853,9 +800,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolSurvivalGuideList
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSurvivalGuideList"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -867,9 +813,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolSurvivalGuideReader
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSurvivalGuideReader"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -885,9 +830,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolNotes
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolNotes"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -905,9 +849,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolNotesCreate
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolNotesCreate"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -920,9 +863,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolWhiteNoise
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolWhiteNoise"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -931,9 +873,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentBacktrack
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -961,9 +902,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.cloudFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CloudScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -985,9 +925,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.sensorDetailsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SensorDetailsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -996,9 +935,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolLightFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolLightFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1007,9 +945,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.tidesFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TidesScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1027,9 +964,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolScreenFlashlight
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolScreenFlashlight"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1038,9 +974,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolPedometer
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolSpeedometer"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1049,9 +984,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentTurnBackSettings
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TurnBackSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1060,9 +994,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentWaterBoilTimerSettings
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "WaterBoilTimerSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1071,9 +1004,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.calibrateOdometerFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CalibrateOdometerFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1091,9 +1023,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.createTideFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CreateTideScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1106,9 +1037,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.tideListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TideListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1126,9 +1056,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.photoMapsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PhotoMapsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1154,9 +1083,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.mapListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "MapListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1174,9 +1102,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.flashlightSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FlashlightSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1185,9 +1112,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.thermometerSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ThermometerSettingsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1196,9 +1122,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.cellSignalSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CellSignalSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1207,9 +1132,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.bubbleLevelSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BubbleLevelSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1218,9 +1142,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.clockSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClockSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1229,9 +1152,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.privacySettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PrivacySettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1249,9 +1171,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.themeSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ThemeSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1260,9 +1181,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.backupSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "BackupSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1271,9 +1191,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.powerSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PowerSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1282,9 +1201,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.unitSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "UnitSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1293,9 +1211,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.experimentalSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ExperimentalSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1304,9 +1221,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolRulerSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "RulerSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1315,9 +1231,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.sensorSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "SensorSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1326,9 +1241,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.photoMapSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PhotoMapSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1337,9 +1251,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.temperatureEstimationFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TemperatureEstimationScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1348,9 +1261,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.packListFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PackListScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1368,9 +1280,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.diagnosticsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "DiagnosticsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1388,9 +1299,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.pathDetailsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "PathOverviewScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1407,9 +1317,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.tideSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TideSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1418,9 +1327,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.clinometerSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClinometerSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1429,9 +1337,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.augmentedRealitySettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AugmentedRealitySettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1440,9 +1347,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.cameraSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CameraSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1451,9 +1357,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.errorSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ErrorSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1462,9 +1367,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.scanQrFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ScanQRScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1473,9 +1377,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.augmentedRealityFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "AugmentedRealityScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1492,9 +1395,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentStrideLengthEstimation
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "StrideLengthEstimationScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1503,9 +1405,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.cloudResultsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "CloudResultsScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1514,9 +1415,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.climateFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ClimateScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1525,9 +1425,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.mirrorCameraFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolMirrorCameraFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1536,9 +1435,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.magnifierFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolMagnifierFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1547,9 +1445,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.turnBackFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "TurnBackScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1558,9 +1455,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentLocalMessaging
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLocalMessaging"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1569,9 +1465,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentLocalTalk
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "FragmentToolLocalTalk"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1580,9 +1475,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.toolsSettingsFragment
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ToolsSettingsFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
@@ -1591,9 +1485,8 @@ object TrailSenseNavGraph {
             graph.addDestination(this)
         }
 
-        fragmentNavigator.createDestination().apply {
+        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolErrorHandler
-            setClassName(COMPOSE_DESTINATION_FRAGMENT_CLASS)
             label = "ErrorHandlerFragment"
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)

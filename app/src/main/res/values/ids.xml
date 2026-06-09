@@ -33,7 +33,6 @@
     <item name="error_text" type="id" />
     <item name="error_action" type="id" />
     <item name="error_close" type="id" />
-    <item name="fragment_holder" type="id" />
     <item name="quick_actions_sheet" type="id" />
     <item name="tabs" type="id" />
     <item name="close_button" type="id" />
