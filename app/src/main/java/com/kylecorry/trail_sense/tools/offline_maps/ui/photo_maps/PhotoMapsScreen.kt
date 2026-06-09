@@ -30,8 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -44,6 +42,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -56,7 +55,7 @@ import kotlin.math.absoluteValue
 
 @Composable
 fun PhotoMapsToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PhotoMapsController(fragment) }
@@ -72,14 +71,15 @@ fun PhotoMapsToolScreen(
 }
 
 private class PhotoMapsController(
-    private val fragment: TrailSenseComposeDestinationFragment
+    private val fragment: TrailSenseDestinationHost
 ) {
 
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
 
-    private var mapId = fragment.requireArguments().getLong("mapId")
-    private var autoLockLocation = fragment.requireArguments().getBoolean("autoLockLocation", false)
+    private var mapId = fragment.destinationArguments?.getLong("mapId") ?: error("Missing map id")
+    private var autoLockLocation =
+        fragment.destinationArguments?.getBoolean("autoLockLocation", false) == true
     private var map: PhotoMap? = null
     private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null
@@ -371,7 +371,7 @@ private fun PhotoMapsScreen(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
     childSpec: PhotoMapChildSpec?,
-    fragment: TrailSenseComposeDestinationFragment?,
+    fragment: TrailSenseDestinationHost?,
     onWarpComplete: () -> Unit,
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationController: (PhotoMapCalibrationController) -> Unit,
