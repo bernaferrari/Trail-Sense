@@ -2,11 +2,12 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlinx.coroutines.launch
 
 
 class TogglePathVisibilityCommand(
@@ -16,7 +17,7 @@ class TogglePathVisibilityCommand(
 ) : IPathCommand {
 
     override fun execute(path: Path) {
-        lifecycleOwner.inBackground {
+        lifecycleOwner.lifecycleScope.launch {
             onIO {
                 pathService.addPath(path.copy(style = path.style.copy(visible = !path.style.visible)))
             }
