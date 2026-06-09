@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.content.Context
 import android.graphics.Color
 import android.view.View
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -23,6 +22,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileMapLayer
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
 import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
@@ -49,7 +49,7 @@ class PhotoMapToolLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, photoMapId: Long, fragment: TrailSenseComposeDestinationFragment) {
+    fun resume(context: Context, view: IMapView, photoMapId: Long, fragment: TrailSenseDestinationHost) {
         synchronized(runningLock) {
             isRunning = true
         }

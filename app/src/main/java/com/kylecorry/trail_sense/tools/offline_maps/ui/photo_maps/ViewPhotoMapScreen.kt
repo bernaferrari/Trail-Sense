@@ -13,12 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -26,9 +26,6 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.fragments.observeFlow
-import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -47,11 +44,12 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -65,12 +63,14 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
 fun ViewPhotoMapToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     mapId: Long,
     autoLockLocation: Boolean,
     onController: (ViewPhotoMapController) -> Unit,
@@ -102,7 +102,7 @@ fun ViewPhotoMapToolScreen(
 }
 
 class ViewPhotoMapController(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val mapId: Long,
     private val autoLockLocation: Boolean
 ) {
@@ -126,7 +126,7 @@ class ViewPhotoMapController(
     private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
-    private val screenLight by lazy { ScreenTorch(fragment.requireActivity().window) }
+    private val screenLight by lazy { ScreenTorch(fragment.andromedaActivity.window) }
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
@@ -165,7 +165,7 @@ class ViewPhotoMapController(
     fun onCreate() {
         shouldLockOnMapLoad = autoLockLocation
 
-        fragment.observe(gps) {
+        gps.asLiveData().observe(fragment.lifecycleOwner) {
             views.map.userLocation = gps.location
             views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
             updateDestination()
@@ -174,8 +174,8 @@ class ViewPhotoMapController(
                 views.map.mapCenter = gps.location
             }
         }
-        fragment.observe(altimeter) { updateDestination() }
-        fragment.observe(compass) {
+        altimeter.asLiveData().observe(fragment.lifecycleOwner) { updateDestination() }
+        compass.asLiveData().observe(fragment.lifecycleOwner) {
             compass.declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
             val bearing = compass.rawBearing
             views.map.userAzimuth = compass.bearing
@@ -185,8 +185,10 @@ class ViewPhotoMapController(
             updateDestination()
         }
 
-        fragment.observeFlow(navigator.destination2) {
-            setDestination(it)
+        fragment.lifecycleScope.launch {
+            navigator.destination2.collect {
+                setDestination(it)
+            }
         }
 
         reloadMap()
@@ -429,7 +431,7 @@ class ViewPhotoMapController(
                 updateDestination()
             }
         }
-        fragment.activity?.let { screenLock.updateLock(it) }
+        screenLock.updateLock(fragment.andromedaActivity)
     }
 
     private fun onMapLoad(map: PhotoMap) {
@@ -463,7 +465,7 @@ class ViewPhotoMapController(
         views.map.isZoomEnabled = true
 
         // Show the bottom navigation
-        fragment.requireMainActivity().setBottomNavigationEnabled(true)
+        (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(true)
 
         when (mapLockMode) {
             MapLockMode.Location -> {
@@ -543,7 +545,7 @@ class ViewPhotoMapController(
                 views.zoomOutBtn.isVisible = false
 
                 // Hide the bottom navigation
-                fragment.requireMainActivity().setBottomNavigationEnabled(false)
+                (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(false)
             }
         }
     }
@@ -559,7 +561,7 @@ class ViewPhotoMapController(
         screenLight.off()
 
         // Show the bottom navigation
-        fragment.requireMainActivity().setBottomNavigationEnabled(true)
+        (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(true)
     }
 
     fun recenter() {
@@ -570,12 +572,12 @@ class ViewPhotoMapController(
     }
 
     fun onDestroy() {
-        fragment.activity?.let { screenLock.releaseLock(it) }
+        screenLock.releaseLock(fragment.andromedaActivity)
         photoMapViews = null
     }
 
     private fun updatePeriodic() {
-        fragment.activity?.let { screenLock.updateLock(it) }
+        screenLock.updateLock(fragment.andromedaActivity)
         val views = photoMapViews ?: return
         fragment.inBackground {
             val attribution = views.map.getAttribution(fragment.requireContext())
