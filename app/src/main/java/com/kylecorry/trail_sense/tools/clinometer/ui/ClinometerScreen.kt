@@ -37,14 +37,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.toast
+import androidx.lifecycle.observe
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.andromeda.fragments.observe
+import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.clinometer.IClinometer
@@ -63,12 +62,12 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.getMarkdown
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
@@ -85,7 +84,7 @@ import kotlin.math.min
 
 @Composable
 fun ClinometerToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     onController: (ClinometerLockController?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -114,7 +113,7 @@ fun ClinometerToolScreen(
 }
 
 private class ClinometerController(
-    private val fragment: TrailSenseComposeDestinationFragment
+    private val fragment: TrailSenseDestinationHost
 ) : ClinometerLockController {
 
     private var clinometerViews: ClinometerViews? =
@@ -211,11 +210,11 @@ private class ClinometerController(
         views.arView.showPosition = false
         views.arView.passThroughTouchEvents = true
 
-        views.arView.bind(views.camera, fragment.viewLifecycleOwner)
+        views.arView.bind(views.camera, fragment.lifecycleOwner)
 
-        fragment.observe(sideClinometer) { updateUI() }
-        fragment.observe(cameraClinometer) { updateUI() }
-        fragment.observe(deviceOrientation) { updateUI() }
+        sideClinometer.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
+        cameraClinometer.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
+        deviceOrientation.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
     }
 
     private fun startSideClinometer() {
