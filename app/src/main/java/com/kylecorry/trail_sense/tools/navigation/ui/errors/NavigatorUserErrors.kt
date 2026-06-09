@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.errors
 
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -10,12 +8,13 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.alerts.MissingSensorAlert
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import java.util.Locale
 
 class NavigatorUserErrors(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val onDisplayAccuracyTips: () -> Unit
 ) {
 

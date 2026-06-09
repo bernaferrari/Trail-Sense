@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui.layers
 
 import android.content.Context
 import android.view.View
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
@@ -10,6 +9,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 
 class NavigationCompassLayerManager {
@@ -21,7 +21,7 @@ class NavigationCompassLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, fragment: TrailSenseComposeDestinationFragment) {
+    fun resume(context: Context, view: IMapView, fragment: TrailSenseDestinationHost) {
         synchronized(runningLock) {
             isRunning = true
         }
