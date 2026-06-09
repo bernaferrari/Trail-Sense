@@ -8,12 +8,8 @@ import android.graphics.Color as AndroidColor
 import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.background
@@ -58,7 +54,6 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -79,7 +74,7 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
-import com.kylecorry.andromeda.fragments.inBackground as runInBackground
+import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
@@ -279,7 +274,14 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
 
-class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
+class TrailSenseComposeDestinationHost(
+    private val context: Context,
+    private val activity: MainActivity,
+    private val rootView: View,
+    private val arguments: Bundle?,
+    override val lifecycleOwner: LifecycleOwner,
+    private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
+) : ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost, TrailSenseReactiveDestinationHost {
 
@@ -311,47 +313,57 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     private var beaconListController: BeaconListControllerHost? = null
     private var mapController: MapControllerHost? = null
     private var resumeCount = 0
-    private var permissionAction: (() -> Unit)? = null
-    private var permissionLauncher: ActivityResultLauncher<Array<String>>? = null
     private var specialPermissionAction: (() -> Unit)? = null
     private val reactiveComponent = TrailSenseReactiveComponent(
         contextProvider = ::requireContext,
         activityProvider = ::requireActivity,
         rootViewProvider = ::requireView,
-        lifecycleOwnerProvider = { this },
-        viewLifecycleOwnerProvider = { viewLifecycleOwner },
+        lifecycleOwnerProvider = { lifecycleOwner },
+        viewLifecycleOwnerProvider = { lifecycleOwner },
         argumentsProvider = ::requireArguments,
         onStateChanged = ::onReactiveUpdate
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        permissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) {
-            val action = permissionAction
-            permissionAction = null
-            action?.invoke()
-        }
+    fun requireActivity(): MainActivity {
+        return activity
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        permissionLauncher?.unregister()
-        permissionLauncher = null
+    fun requireView(): View {
+        return rootView
     }
 
-    override val lifecycleOwner: LifecycleOwner
-        get() = viewLifecycleOwner
+    fun requireArguments(): Bundle {
+        return arguments ?: Bundle.EMPTY
+    }
 
     override val lifecycleScope: CoroutineScope
-        get() = viewLifecycleOwner.lifecycleScope
+        get() = lifecycleOwner.lifecycleScope
 
     override val andromedaActivity: AndromedaActivity
-        get() = requireActivity() as AndromedaActivity
+        get() = activity
 
     override val destinationArguments: Bundle?
         get() = arguments
+
+    override fun requireContext(): Context {
+        return context
+    }
+
+    override fun getResources(): android.content.res.Resources {
+        return context.resources
+    }
+
+    override fun getString(resId: Int): String {
+        return context.getString(resId)
+    }
+
+    override fun getString(resId: Int, vararg formatArgs: Any?): String {
+        return context.getString(resId, *formatArgs)
+    }
+
+    override fun startActivity(intent: Intent) {
+        context.startActivity(intent)
+    }
 
     override val hookResetOnResume: Int
         get() = resumeCount
@@ -375,15 +387,13 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         action: String?,
         onAction: () -> Unit
     ): Snackbar {
-        val playBar = view?.findViewWithTag<View>(getString(R.string.tag_play_bar))
-        return Alerts.snackbar(
-            this,
-            playBar ?: requireView(),
-            text,
-            duration,
-            action,
-            onAction
-        )
+        val playBar = rootView.findViewWithTag<View>(getString(R.string.tag_play_bar))
+        return Snackbar.make(playBar ?: requireView(), text, duration).apply {
+            if (action != null) {
+                setAction(action) { onAction() }
+            }
+            show()
+        }
     }
 
     override fun showPhotoImport(
@@ -393,8 +403,8 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     ) {
         photoImportDialog = PhotoImportDialog(
             requireContext(),
-            viewLifecycleOwner,
-            viewLifecycleOwner.lifecycleScope,
+            lifecycleOwner,
+            lifecycleScope,
             resolution,
             useZeroShutterLag
         ) {
@@ -519,7 +529,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         cancelWhenRerun: Boolean,
         block: suspend CoroutineScope.() -> Unit
     ): Job {
-        return runInBackground(state, block = block)
+        return lifecycleOwner.inBackground(state, true, cancelWhenRerun, block)
     }
 
     override fun alertNoActivityRecognitionPermission() {
@@ -555,8 +565,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
             return
         }
 
-        permissionAction = action
-        permissionLauncher?.launch(missingPermissions.toTypedArray())
+        requestRuntimePermissions(missingPermissions.toTypedArray(), action)
     }
 
     private fun requestPermission(
@@ -585,18 +594,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return TrailSenseComposeRootView(requireContext()) {
-            FragmentContent()
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    fun onStart() {
         requireMainActivity().registerDestinationHost(this)
         when (requireArguments().getString(ARG_DESTINATION)) {
             DESTINATION_LOCAL_MESSAGING -> openApp(
@@ -624,14 +622,12 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         }
     }
 
-    override fun onDestroyView() {
+    fun onStop() {
         survivalGuideSearchJob?.cancel()
         requireMainActivity().unregisterDestinationHost(this)
-        super.onDestroyView()
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResume() {
         resumeCount++
         specialPermissionAction?.invoke()
         specialPermissionAction = null
@@ -643,14 +639,13 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         }
     }
 
-    override fun onPause() {
+    fun onPause() {
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
             turnOffScreenFlashlight()
         }
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
             mapController?.onPause()
         }
-        super.onPause()
         layerSheet?.dismissAndUpdateWidgets(requireContext())
     }
 
@@ -663,9 +658,9 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun FragmentContent() {
+    fun Content(modifier: Modifier = Modifier) {
         val host = this
-        Box(Modifier.fillMaxSize()) {
+        Box(modifier.fillMaxSize()) {
             with(host) {
                 when (requireArguments().getString(ARG_DESTINATION)) {
                 DESTINATION_LEVEL -> LevelScreen()
@@ -903,7 +898,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     private fun Notes() {
         NotesScreen(
             notes = notesRepo.getNotes(),
-            lifecycleOwner = viewLifecycleOwner,
+            lifecycleOwner = lifecycleOwner,
             onAdd = {
                 findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
             },
@@ -3055,14 +3050,14 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
 
     private fun backup() {
         val uriPicker = IntentUriPicker(requireActivity() as IntentResultRetriever, requireContext())
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             BackupCommand(requireContext(), uriPicker).execute()
         }
     }
 
     private fun restore() {
         val uriPicker = IntentUriPicker(requireActivity() as IntentResultRetriever, requireContext())
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             RestoreCommand(requireContext(), uriPicker).execute()
         }
     }
@@ -3111,8 +3106,8 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     }
 
     private fun settingsOptions(entriesId: Int, valuesId: Int): List<SettingsOption> {
-        val entries = resources.getStringArray(entriesId)
-        val values = resources.getStringArray(valuesId)
+        val entries = getResources().getStringArray(entriesId)
+        val values = getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             SettingsOption(value, entries.getOrElse(index) { value })
         }
@@ -3325,7 +3320,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
             getString(R.string.plugin_connect_message, plugin.name)
         ) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch {
+                lifecycleOwner.lifecycleScope.launch {
                     pluginSubsystem.connect(plugin)
                     onConnected()
                 }
@@ -3467,7 +3462,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
             }
         ) { cancelled ->
             if (!cancelled) {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     notesRepo.deleteNote(note)
                 }
             }
@@ -3517,7 +3512,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
 
     private fun loadSurvivalGuideChapter() {
         val chapterResourceId = requireArguments().getInt("chapter_resource_id")
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             survivalGuideContent = withContext(Dispatchers.IO) {
                 TextUtils.loadTextFromResources(requireContext(), chapterResourceId)
             }
@@ -3528,7 +3523,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
         val context = requireContext()
         val files = FileSubsystem.getInstance(context)
         val markdown = AppServiceRegistry.get<com.kylecorry.andromeda.markdown.MarkdownService>()
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val loading = withContext(Dispatchers.Main) {
                 Alerts.loading(context, getString(R.string.loading))
             }
@@ -3567,7 +3562,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     }
 
     private fun initializeSurvivalGuideList() {
-        survivalGuideQuery = arguments?.getString("search_query").orEmpty()
+        survivalGuideQuery = destinationArguments?.getString("search_query").orEmpty()
         CustomUiUtils.disclaimer(
             requireContext(),
             getString(R.string.survival_guide),
@@ -3576,7 +3571,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
             cancelText = null
         )
         requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
+            lifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (survivalGuideQuery.isNotBlank()) {
@@ -3595,7 +3590,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     }
 
     private fun loadSurvivalGuideChapters() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             survivalGuideChapters = GuideLoader(requireContext()).load(includeContent = false)
         }
     }
@@ -3616,7 +3611,7 @@ class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
             return
         }
         val searchService = SurvivalGuideSearch(requireContext())
-        survivalGuideSearchJob = viewLifecycleOwner.lifecycleScope.launch {
+        survivalGuideSearchJob = lifecycleOwner.lifecycleScope.launch {
             delay(200)
             val results = searchService.search(value)
             if (survivalGuideQuery != value) {
