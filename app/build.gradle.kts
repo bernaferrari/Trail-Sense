@@ -195,7 +195,6 @@ dependencies {
 
     // Andromeda
     implementation(libs.andromeda.core)
-    implementation(libs.andromeda.fragments)
     implementation(libs.andromeda.forms)
     implementation(libs.andromeda.csv)
     implementation(libs.andromeda.background)
