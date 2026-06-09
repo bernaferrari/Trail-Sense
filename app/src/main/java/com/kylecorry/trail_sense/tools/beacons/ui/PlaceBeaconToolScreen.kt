@@ -46,13 +46,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.fragments.show
@@ -76,6 +73,7 @@ import com.kylecorry.trail_sense.shared.views.BeaconIconPickerDialog
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -91,7 +89,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun PlaceBeaconToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { PlaceBeaconController(fragment) }
@@ -119,7 +117,7 @@ fun PlaceBeaconToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PlaceBeaconController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class PlaceBeaconController(private val fragment: TrailSenseDestinationHost) {
 
     private val beaconService by lazy { BeaconService(fragment.requireContext()) }
     private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -150,10 +148,11 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
         }
         isInitialized = true
 
-        val beaconId = fragment.arguments?.getLong("edit_beacon") ?: 0L
-        val groupId = fragment.arguments?.getLong("initial_group") ?: 0L
+        val args = fragment.destinationArguments
+        val beaconId = args?.getLong("edit_beacon") ?: 0L
+        val groupId = args?.getLong("initial_group") ?: 0L
         initialLocation = BundleCompat.getParcelable(
-            fragment.arguments ?: Bundle(),
+            args ?: Bundle(),
             "initial_location",
             GeoUri::class.java
         )
@@ -291,7 +290,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
     }
 
     private fun loadExistingBeacon(beaconId: Long) {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val beacon = withContext(Dispatchers.IO) {
                 beaconService.getBeacon(beaconId)
             }
@@ -309,7 +308,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
     }
 
     private fun pickGroup() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val result = BeaconPickers.pickGroup(
                 fragment.requireContext(),
                 initialGroup = data.groupId
@@ -336,8 +335,8 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
                 if (cameraSheet == null) {
                     cameraSheet = SightingCompassDialog(
                         fragment.requireContext(),
-                        fragment.viewLifecycleOwner,
-                        fragment.viewLifecycleOwner.lifecycleScope
+                        fragment.lifecycleOwner,
+                        fragment.lifecycleScope
                     ) {
                         updateData(
                             data.copy(
@@ -356,7 +355,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
 
     private fun updateBeaconGroupName() {
         val parent = data.groupId
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             groupName = withContext(Dispatchers.IO) {
                 if (parent == null) {
                     fragment.getString(R.string.no_group)
@@ -369,7 +368,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseComposeDesti
 
     private fun onSubmit() {
         val beacon = data.toBeacon() ?: return
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 beaconService.add(beacon)
             }
