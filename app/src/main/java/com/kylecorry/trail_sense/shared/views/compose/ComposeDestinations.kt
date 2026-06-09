@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+const val COMPOSE_DESTINATION_FRAGMENT_CLASS =
+    "com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment"
 const val ARG_DESTINATION = "compose_destination"
 const val DESTINATION_LEVEL = "level"
 const val DESTINATION_WHISTLE = "whistle"

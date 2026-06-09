@@ -14,9 +14,6 @@ import com.kylecorry.trail_sense.shared.views.compose.*
 
 object TrailSenseNavGraph {
 
-    private const val COMPOSE_DESTINATION_FRAGMENT_CLASS =
-        "com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment"
-
     fun create(navController: NavController, startDestination: Int): NavGraph {
         val provider = navController.navigatorProvider
         val graph = NavGraph(provider.getNavigator(NavGraphNavigator::class.java))
