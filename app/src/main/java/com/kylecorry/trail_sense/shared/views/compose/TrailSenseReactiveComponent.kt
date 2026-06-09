@@ -71,8 +71,7 @@ class TrailSenseReactiveComponent(
     }
 
     override fun <T> useView(id: Int): T {
-        @Suppress("UNCHECKED_CAST")
-        return rootViewProvider().findViewById<View>(id) as T
+        error("View lookup is not supported in Compose destination hosts")
     }
 
     override fun <T> useRef(initialValue: T): Ref<T> {
