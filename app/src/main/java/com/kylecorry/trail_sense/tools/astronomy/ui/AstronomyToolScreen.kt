@@ -38,19 +38,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -77,6 +73,7 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.views.DatePickerContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -108,7 +105,7 @@ import java.time.ZonedDateTime
 
 @Composable
 fun AstronomyToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { AstronomyController(fragment) }
@@ -136,7 +133,7 @@ fun AstronomyToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AstronomyController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class AstronomyController(private val fragment: TrailSenseDestinationHost) {
 
     private val views = createAstronomyViews(fragment.requireContext(), this::showTimeSeeker)
     private val isViewReady: Boolean
@@ -590,7 +587,7 @@ private class AstronomyController(private val fragment: TrailSenseComposeDestina
         }
 
         if (gps is MockedGPS && prefs.locationOverride == Coordinate.zero) {
-            val activity = fragment.requireActivity() as MainActivity
+            val activity = fragment.andromedaActivity as MainActivity
             val navController = fragment.findNavController()
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
@@ -607,7 +604,7 @@ private class AstronomyController(private val fragment: TrailSenseComposeDestina
             val error = UserError(
                 ErrorBannerReason.NoGPS, fragment.getString(R.string.location_disabled), R.drawable.satellite
             )
-            (fragment.requireActivity() as MainActivity).errorBanner.report(error)
+            (fragment.andromedaActivity as MainActivity).errorBanner.report(error)
             gpsErrorShown = true
         }
     }
