@@ -5,14 +5,8 @@ import android.content.res.ColorStateList
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.annotation.RawRes
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.view.setPadding
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -31,7 +25,6 @@ import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.PostProcessedTokeniz
 import com.kylecorry.trail_sense.shared.text.nlp.tokenizers.SimpleWordTokenizer
 import com.kylecorry.trail_sense.shared.text.search.TextMatchStrategy
 import com.kylecorry.trail_sense.shared.views.TrailSenseTextView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 object TextUtils {
 
@@ -305,21 +298,17 @@ object TextUtils {
     }
 
     private fun createMarkdownContainer(context: Context, children: List<View>): View {
-        return TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                children.forEach { child ->
-                    AndroidView(
-                        factory = { child },
-                        modifier = Modifier.fillMaxWidth()
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(Resources.dp(context, 16f).toInt())
+            children.forEach { child ->
+                addView(
+                    child,
+                    LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
                     )
-                }
+                )
             }
         }
     }
