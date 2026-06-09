@@ -41,14 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.dialog
-import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Pressure
@@ -69,6 +65,7 @@ import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrict
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -96,6 +93,8 @@ import com.kylecorry.trail_sense.tools.weather.ui.fields.PressureTendencyWeather
 import com.kylecorry.trail_sense.tools.weather.ui.fields.PressureWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.TemperatureWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.WeatherListItem
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.abs
@@ -103,7 +102,7 @@ import kotlin.math.max
 
 @Composable
 fun WeatherToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { WeatherController(fragment) }
@@ -129,7 +128,7 @@ fun WeatherToolScreen(
 }
 
 private class WeatherController(
-    private val fragment: TrailSenseComposeDestinationFragment
+    private val fragment: TrailSenseDestinationHost
 ) {
     private var weatherViews: WeatherViews? =
         createWeatherViews(fragment.requireContext())
@@ -225,8 +224,10 @@ private class WeatherController(
             prefs.weather
         ).bind()
 
-        fragment.observe(weatherSubsystem.weatherChanged) {
-            updateWeather()
+        fragment.lifecycleScope.launch {
+            weatherSubsystem.weatherChanged.flow().collect {
+                updateWeather()
+            }
         }
 
         updateStatusBar()
@@ -409,7 +410,12 @@ private class WeatherController(
                     val conditions = prediction.hourly.joinToString("\n") {
                         formatService.formatWeather(it)
                     }
-                    fragment.dialog(fragment.getString(R.string.weather), conditions, cancelText = null)
+                    Alerts.dialog(
+                        fragment.requireContext(),
+                        fragment.getString(R.string.weather),
+                        conditions,
+                        cancelText = null
+                    )
                 }
             }
             views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
