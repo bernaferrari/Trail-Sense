@@ -585,8 +585,9 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun FragmentContent() {
+        val host = this
         Box(Modifier.fillMaxSize()) {
-            with(this@TrailSenseComposeDestinationFragment) {
+            with(host) {
                 when (requireArguments().getString(ARG_DESTINATION)) {
                 DESTINATION_LEVEL -> LevelScreen()
                 DESTINATION_WHISTLE -> WhistleScreen()
