@@ -78,7 +78,7 @@ class QuickActionSheetState(private val context: Context) {
             return
         }
 
-        val fragment = activity.getFragment() as? TrailSenseDestinationHost
+        val fragment = activity.getActiveDestinationHost()
 
         if (fragment == null) {
             Alerts.toast(context, context.getString(R.string.quick_actions_are_unavailable))
@@ -106,7 +106,7 @@ class QuickActionSheetState(private val context: Context) {
     }
 
     private fun bindWidgetsIfReady() {
-        val fragment = activity?.getFragment() as? TrailSenseDestinationHost ?: return
+        val fragment = activity?.getActiveDestinationHost() ?: return
         val widgets = widgets ?: return
         if (widgetBinder != null) {
             return

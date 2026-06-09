@@ -88,6 +88,7 @@ class MainActivity : AndromedaActivity() {
 
     private val themeProvider = ThemeProvider()
     private var rootNavController: NavController? = null
+    private var activeDestinationHost: TrailSenseDestinationHost? = null
 
     private val permissions = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -201,7 +202,22 @@ class MainActivity : AndromedaActivity() {
 
         views.bottomNavigation.selectedItemId = idToSelect
 
-        lastKnownFragment = getFragment()?.javaClass?.simpleName
+        lastKnownDestinationHost = activeDestinationHost?.javaClass?.simpleName
+    }
+
+    fun registerDestinationHost(host: TrailSenseDestinationHost) {
+        activeDestinationHost = host
+        lastKnownDestinationHost = host.javaClass.simpleName
+    }
+
+    fun unregisterDestinationHost(host: TrailSenseDestinationHost) {
+        if (activeDestinationHost == host) {
+            activeDestinationHost = null
+        }
+    }
+
+    fun getActiveDestinationHost(): TrailSenseDestinationHost? {
+        return activeDestinationHost
     }
 
     fun changeBottomNavLabelsVisibility(useCompactMode: Boolean) {
@@ -442,7 +458,7 @@ class MainActivity : AndromedaActivity() {
 
     private fun getVolumeAction(): VolumeAction? {
         val navigationId = navController?.currentDestination?.id
-        val fragment = getFragment() as? TrailSenseDestinationHost ?: return null
+        val fragment = activeDestinationHost ?: return null
         val tools = Tools.getTools(this)
 
         // Sort order = High priority active, open tool, normal priority active
@@ -542,7 +558,7 @@ class MainActivity : AndromedaActivity() {
             navController?.currentDestination?.id == R.id.action_experimental_tools &&
             !views.quickActionsSheet.isOpen()
         ) {
-            val toolsFragment = getFragment() as? ToolSearchFocusable
+            val toolsFragment = activeDestinationHost as? ToolSearchFocusable
             if (toolsFragment?.focusSearch() == true) {
                 return
             }
@@ -631,7 +647,7 @@ class MainActivity : AndromedaActivity() {
         var deviceSurfaceRotation: Int = Surface.ROTATION_90
             private set
 
-        var lastKnownFragment: String? = null
+        var lastKnownDestinationHost: String? = null
 
         fun intent(context: Context): Intent {
             return Intent(context, MainActivity::class.java)

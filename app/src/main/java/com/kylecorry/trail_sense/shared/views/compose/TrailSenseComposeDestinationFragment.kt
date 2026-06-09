@@ -526,6 +526,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireMainActivity().registerDestinationHost(this)
         when (requireArguments().getString(ARG_DESTINATION)) {
             DESTINATION_LOCAL_MESSAGING -> openApp(
                 requireContext(),
@@ -554,6 +555,7 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override fun onDestroyView() {
         survivalGuideSearchJob?.cancel()
+        requireMainActivity().unregisterDestinationHost(this)
         super.onDestroyView()
     }
 
