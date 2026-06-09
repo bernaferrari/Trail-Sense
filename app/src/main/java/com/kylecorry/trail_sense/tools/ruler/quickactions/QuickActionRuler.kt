@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
+import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -25,7 +26,7 @@ class QuickActionRuler(
 ) : QuickActionButton(btn, fragment) {
     private val prefs by lazy { UserPreferences(context) }
 
-    private var ruler: TrailSenseComposeRootView? = null
+    private var ruler: View? = null
 
     override fun onCreate() {
         super.onCreate()

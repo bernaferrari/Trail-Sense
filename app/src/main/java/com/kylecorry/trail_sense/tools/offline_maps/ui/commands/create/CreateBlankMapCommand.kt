@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -149,7 +150,7 @@ class CreateBlankMapCommand(
         units: List<DistanceUnits>,
         onCenterChange: (Coordinate?) -> Unit,
         onDistanceChange: (Distance?) -> Unit
-    ): TrailSenseComposeRootView {
+    ): View {
         return TrailSenseComposeRootView(
             context,
             ViewCompositionStrategy.DisposeOnDetachedFromWindow
