@@ -12,6 +12,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.background
@@ -56,6 +58,7 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -77,7 +80,6 @@ import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.inBackground as runInBackground
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
@@ -277,7 +279,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
 
-class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocusable,
+class TrailSenseComposeDestinationFragment : Fragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost, TrailSenseReactiveDestinationHost {
 
@@ -309,6 +311,9 @@ class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocu
     private var beaconListController: BeaconListControllerHost? = null
     private var mapController: MapControllerHost? = null
     private var resumeCount = 0
+    private var permissionAction: (() -> Unit)? = null
+    private var permissionLauncher: ActivityResultLauncher<Array<String>>? = null
+    private var specialPermissionAction: (() -> Unit)? = null
     private val reactiveComponent = TrailSenseReactiveComponent(
         contextProvider = ::requireContext,
         activityProvider = ::requireActivity,
@@ -318,6 +323,23 @@ class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocu
         argumentsProvider = ::requireArguments,
         onStateChanged = ::onReactiveUpdate
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) {
+            val action = permissionAction
+            permissionAction = null
+            action?.invoke()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        permissionLauncher?.unregister()
+        permissionLauncher = null
+    }
 
     override val lifecycleOwner: LifecycleOwner
         get() = viewLifecycleOwner
@@ -524,6 +546,45 @@ class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocu
         requireMainActivity().reloadTheme()
     }
 
+    private fun requestPermissions(permissions: List<String>, action: () -> Unit) {
+        val missingPermissions = permissions.filter {
+            !Permissions.hasPermission(requireContext(), it)
+        }
+        if (missingPermissions.isEmpty()) {
+            action()
+            return
+        }
+
+        permissionAction = action
+        permissionLauncher?.launch(missingPermissions.toTypedArray())
+    }
+
+    private fun requestPermission(
+        permission: SpecialPermission,
+        rationale: PermissionRationale,
+        action: () -> Unit
+    ) {
+        if (Permissions.hasPermission(requireContext(), permission)) {
+            action()
+            return
+        }
+
+        Alerts.dialog(
+            requireContext(),
+            rationale.title,
+            rationale.message,
+            okText = rationale.ok ?: getString(android.R.string.ok),
+            cancelText = rationale.cancel ?: getString(android.R.string.cancel)
+        ) { cancelled ->
+            if (!cancelled) {
+                specialPermissionAction = action
+                Permissions.requestPermission(requireContext(), permission)
+            } else {
+                action()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -572,6 +633,8 @@ class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocu
     override fun onResume() {
         super.onResume()
         resumeCount++
+        specialPermissionAction?.invoke()
+        specialPermissionAction = null
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
             turnOnScreenFlashlight()
         }
