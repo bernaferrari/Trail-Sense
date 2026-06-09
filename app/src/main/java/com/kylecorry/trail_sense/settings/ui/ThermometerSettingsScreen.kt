@@ -35,7 +35,7 @@ import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.IThermometer
-import com.kylecorry.andromeda.fragments.asLiveData
+import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain

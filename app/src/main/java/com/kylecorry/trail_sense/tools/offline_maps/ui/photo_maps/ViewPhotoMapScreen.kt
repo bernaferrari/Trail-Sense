@@ -18,7 +18,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.fragments.asLiveData
+import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri

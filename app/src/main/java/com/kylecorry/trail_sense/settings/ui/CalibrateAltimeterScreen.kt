@@ -21,7 +21,7 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.andromeda.fragments.asLiveData
+import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
 import com.kylecorry.andromeda.sense.barometer.IBarometer
