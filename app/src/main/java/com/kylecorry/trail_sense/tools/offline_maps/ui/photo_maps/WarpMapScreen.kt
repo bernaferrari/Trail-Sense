@@ -4,7 +4,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.graphics.Color
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.dialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,14 +31,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
-import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.rememberPerspectiveCorrectionState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -51,7 +49,7 @@ import java.io.IOException
 
 @Composable
 fun WarpMapToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     mapId: Long,
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,7 +77,7 @@ fun WarpMapToolScreen(
 }
 
 private class WarpMapController(
-    private val fragment: TrailSenseComposeDestinationFragment,
+    private val fragment: TrailSenseDestinationHost,
     private val mapId: Long,
     private val onComplete: () -> Unit
 ) {
@@ -102,7 +100,8 @@ private class WarpMapController(
     }
 
     fun showInstructions() {
-        fragment.dialog(
+        Alerts.dialog(
+            fragment.requireContext(),
             fragment.getString(R.string.map_perspective_instructions),
             fragment.getString(R.string.crop_map_instructions_long),
             cancelText = null
@@ -114,7 +113,7 @@ private class WarpMapController(
     }
 
     private fun loadMap() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getPhotoMap(mapId)
             }
@@ -135,7 +134,7 @@ private class WarpMapController(
         val percentBounds = perspective.getPercentBounds() ?: return
         val hasChanges = perspective.hasChanges
 
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val loading = Alerts.loading(
                 fragment.requireContext(),
                 fragment.getString(R.string.saving)
