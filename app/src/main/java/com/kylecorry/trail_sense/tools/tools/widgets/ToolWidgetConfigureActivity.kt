@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.tools.widgets
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
@@ -32,22 +33,20 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.fragments.AndromedaActivity
-import com.kylecorry.andromeda.fragments.ColorTheme
-import com.kylecorry.andromeda.fragments.inBackground
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.launch
 
-class ToolWidgetConfigureActivity : AndromedaActivity() {
+class ToolWidgetConfigureActivity : ComponentActivity() {
 
     private var appWidgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setColorTheme(ColorTheme.System, true)
         enableEdgeToEdge()
 
         super.onCreate(savedInstanceState)
@@ -117,7 +116,7 @@ class ToolWidgetConfigureActivity : AndromedaActivity() {
         theme: WidgetTheme
     ) {
         prefs.setTheme(theme)
-        inBackground {
+        lifecycleScope.launch {
             val widgetProvider =
                 widget.widgetClass.getConstructor().newInstance() as? AppWidgetBase
             widgetProvider?.let {

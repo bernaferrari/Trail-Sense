@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.onboarding
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,14 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.kylecorry.andromeda.fragments.AndromedaActivity
-import com.kylecorry.andromeda.fragments.ColorTheme
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class OnboardingActivity : AndromedaActivity() {
+class OnboardingActivity : ComponentActivity() {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
     private val pages by lazy { OnboardingPages.getPages(this) }
@@ -25,7 +24,6 @@ class OnboardingActivity : AndromedaActivity() {
     private var pageIdx by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setColorTheme(ColorTheme.System, true)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
