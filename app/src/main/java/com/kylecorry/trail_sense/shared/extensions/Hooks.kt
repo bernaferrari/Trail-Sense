@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.shared.extensions
 
-import android.os.Bundle
-import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleObserver
@@ -12,7 +10,6 @@ import com.kylecorry.andromeda.core.sensors.ISpeedometer
 import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.fragments.LifecycleHookTrigger
 import com.kylecorry.andromeda.fragments.useBackgroundEffect
 import com.kylecorry.andromeda.fragments.useTopic
 import com.kylecorry.andromeda.preferences.IPreferences
@@ -318,20 +315,6 @@ fun ReactiveComponent.useSpeedPreference(
     }
 
     return speed to setter
-}
-
-fun <T : View> ReactiveComponent.useViewWithCleanup(
-    id: Int,
-    lifecycleHookTrigger: LifecycleHookTrigger,
-    cleanup: (T) -> Unit
-): T {
-    val view = useView<T>(id)
-    useEffectWithCleanup(lifecycleHookTrigger.onResume(), view) {
-        return@useEffectWithCleanup {
-            cleanup(view)
-        }
-    }
-    return view
 }
 
 fun ReactiveComponent.useLifecycleEffect(
