@@ -13,19 +13,25 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
@@ -372,12 +378,23 @@ object CustomUiUtils {
                             .padding(bottom = 16.dp)
                     )
                 }
-                AndroidView(
-                    factory = { chart },
+                var chartSize by remember { mutableStateOf(IntSize.Zero) }
+                Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.chart_height))
-                )
+                        .onSizeChanged { chartSize = it }
+                ) {
+                    if (chartSize.width <= 0 || chartSize.height <= 0) {
+                        return@Canvas
+                    }
+                    chart.measure(
+                        View.MeasureSpec.makeMeasureSpec(chartSize.width, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(chartSize.height, View.MeasureSpec.EXACTLY)
+                    )
+                    chart.layout(0, 0, chartSize.width, chartSize.height)
+                    chart.draw(drawContext.canvas.nativeCanvas)
+                }
             }
         }
         Alerts.dialog(
