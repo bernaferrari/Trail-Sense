@@ -704,7 +704,10 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     }
 
     private fun exportWeatherData() {
-        val exporter = IOFactory().createCsvService(fragment.andromedaActivity)
+        val exporter = IOFactory().createCsvService(
+            fragment.requireContext(),
+            fragment.andromedaActivity
+        )
         val repo = WeatherRepo.getInstance(fragment.requireContext())
         fragment.inBackground(BackgroundMinimumState.Created) {
             val exported = withContext(Dispatchers.IO) {
