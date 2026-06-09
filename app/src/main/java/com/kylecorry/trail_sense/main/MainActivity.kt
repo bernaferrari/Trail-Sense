@@ -16,10 +16,10 @@ import android.view.KeyEvent
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,7 +73,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 
-class MainActivity : AppCompatActivity(), IntentResultRetriever {
+class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     var isRunning = false
         private set
