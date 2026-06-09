@@ -1,11 +1,16 @@
 package com.kylecorry.trail_sense.main.theme
 
-import com.kylecorry.andromeda.fragments.ColorTheme
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
+
+enum class AppThemeMode {
+    Light,
+    Dark,
+    System
+}
 
 class ThemeProvider {
 
@@ -13,25 +18,25 @@ class ThemeProvider {
     private val astronomy = AstronomyService()
     private val sensors = getAppService<SensorSubsystem>()
 
-    fun getColorTheme(): ColorTheme {
+    fun getThemeMode(): AppThemeMode {
         return when (prefs.theme) {
-            UserPreferences.Theme.Light -> ColorTheme.Light
-            UserPreferences.Theme.Dark, UserPreferences.Theme.Black, UserPreferences.Theme.Night -> ColorTheme.Dark
-            UserPreferences.Theme.System, UserPreferences.Theme.SystemBlack -> ColorTheme.System
+            UserPreferences.Theme.Light -> AppThemeMode.Light
+            UserPreferences.Theme.Dark, UserPreferences.Theme.Black, UserPreferences.Theme.Night -> AppThemeMode.Dark
+            UserPreferences.Theme.System, UserPreferences.Theme.SystemBlack -> AppThemeMode.System
             UserPreferences.Theme.SunriseSunset -> sunriseSunsetTheme()
         }
     }
 
-    private fun sunriseSunsetTheme(): ColorTheme {
+    private fun sunriseSunsetTheme(): AppThemeMode {
         val location = sensors.lastKnownLocation
         if (location == Coordinate.zero) {
-            return ColorTheme.System
+            return AppThemeMode.System
         }
         val isSunUp = astronomy.isSunUp(location)
         return if (isSunUp) {
-            ColorTheme.Light
+            AppThemeMode.Light
         } else {
-            ColorTheme.Dark
+            AppThemeMode.Dark
         }
     }
 }

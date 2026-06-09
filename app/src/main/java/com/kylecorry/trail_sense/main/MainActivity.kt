@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.main
 
 import android.Manifest
+import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -15,7 +16,11 @@ import android.view.KeyEvent
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,17 +37,19 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import com.google.android.material.color.DynamicColors
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.errors.ExceptionHandler
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
+import com.kylecorry.trail_sense.main.theme.AppThemeMode
 import com.kylecorry.trail_sense.main.theme.ThemeProvider
 import com.kylecorry.trail_sense.onboarding.OnboardingActivity
 import com.kylecorry.trail_sense.receivers.RestartServicesCommand
@@ -66,7 +73,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 
-class MainActivity : AndromedaActivity() {
+class MainActivity : AppCompatActivity(), IntentResultRetriever {
 
     var isRunning = false
         private set
@@ -96,6 +103,24 @@ class MainActivity : AndromedaActivity() {
 
     private var bottomInsets = 0
     private var appInitialized = false
+    private var navGraphInitialized = false
+    private var permissionResultAction: (() -> Unit)? = null
+    private var intentResultAction: ((Boolean, Intent?) -> Unit)? = null
+
+    private val permissionLauncher: ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            permissionResultAction?.invoke()
+            permissionResultAction = null
+        }
+
+    private val intentResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            intentResultAction?.invoke(
+                result.resultCode == Activity.RESULT_OK,
+                result.data
+            )
+            intentResultAction = null
+        }
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -107,7 +132,7 @@ class MainActivity : AndromedaActivity() {
     override fun attachBaseContext(newBase: Context) {
         // This is needed to prevent old colors from remaining when the theme changes
         // Dynamic colors are only disabled until onCreate is called since it needs the activity to be created
-        setColorTheme(themeProvider.getColorTheme(), false)
+        applyThemeMode(themeProvider.getThemeMode(), false)
         super.attachBaseContext(newBase)
     }
 
@@ -250,8 +275,39 @@ class MainActivity : AndromedaActivity() {
     }
 
     private fun updateTheme() {
-        val mode = themeProvider.getColorTheme()
-        setColorTheme(mode, userPrefs.useDynamicColors)
+        val mode = themeProvider.getThemeMode()
+        applyThemeMode(mode, userPrefs.useDynamicColors)
+    }
+
+    private fun applyThemeMode(mode: AppThemeMode, useDynamicColors: Boolean) {
+        AppCompatDelegate.setDefaultNightMode(
+            when (mode) {
+                AppThemeMode.Light -> AppCompatDelegate.MODE_NIGHT_NO
+                AppThemeMode.Dark -> AppCompatDelegate.MODE_NIGHT_YES
+                AppThemeMode.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            }
+        )
+        if (useDynamicColors) {
+            DynamicColors.applyToActivityIfAvailable(this)
+        }
+    }
+
+    private fun requestPermissions(permissions: List<String>, action: () -> Unit) {
+        val missingPermissions = permissions.filter {
+            !Permissions.hasPermission(this, it)
+        }
+        if (missingPermissions.isEmpty()) {
+            action()
+            return
+        }
+
+        permissionResultAction = action
+        permissionLauncher.launch(missingPermissions.toTypedArray())
+    }
+
+    override fun getResult(intent: Intent, action: (Boolean, Intent?) -> Unit) {
+        intentResultAction = action
+        intentResultLauncher.launch(intent)
     }
 
     fun reloadTheme() {
@@ -543,8 +599,8 @@ class MainActivity : AndromedaActivity() {
             views.bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         }
 
-        // Only initialize the nav graph once
-        effect("navGraph") {
+        if (!navGraphInitialized) {
+            navGraphInitialized = true
             initializeNavGraph(initialItem)
         }
         updateBottomNavSelection()
