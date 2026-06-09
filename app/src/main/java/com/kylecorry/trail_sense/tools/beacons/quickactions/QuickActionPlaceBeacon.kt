@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.beacons.quickactions
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.fragments.inBackground

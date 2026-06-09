@@ -27,7 +27,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.sensors.Quality

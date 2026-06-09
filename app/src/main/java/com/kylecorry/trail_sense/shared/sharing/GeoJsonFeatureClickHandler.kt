@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.sharing
 
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonPoint

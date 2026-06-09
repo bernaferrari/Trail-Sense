@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.shared.quickactions
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 

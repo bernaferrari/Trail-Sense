@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.pedometer.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.luna.topics.generic.replay

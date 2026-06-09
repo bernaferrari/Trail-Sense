@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.quickactions
 
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.trail_sense.R

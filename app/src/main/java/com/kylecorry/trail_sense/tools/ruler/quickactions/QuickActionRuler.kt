@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.sol.units.DistanceUnits
