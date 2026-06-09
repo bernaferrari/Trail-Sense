@@ -9,8 +9,6 @@ import android.os.Bundle
 import android.util.Size
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Canvas
@@ -118,18 +116,18 @@ object CustomUiUtils {
                 units = units,
                 hint = hint,
                 showFeetAndInches = showFeetAndInches,
-                allowNegative = allowNegative
+                allowNegative = allowNegative,
+                modifier = Modifier.padding(16.dp)
             ) {
                 distance = it
             }
         }
-        val view = createPromptContent(context, distanceInput)
 
         Alerts.dialog(
             context,
             title,
             content = description,
-            contentView = view
+            contentView = distanceInput
         ) { cancelled ->
             if (cancelled) {
                 onDistancePick.invoke(null, true)
@@ -153,17 +151,17 @@ object CustomUiUtils {
         ) {
             ElevationPromptContent(
                 default = default,
-                hint = hint
+                hint = hint,
+                modifier = Modifier.padding(16.dp)
             ) {
                 elevation = it
             }
         }
-        val view = createPromptContent(context, elevationInput)
 
         Alerts.dialog(
             context,
             title,
-            contentView = view
+            contentView = elevationInput
         ) { cancelled ->
             if (cancelled) {
                 onElevationPick.invoke(null, true)
@@ -283,6 +281,7 @@ object CustomUiUtils {
     private fun ElevationPromptContent(
         default: Distance?,
         hint: String,
+        modifier: Modifier = Modifier,
         onElevationChange: (Distance?) -> Unit
     ) {
         val context = LocalContext.current
@@ -331,7 +330,7 @@ object CustomUiUtils {
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             IconButton(
@@ -737,29 +736,6 @@ object CustomUiUtils {
             contentView = view,
             cancelText = null
         )
-    }
-
-    private fun createPromptContent(
-        context: Context,
-        content: View,
-        horizontalPadding: Int = 16,
-        verticalPadding: Int = 16
-    ): View {
-        return FrameLayout(context).apply {
-            setPadding(
-                Resources.dp(context, horizontalPadding.toFloat()).toInt(),
-                Resources.dp(context, verticalPadding.toFloat()).toInt(),
-                Resources.dp(context, horizontalPadding.toFloat()).toInt(),
-                Resources.dp(context, verticalPadding.toFloat()).toInt()
-            )
-            addView(
-                content,
-                FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            )
-        }
     }
 
     fun Resources.getPrimaryColor(context: Context): Int {
