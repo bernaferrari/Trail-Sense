@@ -69,12 +69,12 @@ fun ReactiveComponent.useCellSignalSensor(removeUnregisteredSignals: Boolean = t
     }
 }
 
-fun ReactiveAndromedaFragment.useCompassSensor(): ICompass {
+fun ReactiveComponent.useCompassSensor(): ICompass {
     val sensors = useService<SensorService>()
     return useMemo(sensors) { sensors.getCompass() }
 }
 
-fun ReactiveAndromedaFragment.useAltimeterSensor(gps: IGPS? = null): IAltimeter {
+fun ReactiveComponent.useAltimeterSensor(gps: IGPS? = null): IAltimeter {
     val sensors = useService<SensorService>()
     return useMemo(sensors, gps) {
         sensors.getAltimeter(gps = gps)
@@ -89,14 +89,14 @@ fun ReactiveComponent.useSpeedometerSensor(gps: IGPS? = null): ISpeedometer {
 }
 
 // Common sensor readings
-fun ReactiveAndromedaFragment.useGPSLocation(frequency: Duration = Duration.ofMillis(20)): Pair<Coordinate, Float?> {
+fun ReactiveComponent.useGPSLocation(frequency: Duration = Duration.ofMillis(20)): Pair<Coordinate, Float?> {
     val gps = useGPSSensor(frequency)
     return useTopic(gps, gps.location to gps.horizontalAccuracy) {
         it.location to it.horizontalAccuracy
     }
 }
 
-fun ReactiveAndromedaFragment.useNavigationSensors(
+fun ReactiveComponent.useNavigationSensors(
     gpsFrequency: Duration = Duration.ofMillis(20),
     trueNorth: Boolean = false
 ): NavigationSensorValues {
@@ -185,7 +185,7 @@ fun ReactiveAndromedaFragment.useNavigationSensors(
     }
 }
 
-fun ReactiveAndromedaFragment.useLocation(refreshPolicy: SensorSubsystem.SensorRefreshPolicy = SensorSubsystem.SensorRefreshPolicy.RefreshIfInvalid): Pair<Coordinate, Boolean> {
+fun ReactiveComponent.useLocation(refreshPolicy: SensorSubsystem.SensorRefreshPolicy = SensorSubsystem.SensorRefreshPolicy.RefreshIfInvalid): Pair<Coordinate, Boolean> {
     val sensors = useService<SensorSubsystem>()
     val lastLocation = useMemo(sensors) {
         sensors.lastKnownLocation
