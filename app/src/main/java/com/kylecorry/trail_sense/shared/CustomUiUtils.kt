@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +44,7 @@ import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.andromeda.views.chart.Chart
+import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Pressure
@@ -52,7 +55,6 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.DistanceInputView
 import com.kylecorry.trail_sense.shared.views.ElevationInputView
-import com.kylecorry.trail_sense.shared.views.PressureInputView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
@@ -316,20 +318,58 @@ object CustomUiUtils {
         onPressurePick: (pressure: Pressure?) -> Unit
     ) {
         var selected = default
-        val pressureInput = PressureInputView(context).apply {
-            // TODO: Sort the units properly
-            units = PressureUnits.entries
-            value = default
-            setOnValueChangeListener {
-                selected = it
+        val formatService = FormatService.getInstance(context)
+        val view = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            var amount by remember { mutableStateOf(default?.value?.toString().orEmpty()) }
+            var unit by remember { mutableStateOf(default?.units ?: PressureUnits.Hpa) }
+
+            fun updateSelected() {
+                selected = amount.toFloatCompat()?.let {
+                    if (it < 0f) {
+                        null
+                    } else {
+                        Pressure.from(it, unit)
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp)
+            ) {
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = {
+                        amount = it
+                        updateSelected()
+                    },
+                    label = { Text(context.getString(R.string.pressure)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextButton(
+                    onClick = {
+                        Pickers.item(
+                            context,
+                            title,
+                            PressureUnits.entries.map(formatService::getPressureUnitName),
+                            PressureUnits.entries.indexOf(unit)
+                        ) { idx ->
+                            if (idx != null) {
+                                unit = PressureUnits.entries[idx]
+                                updateSelected()
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(formatService.getPressureUnitName(unit))
+                }
             }
         }
-        val view = createPromptContent(
-            context,
-            pressureInput,
-            horizontalPadding = 28,
-            verticalPadding = 0
-        )
 
         Alerts.dialog(context, title, message, contentView = view) {
             if (!it) {
