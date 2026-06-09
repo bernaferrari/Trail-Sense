@@ -36,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -44,8 +43,8 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
-import androidx.navigation.fragment.findNavController
-import com.kylecorry.andromeda.alerts.dialog
+import androidx.lifecycle.observe
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onDefault
@@ -53,9 +52,7 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observe
-import com.kylecorry.andromeda.fragments.observeFlow
+import com.kylecorry.andromeda.fragments.asLiveData
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
@@ -82,7 +79,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -92,6 +88,7 @@ import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
@@ -116,12 +113,14 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 
 @Composable
 fun NavigatorToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { NavigatorController(fragment) }
@@ -149,7 +148,7 @@ fun NavigatorToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class NavigatorController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class NavigatorController(private val fragment: TrailSenseDestinationHost) {
 
     private val views = createNavigatorViews(
         fragment.requireContext(),
@@ -342,7 +341,7 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
             return
         }
         isCreated = true
-        val beaconId = fragment.arguments?.getLong("destination") ?: 0L
+        val beaconId = fragment.destinationArguments?.getLong("destination") ?: 0L
 
         // Load the destination and start navigation
         if (beaconId != 0L) {
@@ -350,10 +349,12 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
             navigator.navigateTo(beaconId)
         }
 
-        fragment.observeFlow(navigator.destination2) {
-            destination = it
-            updateNearbyBeacons()
-            handleShowWhenLocked()
+        fragment.lifecycleScope.launch {
+            navigator.destination2.collect {
+                destination = it
+                updateNearbyBeacons()
+                handleShowWhenLocked()
+            }
         }
 
         // Observe diagnostics
@@ -361,11 +362,10 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
             GPSDiagnosticScanner(gps),
             MagnetometerDiagnosticScanner()
         ).mapIndexed { index, scanner ->
-            fragment.observeFlow(
-                scanner.fullScan(fragment.requireContext()),
-                BackgroundMinimumState.Resumed
-            ) { results ->
-                diagnosticResults = diagnosticResults + (index to results.map { it.id })
+            fragment.lifecycleScope.launch {
+                scanner.fullScan(fragment.requireContext()).collect { results ->
+                    diagnosticResults = diagnosticResults + (index to results.map { it.id })
+                }
             }
         }
 
@@ -392,21 +392,23 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
             userPrefs.navigation
         ).bind()
 
-        fragment.observeFlow(beaconRepo.getBeacons()) {
-            beacons = it
-            updateNearbyBeacons()
+        fragment.lifecycleScope.launch {
+            beaconRepo.getBeacons().collect {
+                beacons = it
+                updateNearbyBeacons()
+            }
         }
 
-        fragment.observe(compass) { }
-        fragment.observe(clinometer) { }
-        fragment.observe(altimeter) { }
-        fragment.observe(gps) { }
-        fragment.observe(speedometer) { }
-        fragment.observe(getBacktrackAltitudeReadings()) {
+        compass.asLiveData().observe(fragment.lifecycleOwner) { }
+        clinometer.asLiveData().observe(fragment.lifecycleOwner) { }
+        altimeter.asLiveData().observe(fragment.lifecycleOwner) { }
+        gps.asLiveData().observe(fragment.lifecycleOwner) { }
+        speedometer.asLiveData().observe(fragment.lifecycleOwner) { }
+        getBacktrackAltitudeReadings().observe(fragment.lifecycleOwner) {
             backtrackAltitudeReadings = it
             updateAltitudeChart()
         }
-        fragment.observe(getWeatherAltitudeReadings()) {
+        getWeatherAltitudeReadings().observe(fragment.lifecycleOwner) {
             weatherAltitudeReadings = it
             updateAltitudeChart()
         }
@@ -524,12 +526,10 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
     }
 
     private fun handleShowWhenLocked() {
-        fragment.activity?.let { screenLock.updateLock(it) }
+        screenLock.updateLock(fragment.andromedaActivity)
     }
 
     fun displayAccuracyTips() {
-        fragment.context ?: return
-
         val alerter = ImproveAccuracyAlerter(fragment.requireContext())
         alerter.alert(listOf(gps, compass))
     }
@@ -674,7 +674,7 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
 
     fun onDestroy() {
         onPause()
-        fragment.activity?.let { screenLock.releaseLock(it) }
+        screenLock.releaseLock(fragment.andromedaActivity)
         isCreated = false
     }
 
@@ -929,7 +929,8 @@ private class NavigatorController(private val fragment: TrailSenseComposeDestina
                     }
                 )
             }
-            fragment.dialog(
+            Alerts.dialog(
+                fragment.requireContext(),
                 fragment.getString(R.string.calibrate_compass_dialog_title),
                 fragment.getString(
                     R.string.calibrate_compass_on_navigate_dialog_content,
