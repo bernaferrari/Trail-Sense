@@ -9,10 +9,10 @@ import android.os.Build
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import android.view.View
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -3540,7 +3540,7 @@ class TrailSenseComposeDestinationHost(
                 )
                 val file = files.createTemp("pdf")
                 val parsed = markdown.toMarkdown(content)
-                val textView = AppCompatTextView(context)
+                val textView = TextView(context)
                 textView.textSize = 6f
                 textView.setTextColor(AndroidColor.BLACK)
                 markdown.setParsedMarkdown(textView, parsed)
