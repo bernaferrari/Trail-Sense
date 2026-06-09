@@ -55,7 +55,7 @@ import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
@@ -446,7 +446,7 @@ class MainActivity : AndromedaActivity() {
 
     private fun getVolumeAction(): VolumeAction? {
         val navigationId = navController?.currentDestination?.id
-        val fragment = getFragment() as? TrailSenseComposeDestinationFragment ?: return null
+        val fragment = getFragment() as? TrailSenseDestinationHost ?: return null
         val tools = Tools.getTools(this)
 
         // Sort order = High priority active, open tool, normal priority active
