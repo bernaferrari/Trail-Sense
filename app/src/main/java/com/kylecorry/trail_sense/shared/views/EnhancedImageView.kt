@@ -12,6 +12,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -19,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.LocalView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -36,22 +37,16 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import kotlin.math.max
 
 open class EnhancedImageView(
-    context: Context
-) : AbstractComposeView(context) {
-
-    val view: View
-        get() = this
+    protected val context: Context
+) {
 
     fun post(action: () -> Unit) {
-        if (!isAttachedToWindow) {
-            action()
-            return
-        }
-        super.post {
-            action()
-        }
+        action()
     }
 
+    var id: Int = 0
+    var keepScreenOn: Boolean = false
+    private var backgroundColorOverride: Int? = null
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
     private var renderVersion by mutableIntStateOf(0)
@@ -171,18 +166,21 @@ open class EnhancedImageView(
         get() = imageView.isImageLoaded
 
     @Composable
-    override fun Content() {
-        EnhancedImageContent()
-    }
-
-    @Composable
-    fun Content(modifier: Modifier) {
+    fun Content(modifier: Modifier = Modifier) {
         EnhancedImageContent(modifier)
     }
 
     @Composable
     fun EnhancedImageContent(modifier: Modifier = Modifier) {
         TrailSenseTheme {
+            val view = LocalView.current
+            DisposableEffect(view, keepScreenOn) {
+                val previousKeepScreenOn = view.keepScreenOn
+                view.keepScreenOn = keepScreenOn
+                onDispose {
+                    view.keepScreenOn = previousKeepScreenOn
+                }
+            }
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -197,6 +195,9 @@ open class EnhancedImageView(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     renderVersion
                     if (contentWidth > 0 && contentHeight > 0) {
+                        backgroundColorOverride?.let {
+                            drawContext.canvas.nativeCanvas.drawColor(it)
+                        }
                         imageView.measure(
                             View.MeasureSpec.makeMeasureSpec(contentWidth, View.MeasureSpec.EXACTLY),
                             View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY)
@@ -215,10 +216,20 @@ open class EnhancedImageView(
         }
     }
 
-    override fun invalidate() {
-        super.invalidate()
+    fun invalidate() {
         requestRedraw()
     }
+
+    fun setBackgroundColor(color: Int) {
+        backgroundColorOverride = color
+        invalidate()
+    }
+
+    val width: Int
+        get() = contentWidth
+
+    val height: Int
+        get() = contentHeight
 
     private fun requestRedraw() {
         post {
