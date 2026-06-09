@@ -1,13 +1,11 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
 import android.annotation.SuppressLint
-import android.appwidget.AppWidgetHostView
-import android.appwidget.AppWidgetManager
 import android.graphics.Bitmap
-import android.content.ComponentName
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.widget.FrameLayout
 import androidx.core.view.setPadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -60,17 +58,8 @@ class ToolWidgetViewBinder(
         val fullSummaryHeight = halfSummaryHeight * 2
         val summaryGap = Resources.dp(context, 4f).toInt()
 
-        widgets.forEachIndexed { index, widget ->
-            val layout = AppWidgetHostView(context)
-            layout.setAppWidget(
-                index,
-                AppWidgetManager.getInstance(context).installedProviders?.find {
-                    it.provider == ComponentName(
-                        context,
-                        widget.widgetClass
-                    )
-                }
-            )
+        widgets.forEach { widget ->
+            val layout = FrameLayout(context)
 
             val height = when (widget.size) {
                 ToolSummarySize.Half -> halfSummaryHeight
@@ -88,13 +77,7 @@ class ToolWidgetViewBinder(
                     }
                     onMain {
                         tryOrLog {
-                            layout.updateAppWidget(views)
-                            layout.getChildAt(0)?.backgroundTintList =
-                                ColorStateList.valueOf(
-                                    Resources.androidBackgroundColorSecondary(
-                                        context
-                                    )
-                                )
+                            inflateRemoteViews(layout, views)
                             updateWidgetSnapshot(
                                 widgetId,
                                 renderWidget(layout, widget.size, height)
@@ -108,9 +91,7 @@ class ToolWidgetViewBinder(
             this.widgets.add(WidgetInstance(widget, layout, height, updateFunction = updateFunction))
             val widgetView =
                 widget.widgetView.getView(context, null)
-            layout.updateAppWidget(widgetView)
-            layout.getChildAt(0)?.backgroundTintList =
-                ColorStateList.valueOf(Resources.androidBackgroundColorSecondary(context))
+            inflateRemoteViews(layout, widgetView)
             updateWidgetSnapshot(widgetId, renderWidget(layout, widget.size, height))
         }
 
@@ -178,8 +159,16 @@ class ToolWidgetViewBinder(
         return true
     }
 
+    private fun inflateRemoteViews(layout: FrameLayout, views: android.widget.RemoteViews) {
+        val child = views.apply(context, layout)
+        layout.removeAllViews()
+        layout.addView(child)
+        child.backgroundTintList =
+            ColorStateList.valueOf(Resources.androidBackgroundColorSecondary(context))
+    }
+
     private fun renderWidget(
-        layout: AppWidgetHostView,
+        layout: FrameLayout,
         size: ToolSummarySize,
         height: Int
     ): Bitmap {
@@ -206,7 +195,7 @@ class ToolWidgetViewBinder(
 
     private data class WidgetInstance(
         val widget: ToolWidget,
-        val layout: AppWidgetHostView,
+        val layout: FrameLayout,
         val height: Int,
         var snapshot: ToolWidgetSnapshot? = null,
         val updateFunction: () -> Unit = {}
