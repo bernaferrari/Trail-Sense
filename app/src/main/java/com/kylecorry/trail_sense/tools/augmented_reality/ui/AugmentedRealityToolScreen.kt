@@ -39,20 +39,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.kylecorry.andromeda.alerts.dialog
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.fragments.observeFlow
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.Sensors
@@ -74,13 +71,13 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.permissions.alertNoCameraPermission
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
@@ -102,6 +99,8 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 import com.kylecorry.trail_sense.tools.paths.map_layers.AugmentedRealityPathLayerManager
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.math.hypot
@@ -123,7 +122,7 @@ fun openAugmentedReality(
 
 @Composable
 fun AugmentedRealityToolScreen(
-    fragment: TrailSenseComposeDestinationFragment,
+    fragment: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val controller = remember(fragment) { AugmentedRealityController(fragment) }
@@ -151,7 +150,7 @@ fun AugmentedRealityToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AugmentedRealityController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class AugmentedRealityController(private val fragment: TrailSenseDestinationHost) {
 
     private val views = createAugmentedRealityViews(fragment.requireContext())
     private val isViewReady: Boolean
@@ -315,12 +314,16 @@ private class AugmentedRealityController(private val fragment: TrailSenseCompose
         }
         isCreated = true
         // Beacon layer setup (TODO: Move this to a layer manager)
-        fragment.observeFlow(beaconRepo.getBeacons()) {
-            beaconLayer.setBeacons(it)
+        fragment.lifecycleScope.launch {
+            beaconRepo.getBeacons().collect {
+                beaconLayer.setBeacons(it)
+            }
         }
-        fragment.observeFlow(navigator.destination) {
-            beaconLayer.destination = it
-            syncBeaconGuidance(it)
+        fragment.lifecycleScope.launch {
+            navigator.destination.collect {
+                beaconLayer.destination = it
+                syncBeaconGuidance(it)
+            }
         }
 
         views.guidancePanel.isVisible = false
@@ -336,9 +339,9 @@ private class AugmentedRealityController(private val fragment: TrailSenseCompose
         views.camera.setShowTorch(false)
 
         views.arView.infiniteFocusWhenPointedUp = true
-        views.arView.bind(views.camera, fragment.viewLifecycleOwner)
+        views.arView.bind(views.camera, fragment.lifecycleOwner)
 
-        val arguments = fragment.requireArguments()
+        val arguments = fragment.destinationArguments ?: Bundle()
         val modeId = arguments.getLong("mode", ARMode.Normal.id)
         val desiredMode = ARMode.entries.withId(modeId) ?: ARMode.Normal
 
@@ -381,10 +384,13 @@ private class AugmentedRealityController(private val fragment: TrailSenseCompose
             refreshGuidance()
         }
 
-        setMode(desiredMode, fragment.requireArguments().getBundle("extras"))
+        setMode(desiredMode, arguments.getBundle("extras"))
 
         views.calibrateBtn.onLongClick = {
-            fragment.dialog(fragment.getString(R.string.reset_calibration_question)) { cancelled ->
+            Alerts.dialog(
+                fragment.requireContext(),
+                fragment.getString(R.string.reset_calibration_question)
+            ) { cancelled ->
                 if (!cancelled) {
                     views.arView.resetCalibration()
                 }
@@ -779,7 +785,8 @@ private class AugmentedRealityController(private val fragment: TrailSenseCompose
     private fun startCalibration() {
         views.calibrationPanel.isVisible = true
         val isSunUp = astronomyService.isSunUp(views.arView.location)
-        fragment.dialog(
+        Alerts.dialog(
+            fragment.requireContext(),
             fragment.getString(R.string.calibrate),
             fragment.getString(
                 R.string.ar_calibration_instructions,
@@ -810,8 +817,6 @@ private class AugmentedRealityController(private val fragment: TrailSenseCompose
     }
 
     private fun displayAccuracyTips() {
-        fragment.context ?: return
-
         val alerter = ImproveAccuracyAlerter(
             fragment.requireContext(),
             fragment.getString(R.string.ar_calibration_instructions_hint)
