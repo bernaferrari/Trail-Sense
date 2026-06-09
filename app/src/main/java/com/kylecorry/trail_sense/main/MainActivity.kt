@@ -455,7 +455,7 @@ class MainActivity : AndromedaActivity() {
 
     private fun getVolumeAction(): VolumeAction? {
         val navigationId = navController?.currentDestination?.id
-        val fragment = activeDestinationHost ?: return null
+        val host = activeDestinationHost ?: return null
         val tools = Tools.getTools(this)
 
         // Sort order = High priority active, open tool, normal priority active
@@ -465,22 +465,22 @@ class MainActivity : AndromedaActivity() {
                 it.priority == ToolVolumeActionPriority.High && it.isActive(
                     this,
                     tool.isOpen(navigationId ?: 0),
-                    fragment
+                    host
                 )
             }
         }.firstOrNull()
 
         if (highPriorityAction != null) {
-            return highPriorityAction.create(fragment)
+            return highPriorityAction.create(host)
         }
 
         val activeAction =
             tools.firstOrNull { it.isOpen(navigationId ?: 0) }?.volumeActions?.firstOrNull {
-                it.isActive(this, true, fragment)
+                it.isActive(this, true, host)
             }
 
         if (activeAction != null) {
-            return activeAction.create(fragment)
+            return activeAction.create(host)
         }
 
         val normalPriorityAction = tools.flatMap { tool ->
@@ -488,12 +488,12 @@ class MainActivity : AndromedaActivity() {
                 it.priority == ToolVolumeActionPriority.Normal && it.isActive(
                     this,
                     tool.isOpen(navigationId ?: 0),
-                    fragment
+                    host
                 )
             }
         }.firstOrNull()
 
-        return normalPriorityAction?.create?.invoke(fragment)
+        return normalPriorityAction?.create?.invoke(host)
     }
 
     private fun onVolumePressed(isVolumeUp: Boolean, isButtonPressed: Boolean): Boolean {
@@ -555,8 +555,8 @@ class MainActivity : AndromedaActivity() {
             navController?.currentDestination?.id == R.id.action_experimental_tools &&
             !views.quickActionsSheet.isOpen()
         ) {
-            val toolsFragment = activeDestinationHost as? ToolSearchFocusable
-            if (toolsFragment?.focusSearch() == true) {
+            val toolsHost = activeDestinationHost as? ToolSearchFocusable
+            if (toolsHost?.focusSearch() == true) {
                 return
             }
         }
