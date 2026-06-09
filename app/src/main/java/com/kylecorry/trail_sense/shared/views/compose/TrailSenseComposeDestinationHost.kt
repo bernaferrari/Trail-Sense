@@ -77,7 +77,6 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
@@ -342,7 +341,10 @@ class TrailSenseComposeDestinationHost(
     override val lifecycleScope: CoroutineScope
         get() = lifecycleOwner.lifecycleScope
 
-    override val andromedaActivity: AndromedaActivity
+    override val mainActivity: MainActivity
+        get() = activity
+
+    override val intentResultRetriever: IntentResultRetriever
         get() = activity
 
     override val destinationArguments: Bundle?

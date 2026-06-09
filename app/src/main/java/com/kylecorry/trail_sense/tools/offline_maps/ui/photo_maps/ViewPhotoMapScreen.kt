@@ -48,7 +48,6 @@ import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -125,7 +124,7 @@ class ViewPhotoMapController(
     private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
-    private val screenLight by lazy { ScreenTorch(fragment.andromedaActivity.window) }
+    private val screenLight by lazy { ScreenTorch(fragment.mainActivity.window) }
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
@@ -430,7 +429,7 @@ class ViewPhotoMapController(
                 updateDestination()
             }
         }
-        screenLock.updateLock(fragment.andromedaActivity)
+        screenLock.updateLock(fragment.mainActivity)
     }
 
     private fun onMapLoad(map: PhotoMap) {
@@ -464,7 +463,7 @@ class ViewPhotoMapController(
         views.map.isZoomEnabled = true
 
         // Show the bottom navigation
-        (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(true)
+        (fragment.mainActivity).setBottomNavigationEnabled(true)
 
         when (mapLockMode) {
             MapLockMode.Location -> {
@@ -544,7 +543,7 @@ class ViewPhotoMapController(
                 views.zoomOutBtn.isVisible = false
 
                 // Hide the bottom navigation
-                (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(false)
+                (fragment.mainActivity).setBottomNavigationEnabled(false)
             }
         }
     }
@@ -560,7 +559,7 @@ class ViewPhotoMapController(
         screenLight.off()
 
         // Show the bottom navigation
-        (fragment.andromedaActivity as MainActivity).setBottomNavigationEnabled(true)
+        (fragment.mainActivity).setBottomNavigationEnabled(true)
     }
 
     fun recenter() {
@@ -571,12 +570,12 @@ class ViewPhotoMapController(
     }
 
     fun onDestroy() {
-        screenLock.releaseLock(fragment.andromedaActivity)
+        screenLock.releaseLock(fragment.mainActivity)
         photoMapViews = null
     }
 
     private fun updatePeriodic() {
-        screenLock.updateLock(fragment.andromedaActivity)
+        screenLock.updateLock(fragment.mainActivity)
         val views = photoMapViews ?: return
         fragment.inBackground {
             val attribution = views.map.getAttribution(fragment.requireContext())

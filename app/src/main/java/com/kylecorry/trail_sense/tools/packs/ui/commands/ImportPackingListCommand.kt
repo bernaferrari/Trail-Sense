@@ -18,7 +18,7 @@ class ImportPackingListCommand(private val fragment: TrailSenseDestinationHost) 
 
     private val importService = LighterPackIOService.create(
         fragment.requireContext(),
-        fragment.andromedaActivity
+        fragment.intentResultRetriever
     )
     private val repo = PackRepo.getInstance(fragment.requireContext())
 

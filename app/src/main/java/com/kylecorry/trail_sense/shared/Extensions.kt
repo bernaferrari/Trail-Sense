@@ -28,7 +28,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.math.roundToInt
 
 fun TrailSenseDestinationHost.requireMainActivity(): MainActivity {
-    return andromedaActivity as MainActivity
+    return mainActivity
 }
 
 fun <T : Identifiable> Array<T>.withId(id: Long): T? {

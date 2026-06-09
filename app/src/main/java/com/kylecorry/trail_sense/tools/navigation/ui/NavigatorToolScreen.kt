@@ -525,7 +525,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun handleShowWhenLocked() {
-        screenLock.updateLock(fragment.andromedaActivity)
+        screenLock.updateLock(fragment.mainActivity)
     }
 
     fun displayAccuracyTips() {
@@ -673,7 +673,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
 
     fun onDestroy() {
         onPause()
-        screenLock.releaseLock(fragment.andromedaActivity)
+        screenLock.releaseLock(fragment.mainActivity)
         isCreated = false
     }
 

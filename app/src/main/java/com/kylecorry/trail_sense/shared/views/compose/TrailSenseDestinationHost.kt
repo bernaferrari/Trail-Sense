@@ -12,7 +12,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.fragments.AndromedaActivity
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -20,7 +21,8 @@ import kotlinx.coroutines.Job
 interface TrailSenseDestinationHost {
     val lifecycleOwner: LifecycleOwner
     val lifecycleScope: CoroutineScope
-    val andromedaActivity: AndromedaActivity
+    val mainActivity: MainActivity
+    val intentResultRetriever: IntentResultRetriever
     val destinationArguments: Bundle?
 
     fun requireContext(): Context

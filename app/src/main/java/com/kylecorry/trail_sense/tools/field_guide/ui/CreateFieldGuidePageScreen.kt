@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toFile
 import androidx.exifinterface.media.ExifInterface
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.luna.concurrency.onIO
@@ -104,7 +103,7 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
     private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
     private val uriPicker by lazy {
         IntentUriPicker(
-            fragment.andromedaActivity as IntentResultRetriever,
+            fragment.intentResultRetriever,
             fragment.requireContext()
         )
     }

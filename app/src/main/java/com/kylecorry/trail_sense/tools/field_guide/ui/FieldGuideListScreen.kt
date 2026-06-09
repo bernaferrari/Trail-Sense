@@ -160,11 +160,11 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
                     filter = ""
                 } else {
                     isEnabled = false
-                    fragment.andromedaActivity.onBackPressedDispatcher.onBackPressed()
+                    fragment.mainActivity.onBackPressedDispatcher.onBackPressed()
                 }
             }
         }
-        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+        fragment.mainActivity.onBackPressedDispatcher.addCallback(
             fragment.lifecycleOwner,
             backCallback!!
         )

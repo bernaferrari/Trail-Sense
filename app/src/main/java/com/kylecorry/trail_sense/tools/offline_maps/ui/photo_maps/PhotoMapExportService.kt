@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.io.ExternalUriService
@@ -17,7 +16,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.co
 
 class PhotoMapExportService(private val fragment: TrailSenseDestinationHost) {
     private val uriPicker = IntentUriPicker(
-        fragment.andromedaActivity as IntentResultRetriever,
+        fragment.intentResultRetriever,
         fragment.requireContext()
     )
     private val loading = AlertLoadingIndicator(

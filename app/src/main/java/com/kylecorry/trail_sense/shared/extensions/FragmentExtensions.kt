@@ -15,23 +15,23 @@ fun TrailSenseDestinationHost.promptIfUnsavedChanges(
         override fun handleOnBackPressed() {
             if (hasChanges()) {
                 Alerts.dialog(
-                    andromedaActivity,
+                    mainActivity,
                     getString(R.string.unsaved_changes),
                     getString(R.string.unsaved_changes_message),
                     okText = getString(R.string.dialog_leave)
                 ) { cancelled ->
                     if (!cancelled) {
                         remove()
-                        andromedaActivity.onBackPressedDispatcher.onBackPressed()
+                        mainActivity.onBackPressedDispatcher.onBackPressed()
                     }
                 }
             } else {
                 remove()
-                andromedaActivity.onBackPressedDispatcher.onBackPressed()
+                mainActivity.onBackPressedDispatcher.onBackPressed()
             }
         }
     }
-    andromedaActivity.onBackPressedDispatcher.addCallback(lifecycleOwner, callback)
+    mainActivity.onBackPressedDispatcher.addCallback(lifecycleOwner, callback)
     return callback
 }
 

@@ -20,7 +20,6 @@ import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
@@ -643,7 +642,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
             }
 
             val source = IntentUriPicker(
-                fragment.andromedaActivity as IntentResultRetriever,
+                fragment.intentResultRetriever,
                 fragment.requireContext()
             ).open(listOf("application/zip")) ?: return@inBackground
 

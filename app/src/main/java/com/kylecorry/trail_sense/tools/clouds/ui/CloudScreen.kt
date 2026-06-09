@@ -55,7 +55,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -181,7 +180,7 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
         fragment.inBackground(BackgroundMinimumState.Created) {
             val uri =
                 IntentUriPicker(
-                    fragment.andromedaActivity as IntentResultRetriever,
+                    fragment.intentResultRetriever,
                     fragment.requireContext()
                 ).open(listOf("image/*"))
             val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }

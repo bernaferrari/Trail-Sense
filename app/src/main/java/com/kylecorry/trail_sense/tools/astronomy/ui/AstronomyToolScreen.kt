@@ -60,7 +60,6 @@ import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
@@ -587,7 +586,7 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         }
 
         if (gps is MockedGPS && prefs.locationOverride == Coordinate.zero) {
-            val activity = fragment.andromedaActivity as MainActivity
+            val activity = fragment.mainActivity
             val navController = fragment.findNavController()
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
@@ -604,7 +603,7 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
             val error = UserError(
                 ErrorBannerReason.NoGPS, fragment.getString(R.string.location_disabled), R.drawable.satellite
             )
-            (fragment.andromedaActivity as MainActivity).errorBanner.report(error)
+            (fragment.mainActivity).errorBanner.report(error)
             gpsErrorShown = true
         }
     }

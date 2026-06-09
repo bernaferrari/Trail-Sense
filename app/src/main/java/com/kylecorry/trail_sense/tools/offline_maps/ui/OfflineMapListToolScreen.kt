@@ -44,7 +44,6 @@ import androidx.core.os.BundleCompat
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onDefault
@@ -148,7 +147,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
 
     private val uriPicker by lazy {
         IntentUriPicker(
-            fragment.andromedaActivity as IntentResultRetriever,
+            fragment.intentResultRetriever,
             fragment.requireContext()
         )
     }
@@ -250,7 +249,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
                 }
             }
         }
-        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+        fragment.mainActivity.onBackPressedDispatcher.addCallback(
             fragment.lifecycleOwner,
             backPressedCallback!!
         )

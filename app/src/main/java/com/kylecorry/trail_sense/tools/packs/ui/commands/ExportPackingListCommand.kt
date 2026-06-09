@@ -16,7 +16,7 @@ class ExportPackingListCommand(private val fragment: TrailSenseDestinationHost) 
 
     private val exportService = LighterPackIOService.create(
         fragment.requireContext(),
-        fragment.andromedaActivity
+        fragment.intentResultRetriever
     )
 
     private val repo = PackRepo.getInstance(fragment.requireContext())

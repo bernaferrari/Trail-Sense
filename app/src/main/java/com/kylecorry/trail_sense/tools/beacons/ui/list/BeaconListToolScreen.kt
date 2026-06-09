@@ -52,7 +52,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import androidx.navigation.NavController
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
@@ -175,7 +174,7 @@ private class BeaconListController(private val fragment: TrailSenseDestinationHo
     private val gpxService by lazy {
         IOFactory().createGpxService(
             fragment.requireContext(),
-            fragment.andromedaActivity as IntentResultRetriever
+            fragment.intentResultRetriever
         )
     }
     private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
@@ -284,7 +283,7 @@ private class BeaconListController(private val fragment: TrailSenseDestinationHo
                 }
             }
         }
-        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+        fragment.mainActivity.onBackPressedDispatcher.addCallback(
             fragment.lifecycleOwner,
             backPressedCallback!!
         )

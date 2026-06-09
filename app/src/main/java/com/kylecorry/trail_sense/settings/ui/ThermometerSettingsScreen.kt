@@ -57,7 +57,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
@@ -652,12 +651,12 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
     }
 
     private fun hideLocationUnsetError() {
-        val activity = fragment.andromedaActivity as MainActivity
+        val activity = fragment.mainActivity
         activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
     }
 
     private fun showLocationUnsetError() {
-        val activity = fragment.andromedaActivity as MainActivity
+        val activity = fragment.mainActivity
         val navController = fragment.findNavController()
         val error = UserError(
             ErrorBannerReason.LocationNotSet,

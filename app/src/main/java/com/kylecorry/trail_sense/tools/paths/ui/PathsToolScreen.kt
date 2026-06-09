@@ -42,7 +42,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -148,7 +147,7 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
     private val gpxService by lazy {
         IOFactory().createGpxService(
             fragment.requireContext(),
-            fragment.andromedaActivity as IntentResultRetriever
+            fragment.intentResultRetriever
         )
     }
 
@@ -260,7 +259,7 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
                 }
             }
         }
-        fragment.andromedaActivity.onBackPressedDispatcher.addCallback(
+        fragment.mainActivity.onBackPressedDispatcher.addCallback(
             fragment.lifecycleOwner,
             backPressedCallback!!
         )
