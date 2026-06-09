@@ -38,12 +38,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -54,6 +51,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
@@ -70,7 +68,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
-fun BeaconDetailsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
+fun BeaconDetailsToolScreen(fragment: TrailSenseDestinationHost) {
     val controller = remember(fragment) { BeaconDetailsController(fragment) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -113,7 +111,7 @@ fun BeaconDetailsToolScreen(fragment: TrailSenseComposeDestinationFragment) {
     )
 }
 
-private class BeaconDetailsController(private val fragment: TrailSenseComposeDestinationFragment) {
+private class BeaconDetailsController(private val fragment: TrailSenseDestinationHost) {
 
     private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
     private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
@@ -124,7 +122,9 @@ private class BeaconDetailsController(private val fragment: TrailSenseComposeDes
     private val tideFormatter by lazy { TideFormatter(fragment.requireContext()) }
     private val astronomy = AstronomyService()
 
-    private val beaconId: Long by lazy { fragment.requireArguments().getLong("beacon_id") }
+    private val beaconId: Long by lazy {
+        fragment.destinationArguments?.getLong("beacon_id") ?: error("Missing beacon id")
+    }
     var beacon by mutableStateOf<Beacon?>(null)
         private set
     var distance by mutableStateOf("")
@@ -151,7 +151,7 @@ private class BeaconDetailsController(private val fragment: TrailSenseComposeDes
     }
 
     fun loadBeacon() {
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 beaconRepo.getBeacon(beaconId)?.toBeacon()
             }
@@ -226,7 +226,7 @@ private class BeaconDetailsController(private val fragment: TrailSenseComposeDes
 
     fun showTemperatureDetails() {
         val currentBeacon = beacon ?: return
-        fragment.viewLifecycleOwner.lifecycleScope.launch {
+        fragment.lifecycleScope.launch {
             ShowHighLowTemperatureDialogCommand(
                 fragment.requireContext(),
                 currentBeacon.coordinate,
@@ -262,7 +262,7 @@ private class BeaconDetailsController(private val fragment: TrailSenseComposeDes
             beacon.name
         ) { cancelled ->
             if (!cancelled) {
-                fragment.viewLifecycleOwner.lifecycleScope.launch {
+                fragment.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
                     }
