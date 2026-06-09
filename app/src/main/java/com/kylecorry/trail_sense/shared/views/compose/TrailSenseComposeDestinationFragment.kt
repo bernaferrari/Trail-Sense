@@ -77,7 +77,7 @@ import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.fragments.show
 import com.kylecorry.andromeda.fragments.inBackground as runInBackground
-import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
+import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.AndromedaActivity
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
@@ -277,7 +277,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
 
-class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSearchFocusable,
+class TrailSenseComposeDestinationFragment : AndromedaFragment(), ToolSearchFocusable,
     ScreenFlashlightController, FlashlightController, ClinometerLockController,
     BeaconListControllerHost, TrailSenseReactiveDestinationHost {
 
@@ -308,6 +308,16 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
     private var clinometerLockController: ClinometerLockController? = null
     private var beaconListController: BeaconListControllerHost? = null
     private var mapController: MapControllerHost? = null
+    private var resumeCount = 0
+    private val reactiveComponent = TrailSenseReactiveComponent(
+        contextProvider = ::requireContext,
+        activityProvider = ::requireActivity,
+        rootViewProvider = ::requireView,
+        lifecycleOwnerProvider = { this },
+        viewLifecycleOwnerProvider = { viewLifecycleOwner },
+        argumentsProvider = ::requireArguments,
+        onStateChanged = ::onReactiveUpdate
+    )
 
     override val lifecycleOwner: LifecycleOwner
         get() = viewLifecycleOwner
@@ -322,10 +332,10 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         get() = arguments
 
     override val hookResetOnResume: Int
-        get() = resetOnResume
+        get() = resumeCount
 
     override fun cleanupReactiveEffects() {
-        cleanupEffects()
+        reactiveComponent.cleanupEffects()
     }
 
     override fun showActionSheet(
@@ -561,8 +571,12 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
 
     override fun onResume() {
         super.onResume()
+        resumeCount++
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
             turnOnScreenFlashlight()
+        }
+        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+            onReactiveUpdate()
         }
     }
 
@@ -577,8 +591,8 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
         layerSheet?.dismissAndUpdateWidgets(requireContext())
     }
 
-    override fun onUpdate() {
-        super.onUpdate()
+    private fun onReactiveUpdate() {
+        reactiveComponent.resetHookCursor()
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
             mapController?.onUpdate()
         }
@@ -621,9 +635,14 @@ class TrailSenseComposeDestinationFragment : ReactiveAndromedaFragment(), ToolSe
             DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
             DESTINATION_MAP_SETTINGS -> MapSettings()
             DESTINATION_MAP -> MapToolScreen(
-                component = this,
+                component = reactiveComponent,
                 host = this,
-                onController = { mapController = it }
+                onController = {
+                    mapController = it
+                    if (it != null) {
+                        onReactiveUpdate()
+                    }
+                }
             )
             DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
                 onOpenGuide = {
