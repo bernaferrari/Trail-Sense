@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.sensors.widgets
 import android.content.Context
 import android.view.View
 import android.widget.RemoteViews
+import com.kylecorry.trail_sense.shared.extensions.setImageViewResourceAsIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
