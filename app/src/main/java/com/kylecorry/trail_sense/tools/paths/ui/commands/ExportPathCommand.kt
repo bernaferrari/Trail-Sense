@@ -2,11 +2,10 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.pickers.CoroutinePickers
 import com.kylecorry.trail_sense.R
@@ -19,6 +18,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathGPXConverter
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.PathNameFactory
+import kotlinx.coroutines.launch
 import java.time.Instant
 
 
@@ -32,14 +32,14 @@ class ExportPathCommand(
     private val pathNameFactory = PathNameFactory(context)
 
     fun execute(path: IPath?) {
-        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
+        lifecycleOwner.lifecycleScope.launch {
             // Load the paths and groups (without waypoints)
             val all = getPaths(path)
             val paths = all.filterIsInstance<Path>()
             val groups = all.filterIsInstance<PathGroup>().associateBy { it.id }
 
             if (paths.isEmpty()) {
-                return@inBackground
+                return@launch
             }
 
             val chosenIds = if (path is Path) {
@@ -50,10 +50,10 @@ class ExportPathCommand(
                     context.getString(R.string.export),
                     paths.map { pathNameFactory.getName(it) },
                     List(paths.size) { it }
-                ) ?: return@inBackground
+                ) ?: return@launch
 
                 if (selection.isEmpty()) {
-                    return@inBackground
+                    return@launch
                 }
 
                 selection.map { paths[it].id }

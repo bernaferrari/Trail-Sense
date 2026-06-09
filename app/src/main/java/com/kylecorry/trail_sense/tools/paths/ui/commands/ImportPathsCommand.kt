@@ -2,12 +2,11 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.extensions.filterIndices
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.gpx.GPXWaypoint
 import com.kylecorry.andromeda.pickers.CoroutinePickers
@@ -23,6 +22,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.PathSimplificationQuality
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlinx.coroutines.launch
 
 class ImportPathsCommand(
     private val context: Context,
@@ -35,8 +35,8 @@ class ImportPathsCommand(
     private val style = prefs.defaultPathStyle
 
     fun execute(parentId: Long?) {
-        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
-            val gpx = gpxService.import() ?: return@inBackground
+        lifecycleOwner.lifecycleScope.launch {
+            val gpx = gpxService.import() ?: return@launch
             val paths = mutableListOf<FullPath>()
 
             // Get the tracks and routes from the GPX
@@ -51,7 +51,7 @@ class ImportPathsCommand(
                     it.path.name ?: context.getString(android.R.string.untitled)
                 },
                 paths.indices.toList()
-            ) ?: return@inBackground
+            ) ?: return@launch
 
 
             Alerts.withLoading(context, context.getString(R.string.importing)) {

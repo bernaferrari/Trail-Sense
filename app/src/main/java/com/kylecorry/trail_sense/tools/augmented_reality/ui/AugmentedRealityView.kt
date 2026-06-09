@@ -21,13 +21,13 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.fragments.inBackground
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
@@ -63,6 +63,7 @@ import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.AugmentedRealityCoordinate
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARLayer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.Duration
 import kotlin.math.atan2
 
@@ -671,7 +672,7 @@ class AugmentedRealityView(val context: Context) {
 
     private fun syncWithCamera() {
         camera?.passThroughTouchEvents = true
-        owner?.inBackground {
+        owner?.lifecycleScope?.launch {
             fovRunner.enqueue {
                 val camera = camera ?: return@enqueue
                 if (!camera.isStarted) {
