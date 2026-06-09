@@ -1182,7 +1182,7 @@ private fun createNavigatorViews(
         id = R.id.radar_compass_map
     }
 
-    val radarCompass = RadarCompassView(context, null).apply {
+    val radarCompass = RadarCompassView(context).apply {
         isInvisible = true
     }
 

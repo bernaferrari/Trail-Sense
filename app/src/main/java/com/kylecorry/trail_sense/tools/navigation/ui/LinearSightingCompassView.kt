@@ -102,7 +102,7 @@ class LinearSightingCompassView(private val context: Context) : ICompassView {
             keepScreenOn = true
             isVisible = false
         }
-        linearCompass = LinearCompassView(context, null)
+        linearCompass = LinearCompassView(context)
         sightingCompassButton = SightingCompassButton()
 
         sightingCompassButton.setState(false)

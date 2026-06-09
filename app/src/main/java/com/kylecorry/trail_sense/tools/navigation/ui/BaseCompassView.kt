@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,10 +16,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassLayer
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 
-abstract class BaseCompassView @JvmOverloads constructor(
-    protected val context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+abstract class BaseCompassView(
+    protected val context: Context
 ) : ICompassView {
 
     private val bitmapLoader by lazy { BitmapLoader(context) }

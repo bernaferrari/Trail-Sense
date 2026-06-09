@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.util.AttributeSet
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -23,11 +22,9 @@ import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.extensions.getValuesBetween
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 
-class LinearCompassView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : BaseCompassView(context, attrs, defStyleAttr) {
+class LinearCompassView(
+    context: Context
+) : BaseCompassView(context) {
 
     private val formatService = FormatService.getInstance(context)
     private val north by lazy { formatService.formatDirection(CompassDirection.North) }

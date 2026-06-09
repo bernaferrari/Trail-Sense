@@ -9,7 +9,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
 import android.graphics.Typeface
-import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,11 +34,9 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class RadarCompassView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : BaseCompassView(context, attrs, defStyleAttr) {
+class RadarCompassView(
+    context: Context
+) : BaseCompassView(context) {
 
     @ColorInt
     private var primaryColor: Int = Color.WHITE
