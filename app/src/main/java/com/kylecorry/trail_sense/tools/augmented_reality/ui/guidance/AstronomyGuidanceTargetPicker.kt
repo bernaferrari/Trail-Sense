@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import android.app.Dialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -170,7 +171,7 @@ class AstronomyGuidanceTargetPicker(
         val context = view.context
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
-        var alert: androidx.appcompat.app.AlertDialog? = null
+        var alert: Dialog? = null
         val dialogView = TrailSenseComposeRootView(
             context,
             ViewCompositionStrategy.DisposeOnDetachedFromWindow

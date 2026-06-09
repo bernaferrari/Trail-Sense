@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.extensions
 
 import android.app.ForegroundServiceStartNotAllowedException
-import android.app.Service
+import android.app.Dialog
 import android.content.Context
 import android.graphics.Path
 import android.os.Build
@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
-import androidx.appcompat.app.AlertDialog
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
@@ -43,7 +42,7 @@ fun Alerts.cancelableLoading(
     title: String,
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
-): AlertDialog {
+): Dialog {
     return dialog(
         context,
         title,

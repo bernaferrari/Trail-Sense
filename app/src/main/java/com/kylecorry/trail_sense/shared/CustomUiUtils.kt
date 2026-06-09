@@ -10,7 +10,6 @@ import android.util.Size
 import android.view.Gravity
 import android.view.View
 import androidx.annotation.ColorInt
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
