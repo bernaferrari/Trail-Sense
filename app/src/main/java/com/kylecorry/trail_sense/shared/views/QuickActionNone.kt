@@ -4,9 +4,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 
-class QuickActionNone(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) : QuickActionButton(
+class QuickActionNone(button: QuickActionButtonView, host: TrailSenseDestinationHost) : QuickActionButton(
     button,
-    fragment
+    host
 ) {
     override fun onCreate() {
         super.onCreate()

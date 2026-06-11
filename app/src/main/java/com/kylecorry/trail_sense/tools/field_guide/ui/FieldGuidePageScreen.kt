@@ -59,8 +59,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { FieldGuidePageController(fragment) }
+fun FieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { FieldGuidePageController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -85,20 +85,20 @@ fun FieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class FieldGuidePageController(private val fragment: TrailSenseDestinationHost) {
+private class FieldGuidePageController(private val host: TrailSenseDestinationHost) {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
-    val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
-    val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
+    val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
+    val tagNameMapper by lazy { FieldGuideTagNameMapper(host.requireContext()) }
     private val pageId: Long? by lazy {
-        fragment.destinationArguments?.getLong("page_id")?.takeIf { it != 0L }
+        host.destinationArguments?.getLong("page_id")?.takeIf { it != 0L }
     }
 
     var page by mutableStateOf<FieldGuidePage?>(null)
         private set
 
     fun loadPage() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             page = withContext(Dispatchers.IO) {
                 pageId?.let { repo.getPage(it) }
             }
@@ -107,7 +107,7 @@ private class FieldGuidePageController(private val fragment: TrailSenseDestinati
 
     fun editPage() {
         val current = page ?: return
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", current.id)
@@ -117,7 +117,7 @@ private class FieldGuidePageController(private val fragment: TrailSenseDestinati
 
     fun openSightings() {
         val current = page ?: return
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.sightingListFragment,
             Bundle().apply {
                 putLong("page_id", current.id)

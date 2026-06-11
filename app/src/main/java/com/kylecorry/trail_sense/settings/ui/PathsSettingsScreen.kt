@@ -49,8 +49,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun PathsSettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { PathsSettingsController(fragment) }
+fun PathsSettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { PathsSettingsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -72,11 +72,11 @@ fun PathsSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     PathsSettingsContent(controller)
 }
 
-private class PathsSettingsController(private val fragment: TrailSenseDestinationHost) {
+private class PathsSettingsController(private val host: TrailSenseDestinationHost) {
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    val prefs by lazy { UserPreferences(host.requireContext()) }
 
     private var setBacktrackEnabledState: ((Boolean) -> Unit)? = null
     private var refreshNotificationState: (() -> Unit)? = null
@@ -119,21 +119,21 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
 
     fun isBacktrackBlocked(): Boolean {
         return Tools.getService(
-            fragment.requireContext(),
+            host.requireContext(),
             PathsToolRegistration.SERVICE_BACKTRACK
         )?.isBlocked() ?: false
     }
 
     fun toggleBacktrack(onBlocked: () -> Unit) {
-        ToggleBacktrackCommand(fragment) {
+        ToggleBacktrackCommand(host) {
             onBlocked()
         }.execute()
     }
 
     fun openNotificationSettings() {
-        fragment.startActivity(
+        host.startActivity(
             Intents.notificationSettings(
-                fragment.requireContext(),
+                host.requireContext(),
                 BacktrackService.FOREGROUND_CHANNEL_ID
             )
         )
@@ -144,8 +144,8 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
         onChanged: (Duration) -> Unit
     ) {
         ChangeBacktrackFrequencyCommand(
-            fragment.requireContext(),
-            fragment.lifecycleScope
+            host.requireContext(),
+            host.lifecycleScope
         ) { frequency ->
             onChanged(frequency)
         }.execute(duration)
@@ -158,7 +158,7 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -171,13 +171,13 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
 
     fun pickBacktrackHistory(onPicked: (Int) -> Unit) {
         Pickers.number(
-            fragment.requireContext(),
-            fragment.getString(R.string.pref_backtrack_history_days_title),
+            host.requireContext(),
+            host.getString(R.string.pref_backtrack_history_days_title),
             null,
             prefs.navigation.backtrackHistory.toDays().toInt(),
             allowDecimals = false,
             allowNegative = false,
-            hint = fragment.getString(R.string.days)
+            hint = host.getString(R.string.days)
         ) { days ->
             if (days != null) {
                 val dayCount = days.toInt()
@@ -202,22 +202,22 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
 
     fun notificationSummary(): String {
         val isBlocked = Notify.isChannelBlocked(
-            fragment.requireContext(),
+            host.requireContext(),
             BacktrackService.FOREGROUND_CHANNEL_ID
         )
-        return if (isBlocked) fragment.getString(R.string.off) else fragment.getString(R.string.on)
+        return if (isBlocked) host.getString(R.string.off) else host.getString(R.string.on)
     }
 
     fun notificationsTitle(): String {
-        return fragment.getString(
+        return host.getString(
             R.string.notifications_channel,
-            fragment.getString(R.string.backtrack)
+            host.getString(R.string.backtrack)
         )
     }
 
     fun options(entriesId: Int, valuesId: Int): List<PathOption> {
-        val entries = fragment.getResources().getStringArray(entriesId)
-        val values = fragment.getResources().getStringArray(valuesId)
+        val entries = host.getResources().getStringArray(entriesId)
+        val values = host.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             PathOption(value, entries.getOrElse(index) { value })
         }
@@ -228,19 +228,19 @@ private class PathsSettingsController(private val fragment: TrailSenseDestinatio
     }
 
     fun getBoolean(key: Int, default: Boolean): Boolean {
-        return cache.getBoolean(fragment.getString(key)) ?: default
+        return cache.getBoolean(host.getString(key)) ?: default
     }
 
     fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(fragment.getString(key)) ?: default
+        return cache.getString(host.getString(key)) ?: default
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(fragment.getString(key), value)
+        cache.putBoolean(host.getString(key), value)
     }
 
     fun putString(key: Int, value: String) {
-        cache.putString(fragment.getString(key), value)
+        cache.putString(host.getString(key), value)
     }
 
     private fun onBacktrackEnabled(data: Bundle): Boolean {

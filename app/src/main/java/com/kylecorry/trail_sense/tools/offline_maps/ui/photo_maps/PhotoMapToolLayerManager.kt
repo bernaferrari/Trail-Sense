@@ -48,11 +48,11 @@ class PhotoMapToolLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, photoMapId: Long, fragment: TrailSenseDestinationHost) {
+    fun resume(context: Context, view: IMapView, photoMapId: Long, host: TrailSenseDestinationHost) {
         synchronized(runningLock) {
             isRunning = true
         }
-        fragment.inBackground {
+        host.inBackground {
             // User can't disable the photo maps layer
             preferences.preferences.putBoolean("pref_photo_maps_map_layer_enabled", true)
 
@@ -83,7 +83,7 @@ class PhotoMapToolLayerManager {
             photoMapLayer?.setMinZoomLevel(0)
 
             view.layerManager.setOnGeoJsonFeatureClickListener { feature ->
-                GeoJsonFeatureClickHandler.handleFeatureClick(fragment, feature)
+                GeoJsonFeatureClickHandler.handleFeatureClick(host, feature)
             }
 
             synchronized(runningLock) {

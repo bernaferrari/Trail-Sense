@@ -14,37 +14,37 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 
-class ImportPackingListCommand(private val fragment: TrailSenseDestinationHost) : Command {
+class ImportPackingListCommand(private val host: TrailSenseDestinationHost) : Command {
 
     private val importService = LighterPackIOService.create(
-        fragment.requireContext(),
-        fragment.intentResultRetriever
+        host.requireContext(),
+        host.intentResultRetriever
     )
-    private val repo = PackRepo.getInstance(fragment.requireContext())
+    private val repo = PackRepo.getInstance(host.requireContext())
 
     override fun execute() {
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        host.inBackground(BackgroundMinimumState.Created) {
             var items: List<PackItem>? = null
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 items = importService.import()
             }
 
             // If items are null or empty, show a toast and return
             if (items.isNullOrEmpty()) {
-                fragment.toast(fragment.getString(R.string.no_items_found))
+                host.toast(host.getString(R.string.no_items_found))
                 return@inBackground
             }
 
             // Ask the user for the pack name
             // TODO: Default to the file name
             val name = CoroutinePickers.text(
-                fragment.requireContext(),
-                fragment.getString(R.string.name)
+                host.requireContext(),
+                host.getString(R.string.name)
             ) ?: return@inBackground
 
             // Create the pack
             var packId = 0L
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 packId = repo.addPack(Pack(0, name))
                 for (item in items) {
                     val newItem = item.copy(packId = packId)
@@ -56,7 +56,7 @@ class ImportPackingListCommand(private val fragment: TrailSenseDestinationHost) 
             val bundle = Bundle().apply {
                 putLong("pack_id", packId)
             }
-            fragment.findNavController().navigateWithAnimation(R.id.packItemListFragment, bundle)
+            host.findNavController().navigateWithAnimation(R.id.packItemListFragment, bundle)
         }
     }
 }

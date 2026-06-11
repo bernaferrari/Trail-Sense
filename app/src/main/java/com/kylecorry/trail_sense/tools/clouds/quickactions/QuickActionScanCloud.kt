@@ -7,8 +7,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
-class QuickActionScanCloud(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(button, fragment) {
+class QuickActionScanCloud(button: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(button, host) {
 
     override fun onCreate() {
         super.onCreate()
@@ -17,7 +17,7 @@ class QuickActionScanCloud(button: QuickActionButtonView, fragment: TrailSenseDe
 
     override fun onClick() {
         super.onClick()
-        fragment.findNavController().navigateWithAnimation(
+        host.findNavController().navigateWithAnimation(
             R.id.cloudFragment,
             Bundle().apply {
                 putBoolean("open_scanner", true)
@@ -27,7 +27,7 @@ class QuickActionScanCloud(button: QuickActionButtonView, fragment: TrailSenseDe
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(
+        host.findNavController().navigateWithAnimation(
             R.id.cloudFragment
         )
         return true

@@ -49,13 +49,13 @@ import java.io.IOException
 
 @Composable
 fun WarpMapToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     mapId: Long,
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment, mapId, onComplete) {
-        WarpMapController(fragment, mapId, onComplete)
+    val controller = remember(host, mapId, onComplete) {
+        WarpMapController(host, mapId, onComplete)
     }
 
     DisposableEffect(controller) {
@@ -77,12 +77,12 @@ fun WarpMapToolScreen(
 }
 
 private class WarpMapController(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val mapId: Long,
     private val onComplete: () -> Unit
 ) {
     private val service = getAppService<MapService>()
-    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
 
     var map by mutableStateOf<PhotoMap?>(null)
         private set
@@ -101,9 +101,9 @@ private class WarpMapController(
 
     fun showInstructions() {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.map_perspective_instructions),
-            fragment.getString(R.string.crop_map_instructions_long),
+            host.requireContext(),
+            host.getString(R.string.map_perspective_instructions),
+            host.getString(R.string.crop_map_instructions_long),
             cancelText = null
         )
     }
@@ -113,7 +113,7 @@ private class WarpMapController(
     }
 
     private fun loadMap() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getPhotoMap(mapId)
             }
@@ -134,10 +134,10 @@ private class WarpMapController(
         val percentBounds = perspective.getPercentBounds() ?: return
         val hasChanges = perspective.hasChanges
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val loading = Alerts.loading(
-                fragment.requireContext(),
-                fragment.getString(R.string.saving)
+                host.requireContext(),
+                host.getString(R.string.saving)
             )
             val saved = withContext(Dispatchers.IO) {
                 if (hasChanges) {

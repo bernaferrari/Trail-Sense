@@ -8,10 +8,10 @@ import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 
-class QuickActionBacktrack(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
+class QuickActionBacktrack(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     ToolServiceQuickAction(
         btn,
-        fragment,
+        host,
         PathsToolRegistration.SERVICE_BACKTRACK,
         PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED,
         hideWhenUnavailable = false
@@ -24,13 +24,13 @@ class QuickActionBacktrack(btn: QuickActionButtonView, fragment: TrailSenseDesti
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(R.id.fragmentBacktrack)
+        host.findNavController().navigateWithAnimation(R.id.fragmentBacktrack)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        val command = ToggleBacktrackCommand(fragment)
+        val command = ToggleBacktrackCommand(host)
         command.execute()
     }
 }

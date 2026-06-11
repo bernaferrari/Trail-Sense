@@ -63,8 +63,8 @@ import java.time.Instant
 import java.time.LocalTime
 
 @Composable
-fun WeatherSettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { WeatherSettingsController(fragment) }
+fun WeatherSettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { WeatherSettingsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -84,16 +84,16 @@ fun WeatherSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class WeatherSettingsController(private val fragment: TrailSenseDestinationHost) {
+private class WeatherSettingsController(private val host: TrailSenseDestinationHost) {
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    private val userPrefs by lazy { UserPreferences(host.requireContext()) }
     private val prefs by lazy { userPrefs.weather }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
     private val weatherMonitorService by lazy {
         Tools.getService(
-            fragment.requireContext(),
+            host.requireContext(),
             WeatherToolRegistration.SERVICE_WEATHER_MONITOR
         )!!
     }
@@ -104,7 +104,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     @Composable
     fun Content() {
                     val quickActionOptions = remember {
-                        Tools.getQuickActions(fragment.requireContext()).map {
+                        Tools.getQuickActions(host.requireContext()).map {
                             WeatherOption(it.id.toString(), it.name)
                         }
                     }
@@ -340,9 +340,9 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
                                     ),
                                     summary = notificationSummary,
                                     onClick = {
-                                        fragment.startActivity(
+                                        host.startActivity(
                                             Intents.notificationSettings(
-                                                fragment.requireContext(),
+                                                host.requireContext(),
                                                 CurrentWeatherAlerter.WEATHER_CHANNEL_ID
                                             )
                                         )
@@ -406,7 +406,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
                                     enabled = dailyWeatherNotification,
                                     onClick = {
                                         Pickers.time(
-                                            fragment.requireContext(),
+                                            host.requireContext(),
                                             userPrefs.use24HourTime,
                                             dailyWeatherTime
                                         ) { time ->
@@ -542,7 +542,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
                             hint = stringResource(R.string.frequency),
                             onDurationPicked = {
                                 if (it != null) {
-                                    ChangeWeatherFrequencyCommand(fragment.requireContext()) { frequency ->
+                                    ChangeWeatherFrequencyCommand(host.requireContext()) { frequency ->
                                         updateFrequency = frequency
                                     }.execute(it)
                                 }
@@ -557,7 +557,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     }
 
     fun onCreate() {
-        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
             setMonitorWeatherState?.invoke(
                 weatherMonitorService.isEnabled(),
                 !weatherMonitorService.isBlocked()
@@ -576,12 +576,12 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     }
 
     private fun onMonitorWeatherChanged(enabled: Boolean) {
-        fragment.inBackground {
+        host.inBackground {
             if (enabled && prefs.shouldMonitorWeather) {
                 weatherMonitorService.enable()
                 RequestRemoveBatteryRestrictionCommand(
-                    fragment.requireContext(),
-                    RemoveBatteryRestrictionsAlerter(fragment)
+                    host.requireContext(),
+                    RemoveBatteryRestrictionsAlerter(host)
                 ).execute()
             } else {
                 weatherMonitorService.disable()
@@ -590,7 +590,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     }
 
     private fun restartWeatherMonitor() {
-        fragment.inBackground {
+        host.inBackground {
             weatherMonitorService.restart()
         }
     }
@@ -602,7 +602,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -614,11 +614,11 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<WeatherOption> {
-        return options(fragment.getResources().getStringArray(entriesId).toList(), valuesId)
+        return options(host.getResources().getStringArray(entriesId).toList(), valuesId)
     }
 
     private fun options(entries: List<CharSequence>, valuesId: Int): List<WeatherOption> {
-        val values = fragment.getResources().getStringArray(valuesId)
+        val values = host.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             WeatherOption(value, entries.getOrElse(index) { value }.toString())
         }
@@ -680,7 +680,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
 
     private suspend fun getDebugTimingSummary(): String? {
         return withContext(Dispatchers.Default) {
-            val readings = WeatherRepo.getInstance(fragment.requireContext()).getAll()
+            val readings = WeatherRepo.getInstance(host.requireContext()).getAll()
                 .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
 
             if (readings.isEmpty()) {
@@ -705,11 +705,11 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
 
     private fun exportWeatherData() {
         val exporter = IOFactory().createCsvService(
-            fragment.requireContext(),
-            fragment.intentResultRetriever
+            host.requireContext(),
+            host.intentResultRetriever
         )
-        val repo = WeatherRepo.getInstance(fragment.requireContext())
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        val repo = WeatherRepo.getInstance(host.requireContext())
+        host.inBackground(BackgroundMinimumState.Created) {
             val exported = withContext(Dispatchers.IO) {
                 val readings = repo.getAll().sortedByDescending { it.time }
                 val csv = WeatherCsvConverter().toCSV(readings)
@@ -717,7 +717,7 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
             }
             if (exported) {
                 withContext(Dispatchers.Main) {
-                    Alerts.toast(fragment.requireContext(), getString(R.string.weather_exported))
+                    Alerts.toast(host.requireContext(), getString(R.string.weather_exported))
                 }
             }
         }
@@ -725,14 +725,14 @@ private class WeatherSettingsController(private val fragment: TrailSenseDestinat
 
     private fun notificationSummary(): String {
         val isBlocked = Notify.isChannelBlocked(
-            fragment.requireContext(),
+            host.requireContext(),
             CurrentWeatherAlerter.WEATHER_CHANNEL_ID
         )
         return if (isBlocked) getString(R.string.off) else getString(R.string.on)
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
     private fun getStringPreference(key: Int, default: String): String {

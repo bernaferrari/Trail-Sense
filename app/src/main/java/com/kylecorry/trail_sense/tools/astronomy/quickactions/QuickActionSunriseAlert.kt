@@ -15,10 +15,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 import java.time.Duration
 
-class QuickActionSunriseAlert(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
+class QuickActionSunriseAlert(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     ToolServiceQuickAction(
         btn,
-        fragment,
+        host,
         AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS,
         AstronomyToolRegistration.BROADCAST_SUNRISE_ALERTS_STATE_CHANGED
     ) {
@@ -34,21 +34,21 @@ class QuickActionSunriseAlert(btn: QuickActionButtonView, fragment: TrailSenseDe
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.ASTRONOMY)
+        host.findNavController().openTool(Tools.ASTRONOMY)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
-                    SunriseAlarmReceiver.enable(fragment, true)
+                    SunriseAlarmReceiver.enable(host, true)
                     val alertTime =
                         Duration.ofMinutes(prefs.astronomy.sunriseAlertMinutesBefore)
                     val formattedAlertTime = formatter.formatDuration(alertTime)
-                    fragment.toast(
+                    host.toast(
                         context.getString(
                             R.string.sunrise_alert_scheduled,
                             formattedAlertTime

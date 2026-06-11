@@ -57,8 +57,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackListToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { PackListController(fragment) }
+fun PackListToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { PackListController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -78,9 +78,9 @@ fun PackListToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class PackListController(private val fragment: TrailSenseDestinationHost) {
+private class PackListController(private val host: TrailSenseDestinationHost) {
 
-    private val packRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
+    private val packRepo by lazy { PackRepo.getInstance(host.requireContext()) }
     private var isInitialized = false
 
     var packs by mutableStateOf(emptyList<Pack>())
@@ -95,21 +95,21 @@ private class PackListController(private val fragment: TrailSenseDestinationHost
     }
 
     private fun loadPacks() {
-        packRepo.getPacks().observe(fragment.lifecycleOwner) {
+        packRepo.getPacks().observe(host.lifecycleOwner) {
             packs = it.sortedWith(compareBy { pack -> -pack.id })
         }
     }
 
     fun renamePack(pack: Pack) {
         Pickers.text(
-            fragment.requireContext(),
-            fragment.getString(R.string.rename),
+            host.requireContext(),
+            host.getString(R.string.rename),
             null,
             pack.name,
-            hint = fragment.getString(R.string.name)
+            hint = host.getString(R.string.name)
         ) {
             if (it != null) {
-                fragment.inBackground {
+                host.inBackground {
                     withContext(Dispatchers.IO) {
                         packRepo.addPack(pack.copy(name = it))
                     }
@@ -119,17 +119,17 @@ private class PackListController(private val fragment: TrailSenseDestinationHost
     }
 
     fun exportPack(pack: Pack) {
-        ExportPackingListCommand(fragment).execute(pack)
+        ExportPackingListCommand(host).execute(pack)
     }
 
     fun deletePack(pack: Pack) {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.delete_pack),
+            host.requireContext(),
+            host.getString(R.string.delete_pack),
             pack.name
         ) { cancelled ->
             if (!cancelled) {
-                fragment.inBackground {
+                host.inBackground {
                     withContext(Dispatchers.IO) {
                         packRepo.deletePack(pack)
                     }
@@ -143,24 +143,24 @@ private class PackListController(private val fragment: TrailSenseDestinationHost
             val bundle = Bundle().apply {
                 putLong("pack_id", packId)
             }
-            fragment.findNavController().navigate(R.id.action_pack_to_pack_items, bundle)
+            host.findNavController().navigate(R.id.action_pack_to_pack_items, bundle)
         }
     }
 
     fun importPack() {
-        ImportPackingListCommand(fragment).execute()
+        ImportPackingListCommand(host).execute()
     }
 
     fun createPack() {
         Pickers.text(
-            fragment.requireContext(),
-            fragment.getString(R.string.new_packing_list),
+            host.requireContext(),
+            host.getString(R.string.new_packing_list),
             null,
             null,
-            hint = fragment.getString(R.string.name)
+            hint = host.getString(R.string.name)
         ) {
             if (it != null) {
-                fragment.inBackground {
+                host.inBackground {
                     val packId = withContext(Dispatchers.IO) {
                         packRepo.addPack(Pack(0, it))
                     }
@@ -175,14 +175,14 @@ private class PackListController(private val fragment: TrailSenseDestinationHost
 
     fun copyPack(oldPack: Pack) {
         Pickers.text(
-            fragment.requireContext(),
-            fragment.getString(R.string.new_packing_list),
+            host.requireContext(),
+            host.getString(R.string.new_packing_list),
             null,
             null,
-            hint = fragment.getString(R.string.name)
+            hint = host.getString(R.string.name)
         ) {
             if (it != null) {
-                fragment.inBackground {
+                host.inBackground {
                     val packId = withContext(Dispatchers.IO) {
                         packRepo.copyPack(oldPack, Pack(0, it))
                     }

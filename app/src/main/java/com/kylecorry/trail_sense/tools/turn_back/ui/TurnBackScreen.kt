@@ -62,8 +62,8 @@ object TurnBackKeys {
 }
 
 @Composable
-fun TurnBackToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { TurnBackController(fragment) }
+fun TurnBackToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { TurnBackController(host) }
 
     TurnBackScreen(
         formatter = controller.formatter,
@@ -79,16 +79,16 @@ fun TurnBackToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class TurnBackController(private val fragment: TrailSenseDestinationHost) {
+private class TurnBackController(private val host: TrailSenseDestinationHost) {
 
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    val sharedPrefs by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()) }
-    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    val sharedPrefs by lazy { PreferencesSubsystem.getInstance(host.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     private val astronomy = AstronomyService()
 
     fun pickReturnTime(currentReturnTime: Instant?) {
         CustomUiUtils.pickTime(
-            fragment.requireContext(),
+            host.requireContext(),
             prefs.use24HourTime,
             currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
         ) {
@@ -105,22 +105,22 @@ private class TurnBackController(private val fragment: TrailSenseDestinationHost
     }
 
     fun setReturnTimeToSunset() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             var wasSuccessful = false
             var sunsetTime: ZonedDateTime? = null
             val job = launch(Dispatchers.IO) {
-                val location = SensorSubsystem.getInstance(fragment.requireContext()).getLocation()
+                val location = SensorSubsystem.getInstance(host.requireContext()).getLocation()
                 sunsetTime = astronomy.getNextSunset(location, SunTimesMode.Actual)
                     ?.atZone(ZoneId.systemDefault())
                 wasSuccessful = true
             }
 
             Alerts.withCancelableLoading(
-                fragment.requireContext(),
-                fragment.getString(R.string.loading),
+                host.requireContext(),
+                host.getString(R.string.loading),
                 onCancel = { job.cancel() }
             ) {
-                fragment.lifecycleScope.launch {
+                host.lifecycleScope.launch {
                     job.join()
                     if (wasSuccessful) {
                         setReturnTime(sunsetTime ?: return@launch)
@@ -142,18 +142,18 @@ private class TurnBackController(private val fragment: TrailSenseDestinationHost
         sharedPrefs.preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME, instant)
         enableTurnBackAlarm()
 
-        fragment.toast(fragment.getString(R.string.turn_back_alert_set))
+        host.toast(host.getString(R.string.turn_back_alert_set))
     }
 
     private fun enableTurnBackAlarm() {
         requestExactAlarms {
-            TurnBackAlarmReceiver.start(fragment.requireContext())
+            TurnBackAlarmReceiver.start(host.requireContext())
             requestBackgroundLocation()
         }
     }
 
     private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        fragment.requestScheduleExactAlarms(action)
+        host.requestScheduleExactAlarms(action)
     }
 
     private fun requestBackgroundLocation() {
@@ -161,7 +161,7 @@ private class TurnBackController(private val fragment: TrailSenseDestinationHost
             sharedPrefs.preferences,
             "cache_background_location_requested"
         )
-        if (!IsBackgroundLocationRequired().isSatisfiedBy(fragment.requireContext())) {
+        if (!IsBackgroundLocationRequired().isSatisfiedBy(host.requireContext())) {
             shownFlag.set(false)
             return
         }
@@ -175,24 +175,24 @@ private class TurnBackController(private val fragment: TrailSenseDestinationHost
         }
 
         CustomUiUtils.snackbar(
-            fragment,
-            fragment.getString(R.string.sunset_alerts_background_location_disclaimer),
+            host,
+            host.getString(R.string.sunset_alerts_background_location_disclaimer),
             Snackbar.LENGTH_LONG,
-            fragment.getString(R.string.learn_more)
+            host.getString(R.string.learn_more)
         ) {
             val markdown = AppServiceRegistry.get<MarkdownService>()
             val contents =
-                markdown.toMarkdown(fragment.getString(R.string.access_background_location_rationale))
+                markdown.toMarkdown(host.getString(R.string.access_background_location_rationale))
 
             Alerts.dialog(
-                fragment.requireContext(),
-                fragment.getString(R.string.access_background_location),
+                host.requireContext(),
+                host.getString(R.string.access_background_location),
                 contents,
-                okText = fragment.getString(R.string.settings),
+                okText = host.getString(R.string.settings),
                 allowLinks = true
             ) { cancelled ->
                 if (!cancelled) {
-                    fragment.requestBackgroundLocation {
+                    host.requestBackgroundLocation {
                         // No-op
                     }
                 }
@@ -203,7 +203,7 @@ private class TurnBackController(private val fragment: TrailSenseDestinationHost
     fun cancelTurnBack() {
         sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
         sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
-        TurnBackAlarmReceiver.stop(fragment.requireContext())
+        TurnBackAlarmReceiver.stop(host.requireContext())
     }
 }
 

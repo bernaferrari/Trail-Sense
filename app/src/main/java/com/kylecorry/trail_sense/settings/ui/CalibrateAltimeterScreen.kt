@@ -61,8 +61,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.observe
 
 @Composable
-fun CalibrateAltimeterToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CalibrateAltimeterController(fragment) }
+fun CalibrateAltimeterToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CalibrateAltimeterController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -84,7 +84,7 @@ fun CalibrateAltimeterToolScreen(fragment: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class CalibrateAltimeterController(private val fragment: TrailSenseDestinationHost) {
+private class CalibrateAltimeterController(private val host: TrailSenseDestinationHost) {
 
     private lateinit var barometer: IBarometer
     private lateinit var gps: IGPS
@@ -97,9 +97,9 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
 
     private lateinit var lastMode: UserPreferences.AltimeterMode
     private val updateTimer = CoroutineTimer { updateAltitude() }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val overridePopulationRunner = CoroutineQueueRunner(dispatcher = Dispatchers.Default)
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
 
     private var setAltitudeState: ((String) -> Unit)? = null
     private var setModeState: ((String) -> Unit)? = null
@@ -112,9 +112,9 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     private var setDemSummary: ((String) -> Unit)? = null
 
     fun onCreate() {
-        prefs = UserPreferences(fragment.requireContext())
-        sensorService = SensorService(fragment.requireContext())
-        gps = CustomGPS(fragment.requireContext().applicationContext)
+        prefs = UserPreferences(host.requireContext())
+        sensorService = SensorService(host.requireContext())
+        gps = CustomGPS(host.requireContext().applicationContext)
         barometer = sensorService.getBarometer()
         altimeter = sensorService.getAltimeter()
         distanceUnits = prefs.baseDistanceUnits
@@ -380,7 +380,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
                                         ),
                                         onClick = {
                                             FusedAltimeter.clearCachedCalibration(cache)
-                                            fragment.toast(getString(R.string.done))
+                                            host.toast(getString(R.string.done))
                                         },
                                         modifier = androidx.compose.ui.Modifier.padding(
                                             horizontal = TrailSenseSpacing.lg
@@ -411,7 +411,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
 
     private fun onViewCreated() {
         val seaLevelPressureKey = getString(R.string.pref_sea_level_pressure_override)
-        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
+        cache.onChange.asLiveData().observe(host.lifecycleOwner) {
             if (it == seaLevelPressureKey) {
                 restartAltimeter()
             }
@@ -462,7 +462,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun setOverrideFromBarometer(seaLevelPressure: Float) {
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     barometer.read()
@@ -479,7 +479,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
                     onMain {
                         refreshOverrideSummary()
                         restartAltimeter()
-                        fragment.toast(getString(R.string.elevation_override_updated_toast))
+                        host.toast(getString(R.string.elevation_override_updated_toast))
                     }
                 }
             }
@@ -487,7 +487,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun setOverrideFromGPS() {
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     readAll(listOf(gps, barometer))
@@ -505,7 +505,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
                     onMain {
                         refreshOverrideSummary()
                         restartAltimeter()
-                        fragment.toast(getString(R.string.elevation_override_updated_toast))
+                        host.toast(getString(R.string.elevation_override_updated_toast))
                     }
                 }
             }
@@ -513,7 +513,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun updateAltitudeOverride() {
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     altimeter.read()
@@ -556,7 +556,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
 
     private fun pickAltitudeOverride() {
         CustomUiUtils.pickElevation(
-            fragment.requireContext(),
+            host.requireContext(),
             Distance.meters(prefs.altitudeOverride).convertTo(distanceUnits),
             getString(R.string.pref_elevation_override_title)
         ) { elevation, _ ->
@@ -568,7 +568,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
 
     private fun pickOverrideFromBarometer() {
         Pickers.number(
-            fragment.requireContext(),
+            host.requireContext(),
             getString(R.string.pref_elevation_override_sea_level_dialog_title),
             getString(R.string.pref_elevation_override_sea_level_dialog_msg),
             prefs.seaLevelPressureOverride,
@@ -585,7 +585,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     private fun pickSamples(onPicked: (Int) -> Unit) {
         val samples = (1..8).toList()
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             getString(R.string.samples),
             samples.map { it.toString() },
             samples.indexOf(prefs.altimeterSamples).coerceAtLeast(0)
@@ -599,7 +599,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun setAltitudeOverride(elevation: Distance) {
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 overridePopulationRunner.replace {
                     if (prefs.altimeterMode == UserPreferences.AltimeterMode.Barometer) {
@@ -624,14 +624,14 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun loadDEM() {
-        fragment.inBackground(state = BackgroundMinimumState.Created) {
+        host.inBackground(state = BackgroundMinimumState.Created) {
             val instructions = getString(
                 R.string.digital_elevation_model_link,
                 URLs.DEM
             ).toSpannable()
             LinkifyCompat.addLinks(instructions, WEB_URLS)
             val cancelled = CoroutineAlerts.dialog(
-                fragment.requireContext(),
+                host.requireContext(),
                 getString(R.string.plugin_digital_elevation_model),
                 instructions,
                 allowLinks = true
@@ -642,40 +642,40 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
             }
 
             val source = IntentUriPicker(
-                fragment.intentResultRetriever,
-                fragment.requireContext()
+                host.intentResultRetriever,
+                host.requireContext()
             ).open(listOf("application/zip")) ?: return@inBackground
 
             val loader = DigitalElevationModelLoader()
             try {
-                Alerts.withProgress(fragment.requireContext(), getString(R.string.loading)) { setProgress ->
+                Alerts.withProgress(host.requireContext(), getString(R.string.loading)) { setProgress ->
                     loader.load(source).collect(setProgress)
                     onMain {
                         onAltimeterModeChanged()
-                        fragment.toast(getString(R.string.loaded))
+                        host.toast(getString(R.string.loaded))
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 onMain {
-                    fragment.toast(getString(R.string.invalid_dem_file))
+                    host.toast(getString(R.string.invalid_dem_file))
                 }
             }
         }
     }
 
     private fun clearDEM() {
-        fragment.inBackground {
-            val cancelled = CoroutineAlerts.dialog(fragment.requireContext(), getString(R.string.remove_dem))
+        host.inBackground {
+            val cancelled = CoroutineAlerts.dialog(host.requireContext(), getString(R.string.remove_dem))
             if (cancelled) {
                 return@inBackground
             }
             val loader = DigitalElevationModelLoader()
-            Alerts.withLoading(fragment.requireContext(), getString(R.string.loading)) {
+            Alerts.withLoading(host.requireContext(), getString(R.string.loading)) {
                 loader.clear()
                 onMain {
                     onAltimeterModeChanged()
-                    fragment.toast(getString(R.string.done))
+                    host.toast(getString(R.string.done))
                 }
             }
         }
@@ -692,7 +692,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun updateDemSummary() {
-        fragment.inBackground {
+        host.inBackground {
             val version = DEMRepo.getInstance().getVersion()
             onMain {
                 setDemSummary?.invoke(version ?: getString(R.string.built_in_dem))
@@ -769,7 +769,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -809,7 +809,7 @@ private class CalibrateAltimeterController(private val fragment: TrailSenseDesti
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
     private data class AltimeterConditionalState(

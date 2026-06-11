@@ -6,8 +6,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 
-class QuickActionNightMode(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionNightMode(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     private var isSwitching = false
     private val prefs by lazy { UserPreferences(context) }
@@ -33,6 +33,6 @@ class QuickActionNightMode(btn: QuickActionButtonView, fragment: TrailSenseDesti
             UserPreferences.Theme.Night
         }
 
-        fragment.reloadTheme()
+        host.reloadTheme()
     }
 }

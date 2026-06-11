@@ -10,9 +10,9 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 
 abstract class QuickActionButton(
     protected val button: QuickActionButtonView,
-    protected val fragment: TrailSenseDestinationHost
+    protected val host: TrailSenseDestinationHost
 ) {
-    protected val context: Context by lazy { fragment.requireContext() }
+    protected val context: Context by lazy { host.requireContext() }
     private var wasStateSet = false
 
     private val observer = LifecycleEventObserver { _, event ->

@@ -76,9 +76,9 @@ class QuickActionSheetState(private val context: Context) {
             return
         }
 
-        val fragment = activity.getActiveDestinationHost()
+        val host = activity.getActiveDestinationHost()
 
-        if (fragment == null) {
+        if (host == null) {
             Alerts.toast(context, context.getString(R.string.quick_actions_are_unavailable))
             return
         }
@@ -86,7 +86,7 @@ class QuickActionSheetState(private val context: Context) {
         widgetBinder?.unbind()
         widgetBinder = null
         quickActionBinder = MainActivityQuickActionBinder(
-            fragment,
+            host,
             quickActionState
         )
         quickActionBinder?.bind()
@@ -104,13 +104,13 @@ class QuickActionSheetState(private val context: Context) {
     }
 
     private fun bindWidgetsIfReady() {
-        val fragment = activity?.getActiveDestinationHost() ?: return
+        val host = activity?.getActiveDestinationHost() ?: return
         if (widgetBinder != null) {
             return
         }
         widgetBinder = ToolWidgetViewBinder(
-            fragment.requireContext(),
-            fragment.lifecycleOwner
+            host.requireContext(),
+            host.lifecycleOwner
         ) {
             widgets = it
         }

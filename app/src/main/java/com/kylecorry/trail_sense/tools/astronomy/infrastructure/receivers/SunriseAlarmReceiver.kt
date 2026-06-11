@@ -59,22 +59,22 @@ class SunriseAlarmReceiver : BroadcastReceiver() {
          * Enable sunrise alerts and request permissions if needed
          */
         suspend fun enable(
-            fragment: TrailSenseDestinationHost,
+            host: TrailSenseDestinationHost,
             shouldRequestPermissions: Boolean
         ) {
             val service = Tools.getService(
-                fragment.requireContext(),
+                host.requireContext(),
                 AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS
             )
             service?.enable()
             if (shouldRequestPermissions) {
-                fragment.requestScheduleExactAlarms {
+                host.requestScheduleExactAlarms {
                     runBlocking {
                         service?.restart()
                     }
                     RequestBackgroundLocationCommand(
-                        fragment.requireContext(),
-                        BackgroundLocationAlerter(fragment)
+                        host.requireContext(),
+                        BackgroundLocationAlerter(host)
                     ).execute()
                 }
             }

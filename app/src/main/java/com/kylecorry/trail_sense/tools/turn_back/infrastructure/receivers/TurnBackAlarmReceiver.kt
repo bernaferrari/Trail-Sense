@@ -92,19 +92,19 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
          * Enable turn back alerts and request permissions if needed
          */
         fun enable(
-            fragment: TrailSenseDestinationHost,
+            host: TrailSenseDestinationHost,
             shouldRequestPermissions: Boolean
         ) {
             if (shouldRequestPermissions) {
-                fragment.requestScheduleExactAlarms {
-                    start(fragment.requireContext())
+                host.requestScheduleExactAlarms {
+                    start(host.requireContext())
                     RequestBackgroundLocationCommand(
-                        fragment.requireContext(),
-                        BackgroundLocationAlerter(fragment)
+                        host.requireContext(),
+                        BackgroundLocationAlerter(host)
                     ).execute()
                 }
             } else {
-                start(fragment.requireContext())
+                start(host.requireContext())
             }
         }
     }

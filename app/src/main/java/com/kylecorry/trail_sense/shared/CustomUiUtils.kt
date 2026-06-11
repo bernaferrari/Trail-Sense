@@ -510,21 +510,21 @@ object CustomUiUtils {
     }
 
     fun snackbar(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         text: String,
         duration: Int = Snackbar.LENGTH_SHORT,
         action: String? = null,
         onAction: () -> Unit = {}
     ): Snackbar {
-        return fragment.showSnackbar(text, duration, action, onAction)
+        return host.showSnackbar(text, duration, action, onAction)
     }
 
     fun showQR(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         title: String,
         qr: String
     ) {
-        showQR(fragment.requireContext(), fragment.findNavController(), title, qr)
+        showQR(host.requireContext(), host.findNavController(), title, qr)
     }
 
     fun showQR(
@@ -546,28 +546,28 @@ object CustomUiUtils {
     }
 
     suspend fun takePhoto(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         size: Size? = null
     ): Uri? =
         suspendCoroutine { cont ->
-            takePhoto(fragment, size) {
+            takePhoto(host, size) {
                 cont.resume(it)
             }
         }
 
     private fun takePhoto(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         size: Size? = null,
         onCapture: (uri: Uri?) -> Unit
     ) {
-        fragment.requestCamera {
+        host.requestCamera {
             if (!it) {
                 onCapture(null)
                 return@requestCamera
             }
 
-            val prefs = UserPreferences(fragment.requireContext()).camera
-            fragment.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
+            val prefs = UserPreferences(host.requireContext()).camera
+            host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
                 onCapture(uri)
             }
         }

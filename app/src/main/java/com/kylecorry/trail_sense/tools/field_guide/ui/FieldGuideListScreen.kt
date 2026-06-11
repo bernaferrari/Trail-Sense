@@ -71,8 +71,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuideToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { FieldGuideController(fragment) }
+fun FieldGuideToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { FieldGuideController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -101,10 +101,10 @@ fun FieldGuideToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class FieldGuideController(private val fragment: TrailSenseDestinationHost) {
+private class FieldGuideController(private val host: TrailSenseDestinationHost) {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
     private var pages by mutableStateOf(emptyList<FieldGuidePage>())
     var filter by mutableStateOf("")
     var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
@@ -147,9 +147,9 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
         }
         isInitialized = true
         CustomUiUtils.disclaimer(
-            fragment.requireContext(),
-            fragment.getString(R.string.disclaimer_message_title),
-            fragment.getString(R.string.field_guide_disclaimer),
+            host.requireContext(),
+            host.getString(R.string.disclaimer_message_title),
+            host.getString(R.string.field_guide_disclaimer),
             "field_guide_disclaimer",
             cancelText = null
         )
@@ -160,12 +160,12 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
                     filter = ""
                 } else {
                     isEnabled = false
-                    fragment.mainActivity.onBackPressedDispatcher.onBackPressed()
+                    host.mainActivity.onBackPressedDispatcher.onBackPressed()
                 }
             }
         }
-        fragment.mainActivity.onBackPressedDispatcher.addCallback(
-            fragment.lifecycleOwner,
+        host.mainActivity.onBackPressedDispatcher.addCallback(
+            host.lifecycleOwner,
             backCallback!!
         )
         reloadPages()
@@ -177,9 +177,9 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     fun reloadPages() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             pages = withContext(Dispatchers.IO) {
-                FieldGuideCleanupCommand(fragment.requireContext()).execute()
+                FieldGuideCleanupCommand(host.requireContext()).execute()
                 repo.getAllPages().sortedBy { it.name }
             }
         }
@@ -187,14 +187,14 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
 
     fun getListItems(): FieldGuideListItems {
         val filteredPages = getFilteredPages()
-        val tagNameMapper = FieldGuideTagNameMapper(fragment.requireContext())
+        val tagNameMapper = FieldGuideTagNameMapper(host.requireContext())
         return if (tagFilter == null && filter.isBlank()) {
             FieldGuideListItems(
                 headingTags.map { tag ->
                     FieldGuideListItem.TagItem(
                         tag = tag,
                         title = tagNameMapper.getName(tag),
-                        subtitle = fragment.getResources().getQuantityString(
+                        subtitle = host.getResources().getQuantityString(
                             R.plurals.page_group_summary,
                             filteredPages.count { it.tags.contains(tag) },
                             filteredPages.count { it.tags.contains(tag) }
@@ -220,7 +220,7 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     private fun getFilteredPages(): List<FieldGuidePage> {
-        val mapper = FieldGuideTagNameMapper(fragment.requireContext())
+        val mapper = FieldGuideTagNameMapper(host.requireContext())
         return TextUtils.search(filter, pages) { page ->
             listOf(
                 page.name,
@@ -233,7 +233,7 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     fun createPage(tag: FieldGuidePageTag?) {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("classification_id", tag?.id ?: 0L)
@@ -242,7 +242,7 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     fun editPage(page: FieldGuidePage) {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
@@ -251,7 +251,7 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     fun viewPage(page: FieldGuidePage) {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.fieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
@@ -260,9 +260,9 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     fun deletePage(page: FieldGuidePage) {
-        Alerts.dialog(fragment.requireContext(), fragment.getString(R.string.delete), page.name) { cancelled ->
+        Alerts.dialog(host.requireContext(), host.getString(R.string.delete), page.name) { cancelled ->
             if (!cancelled) {
-                fragment.lifecycleScope.launch {
+                host.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.delete(page)
                     }
@@ -273,7 +273,7 @@ private class FieldGuideController(private val fragment: TrailSenseDestinationHo
     }
 
     suspend fun loadThumbnail(page: FieldGuidePage): Bitmap = onIO {
-        val size = Resources.dp(fragment.requireContext(), 48f).toInt()
+        val size = Resources.dp(host.requireContext(), 48f).toInt()
         try {
             files.bitmap(page.images.first(), Size(size, size)) ?: getDefaultThumbnail(size)
         } catch (e: Exception) {

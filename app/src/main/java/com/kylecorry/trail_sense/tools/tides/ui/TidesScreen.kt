@@ -73,8 +73,8 @@ import java.time.Instant
 import java.time.LocalDate
 
 @Composable
-fun TidesToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { TidesController(fragment) }
+fun TidesToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { TidesController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -106,15 +106,15 @@ fun TidesToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class TidesController(private val fragment: TrailSenseDestinationHost) {
+private class TidesController(private val host: TrailSenseDestinationHost) {
 
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val tideService by lazy { TideService(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val tideService by lazy { TideService(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
     private val currentTideCommand by lazy { CurrentTideCommand(tideService) }
     private val dailyTideCommand by lazy { DailyTideCommand(tideService) }
-    private val loadTideCommand by lazy { LoadTideTableCommand(fragment.requireContext()) }
+    private val loadTideCommand by lazy { LoadTideTableCommand(host.requireContext()) }
 
     private var table by mutableStateOf<TideTable?>(null)
     var current by mutableStateOf<CurrentTideData?>(null)
@@ -133,7 +133,7 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
     fun onResume() {
         if (table == null) {
             displayDate = LocalDate.now()
-            ShowTideDisclaimerCommand(fragment.requireContext(), fragment.findNavController()) {
+            ShowTideDisclaimerCommand(host.requireContext(), host.findNavController()) {
                 loadTideTable()
             }.execute()
         } else {
@@ -149,7 +149,7 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
 
     fun openTideList() {
         table = null
-        fragment.findNavController().navigate(R.id.action_tides_to_tideList)
+        host.findNavController().navigate(R.id.action_tides_to_tideList)
     }
 
     fun onDisplayDateSelected(date: LocalDate) {
@@ -162,9 +162,9 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
         daily = null
         current = null
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val updatedTable = newTable ?: loadTideCommand.execute()
-            val locationSubsystem = LocationSubsystem.getInstance(fragment.requireContext())
+            val locationSubsystem = LocationSubsystem.getInstance(host.requireContext())
             if (updatedTable?.isAutomaticNearbyTide == true &&
                 locationSubsystem.locationAge > Duration.ofMinutes(30)
             ) {
@@ -176,12 +176,12 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
 
             if (updatedTable == null) {
                 val cancelled = CoroutineAlerts.dialog(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.no_tides),
-                    fragment.getString(R.string.calibrate_new_tide)
+                    host.requireContext(),
+                    host.getString(R.string.no_tides),
+                    host.getString(R.string.calibrate_new_tide)
                 )
                 if (!cancelled) {
-                    fragment.findNavController().navigate(R.id.action_tides_to_tideList)
+                    host.findNavController().navigate(R.id.action_tides_to_tideList)
                 }
                 return@launch
             }
@@ -196,7 +196,7 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
         val currentTable = table ?: return
         val date = displayDate
         dailyTideJob?.cancel()
-        dailyTideJob = fragment.lifecycleScope.launch {
+        dailyTideJob = host.lifecycleScope.launch {
             daily = dailyTideCommand.execute(currentTable, date)
         }
     }
@@ -204,14 +204,14 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
     private fun updateCurrentTide() {
         val currentTable = table ?: return
         currentTideJob?.cancel()
-        currentTideJob = fragment.lifecycleScope.launch {
+        currentTideJob = host.lifecycleScope.launch {
             current = currentTideCommand.execute(currentTable)
         }
     }
 
     private fun startCurrentRefresh() {
         currentRefreshJob?.cancel()
-        currentRefreshJob = fragment.lifecycleScope.launch {
+        currentRefreshJob = host.lifecycleScope.launch {
             while (isActive) {
                 updateCurrentTide()
                 delay(Duration.ofMinutes(1).toMillis())
@@ -233,8 +233,8 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
 
     @SuppressLint("SetTextI18n")
     fun getCurrentTideTitle(): String {
-        val current = current ?: return fragment.getString(R.string.tides)
-        val name = TideFormatter(fragment.requireContext()).getTideTypeName(current.type)
+        val current = current ?: return host.getString(R.string.tides)
+        val name = TideFormatter(host.requireContext()).getTideTypeName(current.type)
         val waterLevel = if (current.waterLevel != null) {
             val height = Distance.meters(current.waterLevel).convertTo(units)
             " (${formatService.formatDistance(height, 2, true)})"
@@ -248,7 +248,7 @@ private class TidesController(private val fragment: TrailSenseDestinationHost) {
         val table = table ?: return ""
         return table.name
             ?: table.location?.let { formatService.formatLocation(it) }
-            ?: fragment.getString(android.R.string.untitled)
+            ?: host.getString(android.R.string.untitled)
     }
 }
 

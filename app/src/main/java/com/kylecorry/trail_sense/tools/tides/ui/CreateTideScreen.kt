@@ -83,8 +83,8 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
 @Composable
-fun CreateTideToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CreateTideController(fragment) }
+fun CreateTideToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CreateTideController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -124,11 +124,11 @@ fun CreateTideToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CreateTideController(private val fragment: TrailSenseDestinationHost) {
+private class CreateTideController(private val host: TrailSenseDestinationHost) {
 
-    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val tideRepo by lazy { TideTableRepo.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
 
     private var editingId: Long = 0
@@ -148,22 +148,22 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
 
     val estimateTypeNameMap by lazy {
         mapOf(
-            EstimateType.Clock to fragment.getString(R.string.tide_clock),
-            EstimateType.LunitidalIntervalAuto to fragment.getString(R.string.lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to fragment.getString(R.string.lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to fragment.getString(R.string.lunitidal_interval_utc),
-            EstimateType.TideModel to fragment.getString(R.string.tide_model_auto),
-            EstimateType.Harmonic to fragment.getString(R.string.harmonic)
+            EstimateType.Clock to host.getString(R.string.tide_clock),
+            EstimateType.LunitidalIntervalAuto to host.getString(R.string.lunitidal_interval_auto),
+            EstimateType.LunitidalIntervalManualLocal to host.getString(R.string.lunitidal_interval_local),
+            EstimateType.LunitidalIntervalManualUTC to host.getString(R.string.lunitidal_interval_utc),
+            EstimateType.TideModel to host.getString(R.string.tide_model_auto),
+            EstimateType.Harmonic to host.getString(R.string.harmonic)
         )
     }
 
     val estimateTypeDescriptionMap by lazy {
         mapOf(
-            EstimateType.Clock to fragment.getString(R.string.tide_estimation_description_tide_clock),
-            EstimateType.LunitidalIntervalAuto to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to fragment.getString(R.string.tide_estimation_description_lunitidal_interval_utc),
-            EstimateType.TideModel to fragment.getString(R.string.tide_estimation_description_tide_model),
+            EstimateType.Clock to host.getString(R.string.tide_estimation_description_tide_clock),
+            EstimateType.LunitidalIntervalAuto to host.getString(R.string.tide_estimation_description_lunitidal_interval_auto),
+            EstimateType.LunitidalIntervalManualLocal to host.getString(R.string.tide_estimation_description_lunitidal_interval_local),
+            EstimateType.LunitidalIntervalManualUTC to host.getString(R.string.tide_estimation_description_lunitidal_interval_utc),
+            EstimateType.TideModel to host.getString(R.string.tide_estimation_description_tide_model),
             EstimateType.Harmonic to "!! NEED TO MANUALLY INSERT INTO DB !!"
         )
     }
@@ -184,8 +184,8 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
             return
         }
         isInitialized = true
-        editingId = fragment.destinationArguments?.getLong("edit_tide_id") ?: 0L
-        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
+        editingId = host.destinationArguments?.getLong("edit_tide_id") ?: 0L
+        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
 
         if (editingId != 0L) {
             loadEditingTide()
@@ -200,7 +200,7 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
     }
 
     private fun loadEditingTide() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             editingTide = withContext(Dispatchers.IO) {
                 tideRepo.getTideTable(editingId)
             }
@@ -268,9 +268,9 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
     fun deleteTideEntry(entry: TideEntry) {
         tideEntries = tideEntries.filterNot { it.id == entry.id }
         CustomUiUtils.snackbar(
-            fragment,
-            fragment.getString(R.string.tide_deleted),
-            action = fragment.getString(R.string.undo)
+            host,
+            host.getString(R.string.tide_deleted),
+            action = host.getString(R.string.undo)
         ) {
             tideEntries = tideEntries + entry
         }
@@ -278,7 +278,7 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
 
     fun pickTideTime(entry: TideEntry) {
         CustomUiUtils.pickDatetime(
-            fragment.requireContext(),
+            host.requireContext(),
             prefs.use24HourTime,
             entry.time?.toLocalDateTime() ?: LocalDateTime.now()
         ) {
@@ -291,10 +291,10 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
     fun pickTideHeight(entry: TideEntry) {
         val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
         CustomUiUtils.pickDistance(
-            fragment.requireContext(),
+            host.requireContext(),
             distanceUnits,
             entry.height,
-            fragment.getString(R.string.height)
+            host.getString(R.string.height)
         ) { distance, cancelled ->
             if (!cancelled) {
                 updateTideEntry(entry.copy(height = distance))
@@ -304,21 +304,21 @@ private class CreateTideController(private val fragment: TrailSenseDestinationHo
 
     fun showHelp() {
         UserGuideUtils.showGuide(
-            fragment.requireContext(),
-            fragment.findNavController(),
+            host.requireContext(),
+            host.findNavController(),
             R.raw.guide_tool_tides
         )
     }
 
     fun saveTide() {
         val tide = getTide() ?: return
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 tideRepo.addTideTable(tide)
             }
 
             backCallback?.remove()
-            fragment.findNavController().navigateUp()
+            host.findNavController().navigateUp()
         }
     }
 

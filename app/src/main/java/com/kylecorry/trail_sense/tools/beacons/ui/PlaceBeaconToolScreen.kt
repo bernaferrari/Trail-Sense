@@ -87,10 +87,10 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun PlaceBeaconToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { PlaceBeaconController(fragment) }
+    val controller = remember(host) { PlaceBeaconController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -115,11 +115,11 @@ fun PlaceBeaconToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PlaceBeaconController(private val fragment: TrailSenseDestinationHost) {
+private class PlaceBeaconController(private val host: TrailSenseDestinationHost) {
 
-    private val beaconService by lazy { BeaconService(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val beaconService by lazy { BeaconService(host.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val units by lazy { prefs.baseDistanceUnits }
 
     private val isComplete = IsBeaconFormDataComplete()
@@ -135,8 +135,8 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
     private var elevationAutofillRequest by mutableStateOf(0)
     private var compassBearingText by mutableStateOf("")
 
-    private val compass by lazy { SensorService(fragment.requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
+    private val compass by lazy { SensorService(host.requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
     private var isInitialized = false
 
@@ -146,7 +146,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
         }
         isInitialized = true
 
-        val args = fragment.destinationArguments
+        val args = host.destinationArguments
         val beaconId = args?.getLong("edit_beacon") ?: 0L
         val groupId = args?.getLong("initial_group") ?: 0L
         initialLocation = BundleCompat.getParcelable(
@@ -157,7 +157,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
 
         editingBeaconId = if (beaconId == 0L) null else beaconId
         data = data.copy(groupId = if (groupId == 0L) null else groupId)
-        backCallback = fragment.promptIfUnsavedChanges { hasChanges.isSatisfiedBy(data) }
+        backCallback = host.promptIfUnsavedChanges { hasChanges.isSatisfiedBy(data) }
 
         updateBeaconGroupName()
 
@@ -288,7 +288,7 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
     }
 
     private fun loadExistingBeacon(beaconId: Long) {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val beacon = withContext(Dispatchers.IO) {
                 beaconService.getBeacon(beaconId)
             }
@@ -306,9 +306,9 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
     }
 
     private fun pickGroup() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val result = BeaconPickers.pickGroup(
-                fragment.requireContext(),
+                host.requireContext(),
                 initialGroup = data.groupId
             )
             if (result.first) {
@@ -328,13 +328,13 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
     }
 
     private fun setBearingFromCamera() {
-        fragment.requestCamera { hasPermission ->
+        host.requestCamera { hasPermission ->
             if (hasPermission) {
                 if (cameraSheet == null) {
                     cameraSheet = SightingCompassDialog(
-                        fragment.requireContext(),
-                        fragment.lifecycleOwner,
-                        fragment.lifecycleScope
+                        host.requireContext(),
+                        host.lifecycleOwner,
+                        host.lifecycleScope
                     ) {
                         updateData(
                             data.copy(
@@ -346,17 +346,17 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
                 }
                 cameraSheet?.show()
             } else {
-                fragment.alertNoCameraPermission()
+                host.alertNoCameraPermission()
             }
         }
     }
 
     private fun updateBeaconGroupName() {
         val parent = data.groupId
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             groupName = withContext(Dispatchers.IO) {
                 if (parent == null) {
-                    fragment.getString(R.string.no_group)
+                    host.getString(R.string.no_group)
                 } else {
                     beaconService.getGroup(parent)?.name ?: ""
                 }
@@ -366,13 +366,13 @@ private class PlaceBeaconController(private val fragment: TrailSenseDestinationH
 
     private fun onSubmit() {
         val beacon = data.toBeacon() ?: return
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 beaconService.add(beacon)
             }
 
             backCallback?.remove()
-            fragment.findNavController().navigateUp()
+            host.findNavController().navigateUp()
         }
     }
 }

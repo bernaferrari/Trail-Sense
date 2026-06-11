@@ -121,10 +121,10 @@ fun openAugmentedReality(
 
 @Composable
 fun AugmentedRealityToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { AugmentedRealityController(fragment) }
+    val controller = remember(host) { AugmentedRealityController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -149,28 +149,28 @@ fun AugmentedRealityToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AugmentedRealityController(private val fragment: TrailSenseDestinationHost) {
+private class AugmentedRealityController(private val host: TrailSenseDestinationHost) {
 
-    private val views = createAugmentedRealityViews(fragment.requireContext())
+    private val views = createAugmentedRealityViews(host.requireContext())
     private val isViewReady: Boolean
         get() = isCreated
 
     private var mode = ARMode.Normal
     private var timeOverride: Instant? = null
 
-    private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val userPrefs by lazy { UserPreferences(host.requireContext()) }
     private val beaconRepo by lazy {
-        BeaconRepo.getInstance(fragment.requireContext())
+        BeaconRepo.getInstance(host.requireContext())
     }
 
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val planetMapper by lazy { PlanetMapper(fragment.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val planetMapper by lazy { PlanetMapper(host.requireContext()) }
     private var activeGuidanceTarget: ARGuidanceTarget? = null
     private val guidanceRefreshRunner = CoroutineQueueRunner()
 
     private val beaconLayer by lazy {
         ARBeaconLayer(
-            fragment.getString(R.string.beacons),
+            host.getString(R.string.beacons),
             Distance.meters(userPrefs.augmentedReality.beaconViewDistance),
             onFocus = this::onBeaconFocused
         ) {
@@ -185,7 +185,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
 
     private val astronomyLayer by lazy {
         ARAstronomyLayer(
-            fragment.getString(R.string.astronomy),
+            host.getString(R.string.astronomy),
             drawBelowHorizon = userPrefs.augmentedReality.showAstronomyBelowHorizon,
             drawStars = userPrefs.augmentedReality.showStars,
             drawConstellations = userPrefs.augmentedReality.showConstellations,
@@ -205,12 +205,12 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         )
     }
 
-    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
 
     private val gridLayer by lazy {
         ARGridLayer(
             30,
-            northColor = Resources.getCardinalDirectionColor(fragment.requireContext()),
+            northColor = Resources.getCardinalDirectionColor(host.requireContext()),
             horizonColor = Color.WHITE,
             labelColor = Color.WHITE,
             color = Color.WHITE.withAlpha(100),
@@ -313,12 +313,12 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         }
         isCreated = true
         // Beacon layer setup (TODO: Move this to a layer manager)
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             beaconRepo.getBeacons().collect {
                 beaconLayer.setBeacons(it)
             }
         }
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             navigator.destination.collect {
                 beaconLayer.destination = it
                 syncBeaconGuidance(it)
@@ -338,9 +338,9 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         views.camera.setShowTorch(false)
 
         views.arView.infiniteFocusWhenPointedUp = true
-        views.arView.bind(views.camera, fragment.lifecycleOwner)
+        views.arView.bind(views.camera, host.lifecycleOwner)
 
-        val arguments = fragment.destinationArguments ?: Bundle()
+        val arguments = host.destinationArguments ?: Bundle()
         val modeId = arguments.getLong("mode", ARMode.Normal.id)
         val desiredMode = ARMode.entries.withId(modeId) ?: ARMode.Normal
 
@@ -387,8 +387,8 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
 
         views.calibrateBtn.onLongClick = {
             Alerts.dialog(
-                fragment.requireContext(),
-                fragment.getString(R.string.reset_calibration_question)
+                host.requireContext(),
+                host.getString(R.string.reset_calibration_question)
             ) { cancelled ->
                 if (!cancelled) {
                     views.arView.resetCalibration()
@@ -408,10 +408,10 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
             views.focusActionButton.isVisible = false
         }
 
-        ARCalibrateDisclaimer(fragment.requireContext()).alert()
+        ARCalibrateDisclaimer(host.requireContext()).alert()
 
-        if (!Sensors.hasGyroscope(fragment.requireContext())) {
-            ARNoGyroAlert(fragment.requireContext()).alert()
+        if (!Sensors.hasGyroscope(host.requireContext())) {
+            ARNoGyroAlert(host.requireContext()).alert()
         }
     }
 
@@ -421,7 +421,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         }
 
         pathLayerManager = AugmentedRealityPathLayerManager(
-            fragment.requireContext(),
+            host.requireContext(),
             pathsLayer,
             shouldCorrectElevations = userPrefs.augmentedReality.adjustForPathElevation
         )
@@ -448,7 +448,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         isCameraEnabled = true
         views.cameraToggle.setImageResource(R.drawable.ic_camera)
         views.arView.backgroundFillColor = Color.TRANSPARENT
-        fragment.requestCamera {
+        host.requestCamera {
             if (it) {
                 views.camera.isVisible = true
                 views.camera.start(
@@ -459,7 +459,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
                 isCameraEnabled = false
                 views.cameraToggle.setImageResource(R.drawable.ic_camera_off)
                 views.arView.backgroundFillColor = Color.BLACK
-                fragment.alertNoCameraPermission()
+                host.alertNoCameraPermission()
             }
         }
     }
@@ -505,7 +505,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         if (!isViewReady) {
             return
         }
-        val isNight = AstronomySubsystem.getInstance(fragment.requireContext()).isNight()
+        val isNight = AstronomySubsystem.getInstance(host.requireContext()).isNight()
         val shouldIncreaseExposureAtNight = userPrefs.augmentedReality.increaseExposureAtNight
         views.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
     }
@@ -513,7 +513,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
     // TODO: Extract focus formatters
     private fun onSunFocused(time: ZonedDateTime): Boolean {
         views.arView.focusText =
-            fragment.getString(R.string.sun) + "\n" + formatter.formatRelativeDateTime(
+            host.getString(R.string.sun) + "\n" + formatter.formatRelativeDateTime(
                 time,
                 includeSeconds = false
             )
@@ -522,7 +522,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
 
     private fun onMoonFocused(time: ZonedDateTime, phase: MoonPhase): Boolean {
         views.arView.focusText =
-            fragment.getString(R.string.moon) + "\n" + formatter.formatRelativeDateTime(
+            host.getString(R.string.moon) + "\n" + formatter.formatRelativeDateTime(
                 time,
                 includeSeconds = false
             ) + "\n${formatter.formatMoonPhase(phase.phase)} (${
@@ -536,9 +536,9 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
     private fun onStarFocused(star: Star): Boolean {
         val constellations = astronomyService.getConstellationsForStar(star)
         val constellationString =
-            constellations.joinToString("\n\n\n") { "${fragment.getString(R.string.constellation)}\n${it.name}" }
+            constellations.joinToString("\n\n\n") { "${host.getString(R.string.constellation)}\n${it.name}" }
         views.arView.focusText =
-            "${fragment.getString(R.string.star)}\n${star.name}\n\n\n$constellationString".trim()
+            "${host.getString(R.string.star)}\n${star.name}\n\n\n$constellationString".trim()
         return true
     }
 
@@ -548,7 +548,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
     }
 
     private fun onMeteorShowerFocused(shower: MeteorShower): Boolean {
-        views.arView.focusText = fragment.getString(R.string.meteor_shower) + "\n" + shower.readableName()
+        views.arView.focusText = host.getString(R.string.meteor_shower) + "\n" + shower.readableName()
         return true
     }
 
@@ -578,7 +578,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
 
         // If the beacon isn't the destination, show the navigate button
         if (navigator.getDestinationId() != beacon.id) {
-            views.focusActionButton.setTextDistinct(fragment.getString(R.string.navigate))
+            views.focusActionButton.setTextDistinct(host.getString(R.string.navigate))
             views.focusActionButton.onClick = {
                 replaceActiveGuidanceTarget(BeaconGuidanceTarget(beacon))
             }
@@ -631,8 +631,8 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         }
 
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.locate),
+            host.requireContext(),
+            host.getString(R.string.locate),
             layers.map { it.guidanceName }
         ) { selected ->
             if (selected == null) {
@@ -645,7 +645,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
                 return@item
             }
 
-            fragment.inBackground {
+            host.inBackground {
                 val target = layer.pickGuidanceTarget(views.arView)
                 if (target == null) {
                     handleGuidancePickerCancelled()
@@ -658,7 +658,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
     }
 
     private fun showAstronomyTargetPicker() {
-        fragment.inBackground {
+        host.inBackground {
             val target = astronomyLayer.pickGuidanceTarget(views.arView)
             if (target == null) {
                 handleGuidancePickerCancelled()
@@ -723,7 +723,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
             return
         }
 
-        fragment.inBackground {
+        host.inBackground {
             guidanceRefreshRunner.enqueue {
                 tryOrLog {
                     val state = target.refresh(views.arView)
@@ -785,11 +785,11 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
         views.calibrationPanel.isVisible = true
         val isSunUp = astronomyService.isSunUp(views.arView.location)
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.calibrate),
-            fragment.getString(
+            host.requireContext(),
+            host.getString(R.string.calibrate),
+            host.getString(
                 R.string.ar_calibration_instructions,
-                if (isSunUp) fragment.getString(R.string.sun) else fragment.getString(R.string.moon)
+                if (isSunUp) host.getString(R.string.sun) else host.getString(R.string.moon)
             ),
         ) { cancelled ->
             if (cancelled) {
@@ -799,7 +799,7 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
     }
 
     private fun calibrate() {
-        fragment.inBackground {
+        host.inBackground {
             val useGyro = userPrefs.augmentedReality.useGyroOnlyAfterCalibration
             val calibrator = if (astronomyService.isSunUp(views.arView.location)) {
                 calibrationFactory.getSunCalibrator(views.arView.location)
@@ -817,8 +817,8 @@ private class AugmentedRealityController(private val fragment: TrailSenseDestina
 
     private fun displayAccuracyTips() {
         val alerter = ImproveAccuracyAlerter(
-            fragment.requireContext(),
-            fragment.getString(R.string.ar_calibration_instructions_hint)
+            host.requireContext(),
+            host.getString(R.string.ar_calibration_instructions_hint)
         )
         alerter.alert(listOf(views.arView.gps, views.arView.geomagneticOrientationSensor))
     }

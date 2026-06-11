@@ -9,8 +9,8 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionLowPowerMode(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(button, fragment) {
+class QuickActionLowPowerMode(button: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(button, host) {
 
     private val lowerPowerMode by lazy { LowPowerMode(context) }
     private val prefs by lazy { UserPreferences(context) }
@@ -43,7 +43,7 @@ class QuickActionLowPowerMode(button: QuickActionButtonView, fragment: TrailSens
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.BATTERY)
+        host.findNavController().openTool(Tools.BATTERY)
         return true
     }
 }

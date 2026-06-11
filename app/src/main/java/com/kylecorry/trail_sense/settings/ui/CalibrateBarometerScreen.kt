@@ -62,8 +62,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @Composable
-fun CalibrateBarometerToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CalibrateBarometerController(fragment) }
+fun CalibrateBarometerToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CalibrateBarometerController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -87,12 +87,12 @@ fun CalibrateBarometerToolScreen(fragment: TrailSenseDestinationHost) {
     CalibrateBarometerContent(controller)
 }
 
-private class CalibrateBarometerController(private val fragment: TrailSenseDestinationHost) {
+private class CalibrateBarometerController(private val host: TrailSenseDestinationHost) {
 
-    val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
     private val units: PressureUnits by lazy { prefs.pressureUnits }
-    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val throttle = Throttle(20)
     private val updateTimer = CoroutineTimer {
         update()
@@ -101,12 +101,12 @@ private class CalibrateBarometerController(private val fragment: TrailSenseDesti
     private var history: List<WeatherObservation> = listOf()
     private var uncalibratedHistory: List<Reading<RawWeatherObservation>> = listOf()
 
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
     private val runner = CoroutineQueueRunner()
 
     private val logger by lazy {
         WeatherLogger(
-            fragment.requireContext(),
+            host.requireContext(),
             Duration.ofSeconds(30),
             Duration.ofMillis(500),
         )
@@ -117,7 +117,7 @@ private class CalibrateBarometerController(private val fragment: TrailSenseDesti
     private var setBarometerOffset: ((Float) -> Unit)? = null
 
     fun onViewCreated() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             weatherSubsystem.weatherChanged.flow().collect {
                 updateBarometerData()
             }
@@ -205,8 +205,8 @@ private class CalibrateBarometerController(private val fragment: TrailSenseDesti
 
     fun resetBarometerOffset(onReset: (Float) -> Unit) {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.reset_calibration_question)
+            host.requireContext(),
+            host.getString(R.string.reset_calibration_question)
         ) { cancelled ->
             if (!cancelled) {
                 prefs.weather.barometerOffset = 0f
@@ -218,9 +218,9 @@ private class CalibrateBarometerController(private val fragment: TrailSenseDesti
 
     fun pickBarometerOffset(onPicked: (Float) -> Unit) {
         CustomUiUtils.pickPressure(
-            fragment.requireContext(),
-            fragment.getString(R.string.pressure),
-            fragment.getString(R.string.enter_the_current_pressure),
+            host.requireContext(),
+            host.getString(R.string.pressure),
+            host.getString(R.string.enter_the_current_pressure),
             default = getCurrentPressure().convertTo(units)
         ) {
             if (it == null) {
@@ -246,23 +246,23 @@ private class CalibrateBarometerController(private val fragment: TrailSenseDesti
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+        return cache.getBoolean(host.getString(key)) ?: defaultValue
     }
 
     fun getInt(key: Int, defaultValue: Int): Int {
-        return cache.getInt(fragment.getString(key)) ?: defaultValue
+        return cache.getInt(host.getString(key)) ?: defaultValue
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(fragment.getString(key), value)
+        cache.putBoolean(host.getString(key), value)
     }
 
     fun putInt(key: Int, value: Int) {
-        cache.putInt(fragment.getString(key), value)
+        cache.putInt(host.getString(key), value)
     }
 
     private fun updateBarometerData() {
-        fragment.inBackground {
+        host.inBackground {
             runner.replace {
                 history = weatherSubsystem.getHistory()
                 uncalibratedHistory = weatherSubsystem.getRawHistory(true)

@@ -10,12 +10,12 @@ class QuickActionFactory {
     fun create(
         id: Int,
         button: QuickActionButtonView,
-        fragment: TrailSenseDestinationHost
+        host: TrailSenseDestinationHost
     ): QuickActionButton {
-        val quickActions = Tools.getQuickActions(fragment.requireContext())
+        val quickActions = Tools.getQuickActions(host.requireContext())
         button.contentDescription = "quick_action_$id"
-        return quickActions.firstOrNull { it.id == id }?.create?.invoke(button, fragment)
-            ?: QuickActionNone(button, fragment)
+        return quickActions.firstOrNull { it.id == id }?.create?.invoke(button, host)
+            ?: QuickActionNone(button, host)
     }
 
 }

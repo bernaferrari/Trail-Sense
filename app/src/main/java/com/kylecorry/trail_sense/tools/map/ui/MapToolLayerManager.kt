@@ -37,11 +37,11 @@ class MapToolLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, fragment: TrailSenseDestinationHost) {
+    fun resume(context: Context, view: IMapView, host: TrailSenseDestinationHost) {
         synchronized(runningLock) {
             isRunning = true
         }
-        fragment.inBackground {
+        host.inBackground {
             view.setLayersWithPreferences(
                 MapToolRegistration.MAP_ID,
                 repo.getActiveLayerIds(MapToolRegistration.MAP_ID) +
@@ -64,7 +64,7 @@ class MapToolLayerManager {
                 48f
 
             view.layerManager.setOnGeoJsonFeatureClickListener { feature ->
-                GeoJsonFeatureClickHandler.handleFeatureClick(fragment, feature)
+                GeoJsonFeatureClickHandler.handleFeatureClick(host, feature)
             }
 
             synchronized(runningLock) {

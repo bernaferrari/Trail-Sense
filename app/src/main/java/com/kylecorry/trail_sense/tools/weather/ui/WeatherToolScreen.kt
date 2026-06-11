@@ -102,10 +102,10 @@ import kotlin.math.max
 
 @Composable
 fun WeatherToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { WeatherController(fragment) }
+    val controller = remember(host) { WeatherController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -128,10 +128,10 @@ fun WeatherToolScreen(
 }
 
 private class WeatherController(
-    private val fragment: TrailSenseDestinationHost
+    private val host: TrailSenseDestinationHost
 ) {
     private var weatherViews: WeatherViews? =
-        createWeatherViews(fragment.requireContext())
+        createWeatherViews(host.requireContext())
     private val views: WeatherViews
         get() = weatherViews ?: error("Weather views are not ready")
     private val isViewReady: Boolean
@@ -140,10 +140,10 @@ private class WeatherController(
     private var useSeaLevelPressure = false
     private var units = PressureUnits.Hpa
 
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val temperatureUnits by lazy { prefs.temperatureUnits }
 
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
     private var history: List<WeatherObservation> = emptyList()
     private var pressureForecast: List<Reading<Pressure>> = emptyList()
@@ -156,7 +156,7 @@ private class WeatherController(
     private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
     private var showWeatherFrequencyPicker by mutableStateOf(false)
 
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
     private var weather: CurrentWeather? = null
     private val loadingIndicator by lazy {
         ResettableLoadingIndicator(
@@ -166,7 +166,7 @@ private class WeatherController(
 
     private val logger by lazy {
         WeatherLogger(
-            fragment.requireContext(),
+            host.requireContext(),
             Duration.ofSeconds(30),
             Duration.ofMillis(500),
             loadingIndicator
@@ -174,7 +174,7 @@ private class WeatherController(
     }
 
     private val weatherMonitorService by lazy {
-        Tools.getService(fragment.requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
+        Tools.getService(host.requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
     }
 
     @Composable
@@ -218,13 +218,13 @@ private class WeatherController(
 
     fun onCreate() {
         WeatherQuickActionBinder(
-            fragment,
+            host,
             views.weatherTitle.leftButton,
             views.weatherTitle.rightButton,
             prefs.weather
         ).bind()
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             weatherSubsystem.weatherChanged.flow().collect {
                 updateWeather()
             }
@@ -232,12 +232,12 @@ private class WeatherController(
 
         updateStatusBar()
 
-        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
             updateStatusBar()
             true
         }
 
-        Tools.observe(fragment, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
+        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
             updateStatusBar()
             true
         }
@@ -254,22 +254,22 @@ private class WeatherController(
     }
 
     private fun changeWeatherFrequency(frequency: Duration) {
-        ChangeWeatherFrequencyCommand(fragment.requireContext()) { updateStatusBar() }.execute(frequency)
+        ChangeWeatherFrequencyCommand(host.requireContext()) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleWeatherMonitor() {
-        fragment.inBackground {
+        host.inBackground {
             when (weatherMonitorService.getFeatureState()) {
                 FeatureState.On -> weatherMonitorService.disable()
                 FeatureState.Off -> {
                     weatherMonitorService.enable()
                     RequestRemoveBatteryRestrictionCommand(
-                        fragment.requireContext(),
-                        RemoveBatteryRestrictionsAlerter(fragment)
+                        host.requireContext(),
+                        RemoveBatteryRestrictionsAlerter(host)
                     ).execute()
                 }
 
-                FeatureState.Unavailable -> fragment.toast(fragment.getString(R.string.weather_monitoring_disabled))
+                FeatureState.Unavailable -> host.toast(host.getString(R.string.weather_monitoring_disabled))
             }
         }
     }
@@ -279,7 +279,7 @@ private class WeatherController(
         logger.start()
         useSeaLevelPressure = prefs.weather.useSeaLevelPressure
         units = prefs.pressureUnits
-        ShowHistoricTemperatureDisclaimerCommand(fragment.requireContext()).execute()
+        ShowHistoricTemperatureDisclaimerCommand(host.requireContext()).execute()
         updateWeather()
     }
 
@@ -316,12 +316,12 @@ private class WeatherController(
             FrontWeatherField(weather.prediction.front),
         )
 
-        weatherItems = fields.mapNotNull { it.getListItem(fragment.requireContext()) }
+        weatherItems = fields.mapNotNull { it.getListItem(host.requireContext()) }
     }
 
 
     private fun updateWeather() {
-        fragment.inBackground {
+        host.inBackground {
             val nextHistory = onIO {
                 weatherSubsystem.getHistory().filter {
                     Duration.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
@@ -391,7 +391,7 @@ private class WeatherController(
                 Pressure.from(pressure, units),
                 Units.getDecimalPlaces(units)
             )
-            fragment.getString(
+            host.getString(
                 R.string.pressure_reading_time_ago,
                 formatted,
                 formatService.formatDuration(timeAgo, false)
@@ -411,8 +411,8 @@ private class WeatherController(
                         formatService.formatWeather(it)
                     }
                     Alerts.dialog(
-                        fragment.requireContext(),
-                        fragment.getString(R.string.weather),
+                        host.requireContext(),
+                        host.getString(R.string.weather),
                         conditions,
                         cancelText = null
                     )
@@ -421,7 +421,7 @@ private class WeatherController(
             views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
             val arrival =
                 formatService.formatWeatherArrival(weather.prediction.hourlyArrival)
-            val then = fragment.getString(
+            val then = host.getString(
                 R.string.then_weather,
                 formatService.formatWeather(prediction.primaryDaily).lowercase()
             )
@@ -449,8 +449,8 @@ private class WeatherController(
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
         CustomUiUtils.showComposeContentDialog(
-            context = fragment.requireContext(),
-            title = fragment.getString(
+            context = host.requireContext(),
+            title = host.getString(
                 R.string.humidity_history,
                 formatService.formatDuration(readingDuration, true)
             )
@@ -467,8 +467,8 @@ private class WeatherController(
     }
 
     private fun showTemperatureForecast() {
-        fragment.inBackground {
-            ShowHighLowTemperatureDialogCommand(fragment.requireContext()).execute()
+        host.inBackground {
+            ShowHighLowTemperatureDialogCommand(host.requireContext()).execute()
         }
     }
 
@@ -481,8 +481,8 @@ private class WeatherController(
         }
         val readingDuration = Duration.between(readings.first().time, Instant.now())
         CustomUiUtils.showComposeContentDialog(
-            context = fragment.requireContext(),
-            title = fragment.getString(
+            context = host.requireContext(),
+            title = host.getString(
                 R.string.temperature_history,
                 formatService.formatDuration(readingDuration, true)
             )

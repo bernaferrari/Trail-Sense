@@ -22,8 +22,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionRuler(
     btn: QuickActionButtonView,
-    fragment: TrailSenseDestinationHost,
-) : QuickActionButton(btn, fragment) {
+    host: TrailSenseDestinationHost,
+) : QuickActionButton(btn, host) {
     private val prefs by lazy { UserPreferences(context) }
 
     private var ruler: View? = null
@@ -66,10 +66,10 @@ class QuickActionRuler(
             Resources.dp(context, 80f).toInt(),
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        layoutParams.bottomMargin = fragment.getBottomNavigationHeight()
+        layoutParams.bottomMargin = host.getBottomNavigationHeight()
         ruler.layoutParams = layoutParams
 
-        fragment.addOverlayView(ruler)
+        host.addOverlayView(ruler)
 
         setIcon(R.drawable.ruler)
     }
@@ -87,7 +87,7 @@ class QuickActionRuler(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.RULER)
+        host.findNavController().openTool(Tools.RULER)
         return true
     }
 
@@ -106,7 +106,7 @@ class QuickActionRuler(
 
     private fun removeRuler() {
         ruler?.let {
-            fragment.removeOverlayView(it)
+            host.removeOverlayView(it)
         }
         ruler = null
     }

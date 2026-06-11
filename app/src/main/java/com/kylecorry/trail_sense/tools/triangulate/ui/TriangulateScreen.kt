@@ -109,12 +109,12 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun TriangulateToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(fragment) {
-        TriangulateController(fragment)
+    val controller = remember(host) {
+        TriangulateController(host)
     }
 
     DisposableEffect(lifecycleOwner, controller) {
@@ -141,13 +141,13 @@ fun TriangulateToolScreen(
 }
 
 private class TriangulateController(
-    private val fragment: TrailSenseDestinationHost
+    private val host: TrailSenseDestinationHost
 ) {
 
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val appNavigation by lazy { NavControllerAppNavigation(fragment.findNavController()) }
-    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val appNavigation by lazy { NavControllerAppNavigation(host.findNavController()) }
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
 
     private var location: Coordinate? = null
 
@@ -179,8 +179,8 @@ private class TriangulateController(
     private val isBound: Boolean
         get() = map != null
 
-    private val compass by lazy { SensorService(fragment.requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
+    private val compass by lazy { SensorService(host.requireContext()).getCompass() }
+    private val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
     private var cameraBearingIndex: Int? = null
 
@@ -272,27 +272,27 @@ private class TriangulateController(
 
     private fun createBeacon() {
         location?.let {
-            AppUtils.placeBeacon(fragment.requireContext(), GeoUri(it))
+            AppUtils.placeBeacon(host.requireContext(), GeoUri(it))
         }
     }
 
     private fun navigateToLocation() {
         location?.let {
-            navigator.navigateTo(it, fragment.getString(R.string.location), BeaconOwner.Triangulate)
+            navigator.navigateTo(it, host.getString(R.string.location), BeaconOwner.Triangulate)
             appNavigation.navigate(R.id.action_navigation)
         }
     }
 
     private fun shareLocation() {
         location?.let {
-            Share.shareLocation(fragment, it)
+            Share.shareLocation(host, it)
         }
     }
 
     private fun updateGpsOverride() {
         location?.let { coord ->
             prefs.locationOverride = coord
-            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.location_override_updated))
+            Alerts.toast(host.requireContext(), host.getString(R.string.location_override_updated))
         }
     }
 
@@ -322,14 +322,14 @@ private class TriangulateController(
     }
 
     private fun setBearingFromCamera(index: Int) {
-        fragment.requestCamera { hasPermission ->
+        host.requestCamera { hasPermission ->
             if (hasPermission) {
                 cameraBearingIndex = index
                 if (cameraSheet == null) {
                     cameraSheet = SightingCompassDialog(
-                        fragment.requireContext(),
-                        fragment.lifecycleOwner,
-                        fragment.lifecycleScope
+                        host.requireContext(),
+                        host.lifecycleOwner,
+                        host.lifecycleScope
                     ) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
@@ -338,7 +338,7 @@ private class TriangulateController(
                 }
                 cameraSheet?.show()
             } else {
-                fragment.alertNoCameraPermission()
+                host.alertNoCameraPermission()
             }
         }
     }
@@ -367,7 +367,7 @@ private class TriangulateController(
                     it,
                     id = 1,
                     name = "1",
-                    color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
+                    color = Resources.getPrimaryMarkerColor(host.requireContext()),
                     strokeColor = Color.WHITE
                 )
             },
@@ -376,7 +376,7 @@ private class TriangulateController(
                     it,
                     id = 2,
                     name = "2",
-                    color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
+                    color = Resources.getPrimaryMarkerColor(host.requireContext()),
                     strokeColor = Color.WHITE
                 )
             },
@@ -412,15 +412,15 @@ private class TriangulateController(
             formatService.formatDistance(it, Units.getDecimalPlaces(it.units))
         }
         return buildSpannedString {
-            append(fragment.getString(R.string.location_number, locationIdx))
+            append(host.getString(R.string.location_number, locationIdx))
             if (distance != null) {
                 appendLine()
                 scale(0.75f) {
                     append(
                         if (shouldCalculateMyLocation) {
-                            fragment.getString(R.string.distance_away_from_self, formattedDistance)
+                            host.getString(R.string.distance_away_from_self, formattedDistance)
                         } else {
-                            fragment.getString(R.string.distance_away_from_destination, formattedDistance)
+                            host.getString(R.string.distance_away_from_destination, formattedDistance)
                         }
                     )
                 }
@@ -434,11 +434,11 @@ private class TriangulateController(
         }
 
         if (shouldCalculateMyLocation) {
-            location1Instructions = fragment.getString(R.string.triangulate_self_location_1_instructions)
-            location2Instructions = fragment.getString(R.string.triangulate_self_location_2_instructions)
+            location1Instructions = host.getString(R.string.triangulate_self_location_1_instructions)
+            location2Instructions = host.getString(R.string.triangulate_self_location_2_instructions)
         } else {
-            location1Instructions = fragment.getString(R.string.triangulate_destination_location_1_instructions)
-            location2Instructions = fragment.getString(
+            location1Instructions = host.getString(R.string.triangulate_destination_location_1_instructions)
+            location2Instructions = host.getString(
                 R.string.triangulate_destination_location_2_instructions,
                 formatService.formatDistance(
                     recommendedMinDistance,
@@ -488,7 +488,7 @@ private class TriangulateController(
             GeoJsonFeature.lineString(
                 if (shouldCalculateMyLocation) pts.reversed() else pts,
                 locationIdx.toLong(),
-                color = Resources.getPrimaryMarkerColor(fragment.requireContext()),
+                color = Resources.getPrimaryMarkerColor(host.requireContext()),
                 lineStyle = LineStyle.Arrow
             )
         } else {
@@ -558,7 +558,7 @@ private class TriangulateController(
     private fun setLocation(location: Coordinate?) {
         this.location = location
         if (location == null || location.latitude.isNaN() || location.longitude.isNaN()) {
-            title = fragment.getString(R.string.could_not_triangulate)
+            title = host.getString(R.string.could_not_triangulate)
             actionsVisible = false
         } else {
             title = formatService.formatLocation(location)
@@ -577,7 +577,7 @@ private class TriangulateController(
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
         preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
         preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1Value)
         preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2Value)
@@ -598,7 +598,7 @@ private class TriangulateController(
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
         shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
         bearing1Value = preferences.getFloat("state_triangulate_bearing1")
         bearing2Value = preferences.getFloat("state_triangulate_bearing2")
@@ -617,7 +617,7 @@ private class TriangulateController(
         bearing1TrueNorth = false
         bearing2TrueNorth = false
 
-        val preferences = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
         preferences.remove("state_triangulate_self")
         preferences.remove("state_triangulate_bearing1")
         preferences.remove("state_triangulate_bearing2")

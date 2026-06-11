@@ -13,20 +13,20 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationS
 object Share {
 
     fun shareLocation(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         location: Coordinate,
-        format: BuiltInCoordinateFormat = UserPreferences(fragment.requireContext()).navigation.coordinateFormat,
-        title: String = fragment.getString(R.string.location)
+        format: BuiltInCoordinateFormat = UserPreferences(host.requireContext()).navigation.coordinateFormat,
+        title: String = host.getString(R.string.location)
     ) {
         val locationSenders = mapOf(
-            ShareAction.Copy to LocationCopy(fragment.requireContext()),
-            ShareAction.QR to LocationQRSender(fragment.requireContext(), fragment.findNavController()),
-            ShareAction.Maps to LocationGeoSender(fragment.requireContext()),
-            ShareAction.Send to LocationSharesheet(fragment.requireContext())
+            ShareAction.Copy to LocationCopy(host.requireContext()),
+            ShareAction.QR to LocationQRSender(host.requireContext(), host.findNavController()),
+            ShareAction.Maps to LocationGeoSender(host.requireContext()),
+            ShareAction.Send to LocationSharesheet(host.requireContext())
         )
 
         share(
-            fragment,
+            host,
             title,
             listOf(ShareAction.Copy, ShareAction.QR, ShareAction.Send, ShareAction.Maps)
         ) {
@@ -37,7 +37,7 @@ object Share {
     }
 
     fun share(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         title: String,
         actions: List<ShareAction>,
         subtitle: String? = null,
@@ -45,13 +45,13 @@ object Share {
     ) {
 
         val titles = mapOf(
-            ShareAction.Copy to fragment.getString(androidx.preference.R.string.copy),
-            ShareAction.QR to fragment.getString(R.string.qr_code),
-            ShareAction.Send to fragment.getString(R.string.share_action_send),
-            ShareAction.Maps to fragment.getString(R.string.maps),
-            ShareAction.File to fragment.getString(R.string.file),
-            ShareAction.Navigate to fragment.getString(R.string.navigate),
-            ShareAction.Open to fragment.getString(R.string.open)
+            ShareAction.Copy to host.getString(androidx.preference.R.string.copy),
+            ShareAction.QR to host.getString(R.string.qr_code),
+            ShareAction.Send to host.getString(R.string.share_action_send),
+            ShareAction.Maps to host.getString(R.string.maps),
+            ShareAction.File to host.getString(R.string.file),
+            ShareAction.Navigate to host.getString(R.string.navigate),
+            ShareAction.Open to host.getString(R.string.open)
         )
 
         val icons = mapOf(
@@ -70,13 +70,13 @@ object Share {
             }
         }
 
-        actions(fragment, title, actionItems, subtitle = subtitle) {
+        actions(host, title, actionItems, subtitle = subtitle) {
             onAction(null)
         }
     }
 
     fun actions(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         title: String,
         actions: List<ActionItem>,
         subtitle: String? = null,
@@ -96,7 +96,7 @@ object Share {
             }
         }
 
-        fragment.showActionSheet(title, subtitle, actions, customOnAction)
+        host.showActionSheet(title, subtitle, actions, customOnAction)
     }
 
 }

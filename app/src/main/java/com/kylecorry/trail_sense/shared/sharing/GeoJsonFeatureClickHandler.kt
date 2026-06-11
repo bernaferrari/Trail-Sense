@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 object GeoJsonFeatureClickHandler {
 
     fun handleFeatureClick(
-        fragment: TrailSenseDestinationHost,
+        host: TrailSenseDestinationHost,
         feature: GeoJsonFeature
     ) {
         val layerId = feature.getLayerId()
@@ -34,9 +34,9 @@ object GeoJsonFeatureClickHandler {
         val formatter = DependencyRegistry.get<FormatService>()
         val location = getFeatureLocation(feature) ?: return
         val name = feature.getName()
-        val title = name ?: fragment.getString(R.string.location)
+        val title = name ?: host.getString(R.string.location)
         val layer = if (layerId != null) {
-            Tools.getTools(fragment.requireContext())
+            Tools.getTools(host.requireContext())
                 .flatMap { it.mapLayers }
                 .firstOrNull { it.id == layerId }
         } else {
@@ -44,7 +44,7 @@ object GeoJsonFeatureClickHandler {
         }
 
         Share.share(
-            fragment,
+            host,
             title,
             listOfNotNull(
                 ShareAction.Navigate,
@@ -70,8 +70,8 @@ object GeoJsonFeatureClickHandler {
                 ShareAction.Open -> {
                     layer?.openFeature?.invoke(
                         feature,
-                        fragment.requireContext(),
-                        fragment.findNavController()
+                        host.requireContext(),
+                        host.findNavController()
                     )
                 }
 

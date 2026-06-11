@@ -67,9 +67,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SignalFinderToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) {
-        SignalFinderController(fragment)
+fun SignalFinderToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) {
+        SignalFinderController(host)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(controller, lifecycleOwner) {
@@ -103,15 +103,15 @@ fun SignalFinderToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class SignalFinderController(private val fragment: TrailSenseDestinationHost) {
+private class SignalFinderController(private val host: TrailSenseDestinationHost) {
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val cellSignal by lazy { sensorService.getCellSignal() }
     private val gps by lazy { sensorService.getGPS() }
-    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    val prefs by lazy { UserPreferences(host.requireContext()) }
     private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
-    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
     private val handler = Handler(Looper.getMainLooper())
 
     var signals by mutableStateOf(emptyList<CellSignal>())
@@ -123,7 +123,7 @@ private class SignalFinderController(private val fragment: TrailSenseDestination
     var loading by mutableStateOf(false)
         private set
     val disclaimer by lazy {
-        markdown.toMarkdown(fragment.getString(R.string.cell_tower_disclaimer))
+        markdown.toMarkdown(host.getString(R.string.cell_tower_disclaimer))
     }
     private var lastTowerLocation: Coordinate? = null
     private var towerJob: Job? = null
@@ -180,7 +180,7 @@ private class SignalFinderController(private val fragment: TrailSenseDestination
     private fun loadNearbyTowers(currentLocation: Coordinate) {
         lastTowerLocation = currentLocation
         towerJob?.cancel()
-        towerJob = fragment.lifecycleScope.launch {
+        towerJob = host.lifecycleScope.launch {
             loading = true
             val towers = withContext(Dispatchers.IO) {
                 CellTowerModel.getTowers(
@@ -194,15 +194,15 @@ private class SignalFinderController(private val fragment: TrailSenseDestination
     }
 
     fun navigateToTower(tower: ApproximateCoordinate) {
-        navigator.navigateTo(tower.coordinate, fragment.getString(R.string.cell_tower))
-        fragment.findNavController().openTool(Tools.NAVIGATION)
+        navigator.navigateTo(tower.coordinate, host.getString(R.string.cell_tower))
+        host.findNavController().openTool(Tools.NAVIGATION)
     }
 
     fun createBeacon(tower: ApproximateCoordinate) {
         val bundle = Bundle().apply {
             putParcelable("initial_location", GeoUri(tower.coordinate))
         }
-        fragment.findNavController().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavController().navigate(R.id.placeBeaconFragment, bundle)
     }
 }
 

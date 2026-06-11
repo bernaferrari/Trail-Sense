@@ -7,8 +7,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 
-class QuickActionWhiteNoise(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionWhiteNoise(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     private val intervalometer = CoroutineTimer {
         setState(isOn())

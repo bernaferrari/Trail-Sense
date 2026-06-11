@@ -14,10 +14,10 @@ import kotlinx.coroutines.launch
 
 class QuickActionWeatherMonitor(
     btn: QuickActionButtonView,
-    fragment: TrailSenseDestinationHost
+    host: TrailSenseDestinationHost
 ) : ToolServiceQuickAction(
     btn,
-    fragment,
+    host,
     WeatherToolRegistration.SERVICE_WEATHER_MONITOR,
     WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED,
     hideWhenUnavailable = false
@@ -30,24 +30,24 @@ class QuickActionWeatherMonitor(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(R.id.action_weather)
+        host.findNavController().navigateWithAnimation(R.id.action_weather)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
                     service?.enable()
                     RequestRemoveBatteryRestrictionCommand(
-                        fragment.requireContext(),
-                        RemoveBatteryRestrictionsAlerter(fragment)
+                        host.requireContext(),
+                        RemoveBatteryRestrictionsAlerter(host)
                     ).execute()
                 }
 
-                else -> fragment.toast(context.getString(R.string.weather_monitoring_disabled))
+                else -> host.toast(context.getString(R.string.weather_monitoring_disabled))
             }
         }
     }

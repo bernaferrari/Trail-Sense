@@ -8,11 +8,11 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
 class QuickActionOpenTool(
     button: QuickActionButtonView,
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     @IdRes private val navId: Int,
     @DrawableRes private val icon: Int
 ) :
-    QuickActionButton(button, fragment) {
+    QuickActionButton(button, host) {
 
     override fun onCreate() {
         super.onCreate()
@@ -21,7 +21,7 @@ class QuickActionOpenTool(
 
     override fun onClick() {
         super.onClick()
-        fragment.findNavController().navigateWithAnimation(navId)
+        host.findNavController().navigateWithAnimation(navId)
     }
 
 }

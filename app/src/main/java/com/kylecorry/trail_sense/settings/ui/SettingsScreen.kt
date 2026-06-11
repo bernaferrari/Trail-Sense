@@ -50,23 +50,23 @@ private val navigationMap = mapOf(
 )
 
 @Composable
-fun SettingsToolScreen(fragment: TrailSenseDestinationHost) {
+fun SettingsToolScreen(host: TrailSenseDestinationHost) {
     val plugins = remember { getAppService<PluginSubsystem>() }
 
     SettingsScreen(
-        version = Package.getVersionName(fragment.requireContext()),
+        version = Package.getVersionName(host.requireContext()),
         pluginsEnabled = plugins.arePluginsEnabled(),
-        onNavigate = { fragment.findNavController().navigateWithAnimation(it) },
-        onOpenUrl = { fragment.startActivity(Intents.url(it)) },
+        onNavigate = { host.findNavController().navigateWithAnimation(it) },
+        onOpenUrl = { host.startActivity(Intents.url(it)) },
         onEmailDeveloper = {
             val intent = Intents.email(
-                fragment.getString(R.string.email),
-                fragment.getString(R.string.app_name)
+                host.getString(R.string.email),
+                host.getString(R.string.app_name)
             )
-            fragment.startActivity(
+            host.startActivity(
                 Intent.createChooser(
                     intent,
-                    fragment.getString(R.string.pref_email_title)
+                    host.getString(R.string.pref_email_title)
                 )
             )
         }

@@ -12,24 +12,24 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
 class ToggleBacktrackCommand(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val onPermissionDenied: () -> Unit = {}
 ) : Command {
     override fun execute() {
-        fragment.inBackground {
+        host.inBackground {
             val service =
-                Tools.getService(fragment.requireContext(), PathsToolRegistration.SERVICE_BACKTRACK)
+                Tools.getService(host.requireContext(), PathsToolRegistration.SERVICE_BACKTRACK)
                     ?: return@inBackground
             when (service.getFeatureState()) {
                 FeatureState.On -> service.disable()
                 FeatureState.Off -> {
-                    fragment.requestBacktrackPermission { success ->
+                    host.requestBacktrackPermission { success ->
                         if (success) {
-                            fragment.inBackground {
+                            host.inBackground {
                                 service.enable()
                                 RequestRemoveBatteryRestrictionCommand(
-                                    fragment.requireContext(),
-                                    RemoveBatteryRestrictionsAlerter(fragment)
+                                    host.requireContext(),
+                                    RemoveBatteryRestrictionsAlerter(host)
                                 ).execute()
                             }
                         } else {
@@ -38,7 +38,7 @@ class ToggleBacktrackCommand(
                     }
                 }
 
-                FeatureState.Unavailable -> fragment.toast(fragment.getString(R.string.backtrack_disabled_low_power_toast))
+                FeatureState.Unavailable -> host.toast(host.getString(R.string.backtrack_disabled_low_power_toast))
             }
         }
     }

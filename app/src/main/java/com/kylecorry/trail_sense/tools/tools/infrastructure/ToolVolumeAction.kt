@@ -6,6 +6,6 @@ import com.kylecorry.trail_sense.shared.volume.VolumeAction
 
 data class ToolVolumeAction(
     val priority: ToolVolumeActionPriority,
-    val isActive: (context: Context, isToolOpen: Boolean, fragment: TrailSenseDestinationHost) -> Boolean,
-    val create: (fragment: TrailSenseDestinationHost) -> VolumeAction
+    val isActive: (context: Context, isToolOpen: Boolean, host: TrailSenseDestinationHost) -> Boolean,
+    val create: (host: TrailSenseDestinationHost) -> VolumeAction
 )

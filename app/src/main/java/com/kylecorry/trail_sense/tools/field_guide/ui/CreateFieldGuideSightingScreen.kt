@@ -78,8 +78,8 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 @Composable
-fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CreateFieldGuideSightingController(fragment) }
+fun CreateFieldGuideSightingToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CreateFieldGuideSightingController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -118,10 +118,10 @@ fun CreateFieldGuideSightingToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CreateFieldGuideSightingController(private val fragment: TrailSenseDestinationHost) {
+private class CreateFieldGuideSightingController(private val host: TrailSenseDestinationHost) {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private var isInitialized = false
 
     private var pageId: Long = 0L
@@ -145,9 +145,9 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
             return
         }
         isInitialized = true
-        pageId = fragment.destinationArguments?.getLong("page_id") ?: 0L
-        sightingId = fragment.destinationArguments?.getLong("sighting_id") ?: 0L
-        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
+        pageId = host.destinationArguments?.getLong("page_id") ?: 0L
+        sightingId = host.destinationArguments?.getLong("sighting_id") ?: 0L
+        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
         if (sightingId != 0L) {
             loadSighting()
         }
@@ -159,7 +159,7 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
     }
 
     private fun loadSighting() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val sighting = repo.getSighting(sightingId)
             initialSighting = sighting
             sighting ?: return@launch
@@ -190,12 +190,12 @@ private class CreateFieldGuideSightingController(private val fragment: TrailSens
             showOnMap
         )
 
-        fragment.lifecycleScope.launch {
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.saving)) {
+        host.lifecycleScope.launch {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.saving)) {
                 repo.addSighting(sighting)
                 onMain {
                     backCallback?.remove()
-                    fragment.findNavController().navigateUp()
+                    host.findNavController().navigateUp()
                 }
             }
         }

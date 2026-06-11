@@ -70,8 +70,8 @@ import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import java.util.UUID
 
 @Composable
-fun CreateFieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CreateFieldGuidePageController(fragment) }
+fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CreateFieldGuidePageController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -96,15 +96,15 @@ fun CreateFieldGuidePageToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CreateFieldGuidePageController(private val fragment: TrailSenseDestinationHost) {
+private class CreateFieldGuidePageController(private val host: TrailSenseDestinationHost) {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(fragment.requireContext()) }
-    private val tagNameMapper by lazy { FieldGuideTagNameMapper(fragment.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
+    private val tagNameMapper by lazy { FieldGuideTagNameMapper(host.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
     private val uriPicker by lazy {
         IntentUriPicker(
-            fragment.intentResultRetriever,
-            fragment.requireContext()
+            host.intentResultRetriever,
+            host.requireContext()
         )
     }
 
@@ -125,10 +125,10 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
             return
         }
         isInitialized = true
-        fragment.destinationArguments?.let {
+        host.destinationArguments?.let {
             val pageId = it.getLong(ARG_PAGE_ID, 0L)
             if (pageId != 0L) {
-                fragment.inBackground {
+                host.inBackground {
                     repo.getPage(pageId)?.let { loaded ->
                         onMain {
                             originalPage = loaded
@@ -143,7 +143,7 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
                 updatePage(page.copy(directTags = page.directTags + tag))
             }
         }
-        backCallback = fragment.promptIfUnsavedChanges(this::hasChanges)
+        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
         refreshImagePreview()
     }
 
@@ -170,11 +170,11 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
     }
 
     fun save() {
-        fragment.inBackground {
+        host.inBackground {
             repo.add(page)
             onMain {
                 backCallback?.remove()
-                fragment.findNavController().navigateUp()
+                host.findNavController().navigateUp()
             }
         }
     }
@@ -184,7 +184,7 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
     }
 
     fun takePhoto() {
-        fragment.requestCamera {
+        host.requestCamera {
             if (!it) {
                 return@requestCamera
             }
@@ -193,14 +193,14 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
     }
 
     fun selectPhoto() {
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        host.inBackground(BackgroundMinimumState.Created) {
             val uri = uriPicker.open(listOf("image/*"))
             uploadPhoto(uri)
         }
     }
 
     fun deleteImage() {
-        fragment.inBackground {
+        host.inBackground {
             deleteImageInternal()
         }
     }
@@ -212,16 +212,16 @@ private class CreateFieldGuidePageController(private val fragment: TrailSenseDes
             return
         }
 
-        fragment.inBackground {
+        host.inBackground {
             val bitmap = onIO { files.bitmap(image, Size(500, 500)) }
             onMain { imagePreview = bitmap }
         }
     }
 
     private fun showPhotoImport() {
-        val prefs = UserPreferences(fragment.requireContext()).camera
-        fragment.showPhotoImport(null, prefs.useZeroShutterLag) { uri ->
-            fragment.inBackground {
+        val prefs = UserPreferences(host.requireContext()).camera
+        host.showPhotoImport(null, prefs.useZeroShutterLag) { uri ->
+            host.inBackground {
                 uploadPhoto(uri)
             }
         }

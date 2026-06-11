@@ -20,10 +20,10 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import kotlinx.coroutines.launch
 
-class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
 
     override fun onCreate() {
         super.onCreate()
@@ -38,13 +38,13 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: Trai
             UserPreferences.AltimeterMode.Override -> {
                 val distanceUnits = prefs.baseDistanceUnits
                 CustomUiUtils.pickElevation(
-                    fragment.requireContext(),
+                    host.requireContext(),
                     Distance.meters(prefs.altitudeOverride).convertTo(distanceUnits),
-                    fragment.getString(R.string.quick_action_recalibrate_altimeter)
+                    host.getString(R.string.quick_action_recalibrate_altimeter)
                 ) { elevation, cancelled ->
                     if (!cancelled && elevation != null) {
-                        fragment.inBackground {
-                            val sensorService = SensorService(fragment.requireContext())
+                        host.inBackground {
+                            val sensorService = SensorService(host.requireContext())
                             if (mode == UserPreferences.AltimeterMode.Barometer) {
                                 val barometer = sensorService.getBarometer()
                                 barometer.read()
@@ -57,7 +57,7 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: Trai
                             } else {
                                 prefs.altitudeOverride = elevation.meters().value
                             }
-                            fragment.toast(fragment.getString(R.string.elevation_override_updated_toast))
+                            host.toast(host.getString(R.string.elevation_override_updated_toast))
                         }
                     }
                 }
@@ -65,8 +65,8 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: Trai
 
             UserPreferences.AltimeterMode.GPSBarometer,
             UserPreferences.AltimeterMode.DigitalElevationModelBarometer -> {
-                fragment.inBackground {
-                    val sensorService = SensorService(fragment.requireContext())
+                host.inBackground {
+                    val sensorService = SensorService(host.requireContext())
                     val altimeter = sensorService.getAltimeter()
 
                     val job = launch {
@@ -77,25 +77,25 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, fragment: Trai
                     }
 
                     Alerts.withCancelableLoading(
-                        fragment.requireContext(),
-                        fragment.getString(R.string.recalibrating),
+                        host.requireContext(),
+                        host.getString(R.string.recalibrating),
                         onCancel = { job.cancel() }
                     ) {
                         job.join()
-                        fragment.toast(fragment.getString(R.string.done))
+                        host.toast(host.getString(R.string.done))
                     }
                 }
             }
 
             else -> {
-                fragment.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
+                host.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
             }
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
+        host.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
         return true
     }
 }

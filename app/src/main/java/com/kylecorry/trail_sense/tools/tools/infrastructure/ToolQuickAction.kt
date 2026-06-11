@@ -7,5 +7,5 @@ import com.kylecorry.trail_sense.shared.QuickActionButton
 data class ToolQuickAction(
     val id: Int,
     val name: String,
-    val create: (button: QuickActionButtonView, fragment: TrailSenseDestinationHost) -> QuickActionButton
+    val create: (button: QuickActionButtonView, host: TrailSenseDestinationHost) -> QuickActionButton
 )

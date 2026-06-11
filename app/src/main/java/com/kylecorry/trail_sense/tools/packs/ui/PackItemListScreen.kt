@@ -73,8 +73,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackItemListToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { PackItemListController(fragment) }
+fun PackItemListToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { PackItemListController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -103,12 +103,12 @@ fun PackItemListToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class PackItemListController(private val fragment: TrailSenseDestinationHost) {
+private class PackItemListController(private val host: TrailSenseDestinationHost) {
 
-    private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val itemRepo by lazy { PackRepo.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val packService = PackService()
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private var isInitialized = false
 
     private var items = emptyList<PackItem>()
@@ -131,9 +131,9 @@ private class PackItemListController(private val fragment: TrailSenseDestination
             return
         }
         isInitialized = true
-        packId = fragment.destinationArguments?.getLong("pack_id") ?: 0L
+        packId = host.destinationArguments?.getLong("pack_id") ?: 0L
         setupUI()
-        fragment.inBackground {
+        host.inBackground {
             loadPack(packId)
         }
     }
@@ -149,14 +149,14 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     }
 
     private fun setupUI() {
-        itemRepo.getItemsFromPack(packId).observe(fragment.lifecycleOwner) {
+        itemRepo.getItemsFromPack(packId).observe(host.lifecycleOwner) {
             items = it
             updateItems()
         }
     }
 
     fun addItem() {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.action_action_inventory_to_createItemFragment,
             Bundle().apply {
                 putLong("pack_id", packId)
@@ -166,12 +166,12 @@ private class PackItemListController(private val fragment: TrailSenseDestination
 
     fun clearAmounts() {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.clear_amounts),
-            fragment.getString(R.string.action_inventory_clear_confirm)
+            host.requireContext(),
+            host.getString(R.string.clear_amounts),
+            host.getString(R.string.action_inventory_clear_confirm)
         ) { cancelled ->
             if (!cancelled) {
-                fragment.inBackground {
+                host.inBackground {
                     withContext(Dispatchers.IO) {
                         itemRepo.clearPackedAmounts(packId)
                     }
@@ -187,14 +187,14 @@ private class PackItemListController(private val fragment: TrailSenseDestination
 
     fun renamePack(pack: Pack) {
         Pickers.text(
-            fragment.requireContext(),
-            fragment.getString(R.string.rename),
+            host.requireContext(),
+            host.getString(R.string.rename),
             null,
             pack.name,
-            hint = fragment.getString(R.string.name)
+            hint = host.getString(R.string.name)
         ) {
             if (it != null) {
-                fragment.inBackground {
+                host.inBackground {
                     val renamed = pack.copy(name = it)
                     withContext(Dispatchers.IO) {
                         itemRepo.addPack(renamed)
@@ -209,22 +209,22 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     }
 
     fun exportPack(pack: Pack) {
-        ExportPackingListCommand(fragment).execute(pack)
+        ExportPackingListCommand(host).execute(pack)
     }
 
     fun deletePack(pack: Pack) {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.delete_pack),
+            host.requireContext(),
+            host.getString(R.string.delete_pack),
             pack.name
         ) { cancelled ->
             if (!cancelled) {
-                fragment.inBackground {
+                host.inBackground {
                     withContext(Dispatchers.IO) {
                         itemRepo.deletePack(pack)
                     }
                     withContext(Dispatchers.Main) {
-                        fragment.findNavController().popBackStack()
+                        host.findNavController().popBackStack()
                     }
                 }
             }
@@ -244,7 +244,7 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     }
 
     fun deleteItem(item: PackItem) {
-        fragment.inBackground {
+        host.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.deleteItem(item)
             }
@@ -256,17 +256,17 @@ private class PackItemListController(private val fragment: TrailSenseDestination
             putLong("edit_item_id", item.id)
             putLong("pack_id", packId)
         }
-        fragment.findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
+        host.findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
     }
 
     fun add(item: PackItem) {
         Pickers.number(
-            fragment.requireContext(),
-            fragment.getString(R.string.add),
+            host.requireContext(),
+            host.getString(R.string.add),
             null,
             null,
             allowNegative = false,
-            hint = fragment.getString(R.string.dialog_item_amount)
+            hint = host.getString(R.string.dialog_item_amount)
         ) {
             if (it != null) {
                 addAmount(item, it.toDouble())
@@ -276,12 +276,12 @@ private class PackItemListController(private val fragment: TrailSenseDestination
 
     fun subtract(item: PackItem) {
         Pickers.number(
-            fragment.requireContext(),
-            fragment.getString(R.string.subtract),
+            host.requireContext(),
+            host.getString(R.string.subtract),
             null,
             null,
             allowNegative = false,
-            hint = fragment.getString(R.string.dialog_item_amount)
+            hint = host.getString(R.string.dialog_item_amount)
         ) {
             if (it != null) {
                 addAmount(item, -it.toDouble())
@@ -290,7 +290,7 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     }
 
     private fun addAmount(item: PackItem, amount: Double) {
-        fragment.inBackground {
+        host.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.addItem(
                     item.copy(amount = max(0.0, item.amount + amount))
@@ -300,7 +300,7 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     }
 
     private fun setAmount(item: PackItem, amount: Double) {
-        fragment.inBackground {
+        host.inBackground {
             withContext(Dispatchers.IO) {
                 itemRepo.addItem(
                     item.copy(amount = amount)
@@ -312,8 +312,8 @@ private class PackItemListController(private val fragment: TrailSenseDestination
     fun changeSort() {
         val options = listOf("category", "percent_asc", "percent_desc", "weight_asc", "weight_desc")
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.sort),
+            host.requireContext(),
+            host.getString(R.string.sort),
             options.map { getSortTitle(it) },
             options.indexOf(prefs.packs.packSort)
         ) {
@@ -333,11 +333,11 @@ private class PackItemListController(private val fragment: TrailSenseDestination
 
     private fun getSortTitle(sort: String): String {
         return when (sort) {
-            "category" -> fragment.getString(R.string.category)
-            "percent_asc" -> fragment.getString(R.string.pack_sort_percent_low_to_high)
-            "percent_desc" -> fragment.getString(R.string.pack_sort_percent_high_to_low)
-            "weight_asc" -> fragment.getString(R.string.pack_sort_weight_low_to_high)
-            "weight_desc" -> fragment.getString(R.string.pack_sort_weight_high_to_low)
+            "category" -> host.getString(R.string.category)
+            "percent_asc" -> host.getString(R.string.pack_sort_percent_low_to_high)
+            "percent_desc" -> host.getString(R.string.pack_sort_percent_high_to_low)
+            "weight_asc" -> host.getString(R.string.pack_sort_weight_low_to_high)
+            "weight_desc" -> host.getString(R.string.pack_sort_weight_high_to_low)
             else -> ""
         }
     }
@@ -356,7 +356,7 @@ private class PackItemListController(private val fragment: TrailSenseDestination
             ""
         }
         totalPercentPacked =
-            fragment.getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
+            host.getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
         sortedItems = sorts[prefs.packs.packSort]?.sort(items) ?: items
     }
 }

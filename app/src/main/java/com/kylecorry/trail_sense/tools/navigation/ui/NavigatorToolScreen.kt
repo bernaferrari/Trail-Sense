@@ -119,10 +119,10 @@ import java.time.Instant
 
 @Composable
 fun NavigatorToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { NavigatorController(fragment) }
+    val controller = remember(host) { NavigatorController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -147,17 +147,17 @@ fun NavigatorToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class NavigatorController(private val fragment: TrailSenseDestinationHost) {
+private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
     private val views = createNavigatorViews(
-        fragment.requireContext(),
+        host.requireContext(),
         onNorthReferenceSettingsClick = {
-            fragment.findNavController().navigate(R.id.calibrateCompassFragment)
+            host.findNavController().navigate(R.id.calibrateCompassFragment)
         },
-        requestCameraPermission = { callback -> fragment.requestCamera(callback) },
-        onCameraPermissionDenied = { fragment.alertNoCameraPermission() },
+        requestCameraPermission = { callback -> host.requestCamera(callback) },
+        onCameraPermissionDenied = { host.alertNoCameraPermission() },
         onOpenBeacon = { beaconId ->
-            fragment.findNavController().navigateWithAnimation(
+            host.findNavController().navigateWithAnimation(
                 R.id.beaconDetailsFragment,
                 Bundle().apply {
                     putLong("beacon_id", beaconId)
@@ -182,25 +182,25 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
     private var declination = 0f
 
-    private val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val userPrefs by lazy { UserPreferences(host.requireContext()) }
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(fragment.requireContext()) }
+    private val beaconRepo by lazy { BeaconRepo.getInstance(host.requireContext()) }
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
-    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
-    private val weatherRepo by lazy { WeatherRepo.getInstance(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val pathService by lazy { PathService.getInstance(host.requireContext()) }
+    private val weatherRepo by lazy { WeatherRepo.getInstance(host.requireContext()) }
 
     private val navigationService = NavigationService()
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
     private var beacons: Collection<Beacon> = listOf()
     private var nearbyBeacons: List<Beacon> = listOf()
 
     private var destination: Destination? = null
-    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
 
     // Diagnostics
-    private val errors by lazy { NavigatorUserErrors(fragment, this::displayAccuracyTips) }
+    private val errors by lazy { NavigatorUserErrors(host, this::displayAccuracyTips) }
 
     // Data commands
     private val updateAstronomyLayerCommand by lazy {
@@ -289,7 +289,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
                     },
                     onPickFormat = ::pickLocationFormat,
                     onShare = {
-                        Share.shareLocation(fragment, gps.location, locationFormat)
+                        Share.shareLocation(host, gps.location, locationFormat)
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -301,7 +301,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
                     showAltitudeSheet = false
                 }
             ) {
-                val historyDurationTitle = fragment.getString(R.string.elevation_history_length)
+                val historyDurationTitle = host.getString(R.string.elevation_history_length)
                 AltitudeContent(
                     historySummary = altitudeHistorySummary,
                     readings = altitudeChartReadings,
@@ -330,8 +330,8 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             }
         }
         layerSheet.Content(
-            fragment.requireContext(),
-            { fragment.findNavController().navigateWithAnimation(it) }
+            host.requireContext(),
+            { host.findNavController().navigateWithAnimation(it) }
         )
     }
 
@@ -340,7 +340,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             return
         }
         isCreated = true
-        val beaconId = fragment.destinationArguments?.getLong("destination") ?: 0L
+        val beaconId = host.destinationArguments?.getLong("destination") ?: 0L
 
         // Load the destination and start navigation
         if (beaconId != 0L) {
@@ -348,7 +348,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             navigator.navigateTo(beaconId)
         }
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             navigator.destination2.collect {
                 destination = it
                 updateNearbyBeacons()
@@ -361,8 +361,8 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             GPSDiagnosticScanner(gps),
             MagnetometerDiagnosticScanner()
         ).mapIndexed { index, scanner ->
-            fragment.lifecycleScope.launch {
-                scanner.fullScan(fragment.requireContext()).collect { results ->
+            host.lifecycleScope.launch {
+                scanner.fullScan(host.requireContext()).collect { results ->
                     diagnosticResults = diagnosticResults + (index to results.map { it.id })
                 }
             }
@@ -385,36 +385,36 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
 
 
         NavigationQuickActionBinder(
-            fragment,
+            host,
             views.navigationTitle.leftButton,
             views.navigationTitle.rightButton,
             userPrefs.navigation
         ).bind()
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             beaconRepo.getBeacons().collect {
                 beacons = it
                 updateNearbyBeacons()
             }
         }
 
-        compass.asLiveData().observe(fragment.lifecycleOwner) { }
-        clinometer.asLiveData().observe(fragment.lifecycleOwner) { }
-        altimeter.asLiveData().observe(fragment.lifecycleOwner) { }
-        gps.asLiveData().observe(fragment.lifecycleOwner) { }
-        speedometer.asLiveData().observe(fragment.lifecycleOwner) { }
-        getBacktrackAltitudeReadings().observe(fragment.lifecycleOwner) {
+        compass.asLiveData().observe(host.lifecycleOwner) { }
+        clinometer.asLiveData().observe(host.lifecycleOwner) { }
+        altimeter.asLiveData().observe(host.lifecycleOwner) { }
+        gps.asLiveData().observe(host.lifecycleOwner) { }
+        speedometer.asLiveData().observe(host.lifecycleOwner) { }
+        getBacktrackAltitudeReadings().observe(host.lifecycleOwner) {
             backtrackAltitudeReadings = it
             updateAltitudeChart()
         }
-        getWeatherAltitudeReadings().observe(fragment.lifecycleOwner) {
+        getWeatherAltitudeReadings().observe(host.lifecycleOwner) {
             weatherAltitudeReadings = it
             updateAltitudeChart()
         }
 
         views.navigationTitle.onSubtitleLongClick = {
             Share.shareLocation(
-                fragment,
+                host,
                 gps.location
             )
             true
@@ -437,7 +437,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
         }
 
         views.onBeaconClick = {
-            fragment.findNavController().openTool(Tools.BEACONS)
+            host.findNavController().openTool(Tools.BEACONS)
         }
 
         views.onBeaconLongClick = {
@@ -448,9 +448,9 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
                         if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
                     ))
                 }
-                fragment.findNavController().openTool(Tools.BEACONS, bundle)
+                host.findNavController().openTool(Tools.BEACONS, bundle)
             } else {
-                fragment.findNavController().openTool(Tools.BEACONS)
+                host.findNavController().openTool(Tools.BEACONS)
             }
         }
 
@@ -465,7 +465,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             layerSheet.dismiss()
             layers.pause(views.radarCompassMap)
             layerSheet.setOnDismissListener {
-                layers.resume(fragment.requireContext(), views.radarCompassMap, fragment)
+                layers.resume(host.requireContext(), views.radarCompassMap, host)
             }
             layerSheet.show()
         }
@@ -477,7 +477,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
         views.radarCompassMap.isPanEnabled = false
         views.radarCompassMap.isFlingEnabled = false
         views.radarCompassMap.backgroundColorOverride =
-            Resources.color(fragment.requireContext(), R.color.colorSecondary)
+            Resources.color(host.requireContext(), R.color.colorSecondary)
         views.radarCompassMap.minScale = 0.001f
         views.radarCompassMap.mapCenter = gps.location
         views.radarCompassMap.metersPerProjectedUnit = 1.0
@@ -504,7 +504,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun toggleDestinationBearing() {
-        fragment.inBackground {
+        host.inBackground {
             if (destination is Destination.Beacon) {
                 // TODO: Prompt to cancel navigation?
                 // Don't set destination bearing while navigating to a beacon
@@ -525,11 +525,11 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun handleShowWhenLocked() {
-        screenLock.updateLock(fragment.mainActivity)
+        screenLock.updateLock(host.mainActivity)
     }
 
     fun displayAccuracyTips() {
-        val alerter = ImproveAccuracyAlerter(fragment.requireContext())
+        val alerter = ImproveAccuracyAlerter(host.requireContext())
         alerter.alert(listOf(gps, compass))
     }
 
@@ -540,8 +540,8 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
         val formats = BuiltInCoordinateFormat.entries
         val formatStrings = formats.map { formatService.formatCoordinateType(it) }
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.pref_coordinate_format_title),
+            host.requireContext(),
+            host.getString(R.string.pref_coordinate_format_title),
             formatStrings,
             defaultSelectedIndex = formats.indexOf(currentFormat)
         ) {
@@ -556,7 +556,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             val accuracyStr = formatService.formatDistance(
                 Distance.meters(it).convertTo(baseDistanceUnits)
             )
-            fragment.getString(R.string.accuracy_distance_format, accuracyStr)
+            host.getString(R.string.accuracy_distance_format, accuracyStr)
         }
 
         val timeAgo = Duration.between(gps.time, Instant.now())
@@ -564,9 +564,9 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
             location = formatService.formatLocation(gps.location, format),
             coordinateFormat = formatService.formatCoordinateType(format),
             accuracy = accuracy,
-            satellites = fragment.getString(R.string.num_satellites, gps.satellites ?: 0),
-            time = fragment.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
-            datum = fragment.getString(R.string.wgs84)
+            satellites = host.getString(R.string.num_satellites, gps.satellites ?: 0),
+            time = host.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+            datum = host.getString(R.string.wgs84)
         )
     }
 
@@ -576,7 +576,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun updateAltitudeChart() {
-        fragment.inBackground {
+        host.inBackground {
             val currentAltitude = Reading(altimeter.altitude, Instant.now())
             val filteredReadings = onDefault {
                 val readings =
@@ -591,7 +591,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
                 onIO {
-                    DebugElevationsCommand(fragment.requireContext(), readings, smoothed).execute()
+                    DebugElevationsCommand(host.requireContext(), readings, smoothed).execute()
                 }
 
                 smoothed.filter {
@@ -604,7 +604,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun formatAltitudeHistoryDuration(): String {
-        return fragment.getString(
+        return host.getString(
             R.string.last_duration,
             formatService.formatDuration(altitudeHistoryDuration)
         )
@@ -628,7 +628,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun updateAstronomyData() {
-        fragment.inBackground {
+        host.inBackground {
             if (gps.location == Coordinate.zero) {
                 return@inBackground
             }
@@ -644,7 +644,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
 
         views.radarCompassMap.useDensityPixelsForZoom =
             !userPrefs.navigation.highDetailMode
-        layers.resume(fragment.requireContext(), views.radarCompassMap, fragment)
+        layers.resume(host.requireContext(), views.radarCompassMap, host)
         views.radarCompass.bindMapView(views.radarCompassMap)
 
         // Show the north reference indicator
@@ -673,12 +673,12 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
 
     fun onDestroy() {
         onPause()
-        screenLock.releaseLock(fragment.mainActivity)
+        screenLock.releaseLock(host.mainActivity)
         isCreated = false
     }
 
     private fun updateNearbyBeacons() {
-        fragment.inBackground {
+        host.inBackground {
             onIO {
                 loadBeaconsRunner.skipIfRunning {
                     val destinationBeacon = (destination as? Destination.Beacon)?.beacon
@@ -777,9 +777,9 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
         lastAttributionLayerKey = layers.key
         lastAttributionRadarVisible = isRadarVisible
 
-        fragment.inBackground {
+        host.inBackground {
             if (isRadarVisible) {
-                val attribution = views.radarCompassMap.getAttribution(fragment.requireContext())
+                val attribution = views.radarCompassMap.getAttribution(host.requireContext())
                 onMain {
                     if (isViewReady) {
                         views.mapAttribution.text = attribution
@@ -889,7 +889,7 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     }
 
     private fun updateCompassLayers() {
-        fragment.inBackground {
+        host.inBackground {
             val destBearing = getDestinationBearing()
             val destinationBeacon = (destination as? Destination.Beacon)?.beacon
             val destColor = destinationBeacon?.color ?: AppColor.Blue.color
@@ -916,9 +916,9 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
     private fun showCalibrationDialog() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
             var doNotAskAgain = false
-            val doNotAskAgainText = fragment.getString(R.string.do_not_ask_again)
+            val doNotAskAgainText = host.getString(R.string.do_not_ask_again)
             val contentView = TrailSenseComposeRootView(
-                fragment.requireContext(),
+                host.requireContext(),
                 ViewCompositionStrategy.DisposeOnDetachedFromWindow
             ) {
                 NavigationCalibrationDialogContent(
@@ -929,11 +929,11 @@ private class NavigatorController(private val fragment: TrailSenseDestinationHos
                 )
             }
             Alerts.dialog(
-                fragment.requireContext(),
-                fragment.getString(R.string.calibrate_compass_dialog_title),
-                fragment.getString(
+                host.requireContext(),
+                host.getString(R.string.calibrate_compass_dialog_title),
+                host.getString(
                     R.string.calibrate_compass_on_navigate_dialog_content,
-                    fragment.getString(android.R.string.ok)
+                    host.getString(android.R.string.ok)
                 ),
                 contentView = contentView,
                 cancelText = null,

@@ -99,10 +99,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PathsToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { PathsController(fragment) }
+    val controller = remember(host) { PathsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -127,27 +127,27 @@ fun PathsToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PathsController(private val fragment: TrailSenseDestinationHost) {
+private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private val service by lazy {
         Tools.getService(
-            fragment.requireContext(),
+            host.requireContext(),
             PathsToolRegistration.SERVICE_BACKTRACK
         )
     }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val pathService by lazy {
-        PathService.getInstance(fragment.requireContext())
+        PathService.getInstance(host.requireContext())
     }
 
     private val gps by lazy {
-        SensorService(fragment.requireContext()).getGPS()
+        SensorService(host.requireContext()).getGPS()
     }
 
     private val gpxService by lazy {
         IOFactory().createGpxService(
-            fragment.requireContext(),
-            fragment.intentResultRetriever
+            host.requireContext(),
+            host.intentResultRetriever
         )
     }
 
@@ -182,7 +182,7 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
             resetKey = pathListResetKey,
             backtrackState = backtrackState,
             backtrackFrequency = backtrackFrequency,
-            formatService = FormatService.getInstance(fragment.requireContext()),
+            formatService = FormatService.getInstance(host.requireContext()),
             baseDistanceUnits = prefs.baseDistanceUnits,
             onSearchChange = {
                 searchText = it
@@ -227,7 +227,7 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
         }
         isInitialized = true
         manager = GroupListManager(
-            fragment.lifecycleScope,
+            host.lifecycleScope,
             pathLoader,
             lastRoot,
             this::sortPaths
@@ -238,14 +238,14 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
             if (rootChanged) {
                 pathListResetKey++
             }
-            title = (root as PathGroup?)?.name ?: fragment.getString(R.string.paths)
+            title = (root as PathGroup?)?.name ?: host.getString(R.string.paths)
         }
 
         sort = prefs.navigation.pathSort
-        sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
 
         // TODO: See if it is possible to get notified of changes without loading all paths
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             pathService.getPaths().collect {
                 manager.refresh()
             }
@@ -255,16 +255,16 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
             override fun handleOnBackPressed() {
                 if (!manager.up()) {
                     remove()
-                    fragment.findNavController().navigateUp()
+                    host.findNavController().navigateUp()
                 }
             }
         }
-        fragment.mainActivity.onBackPressedDispatcher.addCallback(
-            fragment.lifecycleOwner,
+        host.mainActivity.onBackPressedDispatcher.addCallback(
+            host.lifecycleOwner,
             backPressedCallback!!
         )
 
-        title = fragment.getString(R.string.paths)
+        title = host.getString(R.string.paths)
     }
 
     fun onResume() {
@@ -321,28 +321,28 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun changeBacktrackFrequency(frequency: Duration) {
         ChangeBacktrackFrequencyCommand(
-            fragment.requireContext(),
-            fragment.lifecycleScope
+            host.requireContext(),
+            host.lifecycleScope
         ) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleBacktrack() {
-        val command = ToggleBacktrackCommand(fragment)
+        val command = ToggleBacktrackCommand(host)
         command.execute()
     }
 
     private fun changeSort() {
         val sortOptions = PathSortMethod.values()
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.sort),
+            host.requireContext(),
+            host.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.navigation.pathSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.navigation.pathSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -350,11 +350,11 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun getSortString(sortMethod: PathSortMethod): String {
         return when (sortMethod) {
-            PathSortMethod.MostRecent -> fragment.getString(R.string.most_recent)
-            PathSortMethod.Longest -> fragment.getString(R.string.longest)
-            PathSortMethod.Shortest -> fragment.getString(R.string.shortest)
-            PathSortMethod.Closest -> fragment.getString(R.string.closest)
-            PathSortMethod.Name -> fragment.getString(R.string.name)
+            PathSortMethod.MostRecent -> host.getString(R.string.most_recent)
+            PathSortMethod.Longest -> host.getString(R.string.longest)
+            PathSortMethod.Shortest -> host.getString(R.string.shortest)
+            PathSortMethod.Closest -> host.getString(R.string.closest)
+            PathSortMethod.Name -> host.getString(R.string.name)
         }
     }
 
@@ -375,8 +375,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
     }
 
     private fun setGroupVisibility(group: PathGroup, visible: Boolean) {
-        fragment.inBackground {
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+        host.inBackground {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 val paths = onIO {
                     pathService.loader().getChildren(group.id, null).filterIsInstance<Path>()
                 }
@@ -408,8 +408,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun simplifyPath(path: Path) {
         val command = SimplifyPathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -428,8 +428,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun togglePathVisibility(path: Path) {
         val command = TogglePathVisibilityCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -437,8 +437,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun renamePath(path: Path) {
         val command = RenamePathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -446,27 +446,27 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun keepPath(path: Path) {
         val command = KeepPathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
     }
 
     private fun showPath(path: Path) {
-        val command = ViewPathCommand(fragment.findNavController())
+        val command = ViewPathCommand(host.findNavController())
         command.execute(path)
     }
 
     private fun showPath(id: Long) {
-        val command = ViewPathCommand(fragment.findNavController())
+        val command = ViewPathCommand(host.findNavController())
         command.execute(id)
     }
 
     private fun importPaths() {
         val command = ImportPathsCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             gpxService,
             pathService,
             prefs.navigation
@@ -476,8 +476,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun exportPath(path: IPath?) {
         val command = ExportPathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             gpxService,
             pathService
         )
@@ -490,8 +490,8 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun deletePath(path: Path) {
         val command = DeletePathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -499,16 +499,16 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     private fun merge(path: Path) {
         val command = MergePathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             pathService
         )
         command.execute(path)
     }
 
     private fun createPath() {
-        val command = CreatePathCommand(fragment.requireContext(), pathService, prefs.navigation)
-        fragment.inBackground {
+        val command = CreatePathCommand(host.requireContext(), pathService, prefs.navigation)
+        host.inBackground {
             command.execute(manager.root?.id)?.let {
                 showPath(it)
             }
@@ -517,35 +517,35 @@ private class PathsController(private val fragment: TrailSenseDestinationHost) {
 
     // Groups
     private fun deleteGroup(group: PathGroup) {
-        val command = DeletePathGroupGroupCommand(fragment.requireContext(), pathService)
-        fragment.inBackground {
+        val command = DeletePathGroupGroupCommand(host.requireContext(), pathService)
+        host.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun renameGroup(group: PathGroup) {
-        val command = RenamePathGroupGroupCommand(fragment.requireContext(), pathService)
-        fragment.inBackground {
+        val command = RenamePathGroupGroupCommand(host.requireContext(), pathService)
+        host.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun createGroup() {
-        val command = CreatePathGroupCommand(fragment.requireContext(), pathService)
-        fragment.inBackground {
+        val command = CreatePathGroupCommand(host.requireContext(), pathService)
+        host.inBackground {
             command.execute(manager.root?.id)
             manager.refresh()
         }
     }
 
     private fun movePath(path: IPath) {
-        val command = MoveIPathCommand(fragment.requireContext(), pathService)
-        fragment.inBackground {
+        val command = MoveIPathCommand(host.requireContext(), pathService)
+        host.inBackground {
             val newGroup = command.execute(path)
             if (newGroup?.id != path.parentId) {
-                fragment.toast(fragment.getString(R.string.moved_to, newGroup?.name ?: fragment.getString(R.string.no_group)))
+                host.toast(host.getString(R.string.moved_to, newGroup?.name ?: host.getString(R.string.no_group)))
                 manager.refresh()
             }
         }

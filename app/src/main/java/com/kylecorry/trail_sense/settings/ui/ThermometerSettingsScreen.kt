@@ -72,8 +72,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @Composable
-fun ThermometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { ThermometerSettingsController(fragment) }
+fun ThermometerSettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { ThermometerSettingsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -95,16 +95,16 @@ fun ThermometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class ThermometerSettingsController(private val fragment: TrailSenseDestinationHost) {
+private class ThermometerSettingsController(private val host: TrailSenseDestinationHost) {
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private var calibratedThermometer: IThermometer? = null
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
     private val temperatureUnits by lazy { prefs.temperatureUnits }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
-    private val weather by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
+    private val weather by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
     private var history: List<WeatherObservation> = emptyList()
     private var uncalibratedHistory: List<Reading<RawWeatherObservation>> = emptyList()
 
@@ -387,8 +387,8 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
                                     label = stringResource(R.string.tool_user_guide_title),
                                     onClick = {
                                         UserGuideUtils.showGuide(
-                                            fragment.requireContext(),
-                                            fragment.findNavController(),
+                                            host.requireContext(),
+                                            host.findNavController(),
                                             R.raw.guide_tool_settings
                                         )
                                     },
@@ -421,7 +421,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
             R.string.pref_min_uncalibrated_temp_c,
             R.string.pref_max_uncalibrated_temp_c
         ).map { getString(it) } + listOf(source)
-        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
+        cache.onChange.asLiveData().observe(host.lifecycleOwner) {
             if (thermometerInvalidationKeys.contains(it)) {
                 reloadThermometer()
             }
@@ -431,7 +431,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
             }
         }
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             weather.weatherChanged.flow().collect {
                 updateData()
             }
@@ -458,7 +458,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
     }
 
     private fun updateData() {
-        fragment.inBackground {
+        host.inBackground {
             runner.replace {
                 history = weather.getHistory()
                 uncalibratedHistory = weather.getRawHistory()
@@ -543,16 +543,16 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
 
     private fun backfillTemperatures() {
         Alerts.dialog(
-            fragment.requireContext(),
+            host.requireContext(),
             getString(R.string.pref_backfill_temperatures_title),
             getString(R.string.pref_backfill_temperatures_description)
         ) {
             if (!it) {
-                fragment.inBackground {
+                host.inBackground {
                     val loading =
-                        AlertLoadingIndicator(fragment.requireContext(), getString(R.string.updating))
+                        AlertLoadingIndicator(host.requireContext(), getString(R.string.updating))
                     loading.show()
-                    BackfillHistoricalTemperaturesCommand.create(fragment.requireContext()).execute()
+                    BackfillHistoricalTemperaturesCommand.create(host.requireContext()).execute()
                     loading.hide()
                 }
             }
@@ -566,7 +566,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -583,7 +583,7 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
         onSelected: (Float) -> Unit
     ) {
         Pickers.number(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             null,
             current,
@@ -598,8 +598,8 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<ThermometerOption> {
-        val entries = fragment.getResources().getStringArray(entriesId)
-        val values = fragment.getResources().getStringArray(valuesId)
+        val entries = host.getResources().getStringArray(entriesId)
+        val values = host.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             ThermometerOption(value, entries.getOrElse(index) { value })
         }
@@ -651,13 +651,13 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
     }
 
     private fun hideLocationUnsetError() {
-        val activity = fragment.mainActivity
+        val activity = host.mainActivity
         activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
     }
 
     private fun showLocationUnsetError() {
-        val activity = fragment.mainActivity
-        val navController = fragment.findNavController()
+        val activity = host.mainActivity
+        val navController = host.findNavController()
         val error = UserError(
             ErrorBannerReason.LocationNotSet,
             getString(R.string.location_not_set) + "\n" +
@@ -673,12 +673,12 @@ private class ThermometerSettingsController(private val fragment: TrailSenseDest
 
     private fun isLocationUnset(): Boolean {
         val diagnostic = GPSDiagnosticScanner()
-        return diagnostic.quickScan(fragment.requireContext())
+        return diagnostic.quickScan(host.requireContext())
             .any { it.id == GPSDiagnosticScanner.LOCATION_UNSET }
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
     private data class TemperatureChartData(

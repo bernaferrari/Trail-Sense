@@ -18,16 +18,16 @@ fun ToolService.getFeatureState(): FeatureState {
 }
 
 fun Tools.observe(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     toolBroadCastId: String,
     onReceiveBroadcast: suspend (data: Bundle) -> Unit
 ) {
     val callback: (Bundle) -> Unit = { data ->
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             onReceiveBroadcast(data)
         }
     }
-    fragment.lifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+    host.lifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 subscribe(toolBroadCastId, callback)

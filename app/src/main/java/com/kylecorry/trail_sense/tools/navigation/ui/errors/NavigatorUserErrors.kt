@@ -14,12 +14,12 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.Magnetom
 import java.util.Locale
 
 class NavigatorUserErrors(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val onDisplayAccuracyTips: () -> Unit
 ) {
 
-    private val banner = fragment.requireMainActivity().errorBanner
-    private val formatter = FormatService.getInstance(fragment.requireContext())
+    private val banner = host.requireMainActivity().errorBanner
+    private val formatter = FormatService.getInstance(host.requireContext())
 
     private val possibleErrors = listOf(
         ErrorBannerReason.NoGPS,
@@ -32,32 +32,32 @@ class NavigatorUserErrors(
     private val errorMap = mapOf(
         GPSDiagnosticScanner.GPS_UNAVAILABLE to UserError(
             ErrorBannerReason.NoGPS,
-            fragment.getString(R.string.location_disabled),
+            host.getString(R.string.location_disabled),
             R.drawable.satellite
         ),
         GPSDiagnosticScanner.LOCATION_UNSET to UserError(
             ErrorBannerReason.LocationNotSet,
-            fragment.getString(R.string.location_not_set),
+            host.getString(R.string.location_not_set),
             R.drawable.satellite,
-            fragment.getString(R.string.set)
+            host.getString(R.string.set)
         ) {
-            val navController = fragment.findNavController()
+            val navController = host.findNavController()
             banner.dismiss(ErrorBannerReason.LocationNotSet)
             navController.navigate(R.id.calibrateGPSFragment)
         },
         GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,
-            fragment.getString(R.string.gps_signal_lost),
+            host.getString(R.string.gps_signal_lost),
             R.drawable.satellite
         ),
         MagnetometerDiagnosticScanner.MAGNETOMETER_POOR to UserError(
             ErrorBannerReason.CompassPoor,
-            fragment.getString(
+            host.getString(
                 R.string.compass_calibrate_toast,
                 formatter.formatQuality(Quality.Poor).lowercase(Locale.getDefault())
             ),
             R.drawable.ic_compass_icon,
-            fragment.getString(R.string.how)
+            host.getString(R.string.how)
         ) {
             onDisplayAccuracyTips()
             banner.dismiss(ErrorBannerReason.CompassPoor)
@@ -65,12 +65,12 @@ class NavigatorUserErrors(
         MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE to UserError(
             ErrorBannerReason.NoCompass,
             MissingSensorAlert.getMissingSensorTitle(
-                fragment.requireContext(),
-                fragment.getString(R.string.pref_compass_sensor_title)
+                host.requireContext(),
+                host.getString(R.string.pref_compass_sensor_title)
             ),
             R.drawable.ic_compass_icon
         ) {
-            MissingSensorAlert(fragment.requireContext()).alert(fragment.getString(R.string.pref_compass_sensor_title))
+            MissingSensorAlert(host.requireContext()).alert(host.getString(R.string.pref_compass_sensor_title))
         }
     )
 
@@ -127,14 +127,14 @@ class NavigatorUserErrors(
 
             // Show a one time dialog containing the missing compass text
             CustomUiUtils.disclaimer(
-                fragment.requireContext(),
+                host.requireContext(),
                 MissingSensorAlert.getMissingSensorTitle(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.pref_compass_sensor_title)
+                    host.requireContext(),
+                    host.getString(R.string.pref_compass_sensor_title)
                 ),
                 MissingSensorAlert.getMissingSensorMessage(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.pref_compass_sensor_title)
+                    host.requireContext(),
+                    host.getString(R.string.pref_compass_sensor_title)
                 ),
                 "no_compass_message_shown",
                 cancelText = null

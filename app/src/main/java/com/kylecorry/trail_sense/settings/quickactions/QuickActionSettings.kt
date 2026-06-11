@@ -8,8 +8,8 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionSettings(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionSettings(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     override fun onCreate() {
         super.onCreate()
@@ -19,18 +19,18 @@ class QuickActionSettings(btn: QuickActionButtonView, fragment: TrailSenseDestin
     override fun onClick() {
         super.onClick()
         val activeTool = Tools.getTools(context).firstOrNull {
-            it.isOpen(fragment.findNavController().currentDestination?.id ?: 0)
+            it.isOpen(host.findNavController().currentDestination?.id ?: 0)
         }
         if (activeTool?.settingsNavAction != null) {
-            fragment.findNavController().navigateWithAnimation(activeTool.settingsNavAction)
+            host.findNavController().navigateWithAnimation(activeTool.settingsNavAction)
         } else {
-            fragment.findNavController().openTool(Tools.SETTINGS)
+            host.findNavController().openTool(Tools.SETTINGS)
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.SETTINGS)
+        host.findNavController().openTool(Tools.SETTINGS)
         return true
     }
 }

@@ -11,8 +11,8 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 
-class QuickActionPedometer(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    TopicQuickAction(btn, fragment, hideWhenUnavailable = false) {
+class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    TopicQuickAction(btn, host, hideWhenUnavailable = false) {
 
     private val pedometer = PedometerSubsystem.getInstance(context)
 
@@ -23,7 +23,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, fragment: TrailSenseDesti
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(R.id.fragmentToolPedometer)
+        host.findNavController().navigateWithAnimation(R.id.fragmentToolPedometer)
         return true
     }
 
@@ -41,12 +41,12 @@ class QuickActionPedometer(btn: QuickActionButtonView, fragment: TrailSenseDesti
     }
 
     private fun startStepCounter() {
-        fragment.requestActivityRecognition { hasPermission ->
+        host.requestActivityRecognition { hasPermission ->
             if (hasPermission) {
                 pedometer.enable()
             } else {
                 pedometer.disable()
-                fragment.alertNoActivityRecognitionPermission()
+                host.alertNoActivityRecognitionPermission()
             }
         }
     }

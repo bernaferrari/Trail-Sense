@@ -15,11 +15,12 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import kotlinx.coroutines.launch
 
-class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSenseDestinationHost) : QuickActionButton(
-    button, fragment
+class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDestinationHost) : QuickActionButton(
+    button, host
 ) {
-    private val mapService = getAppService<OfflineMapService>()
-    private val navigator = Navigator.getInstance(fragment.requireContext())
+    private val mapService = MapService.getInstance(host.requireContext())
+    private val navigator = Navigator.getInstance(host.requireContext())
+    private val selector = ActiveMapSelector()
 
     override fun onCreate() {
         super.onCreate()
@@ -28,13 +29,13 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSens
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigate(R.id.mapListFragment)
+        host.findNavController().navigate(R.id.mapListFragment)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        fragment.inBackground {
+        host.inBackground {
             var wasSuccessful = false
             var id = 0L
             val job = launch {
@@ -44,13 +45,13 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSens
 
 
             Alerts.withCancelableLoading(
-                fragment.requireContext(),
+                host.requireContext(),
                 context.getString(R.string.loading),
                 onCancel = { job.cancel() }) {
                 job.join()
                 if (wasSuccessful) {
                     if (id != 0L) {
-                        fragment.findNavController()
+                        host.findNavController()
                             .navigate(
                                 R.id.photoMapsFragment,
                                 Bundle().apply {
@@ -59,7 +60,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSens
                                 }
                             )
                     } else {
-                        fragment.findNavController().navigate(R.id.mapListFragment)
+                        host.findNavController().navigate(R.id.mapListFragment)
                     }
                 }
             }
@@ -67,7 +68,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, fragment: TrailSens
     }
 
     private suspend fun getActiveMap(): PhotoMap? {
-        val sensors = SensorSubsystem.getInstance(fragment.requireContext())
+        val sensors = SensorSubsystem.getInstance(host.requireContext())
         val location = sensors.getLocation()
 
         val destination = navigator.getDestination()?.coordinate

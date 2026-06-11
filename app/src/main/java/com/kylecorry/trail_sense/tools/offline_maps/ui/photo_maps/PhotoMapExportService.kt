@@ -14,19 +14,19 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.co
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.TrailMapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.commands.ExportTrailMapCommand
 
-class PhotoMapExportService(private val fragment: TrailSenseDestinationHost) {
+class PhotoMapExportService(private val host: TrailSenseDestinationHost) {
     private val uriPicker = IntentUriPicker(
-        fragment.intentResultRetriever,
-        fragment.requireContext()
+        host.intentResultRetriever,
+        host.requireContext()
     )
     private val loading = AlertLoadingIndicator(
-        fragment.requireContext(),
-        fragment.getString(R.string.exporting_map)
+        host.requireContext(),
+        host.getString(R.string.exporting_map)
     )
-    private val photoMapExporter = MapExportService(
-        fragment.requireContext(),
+    private val exporter = MapExportService(
+        host.requireContext(),
         uriPicker,
-        ExternalUriService(fragment.requireContext())
+        ExternalUriService(host.requireContext())
     )
     private val trailMapExporter = TrailMapExportService(
         fragment.requireContext(),
@@ -36,17 +36,13 @@ class PhotoMapExportService(private val fragment: TrailSenseDestinationHost) {
     private val photoMapCommand = ExportMapCommand(photoMapExporter, loading)
     private val trailMapCommand = ExportTrailMapCommand(trailMapExporter, loading)
 
-    fun export(map: OfflineMap) {
-        fragment.inBackground(BackgroundMinimumState.Created) {
-            val success = when (map) {
-                is PhotoMap -> photoMapCommand.execute(map)
-                is TrailMap -> trailMapCommand.execute(map)
-                else -> false
-            }
+    fun export(map: PhotoMap) {
+        host.inBackground(BackgroundMinimumState.Created) {
+            val success = command.execute(map)
             if (success) {
-                fragment.toast(fragment.getString(R.string.map_exported))
+                host.toast(host.getString(R.string.map_exported))
             } else {
-                fragment.toast(fragment.getString(R.string.map_export_error))
+                host.toast(host.getString(R.string.map_export_error))
             }
         }
     }

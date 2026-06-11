@@ -7,10 +7,10 @@ import com.kylecorry.trail_sense.shared.sharing.ShareAction
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 
-class BeaconSender(private val fragment: TrailSenseDestinationHost) : IBeaconSender {
+class BeaconSender(private val host: TrailSenseDestinationHost) : IBeaconSender {
     override fun send(beacon: Beacon) {
         Share.share(
-            fragment, beacon.name, listOf(
+            host, beacon.name, listOf(
                 ShareAction.Copy,
                 ShareAction.QR,
                 ShareAction.Maps,
@@ -19,25 +19,25 @@ class BeaconSender(private val fragment: TrailSenseDestinationHost) : IBeaconSen
         ) {
             when (it) {
                 ShareAction.Copy -> {
-                    val sender = BeaconCopy(fragment.requireContext())
+                    val sender = BeaconCopy(host.requireContext())
                     sender.send(beacon)
                 }
 
                 ShareAction.QR -> {
                     CustomUiUtils.showQR(
-                        fragment,
+                        host,
                         beacon.name,
                         BeaconQREncoder().encode(beacon)
                     )
                 }
 
                 ShareAction.Maps -> {
-                    val sender = BeaconGeoSender(fragment.requireContext())
+                    val sender = BeaconGeoSender(host.requireContext())
                     sender.send(beacon)
                 }
 
                 ShareAction.Send -> {
-                    val sender = BeaconSharesheet(fragment.requireContext())
+                    val sender = BeaconSharesheet(host.requireContext())
                     sender.send(beacon)
                 }
 

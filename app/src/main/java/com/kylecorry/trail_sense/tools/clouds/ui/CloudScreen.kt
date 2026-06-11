@@ -78,8 +78,8 @@ import java.time.Duration
 import java.time.Instant
 
 @Composable
-fun CloudToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CloudController(fragment) }
+fun CloudToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CloudController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -104,12 +104,12 @@ fun CloudToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CloudController(private val fragment: TrailSenseDestinationHost) {
+private class CloudController(private val host: TrailSenseDestinationHost) {
 
-    private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
-    private val cloudDetailsService by lazy { CloudDetailsService(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(fragment.requireContext()) }
+    private val repo by lazy { CloudRepo.getInstance(host.requireContext()) }
+    private val cloudDetailsService by lazy { CloudDetailsService(host.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
     private var isInitialized = false
 
     var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
@@ -123,20 +123,20 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
             return
         }
         isInitialized = true
-        subtitle = fragment.getString(
+        subtitle = host.getString(
             R.string.last_duration, formatter.formatDuration(
                 Duration.ofHours(48),
                 short = true
             )
         )
 
-        repo.getAllLive().observe(fragment.lifecycleOwner) {
+        repo.getAllLive().observe(host.lifecycleOwner) {
             val since = Instant.now().minus(Duration.ofHours(48))
             clouds = it.sortedByDescending { cloud -> cloud.time }
                 .filter { cloud -> cloud.time >= since }
         }
 
-        val shouldOpenScanner = fragment.destinationArguments?.getBoolean("open_scanner", false) == true
+        val shouldOpenScanner = host.destinationArguments?.getBoolean("open_scanner", false) == true
         if (shouldOpenScanner) {
             addFromCamera()
         }
@@ -148,14 +148,14 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
 
     fun showGuide() {
         UserGuideUtils.showGuide(
-            fragment.requireContext(),
-            fragment.findNavController(),
+            host.requireContext(),
+            host.findNavController(),
             R.raw.guide_tool_clouds
         )
     }
 
     fun showCloudDetails(reading: Reading<CloudObservation>) {
-        CloudDetailsModal(fragment.requireContext()).show(reading.value.genus)
+        CloudDetailsModal(host.requireContext()).show(reading.value.genus)
     }
 
     fun showCloudImage(reading: Reading<CloudObservation>) {
@@ -163,25 +163,25 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
     }
 
     fun addFromCamera() {
-        fragment.requestCamera {
+        host.requestCamera {
             if (it) {
-                fragment.inBackground {
+                host.inBackground {
                     showPhotoImport(
                         Size(SoftmaxCloudClassifier.IMAGE_SIZE, SoftmaxCloudClassifier.IMAGE_SIZE)
                     )
                 }
             } else {
-                fragment.alertNoCameraPermission()
+                host.alertNoCameraPermission()
             }
         }
     }
 
     fun addFromFile() {
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        host.inBackground(BackgroundMinimumState.Created) {
             val uri =
                 IntentUriPicker(
-                    fragment.intentResultRetriever,
-                    fragment.requireContext()
+                    host.intentResultRetriever,
+                    host.requireContext()
                 ).open(listOf("image/*"))
             val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
             temp?.let { openCloudPicker(it) }
@@ -189,18 +189,18 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
     }
 
     private fun showPhotoImport(size: Size) {
-        val prefs = UserPreferences(fragment.requireContext()).camera
-        fragment.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
+        val prefs = UserPreferences(host.requireContext()).camera
+        host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
             uri?.let { openCloudPicker(it) }
         }
     }
 
     fun addManual() {
-        fragment.findNavController().navigate(R.id.action_cloud_to_cloud_picker)
+        host.findNavController().navigate(R.id.action_cloud_to_cloud_picker)
     }
 
     private fun openCloudPicker(uri: Uri) {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.action_cloud_to_cloud_picker,
             Bundle().apply {
                 putParcelable("image", uri)
@@ -209,11 +209,11 @@ private class CloudController(private val fragment: TrailSenseDestinationHost) {
     }
 
     fun delete(reading: Reading<CloudObservation>) {
-        fragment.inBackground {
+        host.inBackground {
             val cancelled = onMain {
                 CoroutineAlerts.dialog(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.delete),
+                    host.requireContext(),
+                    host.getString(R.string.delete),
                     cloudDetailsService.getCloudName(reading.value.genus)
                 )
             }

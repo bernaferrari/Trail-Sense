@@ -62,8 +62,8 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeacon
 import kotlinx.coroutines.launch
 
 @Composable
-fun CalibrateGPSToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CalibrateGPSController(fragment) }
+fun CalibrateGPSToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CalibrateGPSController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
@@ -86,12 +86,12 @@ fun CalibrateGPSToolScreen(fragment: TrailSenseDestinationHost) {
     CalibrateGPSContent(controller)
 }
 
-private class CalibrateGPSController(private val fragment: TrailSenseDestinationHost) {
+private class CalibrateGPSController(private val host: TrailSenseDestinationHost) {
 
-    val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val throttle = Throttle(20)
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
     private var gps: IGPS = sensorService.getGPS()
     private var realGps: IGPS = getRealGPS()
@@ -156,7 +156,7 @@ private class CalibrateGPSController(private val fragment: TrailSenseDestination
     }
 
     fun openAppSettings() {
-        fragment.startActivity(Intents.appSettings(fragment.requireContext()))
+        host.startActivity(Intents.appSettings(host.requireContext()))
     }
 
     fun onAutoLocationChanged() {
@@ -165,7 +165,7 @@ private class CalibrateGPSController(private val fragment: TrailSenseDestination
     }
 
     fun clearCache() {
-        val cache = PreferencesSubsystem.getInstance(fragment.requireContext()).preferences
+        val cache = PreferencesSubsystem.getInstance(host.requireContext()).preferences
         cache.remove(CustomGPS.LAST_ALTITUDE)
         cache.remove(CustomGPS.LAST_UPDATE)
         cache.remove(CustomGPS.LAST_SPEED)
@@ -194,8 +194,8 @@ private class CalibrateGPSController(private val fragment: TrailSenseDestination
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        PreferencesSubsystem.getInstance(fragment.requireContext()).preferences.putBoolean(
-            fragment.getString(key),
+        PreferencesSubsystem.getInstance(host.requireContext()).preferences.putBoolean(
+            host.getString(key),
             value
         )
     }
@@ -226,18 +226,18 @@ private class CalibrateGPSController(private val fragment: TrailSenseDestination
 
     private fun getRealGPS(): IGPS {
         return when {
-            shouldUseRealGPS() -> CustomGPS(fragment.requireContext())
-            shouldUseCachedGPS() -> CachedGPS(fragment.requireContext())
-            else -> OverrideGPS(fragment.requireContext())
+            shouldUseRealGPS() -> CustomGPS(host.requireContext())
+            shouldUseCachedGPS() -> CachedGPS(host.requireContext())
+            else -> OverrideGPS(host.requireContext())
         }
     }
 
     private fun shouldUseCachedGPS(): Boolean {
-        return sensorService.hasLocationPermission() && !GPS.isAvailable(fragment.requireContext())
+        return sensorService.hasLocationPermission() && !GPS.isAvailable(host.requireContext())
     }
 
     private fun shouldUseRealGPS(): Boolean {
-        return GPS.isAvailable(fragment.requireContext())
+        return GPS.isAvailable(host.requireContext())
     }
 
     private fun onOverrideLocationUpdate(): Boolean {

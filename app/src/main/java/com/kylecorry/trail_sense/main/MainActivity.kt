@@ -6,10 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.ColorFilter
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -17,24 +13,33 @@ import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.updateLayoutParams
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import com.google.android.material.color.DynamicColors
@@ -61,8 +66,8 @@ import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavigator
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.battery.infrastructure.commands.PowerSavingModeAlertCommand
@@ -78,15 +83,12 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     var isRunning = false
         private set
 
-    private var mainViews: MainActivityViews? = null
-    private val views: MainActivityViews
-        get() = mainViews!!
-
     private val navController: NavController?
         get() = rootNavController
 
-    val errorBanner: ErrorBannerState
-        get() = views.errorBanner
+    val errorBanner = ErrorBannerState(this)
+    private val quickActionsSheet = QuickActionSheetState(this)
+    private val bottomNavigation = MainBottomNavigationState()
 
     private val userPrefs = getAppService<UserPreferences>()
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
@@ -145,6 +147,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             userPrefs.theme == UserPreferences.Theme.Black
                     || userPrefs.theme == UserPreferences.Theme.Night
                     || (isDarkThemeOn() && userPrefs.theme == UserPreferences.Theme.SystemBlack)
+        val useNightColorFilter = userPrefs.theme == UserPreferences.Theme.Night
 
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -157,26 +160,25 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
         setupNavController()
-        mainViews = createMainActivityViews(
-            activity = this,
-            navigator = composeNavigator ?: error("Compose navigator is not initialized")
-        )
-        setContentView(views.root)
+
+        setContent {
+            TrailSenseTheme {
+                MainActivityContent(
+                    errorBanner = errorBanner,
+                    navigator = composeNavigator ?: error("Compose navigator is not initialized"),
+                    quickActionsSheet = quickActionsSheet,
+                    bottomNavigation = bottomNavigation,
+                    nightColorFilter = useNightColorFilter,
+                    onBottomNavigationItemSelected = ::onBottomNavigationItemSelected,
+                    onBottomNavigationItemLongSelected = { quickActionsSheet.show(this) }
+                )
+            }
+        }
 
         // Handle black theme
         if (isBlackTheme) {
             window.decorView.rootView.setBackgroundColor(Color.BLACK)
-            views.bottomNavigation.useBlackTheme = true
-        }
-
-        if (userPrefs.theme == UserPreferences.Theme.Night) {
-            setColorFilter(
-                views.colorFilter,
-                PorterDuffColorFilter(
-                    Color.RED,
-                    PorterDuff.Mode.MULTIPLY
-                )
-            )
+            bottomNavigation.useBlackTheme = true
         }
 
         updateFullscreenMode()
@@ -185,7 +187,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onDestroy() {
         super.onDestroy()
-        mainViews = null
     }
 
     private fun setupNavController() {
@@ -212,7 +213,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         val selectedTool = tools.firstOrNull { it.isOpen(currentNavId ?: 0) }
         // If the tool appears in the bottom nav, select it. Otherwise, select the Tools tab
         val idToSelect = if (selectedTool != null) {
-            val isToolPinnedToNav = views.bottomNavigation.contains(selectedTool.navAction)
+            val isToolPinnedToNav = bottomNavigation.contains(selectedTool.navAction)
             if (isToolPinnedToNav) {
                 selectedTool.navAction
             } else {
@@ -222,7 +223,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             R.id.action_experimental_tools
         }
 
-        views.bottomNavigation.selectedItemId = idToSelect
+        bottomNavigation.selectedItemId = idToSelect
 
         lastKnownDestinationHost = activeDestinationHost?.javaClass?.simpleName
     }
@@ -253,21 +254,21 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     private fun setBottomNavLabelsVisibility() {
-        views.bottomNavigation.useCompactMode = userPrefs.useCompactMode
-        views.bottomNavigation.showAllLabels = userPrefs.useShowAllBottomNavigationLabels
-        views.bottomNavigation.bottomInsetDp =
+        bottomNavigation.useCompactMode = userPrefs.useCompactMode
+        bottomNavigation.showAllLabels = userPrefs.useShowAllBottomNavigationLabels
+        bottomNavigation.bottomInsetDp =
             (bottomInsets / resources.displayMetrics.density).toInt()
     }
 
     private fun bindLayoutInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(views.root) { v, windowInsets ->
+        // Harvest bottom inset (and system bars/cutout info) for bottom nav height calculations
+        // and legacy getBottomNavigationHeight() / overlay positioning. We no longer mutate
+        // a view root's margins; Compose MainActivityContent applies windowInsetsPadding for
+        // top + horizontal safe area.
+        val rootView = findViewById<View>(android.R.id.content) ?: window.decorView
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
             val insets =
                 windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-                leftMargin = insets.left
-                rightMargin = insets.right
-            }
             bottomInsets = insets.bottom
             setBottomNavLabelsVisibility()
             windowInsets
@@ -318,12 +319,12 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onStart() {
         super.onStart()
-        if (!appInitialized && mainViews != null) {
+        if (!appInitialized) {
             appInitialized = true
             updateBottomNavigation()
 
             navController?.addOnDestinationChangedListener { _, _, _ ->
-                views.quickActionsSheet.close()
+                quickActionsSheet.close()
                 updateBottomNavSelection()
             }
 
@@ -377,7 +378,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         if (shouldReloadNavigation) {
             navController?.navigate(
-                views.bottomNavigation.selectedItemId,
+                bottomNavigation.selectedItemId,
                 null,
                 NavOptions.Builder().setPopUpTo(
                     navController?.currentDestination?.id ?: R.id.action_experimental_tools, true
@@ -393,7 +394,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         ).execute()
 
         if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
-            views.bottomNavigation.items.replaceAll {
+            bottomNavigation.items.replaceAll {
                 if (it.id == R.id.action_weather) {
                     it.copy(visible = false)
                 } else {
@@ -434,7 +435,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 if (navController?.currentDestination?.id != tool.navAction) {
                     navController?.navigate(tool.navAction)
                 }
-                views.bottomNavigation.selectedItemId = tool.navAction
+                bottomNavigation.selectedItemId = tool.navAction
             }
             return
         }
@@ -466,9 +467,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        views.bottomNavigation.selectedItemId = savedInstanceState.getInt(
+        bottomNavigation.selectedItemId = savedInstanceState.getInt(
             "page",
-            views.bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
+            bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         )
         if (savedInstanceState.containsKey("navigation")) {
             tryOrNothing {
@@ -481,7 +482,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         tryOrLog {
-            outState.putInt("page", views.bottomNavigation.selectedItemId)
+            outState.putInt("page", bottomNavigation.selectedItemId)
             navController?.currentBackStackEntry?.arguments?.let {
                 outState.putBundle("navigation_arguments", it)
             }
@@ -572,10 +573,10 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         val bottomNavTools = userPrefs.bottomNavigationTools
 
         val tools = Tools.getTools(this)
-        views.bottomNavigation.items.clear()
+        bottomNavigation.items.clear()
         bottomNavTools.forEachIndexed { index, toolId ->
             val toolItem = tools.firstOrNull { it.id == toolId } ?: return@forEachIndexed
-            views.bottomNavigation.items.add(
+            bottomNavigation.items.add(
                 MainBottomNavigationItem(
                     id = toolItem.navAction,
                     title = toolItem.name,
@@ -584,7 +585,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             )
         }
 
-        views.bottomNavigation.items.add(
+        bottomNavigation.items.add(
             MainBottomNavigationItem(
                 id = R.id.action_experimental_tools,
                 title = getString(R.string.tools),
@@ -596,7 +597,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         val initialItem = if (SafeMode.isEnabled()) {
             tools.first { it.id == Tools.SETTINGS }.navAction
         } else {
-            views.bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
+            bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         }
 
         if (!navGraphInitialized) {
@@ -609,7 +610,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     fun onBottomNavigationItemSelected(itemId: Int) {
         if (itemId == R.id.action_experimental_tools &&
             navController?.currentDestination?.id == R.id.action_experimental_tools &&
-            !views.quickActionsSheet.isOpen()
+            !quickActionsSheet.isOpen()
         ) {
             val toolsHost = activeDestinationHost as? ToolSearchFocusable
             if (toolsHost?.focusSearch() == true) {
@@ -628,7 +629,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                     .build()
             )
         }
-        views.bottomNavigation.selectedItemId = itemId
+        bottomNavigation.selectedItemId = itemId
     }
 
     private fun initializeNavGraph(startDestination: Int) {
@@ -657,11 +658,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     fun openWidgets() {
-        views.quickActionsSheet.show(this, 1)
+        quickActionsSheet.show(this, 1)
     }
 
     fun setBottomNavigationEnabled(isEnabled: Boolean) {
-        views.bottomNavigation.isEnabled = isEnabled
+        bottomNavigation.isEnabled = isEnabled
     }
 
     fun getBottomNavigationHeight(): Int {
@@ -670,11 +671,13 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     fun addOverlayView(view: View) {
-        views.root.addView(view)
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        root?.addView(view)
     }
 
     fun removeOverlayView(view: View) {
-        views.root.removeView(view)
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        root?.removeView(view)
     }
 
     private fun updateFullscreenMode() {
@@ -726,67 +729,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
 }
 
-private data class MainActivityViews(
-    val root: CoordinatorLayout,
-    val colorFilter: View,
-    val errorBanner: ErrorBannerState,
-    val navigator: TrailSenseComposeNavigator,
-    val quickActionsSheet: QuickActionSheetState,
-    val bottomNavigation: MainBottomNavigationState
-)
-
-private fun createMainActivityViews(
-    activity: MainActivity,
-    navigator: TrailSenseComposeNavigator
-): MainActivityViews {
-    val context = activity
-    val root = CoordinatorLayout(context).apply {
-        id = R.id.coordinator
-        layoutParams = ViewGroup.MarginLayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
-
-    val errorBanner = ErrorBannerState(context)
-    val bottomNavigation = MainBottomNavigationState()
-    val quickActionsSheet = QuickActionSheetState(context)
-
-    val colorFilter = TrailSenseComposeRootView(
-        context,
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
-    ) {
-        MainActivityContent(
-            errorBanner = errorBanner,
-            navigator = navigator,
-            quickActionsSheet = quickActionsSheet,
-            bottomNavigation = bottomNavigation,
-            onBottomNavigationItemSelected = activity::onBottomNavigationItemSelected,
-            onBottomNavigationItemLongSelected = {
-                quickActionsSheet.show(activity)
-            }
-        )
-    }.apply {
-        id = R.id.color_filter
-    }
-    root.addView(
-        colorFilter,
-        CoordinatorLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    )
-
-    return MainActivityViews(
-        root,
-        colorFilter,
-        errorBanner,
-        navigator,
-        quickActionsSheet,
-        bottomNavigation
-    )
-}
-
 @Suppress("FunctionName")
 @Composable
 private fun MainActivityContent(
@@ -794,11 +736,30 @@ private fun MainActivityContent(
     navigator: TrailSenseComposeNavigator,
     quickActionsSheet: QuickActionSheetState,
     bottomNavigation: MainBottomNavigationState,
+    nightColorFilter: Boolean,
     onBottomNavigationItemSelected: (Int) -> Unit,
     onBottomNavigationItemLongSelected: (Int) -> Unit
 ) {
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize()) {
+    val rootInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Start + WindowInsetsSides.End)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                if (nightColorFilter) {
+                    colorFilter = ColorFilter.tint(
+                        ComposeColor.Red,
+                        BlendMode.Multiply
+                    )
+                }
+            }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(rootInsets)
+        ) {
             errorBanner.Content()
             TrailSenseComposeNavHost(
                 navigator = navigator,
@@ -819,16 +780,5 @@ private fun MainActivityContent(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = (navigationHeight + bottomNavigation.bottomInsetDp).dp)
         )
-    }
-}
-
-private fun setColorFilter(view: View, filter: ColorFilter?) {
-    val paint = Paint().apply {
-        colorFilter = filter
-    }
-    if (filter != null) {
-        view.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
-    } else {
-        view.setLayerType(View.LAYER_TYPE_NONE, paint)
     }
 }

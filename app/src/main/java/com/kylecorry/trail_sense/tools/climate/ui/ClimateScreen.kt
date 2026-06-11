@@ -100,8 +100,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Composable
-fun ClimateToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { ClimateController(fragment) }
+fun ClimateToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { ClimateController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -113,12 +113,12 @@ fun ClimateToolScreen(fragment: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class ClimateController(private val fragment: TrailSenseDestinationHost) {
+private class ClimateController(private val host: TrailSenseDestinationHost) {
 
-    private val locationSubsystem by lazy { LocationSubsystem.getInstance(fragment.requireContext()) }
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val locationSubsystem by lazy { LocationSubsystem.getInstance(host.requireContext()) }
+    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
 
     private val temperatureUnits: TemperatureUnits
         get() = prefs.temperatureUnits
@@ -148,8 +148,8 @@ private class ClimateController(private val fragment: TrailSenseDestinationHost)
     @Composable
     fun Content() {
         ClimateScreen(
-            title = fragment.getString(R.string.tool_climate),
-            subtitle = fragment.getString(R.string.historic_temperature_years, 30),
+            title = host.getString(R.string.tool_climate),
+            subtitle = host.getString(R.string.historic_temperature_years, 30),
             date = date,
             location = location,
             elevation = this@ClimateController.elevation,
@@ -236,7 +236,7 @@ private class ClimateController(private val fragment: TrailSenseDestinationHost)
         val currentElevation = elevation
 
         loadJob?.cancel()
-        loadJob = fragment.lifecycleScope.launch {
+        loadJob = host.lifecycleScope.launch {
             val result = coroutineScope {
                 val temperatures = async {
                     weatherSubsystem.getTemperatureRanges(
@@ -318,7 +318,7 @@ private class ClimateController(private val fragment: TrailSenseDestinationHost)
 
         if (fullText.isNotBlank()) {
             Alerts.dialog(
-                fragment.requireContext(),
+                host.requireContext(),
                 getString(R.string.ecology),
                 fullText,
                 cancelText = null
@@ -327,7 +327,7 @@ private class ClimateController(private val fragment: TrailSenseDestinationHost)
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
     private fun isActivityWrapped(activePeriods: List<Range<LocalDate>>): Boolean {

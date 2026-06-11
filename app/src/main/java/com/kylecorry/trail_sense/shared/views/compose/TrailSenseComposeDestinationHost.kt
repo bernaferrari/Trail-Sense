@@ -311,12 +311,12 @@ class TrailSenseComposeDestinationHost(
     private var survivalGuideSummary by mutableStateOf("")
     private var survivalGuideSearchJob: Job? = null
     private var selectedFlashlightMode = FlashlightMode.Torch
-    private var clinometerLockController: ClinometerLockController? = null
-    private var beaconListController: BeaconListControllerHost? = null
-    private var mapController: MapControllerHost? = null
+    internal var clinometerLockController: ClinometerLockController? = null
+    internal var beaconListController: BeaconListControllerHost? = null
+    internal var mapController: MapControllerHost? = null
     private var resumeCount = 0
     private var specialPermissionAction: (() -> Unit)? = null
-    private val reactiveComponent = TrailSenseReactiveComponent(
+    internal val reactiveComponent = TrailSenseReactiveComponent(
         contextProvider = ::requireContext,
         activityProvider = ::requireActivity,
         rootViewProvider = ::requireView,
@@ -654,7 +654,7 @@ class TrailSenseComposeDestinationHost(
         layerSheet?.dismissAndUpdateWidgets(requireContext())
     }
 
-    private fun onReactiveUpdate() {
+    internal fun onReactiveUpdate() {
         reactiveComponent.resetHookCursor()
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
             mapController?.onUpdate()
@@ -664,155 +664,9 @@ class TrailSenseComposeDestinationHost(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        val host = this
+        val destinationHost = this
         Box(modifier.fillMaxSize()) {
-            with(host) {
-                when (requireArguments().getString(ARG_DESTINATION)) {
-                DESTINATION_LEVEL -> LevelScreen()
-                DESTINATION_WHISTLE -> WhistleScreen()
-                DESTINATION_CELL_SIGNAL_SETTINGS -> CellSignalSettings()
-                DESTINATION_CLOCK_SETTINGS -> ClockSettings()
-                DESTINATION_TIDE_SETTINGS -> TideSettings()
-                DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
-                DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
-                DESTINATION_LICENSES -> LicensesScreen()
-                DESTINATION_BEACON_SETTINGS -> BeaconSettings()
-                DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
-                DESTINATION_CAMERA_SETTINGS -> CameraSettings()
-                DESTINATION_ERROR_SETTINGS -> ErrorSettings()
-                DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
-                DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
-                DESTINATION_SENSOR_SETTINGS -> SensorSettings()
-                DESTINATION_RULER_SETTINGS -> RulerSettings()
-                DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
-                DESTINATION_POWER_SETTINGS -> PowerSettings()
-            DESTINATION_GUIDE -> GuideScreen(
-                name = requireArguments().getString("guide_name", ""),
-                resource = requireArguments().getInt("guide_contents")
-            )
-            DESTINATION_EXPERIMENTATION -> ExperimentationContent()
-            DESTINATION_ERROR_HANDLER -> ErrorHandler()
-            DESTINATION_GUIDE_LIST -> GuideList()
-            DESTINATION_DIAGNOSTICS -> Diagnostics()
-            DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
-            DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
-            DESTINATION_MAP_SETTINGS -> MapSettings()
-            DESTINATION_MAP -> MapToolScreen(
-                component = reactiveComponent,
-                host = this,
-                onController = {
-                    mapController = it
-                    if (it != null) {
-                        onReactiveUpdate()
-                    }
-                }
-            )
-            DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
-                onOpenGuide = {
-                    UserGuideUtils.showGuide(
-                        requireContext(),
-                        findNavController(),
-                        R.raw.guide_tool_cliff_height
-                    )
-                }
-            )
-            DESTINATION_MAGNIFIER -> MagnifierScreen(
-                onRequestCamera = ::requestCameraForMagnifier
-            )
-            DESTINATION_MIRROR_CAMERA -> MirrorCamera()
-            DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
-            DESTINATION_WATER_PURIFICATION -> WaterPurification()
-            DESTINATION_BACKUP_SETTINGS -> BackupSettings()
-            DESTINATION_THEME_SETTINGS -> ThemeSettings()
-            DESTINATION_EXPERIMENTAL_SETTINGS -> ExperimentalSettings()
-            DESTINATION_PLUGIN_DETAILS -> PluginDetailsScreen(
-                packageId = requireArguments().getString("package_id").orEmpty(),
-                pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
-                onNavigateUp = {
-                    tryOrNothing {
-                        findNavController().navigateUp()
-                    }
-                }
-            )
-            DESTINATION_UNIT_SETTINGS -> UnitSettings()
-            DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
-            DESTINATION_LIGHT_METER -> LightMeterScreen()
-            DESTINATION_TOOLS -> ToolsHome()
-            DESTINATION_CONVERT -> ConvertScreen()
-            DESTINATION_BALLISTICS -> BallisticsScreen()
-            DESTINATION_PERMITS -> PermitsScreen()
-            DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
-            DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
-            DESTINATION_LIGHTNING -> LightningScreen()
-            DESTINATION_NOTES -> Notes()
-            DESTINATION_NOTE_EDITOR -> NoteEditor()
-            DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
-            DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
-            DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
-            DESTINATION_PEDOMETER -> Pedometer()
-            DESTINATION_FLASHLIGHT -> Flashlight()
-            DESTINATION_BATTERY -> BatteryTool()
-            DESTINATION_METAL_DETECTOR -> MetalDetectorToolScreen()
-            DESTINATION_TRIANGULATE -> TriangulateToolScreen(this)
-            DESTINATION_DECLINATION -> DeclinationScreen()
-            DESTINATION_CLOCK -> ClockToolScreen(this)
-            DESTINATION_RULER -> RulerScreen()
-            DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
-            DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
-            DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
-            DESTINATION_SETTINGS -> SettingsToolScreen(this)
-            DESTINATION_THERMOMETER_SETTINGS -> ThermometerSettingsToolScreen(this)
-            DESTINATION_WEATHER_SETTINGS -> WeatherSettingsToolScreen(this)
-            DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
-            DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
-            DESTINATION_CLOUDS -> CloudToolScreen(this)
-            DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
-            DESTINATION_ASTRONOMY -> AstronomyToolScreen(this)
-            DESTINATION_ASTRONOMY_SETTINGS -> AstronomySettingsToolScreen(this)
-            DESTINATION_AUGMENTED_REALITY -> AugmentedRealityToolScreen(this)
-            DESTINATION_BEACON_LIST -> BeaconListToolScreen(
-                fragment = this,
-                onController = { beaconListController = it }
-            )
-            DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
-            DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
-            DESTINATION_OFFLINE_MAP_LIST -> OfflineMapListToolScreen(this)
-            DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
-            DESTINATION_VIEW_QR -> QRShareScreen(
-                title = requireArguments().getString("qr_title").orEmpty(),
-                text = requireArguments().getString("qr_text").orEmpty()
-            )
-            DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
-            DESTINATION_NAVIGATION -> NavigatorToolScreen(this)
-            DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
-            DESTINATION_PATH_OVERVIEW -> PathOverviewToolScreen(this)
-            DESTINATION_PATHS -> PathsToolScreen(this)
-            DESTINATION_PATHS_SETTINGS -> PathsSettingsToolScreen(this)
-            DESTINATION_CALIBRATE_ALTIMETER -> CalibrateAltimeterToolScreen(this)
-            DESTINATION_CALIBRATE_BAROMETER -> CalibrateBarometerToolScreen(this)
-            DESTINATION_CALIBRATE_COMPASS -> CalibrateCompassToolScreen(this)
-            DESTINATION_CALIBRATE_GPS -> CalibrateGPSToolScreen(this)
-            DESTINATION_SENSOR_DETAILS -> SensorDetailsToolScreen(this)
-            DESTINATION_TIDES -> TidesToolScreen(this)
-            DESTINATION_TIDE_LIST -> TideListToolScreen(this)
-            DESTINATION_CREATE_TIDE -> CreateTideToolScreen(this)
-            DESTINATION_CLIMATE -> ClimateToolScreen(this)
-            DESTINATION_PACK_LIST -> PackListToolScreen(this)
-            DESTINATION_PACK_ITEM_LIST -> PackItemListToolScreen(this)
-            DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
-            DESTINATION_FIELD_GUIDE -> FieldGuideToolScreen(this)
-            DESTINATION_FIELD_GUIDE_PAGE -> FieldGuidePageToolScreen(this)
-            DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
-            DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
-            DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)
-            DESTINATION_PHOTO_MAPS -> PhotoMapsToolScreen(this)
-            DESTINATION_CLINOMETER -> ClinometerToolScreen(
-                fragment = this,
-                onController = { clinometerLockController = it }
-            )
-            DESTINATION_WEATHER -> WeatherToolScreen(this)
-                }
-            }
+            DestinationContent(requireArguments().getString(ARG_DESTINATION), destinationHost, modifier)
             layerSheet?.Content(
                 requireContext(),
                 { findNavController().navigateWithAnimation(it) },
@@ -886,7 +740,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ScreenFlashlight() {
+    internal fun ScreenFlashlight() {
         ScreenFlashlightScreen(
             brightness = screenFlashlightBrightness,
             isRedLight = screenFlashlightIsRed,
@@ -900,7 +754,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun Notes() {
+    internal fun Notes() {
         NotesScreen(
             notes = notesRepo.getNotes(),
             lifecycleOwner = lifecycleOwner,
@@ -914,7 +768,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun NoteEditor() {
+    internal fun NoteEditor() {
         NoteEditorScreen(
             noteId = requireArguments().getLong("edit_note_id"),
             loadNote = { notesRepo.getNote(it) },
@@ -930,7 +784,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun SurvivalGuideReader() {
+    internal fun SurvivalGuideReader() {
         val chapter = getSurvivalGuideChapter()
         SurvivalGuideReaderScreen(
             chapter = chapter,
@@ -942,7 +796,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun SurvivalGuideList() {
+    internal fun SurvivalGuideList() {
         SurvivalGuideListScreen(
             query = survivalGuideQuery,
             listItems = getSurvivalGuideListItems(),
@@ -955,7 +809,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun Pedometer() {
+    internal fun Pedometer() {
         val pedometer = remember { PedometerSubsystem.getInstance(requireContext()) }
         val prefs = remember { UserPreferences(requireContext()) }
         val formatter = remember { FormatService.getInstance(requireContext()) }
@@ -970,7 +824,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun Flashlight() {
+    internal fun Flashlight() {
         FlashlightScreen(
             initialSelectedMode = selectedFlashlightMode,
             onSelectedModeChanged = { selectedFlashlightMode = it },
@@ -981,7 +835,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun BatteryTool() {
+    internal fun BatteryTool() {
         BatteryToolScreen(
             onShowHistory = ::showBatteryHistory,
             onOpenPowerSettings = {
@@ -991,7 +845,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ToolsHome() {
+    internal fun ToolsHome() {
         ToolsScreen(
             onToolClick = { tool ->
                 findNavController().navigateWithAnimation(tool.navAction)
@@ -1009,7 +863,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun UnitSettings() {
+    internal fun UnitSettings() {
         val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
         val userPrefs = remember { UserPreferences(requireContext()) }
         val hasBarometer = remember { Sensors.hasBarometer(requireContext()) }
@@ -1152,7 +1006,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun AugmentedRealitySettings() {
+    internal fun AugmentedRealitySettings() {
         val userPrefs = remember { UserPreferences(requireContext()) }
         val formatter = remember { FormatService.getInstance(requireContext()) }
         val distanceUnits = remember {
@@ -1394,7 +1248,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ThemeSettings() {
+    internal fun ThemeSettings() {
         val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
         val prefs = remember { UserPreferences(requireContext()) }
         val dynamicColorsAvailable = remember { DynamicColors.isDynamicColorAvailable() }
@@ -1524,7 +1378,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ExperimentalSettings() {
+    internal fun ExperimentalSettings() {
         val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
         val userPrefs = remember { UserPreferences(requireContext()) }
         val hasMetalDirectionSupport = remember {
@@ -1671,7 +1525,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun BackupSettings() {
+    internal fun BackupSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         var autoBackupEnabled by remember {
             mutableStateOf(prefs.backup.isAutoBackupEnabled)
@@ -1736,7 +1590,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun WaterPurification() {
+    internal fun WaterPurification() {
         val sensorService = remember { SensorService(requireContext()) }
         val formatService = remember { FormatService.getInstance(requireContext()) }
         val altimeter = remember { sensorService.getAltimeter() }
@@ -1770,7 +1624,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun PhotoMapSettings() {
+    internal fun PhotoMapSettings() {
         val prefs = remember { UserPreferences(requireContext()).photoMaps }
         var reducePhotoResolution by remember {
             mutableStateOf(prefs.autoReducePhotoMaps)
@@ -1875,7 +1729,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun MirrorCamera() {
+    internal fun MirrorCamera() {
         val flashlight = remember { ScreenTorch(requireActivity().window) }
         MirrorCameraScreen(
             onRequestCamera = ::requestCameraForMirror,
@@ -1885,7 +1739,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun MapSettings() {
+    internal fun MapSettings() {
         val prefs = remember { UserPreferences(requireContext()).map }
         var keepUnlocked by remember {
             mutableStateOf(prefs.keepScreenUnlockedWhileOpen)
@@ -1942,7 +1796,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun PluginsSettings() {
+    internal fun PluginsSettings() {
         val lifecycleOwner = LocalLifecycleOwner.current
         val scope = rememberCoroutineScope()
         val pluginSubsystem = remember { PluginSubsystem.getInstance(requireContext()) }
@@ -2024,7 +1878,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ToolsSettings() {
+    internal fun ToolsSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         val tools = remember {
             AlphabeticalToolSort().sort(Tools.getTools(requireContext())).first().tools
@@ -2078,7 +1932,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun GuideList() {
+    internal fun GuideList() {
         GuideListScreen(
             guides = Guides.guides(requireContext()),
             onOpenGuide = {
@@ -2096,7 +1950,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun Diagnostics() {
+    internal fun Diagnostics() {
         DiagnosticsScreen(
             onShowSensorDetails = {
                 findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
@@ -2110,7 +1964,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ErrorHandler() {
+    internal fun ErrorHandler() {
         val toolId = requireArguments().getLong("tool_id", 0L)
         val errorDetails = requireArguments().getString("error").orEmpty()
         val navController = findNavController()
@@ -2153,7 +2007,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun BubbleLevelSettings() {
+    internal fun BubbleLevelSettings() {
         val prefs = remember { AppServiceRegistry.get<UserPreferences>().bubbleLevel }
         val formatter = remember { AppServiceRegistry.get<FormatService>() }
         var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
@@ -2187,7 +2041,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun BeaconSettings() {
+    internal fun BeaconSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         var defaultColor by remember {
             mutableStateOf(prefs.beacons.defaultBeaconColor)
@@ -2235,7 +2089,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun CameraSettings() {
+    internal fun CameraSettings() {
         val prefs = remember { UserPreferences(requireContext()).camera }
         val projectionNames = projectionTypeNames()
         val projectionTypes = projectionNames.keys.toList()
@@ -2266,7 +2120,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ErrorSettings() {
+    internal fun ErrorSettings() {
         val prefs = remember { ErrorPreferences(requireContext()) }
         val errors = remember { ErrorBannerReason.values().sortedBy { it.id } }
         var values by remember {
@@ -2290,7 +2144,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ClinometerSettings() {
+    internal fun ClinometerSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         val formatter = remember { FormatService.getInstance(requireContext()) }
         var lockWithVolume by remember {
@@ -2330,7 +2184,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun PrivacySettings() {
+    internal fun PrivacySettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         val lifecycleOwner = LocalLifecycleOwner.current
         var isLocationMocked by remember { mutableStateOf(isLocationMocked(prefs)) }
@@ -2393,7 +2247,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun SensorSettings() {
+    internal fun SensorSettings() {
         val hasBarometer = remember { Sensors.hasBarometer(requireContext()) }
         val items = remember(hasBarometer) {
             sensorSettingsItems(hasBarometer)
@@ -2418,7 +2272,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun RulerSettings() {
+    internal fun RulerSettings() {
         val prefs = remember { UserPreferences(requireContext()).ruler }
         var scale by remember { mutableFloatStateOf(prefs.rulerScale) }
         var flipped by remember { mutableStateOf(prefs.rulerFlipped) }
@@ -2465,7 +2319,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun FlashlightSettings() {
+    internal fun FlashlightSettings() {
         val formatter = remember { FormatService.getInstance(requireContext()) }
         val prefs = remember { UserPreferences(requireContext()).flashlight }
         val hasFlashlight = remember {
@@ -2559,7 +2413,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun PowerSettings() {
+    internal fun PowerSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
         var lowPowerMode by remember { mutableStateOf(prefs.isLowPowerModeOn) }
         var autoLowPower by remember { mutableStateOf(prefs.power.autoLowPower) }
@@ -2641,7 +2495,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun BubbleLevelThresholdDialog(
+    internal fun BubbleLevelThresholdDialog(
         title: String,
         current: Int,
         formatter: FormatService,
@@ -2683,7 +2537,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun RulerScaleDialog(
+    internal fun RulerScaleDialog(
         title: String,
         current: Float,
         onDismiss: () -> Unit,
@@ -2721,7 +2575,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun SettingsList(
+    internal fun SettingsList(
         title: String,
         content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit
     ) {
@@ -2747,7 +2601,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun LicensesScreen() {
+    internal fun LicensesScreen() {
         SettingsList(title = stringResource(R.string.pref_open_source_licenses_title)) {
             items(Licenses.libraries, key = { it.name }) { library ->
                 SettingsActionRow(
@@ -2761,7 +2615,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun CellSignalSettings() {
+    internal fun CellSignalSettings() {
         val prefs = remember { UserPreferences(requireContext()).cellSignal }
         var populateCache by remember { mutableStateOf(prefs.populateCache) }
         SingleSwitchSettingsScreen(
@@ -2777,7 +2631,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun ClockSettings() {
+    internal fun ClockSettings() {
         val prefs = remember { UserPreferences(requireContext()).clock }
         var showAnalogClock by remember { mutableStateOf(prefs.showAnalogClock) }
         SingleSwitchSettingsScreen(
@@ -2792,7 +2646,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun TideSettings() {
+    internal fun TideSettings() {
         val prefs = remember { UserPreferences(requireContext()).tides }
         var showNearestTide by remember { mutableStateOf(prefs.showNearestTide) }
         SingleSwitchSettingsScreen(
@@ -2807,7 +2661,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun TurnBackSettings() {
+    internal fun TurnBackSettings() {
         val prefs = remember { UserPreferences(requireContext()).turnBack }
         var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
         SingleSwitchSettingsScreen(
@@ -2823,7 +2677,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun WaterBoilSettings() {
+    internal fun WaterBoilSettings() {
         val prefs = remember { UserPreferences(requireContext()).waterBoilTimer }
         var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
         SingleSwitchSettingsScreen(
@@ -3033,7 +2887,7 @@ class TrailSenseComposeDestinationHost(
         )
     }
 
-    private fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
+    internal fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.CAMERA)) {
             val isAvailable = Camera.isAvailable(requireContext())
             if (!isAvailable) {
@@ -3205,7 +3059,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    private fun UnitPickerRow(
+    internal fun UnitPickerRow(
         label: String,
         options: List<SettingsOption>,
         selected: String,
@@ -3302,7 +3156,7 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    private data class SettingsOption(
+    internal data class SettingsOption(
         val value: String,
         val label: String
     )
@@ -3854,7 +3708,7 @@ class TrailSenseComposeDestinationHost(
     )
 
     @Composable
-    private fun getErrorDisplayName(reason: ErrorBannerReason): String {
+    internal fun getErrorDisplayName(reason: ErrorBannerReason): String {
         return when (reason) {
             ErrorBannerReason.NoGPS -> stringResource(R.string.gps_unavailable)
             ErrorBannerReason.LocationNotSet -> stringResource(R.string.location_not_set)

@@ -87,15 +87,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoMapCalibrationToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     mapId: Long,
     onRotation: (Float) -> Unit,
     onComplete: () -> Unit,
     onController: (PhotoMapCalibrationController) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment, mapId, onRotation, onComplete) {
-        PhotoMapCalibrationController(fragment, mapId, onRotation, onComplete)
+    val controller = remember(host, mapId, onRotation, onComplete) {
+        PhotoMapCalibrationController(host, mapId, onRotation, onComplete)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -120,16 +120,16 @@ fun PhotoMapCalibrationToolScreen(
 }
 
 class PhotoMapCalibrationController(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val mapId: Long,
     private var showRotation: (Float) -> Unit,
     private var onDone: () -> Unit
 ) {
 
     private val service = getAppService<MapService>()
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private var calibrationViews: PhotoMapCalibrationViews? =
-        createPhotoMapCalibrationViews(fragment.requireContext())
+        createPhotoMapCalibrationViews(host.requireContext())
     private val views: PhotoMapCalibrationViews
         get() = calibrationViews ?: error("Photo map calibration views are not ready")
     private val isBound: Boolean
@@ -157,7 +157,7 @@ class PhotoMapCalibrationController(
     }
 
     // Sensors
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val compass by lazy { sensorService.getCompass() }
 
@@ -169,18 +169,18 @@ class PhotoMapCalibrationController(
 
     fun onCreate() {
         CustomUiUtils.disclaimer(
-            fragment.requireContext(),
-            fragment.getString(R.string.map_calibration),
-            fragment.getString(R.string.map_calibration_instructions),
-            fragment.getString(R.string.map_calibration_shown),
+            host.requireContext(),
+            host.getString(R.string.map_calibration),
+            host.getString(R.string.map_calibration_instructions),
+            host.getString(R.string.map_calibration_shown),
             cancelText = null
         )
 
         views.mapCalibrationBottomPanel.onTitleClick = {
             Alerts.dialog(
-                fragment.requireContext(),
-                fragment.getString(R.string.map_calibration),
-                fragment.getString(R.string.map_calibration_instructions),
+                host.requireContext(),
+                host.getString(R.string.map_calibration),
+                host.getString(R.string.map_calibration_instructions),
                 cancelText = null
             )
         }
@@ -189,7 +189,7 @@ class PhotoMapCalibrationController(
 
         views.mapCalibrationBottomPanel.onNextClick = {
             if (calibrationIndex == (maxPoints - 1)) {
-                fragment.inBackground {
+                host.inBackground {
                     map = map?.let { save(it) }
                     manager.reset(map?.georeference?.calibrationPoints ?: emptyList())
                     backCallback?.remove()
@@ -235,7 +235,7 @@ class PhotoMapCalibrationController(
             views.calibrationMap.zoomBy(2f)
         }
 
-        backCallback = fragment.promptIfUnsavedChanges {
+        backCallback = host.promptIfUnsavedChanges {
             hasChanges()
         }
     }
@@ -247,14 +247,14 @@ class PhotoMapCalibrationController(
         views.calibrationMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
-        gps.asLiveData().observe(fragment.lifecycleOwner) {
+        gps.asLiveData().observe(host.lifecycleOwner) {
             views.calibrationMap.userLocation = gps.location
             views.calibrationMap.userLocationAccuracy =
                 gps.horizontalAccuracy?.let { Distance.meters(it) }
             compass.declination = declinationStrategy.getDeclination()
         }
 
-        compass.asLiveData().observe(fragment.lifecycleOwner) {
+        compass.asLiveData().observe(host.lifecycleOwner) {
             views.calibrationMap.userAzimuth = compass.bearing
         }
     }
@@ -270,7 +270,7 @@ class PhotoMapCalibrationController(
     }
 
     fun reloadMap() {
-        fragment.inBackground {
+        host.inBackground {
             map = service.getPhotoMap(mapId)
             onMain {
                 map?.let(::onMapLoad)
@@ -387,7 +387,7 @@ class PhotoMapCalibrationController(
         views.mapCalibrationBottomPanel.iconTint = when {
             notice.isNotBlank() -> Color(getErrorColor())
             manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
-            else -> Color(Resources.androidTextColorSecondary(fragment.requireContext()))
+            else -> Color(Resources.androidTextColorSecondary(host.requireContext()))
         }
     }
 
@@ -416,7 +416,7 @@ class PhotoMapCalibrationController(
             MyLocationGeoJsonSource.SOURCE_ID,
             BeaconGeoJsonSource.SOURCE_ID
         ) else emptyList()
-        fragment.inBackground {
+        host.inBackground {
             views.calibrationMap.setLayersWithPreferences(
                 OfflineMapsToolRegistration.PHOTO_MAPS_ID,
                 layers
@@ -467,7 +467,7 @@ class PhotoMapCalibrationController(
 
     private fun getErrorColor(): Int {
         return Resources.getAndroidColorAttr(
-            fragment.requireContext(),
+            host.requireContext(),
             androidx.appcompat.R.attr.colorError
         )
     }
@@ -486,7 +486,7 @@ class PhotoMapCalibrationController(
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
 }

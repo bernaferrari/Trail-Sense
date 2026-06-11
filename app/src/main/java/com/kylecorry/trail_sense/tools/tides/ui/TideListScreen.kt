@@ -66,8 +66,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun TideListToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { TideListController(fragment) }
+fun TideListToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { TideListController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -96,14 +96,14 @@ fun TideListToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class TideListController(private val fragment: TrailSenseDestinationHost) {
+private class TideListController(private val host: TrailSenseDestinationHost) {
 
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val tideRepo by lazy { TideTableRepo.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
-    private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(fragment.requireContext())) }
+    private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(host.requireContext())) }
 
     private var refreshJob: Job? = null
     var tides by mutableStateOf(emptyList<Pair<TideTable, TideType?>>())
@@ -119,12 +119,12 @@ private class TideListController(private val fragment: TrailSenseDestinationHost
 
     fun deleteTide(tide: TideTable) {
         Alerts.dialog(
-            fragment.requireContext(),
-            fragment.getString(R.string.delete_tide_prompt),
+            host.requireContext(),
+            host.getString(R.string.delete_tide_prompt),
             getTideTitle(tide)
         ) { cancelled ->
             if (!cancelled) {
-                fragment.lifecycleScope.launch {
+                host.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         tideRepo.deleteTideTable(tide)
                     }
@@ -135,16 +135,16 @@ private class TideListController(private val fragment: TrailSenseDestinationHost
     }
 
     fun toggleVisibility(tide: TideTable) {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                ToggleTideTableVisibilityCommand(fragment.requireContext()).execute(tide)
+                ToggleTideTableVisibilityCommand(host.requireContext()).execute(tide)
             }
             refreshTides()
         }
     }
 
     fun editTide(tide: TideTable) {
-        fragment.findNavController().navigate(
+        host.findNavController().navigate(
             R.id.action_tideList_to_createTide,
             Bundle().apply {
                 putLong("edit_tide_id", tide.id)
@@ -153,25 +153,25 @@ private class TideListController(private val fragment: TrailSenseDestinationHost
     }
 
     fun createTide() {
-        fragment.findNavController().navigate(R.id.action_tideList_to_createTide)
+        host.findNavController().navigate(R.id.action_tideList_to_createTide)
     }
 
     fun selectTide(tide: TideTable) {
         prefs.tides.lastTide = tide.id
-        fragment.findNavController().navigateUp()
+        host.findNavController().navigateUp()
     }
 
     private fun getTideTitle(tide: TideTable): String {
         return tide.name ?: if (tide.location != null) {
             formatService.formatLocation(tide.location)
         } else {
-            fragment.getString(android.R.string.untitled)
+            host.getString(android.R.string.untitled)
         }
     }
 
     private fun refreshTides() {
         refreshJob?.cancel()
-        refreshJob = fragment.lifecycleScope.launch {
+        refreshJob = host.lifecycleScope.launch {
             val tables = withContext(Dispatchers.IO) {
                 tideRepo.getTideTables().sortedWith(compareBy({ it.isEditable }, { tide ->
                     tide.location?.distanceTo(gps.location) ?: Float.POSITIVE_INFINITY

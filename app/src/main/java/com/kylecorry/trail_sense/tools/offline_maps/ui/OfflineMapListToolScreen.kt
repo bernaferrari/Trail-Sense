@@ -95,10 +95,10 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExport
 
 @Composable
 fun OfflineMapListToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { OfflineMapListController(fragment) }
+    val controller = remember(host) { OfflineMapListController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -123,12 +123,12 @@ fun OfflineMapListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class OfflineMapListController(private val fragment: TrailSenseDestinationHost) {
+private class OfflineMapListController(private val host: TrailSenseDestinationHost) {
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val mapService by lazy { MapService.Companion.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val mapService by lazy { MapService.Companion.getInstance(host.requireContext()) }
     private val mapLoader by lazy { MapGroupLoader(mapService.loader) }
     private lateinit var manager: GroupListManager<IMap>
 
@@ -147,17 +147,17 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
 
     private val uriPicker by lazy {
         IntentUriPicker(
-            fragment.intentResultRetriever,
-            fragment.requireContext()
+            host.intentResultRetriever,
+            host.requireContext()
         )
     }
     private val mapImportingIndicator by lazy {
         AlertLoadingIndicator(
-            fragment.requireContext(),
-            fragment.getString(R.string.importing_map)
+            host.requireContext(),
+            host.getString(R.string.importing_map)
         )
     }
-    private val exportService by lazy { PhotoMapExportService(fragment) }
+    private val exportService by lazy { PhotoMapExportService(host) }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -185,8 +185,8 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
             },
             onHelp = {
                 UserGuideUtils.showGuide(
-                    fragment.requireContext(),
-                    fragment.findNavController(),
+                    host.requireContext(),
+                    host.findNavController(),
                     R.raw.guide_tool_offline_maps
                 )
             },
@@ -206,7 +206,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
         }
         isInitialized = true
         manager = GroupListManager(
-            fragment.lifecycleScope,
+            host.lifecycleScope,
             mapLoader,
             lastRoot,
             this::sortMaps
@@ -214,47 +214,47 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
 
         val mapIntentUri =
             BundleCompat.getParcelable(
-                fragment.destinationArguments ?: Bundle(),
+                host.destinationArguments ?: Bundle(),
                 "map_intent_uri",
                 Uri::class.java
             )
-        fragment.destinationArguments?.remove("map_intent_uri")
+        host.destinationArguments?.remove("map_intent_uri")
         if (mapIntentUri != null) {
             createMap(
                 CreateMapFromUriCommand(
-                    fragment.requireContext(),
+                    host.requireContext(),
                     mapIntentUri,
                     mapImportingIndicator
                 )
             )
         }
 
-        ShowMapsDisclaimerCommand(fragment.requireContext(), fragment.findNavController()).execute()
+        ShowMapsDisclaimerCommand(host.requireContext(), host.findNavController()).execute()
 
         sort = prefs.photoMaps.mapSort
-        sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
         manager.onChange = { root, items, rootChanged ->
             mapItems = items
             if (rootChanged) {
                 mapListResetKey++
             }
-            title = (root as MapGroup?)?.name ?: fragment.getString(R.string.offline_maps)
+            title = (root as MapGroup?)?.name ?: host.getString(R.string.offline_maps)
         }
 
         backPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (!manager.up()) {
                     remove()
-                    fragment.findNavController().navigateUp()
+                    host.findNavController().navigateUp()
                 }
             }
         }
-        fragment.mainActivity.onBackPressedDispatcher.addCallback(
-            fragment.lifecycleOwner,
+        host.mainActivity.onBackPressedDispatcher.addCallback(
+            host.lifecycleOwner,
             backPressedCallback!!
         )
         updateBackPressedCallback()
-        title = fragment.getString(R.string.offline_maps)
+        title = host.getString(R.string.offline_maps)
     }
 
     fun onResume() {
@@ -263,8 +263,8 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
         }
         updateBackPressedCallback()
         manager.refresh()
-        fragment.inBackground {
-            val mapsDeleted = MapCleanupCommand(fragment.requireContext()).execute()
+        host.inBackground {
+            val mapsDeleted = MapCleanupCommand(host.requireContext()).execute()
             if (mapsDeleted) {
                 manager.refresh()
             }
@@ -281,15 +281,15 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     private fun changeSort() {
         val sortOptions = MapSortMethod.values()
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.sort),
+            host.requireContext(),
+            host.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.photoMaps.mapSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.photoMaps.mapSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = fragment.getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -297,9 +297,9 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
 
     private fun getSortString(sortMethod: MapSortMethod): String {
         return when (sortMethod) {
-            MapSortMethod.MostRecent -> fragment.getString(R.string.most_recent)
-            MapSortMethod.Closest -> fragment.getString(R.string.closest)
-            MapSortMethod.Name -> fragment.getString(R.string.name)
+            MapSortMethod.MostRecent -> host.getString(R.string.most_recent)
+            MapSortMethod.Closest -> host.getString(R.string.closest)
+            MapSortMethod.Name -> host.getString(R.string.name)
         }
     }
 
@@ -329,8 +329,8 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     }
 
     private fun setGroupVisibility(group: MapGroup, visible: Boolean) {
-        fragment.inBackground {
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+        host.inBackground {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 val maps = mapService.loader.getChildren(group.id, null)
 
                 // Photo Maps
@@ -397,15 +397,15 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     }
 
     private fun resize(map: PhotoMap) {
-        fragment.inBackground {
-            ResizeMapCommand(fragment.requireContext(), mapImportingIndicator).execute(map)
+        host.inBackground {
+            ResizeMapCommand(host.requireContext(), mapImportingIndicator).execute(map)
             manager.refresh()
         }
     }
 
     private fun print(map: PhotoMap) {
-        fragment.inBackground(BackgroundMinimumState.Created) {
-            PrintMapCommand(fragment.requireContext()).execute(map)
+        host.inBackground(BackgroundMinimumState.Created) {
+            PrintMapCommand(host.requireContext()).execute(map)
         }
     }
 
@@ -414,36 +414,36 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     }
 
     private fun rename(map: IMap) {
-        fragment.inBackground {
-            RenameMapCommand(fragment.requireContext(), mapService).execute(map)
+        host.inBackground {
+            RenameMapCommand(host.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun editAttribution(map: VectorMap) {
-        fragment.inBackground {
-            EditOfflineMapAttributionCommand(fragment.requireContext()).execute(map)
+        host.inBackground {
+            EditOfflineMapAttributionCommand(host.requireContext()).execute(map)
             manager.refresh()
         }
     }
 
     private fun move(map: IMap) {
-        fragment.inBackground {
-            MoveMapCommand(fragment.requireContext(), mapService).execute(map)
+        host.inBackground {
+            MoveMapCommand(host.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun toggleVisibility(map: IMap) {
-        fragment.inBackground {
+        host.inBackground {
             ToggleVisibilityMapCommand(mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun delete(map: IMap) {
-        fragment.inBackground {
-            DeleteMapCommand(fragment.requireContext(), mapService).execute(map)
+        host.inBackground {
+            DeleteMapCommand(host.requireContext(), mapService).execute(map)
             manager.refresh()
         }
     }
@@ -451,14 +451,14 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     private fun view(map: OfflineMapCatalogItem) {
         when (map) {
             is MapGroup -> manager.open(map.id)
-            is PhotoMap -> fragment.findNavController().navigate(
+            is PhotoMap -> host.findNavController().navigate(
                 R.id.action_mapList_to_maps,
                 Bundle().apply {
                     putLong("mapId", map.id)
                 }
             )
 
-            is VectorMap -> fragment.findNavController().navigateWithAnimation(
+            is VectorMap -> host.findNavController().navigateWithAnimation(
                 R.id.offlineMapViewFragment,
                 Bundle().apply {
                     putLong("offline_map_file_id", map.id)
@@ -485,7 +485,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
             OfflineMapCreateAction.CreateGroup -> createMapGroup()
             OfflineMapCreateAction.ImportFile -> createMap(
                 CreateMapFromFileCommand(
-                    fragment.requireContext(),
+                    host.requireContext(),
                     uriPicker,
                     mapImportingIndicator
                 )
@@ -493,14 +493,14 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
 
             OfflineMapCreateAction.ImportCamera -> createMap(
                 CreateMapFromCameraCommand(
-                    fragment,
+                    host,
                     mapImportingIndicator
                 )
             )
 
             OfflineMapCreateAction.CreateBlank -> createMap(
                 CreateBlankMapCommand(
-                    fragment.requireContext(),
+                    host.requireContext(),
                     mapImportingIndicator
                 )
             )
@@ -509,8 +509,8 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     }
 
     private fun createMapGroup() {
-        fragment.inBackground {
-            CreateMapGroupCommand(fragment.requireContext(), mapService).execute(manager.root?.id)
+        host.inBackground {
+            CreateMapGroupCommand(host.requireContext(), mapService).execute(manager.root?.id)
             manager.refresh()
         }
     }
@@ -529,7 +529,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
     }
 
     private fun createMap(command: ICreateMapCommand) {
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        host.inBackground(BackgroundMinimumState.Created) {
             MapCleanupCommand.isMapImportInProgress = true
             try {
                 onMain {
@@ -539,7 +539,7 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
                 val request = command.execute().map { it.copy(parentId = manager.root?.id) }
 
                 if (map == null) {
-                    fragment.toast(fragment.getString(R.string.error_importing_map))
+                    host.toast(host.getString(R.string.error_importing_map))
                     return@inBackground
                 }
 
@@ -551,22 +551,22 @@ private class OfflineMapListController(private val fragment: TrailSenseDestinati
                 }
 
                 if (map is PhotoMap) {
-                    val isPdfMap = map.hasPdf(fragment.requireContext())
+                    val isPdfMap = map.hasPdf(host.requireContext())
                     if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
                         mapImportingIndicator.show()
-                        val reducer = HighQualityMapReducer(fragment.requireContext())
+                        val reducer = HighQualityMapReducer(host.requireContext())
                         reducer.reduce(map)
                         mapImportingIndicator.hide()
                     }
 
                     if (map.georeference.calibrationPoints.isNotEmpty()) {
-                        fragment.toast(fragment.getString(R.string.map_auto_calibrated))
+                        host.toast(host.getString(R.string.map_auto_calibrated))
                     }
                 }
 
                 manager.refresh(true)
                 when (map) {
-                    is PhotoMap -> fragment.findNavController().navigate(
+                    is PhotoMap -> host.findNavController().navigate(
                         R.id.action_mapList_to_maps,
                         Bundle().apply {
                             putLong("mapId", map.id)

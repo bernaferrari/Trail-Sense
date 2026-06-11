@@ -61,8 +61,8 @@ import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
 @Composable
-fun CreateItemToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CreateItemController(fragment) }
+fun CreateItemToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CreateItemController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -97,10 +97,10 @@ fun CreateItemToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CreateItemController(private val fragment: TrailSenseDestinationHost) {
+private class CreateItemController(private val host: TrailSenseDestinationHost) {
 
-    private val itemRepo by lazy { PackRepo.getInstance(fragment.requireContext()) }
-    val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val itemRepo by lazy { PackRepo.getInstance(host.requireContext()) }
+    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val prefs by lazy { AppServiceRegistry.get<PreferencesSubsystem>() }
     private var backCallback: androidx.activity.OnBackPressedCallback? = null
     private var isInitialized = false
@@ -115,7 +115,7 @@ private class CreateItemController(private val fragment: TrailSenseDestinationHo
         WeightUnits.entries.firstOrNull { it.id == lastUnitId }
     }
 
-    val nameMapper by lazy { ItemCategoryStringMapper(fragment.requireContext()) }
+    val nameMapper by lazy { ItemCategoryStringMapper(host.requireContext()) }
 
     val sortedCategories by lazy {
         ItemCategory.entries.sortedBy { nameMapper.getString(it) }
@@ -142,11 +142,11 @@ private class CreateItemController(private val fragment: TrailSenseDestinationHo
             return
         }
         isInitialized = true
-        itemId = fragment.destinationArguments?.getLong("edit_item_id") ?: 0L
-        packId = fragment.destinationArguments?.getLong("pack_id") ?: 0L
+        itemId = host.destinationArguments?.getLong("edit_item_id") ?: 0L
+        packId = host.destinationArguments?.getLong("pack_id") ?: 0L
         category = defaultCategory
         selectedWeightUnit = defaultWeightUnit
-        backCallback = fragment.promptIfUnsavedChanges(::hasChanges)
+        backCallback = host.promptIfUnsavedChanges(::hasChanges)
 
         if (itemId != 0L) {
             loadEditingItem(itemId)
@@ -159,7 +159,7 @@ private class CreateItemController(private val fragment: TrailSenseDestinationHo
     }
 
     private fun loadEditingItem(id: Long) {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val item = withContext(Dispatchers.IO) {
                 itemRepo.getItem(id)
             } ?: return@launch
@@ -184,7 +184,7 @@ private class CreateItemController(private val fragment: TrailSenseDestinationHo
         val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
         val optional = isOptional
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 prefs.preferences.putInt(KEY_LAST_CATEGORY, itemCategory.id)
                 selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
@@ -204,7 +204,7 @@ private class CreateItemController(private val fragment: TrailSenseDestinationHo
             }
 
             backCallback?.remove()
-            fragment.findNavController().popBackStack()
+            host.findNavController().popBackStack()
         }
     }
 

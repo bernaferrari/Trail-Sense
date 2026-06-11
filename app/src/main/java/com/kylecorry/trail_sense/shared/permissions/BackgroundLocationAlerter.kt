@@ -10,16 +10,16 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
-class BackgroundLocationAlerter(private val fragment: TrailSenseDestinationHost) : IAlerter {
+class BackgroundLocationAlerter(private val host: TrailSenseDestinationHost) : IAlerter {
 
     override fun alert() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             return
         }
 
-        val context = fragment.requireContext()
+        val context = host.requireContext()
         CustomUiUtils.snackbar(
-            fragment,
+            host,
             context.getString(R.string.sunset_alerts_background_location_disclaimer),
             Snackbar.LENGTH_LONG,
             context.getString(R.string.learn_more)
@@ -37,7 +37,7 @@ class BackgroundLocationAlerter(private val fragment: TrailSenseDestinationHost)
                 allowLinks = true
             ) { cancelled ->
                 if (!cancelled) {
-                    fragment.requestBackgroundLocation {
+                    host.requestBackgroundLocation {
                         // Do nothing
                     }
                 }

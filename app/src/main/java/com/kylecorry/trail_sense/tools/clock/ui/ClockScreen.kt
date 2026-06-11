@@ -67,7 +67,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 @Composable
-fun ClockToolScreen(fragment: TrailSenseDestinationHost) {
+fun ClockToolScreen(host: TrailSenseDestinationHost) {
     val context = LocalContext.current
     val formatService = remember { FormatService.getInstance(context) }
     val sensorService = remember { SensorService(context) }
@@ -79,9 +79,9 @@ fun ClockToolScreen(fragment: TrailSenseDestinationHost) {
         prefs = prefs,
         gps = gps,
         getGpsTime = { getGPSTime(gps) },
-        requestExactAlarms = { fragment.requestScheduleExactAlarms(it) },
+        requestExactAlarms = { host.requestScheduleExactAlarms(it) },
         onScheduleNextMinute = { gpsTime, systemTime ->
-            sendNextMinuteNotification(fragment, formatService, gpsTime, systemTime)
+            sendNextMinuteNotification(host, formatService, gpsTime, systemTime)
         }
     )
 }
@@ -313,12 +313,12 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
 }
 
 private fun sendNextMinuteNotification(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     formatService: FormatService,
     gpsTime: Instant,
     systemTime: Instant
 ) {
-    val context = fragment.requireContext()
+    val context = host.requireContext()
     val systemDiff = Duration.between(systemTime, Instant.now())
     val currentTime = gpsTime.plus(systemDiff)
     val clockError = Duration.between(systemTime, gpsTime)
@@ -334,20 +334,20 @@ private fun sendNextMinuteNotification(
 
     Alerts.dialog(
         context,
-        fragment.getString(R.string.clock_sync_time_settings),
-        fragment.getString(R.string.clock_sync_instructions, formattedTime)
+        host.getString(R.string.clock_sync_time_settings),
+        host.getString(R.string.clock_sync_instructions, formattedTime)
     ) { cancelled ->
         if (!cancelled) {
             Alerts.toast(
                 context,
-                fragment.getString(R.string.pip_notification_scheduled, formattedTime)
+                host.getString(R.string.pip_notification_scheduled, formattedTime)
             )
 
             val scheduler = AlarmTaskScheduler(context) {
                 NextMinuteBroadcastReceiver.pendingIntent(context, formattedTime)
             }
             scheduler.once(sendTime.toZonedDateTime().toInstant())
-            fragment.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
+            host.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
     }
 }

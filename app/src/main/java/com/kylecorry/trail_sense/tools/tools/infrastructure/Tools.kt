@@ -150,8 +150,8 @@ object Tools {
         val none = ToolQuickAction(
             QUICK_ACTION_NONE,
             context.getString(R.string.none).capitalizeWords()
-        ) { button, fragment ->
-            QuickActionNone(button, fragment)
+        ) { button, host ->
+            QuickActionNone(button, host)
         }
 
         val tools = getTools(context)
@@ -168,7 +168,7 @@ object Tools {
             ToolQuickAction(
                 it.id.toInt() + TOOL_QUICK_ACTION_OFFSET, // Avoid overlap
                 context.getString(R.string.tool_quick_action_name, it.name)
-            ) { button, fragment -> QuickActionOpenTool(button, fragment, it.navAction, it.icon) }
+            ) { button, host -> QuickActionOpenTool(button, host, it.navAction, it.icon) }
         }
 
         return listOf(none) + quickActions + toolActions

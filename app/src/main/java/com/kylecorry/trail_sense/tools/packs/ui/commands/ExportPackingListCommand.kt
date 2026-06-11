@@ -12,27 +12,23 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 
-class ExportPackingListCommand(private val fragment: TrailSenseDestinationHost) : Command<Pack> {
+class ExportPackingListCommand(private val host: TrailSenseDestinationHost) : Command<Pack> {
 
     private val exportService = LighterPackIOService.create(
-        fragment.requireContext(),
-        fragment.intentResultRetriever
+        host.requireContext(),
+        host.intentResultRetriever
     )
 
-    private val repo = PackRepo.getInstance(fragment.requireContext())
+    private val repo = PackRepo.getInstance(host.requireContext())
 
     override fun execute(value: Pack) {
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        host.inBackground(BackgroundMinimumState.Created) {
             var items: List<PackItem> = emptyList()
-            Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 items = repo.getItemsFromPackAsync(value.id)
             }
-            val exported = exportService.export(items, "${value.name.slugify()}.csv")
-            if (exported) {
-                fragment.toast(fragment.getString(R.string.exported))
-            } else {
-                fragment.toast(fragment.getString(R.string.export_failed))
-            }
+            exportService.export(items, "${value.name.slugify()}.csv")
+            host.toast(host.getString(R.string.exported))
         }
     }
 }

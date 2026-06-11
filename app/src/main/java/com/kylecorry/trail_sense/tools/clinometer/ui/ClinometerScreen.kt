@@ -84,11 +84,11 @@ import kotlin.math.min
 
 @Composable
 fun ClinometerToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     onController: (ClinometerLockController?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { ClinometerController(fragment) }
+    val controller = remember(host) { ClinometerController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -113,21 +113,21 @@ fun ClinometerToolScreen(
 }
 
 private class ClinometerController(
-    private val fragment: TrailSenseDestinationHost
+    private val host: TrailSenseDestinationHost
 ) : ClinometerLockController {
 
     private var clinometerViews: ClinometerViews? =
-        createClinometerViews(fragment.requireContext())
+        createClinometerViews(host.requireContext())
     private val views: ClinometerViews
         get() = clinometerViews ?: error("Clinometer views are not ready")
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val orientation by lazy { sensorService.getOrientation() }
     private val cameraClinometer by lazy { Clinometer(orientation, isAugmentedReality = true) }
     private val sideClinometer by lazy { Clinometer(orientation, isAugmentedReality = false) }
     private val deviceOrientation by lazy { sensorService.getDeviceOrientationSensor() }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     private val throttle = Throttle(20)
     private val invalidCameraOrientations = listOf(
         DeviceOrientation.Orientation.Landscape,
@@ -175,7 +175,7 @@ private class ClinometerController(
 
     @SuppressLint("ClickableViewAccessibility")
     fun onCreate() {
-        fragment.toast(fragment.getString(R.string.set_inclination_instructions))
+        host.toast(host.getString(R.string.set_inclination_instructions))
 
         views.clinometerTitle.isLeftButtonSelected = false
         views.clinometerTitle.isRightButtonSelected = false
@@ -210,11 +210,11 @@ private class ClinometerController(
         views.arView.showPosition = false
         views.arView.passThroughTouchEvents = true
 
-        views.arView.bind(views.camera, fragment.lifecycleOwner)
+        views.arView.bind(views.camera, host.lifecycleOwner)
 
-        sideClinometer.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
-        cameraClinometer.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
-        deviceOrientation.asLiveData().observe(fragment.lifecycleOwner) { updateUI() }
+        sideClinometer.asLiveData().observe(host.lifecycleOwner) { updateUI() }
+        cameraClinometer.asLiveData().observe(host.lifecycleOwner) { updateUI() }
+        deviceOrientation.asLiveData().observe(host.lifecycleOwner) { updateUI() }
     }
 
     private fun startSideClinometer() {
@@ -226,7 +226,7 @@ private class ClinometerController(
     }
 
     private fun startCameraClinometer(showAlert: Boolean) {
-        fragment.requestCamera { hasPermission ->
+        host.requestCamera { hasPermission ->
             if (hasPermission) {
                 useCamera = true
                 views.camera.start(
@@ -238,7 +238,7 @@ private class ClinometerController(
             } else {
                 startSideClinometer()
                 if (showAlert) {
-                    fragment.alertNoCameraPermission()
+                    host.alertNoCameraPermission()
                 }
             }
         }
@@ -251,8 +251,8 @@ private class ClinometerController(
 
     private fun askForHeightOrDistance() {
         Pickers.item(
-            fragment.requireContext(), fragment.getString(R.string.measure), listOf(
-                fragment.getString(R.string.height), fragment.getString(R.string.distance)
+            host.requireContext(), host.getString(R.string.measure), listOf(
+                host.getString(R.string.height), host.getString(R.string.distance)
             ), when {
                 distanceAway != null -> 0
                 knownHeight != null -> 1
@@ -271,19 +271,19 @@ private class ClinometerController(
     private fun measureHeightPrompt() {
         val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
         CustomUiUtils.pickDistance(
-            fragment.requireContext(),
+            host.requireContext(),
             units,
             distanceAway,
-            fragment.getString(R.string.clinometer_measure_height_title)
+            host.getString(R.string.clinometer_measure_height_title)
         ) { distance, _ ->
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
                 views.clinometerTitle.isRightButtonSelected = true
                 CustomUiUtils.disclaimer(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.instructions),
-                    fragment.getMarkdown(
+                    host.requireContext(),
+                    host.getString(R.string.instructions),
+                    host.getMarkdown(
                         R.string.clinometer_measure_height_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -298,11 +298,11 @@ private class ClinometerController(
         val units = formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
 
         CustomUiUtils.pickDistance(
-            fragment.requireContext(),
+            host.requireContext(),
             units,
             knownHeight,
-            fragment.getString(R.string.clinometer_measure_distance_title),
-            hint = fragment.getString(R.string.height),
+            host.getString(R.string.clinometer_measure_distance_title),
+            hint = host.getString(R.string.height),
             showFeetAndInches = true
         ) { distance, _ ->
             if (distance != null) {
@@ -311,9 +311,9 @@ private class ClinometerController(
                 views.clinometerTitle.isRightButtonSelected = true
 
                 CustomUiUtils.disclaimer(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.instructions),
-                    fragment.getMarkdown(
+                    host.requireContext(),
+                    host.getString(R.string.instructions),
+                    host.getMarkdown(
                         R.string.clinometer_measure_distance_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -384,7 +384,7 @@ private class ClinometerController(
 
         views.clinometerTitle.title = formatter.formatDegrees(incline)
         views.clinometerTitle.subtitle =
-            fragment.getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
+            host.getString(R.string.slope_amount, formatter.formatPercentage(getSlopePercent(incline)))
 
         views.avalancheRisk.title = getAvalancheRiskString(Geology.getAvalancheRisk(incline))
 
@@ -398,21 +398,21 @@ private class ClinometerController(
 
         when {
             distanceAway != null -> {
-                views.estimatedHeight.description = fragment.getString(R.string.height)
+                views.estimatedHeight.description = host.getString(R.string.height)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getHeight(distanceAway).toRelativeDistance(), 1, false
                 )
             }
 
             knownHeight != null -> {
-                views.estimatedHeight.description = fragment.getString(R.string.distance)
+                views.estimatedHeight.description = host.getString(R.string.distance)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getDistance(knownHeight).toRelativeDistance(), 1, false
                 )
             }
 
             else -> {
-                views.estimatedHeight.title = fragment.getString(R.string.distance_unset)
+                views.estimatedHeight.title = host.getString(R.string.distance_unset)
             }
         }
     }
@@ -444,9 +444,9 @@ private class ClinometerController(
 
     private fun getAvalancheRiskString(risk: AvalancheRisk): String {
         return when (risk) {
-            AvalancheRisk.Low -> fragment.getString(R.string.low)
-            AvalancheRisk.Moderate -> fragment.getString(R.string.moderate)
-            AvalancheRisk.High -> fragment.getString(R.string.high)
+            AvalancheRisk.Low -> host.getString(R.string.low)
+            AvalancheRisk.Moderate -> host.getString(R.string.moderate)
+            AvalancheRisk.High -> host.getString(R.string.high)
         }
     }
 
@@ -564,7 +564,7 @@ private class ClinometerController(
         )
         markerLayer.addMarker(
             ARMarker(
-                point, CanvasCircle(Resources.getPrimaryMarkerColor(fragment.requireContext()))
+                point, CanvasCircle(Resources.getPrimaryMarkerColor(host.requireContext()))
             )
         )
         return point

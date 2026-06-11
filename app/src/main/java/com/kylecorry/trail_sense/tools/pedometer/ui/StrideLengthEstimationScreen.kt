@@ -42,12 +42,12 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.St
 import kotlinx.coroutines.delay
 
 @Composable
-fun StrideLengthEstimationToolScreen(fragment: TrailSenseDestinationHost) {
-    val estimator = remember(fragment) {
-        StrideLengthEstimatorFactory(fragment.requireContext()).getEstimator()
+fun StrideLengthEstimationToolScreen(host: TrailSenseDestinationHost) {
+    val estimator = remember(host) {
+        StrideLengthEstimatorFactory(host.requireContext()).getEstimator()
     }
-    val formatter = remember(fragment) { FormatService.getInstance(fragment.requireContext()) }
-    val prefs = remember(fragment) { UserPreferences(fragment.requireContext()) }
+    val formatter = remember(host) { FormatService.getInstance(host.requireContext()) }
+    val prefs = remember(host) { UserPreferences(host.requireContext()) }
     val units = remember(prefs) { prefs.baseDistanceUnits }
 
     StrideLengthScreen(
@@ -57,13 +57,13 @@ fun StrideLengthEstimationToolScreen(fragment: TrailSenseDestinationHost) {
         },
         onSave = {
             prefs.pedometer.strideLength = estimator.strideLength ?: Distance.meters(0f)
-            Alerts.toast(fragment.requireContext(), fragment.getString(R.string.saved))
+            Alerts.toast(host.requireContext(), host.getString(R.string.saved))
         },
         onPermissionDenied = {
-            fragment.alertNoActivityRecognitionPermission()
+            host.alertNoActivityRecognitionPermission()
         },
         requestPermission = { callback ->
-            fragment.requestActivityRecognition(callback)
+            host.requestActivityRecognition(callback)
         }
     )
 }

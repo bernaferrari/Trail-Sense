@@ -56,8 +56,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ViewVectorMapToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { ViewVectorMapController(fragment) }
+fun ViewVectorMapToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { ViewVectorMapController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(controller) {
         controller.loadMap()
@@ -86,7 +86,7 @@ fun ViewVectorMapToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class ViewVectorMapController(private val fragment: TrailSenseDestinationHost) {
+private class ViewVectorMapController(private val host: TrailSenseDestinationHost) {
     private val service by lazy { getAppService<MapService>() }
     var map by mutableStateOf<VectorMap?>(null)
         private set
@@ -95,7 +95,7 @@ private class ViewVectorMapController(private val fragment: TrailSenseDestinatio
     private var configuredMapId: Long? = null
 
     private val mapId: Long
-        get() = fragment.destinationArguments?.getLong("offline_map_file_id")
+        get() = host.destinationArguments?.getLong("offline_map_file_id")
             ?: error("Missing offline map id")
 
     fun onDestroy() {
@@ -115,7 +115,7 @@ private class ViewVectorMapController(private val fragment: TrailSenseDestinatio
     }
 
     fun loadMap() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getVectorMap(mapId)
             }
@@ -139,7 +139,7 @@ private class ViewVectorMapController(private val fragment: TrailSenseDestinatio
         }
 
         val factory = LayerFactory()
-        val layer = Tools.getMapLayerDefinition(fragment.requireContext(), TrailMapsTileSource.SOURCE_ID)!!
+        val layer = Tools.getMapLayerDefinition(host.requireContext(), TrailMapsTileSource.SOURCE_ID)!!
         val tileLayer = factory.createLayer(layer)
         tileLayer.setFeatureFilter(map.id.toString())
         view.setLayers(listOf(tileLayer))
@@ -152,25 +152,25 @@ private class ViewVectorMapController(private val fragment: TrailSenseDestinatio
     }
 
     fun rename(map: VectorMap) {
-        fragment.lifecycleScope.launch {
-            RenameMapCommand(fragment.requireContext(), service).execute(map)
+        host.lifecycleScope.launch {
+            RenameMapCommand(host.requireContext(), service).execute(map)
             loadMap()
         }
     }
 
     fun editAttribution(map: VectorMap) {
-        fragment.lifecycleScope.launch {
-            EditOfflineMapAttributionCommand(fragment.requireContext()).execute(map)
+        host.lifecycleScope.launch {
+            EditOfflineMapAttributionCommand(host.requireContext()).execute(map)
             loadMap()
         }
     }
 
     fun delete(map: VectorMap) {
-        fragment.lifecycleScope.launch {
-            DeleteMapCommand(fragment.requireContext(), service).execute(map)
+        host.lifecycleScope.launch {
+            DeleteMapCommand(host.requireContext(), service).execute(map)
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
                 onMain {
-                    fragment.findNavController().popBackStack()
+                    host.findNavController().popBackStack()
                 }
             } else {
                 loadMap()

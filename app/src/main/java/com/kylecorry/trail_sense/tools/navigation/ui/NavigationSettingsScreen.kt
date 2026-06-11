@@ -43,8 +43,8 @@ import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
-fun NavigationSettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { NavigationSettingsController(fragment) }
+fun NavigationSettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { NavigationSettingsController(host) }
     DisposableEffect(controller) {
         onDispose {
             controller.onDispose()
@@ -54,14 +54,14 @@ fun NavigationSettingsToolScreen(fragment: TrailSenseDestinationHost) {
     controller.LayerSheet()
 }
 
-private class NavigationSettingsController(private val fragment: TrailSenseDestinationHost) {
+private class NavigationSettingsController(private val host: TrailSenseDestinationHost) {
     private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
 
-    val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
+    val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    val userPrefs by lazy { UserPreferences(host.requireContext()) }
     val prefs by lazy { userPrefs.navigation }
-    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
-    val hasCompass by lazy { SensorService(fragment.requireContext()).hasCompass() }
+    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
     val distanceUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }
@@ -78,15 +78,15 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
     @Composable
     fun LayerSheet() {
         layerSheet.Content(
-            fragment.requireContext(),
-            { fragment.findNavController().navigateWithAnimation(it) }
+            host.requireContext(),
+            { host.findNavController().navigateWithAnimation(it) }
         )
     }
 
     fun onCurrentPaceSpeedometerSelected() {
-        fragment.requestActivityRecognition { hasPermission ->
+        host.requestActivityRecognition { hasPermission ->
             if (!hasPermission) {
-                fragment.alertNoActivityRecognitionPermission()
+                host.alertNoActivityRecognitionPermission()
             }
         }
     }
@@ -98,7 +98,7 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -111,8 +111,8 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
 
     fun pickVisibleBeaconCount(current: Int, onPicked: (Int) -> Unit) {
         Pickers.number(
-            fragment.requireContext(),
-            fragment.getString(R.string.pref_num_visible_beacons_title),
+            host.requireContext(),
+            host.getString(R.string.pref_num_visible_beacons_title),
             null,
             current,
             allowDecimals = false,
@@ -128,10 +128,10 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
 
     fun pickNearbyRadius(current: Distance, onPicked: (Distance) -> Unit) {
         CustomUiUtils.pickDistance(
-            fragment.requireContext(),
+            host.requireContext(),
             distanceUnits,
             current,
-            fragment.getString(R.string.pref_max_beacon_distance_title)
+            host.getString(R.string.pref_max_beacon_distance_title)
         ) { distance, cancelled ->
             if (cancelled || distance == null || distance.value <= 0) {
                 return@pickDistance
@@ -143,8 +143,8 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
     }
 
     fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
-        val entries = fragment.getResources().getStringArray(entriesId)
-        val values = fragment.getResources().getStringArray(valuesId)
+        val entries = host.getResources().getStringArray(entriesId)
+        val values = host.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             NavigationOption(value, entries.getOrElse(index) { value })
         }
@@ -163,19 +163,19 @@ private class NavigationSettingsController(private val fragment: TrailSenseDesti
     }
 
     fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(fragment.getString(key)) ?: default
+        return cache.getString(host.getString(key)) ?: default
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+        return cache.getBoolean(host.getString(key)) ?: defaultValue
     }
 
     fun putString(key: Int, value: String) {
-        cache.putString(fragment.getString(key), value)
+        cache.putString(host.getString(key), value)
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(fragment.getString(key), value)
+        cache.putBoolean(host.getString(key), value)
     }
 }
 

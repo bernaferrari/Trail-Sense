@@ -68,14 +68,14 @@ import kotlin.math.roundToInt
 
 @Composable
 fun ViewPhotoMapToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     mapId: Long,
     autoLockLocation: Boolean,
     onController: (ViewPhotoMapController) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment, mapId, autoLockLocation) {
-        ViewPhotoMapController(fragment, mapId, autoLockLocation)
+    val controller = remember(host, mapId, autoLockLocation) {
+        ViewPhotoMapController(host, mapId, autoLockLocation)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -100,31 +100,31 @@ fun ViewPhotoMapToolScreen(
 }
 
 class ViewPhotoMapController(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val mapId: Long,
     private val autoLockLocation: Boolean
 ) {
     private var photoMapViews: ViewPhotoMapViews? =
-        createViewPhotoMapViews(fragment.requireContext())
+        createViewPhotoMapViews(host.requireContext())
     private val views: ViewPhotoMapViews
         get() = photoMapViews ?: error("Photo map views are not ready")
     private val isBound: Boolean
         get() = photoMapViews != null
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val altimeter by lazy { sensorService.getAltimeter() }
     private val compass by lazy { sensorService.getCompass() }
     private val hasCompass by lazy { sensorService.hasCompass() }
-    private val beaconService by lazy { BeaconService(fragment.requireContext()) }
+    private val beaconService by lazy { BeaconService(host.requireContext()) }
     private val service = getAppService<MapService>()
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
 
-    private val navigator by lazy { Navigator.getInstance(fragment.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
-    private val screenLight by lazy { ScreenTorch(fragment.mainActivity.window) }
+    private val screenLight by lazy { ScreenTorch(host.mainActivity.window) }
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
@@ -134,7 +134,7 @@ class ViewPhotoMapController(
     )
 
     // Paths
-    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
+    private val pathService by lazy { PathService.getInstance(host.requireContext()) }
 
     private var map: PhotoMap? = null
     private var destination: Destination? = null
@@ -155,15 +155,15 @@ class ViewPhotoMapController(
             modifier = modifier
         )
         layerSheet.Content(
-            fragment.requireContext(),
-            { fragment.findNavController().navigateWithAnimation(it) }
+            host.requireContext(),
+            { host.findNavController().navigateWithAnimation(it) }
         )
     }
 
     fun onCreate() {
         shouldLockOnMapLoad = autoLockLocation
 
-        gps.asLiveData().observe(fragment.lifecycleOwner) {
+        gps.asLiveData().observe(host.lifecycleOwner) {
             views.map.userLocation = gps.location
             views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
             updateDestination()
@@ -172,8 +172,8 @@ class ViewPhotoMapController(
                 views.map.mapCenter = gps.location
             }
         }
-        altimeter.asLiveData().observe(fragment.lifecycleOwner) { updateDestination() }
-        compass.asLiveData().observe(fragment.lifecycleOwner) {
+        altimeter.asLiveData().observe(host.lifecycleOwner) { updateDestination() }
+        compass.asLiveData().observe(host.lifecycleOwner) {
             compass.declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
             val bearing = compass.rawBearing
             views.map.userAzimuth = compass.bearing
@@ -183,7 +183,7 @@ class ViewPhotoMapController(
             updateDestination()
         }
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             navigator.destination2.collect {
                 setDestination(it)
             }
@@ -195,7 +195,7 @@ class ViewPhotoMapController(
             onLongPress(it)
         }
 
-        views.map.setBackgroundColor(Resources.color(fragment.requireContext(), R.color.colorSecondary))
+        views.map.setBackgroundColor(Resources.color(host.requireContext(), R.color.colorSecondary))
 
         val keepMapUp = prefs.photoMaps.keepMapFacingUp
 
@@ -252,28 +252,28 @@ class ViewPhotoMapController(
 
         selectLocation(location)
 
-        fragment.inBackground {
+        host.inBackground {
             val elevation = Distance.meters(DEM.getElevation(location).elevation)
 
             onMain {
                 Share.actions(
-                    fragment,
+                    host,
                     formatService.formatLocation(location),
                     listOf(
-                        ActionItem(fragment.getString(R.string.beacon), R.drawable.ic_location) {
+                        ActionItem(host.getString(R.string.beacon), R.drawable.ic_location) {
                             createBeacon(location)
                             selectLocation(null)
                         },
-                        ActionItem(fragment.getString(R.string.navigate), R.drawable.ic_beacon) {
+                        ActionItem(host.getString(R.string.navigate), R.drawable.ic_beacon) {
                             navigateTo(location)
                             selectLocation(null)
                         },
-                        ActionItem(fragment.getString(R.string.distance), R.drawable.ruler) {
+                        ActionItem(host.getString(R.string.distance), R.drawable.ruler) {
                             startDistanceMeasurement(arrayOf(gps.location, location))
                             selectLocation(null)
                         },
                     ),
-                    subtitle = fragment.getString(
+                    subtitle = host.getString(
                         R.string.elevation_value,
                         formatService.formatElevation(elevation)
                     )
@@ -285,7 +285,7 @@ class ViewPhotoMapController(
     }
 
     fun reloadMap() {
-        fragment.inBackground {
+        host.inBackground {
             withContext(Dispatchers.IO) {
                 map = service.getPhotoMap(mapId)
             }
@@ -321,7 +321,7 @@ class ViewPhotoMapController(
         val bundle = Bundle().apply {
             putParcelable("initial_location", GeoUri(location))
         }
-        fragment.findNavController().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavController().navigate(R.id.placeBeaconFragment, bundle)
     }
 
     private fun showDistance(distance: Distance) {
@@ -333,7 +333,7 @@ class ViewPhotoMapController(
 
     fun startDistanceMeasurement(initialPoints: Array<Coordinate>) {
         if (map?.isCalibrated != true) {
-            fragment.toast(fragment.getString(R.string.map_is_not_calibrated))
+            host.toast(host.getString(R.string.map_is_not_calibrated))
             return
         }
 
@@ -343,7 +343,7 @@ class ViewPhotoMapController(
             stopDistanceMeasurement()
         }
         views.distanceSheet.createPathListener = {
-            fragment.inBackground {
+            host.inBackground {
                 map?.let {
                     val id = CreatePathCommand(
                         pathService,
@@ -352,7 +352,7 @@ class ViewPhotoMapController(
                     ).execute(layerManager.getDistanceMeasurementPoints())
 
                     onMain {
-                        fragment.findNavController().navigate(
+                        host.findNavController().navigate(
                             R.id.action_maps_to_path,
                             Bundle().apply {
                                 putLong("path_id", id)
@@ -377,7 +377,7 @@ class ViewPhotoMapController(
     }
 
     private fun resetLayerManager() {
-        layerManager.resume(fragment.requireContext(), views.map, mapId, fragment)
+        layerManager.resume(host.requireContext(), views.map, mapId, host)
 
         // Populate the last known location and map bounds
         layerManager.onBoundsChanged()
@@ -386,7 +386,7 @@ class ViewPhotoMapController(
     }
 
     fun adjustLayers() {
-        layerSheet.dismissAndUpdateWidgets(fragment.requireContext())
+        layerSheet.dismissAndUpdateWidgets(host.requireContext())
         layerManager.pause(views.map)
         layerSheet.setOnDismissListener {
             resetLayerManager()
@@ -395,7 +395,7 @@ class ViewPhotoMapController(
     }
 
     private fun navigateTo(location: Coordinate) {
-        fragment.inBackground {
+        host.inBackground {
             // Create a temporary beacon
             val beacon = Beacon(
                 0L,
@@ -429,7 +429,7 @@ class ViewPhotoMapController(
                 updateDestination()
             }
         }
-        screenLock.updateLock(fragment.mainActivity)
+        screenLock.updateLock(host.mainActivity)
     }
 
     private fun onMapLoad(map: PhotoMap) {
@@ -446,7 +446,7 @@ class ViewPhotoMapController(
             shouldLockOnMapLoad = false
         }
         views.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
-        layerManager.resume(fragment.requireContext(), views.map, map.id, fragment)
+        layerManager.resume(host.requireContext(), views.map, map.id, host)
         layerManager.onBoundsChanged()
     }
 
@@ -463,7 +463,7 @@ class ViewPhotoMapController(
         views.map.isZoomEnabled = true
 
         // Show the bottom navigation
-        (fragment.mainActivity).setBottomNavigationEnabled(true)
+        (host.mainActivity).setBottomNavigationEnabled(true)
 
         when (mapLockMode) {
             MapLockMode.Location -> {
@@ -520,9 +520,9 @@ class ViewPhotoMapController(
 
             MapLockMode.Trace -> {
                 CustomUiUtils.disclaimer(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.trace),
-                    fragment.getString(R.string.map_trace_instructions),
+                    host.requireContext(),
+                    host.getString(R.string.trace),
+                    host.getString(R.string.map_trace_instructions),
                     "disclaimer_shown_map_trace",
                     cancelText = null
                 )
@@ -543,7 +543,7 @@ class ViewPhotoMapController(
                 views.zoomOutBtn.isVisible = false
 
                 // Hide the bottom navigation
-                (fragment.mainActivity).setBottomNavigationEnabled(false)
+                (host.mainActivity).setBottomNavigationEnabled(false)
             }
         }
     }
@@ -551,7 +551,7 @@ class ViewPhotoMapController(
     fun onPause() {
         updateTimer.stop()
         layerSheet.setOnDismissListener(null)
-        layerSheet.dismissAndUpdateWidgets(fragment.requireContext())
+        layerSheet.dismissAndUpdateWidgets(host.requireContext())
         photoMapViews?.let {
             layerManager.pause(it.map)
         }
@@ -559,7 +559,7 @@ class ViewPhotoMapController(
         screenLight.off()
 
         // Show the bottom navigation
-        (fragment.mainActivity).setBottomNavigationEnabled(true)
+        (host.mainActivity).setBottomNavigationEnabled(true)
     }
 
     fun recenter() {
@@ -570,15 +570,15 @@ class ViewPhotoMapController(
     }
 
     fun onDestroy() {
-        screenLock.releaseLock(fragment.mainActivity)
+        screenLock.releaseLock(host.mainActivity)
         photoMapViews = null
     }
 
     private fun updatePeriodic() {
-        screenLock.updateLock(fragment.mainActivity)
+        screenLock.updateLock(host.mainActivity)
         val views = photoMapViews ?: return
-        fragment.inBackground {
-            val attribution = views.map.getAttribution(fragment.requireContext())
+        host.inBackground {
+            val attribution = views.map.getAttribution(host.requireContext())
             onMain {
                 views.mapAttribution.text = attribution
                 views.mapAttribution.isVisible = attribution != null

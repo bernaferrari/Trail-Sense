@@ -40,8 +40,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun AstronomySettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { AstronomySettingsController(fragment) }
+fun AstronomySettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { AstronomySettingsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -63,20 +63,20 @@ fun AstronomySettingsToolScreen(fragment: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class AstronomySettingsController(private val fragment: TrailSenseDestinationHost) {
+private class AstronomySettingsController(private val host: TrailSenseDestinationHost) {
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     private val sunsetService by lazy {
         Tools.getService(
-            fragment.requireContext(),
+            host.requireContext(),
             AstronomyToolRegistration.SERVICE_SUNSET_ALERTS
         )!!
     }
     private val sunriseService by lazy {
         Tools.getService(
-            fragment.requireContext(),
+            host.requireContext(),
             AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS
         )!!
     }
@@ -90,7 +90,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
                         options(R.array.sun_times_entries, R.array.sun_times_values)
                     }
                     val quickActionOptions = remember {
-                        Tools.getQuickActions(fragment.requireContext()).map {
+                        Tools.getQuickActions(host.requireContext()).map {
                             AstronomyOption(it.id.toString(), it.name)
                         }
                     }
@@ -101,7 +101,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
                         timeOptions(listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L))
                     }
                     val showStartCameraIn3D = remember {
-                        Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
+                        Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
                     }
 
                     var sunTimeMode by remember {
@@ -433,7 +433,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
         val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
         val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
 
-        cache.onChange.asLiveData().observe(fragment.lifecycleOwner) {
+        cache.onChange.asLiveData().observe(host.lifecycleOwner) {
             if (it == sunsetAlertTimeKey) {
                 restartSunsetAlerts()
             } else if (it == sunriseAlertTimeKey) {
@@ -486,9 +486,9 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
     }
 
     private fun onSunsetAlertsPreferenceChanged(enabled: Boolean) {
-        fragment.inBackground {
+        host.inBackground {
             if (enabled) {
-                SunsetAlarmReceiver.enable(fragment, true)
+                SunsetAlarmReceiver.enable(host, true)
             } else {
                 sunsetService.disable()
             }
@@ -496,9 +496,9 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
     }
 
     private fun onSunriseAlertsPreferenceChanged(enabled: Boolean) {
-        fragment.inBackground {
+        host.inBackground {
             if (enabled) {
-                SunriseAlarmReceiver.enable(fragment, true)
+                SunriseAlarmReceiver.enable(host, true)
             } else {
                 sunriseService.disable()
             }
@@ -506,13 +506,13 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
     }
 
     private fun restartSunsetAlerts() {
-        fragment.inBackground {
+        host.inBackground {
             sunsetService.restart()
         }
     }
 
     private fun restartSunriseAlerts() {
-        fragment.inBackground {
+        host.inBackground {
             sunriseService.restart()
         }
     }
@@ -524,7 +524,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -536,8 +536,8 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<AstronomyOption> {
-        val entries = fragment.getResources().getStringArray(entriesId)
-        val values = fragment.getResources().getStringArray(valuesId)
+        val entries = host.getResources().getStringArray(entriesId)
+        val values = host.getResources().getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             AstronomyOption(value, entries.getOrElse(index) { value })
         }
@@ -573,7 +573,7 @@ private class AstronomySettingsController(private val fragment: TrailSenseDestin
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return fragment.getString(id, *args)
+        return host.getString(id, *args)
     }
 
     private fun onSunsetAlertsChanged(data: Bundle): Boolean {

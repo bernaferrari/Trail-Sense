@@ -45,8 +45,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun PedometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { PedometerSettingsController(fragment) }
+fun PedometerSettingsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { PedometerSettingsController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -66,14 +66,14 @@ fun PedometerSettingsToolScreen(fragment: TrailSenseDestinationHost) {
         }
     }
 
-    PedometerSettingsContent(controller, fragment)
+    PedometerSettingsContent(controller, host)
 }
 
-private class PedometerSettingsController(private val fragment: TrailSenseDestinationHost) {
+private class PedometerSettingsController(private val host: TrailSenseDestinationHost) {
 
-    val userPrefs by lazy { UserPreferences(fragment.requireContext()) }
-    val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    val userPrefs by lazy { UserPreferences(host.requireContext()) }
+    val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     private val strideLengthUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
     }
@@ -121,26 +121,26 @@ private class PedometerSettingsController(private val fragment: TrailSenseDestin
         updateEnabled: (Boolean) -> Unit
     ) {
         if (enabled) {
-            fragment.requestActivityRecognition { hasPermission ->
+            host.requestActivityRecognition { hasPermission ->
                 if (hasPermission) {
                     if (cache.getBoolean("pedometer_battery_sent") != true) {
                         Alerts.dialog(
-                            fragment.requireContext(),
-                            fragment.getString(R.string.pedometer),
-                            fragment.getString(R.string.pedometer_disclaimer),
+                            host.requireContext(),
+                            host.getString(R.string.pedometer),
+                            host.getString(R.string.pedometer_disclaimer),
                             cancelText = null
                         )
                         cache.putBoolean("pedometer_battery_sent", true)
                     }
-                    PedometerSubsystem.getInstance(fragment.requireContext()).enable()
+                    PedometerSubsystem.getInstance(host.requireContext()).enable()
                 } else {
-                    PedometerSubsystem.getInstance(fragment.requireContext()).disable()
+                    PedometerSubsystem.getInstance(host.requireContext()).disable()
                     updateEnabled(false)
-                    fragment.alertNoActivityRecognitionPermission()
+                    host.alertNoActivityRecognitionPermission()
                 }
             }
         } else {
-            PedometerSubsystem.getInstance(fragment.requireContext()).disable()
+            PedometerSubsystem.getInstance(host.requireContext()).disable()
         }
     }
 
@@ -149,10 +149,10 @@ private class PedometerSettingsController(private val fragment: TrailSenseDestin
         onPicked: (Distance) -> Unit
     ) {
         CustomUiUtils.pickDistance(
-            fragment.requireContext(),
+            host.requireContext(),
             strideLengthUnits,
             current,
-            fragment.getString(R.string.pref_stride_length_title),
+            host.getString(R.string.pref_stride_length_title),
             showFeetAndInches = true
         ) { distance, cancelled ->
             if (cancelled || distance == null || distance.value <= 0f) {
@@ -168,21 +168,21 @@ private class PedometerSettingsController(private val fragment: TrailSenseDestin
     }
 
     fun isPermissionRequestVisible(enabled: Boolean): Boolean {
-        return (enabled && !Permissions.canRecognizeActivity(fragment.requireContext())) ||
-                (!enabled && !Permissions.isBackgroundLocationEnabled(fragment.requireContext()))
+        return (enabled && !Permissions.canRecognizeActivity(host.requireContext())) ||
+                (!enabled && !Permissions.isBackgroundLocationEnabled(host.requireContext()))
     }
 
     fun notificationSummary(): String {
-        val isBlocked = Notify.isChannelBlocked(fragment.requireContext(), StepCounterService.CHANNEL_ID)
-        return if (isBlocked) fragment.getString(R.string.off) else fragment.getString(R.string.on)
+        val isBlocked = Notify.isChannelBlocked(host.requireContext(), StepCounterService.CHANNEL_ID)
+        return if (isBlocked) host.getString(R.string.off) else host.getString(R.string.on)
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+        return cache.getBoolean(host.getString(key)) ?: defaultValue
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(fragment.getString(key), value)
+        cache.putBoolean(host.getString(key), value)
     }
 
     private fun onPedometerEnabled(data: Bundle): Boolean {
@@ -199,7 +199,7 @@ private class PedometerSettingsController(private val fragment: TrailSenseDestin
 @Composable
 private fun PedometerSettingsContent(
     controller: PedometerSettingsController,
-    fragment: TrailSenseDestinationHost
+    host: TrailSenseDestinationHost
 ) {
                     val userPrefs = controller.userPrefs
                     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }
@@ -285,7 +285,7 @@ private fun PedometerSettingsContent(
                                 SettingsActionRow(
                                     label = stringResource(R.string.estimate_stride_length),
                                     onClick = {
-                                        fragment.findNavController().navigate(
+                                        host.findNavController().navigate(
                                             R.id.action_calibrate_pedometer_to_estimate_stride_length
                                         )
                                     },
@@ -294,15 +294,15 @@ private fun PedometerSettingsContent(
                             }
                             item("notifications") {
                                 SettingsActionRow(
-                                    label = fragment.getString(
+                                    label = host.getString(
                                         R.string.notifications_channel,
-                                        fragment.getString(R.string.pedometer)
+                                        host.getString(R.string.pedometer)
                                     ),
                                     summary = notificationSummary,
                                     onClick = {
-                                        fragment.startActivity(
+                                        host.startActivity(
                                             Intents.notificationSettings(
-                                                fragment.requireContext(),
+                                                host.requireContext(),
                                                 StepCounterService.CHANNEL_ID
                                             )
                                         )
@@ -315,7 +315,7 @@ private fun PedometerSettingsContent(
                                     SettingsActionRow(
                                         label = stringResource(R.string.request_permission),
                                         onClick = {
-                                            fragment.startActivity(Intents.appSettings(fragment.requireContext()))
+                                            host.startActivity(Intents.appSettings(host.requireContext()))
                                         },
                                         modifier = Modifier.padding(
                                             horizontal = TrailSenseSpacing.lg

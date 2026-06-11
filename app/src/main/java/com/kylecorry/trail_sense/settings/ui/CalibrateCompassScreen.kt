@@ -52,8 +52,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
 @Composable
-fun CalibrateCompassToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CalibrateCompassController(fragment) }
+fun CalibrateCompassToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CalibrateCompassController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -77,12 +77,12 @@ fun CalibrateCompassToolScreen(fragment: TrailSenseDestinationHost) {
     CalibrateCompassContent(controller)
 }
 
-private class CalibrateCompassController(private val fragment: TrailSenseDestinationHost) {
+private class CalibrateCompassController(private val host: TrailSenseDestinationHost) {
 
-    val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(fragment.requireContext()).preferences }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val throttle = Throttle(20)
     private val gps: IGPS by lazy { sensorService.getGPS() }
     val hasCompass by lazy { sensorService.hasCompass() }
@@ -95,9 +95,9 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
 
     fun observePreferences(lifecycleOwner: LifecycleOwner) {
         val resetPrefs = listOf(
-            fragment.getString(R.string.pref_use_true_north),
-            fragment.getString(R.string.pref_compass_filter_amt),
-            fragment.getString(R.string.pref_compass_source)
+            host.getString(R.string.pref_use_true_north),
+            host.getString(R.string.pref_compass_filter_amt),
+            host.getString(R.string.pref_compass_source)
         )
         cache.onChange.asLiveData().observe(lifecycleOwner) {
             if (resetPrefs.contains(it)) {
@@ -153,7 +153,7 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            fragment.requireContext(),
+            host.requireContext(),
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -166,13 +166,13 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
 
     fun pickDeclinationOverride(current: Float, onPicked: (Float) -> Unit) {
         Pickers.number(
-            fragment.requireContext(),
-            fragment.getString(R.string.compass_declination_override),
+            host.requireContext(),
+            host.getString(R.string.compass_declination_override),
             null,
             current,
             allowDecimals = true,
             allowNegative = true,
-            hint = fragment.getString(R.string.declination)
+            hint = host.getString(R.string.declination)
         ) {
             if (it != null) {
                 val declination = it.toFloat()
@@ -184,13 +184,13 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
     }
 
     fun getCompassSourceOptions(): List<CompassOption> {
-        val availableSources = CompassProvider.getAvailableSources(fragment.requireContext())
+        val availableSources = CompassProvider.getAvailableSources(host.requireContext())
         return mapOf(
-            CompassSource.RotationVector to fragment.getString(R.string.compass_source_mag_gyro),
-            CompassSource.GeomagneticRotationVector to fragment.getString(R.string.magnetometer),
-            CompassSource.CustomRotationVector to fragment.getString(R.string.magnetometer_gyro_custom),
-            CompassSource.CustomMagnetometer to fragment.getString(R.string.compass_source_legacy_ts),
-            CompassSource.Orientation to fragment.getString(R.string.compass_source_legacy_android)
+            CompassSource.RotationVector to host.getString(R.string.compass_source_mag_gyro),
+            CompassSource.GeomagneticRotationVector to host.getString(R.string.magnetometer),
+            CompassSource.CustomRotationVector to host.getString(R.string.magnetometer_gyro_custom),
+            CompassSource.CustomMagnetometer to host.getString(R.string.compass_source_legacy_ts),
+            CompassSource.Orientation to host.getString(R.string.compass_source_legacy_android)
         ).filter { availableSources.contains(it.key) }
             .map { CompassOption(it.key.id, it.value) }
     }
@@ -200,15 +200,15 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(fragment.getString(key)) ?: defaultValue
+        return cache.getBoolean(host.getString(key)) ?: defaultValue
     }
 
     fun putString(key: Int, value: String) {
-        cache.putString(fragment.getString(key), value)
+        cache.putString(host.getString(key), value)
     }
 
     fun putInt(key: Int, value: Int) {
-        cache.putInt(fragment.getString(key), value)
+        cache.putInt(host.getString(key), value)
     }
 
     private fun onLocationUpdate(): Boolean {
@@ -226,8 +226,8 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
         setDeclinationOverride?.invoke(declination)
         update()
         Alerts.toast(
-            fragment.requireContext(),
-            fragment.getString(R.string.declination_override_updated_toast)
+            host.requireContext(),
+            host.getString(R.string.declination_override_updated_toast)
         )
         return false
     }
@@ -253,8 +253,8 @@ private class CalibrateCompassController(private val fragment: TrailSenseDestina
         if (prevQuality != Quality.Unknown && prevQuality != compass.quality) {
             if (compass.quality.ordinal > prevQuality.ordinal) {
                 Alerts.toast(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.compass_accuracy_improved, getCompassAccuracy())
+                    host.requireContext(),
+                    host.getString(R.string.compass_accuracy_improved, getCompassAccuracy())
                 )
             }
             prevQuality = compass.quality

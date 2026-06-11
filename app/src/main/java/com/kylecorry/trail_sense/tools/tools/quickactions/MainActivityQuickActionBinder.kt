@@ -9,11 +9,11 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class MainActivityQuickActionBinder(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val state: MainActivityQuickActionState
 ) : IQuickActionBinder {
 
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
 
     private fun createButton(recommended: Boolean): ComposeQuickActionButtonView {
         val button = ComposeQuickActionButtonView()
@@ -31,8 +31,8 @@ class MainActivityQuickActionBinder(
 
         val selected = prefs.toolQuickActions.sorted()
 
-        val navController = fragment.findNavController()
-        val tools = Tools.getTools(fragment.requireContext())
+        val navController = host.findNavController()
+        val tools = Tools.getTools(host.requireContext())
         val currentDestination = navController.currentDestination?.id ?: 0
         val activeTools = tools
             .filter { it.isOpen(currentDestination) || it.settingsNavAction == currentDestination }
@@ -53,13 +53,13 @@ class MainActivityQuickActionBinder(
         val factory = QuickActionFactory()
 
         recommended.distinct().forEach {
-            val action = factory.create(it, createButton(true), fragment)
-            action.bind(fragment.lifecycleOwner)
+            val action = factory.create(it, createButton(true), host)
+            action.bind(host.lifecycleOwner)
         }
 
         selected.forEach {
-            val action = factory.create(it, createButton(false), fragment)
-            action.bind(fragment.lifecycleOwner)
+            val action = factory.create(it, createButton(false), host)
+            action.bind(host.lifecycleOwner)
         }
     }
 }

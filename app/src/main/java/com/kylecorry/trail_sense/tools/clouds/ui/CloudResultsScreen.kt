@@ -78,8 +78,8 @@ import java.time.Instant
 import kotlin.math.abs
 
 @Composable
-fun CloudResultsToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { CloudResultsController(fragment) }
+fun CloudResultsToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { CloudResultsController(host) }
     DisposableEffect(controller) {
         onDispose {
             controller.onDestroy()
@@ -106,7 +106,7 @@ fun CloudResultsToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class CloudResultsController(private val fragment: TrailSenseDestinationHost) {
+private class CloudResultsController(private val host: TrailSenseDestinationHost) {
 
     var image by mutableStateOf<Bitmap?>(null)
         private set
@@ -118,11 +118,11 @@ private class CloudResultsController(private val fragment: TrailSenseDestination
     var time by mutableStateOf(Instant.now())
         private set
 
-    private val repo by lazy { CloudRepo.getInstance(fragment.requireContext()) }
-    val formatter by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val repo by lazy { CloudRepo.getInstance(host.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
 
     private val uri: Uri? by lazy {
-        BundleCompat.getParcelable(fragment.destinationArguments ?: Bundle(), "image", Uri::class.java)
+        BundleCompat.getParcelable(host.destinationArguments ?: Bundle(), "image", Uri::class.java)
     }
 
     fun onResume() {
@@ -145,11 +145,11 @@ private class CloudResultsController(private val fragment: TrailSenseDestination
     }
 
     fun pickTime() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val current = time.toZonedDateTime().toLocalDateTime()
             val newTime = CoroutinePickers.datetime(
-                fragment.requireContext(),
-                UserPreferences(fragment.requireContext()).use24HourTime,
+                host.requireContext(),
+                UserPreferences(host.requireContext()).use24HourTime,
                 current
             )
             if (newTime != null) {
@@ -169,19 +169,19 @@ private class CloudResultsController(private val fragment: TrailSenseDestination
     }
 
     fun save() {
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             val readings =
                 selection.filter { it.isSelected }
                     .map { Reading(CloudObservation(0, it.genus), time) }
             readings.forEach {
                 repo.add(it)
             }
-            fragment.findNavController().navigateUp()
+            host.findNavController().navigateUp()
         }
     }
 
     private fun debugLogFeatures(features: List<Float>) {
-        DebugCloudCommand(fragment.requireContext(), features).execute()
+        DebugCloudCommand(host.requireContext(), features).execute()
     }
 
     private fun analyze() {
@@ -189,10 +189,10 @@ private class CloudResultsController(private val fragment: TrailSenseDestination
         isLoading = true
         selection = emptyList()
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             if (image == null) {
                 image = loadImage(uri)
-                DeleteTempFilesCommand(fragment.requireContext()).execute()
+                DeleteTempFilesCommand(host.requireContext()).execute()
             }
             val results = onDefault {
                 image?.let { classifier.classify(it) }

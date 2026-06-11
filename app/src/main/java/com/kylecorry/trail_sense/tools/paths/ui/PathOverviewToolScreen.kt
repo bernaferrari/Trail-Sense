@@ -139,10 +139,10 @@ import java.time.Duration
 
 @Composable
 fun PathOverviewToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { PathOverviewController(fragment) }
+    val controller = remember(host) { PathOverviewController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -167,17 +167,17 @@ fun PathOverviewToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PathOverviewController(private val fragment: TrailSenseDestinationHost) {
+private class PathOverviewController(private val host: TrailSenseDestinationHost) {
 
-    private val views = createPathOverviewViews(fragment.requireContext())
+    private val views = createPathOverviewViews(host.requireContext())
     private val isViewReady: Boolean
         get() = isCreated
 
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val throttle = Throttle(20)
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
     private val gps by lazy { sensorService.getGPS() }
     private val compass by lazy { sensorService.getCompass() }
     private val declinationProvider by lazy {
@@ -188,7 +188,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     }
     private var declination = 0f
     private val hikingService = HikingService()
-    private val pathService by lazy { PathService.getInstance(fragment.requireContext()) }
+    private val pathService by lazy { PathService.getInstance(host.requireContext()) }
 
     private val chart: PathElevationChart
         get() = views.chart
@@ -221,14 +221,14 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
     private val converter: IPathPointBeaconConverter by lazy {
         TemporaryPathPointBeaconConverter(
-            fragment.getString(R.string.waypoint)
+            host.getString(R.string.waypoint)
         )
     }
 
     private val beaconNavigator: IBeaconNavigator by lazy {
         BeaconNavigator(
-            BeaconService(fragment.requireContext()),
-            NavControllerAppNavigation(fragment.findNavController())
+            BeaconService(host.requireContext()),
+            NavControllerAppNavigation(host.findNavController())
         )
     }
 
@@ -280,7 +280,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
                 onColorPicked = {
                     if (it != null) {
                         ChangePathColorCommand(
-                            fragment.lifecycleOwner,
+                            host.lifecycleOwner,
                             pathService
                         ).execute(colorPickerPath, it)
                     }
@@ -298,7 +298,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             return
         }
         isCreated = true
-        pathId = fragment.destinationArguments?.getLong("path_id") ?: error("Missing path id")
+        pathId = host.destinationArguments?.getLong("path_id") ?: error("Missing path id")
         layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.navigation.useFastPathRendering)
         layer.setOnClickListener {
             if (selectedPointId != null) {
@@ -351,10 +351,10 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
         views.pathMapFullscreenToggle.onClick = {
             isFullscreen = !isFullscreen
             views.pathMapHolder.height = if (isFullscreen) {
-                val legendHeight = Resources.dp(fragment.requireContext(), 72f).toInt()
+                val legendHeight = Resources.dp(host.requireContext(), 72f).toInt()
                 views.root.height - legendHeight
             } else {
-                Resources.dp(fragment.requireContext(), 250f).toInt()
+                Resources.dp(host.requireContext(), 250f).toInt()
             }
             views.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
             val timer = CoroutineTimer {
@@ -367,20 +367,20 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
         }
 
         views.pathActions.onAddPointClick = {
-            fragment.inBackground {
+            host.inBackground {
                 var wasSuccessful = false
                 val job = launch {
-                    BacktrackCommand(fragment.requireContext(), pathId).execute()
+                    BacktrackCommand(host.requireContext(), pathId).execute()
                     wasSuccessful = true
                 }
 
                 Alerts.withCancelableLoading(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.loading),
+                    host.requireContext(),
+                    host.getString(R.string.loading),
                     onCancel = { job.cancel() }) {
                     job.join()
                     if (wasSuccessful) {
-                        fragment.toast(fragment.getString(R.string.point_added))
+                        host.toast(host.getString(R.string.point_added))
                     }
                 }
             }
@@ -412,7 +412,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             point?.let { viewWaypoint(it) }
         }
 
-        pathService.getLivePath(pathId).observe(fragment.lifecycleOwner) {
+        pathService.getLivePath(pathId).observe(host.lifecycleOwner) {
             path = it
             views.root.post {
                 updateParent()
@@ -423,11 +423,11 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             }
         }
 
-        pathService.getWaypointsLive(pathId).observe(fragment.lifecycleOwner) {
+        pathService.getWaypointsLive(pathId).observe(host.lifecycleOwner) {
             onWaypointsChanged(it)
         }
 
-        gps.asLiveData().observe(fragment.lifecycleOwner) {
+        gps.asLiveData().observe(host.lifecycleOwner) {
             updateDeclination()
             views.pathImage.userLocation = gps.location
             views.pathImage.userLocationAccuracy =
@@ -435,7 +435,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             onPathChanged()
         }
 
-        compass.asLiveData().observe(fragment.lifecycleOwner) {
+        compass.asLiveData().observe(host.lifecycleOwner) {
             views.pathImage.userAzimuth = compass.bearing
         }
 
@@ -445,7 +445,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
         views.pathStyleControls.onLineStyleClick = lineStyleClick@{
             val path = path ?: return@lineStyleClick
-            val command = ChangePathLineStyleCommand(fragment.requireContext(), fragment.lifecycleOwner)
+            val command = ChangePathLineStyleCommand(host.requireContext(), host.lifecycleOwner)
             command.execute(path)
         }
 
@@ -456,20 +456,20 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
         views.pathStyleControls.onPointStyleClick = pointStyleClick@{
             val path = path ?: return@pointStyleClick
-            val command = ChangePointStyleCommand(fragment.requireContext(), fragment.lifecycleOwner)
+            val command = ChangePointStyleCommand(host.requireContext(), host.lifecycleOwner)
             command.execute(path)
         }
     }
 
     private fun onWaypointsChanged(waypoints: List<PathPoint>) {
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 this@PathOverviewController.waypoints =
                     hikingService.correctElevations(waypoints.sortedBy { it.id }).reversed()
             }
             onIO {
                 DebugPathElevationsCommand(
-                    fragment.requireContext(),
+                    host.requireContext(),
                     waypoints,
                     this@PathOverviewController.waypoints
                 ).execute()
@@ -491,10 +491,10 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
     private fun updateParent() {
         val path = path ?: return
-        fragment.inBackground {
+        host.inBackground {
             val parent = onIO { pathService.getGroup(path.parentId) }
             if (isViewReady) {
-                views.pathTitle.subtitle = parent?.name ?: fragment.getString(R.string.no_group)
+                views.pathTitle.subtitle = parent?.name ?: host.getString(R.string.no_group)
             }
         }
     }
@@ -515,8 +515,8 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
     private fun movePath() {
         val path = path ?: return
-        val command = MoveIPathCommand(fragment.requireContext(), pathService)
-        fragment.inBackground {
+        val command = MoveIPathCommand(host.requireContext(), pathService)
+        host.inBackground {
             command.execute(path)
         }
     }
@@ -558,16 +558,16 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
         val actionItems = actions.mapNotNull { action ->
             val name = when (action) {
-                PathAction.Rename -> fragment.getString(R.string.rename)
-                PathAction.Keep -> if (path.temporary) fragment.getString(R.string.keep_forever) else null
+                PathAction.Rename -> host.getString(R.string.rename)
+                PathAction.Keep -> if (path.temporary) host.getString(R.string.keep_forever) else null
                 PathAction.ToggleVisibility -> if (path.style.visible) {
-                    fragment.getString(R.string.hide)
+                    host.getString(R.string.hide)
                 } else {
-                    fragment.getString(R.string.show)
+                    host.getString(R.string.show)
                 }
-                PathAction.Export -> fragment.getString(R.string.export)
-                PathAction.Simplify -> fragment.getString(R.string.simplify)
-                PathAction.ViewPoints -> fragment.getString(R.string.points)
+                PathAction.Export -> host.getString(R.string.export)
+                PathAction.Simplify -> host.getString(R.string.simplify)
+                PathAction.ViewPoints -> host.getString(R.string.points)
                 else -> null
             }
             name?.let {
@@ -587,7 +587,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             }
         }
 
-        fragment.showActionSheet(path.name ?: fragment.getString(R.string.path), null, actionItems) {
+        host.showActionSheet(path.name ?: host.getString(R.string.path), null, actionItems) {
             when (it) {
                 null -> Unit
                 else -> it.action()
@@ -596,17 +596,17 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     }
 
     private fun simplifyPath(path: Path) {
-        val command = SimplifyPathCommand(fragment.requireContext(), fragment.lifecycleOwner, pathService)
+        val command = SimplifyPathCommand(host.requireContext(), host.lifecycleOwner, pathService)
         command.execute(path)
     }
 
     private fun exportPath(path: Path) {
         val command = ExportPathCommand(
-            fragment.requireContext(),
-            fragment.lifecycleOwner,
+            host.requireContext(),
+            host.lifecycleOwner,
             IOFactory().createGpxService(
-                fragment.requireContext(),
-                fragment.intentResultRetriever
+                host.requireContext(),
+                host.intentResultRetriever
             ),
             pathService
         )
@@ -614,17 +614,17 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     }
 
     private fun togglePathVisibility(path: Path) {
-        val command = TogglePathVisibilityCommand(fragment.requireContext(), fragment.lifecycleOwner, pathService)
+        val command = TogglePathVisibilityCommand(host.requireContext(), host.lifecycleOwner, pathService)
         command.execute(path)
     }
 
     private fun renamePath(path: Path) {
-        val command = RenamePathCommand(fragment.requireContext(), fragment.lifecycleOwner, pathService)
+        val command = RenamePathCommand(host.requireContext(), host.lifecycleOwner, pathService)
         command.execute(path)
     }
 
     private fun keepPath(path: Path) {
-        val command = KeepPathCommand(fragment.requireContext(), fragment.lifecycleOwner, pathService)
+        val command = KeepPathCommand(host.requireContext(), host.lifecycleOwner, pathService)
         command.execute(path)
     }
 
@@ -645,13 +645,13 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
         }
 
         views.pathStyleControls.lineStyle = listOf(
-            fragment.getString(R.string.solid),
-            fragment.getString(R.string.dotted),
-            fragment.getString(R.string.arrow),
-            fragment.getString(R.string.dashed),
-            fragment.getString(R.string.square),
-            fragment.getString(R.string.diamond),
-            fragment.getString(R.string.cross)
+            host.getString(R.string.solid),
+            host.getString(R.string.dotted),
+            host.getString(R.string.arrow),
+            host.getString(R.string.dashed),
+            host.getString(R.string.square),
+            host.getString(R.string.diamond),
+            host.getString(R.string.cross)
         )[path.style.line.ordinal]
 
         val distance =
@@ -661,7 +661,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
         val end = path.metadata.duration?.end
 
 
-        views.pathTitle.title = PathNameFactory(fragment.requireContext()).getName(path)
+        views.pathTitle.title = PathNameFactory(host.requireContext()).getName(path)
 
         val duration = if (start != null && end != null && Duration.between(
                 start,
@@ -725,7 +725,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     private fun updateMapLayer() {
         val path = path ?: return
         val waypointFeatures = waypoints.asBeacons(
-            fragment.requireContext(),
+            host.requireContext(),
             path.style.point,
             selectedPointId
         ).map {
@@ -755,7 +755,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     }
 
     private fun updateDeclination() {
-        fragment.inBackground {
+        host.inBackground {
             onIO {
                 declination = declinationProvider.getDeclination()
                 compass.declination = declination
@@ -778,11 +778,11 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
         val factory = getPointFactory()
 
         views.pathStyleControls.pointStyle = listOf(
-            fragment.getString(R.string.none),
-            fragment.getString(R.string.cell_signal),
-            fragment.getString(R.string.elevation),
-            fragment.getString(R.string.time),
-            fragment.getString(R.string.path_slope)
+            host.getString(R.string.none),
+            host.getString(R.string.cell_signal),
+            host.getString(R.string.elevation),
+            host.getString(R.string.time),
+            host.getString(R.string.path_slope)
         )[path.style.point.ordinal]
 
         views.pathLegend.colorScale = factory.createColorScale(waypoints)
@@ -823,7 +823,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
     private fun navigateToWaypoint(point: PathPoint) {
         val path = path ?: return
         val command = NavigateToPointCommand(
-            fragment.lifecycleOwner,
+            host.lifecycleOwner,
             converter,
             beaconNavigator
         )
@@ -842,27 +842,27 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
             beaconNavigator
         )
 
-        fragment.toast(fragment.getString(R.string.navigating_to_nearest_path_point))
+        host.toast(host.getString(R.string.navigating_to_nearest_path_point))
 
-        fragment.inBackground {
+        host.inBackground {
             command.execute(path, points)
         }
     }
 
     private fun deleteWaypoint(point: PathPoint) {
         val path = path ?: return
-        val command = DeletePointCommand(fragment.requireContext(), fragment.lifecycleOwner)
+        val command = DeletePointCommand(host.requireContext(), host.lifecycleOwner)
         command.execute(path, point)
     }
 
     private fun createBeacon(point: PathPoint) {
         val path = path ?: return
-        val command = CreateBeaconFromPointCommand(fragment.requireContext())
+        val command = CreateBeaconFromPointCommand(host.requireContext())
         command.execute(path, point)
     }
 
     private fun getPointFactory(): IPointDisplayFactory {
-        return getPointFactory(fragment.requireContext(), path?.style?.point ?: PathPointColoringStyle.None)
+        return getPointFactory(host.requireContext(), path?.style?.point ?: PathPointColoringStyle.None)
     }
 
     private fun updateDebugStats() {
@@ -872,7 +872,7 @@ private class PathOverviewController(private val fragment: TrailSenseDestination
 
         views.pathsTiming.isVisible = true
 
-        fragment.inBackground {
+        host.inBackground {
             onDefault {
                 val readings = waypoints
                     .filter { it.time != null }

@@ -20,11 +20,11 @@ class NavigationCompassLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, fragment: TrailSenseDestinationHost) {
+    fun resume(context: Context, view: IMapView, host: TrailSenseDestinationHost) {
         synchronized(runningLock) {
             isRunning = true
         }
-        fragment.inBackground {
+        host.inBackground {
             view.setLayersWithPreferences(
                 NavigationToolRegistration.MAP_ID,
                 repo.getActiveLayerIds(NavigationToolRegistration.MAP_ID)

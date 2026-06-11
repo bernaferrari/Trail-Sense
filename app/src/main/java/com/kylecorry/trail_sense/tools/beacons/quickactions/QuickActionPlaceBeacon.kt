@@ -19,8 +19,8 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import java.time.ZonedDateTime
 import kotlinx.coroutines.launch
 
-class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     override fun onCreate() {
         super.onCreate()
@@ -29,22 +29,22 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseDes
 
     override fun onClick() {
         super.onClick()
-        fragment.inBackground {
+        host.inBackground {
 
             var wasSuccessful = false
             var id = 0L
             val job = launch {
-                val sensors = SensorService(fragment.requireContext())
+                val sensors = SensorService(host.requireContext())
                 val gps = sensors.getGPS()
                 val altimeter = sensors.getAltimeter(gps = gps)
                 readAll(listOf(gps, altimeter))
 
                 // Create a beacon
-                val formatter = FormatService.getInstance(fragment.requireContext())
+                val formatter = FormatService.getInstance(host.requireContext())
                 val time = formatter.formatDateTime(ZonedDateTime.now())
 
-                val prefs = UserPreferences(fragment.requireContext())
-                val beaconService = BeaconService(fragment.requireContext())
+                val prefs = UserPreferences(host.requireContext())
+                val beaconService = BeaconService(host.requireContext())
                 id = beaconService.add(
                     Beacon(
                         0,
@@ -60,18 +60,18 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseDes
 
 
             Alerts.withCancelableLoading(
-                fragment.requireContext(),
+                host.requireContext(),
                 context.getString(R.string.creating_beacon),
                 onCancel = { job.cancel() }) {
                 job.join()
                 if (wasSuccessful) {
                     CustomUiUtils.snackbar(
-                        fragment,
-                        fragment.getString(R.string.beacon_created),
+                        host,
+                        host.getString(R.string.beacon_created),
                         duration = Snackbar.LENGTH_LONG,
-                        action = fragment.getString(R.string.view)
+                        action = host.getString(R.string.view)
                     ) {
-                        fragment.findNavController().navigateWithAnimation(
+                        host.findNavController().navigateWithAnimation(
                             R.id.beaconDetailsFragment,
                             Bundle().apply {
                                 putLong("beacon_id", id)
@@ -79,7 +79,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseDes
                         )
                     }
 
-                    fragment.refreshBeaconList()
+                    host.refreshBeaconList()
                 }
             }
 
@@ -88,7 +88,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, fragment: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().navigateWithAnimation(R.id.beacon_list)
+        host.findNavController().navigateWithAnimation(R.id.beacon_list)
         return true
     }
 

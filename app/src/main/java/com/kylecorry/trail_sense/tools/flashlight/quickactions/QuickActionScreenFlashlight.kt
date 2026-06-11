@@ -8,8 +8,8 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionScreenFlashlight(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionScreenFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     override fun onCreate() {
         super.onCreate()
@@ -18,12 +18,12 @@ class QuickActionScreenFlashlight(btn: QuickActionButtonView, fragment: TrailSen
 
     override fun onClick() {
         super.onClick()
-        fragment.findNavController().navigateWithAnimation(R.id.fragmentToolScreenFlashlight)
+        host.findNavController().navigateWithAnimation(R.id.fragmentToolScreenFlashlight)
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.FLASHLIGHT)
+        host.findNavController().openTool(Tools.FLASHLIGHT)
         return true
     }
 }

@@ -13,8 +13,8 @@ import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionFlashlight(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    TopicQuickAction(btn, fragment, hideWhenUnavailable = true) {
+class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    TopicQuickAction(btn, host, hideWhenUnavailable = true) {
 
     private val flashlight by lazy { FlashlightSubsystem.getInstance(context) }
 
@@ -30,7 +30,7 @@ class QuickActionFlashlight(btn: QuickActionButtonView, fragment: TrailSenseDest
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        fragment.findNavController().openTool(Tools.FLASHLIGHT)
+        host.findNavController().openTool(Tools.FLASHLIGHT)
         return true
     }
 

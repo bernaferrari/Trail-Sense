@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 
 class NavigationQuickActionBinder(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val leftButton: ComposeQuickActionButtonView,
     private val rightButton: ComposeQuickActionButtonView,
     private val prefs: NavigationPreferences
@@ -18,15 +18,15 @@ class NavigationQuickActionBinder(
         val left = factory.create(
             prefs.leftButton,
             leftButton,
-            fragment
+            host
         )
         val right = factory.create(
             prefs.rightButton,
             rightButton,
-            fragment
+            host
         )
-        left.bind(fragment.lifecycleOwner)
-        right.bind(fragment.lifecycleOwner)
+        left.bind(host.lifecycleOwner)
+        right.bind(host.lifecycleOwner)
     }
 
 }

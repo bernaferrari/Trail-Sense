@@ -104,10 +104,10 @@ import java.time.ZonedDateTime
 
 @Composable
 fun AstronomyToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { AstronomyController(fragment) }
+    val controller = remember(host) { AstronomyController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -132,9 +132,9 @@ fun AstronomyToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AstronomyController(private val fragment: TrailSenseDestinationHost) {
+private class AstronomyController(private val host: TrailSenseDestinationHost) {
 
-    private val views = createAstronomyViews(fragment.requireContext(), this::showTimeSeeker)
+    private val views = createAstronomyViews(host.requireContext(), this::showTimeSeeker)
     private val isViewReady: Boolean
         get() = isCreated
 
@@ -145,10 +145,10 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
 
     private lateinit var sunTimesMode: SunTimesMode
 
-    private val sensorService by lazy { SensorService(fragment.requireContext()) }
-    private val prefs by lazy { UserPreferences(fragment.requireContext()) }
+    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.requireContext()) }
     private val astronomyService = AstronomyService()
-    private val formatService by lazy { FormatService.getInstance(fragment.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     private val markdownService by lazy { DependencyRegistry.get<MarkdownService>() }
 
@@ -184,11 +184,11 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
 
     private val producers by lazy {
         listOf(
-            SunListItemProducer(fragment.requireContext()),
-            MoonListItemProducer(fragment.requireContext()),
-            MeteorShowerListItemProducer(fragment.requireContext()),
-            LunarEclipseListItemProducer(fragment.requireContext()),
-            SolarEclipseListItemProducer(fragment.requireContext())
+            SunListItemProducer(host.requireContext()),
+            MoonListItemProducer(host.requireContext()),
+            MeteorShowerListItemProducer(host.requireContext()),
+            LunarEclipseListItemProducer(host.requireContext()),
+            SolarEclipseListItemProducer(host.requireContext())
         )
     }
 
@@ -208,14 +208,14 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         isCreated = true
 
         AstronomyQuickActionBinder(
-            fragment,
+            host,
             views.astronomyTitle.leftButton,
             views.astronomyTitle.rightButton,
             prefs.astronomy
         ).bind()
 
         views.button3d.isVisible =
-            Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
         views.button3d.onClick = {
             val time = if (isSeeking) {
                 currentSeekChartTime
@@ -225,7 +225,7 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
                 views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
             openAugmentedReality(
-                fragment.findNavController(),
+                host.findNavController(),
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
                 Bundle().apply {
@@ -252,18 +252,18 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
             )
 
             val optionNames = listOfNotNull(
-                fragment.getString(R.string.full_moon),
-                fragment.getString(R.string.new_moon),
-                fragment.getString(R.string.quarter_moon),
-                fragment.getString(R.string.meteor_shower),
-                fragment.getString(R.string.lunar_eclipse),
-                fragment.getString(R.string.solar_eclipse),
-                fragment.getString(R.string.supermoon)
+                host.getString(R.string.full_moon),
+                host.getString(R.string.new_moon),
+                host.getString(R.string.quarter_moon),
+                host.getString(R.string.meteor_shower),
+                host.getString(R.string.lunar_eclipse),
+                host.getString(R.string.solar_eclipse),
+                host.getString(R.string.supermoon)
             ).map { it.capitalizeWords() }
 
             Pickers.item(
-                fragment.requireContext(),
-                fragment.getString(R.string.find_next_occurrence),
+                host.requireContext(),
+                host.getString(R.string.find_next_occurrence),
                 optionNames,
                 options.indexOf(lastAstronomyEventSearch)
             ) {
@@ -271,8 +271,8 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
                     val search = options[it]
                     lastAstronomyEventSearch = search
                     val currentDate = views.displayDate.date
-                    fragment.inBackground {
-                        Alerts.withLoading(fragment.requireContext(), fragment.getString(R.string.loading)) {
+                    host.inBackground {
+                        Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                             val nextEvent = onDefault {
                                 astronomyService.findNextEvent(
                                     search, location, currentDate
@@ -285,8 +285,8 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
                                 refreshAstronomy()
 
                                 if (nextEvent == null) {
-                                    fragment.toast(
-                                        fragment.getString(
+                                    host.toast(
+                                        host.getString(
                                             R.string.unable_to_find_next_astronomy,
                                             optionNames[it].lowercase()
                                         )
@@ -348,18 +348,18 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
     private fun updateSeekPositions() {
         val positions = getSunMoonPositions(currentSeekChartTime)
         views.timeSeekerDetails.sunPosition = markdownService.toMarkdown(
-            fragment.getString(
+            host.getString(
                 R.string.sun_moon_position_template,
-                fragment.getString(R.string.sun),
+                host.getString(R.string.sun),
                 formatService.formatDegrees(positions.sunAltitude),
                 formatService.formatDegrees(positions.sunAzimuth)
             )
         )
 
         views.timeSeekerDetails.moonPosition = markdownService.toMarkdown(
-            fragment.getString(
+            host.getString(
                 R.string.sun_moon_position_template,
-                fragment.getString(R.string.moon),
+                host.getString(R.string.moon),
                 formatService.formatDegrees(positions.moonAltitude),
                 formatService.formatDegrees(positions.moonAzimuth)
             )
@@ -377,7 +377,7 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         isSeeking = false
         views.timeSeeker.isVisible = false
         views.button3d.isVisible =
-            Tools.isToolAvailable(fragment.requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
         val displayDate = views.displayDate.date
         if (displayDate == LocalDate.now()) {
             plotMoonImage(data.moon)
@@ -419,8 +419,8 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         refreshAstronomy()
 
         CustomUiUtils.oneTimeToast(
-            fragment.requireContext(),
-            fragment.getString(R.string.tap_sun_moon_hint),
+            host.requireContext(),
+            host.getString(R.string.tap_sun_moon_hint),
             "cache_tap_sun_moon_shown"
         )
     }
@@ -565,17 +565,17 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
-                views.astronomyTitle.subtitle = fragment.getString(R.string.until_sunrise)
+                views.astronomyTitle.subtitle = host.getString(R.string.until_sunrise)
             } else if (nextSunset != null) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunset))
-                views.astronomyTitle.subtitle = fragment.getString(R.string.until_sunset)
+                views.astronomyTitle.subtitle = host.getString(R.string.until_sunset)
             } else if (astronomyService.isSunUp(location)) {
-                views.astronomyTitle.title = fragment.getString(R.string.sun_up_no_set)
-                views.astronomyTitle.subtitle = fragment.getString(R.string.sun_does_not_set)
+                views.astronomyTitle.title = host.getString(R.string.sun_up_no_set)
+                views.astronomyTitle.subtitle = host.getString(R.string.sun_does_not_set)
             } else {
-                views.astronomyTitle.title = fragment.getString(R.string.sun_down_no_set)
-                views.astronomyTitle.subtitle = fragment.getString(R.string.sun_does_not_rise)
+                views.astronomyTitle.title = host.getString(R.string.sun_down_no_set)
+                views.astronomyTitle.subtitle = host.getString(R.string.sun_does_not_rise)
             }
         }
     }
@@ -586,13 +586,13 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         }
 
         if (gps is MockedGPS && prefs.locationOverride == Coordinate.zero) {
-            val activity = fragment.mainActivity
-            val navController = fragment.findNavController()
+            val activity = host.mainActivity
+            val navController = host.findNavController()
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
-                fragment.getString(R.string.location_not_set),
+                host.getString(R.string.location_not_set),
                 R.drawable.satellite,
-                fragment.getString(R.string.set)
+                host.getString(R.string.set)
             ) {
                 activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
                 navController.navigate(R.id.calibrateGPSFragment)
@@ -601,9 +601,9 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
             gpsErrorShown = true
         } else if (gps is CachedGPS && location == Coordinate.zero) {
             val error = UserError(
-                ErrorBannerReason.NoGPS, fragment.getString(R.string.location_disabled), R.drawable.satellite
+                ErrorBannerReason.NoGPS, host.getString(R.string.location_disabled), R.drawable.satellite
             )
-            (fragment.mainActivity).errorBanner.report(error)
+            (host.mainActivity).errorBanner.report(error)
             gpsErrorShown = true
         }
     }
@@ -630,7 +630,7 @@ private class AstronomyController(private val fragment: TrailSenseDestinationHos
         }
         detectAndShowGPSError()
         views.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
-        fragment.inBackground {
+        host.inBackground {
             updateAstronomyDetails()
             updateAstronomyChart()
             displayTimeUntilNextSunEvent()

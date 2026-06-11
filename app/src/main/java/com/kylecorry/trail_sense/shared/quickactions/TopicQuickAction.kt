@@ -7,10 +7,10 @@ import com.kylecorry.trail_sense.shared.QuickActionButton
 
 abstract class TopicQuickAction(
     btn: QuickActionButtonView,
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     private val hideWhenUnavailable: Boolean = false
 ) :
-    QuickActionButton(btn, fragment) {
+    QuickActionButton(btn, host) {
 
     abstract val state: ITopic<FeatureState>
 

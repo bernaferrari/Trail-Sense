@@ -9,11 +9,11 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
 abstract class ToolServiceQuickAction(
     btn: QuickActionButtonView,
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     private val serviceId: String,
     private val stateChangeBroadcastId: String,
     private val hideWhenUnavailable: Boolean = false
-) : QuickActionButton(btn, fragment) {
+) : QuickActionButton(btn, host) {
 
     protected val service by lazy { Tools.getService(context, serviceId) }
     protected val state: FeatureState

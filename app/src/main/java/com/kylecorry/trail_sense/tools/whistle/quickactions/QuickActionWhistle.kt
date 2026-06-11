@@ -12,8 +12,8 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 import kotlinx.coroutines.launch
 
-class QuickActionWhistle(btn: QuickActionButtonView, fragment: TrailSenseDestinationHost) :
-    QuickActionButton(btn, fragment) {
+class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+    QuickActionButton(btn, host) {
 
     private var whistle: ISoundPlayer? = null
 
@@ -21,7 +21,7 @@ class QuickActionWhistle(btn: QuickActionButtonView, fragment: TrailSenseDestina
     override fun onCreate() {
         super.onCreate()
 
-        fragment.lifecycleScope.launch {
+        host.lifecycleScope.launch {
             onDefault {
                 try {
                     whistle = Whistle()

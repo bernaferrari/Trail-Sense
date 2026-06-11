@@ -54,10 +54,10 @@ import kotlin.math.absoluteValue
 
 @Composable
 fun PhotoMapsToolScreen(
-    fragment: TrailSenseDestinationHost,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(fragment) { PhotoMapsController(fragment) }
+    val controller = remember(host) { PhotoMapsController(host) }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -70,15 +70,15 @@ fun PhotoMapsToolScreen(
 }
 
 private class PhotoMapsController(
-    private val fragment: TrailSenseDestinationHost
+    private val host: TrailSenseDestinationHost
 ) {
 
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
 
-    private var mapId = fragment.destinationArguments?.getLong("mapId") ?: error("Missing map id")
+    private var mapId = host.destinationArguments?.getLong("mapId") ?: error("Missing map id")
     private var autoLockLocation =
-        fragment.destinationArguments?.getBoolean("autoLockLocation", false) == true
+        host.destinationArguments?.getBoolean("autoLockLocation", false) == true
     private var map: PhotoMap? = null
     private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null
@@ -87,7 +87,7 @@ private class PhotoMapsController(
     private var showRecenter by mutableStateOf(false)
     private var childSpec by mutableStateOf<PhotoMapChildSpec?>(null)
 
-    private val exportService by lazy { PhotoMapExportService(fragment) }
+    private val exportService by lazy { PhotoMapExportService(host) }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -98,16 +98,16 @@ private class PhotoMapsController(
             onRecenter = ::recenter,
             onMenuClick = ::showMenu,
             childSpec = childSpec,
-            fragment = fragment,
+            host = host,
             onWarpComplete = {
-                fragment.inBackground {
+                host.inBackground {
                     loadMap()
                 }
             },
             onCalibrationRotation = ::showRotation,
             onCalibrationController = ::onCalibrationController,
             onCalibrationComplete = {
-                fragment.inBackground {
+                host.inBackground {
                     autoRotate()
                     loadMap()
                 }
@@ -118,7 +118,7 @@ private class PhotoMapsController(
     }
 
     fun onCreate() {
-        fragment.inBackground {
+        host.inBackground {
             loadMap()
         }
     }
@@ -133,19 +133,19 @@ private class PhotoMapsController(
         val isCalibrationFragment = currentCalibrationController != null
 
         val actions = listOf(
-            MapContextualAction.Calibrate to if (isMapView) fragment.getString(R.string.calibrate) else null,
-            MapContextualAction.Guide to fragment.getString(R.string.tool_user_guide_title),
-            MapContextualAction.Rename to fragment.getString(R.string.rename),
-            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) fragment.getString(
+            MapContextualAction.Calibrate to if (isMapView) host.getString(R.string.calibrate) else null,
+            MapContextualAction.Guide to host.getString(R.string.tool_user_guide_title),
+            MapContextualAction.Rename to host.getString(R.string.rename),
+            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) host.getString(
                 R.string.change_map_projection
             ) else null,
-            MapContextualAction.Measure to if (isMapView) fragment.getString(R.string.measure) else null,
-            MapContextualAction.CreatePath to if (isMapView) fragment.getString(R.string.create_path) else null,
-            MapContextualAction.AdjustLayers to if (isMapView) fragment.getString(R.string.layers) else null,
-            MapContextualAction.Export to if (isMapView) fragment.getString(R.string.export) else null,
-            MapContextualAction.Print to if (isMapView && Printer.canPrint()) fragment.getString(R.string.print) else null,
-            MapContextualAction.Delete to fragment.getString(R.string.delete),
-            MapContextualAction.Trace to if (isMapView) fragment.getString(R.string.trace) else null
+            MapContextualAction.Measure to if (isMapView) host.getString(R.string.measure) else null,
+            MapContextualAction.CreatePath to if (isMapView) host.getString(R.string.create_path) else null,
+            MapContextualAction.AdjustLayers to if (isMapView) host.getString(R.string.layers) else null,
+            MapContextualAction.Export to if (isMapView) host.getString(R.string.export) else null,
+            MapContextualAction.Print to if (isMapView && Printer.canPrint()) host.getString(R.string.print) else null,
+            MapContextualAction.Delete to host.getString(R.string.delete),
+            MapContextualAction.Trace to if (isMapView) host.getString(R.string.trace) else null
         )
 
 
@@ -171,8 +171,8 @@ private class PhotoMapsController(
 
     private fun openGuide() {
         UserGuideUtils.openGuide(
-            fragment.requireContext(),
-            fragment.findNavController(),
+            host.requireContext(),
+            host.findNavController(),
             R.raw.guide_tool_offline_maps
         )
     }
@@ -184,7 +184,7 @@ private class PhotoMapsController(
     }
 
     private fun showRotation(rotation: Float) {
-        subtitle = fragment.getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
+        subtitle = host.getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
     }
 
     private fun hideRotation() {
@@ -192,17 +192,17 @@ private class PhotoMapsController(
     }
 
     private fun delete() {
-        fragment.inBackground {
+        host.inBackground {
             map?.let {
-                DeleteMapCommand(fragment.requireContext(), service).execute(it)
-                fragment.findNavController().popBackStack()
+                DeleteMapCommand(host.requireContext(), service).execute(it)
+                host.findNavController().popBackStack()
             }
         }
     }
 
     private fun print() {
-        val command = PrintMapCommand(fragment.requireContext())
-        fragment.inBackground(BackgroundMinimumState.Created) {
+        val command = PrintMapCommand(host.requireContext())
+        host.inBackground(BackgroundMinimumState.Created) {
             map?.let {
                 command.execute(it)
             }
@@ -210,7 +210,7 @@ private class PhotoMapsController(
     }
 
     private fun export() {
-        fragment.inBackground {
+        host.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
                     exportService.export(updated)
@@ -232,10 +232,10 @@ private class PhotoMapsController(
     }
 
     private fun rename() {
-        fragment.inBackground {
+        host.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
-                    RenameMapCommand(fragment.requireContext(), service).execute(updated)
+                    RenameMapCommand(host.requireContext(), service).execute(updated)
                     val renamed = service.getPhotoMap(updated.id)
                     onMain {
                         map = renamed
@@ -250,8 +250,8 @@ private class PhotoMapsController(
         val projections = MapProjectionType.values()
         val projectionNames = projections.map { formatter.formatMapProjection(it) }
         Pickers.item(
-            fragment.requireContext(),
-            fragment.getString(R.string.change_map_projection),
+            host.requireContext(),
+            host.getString(R.string.change_map_projection),
             projectionNames,
             projections.indexOf(map?.georeference?.projectionType)
         ) {
@@ -259,7 +259,7 @@ private class PhotoMapsController(
             val newProjection = projections[it]
             val applyProjectionChange = {
                 map?.let { m ->
-                    fragment.inBackground {
+                    host.inBackground {
                         val updated = service.getPhotoMap(m.id) ?: return@inBackground
                         val changed = service.setProjection(updated, newProjection)
                         onMain {
@@ -272,9 +272,9 @@ private class PhotoMapsController(
 
             if (showConfirmation) {
                 Alerts.dialog(
-                    fragment.requireContext(),
-                    fragment.getString(R.string.change_map_projection),
-                    fragment.getString(R.string.map_calibration_clear_message)
+                    host.requireContext(),
+                    host.getString(R.string.change_map_projection),
+                    host.getString(R.string.map_calibration_clear_message)
                 ) { cancelled ->
                     if (!cancelled) {
                         applyProjectionChange()
@@ -330,7 +330,7 @@ private class PhotoMapsController(
 
         val delta = Trigonometry.deltaAngle(newRotation, updatedMap.georeference.rotation).absoluteValue
         if (delta > 1f) {
-            fragment.toast(fragment.getString(R.string.map_auto_rotated))
+            host.toast(host.getString(R.string.map_auto_rotated))
         }
 
         val rotated = updatedMap.copy(
@@ -370,7 +370,7 @@ private fun PhotoMapsScreen(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
     childSpec: PhotoMapChildSpec?,
-    fragment: TrailSenseDestinationHost?,
+    host: TrailSenseDestinationHost?,
     onWarpComplete: () -> Unit,
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationController: (PhotoMapCalibrationController) -> Unit,
@@ -395,20 +395,20 @@ private fun PhotoMapsScreen(
                     .fillMaxSize()
                     .testTag("map_fragment")
             ) {
-                if (fragment != null) {
+                if (host != null) {
                     childSpec?.let { spec ->
                         key(spec.key) {
                             when (spec) {
                                 is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
                                     modifier = Modifier.fillMaxSize(),
-                                    fragment = fragment,
+                                    host = host,
                                     mapId = spec.mapId,
                                     onComplete = onWarpComplete
                                 )
 
                                 is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
                                     modifier = Modifier.fillMaxSize(),
-                                    fragment = fragment,
+                                    host = host,
                                     mapId = spec.mapId,
                                     onRotation = onCalibrationRotation,
                                     onComplete = onCalibrationComplete,
@@ -417,7 +417,7 @@ private fun PhotoMapsScreen(
 
                                 is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
                                     modifier = Modifier.fillMaxSize(),
-                                    fragment = fragment,
+                                    host = host,
                                     mapId = spec.mapId,
                                     autoLockLocation = spec.autoLockLocation,
                                     onController = onViewController
@@ -532,7 +532,7 @@ private fun PhotoMapsScreenPreview() {
             onRecenter = {},
             onMenuClick = {},
             childSpec = null,
-            fragment = null,
+            host = null,
             onWarpComplete = {},
             onCalibrationRotation = {},
             onCalibrationController = {},

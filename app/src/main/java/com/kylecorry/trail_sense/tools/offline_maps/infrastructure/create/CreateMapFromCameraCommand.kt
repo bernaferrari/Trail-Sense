@@ -9,21 +9,21 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 
 class CreateMapFromCameraCommand(
-    private val fragment: TrailSenseDestinationHost,
+    private val host: TrailSenseDestinationHost,
     private val loadingIndicator: ILoadingIndicator
 ) : ICreateMapCommand {
     override suspend fun execute(): IMap? = onIO {
-        val uri = CustomUiUtils.takePhoto(fragment) ?: return@onIO null
+        val uri = CustomUiUtils.takePhoto(host) ?: return@onIO null
         onMain {
             loadingIndicator.show()
         }
         try {
             val map = CreateMapFromUriCommand(
-                fragment.requireContext(),
+                host.requireContext(),
                 uri,
                 loadingIndicator
             ).execute()
-            DeleteTempFilesCommand(fragment.requireContext()).execute()
+            DeleteTempFilesCommand(host.requireContext()).execute()
             map
         } finally {
             onMain {

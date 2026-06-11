@@ -64,8 +64,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ScanQRToolScreen(fragment: TrailSenseDestinationHost) {
-    val controller = remember(fragment) { ScanQRController(fragment) }
+fun ScanQRToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { ScanQRController(host) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(controller, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -98,7 +98,7 @@ fun ScanQRToolScreen(fragment: TrailSenseDestinationHost) {
     )
 }
 
-private class ScanQRController(private val fragment: TrailSenseDestinationHost) {
+private class ScanQRController(private val host: TrailSenseDestinationHost) {
     private val cameraSize = Size(200, 200)
 
     var history by mutableStateOf<List<String>>(emptyList())
@@ -111,38 +111,38 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
     private val beaconQREncoder = BeaconQREncoder()
     private val noteQREncoder = NoteQREncoder()
 
-    private val haptics by lazy { HapticSubsystem.getInstance(fragment.requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(host.requireContext()) }
     private val scanLock = Any()
 
     fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
         cameraView.clipToOutline = true
-        if (shouldStartCamera && fragment.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+        if (shouldStartCamera && host.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             startCamera()
         }
     }
 
     fun copy(text: String) {
         Clipboard.copy(
-            fragment.requireContext(),
+            host.requireContext(),
             text,
-            fragment.getString(R.string.copied_to_clipboard_toast)
+            host.getString(R.string.copied_to_clipboard_toast)
         )
     }
 
     fun createNote(text: String) {
-        fragment.inBackground {
+        host.inBackground {
             val id = withContext(Dispatchers.IO) {
-                NoteRepo.getInstance(fragment.requireContext())
+                NoteRepo.getInstance(host.requireContext())
                     .addNote(noteQREncoder.decode(text))
             }
             withContext(Dispatchers.Main) {
                 CustomUiUtils.snackbar(
-                    fragment,
-                    fragment.getString(R.string.saved_to_note),
-                    action = fragment.getString(R.string.view)
+                    host,
+                    host.getString(R.string.saved_to_note),
+                    action = host.getString(R.string.view)
                 ) {
-                    fragment.findNavController().navigate(
+                    host.findNavController().navigate(
                         R.id.fragmentToolNotesCreate,
                         Bundle().apply {
                             putLong("edit_note_id", id)
@@ -155,7 +155,7 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
 
     fun openMap(text: String) {
         val intent = Intents.url(text)
-        Intents.openChooser(fragment.requireContext(), intent, text)
+        Intents.openChooser(host.requireContext(), intent, text)
     }
 
     fun openUrl(text: String) {
@@ -166,19 +166,19 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
             text
         }
         val intent = Intents.url(url)
-        Intents.openChooser(fragment.requireContext(), intent, text)
+        Intents.openChooser(host.requireContext(), intent, text)
     }
 
     fun createBeacon(text: String) {
         val beacon = beaconQREncoder.decode(text) ?: return
-        fragment.inBackground {
-            val id = BeaconService(fragment.requireContext()).add(beacon)
+        host.inBackground {
+            val id = BeaconService(host.requireContext()).add(beacon)
             CustomUiUtils.snackbar(
-                fragment,
-                fragment.getString(R.string.beacon_created),
-                action = fragment.getString(R.string.view)
+                host,
+                host.getString(R.string.beacon_created),
+                action = host.getString(R.string.view)
             ) {
-                fragment.findNavController().navigate(
+                host.findNavController().navigate(
                     R.id.beaconDetailsFragment,
                     Bundle().apply {
                         putLong("beacon_id", id)
@@ -197,9 +197,9 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
         history = history.filterNot { it == text }
         updateHistoryList(false)
         CustomUiUtils.snackbar(
-            fragment,
-            fragment.getString(R.string.result_deleted),
-            action = fragment.getString(R.string.undo)
+            host,
+            host.getString(R.string.result_deleted),
+            action = host.getString(R.string.undo)
         ) {
             if (!history.contains(text)) {
                 val restored = history.toMutableList()
@@ -216,13 +216,13 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
 
     fun onResume() {
         updateHistoryList()
-        fragment.requestCamera { hasPermission ->
+        host.requestCamera { hasPermission ->
             if (hasPermission) {
                 shouldStartCamera = true
                 startCamera()
             } else {
                 shouldStartCamera = false
-                fragment.alertNoCameraPermission()
+                host.alertNoCameraPermission()
             }
         }
     }
@@ -238,7 +238,7 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
         bitmap: Bitmap,
         isFromGallery: Boolean = false
     ): Boolean = synchronized(scanLock) {
-        if (!fragment.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
+        if (!host.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             bitmap.recycle()
             return true
         }
@@ -255,8 +255,8 @@ private class ScanQRController(private val fragment: TrailSenseDestinationHost) 
             onQRScanned(message)
         } else if (isFromGallery) {
             Alerts.toast(
-                fragment.requireContext(),
-                fragment.getString(R.string.no_qr_code_detected)
+                host.requireContext(),
+                host.getString(R.string.no_qr_code_detected)
             )
         }
 
