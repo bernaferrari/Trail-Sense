@@ -1,4 +1,4 @@
-@file:Suppress("FunctionNaming")
+@file:Suppress("FunctionNaming", "LongMethod")
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
@@ -64,7 +64,7 @@ import kotlinx.coroutines.isActive
 import java.time.LocalDate
 
 @Composable
-fun PedometerScreen(
+internal fun PedometerScreen(
     pedometer: PedometerSubsystem,
     prefs: UserPreferences,
     formatService: FormatService,

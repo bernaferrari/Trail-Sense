@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.concurrency.BackgroundTask
+import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.luna.topics.generic.distinct
@@ -65,6 +66,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
     )
 
     private val stepsMutex = Mutex()
+    private val stepsQueue = CoroutineQueueRunner()
     private val initialPopulationTask = BackgroundTask {
         updateSteps()
     }
@@ -72,7 +74,11 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
     init {
         initialPopulationTask.start()
         Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED) {
-            updateSteps(it)
+            BackgroundTask {
+                stepsQueue.enqueue {
+                    updateSteps(it)
+                }
+            }.start()
         }
 
         // Keep them up to date

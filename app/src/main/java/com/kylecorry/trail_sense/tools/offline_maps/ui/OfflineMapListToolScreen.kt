@@ -380,12 +380,8 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
     }
 
-    private fun exportTrailMap(map: TrailMap) {
-        exportService.export(map)
-    }
-
-    private fun copyToAppStorage(map: TrailMap) {
-        inBackground {
+    private fun copyToAppStorage(map: VectorMap) {
+        host.inBackground {
             mapImportingIndicator.show()
             try {
                 mapService.copyToAppStorage(map)

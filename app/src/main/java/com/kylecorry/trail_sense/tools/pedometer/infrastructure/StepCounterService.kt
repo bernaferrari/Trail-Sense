@@ -72,13 +72,11 @@ class StepCounterService : AndromedaService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return tryStartForegroundOrNotify {
-            val flag = super.onStartCommand(intent, flags, startId)
-            isRunning = true
-            pedometer.start(this::onPedometer)
-            Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
-            flag
-        }
+        val flag = super.onStartCommand(intent, flags, startId)
+        isRunning = true
+        pedometer.start(this::onPedometer)
+        Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, ::onStepsChanged)
+        return flag
     }
 
     override fun getForegroundInfo(): ForegroundInfo {
@@ -90,11 +88,15 @@ class StepCounterService : AndromedaService() {
         return true
     }
 
-    private suspend fun onStepsChanged(data: Bundle?) {
-        val steps = data?.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS) ?: 0L
-        val paceCalculator = StepLengthPaceCalculator(prefs.pedometer.stepLength)
-        val distance = paceCalculator.distance(steps)
-        notificationSubsystem.send(NOTIFICATION_ID, getNotification(distance))
+    private fun onStepsChanged(data: Bundle?) {
+        BackgroundTask {
+            addStepsQueue.enqueue {
+                val steps = data?.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS) ?: 0L
+                val paceCalculator = StrideLengthPaceCalculator(prefs.pedometer.strideLength)
+                val distance = paceCalculator.distance(steps)
+                notificationSubsystem.send(NOTIFICATION_ID, getNotification(distance))
+            }
+        }.start()
     }
 
     override fun onDestroy() {
