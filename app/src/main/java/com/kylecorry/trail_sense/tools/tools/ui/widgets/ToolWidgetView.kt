@@ -1,19 +1,25 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
 import android.content.Context
-import android.widget.RemoteViews
 import androidx.lifecycle.Lifecycle
+import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 
 interface ToolWidgetView {
 
     fun onInAppEvent(context: Context, event: Lifecycle.Event, triggerUpdate: () -> Unit)
 
-    suspend fun getPopulatedView(context: Context, prefs: WidgetPreferences?): RemoteViews
+    suspend fun getContent(context: Context, prefs: WidgetPreferences?): ToolWidgetContent
 
     /**
-     * Get the view for the widget without any content (used for the loading state and by the onUpdate method)
+     * Get the widget's loading state.
      */
-    fun getView(context: Context, prefs: WidgetPreferences?): RemoteViews
+    fun getLoadingContent(context: Context, prefs: WidgetPreferences?): ToolWidgetContent {
+        return ToolWidgetContent.Simple(
+            title = context.getString(R.string.app_name),
+            subtitle = "",
+            icon = R.drawable.ic_launcher_foreground
+        )
+    }
 
 }

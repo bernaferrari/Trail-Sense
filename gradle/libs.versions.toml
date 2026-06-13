@@ -4,9 +4,9 @@ androidXTest = "1.7.0"
 androidXTestRunner = "1.7.0"
 androidXTestUiAutomator = "2.4.0"
 androidXArchCore = "2.2.0"
-androidXCoreRemoteViews = "1.1.0"
 androidXExifinterfaceVersion = "1.4.2"
-andromedaVersion = "24.5.0"
+glance = "1.1.1"
+andromedaVersion = "23.0.0"
 cameraxVersion = "1.6.1"
 coreKtx = "1.19.0"
 appcompat = "1.7.1"
@@ -45,8 +45,8 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidXTest" }
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "androidXTestUiAutomator" }
 androidx-test-arch-core = { module = "androidx.arch.core:core-testing", version.ref = "androidXArchCore" }
-androidx-core-remoteviews = { module = "androidx.core:core-remoteviews", version.ref = "androidXCoreRemoteViews" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "androidXExifinterfaceVersion" }
+androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
 andromeda-battery = { module = "com.kylecorry.andromeda:battery", version.ref = "andromedaVersion" }
 andromeda-haptics = { module = "com.kylecorry.andromeda:haptics", version.ref = "andromedaVersion" }
 andromeda-clipboard = { module = "com.kylecorry.andromeda:clipboard", version.ref = "andromedaVersion" }

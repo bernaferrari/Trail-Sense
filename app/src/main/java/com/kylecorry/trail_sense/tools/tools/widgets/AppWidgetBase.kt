@@ -1,27 +1,19 @@
 package com.kylecorry.trail_sense.tools.tools.widgets
 
-import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.widget.RemoteViews
+import androidx.glance.GlanceId
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.updateAll
 import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetGlanceContent
 
-abstract class AppWidgetBase(private val widgetId: String) : CoroutineAppWidgetProvider() {
+abstract class AppWidgetBase(private val widgetId: String) : GlanceAppWidgetReceiver() {
 
-    suspend fun getRemoteViews(context: Context, appWidgetId: Int): RemoteViews {
-        return getUpdatedRemoteViews(context, AppWidgetManager.getInstance(context), appWidgetId)
-    }
-
-    override suspend fun getUpdatedRemoteViews(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ): RemoteViews {
-        val widget = Tools.getWidget(context, widgetId)!!
-        val preferences = WidgetPreferences(context, widget, appWidgetId)
-        return widget.widgetView.getPopulatedView(context, preferences)
-    }
+    override val glanceAppWidget: GlanceAppWidget = TrailSenseGlanceWidget(widgetId)
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         val widget = Tools.getWidget(context, widgetId)!!
@@ -33,12 +25,27 @@ abstract class AppWidgetBase(private val widgetId: String) : CoroutineAppWidgetP
     }
 
     companion object {
-        suspend fun forceUpdate(context: Context, widgetProvider: AppWidgetBase, appWidgetId: Int) {
-            val view = onDefault { widgetProvider.getRemoteViews(context, appWidgetId) }
-            onMain {
-                val manager = AppWidgetManager.getInstance(context)
-                manager.updateAppWidget(appWidgetId, view)
-            }
+        suspend fun forceUpdate(context: Context, widgetProvider: AppWidgetBase) {
+            widgetProvider.glanceAppWidget.updateAll(context)
+        }
+    }
+}
+
+private class TrailSenseGlanceWidget(private val widgetId: String) : GlanceAppWidget() {
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
+        val widget = Tools.getWidget(context, widgetId)
+        val preferences = widget?.let { WidgetPreferences(context, it, appWidgetId) }
+        val theme = preferences?.getTheme() ?: WidgetTheme.System
+        val content = onDefault {
+            widget?.widgetView?.getContent(context, preferences)
+        }
+
+        provideContent {
+            ToolWidgetGlanceContent(
+                content = content,
+                theme = theme
+            )
         }
     }
 }

@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.weather.widgets
 
 import android.content.Context
 import android.view.View
-import android.widget.RemoteViews
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +26,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
@@ -36,10 +37,10 @@ import kotlin.math.max
 
 class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
 
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
+    ): ToolWidgetContent {
         val weather = WeatherSubsystem.getInstance(context)
         val userPrefs = UserPreferences(context)
         val units = userPrefs.pressureUnits
@@ -55,18 +56,15 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             .map { it.copy(value = it.value.convertTo(units)) }
 
 
-        val views = getView(context, prefs)
+        var bitmap: android.graphics.Bitmap? = null
         onMain {
-            renderChart(context, views, createPressureChartView(context, displayReadings))
+            bitmap = renderChart(context, createPressureChartView(context, displayReadings))
         }
 
-        views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
-
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.WEATHER)
+        return ToolWidgetContent.Chart(
+            bitmap = bitmap,
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
         )
-        return views
     }
 
     private fun createPressureChartView(context: Context, readings: List<Reading<Pressure>>): View {

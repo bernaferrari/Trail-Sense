@@ -1,11 +1,13 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.content.Context
-import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.FrameLayout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.setPadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -19,6 +21,7 @@ import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -72,12 +75,12 @@ class ToolWidgetViewBinder(
 
             val updateFunction = {
                 lifecycleOwner.lifecycleScope.launch {
-                    val views = onDefault {
-                        widget.widgetView.getPopulatedView(context, null)
+                    val content = onDefault {
+                        widget.widgetView.getContent(context, null)
                     }
                     onMain {
                         tryOrLog {
-                            inflateRemoteViews(layout, views)
+                            setWidgetContent(layout, content)
                             updateWidgetSnapshot(
                                 widgetId,
                                 renderWidget(layout, widget.size, height)
@@ -89,9 +92,7 @@ class ToolWidgetViewBinder(
             }
 
             this.widgets.add(WidgetInstance(widget, layout, height, updateFunction = updateFunction))
-            val widgetView =
-                widget.widgetView.getView(context, null)
-            inflateRemoteViews(layout, widgetView)
+            setWidgetContent(layout, widget.widgetView.getLoadingContent(context, null))
             updateWidgetSnapshot(widgetId, renderWidget(layout, widget.size, height))
         }
 
@@ -159,12 +160,15 @@ class ToolWidgetViewBinder(
         return true
     }
 
-    private fun inflateRemoteViews(layout: FrameLayout, views: android.widget.RemoteViews) {
-        val child = views.apply(context, layout)
+    private fun setWidgetContent(layout: FrameLayout, content: ToolWidgetContent?) {
+        val child = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            ToolWidgetComposeContent(content, Modifier.fillMaxSize())
+        }
         layout.removeAllViews()
         layout.addView(child)
-        child.backgroundTintList =
-            ColorStateList.valueOf(Resources.androidBackgroundColorSecondary(context))
     }
 
     private fun renderWidget(

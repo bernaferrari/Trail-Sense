@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.widgets
 
 import android.content.Context
-import android.graphics.drawable.Icon
-import android.widget.RemoteViews
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -13,16 +11,17 @@ import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import kotlin.jvm.optionals.getOrNull
 
 class PedometerToolWidgetView : SimpleToolWidgetView() {
 
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
-        val views = getView(context, prefs)
+    ): ToolWidgetContent {
         val subsystem = PedometerSubsystem.getInstance(context)
         val prefs = UserPreferences(context)
         val formatter = FormatService.getInstance(context)
@@ -32,23 +31,15 @@ class PedometerToolWidgetView : SimpleToolWidgetView() {
         val formattedDistance =
             formatter.formatDistance(converted, Units.getDecimalPlaces(converted.units))
 
-        views.setTextViewText(TITLE_TEXTVIEW, formattedDistance)
-        val icon = Icon.createWithResource(context, R.drawable.steps)
-        views.setViewVisibility(ICON_IMAGEVIEW, android.view.View.GONE)
-        views.setViewVisibility(ICON_IMAGEVIEW_TEXT_COLOR, android.view.View.VISIBLE)
-        views.setImageViewIcon(ICON_IMAGEVIEW_TEXT_COLOR, icon)
-        views.setTextViewText(
-            SUBTITLE_TEXTVIEW,
-            context.resources.getQuantityString(
+        return ToolWidgetContent.Simple(
+            title = formattedDistance,
+            subtitle = context.resources.getQuantityString(
                 R.plurals.number_steps,
                 steps.toInt(),
                 steps.toInt()
-            )
+            ),
+            icon = R.drawable.steps,
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.PEDOMETER))
         )
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.PEDOMETER)
-        )
-        return views
     }
 }

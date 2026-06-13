@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
 import android.content.Context
-import android.widget.RemoteViews
-import com.kylecorry.trail_sense.shared.extensions.setImageViewResourceAsIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -10,56 +8,51 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyTransition
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
-import com.kylecorry.trail_sense.tools.tools.widgets.WidgetHelper
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 
 class SunToolWidgetView : SimpleToolWidgetView() {
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
-        val views = getView(context, prefs)
+    ): ToolWidgetContent {
         val formatService = FormatService.getInstance(context)
         val astronomy = AstronomySubsystem.getInstance(context)
         val sun = astronomy.sun
 
-        if (sun.nextRise != null && sun.nextTransition == AstronomyTransition.Rise) {
-            views.setTextViewText(
-                SUBTITLE_TEXTVIEW,
-                formatService.formatTime(sun.nextRise.toLocalTime(), includeSeconds = false)
-            )
-            views.setTextViewText(TITLE_TEXTVIEW, context.getString(R.string.sunrise))
-            WidgetHelper.setIcon(
-                context,
-                views,
-                ICON_IMAGEVIEW,
-                R.drawable.ic_sunrise_notification
+        val clickAction = WidgetClickAction.StartActivity(
+            NavigationUtils.toolIntent(context, Tools.ASTRONOMY)
+        )
+
+        return if (sun.nextRise != null && sun.nextTransition == AstronomyTransition.Rise) {
+            ToolWidgetContent.Simple(
+                title = context.getString(R.string.sunrise),
+                subtitle = formatService.formatTime(sun.nextRise.toLocalTime(), includeSeconds = false),
+                icon = R.drawable.ic_sunrise_notification,
+                clickAction = clickAction
             )
         } else if (sun.nextSet != null && sun.nextTransition == AstronomyTransition.Set) {
-            views.setTextViewText(
-                SUBTITLE_TEXTVIEW,
-                formatService.formatTime(sun.nextSet.toLocalTime(), includeSeconds = false)
-            )
-            views.setTextViewText(TITLE_TEXTVIEW, context.getString(R.string.sunset))
-            WidgetHelper.setIcon(
-                context,
-                views,
-                ICON_IMAGEVIEW,
-                R.drawable.ic_sunset_notification
+            ToolWidgetContent.Simple(
+                title = context.getString(R.string.sunset),
+                subtitle = formatService.formatTime(sun.nextSet.toLocalTime(), includeSeconds = false),
+                icon = R.drawable.ic_sunset_notification,
+                clickAction = clickAction
             )
         } else if (sun.isUp) {
-            views.setTextViewText(TITLE_TEXTVIEW, context.getString(R.string.sun_up_no_set))
-            views.setTextViewText(SUBTITLE_TEXTVIEW, context.getString(R.string.sun_does_not_set))
-            WidgetHelper.setIcon(context, views, ICON_IMAGEVIEW, R.drawable.ic_sun)
+            ToolWidgetContent.Simple(
+                title = context.getString(R.string.sun_up_no_set),
+                subtitle = context.getString(R.string.sun_does_not_set),
+                icon = R.drawable.ic_sun,
+                clickAction = clickAction
+            )
         } else {
-            views.setTextViewText(TITLE_TEXTVIEW, context.getString(R.string.sun_down_no_set))
-            views.setTextViewText(SUBTITLE_TEXTVIEW, context.getString(R.string.sun_does_not_rise))
-            WidgetHelper.setIcon(context, views, ICON_IMAGEVIEW, R.drawable.ic_sun)
+            ToolWidgetContent.Simple(
+                title = context.getString(R.string.sun_down_no_set),
+                subtitle = context.getString(R.string.sun_does_not_rise),
+                icon = R.drawable.ic_sun,
+                clickAction = clickAction
+            )
         }
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.ASTRONOMY)
-        )
-        return views
     }
 }

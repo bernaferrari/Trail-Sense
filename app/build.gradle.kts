@@ -173,7 +173,7 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
-    implementation(libs.androidx.core.remoteviews)
+    implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.exifinterface)
 
     // Compose

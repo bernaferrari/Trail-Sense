@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
 import android.content.Context
-import android.view.View
-import android.widget.RemoteViews
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -14,6 +12,8 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChart
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import java.time.Duration
@@ -21,10 +21,10 @@ import java.time.Instant
 
 class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
 
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
+    ): ToolWidgetContent {
         val astronomy = AstronomySubsystem.getInstance(context)
 
         val moon = astronomy.moon
@@ -39,7 +39,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             Duration.between(instant, it.time).abs()
         }
 
-        val views = getView(context, prefs)
+        var bitmap: android.graphics.Bitmap? = null
         onMain {
             val userPrefs = UserPreferences(context)
             val astroChart = AstroChart(context) {}
@@ -55,9 +55,8 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             astroChart.moveSun(currentSun)
             astroChart.moveMoon(currentMoon)
 
-            renderChart(
+            bitmap = renderChart(
                 context,
-                views,
                 TrailSenseComposeRootView(
                     context,
                     ViewCompositionStrategy.DisposeOnDetachedFromWindow
@@ -67,12 +66,11 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             )
         }
 
-        views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
-
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.ASTRONOMY)
+        return ToolWidgetContent.Chart(
+            bitmap = bitmap,
+            clickAction = WidgetClickAction.StartActivity(
+                NavigationUtils.toolIntent(context, Tools.ASTRONOMY)
+            )
         )
-        return views
     }
 }

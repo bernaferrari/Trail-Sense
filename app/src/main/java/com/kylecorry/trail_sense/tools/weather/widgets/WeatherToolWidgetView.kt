@@ -1,32 +1,30 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
 import android.content.Context
-import android.widget.RemoteViews
-import com.kylecorry.trail_sense.shared.extensions.setImageViewResourceAsIcon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
-import com.kylecorry.trail_sense.tools.tools.widgets.WidgetHelper
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 
 class WeatherToolWidgetView : SimpleToolWidgetView() {
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
-        val views = getView(context, prefs)
+    ): ToolWidgetContent {
         val weather = WeatherSubsystem.getInstance(context)
         val formatter = FormatService.getInstance(context)
         val prefs = UserPreferences(context)
         val current = weather.getWeather()
 
-        views.setTextViewText(TITLE_TEXTVIEW, context.getString(R.string.weather))
-        views.setTextViewText(
-            SUBTITLE_TEXTVIEW, if (current.observation?.temperature != null) {
+        return ToolWidgetContent.Simple(
+            title = context.getString(R.string.weather),
+            subtitle = if (current.observation?.temperature != null) {
                 context.getString(
                     R.string.dot_separated_pair,
                     formatter.formatWeather(current.prediction.primaryHourly),
@@ -36,18 +34,9 @@ class WeatherToolWidgetView : SimpleToolWidgetView() {
                 )
             } else {
                 formatter.formatWeather(current.prediction.primaryHourly)
-            }
+            },
+            icon = formatter.getWeatherImage(current.prediction.primaryHourly),
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
         )
-        WidgetHelper.setIcon(
-            context,
-            views,
-            ICON_IMAGEVIEW,
-            formatter.getWeatherImage(current.prediction.primaryHourly)
-        )
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.WEATHER)
-        )
-        return views
     }
 }

@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.tides.widgets
 
 import android.content.Context
 import android.view.View
-import android.widget.RemoteViews
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,8 @@ import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import java.time.Duration
@@ -33,21 +34,20 @@ import java.time.Instant
 
 class TideChartToolWidgetView : ChartToolWidgetViewBase() {
 
-    override suspend fun getPopulatedView(
+    override suspend fun getContent(
         context: Context,
         prefs: WidgetPreferences?
-    ): RemoteViews {
+    ): ToolWidgetContent {
         val tides = TidesSubsystem.getInstance(context)
         val tide = tides.getNearestTide()
         val currentWaterLevel = tide?.today?.waterLevels?.minByOrNull {
             Duration.between(Instant.now(), it.time).abs()
         }
 
-        val views = getView(context, prefs)
+        var bitmap: android.graphics.Bitmap? = null
         onMain {
-            renderChart(
+            bitmap = renderChart(
                 context,
-                views,
                 createTideChartView(
                     context,
                     if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: "",
@@ -58,13 +58,10 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
             )
         }
 
-        views.setViewVisibility(TITLE_TEXTVIEW, View.GONE)
-
-        views.setOnClickPendingIntent(
-            ROOT,
-            NavigationUtils.toolPendingIntent(context, Tools.TIDES)
+        return ToolWidgetContent.Chart(
+            bitmap = bitmap,
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
         )
-        return views
     }
 
     private fun createTideChartView(

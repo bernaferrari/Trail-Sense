@@ -122,8 +122,7 @@ class ToolWidgetConfigureActivity : ComponentActivity() {
             widgetProvider?.let {
                 AppWidgetBase.forceUpdate(
                     this@ToolWidgetConfigureActivity,
-                    it,
-                    appWidgetId
+                    it
                 )
             }
 

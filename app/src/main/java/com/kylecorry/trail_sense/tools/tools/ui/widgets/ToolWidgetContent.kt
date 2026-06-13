@@ -1,0 +1,49 @@
+package com.kylecorry.trail_sense.tools.tools.ui.widgets
+
+import android.content.Intent
+import android.graphics.Bitmap
+
+sealed interface ToolWidgetContent {
+    val clickAction: WidgetClickAction?
+
+    data class Simple(
+        val title: CharSequence?,
+        val subtitle: CharSequence?,
+        val icon: Int? = null,
+        val iconBitmap: Bitmap? = null,
+        val showTitle: Boolean = true,
+        override val clickAction: WidgetClickAction? = null
+    ) : ToolWidgetContent
+
+    data class Title(
+        val title: CharSequence?,
+        override val clickAction: WidgetClickAction? = null
+    ) : ToolWidgetContent
+
+    data class Chart(
+        val bitmap: Bitmap?,
+        val title: CharSequence? = null,
+        override val clickAction: WidgetClickAction? = null
+    ) : ToolWidgetContent
+
+    data class List(
+        val title: CharSequence,
+        val emptyText: CharSequence,
+        val items: kotlin.collections.List<ListItem>,
+        override val clickAction: WidgetClickAction? = null
+    ) : ToolWidgetContent
+}
+
+data class ListItem(
+    val title: CharSequence,
+    val description: CharSequence? = null,
+    val icon: Int? = null,
+    val iconTint: Int? = null,
+    val iconBackground: Int? = null,
+    val clickAction: WidgetClickAction? = null
+)
+
+sealed interface WidgetClickAction {
+    data class StartActivity(val intent: Intent) : WidgetClickAction
+    data class SendBroadcast(val intent: Intent) : WidgetClickAction
+}
