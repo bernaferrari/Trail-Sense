@@ -243,12 +243,12 @@ private class PathsSettingsController(private val host: TrailSenseDestinationHos
         cache.putString(host.getString(key), value)
     }
 
-    private fun onBacktrackEnabled(data: Bundle): Boolean {
+    private fun onBacktrackEnabled(_data: Bundle): Boolean {
         setBacktrackEnabledState?.invoke(true)
         return true
     }
 
-    private fun onBacktrackDisabled(data: Bundle): Boolean {
+    private fun onBacktrackDisabled(_data: Bundle): Boolean {
         setBacktrackEnabledState?.invoke(false)
         return true
     }

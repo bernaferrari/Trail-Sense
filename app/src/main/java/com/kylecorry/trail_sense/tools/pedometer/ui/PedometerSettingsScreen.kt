@@ -185,12 +185,12 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
         cache.putBoolean(host.getString(key), value)
     }
 
-    private fun onPedometerEnabled(data: Bundle): Boolean {
+    private fun onPedometerEnabled(_data: Bundle): Boolean {
         setEnabledState?.invoke(true)
         return true
     }
 
-    private fun onPedometerDisabled(data: Bundle): Boolean {
+    private fun onPedometerDisabled(_data: Bundle): Boolean {
         setEnabledState?.invoke(false)
         return true
     }

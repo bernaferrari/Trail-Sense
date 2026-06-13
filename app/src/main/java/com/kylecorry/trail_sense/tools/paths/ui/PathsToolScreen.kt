@@ -244,7 +244,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
         sort = prefs.navigation.pathSort
         sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
 
-        // TODO: See if it is possible to get notified of changes without loading all paths
+        // Path updates currently require loading all paths because the repository exposes full snapshots.
         host.lifecycleScope.launch {
             pathService.getPaths().collect {
                 manager.refresh()

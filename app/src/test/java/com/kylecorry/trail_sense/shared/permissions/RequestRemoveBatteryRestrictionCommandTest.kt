@@ -1,10 +1,9 @@
 package com.kylecorry.trail_sense.shared.permissions
 
 import android.content.Context
-import com.kylecorry.luna.specifications.Specification
-import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.preferences.Flag
+import com.kylecorry.luna.specifications.Specification
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -22,13 +21,11 @@ internal class RequestRemoveBatteryRestrictionCommandTest {
 
     @BeforeEach
     fun setup() {
-        // Mock fragment
-        val fragment = mock<AndromedaFragment>()
-        whenever(fragment.requireContext()).thenReturn(mock())
+        val context = mock<Context>()
         flag = mock()
         alerter = mock()
         isRequired = mock()
-        command = RequestRemoveBatteryRestrictionCommand(fragment, flag, alerter, isRequired)
+        command = RequestRemoveBatteryRestrictionCommand(context, alerter, flag, isRequired)
     }
 
 
