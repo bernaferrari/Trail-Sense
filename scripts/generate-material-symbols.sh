@@ -12,7 +12,8 @@ readonly BASE_URL="https://fonts.gstatic.com/render/v1/Material+Symbols+Rounded/
 readonly ICONS=(
   explore map partly_cloudy_day stars_2 apps settings search arrow_back
   more_vert close straighten thermometer speed
-    hiking menu_book privacy_tip gavel sensors_off location_on warning
+  hiking menu_book privacy_tip gavel sensors_off location_on warning
+  add remove schedule my_location lock folder file_open photo_camera draw
 )
 readonly OUTLINED_ICONS=(explore map partly_cloudy_day stars_2 apps)
 

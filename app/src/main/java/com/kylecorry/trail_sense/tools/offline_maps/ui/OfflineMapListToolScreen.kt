@@ -9,19 +9,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,6 +62,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -69,7 +74,6 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -94,7 +98,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.EditOfflineMapAt
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.MoveMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ResizeMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ShowMapsDisclaimerCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ToggleVisibilityMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
@@ -191,13 +194,6 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 searchText = it
                 manager.search(it)
             },
-            onHelp = {
-                UserGuideUtils.showGuide(
-                    host.requireContext(),
-                    host.findNavController(),
-                    R.raw.guide_tool_offline_maps
-                )
-            },
             onToolbarAction = ::handleToolbarAction,
             onCreateMenuOpenChange = { isCreateMenuOpen = it },
             onCreateAction = ::handleCreateAction,
@@ -236,8 +232,6 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 )
             )
         }
-
-        ShowMapsDisclaimerCommand(host.requireContext(), host.findNavController()).execute()
 
         sort = prefs.photoMaps.mapSort
         sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
@@ -599,7 +593,6 @@ private fun OfflineMapListScreen(
     isCreateEnabled: Boolean,
     gpsLocationOnMap: (IMap) -> Boolean,
     onSearchChange: (String) -> Unit,
-    onHelp: () -> Unit,
     onToolbarAction: (OfflineMapToolbarAction) -> Unit,
     onCreateMenuOpenChange: (Boolean) -> Unit,
     onCreateAction: (OfflineMapCreateAction) -> Unit,
@@ -617,19 +610,21 @@ private fun OfflineMapListScreen(
                 OfflineMapListHeader(
                     title = title,
                     sortMenuText = sortMenuText,
-                    onHelp = onHelp,
+                    showSort = !isEmpty,
                     onToolbarAction = onToolbarAction,
                     modifier = Modifier.fillMaxWidth()
                 )
-                TrailSenseSearchBar(
-                    value = searchText,
-                    onValueChange = onSearchChange,
-                    placeholder = stringResource(R.string.search),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = TrailSenseSpacing.lg)
-                        .testTag("searchbox")
-                )
+                if (!isEmpty) {
+                    TrailSenseSearchBar(
+                        value = searchText,
+                        onValueChange = onSearchChange,
+                        placeholder = stringResource(R.string.search),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TrailSenseSpacing.lg)
+                            .testTag("searchbox")
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -638,8 +633,9 @@ private fun OfflineMapListScreen(
                 ) {
                     if (isEmpty) {
                         TrailSenseEmptyState(
-                            icon = Icons.Default.Place,
-                            title = stringResource(R.string.no_maps),
+                            icon = TrailSenseIcons.Filled.Map,
+                            title = stringResource(R.string.no_offline_maps),
+                            description = stringResource(R.string.map_empty_description),
                             modifier = Modifier
                                 .fillMaxSize()
                                 .testTag("map_empty_text")
@@ -674,7 +670,7 @@ private fun OfflineMapListScreen(
 private fun OfflineMapListHeader(
     title: String,
     sortMenuText: String,
-    onHelp: () -> Unit,
+    showSort: Boolean,
     onToolbarAction: (OfflineMapToolbarAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -686,25 +682,19 @@ private fun OfflineMapListHeader(
             .testTag("map_list_title"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onHelp) {
-            Icon(
-                painter = painterResource(R.drawable.ic_help),
-                contentDescription = stringResource(R.string.help)
-            )
-        }
         Text(
             text = title,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Box {
+        if (showSort) Box {
             IconButton(
                 onClick = { isMenuOpen = true },
                 modifier = Modifier.testTag("map_list_menu_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
+                    imageVector = TrailSenseIcons.Filled.MoreVert,
                     contentDescription = stringResource(R.string.sort)
                 )
             }
@@ -724,6 +714,8 @@ private fun OfflineMapListHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("FunctionNaming")
 @Composable
 private fun OfflineMapCreateButton(
     isOpen: Boolean,
@@ -733,21 +725,11 @@ private fun OfflineMapCreateButton(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 72.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            DropdownMenu(
-                expanded = isOpen,
-                onDismissRequest = { onOpenChange(false) }
-            ) {
-                OfflineMapCreateMenuItem(R.string.group, onAction, OfflineMapCreateAction.CreateGroup)
-                OfflineMapCreateMenuItem(R.string.map_file, onAction, OfflineMapCreateAction.ImportFile)
-                OfflineMapCreateMenuItem(R.string.camera, onAction, OfflineMapCreateAction.ImportCamera)
-                OfflineMapCreateMenuItem(R.string.blank, onAction, OfflineMapCreateAction.CreateBlank)
-            }
+        if (isOpen) {
+            OfflineMapCreateSheet(
+                onDismiss = { onOpenChange(false) },
+                onAction = onAction
+            )
         }
         ExtendedFloatingActionButton(
             onClick = {
@@ -760,7 +742,11 @@ private fun OfflineMapCreateButton(
                 .testTag("add_btn"),
             icon = {
                 Icon(
-                    painter = painterResource(if (isOpen) R.drawable.ic_cancel else R.drawable.ic_add),
+                    imageVector = if (isOpen) {
+                        TrailSenseIcons.Filled.Close
+                    } else {
+                        TrailSenseIcons.Filled.Add
+                    },
                     contentDescription = null
                 )
             },
@@ -771,16 +757,57 @@ private fun OfflineMapCreateButton(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("FunctionNaming")
+@Composable
+private fun OfflineMapCreateSheet(
+    onDismiss: () -> Unit,
+    onAction: (OfflineMapCreateAction) -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Text(
+            text = stringResource(R.string.add_offline_map),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.xl,
+                vertical = TrailSenseSpacing.md
+            )
+        )
+        OfflineMapCreateMenuItem(
+            R.string.map_file, TrailSenseIcons.Filled.FileOpen,
+            onAction, OfflineMapCreateAction.ImportFile
+        )
+        OfflineMapCreateMenuItem(
+            R.string.camera, TrailSenseIcons.Filled.PhotoCamera,
+            onAction, OfflineMapCreateAction.ImportCamera
+        )
+        OfflineMapCreateMenuItem(
+            R.string.blank, TrailSenseIcons.Filled.Draw,
+            onAction, OfflineMapCreateAction.CreateBlank
+        )
+        OfflineMapCreateMenuItem(
+            R.string.group, TrailSenseIcons.Filled.Folder,
+            onAction, OfflineMapCreateAction.CreateGroup
+        )
+        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.xl))
+    }
+}
+
 @Composable
 private fun OfflineMapCreateMenuItem(
     label: Int,
+    icon: ImageVector,
     onAction: (OfflineMapCreateAction) -> Unit,
     action: OfflineMapCreateAction
 ) {
-    DropdownMenuItem(
-        text = { Text(stringResource(label)) },
-        enabled = true,
-        onClick = { onAction(action) }
+    ListItem(
+        headlineContent = { Text(stringResource(label)) },
+        leadingContent = {
+            Icon(imageVector = icon, contentDescription = null)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onAction(action) }
     )
 }
 
@@ -1126,7 +1153,6 @@ private fun OfflineMapListScreenPreview() {
             isCreateEnabled = true,
             gpsLocationOnMap = { false },
             onSearchChange = {},
-            onHelp = {},
             onToolbarAction = {},
             onCreateMenuOpenChange = {},
             onCreateAction = {},

@@ -24,6 +24,15 @@ object TrailSenseIcons {
         val SensorsOff: ImageVector get() = FilledSensorsOff
         val LocationOn: ImageVector get() = FilledLocationOn
         val Warning: ImageVector get() = FilledWarning
+        val Add: ImageVector get() = FilledAdd
+        val Remove: ImageVector get() = FilledRemove
+        val Schedule: ImageVector get() = FilledSchedule
+        val MyLocation: ImageVector get() = FilledMyLocation
+        val Lock: ImageVector get() = FilledLock
+        val Folder: ImageVector get() = FilledFolder
+        val FileOpen: ImageVector get() = FilledFileOpen
+        val PhotoCamera: ImageVector get() = FilledPhotoCamera
+        val Draw: ImageVector get() = FilledDraw
     }
 
     object Outlined {
