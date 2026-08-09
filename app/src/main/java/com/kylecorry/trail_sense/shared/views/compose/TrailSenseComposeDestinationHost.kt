@@ -315,6 +315,8 @@ class TrailSenseComposeDestinationHost(
     internal var beaconListController: BeaconListControllerHost? = null
     internal var mapController: MapControllerHost? = null
     private var resumeCount = 0
+    private var mapUpdatesEnabled = true
+    private var reactiveUpdateScheduled = false
     private var specialPermissionAction: (() -> Unit)? = null
     internal val reactiveComponent = TrailSenseReactiveComponent(
         contextProvider = ::requireContext,
@@ -634,6 +636,7 @@ class TrailSenseComposeDestinationHost(
 
     fun onResume() {
         resumeCount++
+        mapUpdatesEnabled = true
         specialPermissionAction?.invoke()
         specialPermissionAction = null
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
@@ -645,6 +648,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     fun onPause() {
+        mapUpdatesEnabled = false
         if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
             turnOffScreenFlashlight()
         }
@@ -655,8 +659,21 @@ class TrailSenseComposeDestinationHost(
     }
 
     internal fun onReactiveUpdate() {
-        reactiveComponent.resetHookCursor()
-        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+        if (
+            !mapUpdatesEnabled ||
+            reactiveUpdateScheduled ||
+            requireArguments().getString(ARG_DESTINATION) != DESTINATION_MAP
+        ) {
+            return
+        }
+
+        reactiveUpdateScheduled = true
+        rootView.post {
+            reactiveUpdateScheduled = false
+            if (!mapUpdatesEnabled) {
+                return@post
+            }
+            reactiveComponent.resetHookCursor()
             mapController?.onUpdate()
         }
     }

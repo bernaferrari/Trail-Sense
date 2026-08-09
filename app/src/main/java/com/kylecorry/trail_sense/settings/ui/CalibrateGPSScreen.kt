@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,7 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -18,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,10 +37,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -44,6 +55,7 @@ import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -53,8 +65,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -104,12 +114,17 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     private var wasUsingCachedGPS = shouldUseCachedGPS()
 
     private var setLocationSummary: ((String) -> Unit)? = null
+    private var setAccuracySummary: ((String?) -> Unit)? = null
     private var setPermissionVisible: ((Boolean) -> Unit)? = null
     private var setAutoLocationEnabled: ((Boolean) -> Unit)? = null
     private var setOverrideEnabled: ((Boolean) -> Unit)? = null
 
     fun setLocationSummary(updater: (String) -> Unit) {
         setLocationSummary = updater
+    }
+
+    fun setAccuracySummary(updater: (String?) -> Unit) {
+        setAccuracySummary = updater
     }
 
     fun setPermissionVisible(updater: (Boolean) -> Unit) {
@@ -138,6 +153,7 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
 
     fun onDestroy() {
         setLocationSummary = null
+        setAccuracySummary = null
         setPermissionVisible = null
         setAutoLocationEnabled = null
         setOverrideEnabled = null
@@ -145,6 +161,15 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
 
     fun formatLocation(): String {
         return formatService.formatLocation(gps.location)
+    }
+
+    fun formatAccuracy(): String? {
+        return gps.horizontalAccuracy?.let {
+            val accuracyStr = formatService.formatDistance(
+                Distance.meters(it).convertTo(prefs.baseDistanceUnits)
+            )
+            host.getString(R.string.accuracy_distance_format, accuracyStr)
+        }
     }
 
     fun isLocationOverrideEnabled(): Boolean {
@@ -270,6 +295,7 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
         setAutoLocationEnabled?.invoke(isAutoGPSPreferenceEnabled())
         setOverrideEnabled?.invoke(isLocationOverrideEnabled())
         setLocationSummary?.invoke(formatService.formatLocation(gps.location))
+        setAccuracySummary?.invoke(formatAccuracy())
     }
 }
 
@@ -278,6 +304,9 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         val prefs = controller.prefs
         var locationSummary by remember {
             mutableStateOf(controller.formatLocation())
+        }
+        var accuracySummary by remember {
+            mutableStateOf(controller.formatAccuracy())
         }
         var autoLocation by remember { mutableStateOf(prefs.useAutoLocation) }
         var requireSatellites by remember { mutableStateOf(prefs.requiresSatellites) }
@@ -292,6 +321,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         }
 
         controller.setLocationSummary { locationSummary = it }
+        controller.setAccuracySummary { accuracySummary = it }
         controller.setPermissionVisible { permissionVisible = it }
         controller.setAutoLocationEnabled { autoLocationEnabled = it }
         controller.setOverrideEnabled { overrideEnabled = it }
@@ -307,95 +337,285 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                     end = TrailSenseSpacing.lg,
                     top = TrailSenseSpacing.lg,
                     bottom = TrailSenseSpacing.xxxl
-                )
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                item("header") {
-                    TrailSenseSectionHeader(title = stringResource(R.string.gps))
-                }
-                item("location") {
-                    TrailSenseListItem(
-                        title = stringResource(R.string.location),
-                        subtitle = locationSummary,
-                        icon = painterResource(R.drawable.satellite),
-                        animateEntrance = false,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                item("auto_location") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.pref_auto_location_title),
-                        checked = autoLocation,
-                        enabled = autoLocationEnabled,
-                        onCheckedChange = {
-                            autoLocation = it
-                            prefs.useAutoLocation = it
-                            overrideEnabled = controller.isLocationOverrideEnabled()
-                            controller.onAutoLocationChanged()
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                item("require_satellites") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.pref_require_satellites_title),
-                        summary = stringResource(R.string.pref_require_satellites_description),
-                        checked = requireSatellites,
-                        enabled = autoLocation,
-                        onCheckedChange = {
-                            requireSatellites = it
-                            controller.putBoolean(R.string.pref_require_satellites, it)
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                if (permissionVisible) {
-                    item("permission") {
-                        SettingsActionRow(
-                            label = stringResource(R.string.request_permission),
-                            onClick = controller::openAppSettings,
-                            modifier = Modifier.padding(
-                                horizontal = TrailSenseSpacing.lg
-                            )
-                        )
-                    }
-                }
-                item("clear_cache") {
-                    SettingsActionRow(
-                        label = stringResource(R.string.clear_cache),
-                        enabled = autoLocation,
-                        onClick = controller::clearCache,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-                item("override") {
-                    Column(
+                item("title") {
+                    Text(
+                        text = stringResource(R.string.gps),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(
-                            horizontal = TrailSenseSpacing.xl,
-                            vertical = TrailSenseSpacing.md
+                            top = TrailSenseSpacing.sm,
+                            bottom = TrailSenseSpacing.xs
                         )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.pref_gps_override_title),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                item("status_hero") {
+                    GPSStatusHero(
+                        location = locationSummary,
+                        accuracy = accuracySummary
+                    )
+                }
+
+                item("gps_settings") {
+                    CalibrateGPSSection(title = stringResource(R.string.gps)) {
+                        GPSChipSwitchRow(
+                            icon = painterResource(R.drawable.ic_location),
+                            label = stringResource(R.string.pref_auto_location_title),
+                            checked = autoLocation,
+                            enabled = autoLocationEnabled,
+                            onCheckedChange = {
+                                autoLocation = it
+                                prefs.useAutoLocation = it
+                                overrideEnabled = controller.isLocationOverrideEnabled()
+                                controller.onAutoLocationChanged()
+                            }
                         )
-                        GPSOverrideCoordinateInput(
-                            coordinate = controller.locationOverride,
-                            enabled = overrideEnabled,
-                            isLoading = controller.isOverrideLocationLoading,
-                            locationProvider = controller::realLocation,
-                            onCoordinateChange = controller::setLocationOverride,
-                            onAutoFill = controller::autofillOverrideLocation,
-                            modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+                        TrailSenseDivider()
+                        GPSChipSwitchRow(
+                            icon = painterResource(R.drawable.satellite),
+                            label = stringResource(R.string.pref_require_satellites_title),
+                            summary = stringResource(R.string.pref_require_satellites_description),
+                            checked = requireSatellites,
+                            enabled = autoLocation,
+                            onCheckedChange = {
+                                requireSatellites = it
+                                controller.putBoolean(R.string.pref_require_satellites, it)
+                            }
+                        )
+                        TrailSenseDivider()
+                        if (permissionVisible) {
+                            GPSChipActionRow(
+                                icon = painterResource(R.drawable.lock),
+                                label = stringResource(R.string.request_permission),
+                                onClick = controller::openAppSettings
+                            )
+                            TrailSenseDivider()
+                        }
+                        GPSChipActionRow(
+                            icon = painterResource(R.drawable.ic_delete),
+                            label = stringResource(R.string.clear_cache),
+                            enabled = autoLocation,
+                            onClick = controller::clearCache
                         )
                     }
-                    TrailSenseDivider()
+                }
+
+                item("override") {
+                    CalibrateGPSSection(
+                        title = stringResource(R.string.pref_gps_override_title)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(
+                                horizontal = TrailSenseSpacing.lg,
+                                vertical = TrailSenseSpacing.lg
+                            )
+                        ) {
+                            GPSOverrideCoordinateInput(
+                                coordinate = controller.locationOverride,
+                                enabled = overrideEnabled,
+                                isLoading = controller.isOverrideLocationLoading,
+                                locationProvider = controller::realLocation,
+                                onCoordinateChange = controller::setLocationOverride,
+                                onAutoFill = controller::autofillOverrideLocation
+                            )
+                        }
+                    }
                 }
             }
         }
+}
+
+@Composable
+private fun GPSStatusHero(
+    location: String,
+    accuracy: String?,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(56.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.satellite),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                Text(
+                    text = stringResource(R.string.location),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = location,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                if (accuracy != null) {
+                    Text(
+                        text = accuracy,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GPSIconChip(icon: Painter) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun GPSChipSwitchRow(
+    icon: Painter,
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        GPSIconChip(icon)
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
+}
+
+@Composable
+private fun GPSChipActionRow(
+    icon: Painter,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        GPSIconChip(icon)
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun CalibrateGPSSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+                content()
+            }
+        }
+    }
 }
 
 @Composable

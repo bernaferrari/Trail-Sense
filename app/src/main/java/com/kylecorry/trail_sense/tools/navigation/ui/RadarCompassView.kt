@@ -12,9 +12,11 @@ import android.graphics.Typeface
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
@@ -23,12 +25,10 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils.getCardinalDirectionColor
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toPixel
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import kotlin.math.cos
 import kotlin.math.min
@@ -84,25 +84,26 @@ class RadarCompassView(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        TrailSenseTheme {
-            Canvas(
-                modifier = modifier
-                    .fillMaxSize()
-                    .onSizeChanged {
-                        updateContentSize(it.width, it.height)
-                    }
-            ) {
-                renderVersion
-                if (!isVisible) {
-                    return@Canvas
+        primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+        secondaryColor = MaterialTheme.colorScheme.surfaceContainerHighest.toArgb()
+        textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+        Canvas(
+            modifier = modifier
+                .fillMaxSize()
+                .onSizeChanged {
+                    updateContentSize(it.width, it.height)
                 }
-                canvas = drawContext.canvas.nativeCanvas
-                canvasWidth = size.width
-                canvasHeight = size.height
-                updateGeometry()
-                drawRadar()
-                canvas = null
+        ) {
+            renderVersion
+            if (!isVisible) {
+                return@Canvas
             }
+            canvas = drawContext.canvas.nativeCanvas
+            canvasWidth = size.width
+            canvasHeight = size.height
+            updateGeometry()
+            drawRadar()
+            canvas = null
         }
     }
 
@@ -129,9 +130,6 @@ class RadarCompassView(
         compassPath = Path().apply {
             addCircle(centerPixel.x, centerPixel.y, compassSize / 2f, Path.Direction.CW)
         }
-        primaryColor = Resources.getCardinalDirectionColor(context)
-        secondaryColor = Resources.color(context, R.color.colorSecondary)
-        textColor = Resources.androidTextColorSecondary(context)
         distanceSize = sp(10f)
         cardinalSize = sp(20f)
         dialTickRadius = if (drawDialBezel) {
@@ -164,7 +162,7 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
         paint.colorFilter = PorterDuffColorFilter(
-            if (drawDialBezel) Color.WHITE.withAlpha(220) else Resources.androidTextColorPrimary(context),
+            textColor.withAlpha(220),
             PorterDuff.Mode.SRC_IN
         )
         nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, 0f, paint)
@@ -176,8 +174,8 @@ class RadarCompassView(
 
         paint.reset()
         paint.isAntiAlias = true
-        paint.color = Color.WHITE
-        paint.alpha = 30
+        paint.color = textColor
+        paint.alpha = 36
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 3f
 
@@ -192,10 +190,10 @@ class RadarCompassView(
                 paint
             )
         }
-        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize.toFloat(), paint)
-        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize / 2f, paint)
-        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, 3 * compassSize / 4f, paint)
-        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassSize / 4f, paint)
+        val compassRadius = compassSize / 2f
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassRadius, paint)
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, 3 * compassRadius / 4f, paint)
+        nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, compassRadius / 2f, paint)
 
         if (distanceText == null) {
             val distance = maxDistanceBaseUnits.toRelativeDistance()
@@ -212,7 +210,7 @@ class RadarCompassView(
         paint.alpha = 200
         paint.textSize = distanceSize
         paint.textAlign = Paint.Align.LEFT
-        distanceText?.let {
+        distanceText?.takeIf { maxDistanceMeters.value > 0f }?.let {
             nativeCanvas.drawText(
                 it,
                 (canvasWidth - compassSize) / 2f + 16,
@@ -229,9 +227,9 @@ class RadarCompassView(
 
     private fun drawCardinalDirections(nativeCanvas: AndroidCanvas) {
         drawDirection(nativeCanvas, 0f, north, primaryColor)
-        drawDirection(nativeCanvas, 90f, east, Color.WHITE)
-        drawDirection(nativeCanvas, 180f, south, Color.WHITE)
-        drawDirection(nativeCanvas, 270f, west, Color.WHITE)
+        drawDirection(nativeCanvas, 90f, east, textColor)
+        drawDirection(nativeCanvas, 180f, south, textColor)
+        drawDirection(nativeCanvas, 270f, west, textColor)
     }
 
     private fun drawDirection(
@@ -278,8 +276,8 @@ class RadarCompassView(
             return
         }
 
-        drawTicks(nativeCanvas, 15, dp(6f), dp(2f), Color.WHITE)
-        drawTicks(nativeCanvas, 45, dp(10f), dp(3f), Color.WHITE)
+        drawTicks(nativeCanvas, 15, dp(6f), dp(2f), textColor)
+        drawTicks(nativeCanvas, 45, dp(10f), dp(3f), textColor)
     }
 
     private fun drawTicks(

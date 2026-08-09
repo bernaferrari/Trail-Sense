@@ -3,21 +3,24 @@
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +55,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -173,21 +177,46 @@ private fun TemperatureEstimationScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = title,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = TrailSenseSpacing.lg)
+                .padding(top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xxxl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            // Hero result
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TrailSenseSpacing.xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                ) {
+                    Text(
+                        text = stringResource(R.string.estimated),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.displayMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
 
+            // Inputs
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
                 DistanceInputRow(
                     value = baseElevationText,
@@ -241,21 +270,33 @@ private fun TemperatureEstimationScreen(
                     onPickUnit = { picker = Picker.WindSpeed },
                     enabled = !isLoading
                 )
-                if (isLoading) {
-                    CircularProgressIndicator()
-                } else {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                isLoading = true
-                                readThermometer()
-                                setThermometerFieldFromSensor()
-                                isLoading = false
-                            }
-                        }
-                    ) {
-                        Text(stringResource(R.string.autofill))
+            }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        readThermometer()
+                        setThermometerFieldFromSensor()
+                        isLoading = false
                     }
+                },
+                enabled = !isLoading,
+                shape = MaterialTheme.shapes.large,
+                contentPadding = ButtonDefaults.ContentPadding,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.autofill),
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -334,7 +375,7 @@ private fun UnitInputRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         OutlinedTextField(
@@ -343,14 +384,16 @@ private fun UnitInputRow(
             modifier = Modifier.weight(1f),
             label = { Text(label) },
             enabled = enabled,
+            shape = MaterialTheme.shapes.medium,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true
         )
-        OutlinedButton(
+        FilledTonalButton(
             onClick = onPickUnit,
-            enabled = enabled
+            enabled = enabled,
+            shape = MaterialTheme.shapes.medium
         ) {
-            Text(unitName)
+            Text(unitName, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

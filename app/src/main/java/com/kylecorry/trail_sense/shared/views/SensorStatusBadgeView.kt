@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,8 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -30,6 +28,7 @@ import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.diagnostics.status.GpsStatusBadgeProvider
 import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
@@ -105,11 +104,19 @@ class SensorStatusBadgeView(
         ) {
             val gps = gpsBadge
             val compass = compassBadge
-            if (showGpsBadge && gps != null) {
-                SensorBadgeContent(gps, modifier = Modifier)
+            if (showGpsBadge && gps != null && !gps.isHealthy) {
+                SensorBadgeContent(
+                    badge = gps,
+                    label = context.getString(R.string.gps),
+                    icon = TrailSenseIcons.Filled.LocationOn
+                )
             }
-            if (showCompassBadge && compass != null) {
-                SensorBadgeContent(compass, modifier = Modifier)
+            if (showCompassBadge && compass != null && !compass.isHealthy) {
+                SensorBadgeContent(
+                    badge = compass,
+                    label = context.getString(R.string.pref_compass_sensor_title),
+                    icon = TrailSenseIcons.Filled.Explore
+                )
             }
         }
     }
@@ -149,13 +156,15 @@ class SensorStatusBadgeView(
 @Composable
 private fun SensorBadgeContent(
     badge: StatusBadge,
+    label: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier,
-        color = Color(badge.color),
-        contentColor = Color.Black,
-        shape = RoundedCornerShape(50)
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shape = MaterialTheme.shapes.large
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -163,12 +172,12 @@ private fun SensorBadgeContent(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Icon(
-                painter = painterResource(badge.icon),
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )
             Text(
-                text = badge.name,
+                text = "$label: ${badge.name}",
                 style = MaterialTheme.typography.labelMedium
             )
         }

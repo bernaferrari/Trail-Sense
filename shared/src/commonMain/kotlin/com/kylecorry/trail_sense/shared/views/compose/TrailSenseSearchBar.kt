@@ -2,10 +2,10 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -29,7 +29,7 @@ fun TrailSenseSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
-        shape = RoundedCornerShape(TrailSenseShapes.medium),
+        shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors()
     )
 }

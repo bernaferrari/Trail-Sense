@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.text.InputType
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,20 +12,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,12 +34,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
@@ -54,6 +59,7 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -266,17 +272,24 @@ private fun CreateItemScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                CreateItemHeader(title = title)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp, bottom = 96.dp)
-                ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CreateItemHeader(title = title)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+            ) {
+                // Details: name + category
+                TrailSenseCard {
+                    SectionLabel(
+                        text = stringResource(R.string.details),
+                        icon = painterResource(R.drawable.ic_edit)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                     PackTextInput(
                         text = name,
                         label = stringResource(R.string.name),
@@ -284,7 +297,21 @@ private fun CreateItemScreen(
                         tag = "name_edit",
                         onTextChange = onNameChange
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+                    CategoryInput(
+                        category = category,
+                        categories = categories,
+                        onCategoryChange = onCategoryChange
+                    )
+                }
+
+                // Amounts: packed + desired
+                TrailSenseCard {
+                    SectionLabel(
+                        text = stringResource(R.string.packed_amount),
+                        icon = painterResource(R.drawable.ic_tool_pack)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                     PackTextInput(
                         text = amount,
                         label = stringResource(R.string.packed_amount),
@@ -292,7 +319,7 @@ private fun CreateItemScreen(
                         tag = "count_edit",
                         onTextChange = onAmountChange
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                     PackTextInput(
                         text = desiredAmount,
                         label = stringResource(R.string.desired_amount),
@@ -300,42 +327,34 @@ private fun CreateItemScreen(
                         tag = "desired_amount_edit",
                         onTextChange = onDesiredAmountChange
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    CategoryInput(
-                        category = category,
-                        categories = categories,
-                        onCategoryChange = onCategoryChange
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
+                }
+
+                // Weight per item
+                TrailSenseCard {
+                    SectionLabel(
                         text = stringResource(R.string.weight_per_item),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        icon = painterResource(R.drawable.ic_weight)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                     WeightInput(
                         weight = weight,
                         selectedUnit = weightUnit,
                         units = weightUnits,
                         onWeightChange = onWeightChange
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                     OptionalInput(
                         checked = isOptional,
                         onCheckedChange = onOptionalChange
                     )
                 }
-            }
-            FloatingActionButton(
-                onClick = onSave,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .testTag("create_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null
+
+                TrailSenseButton(
+                    text = stringResource(R.string.save),
+                    onClick = onSave,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("create_btn")
                 )
             }
         }
@@ -352,10 +371,43 @@ private fun CreateItemHeader(title: String) {
             text = title,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = 18.dp)
                 .testTag("create_item_title"),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun SectionLabel(
+    text: String,
+    icon: Painter,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -397,15 +449,26 @@ private fun CategoryInput(
 ) {
     var isOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     val selected = categories.firstOrNull { it.first == category }?.second.orEmpty()
+    val iconMapper = remember { ItemCategoryIconMapper() }
 
     Box(modifier = modifier.fillMaxWidth()) {
         OutlinedButton(
             onClick = { isOpen = true },
             modifier = Modifier
                 .fillMaxWidth()
+                .height(56.dp)
                 .testTag("category_spinner")
         ) {
-            Text(selected.ifBlank { stringResource(R.string.category) })
+            Icon(
+                painter = painterResource(iconMapper.getIcon(category)),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
+            Text(
+                text = selected.ifBlank { stringResource(R.string.category) },
+                modifier = Modifier.weight(1f)
+            )
         }
         DropdownMenu(
             expanded = isOpen,
@@ -414,6 +477,13 @@ private fun CategoryInput(
             categories.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option.second) },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(iconMapper.getIcon(option.first)),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     onClick = {
                         isOpen = false
                         onCategoryChange(option.first)
@@ -489,7 +559,7 @@ private fun WeightInput(
         )
 
         if (unit == WeightUnits.Pounds) {
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
             OutlinedTextField(
                 value = ouncesText,
                 onValueChange = {
@@ -507,7 +577,7 @@ private fun WeightInput(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         Box(modifier = Modifier.weight(1f)) {
             var isOpen by remember { mutableStateOf(false) }
             OutlinedButton(
@@ -584,24 +654,12 @@ private fun OptionalInput(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("optional_switch"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.packing_list_optional),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-    }
+    TrailSenseSwitchRow(
+        label = stringResource(R.string.packing_list_optional),
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier.testTag("optional_switch")
+    )
 }
 
 @Preview(showBackground = true)

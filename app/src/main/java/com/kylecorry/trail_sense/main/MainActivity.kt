@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -60,17 +62,17 @@ import com.kylecorry.trail_sense.onboarding.OnboardingActivity
 import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavHost
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavigator
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
-import com.kylecorry.trail_sense.tools.battery.infrastructure.commands.PowerSavingModeAlertCommand
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
@@ -86,8 +88,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     private val navController: NavController?
         get() = rootNavController
 
-    val errorBanner = ErrorBannerState(this)
-    private val quickActionsSheet = QuickActionSheetState(this)
+    val errorBanner by lazy { ErrorBannerState(this) }
+    private val quickActionsSheet by lazy { QuickActionSheetState(this) }
     private val bottomNavigation = MainBottomNavigationState()
 
     private val userPrefs = getAppService<UserPreferences>()
@@ -154,6 +156,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         if (cache.getBoolean(getString(R.string.pref_onboarding_completed)) != true) {
             startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
             return
         }
 
@@ -162,7 +165,16 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         setupNavController()
 
         setContent {
-            TrailSenseTheme {
+            val darkTheme = when (themeProvider.getThemeMode()) {
+                AppThemeMode.Light -> false
+                AppThemeMode.Dark -> true
+                AppThemeMode.System -> isSystemInDarkTheme()
+            }
+            TrailSenseAppTheme(
+                darkTheme = darkTheme,
+                isAmoled = isBlackTheme,
+                useDynamicColors = userPrefs.useDynamicColors
+            ) {
                 MainActivityContent(
                     errorBanner = errorBanner,
                     navigator = composeNavigator ?: error("Compose navigator is not initialized"),
@@ -319,6 +331,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onStart() {
         super.onStart()
+        if (cache.getBoolean(getString(R.string.pref_onboarding_completed)) != true) {
+            return
+        }
         if (!appInitialized) {
             appInitialized = true
             updateBottomNavigation()
@@ -388,7 +403,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         ComposedCommand(
             ShowDisclaimerCommand(this),
-            PowerSavingModeAlertCommand(this),
             RestartServicesCommand(this, false),
             NotifyForkPoliciesCommand(this)
         ).execute()
@@ -580,7 +594,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 MainBottomNavigationItem(
                     id = toolItem.navAction,
                     title = toolItem.name,
-                    icon = toolItem.icon
+                    icon = toolItem.icon,
+                    selectedIcon = getPrimaryNavigationIcons(toolId)?.first,
+                    unselectedIcon = getPrimaryNavigationIcons(toolId)?.second
                 )
             )
         }
@@ -589,7 +605,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             MainBottomNavigationItem(
                 id = R.id.action_experimental_tools,
                 title = getString(R.string.tools),
-                icon = R.drawable.apps
+                icon = R.drawable.apps,
+                selectedIcon = TrailSenseIcons.Filled.Apps,
+                unselectedIcon = TrailSenseIcons.Outlined.Apps
             )
         )
 
@@ -605,6 +623,17 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             initializeNavGraph(initialItem)
         }
         updateBottomNavSelection()
+    }
+
+    private fun getPrimaryNavigationIcons(toolId: Long): Pair<ImageVector, ImageVector>? {
+        return when (toolId) {
+            Tools.NAVIGATION -> TrailSenseIcons.Filled.Explore to TrailSenseIcons.Outlined.Explore
+            Tools.MAP -> TrailSenseIcons.Filled.Map to TrailSenseIcons.Outlined.Map
+            Tools.WEATHER -> TrailSenseIcons.Filled.PartlyCloudyDay to
+                    TrailSenseIcons.Outlined.PartlyCloudyDay
+            Tools.ASTRONOMY -> TrailSenseIcons.Filled.Stars2 to TrailSenseIcons.Outlined.Stars2
+            else -> null
+        }
     }
 
     fun onBottomNavigationItemSelected(itemId: Int) {
@@ -761,24 +790,24 @@ private fun MainActivityContent(
                 .windowInsetsPadding(rootInsets)
         ) {
             errorBanner.Content()
-            TrailSenseComposeNavHost(
-                navigator = navigator,
+            MainAdaptiveNavigation(
+                state = bottomNavigation,
+                onItemClick = onBottomNavigationItemSelected,
+                onItemLongClick = onBottomNavigationItemLongSelected,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxSize()
-            )
-            MainBottomNavigation(
-                state = bottomNavigation,
-                onItemClick = onBottomNavigationItemSelected,
-                onItemLongClick = onBottomNavigationItemLongSelected
-            )
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    TrailSenseComposeNavHost(
+                        navigator = navigator,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    quickActionsSheet.Content(
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                }
+            }
         }
-
-        val navigationHeight = if (bottomNavigation.useCompactMode) 55 else 80
-        quickActionsSheet.Content(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = (navigationHeight + bottomNavigation.bottomInsetDp).dp)
-        )
     }
 }

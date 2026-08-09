@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.onboarding
 
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
 
 data class OnboardingPage(
     val title: String,
     val contents: CharSequence,
-    @DrawableRes val image: Int,
+    val image: ImageVector,
     val nextButtonText: String? = null,
 )

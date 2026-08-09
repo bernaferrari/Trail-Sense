@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,20 +20,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,7 +70,9 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
@@ -224,6 +229,7 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CloudScreen(
     subtitle: String,
@@ -254,22 +260,60 @@ private fun CloudScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            CloudHeader(
-                subtitle = subtitle,
-                onGuideClick = onGuideClick
+            TopAppBar(
+                title = {
+                    Column(modifier = Modifier.testTag("cloud_list_title")) {
+                        Text(
+                            text = stringResource(R.string.clouds),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (subtitle.isNotBlank()) {
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onGuideClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_help),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         floatingActionButton = {
             Box {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
-                    modifier = Modifier.testTag("add_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add)
-                    )
-                }
+                    modifier = Modifier.testTag("add_btn"),
+                    shape = MaterialTheme.shapes.large,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(R.string.add),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                )
                 DropdownMenu(
                     expanded = isCreateMenuOpen,
                     onDismissRequest = { isCreateMenuOpen = false }
@@ -305,20 +349,25 @@ private fun CloudScreen(
                 .padding(padding)
         ) {
             if (clouds.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.no_clouds),
+                TrailSenseEmptyState(
+                    icon = Icons.Default.Cloud,
+                    title = stringResource(R.string.no_clouds),
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .testTag("cloud_empty_text"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        .testTag("cloud_empty_text")
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("cloud_list"),
-                    contentPadding = PaddingValues(bottom = 96.dp)
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        bottom = 96.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                 ) {
                     items(clouds) { reading ->
                         CloudReadingListItem(
@@ -327,52 +376,8 @@ private fun CloudScreen(
                             onCloudImageClick = onCloudImageClick,
                             onDeleteCloud = onDeleteCloud
                         )
-                        HorizontalDivider()
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CloudHeader(
-    subtitle: String,
-    onGuideClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("cloud_list_title")
-            ) {
-                Text(
-                    text = stringResource(R.string.clouds),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge
-                )
-                if (subtitle.isNotBlank()) {
-                    Text(
-                        text = subtitle,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            IconButton(onClick = onGuideClick) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_help),
-                    contentDescription = null
-                )
             }
         }
     }
@@ -391,71 +396,75 @@ private fun CloudReadingListItem(
     val cloud = reading.value.genus
     var isMenuOpen by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCloudClick(reading) }
-            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+    TrailSenseCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { onCloudClick(reading) }
     ) {
-        CloudThumbnail(
-            drawable = details.getCloudImage(context, cloud),
-            onClick = { onCloudImageClick(reading) }
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.md)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = details.getCloudName(cloud),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            CloudThumbnail(
+                drawable = details.getCloudImage(context, cloud),
+                onClick = { onCloudImageClick(reading) }
             )
-            Text(
-                text = details.getCloudForecast(cloud),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = formatter.formatDateTime(
-                    reading.time.toZonedDateTime(),
-                    relative = true,
-                    abbreviateMonth = true
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
 
-        Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("cloud_item_menu")
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = TrailSenseSpacing.md)
             ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = null
+                Text(
+                    text = details.getCloudName(cloud),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = details.getCloudForecast(cloud),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = formatter.formatDateTime(
+                        reading.time.toZonedDateTime(),
+                        relative = true,
+                        abbreviateMonth = true
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onDeleteCloud(reading)
-                    }
-                )
+
+            Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("cloud_item_menu")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onDeleteCloud(reading)
+                        }
+                    )
+                }
             }
         }
     }
@@ -471,8 +480,8 @@ private fun CloudThumbnail(
     }
     val modifier = Modifier
         .size(56.dp)
-        .clip(RoundedCornerShape(8.dp))
-        .background(MaterialTheme.colorScheme.surfaceVariant)
+        .clip(MaterialTheme.shapes.large)
+        .background(MaterialTheme.colorScheme.primaryContainer)
         .clickable(onClick = onClick)
         .testTag("cloud_image")
 

@@ -2,24 +2,27 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.content.Context
 import android.os.Bundle
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,11 +32,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.luna.text.capitalizeWords
@@ -72,9 +82,9 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.views.DatePickerContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstroPositions
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyEvent
@@ -738,33 +748,46 @@ private fun AstronomyTitle(
     state: AstronomyTitleState,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
     ) {
-        state.leftButton.Content()
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.sm,
+                vertical = TrailSenseSpacing.lg
+            ),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = state.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            if (state.subtitle.isNotEmpty()) {
+            state.leftButton.Content()
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = TrailSenseSpacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
                 Text(
-                    text = state.subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = state.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
                 )
+                if (state.subtitle.isNotEmpty()) {
+                    Text(
+                        text = state.subtitle,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
+            state.rightButton.Content()
         }
-        state.rightButton.Content()
     }
 }
 
@@ -773,39 +796,111 @@ private fun AstronomyDetailList(
     items: List<AstronomyListItem>,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier.testTag("astronomy_detail_list")
-    ) {
-        items(items, key = { it.id }) { item ->
-            AstronomyDetailRow(item)
-            TrailSenseDivider()
+    Column(modifier = modifier.testTag("astronomy_detail_list")) {
+        Text(
+            text = stringResource(R.string.astronomy),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.xs,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        TrailSenseCard {
+            items.forEach { item ->
+                AstronomyDetailRow(item)
+            }
         }
     }
 }
 
 @Composable
 private fun AstronomyDetailRow(item: AstronomyListItem) {
-    TrailSenseListItem(
-        title = item.title,
-        subtitle = item.subtitle,
-        icon = item.icon?.let { painterResource(it.resource) },
-        iconTint = item.icon?.tint?.let { Color(it) } ?: MaterialTheme.colorScheme.primary,
-        iconRotation = item.icon?.rotation ?: 0f,
-        trailing = {
-            AstronomyDataRow(item.data)
-        },
-        onClick = item.onClick,
-        animateEntrance = false,
-        modifier = Modifier
-            .padding(horizontal = TrailSenseSpacing.lg)
-            .testTag("astronomy_detail_title")
-    )
+    val rowModifier = Modifier
+        .fillMaxWidth()
+        .then(
+            item.onClick?.let { onClick ->
+                Modifier.clickable(onClick = onClick)
+            } ?: Modifier
+        )
+        .padding(vertical = TrailSenseSpacing.md)
+        .testTag("astronomy_detail_title")
+
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        item.icon?.let { icon ->
+            AstronomyIconChip(
+                icon = rememberAndroidDrawablePainter(icon.resource),
+                tint = icon.tint?.let { Color(it) }
+                    ?: Color.Unspecified,
+                rotation = icon.rotation
+            )
+            Spacer(Modifier.size(TrailSenseSpacing.md))
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            item.subtitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(Modifier.size(TrailSenseSpacing.md))
+        AstronomyDataRow(item.data)
+    }
+}
+
+@Composable
+private fun rememberAndroidDrawablePainter(resource: Int): Painter {
+    val context = LocalContext.current
+    return remember(context, resource) {
+        val drawable = requireNotNull(ContextCompat.getDrawable(context, resource))
+        BitmapPainter(drawable.toBitmap().asImageBitmap())
+    }
+}
+
+@Composable
+private fun AstronomyIconChip(
+    icon: Painter,
+    tint: Color,
+    rotation: Float
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        modifier = Modifier.size(44.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier
+                    .size(28.dp)
+                    .rotate(rotation)
+            )
+        }
+    }
 }
 
 @Composable
 private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         data.forEach {
             Text(
@@ -816,6 +911,7 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("astronomy_detail_data")
             )
         }
@@ -828,54 +924,47 @@ private fun AstronomyScreen(
     astronomyItems: List<AstronomyListItem>,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        AstronomyTitle(views.astronomyTitle)
-        Box(
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
+            AstronomyTitle(views.astronomyTitle)
+
             views.displayDate.Content()
-        }
-        views.sunMoonChart.Content(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(dimensionResource(R.dimen.chart_height))
-                .padding(horizontal = 16.dp)
-                .testTag("sunMoonChart")
-        )
-        if (views.timeSeeker.isVisible) {
-            Column(
+
+            views.sunMoonChart.Content(
                 modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 8.dp)
-            ) {
-                views.timeSeekerDetails.Content()
-                Slider(
-                    value = views.timeSeeker.value,
-                    onValueChange = views.timeSeeker::updateValue,
-                    valueRange = 0f..views.timeSeeker.maxValue,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                        .testTag("time_seeker")
-                )
-            }
-        } else {
-            AstronomyDetailList(
-                items = astronomyItems,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(top = 16.dp)
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+                    .testTag("sunMoonChart")
             )
-            if (views.button3d.isVisible) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = dimensionResource(R.dimen.default_bottom_margin)),
-                    contentAlignment = Alignment.Center
-                ) {
+
+            if (views.timeSeeker.isVisible) {
+                TrailSenseCard {
+                    views.timeSeekerDetails.Content()
+                    Slider(
+                        value = views.timeSeeker.value,
+                        onValueChange = views.timeSeeker::updateValue,
+                        valueRange = 0f..views.timeSeeker.maxValue,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = TrailSenseSpacing.md)
+                            .testTag("time_seeker")
+                    )
+                }
+            } else {
+                AstronomyDetailList(
+                    items = astronomyItems,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (views.button3d.isVisible) {
                     views.button3d.Content()
                 }
             }
@@ -906,9 +995,7 @@ private class AstronomyTimeSeekerDetailsState {
     @Composable
     fun Content() {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -937,8 +1024,8 @@ private class AstronomyTimeSeekerDetailsState {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(top = TrailSenseSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
                 AstronomyPositionText(
                     text = sunPosition.toString(),
@@ -987,9 +1074,11 @@ private class AstronomyTextButtonState(
 
     @Composable
     fun Content() {
-        Button(onClick = onClick) {
-            Text(text = text)
-        }
+        TrailSenseButton(
+            text = text,
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

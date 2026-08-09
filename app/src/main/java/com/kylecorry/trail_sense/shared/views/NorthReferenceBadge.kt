@@ -53,7 +53,7 @@ class NorthReferenceBadgeState(
             Row(
                 modifier = Modifier.clickable(
                     enabled = showDetailsOnClick,
-                    onClick = ::showDescription
+                    onClick = { onSettingsClick?.invoke() ?: showDescription() }
                 ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)

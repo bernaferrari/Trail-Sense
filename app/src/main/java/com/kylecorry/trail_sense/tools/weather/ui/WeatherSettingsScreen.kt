@@ -3,12 +3,30 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -16,8 +34,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -31,10 +54,6 @@ import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
-import com.kylecorry.trail_sense.settings.ui.SettingsInfoRow
-import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
-import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -45,9 +64,8 @@ import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrict
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
@@ -236,300 +254,268 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
                                 end = TrailSenseSpacing.lg,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
-                            )
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                         ) {
-                            item("general_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.general))
-                            }
-                            item("left_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.left_quick_action),
-                                    selected = optionLabel(quickActionOptions, leftQuickAction),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.left_quick_action),
-                                            quickActionOptions,
-                                            leftQuickAction
-                                        ) {
-                                            leftQuickAction = it
-                                            putString(R.string.pref_weather_quick_action_left, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("right_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.right_quick_action),
-                                    selected = optionLabel(quickActionOptions, rightQuickAction),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.right_quick_action),
-                                            quickActionOptions,
-                                            rightQuickAction
-                                        ) {
-                                            rightQuickAction = it
-                                            putString(R.string.pref_weather_quick_action_right, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("pressure_history") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_pressure_history_title),
-                                    selected = optionLabel(pressureHistoryOptions, pressureHistory),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_pressure_history_title),
-                                            pressureHistoryOptions,
-                                            pressureHistory
-                                        ) {
-                                            pressureHistory = it
-                                            putString(R.string.pref_pressure_history, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("forecast_header") {
-                                TrailSenseSectionHeader(
-                                    title = stringResource(R.string.forecasts_category)
-                                )
-                            }
-                            item("monitor_weather") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_monitor_weather_title),
-                                    summary = stringResource(R.string.pref_monitor_weather_summary),
-                                    checked = monitorWeather,
-                                    enabled = monitorWeatherEnabled,
-                                    onCheckedChange = {
-                                        monitorWeather = it
-                                        prefs.shouldMonitorWeather = it
-                                        onMonitorWeatherChanged(it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("forecast_sensitivity") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_forecast_sensitivity_title),
-                                    selected = optionLabel(
-                                        forecastSensitivityOptions,
-                                        forecastSensitivity
-                                    ),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_forecast_sensitivity_title),
-                                            forecastSensitivityOptions,
-                                            forecastSensitivity
-                                        ) {
-                                            forecastSensitivity = it
-                                            putString(R.string.pref_forecast_sensitivity, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("notifications") {
-                                SettingsActionRow(
-                                    label = getString(
-                                        R.string.notifications_channel,
-                                        getString(R.string.weather_monitor)
-                                    ),
-                                    summary = notificationSummary,
-                                    onClick = {
-                                        host.startActivity(
-                                            Intents.notificationSettings(
-                                                host.requireContext(),
-                                                CurrentWeatherAlerter.WEATHER_CHANNEL_ID
-                                            )
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("show_pressure") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_show_pressure_in_notification_title),
-                                    checked = showPressureInNotification,
-                                    onCheckedChange = {
-                                        showPressureInNotification = it
-                                        putBoolean(
-                                            R.string.pref_show_pressure_in_notification,
-                                            it
-                                        )
-                                        restartWeatherMonitor()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("show_temperature") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_show_temperature_in_notification_title),
-                                    checked = showTemperatureInNotification,
-                                    onCheckedChange = {
-                                        showTemperatureInNotification = it
-                                        putBoolean(
-                                            R.string.pref_show_temperature_in_notification,
-                                            it
-                                        )
-                                        restartWeatherMonitor()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("daily_weather") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_daily_weather_notification_title),
-                                    checked = dailyWeatherNotification,
-                                    enabled = monitorWeather,
-                                    onCheckedChange = {
-                                        dailyWeatherNotification = it
-                                        putBoolean(
-                                            R.string.pref_daily_weather_notification,
-                                            it
-                                        )
-                                        restartWeatherMonitor()
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("daily_weather_time") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_daily_weather_time_title),
-                                    selected = formatService.formatTime(dailyWeatherTime, false),
-                                    enabled = dailyWeatherNotification,
-                                    onClick = {
-                                        Pickers.time(
-                                            host.requireContext(),
-                                            userPrefs.use24HourTime,
-                                            dailyWeatherTime
-                                        ) { time ->
-                                            if (time != null) {
-                                                dailyWeatherTime = time
-                                                prefs.dailyForecastTime = time
-                                                restartWeatherMonitor()
+                            item("general_section") {
+                                WeatherSettingsSection(title = stringResource(R.string.general)) {
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.left_quick_action),
+                                        subtitle = optionLabel(quickActionOptions, leftQuickAction),
+                                        icon = painterResource(R.drawable.ic_weather),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.left_quick_action),
+                                                quickActionOptions,
+                                                leftQuickAction
+                                            ) {
+                                                leftQuickAction = it
+                                                putString(R.string.pref_weather_quick_action_left, it)
                                             }
                                         }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("storm_header") {
-                                TrailSenseSectionHeader(
-                                    title = stringResource(R.string.weather_storm)
-                                )
-                            }
-                            item("storm_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.storm_alerts),
-                                    checked = stormAlerts,
-                                    enabled = monitorWeather,
-                                    onCheckedChange = {
-                                        stormAlerts = it
-                                        putBoolean(R.string.pref_send_storm_alert, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("storm_sensitivity") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_storm_alert_sensitivity_title),
-                                    selected = optionLabel(stormSensitivityOptions, stormSensitivity),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_storm_alert_sensitivity_title),
-                                            stormSensitivityOptions,
-                                            stormSensitivity
-                                        ) {
-                                            stormSensitivity = it
-                                            putString(R.string.pref_storm_alert_sensitivity, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("storm_alarm") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.use_alarm_for_storm_alert),
-                                    summary = stringResource(R.string.alarm_description),
-                                    checked = useAlarmForStormAlert,
-                                    enabled = stormAlerts,
-                                    onCheckedChange = {
-                                        useAlarmForStormAlert = it
-                                        putBoolean(
-                                            R.string.pref_weather_use_alarm_for_storm_alert,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("mute_storm_alarm") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.mute_alarm_at_night),
-                                    summary = muteStormAlarmSummary,
-                                    checked = muteStormAlarmAtNight,
-                                    enabled = useAlarmForStormAlert,
-                                    onCheckedChange = {
-                                        muteStormAlarmAtNight = it
-                                        putBoolean(
-                                            R.string.pref_weather_mute_storm_alarm_at_night,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("advanced_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.advanced))
-                            }
-                            item("update_frequency") {
-                                SettingsActionRow(
-                                    label = updateFrequencyTitle,
-                                    summary = formatService.formatDuration(updateFrequency),
-                                    enabled = monitorWeather,
-                                    onClick = {
-                                        showUpdateFrequencyPicker = true
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("detailed_icon") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_weather_show_detailed_icon_title),
-                                    checked = showDetailedIcon,
-                                    enabled = monitorWeather,
-                                    onCheckedChange = {
-                                        showDetailedIcon = it
-                                        putBoolean(R.string.pref_weather_show_detailed_icon, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("export_csv") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.pref_export_weather_csv_title),
-                                    onClick = ::exportWeatherData,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            if (isDebug()) {
-                                item("debug_timing") {
-                                    SettingsInfoRow(
-                                        label = "Timing (Debug)",
-                                        summary = debugTimingSummary,
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.right_quick_action),
+                                        subtitle = optionLabel(quickActionOptions, rightQuickAction),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.right_quick_action),
+                                                quickActionOptions,
+                                                rightQuickAction
+                                            ) {
+                                                rightQuickAction = it
+                                                putString(R.string.pref_weather_quick_action_right, it)
+                                            }
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.pref_pressure_history_title),
+                                        subtitle = optionLabel(pressureHistoryOptions, pressureHistory),
+                                        icon = painterResource(R.drawable.ic_barometer),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_pressure_history_title),
+                                                pressureHistoryOptions,
+                                                pressureHistory
+                                            ) {
+                                                pressureHistory = it
+                                                putString(R.string.pref_pressure_history, it)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+
+                            item("forecast_section") {
+                                WeatherSettingsSection(
+                                    title = stringResource(R.string.forecasts_category)
+                                ) {
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_monitor_weather_title),
+                                        summary = stringResource(R.string.pref_monitor_weather_summary),
+                                        icon = painterResource(R.drawable.ic_weather),
+                                        checked = monitorWeather,
+                                        enabled = monitorWeatherEnabled,
+                                        onCheckedChange = {
+                                            monitorWeather = it
+                                            prefs.shouldMonitorWeather = it
+                                            onMonitorWeatherChanged(it)
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.pref_forecast_sensitivity_title),
+                                        subtitle = optionLabel(
+                                            forecastSensitivityOptions,
+                                            forecastSensitivity
+                                        ),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_forecast_sensitivity_title),
+                                                forecastSensitivityOptions,
+                                                forecastSensitivity
+                                            ) {
+                                                forecastSensitivity = it
+                                                putString(R.string.pref_forecast_sensitivity, it)
+                                            }
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = getString(
+                                            R.string.notifications_channel,
+                                            getString(R.string.weather_monitor)
+                                        ),
+                                        subtitle = notificationSummary,
+                                        icon = painterResource(R.drawable.ic_notification),
+                                        onClick = {
+                                            host.startActivity(
+                                                Intents.notificationSettings(
+                                                    host.requireContext(),
+                                                    CurrentWeatherAlerter.WEATHER_CHANNEL_ID
+                                                )
+                                            )
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_show_pressure_in_notification_title),
+                                        checked = showPressureInNotification,
+                                        onCheckedChange = {
+                                            showPressureInNotification = it
+                                            putBoolean(
+                                                R.string.pref_show_pressure_in_notification,
+                                                it
+                                            )
+                                            restartWeatherMonitor()
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_show_temperature_in_notification_title),
+                                        checked = showTemperatureInNotification,
+                                        onCheckedChange = {
+                                            showTemperatureInNotification = it
+                                            putBoolean(
+                                                R.string.pref_show_temperature_in_notification,
+                                                it
+                                            )
+                                            restartWeatherMonitor()
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_daily_weather_notification_title),
+                                        checked = dailyWeatherNotification,
+                                        enabled = monitorWeather,
+                                        onCheckedChange = {
+                                            dailyWeatherNotification = it
+                                            putBoolean(
+                                                R.string.pref_daily_weather_notification,
+                                                it
+                                            )
+                                            restartWeatherMonitor()
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.pref_daily_weather_time_title),
+                                        subtitle = formatService.formatTime(dailyWeatherTime, false),
+                                        enabled = dailyWeatherNotification,
+                                        onClick = {
+                                            Pickers.time(
+                                                host.requireContext(),
+                                                userPrefs.use24HourTime,
+                                                dailyWeatherTime
+                                            ) { time ->
+                                                if (time != null) {
+                                                    dailyWeatherTime = time
+                                                    prefs.dailyForecastTime = time
+                                                    restartWeatherMonitor()
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+
+                            item("storm_section") {
+                                WeatherSettingsSection(
+                                    title = stringResource(R.string.weather_storm)
+                                ) {
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.storm_alerts),
+                                        icon = painterResource(R.drawable.storm),
+                                        checked = stormAlerts,
+                                        enabled = monitorWeather,
+                                        onCheckedChange = {
+                                            stormAlerts = it
+                                            putBoolean(R.string.pref_send_storm_alert, it)
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.pref_storm_alert_sensitivity_title),
+                                        subtitle = optionLabel(stormSensitivityOptions, stormSensitivity),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_storm_alert_sensitivity_title),
+                                                stormSensitivityOptions,
+                                                stormSensitivity
+                                            ) {
+                                                stormSensitivity = it
+                                                putString(R.string.pref_storm_alert_sensitivity, it)
+                                            }
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.use_alarm_for_storm_alert),
+                                        summary = stringResource(R.string.alarm_description),
+                                        checked = useAlarmForStormAlert,
+                                        enabled = stormAlerts,
+                                        onCheckedChange = {
+                                            useAlarmForStormAlert = it
+                                            putBoolean(
+                                                R.string.pref_weather_use_alarm_for_storm_alert,
+                                                it
+                                            )
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.mute_alarm_at_night),
+                                        summary = muteStormAlarmSummary,
+                                        checked = muteStormAlarmAtNight,
+                                        enabled = useAlarmForStormAlert,
+                                        onCheckedChange = {
+                                            muteStormAlarmAtNight = it
+                                            putBoolean(
+                                                R.string.pref_weather_mute_storm_alarm_at_night,
+                                                it
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+
+                            item("advanced_section") {
+                                WeatherSettingsSection(title = stringResource(R.string.advanced)) {
+                                    WeatherSettingsClickRow(
+                                        title = updateFrequencyTitle,
+                                        subtitle = formatService.formatDuration(updateFrequency),
+                                        icon = painterResource(R.drawable.ic_alert),
+                                        enabled = monitorWeather,
+                                        onClick = {
+                                            showUpdateFrequencyPicker = true
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_weather_show_detailed_icon_title),
+                                        checked = showDetailedIcon,
+                                        enabled = monitorWeather,
+                                        onCheckedChange = {
+                                            showDetailedIcon = it
+                                            putBoolean(R.string.pref_weather_show_detailed_icon, it)
+                                        }
+                                    )
+                                    WeatherSettingsCardDivider()
+                                    WeatherSettingsClickRow(
+                                        title = stringResource(R.string.pref_export_weather_csv_title),
+                                        icon = painterResource(R.drawable.ic_import_export),
+                                        onClick = ::exportWeatherData
+                                    )
+                                    if (isDebug()) {
+                                        WeatherSettingsCardDivider()
+                                        WeatherSettingsInfoRow(
+                                            title = "Timing (Debug)",
+                                            subtitle = debugTimingSummary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -553,7 +539,6 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
                             }
                         )
                     }
-                }
     }
 
     fun onCreate() {
@@ -755,4 +740,200 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
         val value: String,
         val label: String
     )
+}
+
+@Composable
+private fun WeatherSettingsSection(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun WeatherSettingsCardDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    )
+}
+
+@Composable
+private fun WeatherSettingsIconChip(icon: Painter) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeatherSettingsClickRow(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            WeatherSettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        if (trailing != null) {
+            trailing()
+        } else {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeatherSettingsSwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            WeatherSettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
+}
+
+@Composable
+private fun WeatherSettingsInfoRow(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }

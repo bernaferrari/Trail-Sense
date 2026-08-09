@@ -1,17 +1,26 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +51,8 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.ballistics.domain.BallisticsCalculator
 import com.kylecorry.trail_sense.tools.ballistics.domain.G1DragModel
 import com.kylecorry.trail_sense.tools.ballistics.domain.TrajectoryPoint
@@ -79,60 +91,108 @@ fun BallisticsCalculatorPage(
     }
 
     BallisticsForm(modifier = modifier) {
-        DistanceField(
-            label = stringResource(R.string.sight_in_range),
-            value = zeroDistance,
-            units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-            defaultUnit = DistanceUnits.Yards,
-            onValueChange = { setZeroDistance(it ?: Distance.from(0f, DistanceUnits.Yards)) },
-            modifier = Modifier.testTag("zero_distance")
-        )
-        DistanceField(
-            label = stringResource(R.string.scope_height),
-            value = scopeHeight,
-            units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-            defaultUnit = DistanceUnits.Inches,
-            onValueChange = { setScopeHeight(it ?: Distance.from(0f, DistanceUnits.Inches)) },
-            modifier = Modifier.testTag("scope_height")
-        )
-        SpeedField(
-            label = stringResource(R.string.muzzle_velocity),
-            value = bulletSpeed,
-            units = formatter.sortDistanceUnits(listOf(DistanceUnits.Feet, DistanceUnits.Meters)),
-            defaultUnit = DistanceUnits.Feet,
-            onValueChange = setBulletSpeed,
-            modifier = Modifier.testTag("bullet_speed")
-        )
-        OutlinedTextField(
-            value = ballisticCoefficientText,
-            onValueChange = {
-                ballisticCoefficientText = it
-                setBallisticCoefficient(it.toFloatCompat())
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("ballistic_coefficient"),
-            label = { Text(stringResource(R.string.ballistic_coefficient)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("ballistics_table"),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            if (loading) {
-                CircularProgressIndicator(modifier = Modifier.testTag("loading"))
-            } else {
-                BallisticsTable(
-                    trajectory = trajectory,
-                    zeroDistance = zeroDistance,
-                    bulletSpeed = bulletSpeed,
-                    formatter = formatter,
-                    prefs = prefs
+        // Inputs group
+        TrailSenseCard {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TonalIconChip(Icons.Default.Tune)
+                    Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
+                    Text(
+                        text = stringResource(R.string.ballistics),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                DistanceField(
+                    label = stringResource(R.string.sight_in_range),
+                    value = zeroDistance,
+                    units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+                    defaultUnit = DistanceUnits.Yards,
+                    onValueChange = { setZeroDistance(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+                    modifier = Modifier.testTag("zero_distance")
+                )
+                DistanceField(
+                    label = stringResource(R.string.scope_height),
+                    value = scopeHeight,
+                    units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
+                    defaultUnit = DistanceUnits.Inches,
+                    onValueChange = { setScopeHeight(it ?: Distance.from(0f, DistanceUnits.Inches)) },
+                    modifier = Modifier.testTag("scope_height")
+                )
+                SpeedField(
+                    label = stringResource(R.string.muzzle_velocity),
+                    value = bulletSpeed,
+                    units = formatter.sortDistanceUnits(listOf(DistanceUnits.Feet, DistanceUnits.Meters)),
+                    defaultUnit = DistanceUnits.Feet,
+                    onValueChange = setBulletSpeed,
+                    modifier = Modifier.testTag("bullet_speed")
+                )
+                OutlinedTextField(
+                    value = ballisticCoefficientText,
+                    onValueChange = {
+                        ballisticCoefficientText = it
+                        setBallisticCoefficient(it.toFloatCompat())
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("ballistic_coefficient"),
+                    label = { Text(stringResource(R.string.ballistic_coefficient)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true
                 )
             }
+        }
+
+        // Result group (calculated trajectory)
+        TrailSenseCard {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("ballistics_table"),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                when {
+                    loading -> CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(vertical = TrailSenseSpacing.xl)
+                            .testTag("loading")
+                    )
+
+                    trajectory.isEmpty() -> Text(
+                        text = stringResource(R.string.no_data),
+                        modifier = Modifier.padding(vertical = TrailSenseSpacing.xl),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    else -> BallisticsTable(
+                        trajectory = trajectory,
+                        zeroDistance = zeroDistance,
+                        bulletSpeed = bulletSpeed,
+                        formatter = formatter,
+                        prefs = prefs
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TonalIconChip(icon: ImageVector) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }

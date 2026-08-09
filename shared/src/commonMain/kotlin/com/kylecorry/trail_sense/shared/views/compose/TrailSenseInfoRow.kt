@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun TrailSenseInfoRow(
@@ -21,7 +20,7 @@ fun TrailSenseInfoRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -29,7 +28,7 @@ fun TrailSenseInfoRow(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(TrailSenseSpacing.sm))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge

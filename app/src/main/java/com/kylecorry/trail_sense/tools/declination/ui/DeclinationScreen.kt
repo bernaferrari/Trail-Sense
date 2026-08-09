@@ -2,16 +2,19 @@
 
 package com.kylecorry.trail_sense.tools.declination.ui
 
-import androidx.compose.foundation.layout.Row
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -49,6 +52,8 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,67 +103,110 @@ fun DeclinationScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            DeclinationHeader(title = title)
-            CoordinateInput(
+            DeclinationHeroCard(
+                title = title,
+                declination = declination,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("title")
+            )
+
+            LocationCard(
                 location = location,
+                isLocationUpToDate = isLocationUpToDate,
                 onLocationChanged = {
                     location = it
                     isLocationUpToDate = true
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .testTag("location")
+                modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                text = if (isLocationUpToDate) "" else stringResource(R.string.loading),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .testTag("loading"),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                DeclinationArrow(
-                    declination = declination,
-                    modifier = Modifier
-                        .size(200.dp)
-                        .testTag("declination")
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun DeclinationHeader(
-    title: String
+private fun DeclinationHeroCard(
+    title: String,
+    declination: Float,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .testTag("title")
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = stringResource(R.string.declination),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            Text(
+                text = stringResource(R.string.declination).uppercase(),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            DeclinationArrow(
+                declination = declination,
+                modifier = Modifier
+                    .size(200.dp)
+                    .testTag("declination")
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationCard(
+    location: Coordinate,
+    isLocationUpToDate: Boolean,
+    onLocationChanged: (Coordinate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = stringResource(R.string.location),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            CoordinateInput(
+                location = location,
+                onLocationChanged = onLocationChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("location")
+            )
+            if (!isLocationUpToDate) {
+                Text(
+                    text = stringResource(R.string.loading),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("loading"),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -187,32 +235,42 @@ private fun CoordinateInput(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
         if (isLoadingLocation) {
-            CircularProgressIndicator(
+            Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .testTag("gps_loading")
-            )
-        } else {
-            IconButton(
-                onClick = {
-                    scope.launch {
-                        isLoadingLocation = true
-                        val updated = withContext(Dispatchers.IO) {
-                            sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
-                        }
-                        onLocationChanged(updated)
-                        isLoadingLocation = false
-                    }
-                },
-                modifier = Modifier.testTag("gps_btn")
+                    .size(48.dp)
+                    .testTag("gps_loading"),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_location),
-                    contentDescription = stringResource(R.string.gps)
-                )
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        } else {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(48.dp)
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            isLoadingLocation = true
+                            val updated = withContext(Dispatchers.IO) {
+                                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                            }
+                            onLocationChanged(updated)
+                            isLoadingLocation = false
+                        }
+                    },
+                    modifier = Modifier.testTag("gps_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location),
+                        contentDescription = stringResource(R.string.gps),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
         }
         OutlinedTextField(
@@ -231,6 +289,7 @@ private fun CoordinateInput(
                     Text(stringResource(R.string.coordinate_input_invalid_location))
                 }
             },
+            shape = MaterialTheme.shapes.medium,
             singleLine = true,
             enabled = !isLoadingLocation
         )
@@ -240,7 +299,8 @@ private fun CoordinateInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_help),
-                contentDescription = stringResource(R.string.location_input_help_title)
+                contentDescription = stringResource(R.string.location_input_help_title),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -264,7 +324,12 @@ private fun DeclinationArrow(
     declination: Float,
     modifier: Modifier = Modifier
 ) {
-    val color = MaterialTheme.colorScheme.onSurface
+    val color = MaterialTheme.colorScheme.onPrimaryContainer
+    val animatedDeclination by animateFloatAsState(
+        targetValue = declination,
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "declinationRotation"
+    )
     Canvas(modifier = modifier) {
         val strokeWidth = 6.dp.toPx()
         val imageSize = 24.dp.toPx()
@@ -284,7 +349,7 @@ private fun DeclinationArrow(
         drawStar(color, Offset(centerX, imageSize * 0.5f), imageSize)
 
         rotate(
-            degrees = declination,
+            degrees = animatedDeclination,
             pivot = Offset(centerX, size.height)
         ) {
             drawLine(

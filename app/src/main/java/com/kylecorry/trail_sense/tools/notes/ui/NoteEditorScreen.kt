@@ -2,16 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -22,14 +18,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -66,56 +62,52 @@ fun NoteEditorScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("title_edit"),
-                    label = { Text(stringResource(R.string.note_title_hint)) },
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    singleLine = true
+                    .fillMaxWidth()
+                    .testTag("title_edit"),
+                label = { Text(stringResource(R.string.note_title_hint)) },
+                textStyle = MaterialTheme.typography.titleMedium,
+                shape = MaterialTheme.shapes.large,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
+                ),
+                singleLine = true
+            )
+            OutlinedTextField(
+                value = content,
+                onValueChange = { content = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .testTag("content_edit"),
+                label = { Text(stringResource(R.string.contents)) },
+                shape = MaterialTheme.shapes.large,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text
                 )
-                OutlinedTextField(
-                    value = content,
-                    onValueChange = { content = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(top = 16.dp)
-                        .testTag("content_edit"),
-                    label = { Text(stringResource(R.string.contents)) },
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text
-                    )
-                )
-            }
-            FloatingActionButton(
+            )
+            TrailSenseButton(
+                text = stringResource(R.string.save),
                 onClick = {
                     if (!isSaving) {
                         isSaving = true
                     }
                 },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .fillMaxWidth()
                     .testTag("note_create_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null
-                )
-            }
+            )
         }
     }
 

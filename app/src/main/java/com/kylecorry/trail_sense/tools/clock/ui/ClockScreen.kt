@@ -13,14 +13,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +61,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import kotlinx.coroutines.delay
@@ -156,70 +165,112 @@ private fun ClockScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.align(Alignment.TopCenter),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Top bar: refresh
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (showAnalogClock) {
-                        Text(
-                            text = timeText,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    IconButton(onClick = { startGpsUpdate() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.reload)
-                        )
-                    }
+                FilledIconButton(
+                    onClick = { startGpsUpdate() },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = stringResource(R.string.reload)
+                    )
                 }
-                Text(
-                    text = dateText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
 
+            // Hero
             Column(
-                modifier = Modifier.align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 if (showAnalogClock) {
-                    AnalogClock(
-                        time = myTime.toLocalTime()
-                    )
-                } else {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        modifier = Modifier.size(300.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            AnalogClock(time = myTime.toLocalTime())
+                        }
+                    }
+                    Spacer(Modifier.height(TrailSenseSpacing.xl))
                     Text(
                         text = timeText,
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center
                     )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Text(
+                            text = timeText,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = TrailSenseSpacing.lg,
+                                    vertical = TrailSenseSpacing.xxl
+                                ),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+
+                Spacer(Modifier.height(TrailSenseSpacing.lg))
                 Text(
-                    text = stringResource(
-                        if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = dateText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(Modifier.height(TrailSenseSpacing.md))
+                ClockSourceChip(isGpsTime = isGpsTime)
             }
 
+            // Bottom action
             if (isUpdatingClock) {
-                Text(
-                    text = stringResource(R.string.clock_waiting_for_gps),
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TrailSenseSpacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        TrailSenseSpacing.sm,
+                        Alignment.CenterHorizontally
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = stringResource(R.string.clock_waiting_for_gps),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
                 Button(
                     onClick = {
@@ -227,12 +278,46 @@ private fun ClockScreen(
                             onScheduleNextMinute(gpsTime, systemTime)
                         }
                     },
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    shape = MaterialTheme.shapes.large,
+                    contentPadding = ButtonDefaults.ContentPadding,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
                 ) {
-                    Text(stringResource(R.string.pip_button))
+                    Text(
+                        stringResource(R.string.pip_button),
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ClockSourceChip(isGpsTime: Boolean) {
+    val container = if (isGpsTime) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    val content = if (isGpsTime) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(shape = CircleShape, color = container) {
+        Text(
+            text = stringResource(
+                if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
+            ),
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.sm
+            ),
+            style = MaterialTheme.typography.labelLarge,
+            color = content
+        )
     }
 }
 

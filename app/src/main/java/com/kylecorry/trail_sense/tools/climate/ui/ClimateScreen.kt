@@ -4,9 +4,9 @@ package com.kylecorry.trail_sense.tools.climate.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -48,10 +50,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.annotation.StringRes
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -539,71 +545,145 @@ private fun ClimateScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .testTag("climate_scroll")
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = dimensionResource(R.dimen.default_bottom_margin))
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(bottom = dimensionResource(R.dimen.default_bottom_margin)),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-                DatePickerInput(
-                    date = date,
-                    onDateChange = onDateChange
+                Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
+
+                // Hero readout
+                ClimateHeroCard(
+                    temperatureTitle = temperatureTitle,
+                    precipitationTitle = precipitationTitle
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                CoordinateInput(
-                    location = location,
-                    onLocationChange = onLocationChange,
-                    autoFillRequest = locationAutofillRequest,
-                    onAutoLocationClick = onAutoLocationClick,
-                    onBeaconSelected = onLocationBeaconSelected
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                ElevationInput(
-                    elevation = elevation,
-                    onElevationChange = onElevationChange,
-                    autoFillRequest = elevationAutofillRequest,
-                    onAutoElevationClick = onAutoElevationClick
-                )
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.default_bottom_margin)))
-                SectionTitle(text = temperatureTitle)
-                SourceLabel(text = stringResource(R.string.source_merra_2))
-                TemperatureChart(
-                    temperatures = temperatures,
-                    selectedDate = date,
-                    units = temperatureUnits,
-                    onDateSelected = onTemperatureDateSelected
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                SectionTitle(text = precipitationTitle)
-                SourceLabel(text = stringResource(R.string.source_era5))
-                PrecipitationChart(
-                    precipitation = precipitation,
-                    selectedMonth = date.month,
-                    units = precipitationDistanceUnits,
-                    onMonthSelected = onPrecipitationMonthSelected
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (climateZoneTitle.isNotBlank()) {
-                    SectionTitle(text = climateZoneTitle)
-                    Text(
-                        text = climateZoneDescription,
-                        modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+
+                // Location & date selectors
+                TrailSenseCard {
+                    SectionLabel(text = stringResource(R.string.location))
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
+                    DatePickerInput(
+                        date = date,
+                        onDateChange = onDateChange
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    CoordinateInput(
+                        location = location,
+                        onLocationChange = onLocationChange,
+                        autoFillRequest = locationAutofillRequest,
+                        onAutoLocationClick = onAutoLocationClick,
+                        onBeaconSelected = onLocationBeaconSelected
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    ElevationInput(
+                        elevation = elevation,
+                        onElevationChange = onElevationChange,
+                        autoFillRequest = elevationAutofillRequest,
+                        onAutoElevationClick = onAutoElevationClick
                     )
                 }
-                if (showEcology) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SectionTitle(text = stringResource(R.string.ecology))
-                    Text(
-                        text = ecologyDescription,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onEcologyClick),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+
+                // Temperature chart
+                TrailSenseCard {
+                    SectionLabel(text = temperatureTitle)
+                    SourceLabel(text = stringResource(R.string.source_merra_2))
+                    TemperatureChart(
+                        temperatures = temperatures,
+                        selectedDate = date,
+                        units = temperatureUnits,
+                        onDateSelected = onTemperatureDateSelected
                     )
+                }
+
+                // Precipitation chart
+                TrailSenseCard {
+                    SectionLabel(text = precipitationTitle)
+                    SourceLabel(text = stringResource(R.string.source_era5))
+                    PrecipitationChart(
+                        precipitation = precipitation,
+                        selectedMonth = date.month,
+                        units = precipitationDistanceUnits,
+                        onMonthSelected = onPrecipitationMonthSelected
+                    )
+                }
+
+                if (climateZoneTitle.isNotBlank()) {
+                    TrailSenseCard {
+                        SectionLabel(text = climateZoneTitle)
+                        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
+                        Text(
+                            text = climateZoneDescription,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                if (showEcology) {
+                    TrailSenseCard(onClick = onEcologyClick) {
+                        SectionLabel(text = stringResource(R.string.ecology))
+                        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
+                        Text(
+                            text = ecologyDescription,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ClimateHeroCard(
+    temperatureTitle: String,
+    precipitationTitle: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = TrailSenseSpacing.lg,
+                    vertical = TrailSenseSpacing.xl
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            Text(
+                text = temperatureTitle,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = precipitationTitle,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary
+    )
 }
 
 @Composable
@@ -633,16 +713,6 @@ private fun ClimateHeader(
             )
         }
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.fillMaxWidth(),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurface
-    )
 }
 
 @Composable

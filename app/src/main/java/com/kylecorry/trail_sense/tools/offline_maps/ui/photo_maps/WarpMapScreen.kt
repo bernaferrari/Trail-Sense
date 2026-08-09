@@ -4,16 +4,14 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.graphics.Color
 import com.kylecorry.andromeda.alerts.Alerts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -30,8 +28,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
@@ -192,13 +192,45 @@ private fun WarpMapScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Instruction card (tonal), tappable for full instructions
+            TrailSenseCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg
+                    )
+                    .testTag("instructions_text"),
+                onClick = onInstructionsClick
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_info),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(R.string.map_perspective_instructions),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Preview / edit toggle (tonal)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = TrailSenseSpacing.md),
                 contentAlignment = Alignment.Center
             ) {
-                Button(
+                FilledTonalButton(
                     onClick = onTogglePreview,
                     modifier = Modifier.testTag("perspective_toggle_btn")
                 ) {
@@ -218,50 +250,20 @@ private fun WarpMapScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .padding(TrailSenseSpacing.lg)
                     .testTag("perspective")
             )
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surfaceContainer
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable(onClick = onInstructionsClick)
-                            .testTag("instructions_text"),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_info),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = stringResource(R.string.map_perspective_instructions),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Button(
-                        onClick = onNext,
-                        enabled = map != null,
-                        modifier = Modifier.testTag("next_button")
-                    ) {
-                        Text(text = stringResource(R.string.next))
-                    }
-                }
-            }
+            // Primary action (full-width)
+            TrailSenseButton(
+                text = stringResource(R.string.next),
+                onClick = onNext,
+                enabled = map != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TrailSenseSpacing.lg)
+                    .testTag("next_button")
+            )
         }
     }
 }

@@ -2,18 +2,15 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,9 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -37,6 +35,10 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.IStrideLengthEstimator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.StrideLengthEstimatorFactory
 import kotlinx.coroutines.delay
@@ -137,60 +139,106 @@ private fun StrideLengthScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            Text(
-                text = strideLength?.let(strideLengthText) ?: stringResource(R.string.dash),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+            // Hero readout: estimated stride length
+            StrideLengthHero(
+                value = strideLength?.let(strideLengthText) ?: stringResource(R.string.dash)
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = when {
-                    isRunning && !hasValidReading -> stringResource(R.string.stride_length_stand_still)
-                    isRunning -> stringResource(R.string.stride_length_walk)
-                    else -> ""
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = {
-                        when {
-                            !isRunning && hasValidReading -> onSave()
-                            !isRunning -> start()
-                            else -> stop()
-                        }
-                    }
-                ) {
+
+            // Status / instructions card
+            val statusText = when {
+                isRunning && !hasValidReading -> stringResource(R.string.stride_length_stand_still)
+                isRunning -> stringResource(R.string.stride_length_walk)
+                else -> null
+            }
+            if (statusText != null) {
+                TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = when {
-                            !isRunning && hasValidReading -> stringResource(R.string.save)
-                            !isRunning -> stringResource(R.string.start)
-                            else -> stringResource(R.string.stop)
-                        }
+                        text = stringResource(R.string.estimate_stride_length),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        modifier = Modifier.padding(top = TrailSenseSpacing.sm),
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                if (!isRunning && strideLength != null) {
-                    IconButton(
-                        onClick = {
-                            estimator.reset()
-                            refreshState()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.reset)
-                        )
+            }
+
+            // Primary start / stop / save action
+            TrailSenseButton(
+                text = when {
+                    !isRunning && hasValidReading -> stringResource(R.string.save)
+                    !isRunning -> stringResource(R.string.start)
+                    else -> stringResource(R.string.stop)
+                },
+                onClick = {
+                    when {
+                        !isRunning && hasValidReading -> onSave()
+                        !isRunning -> start()
+                        else -> stop()
                     }
-                }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Secondary reset action (only when stopped with a reading)
+            if (!isRunning && strideLength != null) {
+                TrailSenseButton(
+                    text = stringResource(R.string.reset),
+                    onClick = {
+                        estimator.reset()
+                        refreshState()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StrideLengthHero(value: String) {
+    val scale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "strideLengthHeroScale"
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = TrailSenseSpacing.xxl, horizontal = TrailSenseSpacing.lg),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            ) {
+                Text(
+                    text = stringResource(R.string.pref_stride_length_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    modifier = Modifier.scale(scale),
+                    text = value,
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

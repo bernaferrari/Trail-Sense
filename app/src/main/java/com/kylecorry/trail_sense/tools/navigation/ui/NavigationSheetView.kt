@@ -108,15 +108,23 @@ class NavigationSheetView(private val context: Context) {
             return
         }
         Surface(
-            modifier = modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceContainer
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 2.dp
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
                 toolbar.Content()
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -364,7 +372,7 @@ private class NavigationSheetToolbarState {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (leftVisible) {
@@ -376,7 +384,7 @@ private class NavigationSheetToolbarState {
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.size(40.dp))
             }
 
             Column(
@@ -421,7 +429,7 @@ private class NavigationSheetToolbarState {
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.size(40.dp))
             }
         }
     }
@@ -443,19 +451,36 @@ private class NavigationDataPointState(
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         if (isVisible) {
-            Box(modifier = modifier) {
-                DataPointContent(
-                    title = title,
-                    description = description,
-                    icon = icon,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    showDescription = showDescriptionState,
-                    gravity = Gravity.CENTER,
-                    onDescriptionClick = null
+            Row(
+                modifier = modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
                 )
+                Column(modifier = Modifier.padding(start = 8.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    if (showDescriptionState && description.isNotEmpty()) {
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         } else {
-            Spacer(modifier = modifier)
+            Spacer(modifier = Modifier)
         }
     }
 }

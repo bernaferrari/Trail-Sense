@@ -2,20 +2,26 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -54,6 +61,9 @@ import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -181,12 +191,13 @@ fun SolarPanelScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // Directional alignment cues hugging the edges of the screen.
             SolarArrow(
                 visible = position != null && getAltitudeDiff(position, orientation) > ALTITUDE_THRESHOLD,
                 rotation = 0f,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 16.dp)
+                    .padding(top = TrailSenseSpacing.lg)
                     .testTag("arrow_up")
             )
             SolarArrow(
@@ -194,7 +205,7 @@ fun SolarPanelScreen(
                 rotation = 180f,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = TrailSenseSpacing.lg)
                     .testTag("arrow_down")
             )
             SolarArrow(
@@ -202,7 +213,7 @@ fun SolarPanelScreen(
                 rotation = 270f,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 16.dp)
+                    .padding(start = TrailSenseSpacing.lg)
                     .testTag("arrow_left")
             )
             SolarArrow(
@@ -210,21 +221,27 @@ fun SolarPanelScreen(
                 rotation = 90f,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp)
+                    .padding(end = TrailSenseSpacing.lg)
                     .testTag("arrow_right")
             )
 
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TrailSenseSpacing.xxl, vertical = TrailSenseSpacing.xl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
+                // Charge-window mode toggle as expressive filter chips.
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(56.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        TrailSenseSpacing.sm,
+                        Alignment.CenterHorizontally
+                    ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    SolarModeButton(
+                    TrailSenseChip(
                         text = formatter.formatDuration(nowDuration),
                         selected = !alignToRestOfDay,
                         onClick = {
@@ -232,7 +249,7 @@ fun SolarPanelScreen(
                         },
                         modifier = Modifier.testTag("solar_now_btn")
                     )
-                    SolarModeButton(
+                    TrailSenseChip(
                         text = stringResource(R.string.today),
                         selected = alignToRestOfDay,
                         onClick = {
@@ -241,39 +258,41 @@ fun SolarPanelScreen(
                         modifier = Modifier.testTag("solar_today_btn")
                     )
                 }
-                position?.let {
-                    Text(
-                        text = getEnergyText(solarPanelService, gps, orientation, compass, alignToRestOfDay, nowDuration, formatter, context.getString(R.string.up_to_amount)),
+
+                if (position == null) {
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxxl))
+                    CircularProgressIndicator(
+                        modifier = Modifier.testTag("solar_loading"),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    SolarPanelReadout(
+                        position = position!!,
+                        compass = compass,
+                        orientation = orientation,
+                        formatter = formatter,
+                        prefs = prefs,
+                        declination = declination,
+                        frame = frame,
                         modifier = Modifier
-                            .padding(top = 16.dp)
-                            .testTag("energy"),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                            .fillMaxWidth()
+                            .testTag("solar_content")
+                    )
+
+                    // Estimated energy capture for the selected window.
+                    EnergyCard(
+                        text = getEnergyText(
+                            solarPanelService,
+                            gps,
+                            orientation,
+                            compass,
+                            alignToRestOfDay,
+                            nowDuration,
+                            formatter,
+                            context.getString(R.string.up_to_amount)
+                        )
                     )
                 }
-            }
-
-            if (position == null) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .testTag("solar_loading")
-                )
-            } else {
-                SolarPanelReadout(
-                    position = position!!,
-                    compass = compass,
-                    orientation = orientation,
-                    formatter = formatter,
-                    prefs = prefs,
-                    declination = declination,
-                    frame = frame,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 72.dp)
-                        .testTag("solar_content")
-                )
             }
         }
     }
@@ -297,20 +316,27 @@ fun SolarPanelScreen(
 }
 
 @Composable
-private fun SolarModeButton(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+private fun EnergyCard(
+    text: String
 ) {
-    if (selected) {
-        Button(onClick = onClick, modifier = modifier) {
-            Text(text)
-        }
-    } else {
-        OutlinedButton(onClick = onClick, modifier = modifier) {
-            Text(text)
-        }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = TrailSenseSpacing.lg,
+                    vertical = TrailSenseSpacing.md
+                )
+                .testTag("energy"),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -321,18 +347,26 @@ private fun SolarArrow(
     modifier: Modifier = Modifier
 ) {
     if (!visible) {
-        Spacer(modifier = modifier.size(32.dp))
+        Spacer(modifier = modifier.size(40.dp))
         return
     }
 
-    Icon(
-        painter = painterResource(R.drawable.ic_arrow),
-        contentDescription = null,
-        modifier = modifier
-            .size(32.dp)
-            .graphicsLayer(rotationZ = rotation),
-        tint = MaterialTheme.colorScheme.primary
-    )
+    Surface(
+        modifier = modifier.size(48.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(28.dp)
+                    .graphicsLayer(rotationZ = rotation),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
 }
 
 @Composable
@@ -366,8 +400,8 @@ private fun SolarPanelReadout(
 
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(56.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
     ) {
         SolarReadoutRow(
             label = stringResource(R.string.tilt),
@@ -403,49 +437,95 @@ private fun SolarReadoutRow(
     isComplete: Boolean,
     completeTag: String
 ) {
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = label,
-                modifier = Modifier.testTag(labelTag),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(24.dp))
-            if (isComplete) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .testTag(completeTag),
-                    tint = colorResource(R.color.positive)
-                )
-            } else {
-                Spacer(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .testTag(completeTag)
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.padding(top = 8.dp),
-            verticalAlignment = Alignment.Bottom
+    // Shift the hero card toward a confirmation tone once the panel is aligned,
+    // with a subtle spring so the transition reads as a celebration.
+    val containerColor by animateColorAsState(
+        targetValue = if (isComplete) {
+            MaterialTheme.colorScheme.tertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "solarReadoutContainer"
+    )
+    val onContainerColor by animateColorAsState(
+        targetValue = if (isComplete) {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "solarReadoutOnContainer"
+    )
+    val accentColor by animateColorAsState(
+        targetValue = if (isComplete) {
+            MaterialTheme.colorScheme.onTertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.primary
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "solarReadoutAccent"
+    )
+    val heroScale by animateFloatAsState(
+        targetValue = if (isComplete) 1.03f else 1f,
+        animationSpec = TrailSenseAnimation.quickSpring,
+        label = "solarReadoutScale"
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(heroScale),
+        shape = MaterialTheme.shapes.large,
+        color = containerColor
+    ) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
+            // Section label + aligned confirmation.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = label,
+                    modifier = Modifier.testTag(labelTag),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accentColor
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (isComplete) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_check),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .testTag(completeTag),
+                        tint = colorResource(R.color.positive)
+                    )
+                } else {
+                    Spacer(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .testTag(completeTag)
+                    )
+                }
+            }
+
+            // Emphasized hero target readout.
+            Text(
+                text = desired,
+                modifier = Modifier.testTag(desiredTag),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = onContainerColor
+            )
+
+            // Supporting current-vs-target guidance.
             Text(
                 text = current,
                 modifier = Modifier.testTag(currentTag),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(24.dp))
-            Text(
-                text = desired,
-                modifier = Modifier.testTag(desiredTag),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = onContainerColor.copy(alpha = 0.7f)
             )
         }
     }

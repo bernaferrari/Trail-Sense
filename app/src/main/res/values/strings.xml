@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">Trail Sense</string>
+    <string name="details">Details</string>
+    <string name="appearance">Appearance</string>
+    <string name="notes">Notes</string>
     <!--Tabs-->
     <string name="navigation">Navigation</string>
     <string name="weather">Weather</string>
@@ -794,6 +797,14 @@
     <string name="pref_privacy_screenshot_protection" translatable="false">pref_privacy_screenshot_protection</string>
     <string name="pref_privacy_screenshot_protection_title">Prevent screenshots</string>
     <string name="units">Units</string>
+    <string name="choose_your_units">Choose your units</string>
+    <string name="units_setup_description">Set how Trail Sense presents distance, weather, and weight. You can change individual units later.</string>
+    <string name="onboarding_setup_intro">Offline field tools for navigation, weather, astronomy, and safety.</string>
+    <string name="onboarding_private_by_design">Your location stays on this device. Trail Sense does not request Internet access.</string>
+    <string name="metric">Metric</string>
+    <string name="us_customary">US customary</string>
+    <string name="metric_units_summary">Kilometers, meters, Celsius, hPa, kilograms</string>
+    <string name="us_customary_units_summary">Miles, feet, Fahrenheit, inHg, pounds</string>
     <string name="privacy">Privacy</string>
     <string name="pref_privacy_settings" translatable="false">pref_privacy_settings</string>
     <string name="pref_theme_settings" translatable="false">pref_theme_settings</string>

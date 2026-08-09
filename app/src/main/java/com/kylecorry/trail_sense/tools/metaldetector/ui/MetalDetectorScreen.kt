@@ -3,12 +3,15 @@
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
 import android.content.Context
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,8 +44,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -448,33 +455,105 @@ private fun MetalDetectorScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            MetalDetectorHeader(
-                title = title,
-                audioEnabled = audioEnabled,
-                vibrationEnabled = vibrationEnabled,
-                showAudioButton = showAudioButton,
-                metalDetected = metalDetected,
-                onAudioToggle = onAudioToggle,
-                onVibrationToggle = onVibrationToggle
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            // Compact action bar: vibration and audio toggles
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                IconButton(
+                    onClick = onVibrationToggle,
+                    modifier = Modifier
+                        .alpha(if (vibrationEnabled) 1f else 0.38f)
+                        .testTag("metal_vibration_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.vibrate),
+                        contentDescription = null
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                if (showAudioButton) {
+                    IconButton(
+                        onClick = onAudioToggle,
+                        modifier = Modifier
+                            .alpha(if (audioEnabled) 1f else 0.38f)
+                            .testTag("metal_audio_btn")
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.volume_up),
+                            contentDescription = null
+                        )
+                    }
+                }
+            }
+
+            // Hero readout: current magnetic field magnitude. The container shifts
+            // to the error tone while a target is detected so the state reads at a glance.
+            val heroColor by animateColorAsState(
+                targetValue = if (metalDetected) {
+                    MaterialTheme.colorScheme.errorContainer
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer
+                },
+                animationSpec = tween(durationMillis = 250),
+                label = "metalHeroColor"
+            )
+            val heroContentColor = if (metalDetected) {
+                MaterialTheme.colorScheme.onErrorContainer
+            } else {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = heroColor
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TrailSenseSpacing.xl),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        TrailSenseSpacing.md,
+                        Alignment.CenterHorizontally
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (metalDetected) {
+                        Icon(
+                            painter = painterResource(R.drawable.metal),
+                            contentDescription = null,
+                            tint = heroContentColor
+                        )
+                    }
+                    Text(
+                        text = title,
+                        modifier = Modifier.testTag("metal_detector_title"),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = heroContentColor,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Threshold + calibration controls
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = stringResource(R.string.threshold),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = thresholdText,
@@ -487,11 +566,14 @@ private fun MetalDetectorScreen(
                         value = thresholdSliderValue,
                         onValueChange = onThresholdChange
                     )
-                }
-                Button(onClick = onCalibrate) {
-                    Text(stringResource(R.string.calibrate))
+                    TrailSenseButton(
+                        text = stringResource(R.string.calibrate),
+                        onClick = onCalibrate,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
+
             HighSensitivitySwitch(
                 checked = isHighSensitivity,
                 onCheckedChange = onHighSensitivityChange
@@ -520,79 +602,11 @@ private fun MetalDetectorScreen(
             )
             Text(
                 text = stringResource(R.string.metal_detector_disclaimer),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-private fun MetalDetectorHeader(
-    title: String,
-    audioEnabled: Boolean,
-    vibrationEnabled: Boolean,
-    showAudioButton: Boolean,
-    metalDetected: Boolean,
-    onAudioToggle: () -> Unit,
-    onVibrationToggle: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onVibrationToggle,
-                modifier = Modifier
-                    .alpha(if (vibrationEnabled) 1f else 0.38f)
-                    .testTag("metal_vibration_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.vibrate),
-                    contentDescription = null
-                )
-            }
-            Text(
-                text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("metal_detector_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            if (metalDetected) {
-                Icon(
-                    painter = painterResource(R.drawable.metal),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-            }
-            if (showAudioButton) {
-                IconButton(
-                    onClick = onAudioToggle,
-                    modifier = Modifier
-                        .alpha(if (audioEnabled) 1f else 0.38f)
-                        .testTag("metal_audio_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.volume_up),
-                        contentDescription = null
-                    )
-                }
-            }
         }
     }
 }

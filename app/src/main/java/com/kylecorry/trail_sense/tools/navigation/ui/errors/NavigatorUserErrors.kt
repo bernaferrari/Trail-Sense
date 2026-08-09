@@ -2,10 +2,8 @@ package com.kylecorry.trail_sense.tools.navigation.ui.errors
 
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.alerts.MissingSensorAlert
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -64,14 +62,9 @@ class NavigatorUserErrors(
         },
         MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE to UserError(
             ErrorBannerReason.NoCompass,
-            MissingSensorAlert.getMissingSensorTitle(
-                host.requireContext(),
-                host.getString(R.string.pref_compass_sensor_title)
-            ),
+            host.getString(R.string.no_sensor_message, host.getString(R.string.pref_compass_sensor_title).lowercase()),
             R.drawable.ic_compass_icon
-        ) {
-            MissingSensorAlert(host.requireContext()).alert(host.getString(R.string.pref_compass_sensor_title))
-        }
+        )
     )
 
     private var isTimedOut = false
@@ -125,20 +118,6 @@ class NavigatorUserErrors(
             show(MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE)
             isCompassErrorShown = true
 
-            // Show a one time dialog containing the missing compass text
-            CustomUiUtils.disclaimer(
-                host.requireContext(),
-                MissingSensorAlert.getMissingSensorTitle(
-                    host.requireContext(),
-                    host.getString(R.string.pref_compass_sensor_title)
-                ),
-                MissingSensorAlert.getMissingSensorMessage(
-                    host.requireContext(),
-                    host.getString(R.string.pref_compass_sensor_title)
-                ),
-                "no_compass_message_shown",
-                cancelText = null
-            )
         } else if (!diagnosticResultIds.contains(MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE)) {
             banner.dismiss(ErrorBannerReason.NoCompass)
             // Do not reset isCompassErrorShown

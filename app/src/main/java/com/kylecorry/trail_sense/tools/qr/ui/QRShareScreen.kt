@@ -3,12 +3,15 @@ package com.kylecorry.trail_sense.tools.qr.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +32,8 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @Composable
 fun QRShareScreen(
@@ -65,28 +69,51 @@ private fun QRShareContent(
         QR.encode(text, size, size).asImageBitmap()
     }
 
-    Column(
-        modifier = modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
-        Image(
-            bitmap = qrBitmap,
-            contentDescription = stringResource(R.string.qr_code),
+        Column(
             modifier = Modifier
-                .padding(top = 16.dp, bottom = 16.dp)
-                .size(250.dp)
-                .shadow(4.dp, RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White)
-        )
+                .fillMaxSize()
+                .padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(
+                TrailSenseSpacing.xl,
+                Alignment.CenterVertically
+            )
+        ) {
+            TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    // Keep the QR's immediate background white so it stays scannable
+                    // regardless of the app theme.
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .padding(TrailSenseSpacing.lg),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            bitmap = qrBitmap,
+                            contentDescription = stringResource(R.string.qr_code),
+                            modifier = Modifier.size(250.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

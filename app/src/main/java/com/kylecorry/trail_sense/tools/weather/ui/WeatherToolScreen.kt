@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +65,7 @@ import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -234,12 +239,10 @@ private class WeatherController(
 
         Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
             updateStatusBar()
-            true
         }
 
         Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
             updateStatusBar()
-            true
         }
 
     }
@@ -532,55 +535,117 @@ private fun WeatherHost(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            WeatherTitle(
-                state = views.weatherTitle,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            WeatherPressureChart(
-                data = pressureChartData.data,
-                raw = pressureChartData.raw,
-                forecast = pressureChartData.forecast,
-                onMarkerSelected = onPressureMarkerSelected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-                    .padding(horizontal = 16.dp)
-                    .testTag("chart")
-            )
-
-            if (pressureMarkerText != null) {
-                Text(
-                    text = pressureMarkerText,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .testTag("pressure_marker"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-            }
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(top = 8.dp)
-                    .testTag("weather_list")
+                    .testTag("weather_list"),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    TrailSenseSpacing.lg
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-                items(weatherItems, key = { it.id }) { item ->
-                    WeatherListItemRow(item)
-                    TrailSenseDivider()
+                // Hero readout
+                item(key = "weather_hero") {
+                    WeatherHeroCard(
+                        state = views.weatherTitle,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-            }
 
-            if (isWeatherUpdating) {
-                UpdatingWeather(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                )
+                // The chart is a section, not another card nested beneath the hero.
+                item(key = "weather_chart") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TrailSenseSpacing.sm)
+                    ) {
+                        WeatherSectionLabel(
+                            icon = TrailSenseIcons.Filled.Speed,
+                            text = stringResource(R.string.pressure_chart)
+                        )
+
+                        Spacer(Modifier.height(TrailSenseSpacing.md))
+
+                        val hasPressureHistory = pressureChartData.data.isNotEmpty() ||
+                                pressureChartData.raw.isNotEmpty() ||
+                                pressureChartData.forecast.isNotEmpty()
+                        if (hasPressureHistory) {
+                            WeatherPressureChart(
+                                data = pressureChartData.data,
+                                raw = pressureChartData.raw,
+                                forecast = pressureChartData.forecast,
+                                onMarkerSelected = onPressureMarkerSelected,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(156.dp)
+                                    .testTag("chart")
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(72.dp)
+                                    .testTag("chart"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.no_data),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (pressureMarkerText != null) {
+                            Text(
+                                text = pressureMarkerText,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = TrailSenseSpacing.sm)
+                                    .testTag("pressure_marker"),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        TrailSenseDivider(Modifier.padding(top = TrailSenseSpacing.lg))
+                    }
+                }
+
+                // Forecast / tendency readouts
+                if (weatherItems.isNotEmpty()) {
+                    item(key = "weather_readouts") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = TrailSenseSpacing.sm)
+                        ) {
+                            WeatherSectionLabel(
+                                icon = TrailSenseIcons.Filled.PartlyCloudyDay,
+                                text = stringResource(R.string.weather)
+                            )
+
+                            Spacer(Modifier.height(TrailSenseSpacing.xs))
+
+                            weatherItems.forEachIndexed { index, item ->
+                                WeatherListItemRow(item)
+                                if (index < weatherItems.lastIndex) {
+                                    TrailSenseDivider()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isWeatherUpdating) {
+                    item(key = "weather_updating") {
+                        UpdatingWeather(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
 
             WeatherMonitorPlayBar(
@@ -591,9 +656,38 @@ private fun WeatherHost(
                 onPlayClick = onToggleMonitor,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.lg
+                    )
             )
         }
+    }
+}
+
+@Composable
+private fun WeatherSectionLabel(
+    icon: ImageVector,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = text,
+            modifier = Modifier.padding(start = TrailSenseSpacing.sm),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -811,61 +905,82 @@ private fun WeatherListItemRow(item: WeatherListItem) {
         onClick = item.onClick,
         animateEntrance = false,
         modifier = Modifier
-            .padding(horizontal = TrailSenseSpacing.lg)
             .testTag("weather_item_${item.id}")
     )
 }
 
 @Composable
-private fun WeatherTitle(
+private fun WeatherHeroCard(
     state: WeatherTitleState,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
     ) {
-        state.leftButton.Content()
-
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(enabled = state.onTitleClick != null) {
-                    state.onTitleClick?.invoke()
-                }
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            state.icon?.let {
-                Icon(
-                    painter = painterResource(it),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(24.dp)
-                )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Quick action buttons row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = TrailSenseSpacing.sm,
+                        end = TrailSenseSpacing.sm,
+                        top = TrailSenseSpacing.sm
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                state.leftButton.Content()
+                state.rightButton.Content()
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+            // Hero readout
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = state.onTitleClick != null) {
+                        state.onTitleClick?.invoke()
+                    }
+                    .padding(
+                        start = TrailSenseSpacing.xl,
+                        end = TrailSenseSpacing.xl,
+                        top = TrailSenseSpacing.sm,
+                        bottom = TrailSenseSpacing.xl
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                state.icon?.let {
+                    Icon(
+                        painter = painterResource(it),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .padding(bottom = TrailSenseSpacing.sm)
+                            .size(48.dp)
+                    )
+                }
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     textAlign = TextAlign.Center
                 )
                 if (state.subtitle.isNotEmpty()) {
                     Text(
                         text = state.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = TrailSenseSpacing.xs),
+                        style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                 }
             }
         }
-
-        state.rightButton.Content()
     }
 }
 

@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.paths.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.view.Gravity
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,21 +10,27 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -96,7 +102,6 @@ import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorScaleContent
 import com.kylecorry.trail_sense.shared.views.ColorScaleState
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
-import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -974,21 +979,40 @@ private class PathDataPointState(
         if (!dataPointVisible) {
             return
         }
-        Box(
+        Row(
             modifier = modifier.clickable(
                 enabled = onClick != null,
                 onClick = { onClick?.invoke() }
-            )
+            ),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            DataPointContent(
-                title = title,
-                description = description,
-                icon = icon,
-                tint = MaterialTheme.colorScheme.onSurface,
-                showDescription = true,
-                gravity = Gravity.START,
-                onDescriptionClick = null
-            )
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -1012,14 +1036,14 @@ private fun PathTitle(
         ) {
             Text(
                 text = state.title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = state.subtitle,
                 modifier = Modifier.clickable { state.onSubtitleClick?.invoke() },
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
@@ -1041,102 +1065,154 @@ private fun PathOverviewHost(
 ) {
     val density = LocalDensity.current
     val context = LocalContext.current
-    Column(
-        modifier = modifier
-            .onSizeChanged { views.root.height = it.height }
-            .verticalScroll(
-                state = views.root.scrollState,
-                enabled = views.root.isScrollable
-            )
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
     ) {
-        PathTitle(views.pathTitle, Modifier.fillMaxWidth())
-        views.pathStyleControls.Content(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(with(density) { views.pathMapHolder.height.toDp() })
-                .onGloballyPositioned {
-                    views.pathMapHolder.top = it.positionInParent().y.toInt()
-                }
-        ) {
-            views.pathImage.Content(Modifier.fillMaxSize())
-            views.pathMapFullscreenToggle.Content(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 8.dp, bottom = 8.dp)
-            )
-        }
-        views.pathSelectedPoint.Content(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        )
-        if (views.pathLegend.isVisible) {
-            ColorScaleContent(
-                state = views.pathLegend,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
-            )
-        }
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxSize()
+                .onSizeChanged { views.root.height = it.height }
+                .verticalScroll(
+                    state = views.root.scrollState,
+                    enabled = views.root.isScrollable
+                )
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                views.pathDuration.Content(Modifier.weight(1f))
-                views.pathDistance.Content(Modifier.weight(1f))
+            PathTitle(views.pathTitle, Modifier.fillMaxWidth())
+
+            // Map + floating controls
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(with(density) { views.pathMapHolder.height.toDp() })
+                    .clip(MaterialTheme.shapes.large)
+                    .onGloballyPositioned {
+                        views.pathMapHolder.top = it.positionInParent().y.toInt()
+                    }
+            ) {
+                views.pathImage.Content(Modifier.fillMaxSize())
+                views.pathMapFullscreenToggle.Content(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(TrailSenseSpacing.md)
+                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                views.pathWaypoints.Content(Modifier.weight(1f))
-                views.pathDifficulty.Content(Modifier.weight(1f))
+
+            // Style controls
+            TrailSenseCard {
+                views.pathStyleControls.Content(Modifier.fillMaxWidth())
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                views.pathElevationGain.Content(Modifier.weight(1f))
-                views.pathElevationLoss.Content(Modifier.weight(1f))
+
+            views.pathSelectedPoint.Content(Modifier.fillMaxWidth())
+
+            if (views.pathLegend.isVisible) {
+                ColorScaleContent(
+                    state = views.pathLegend,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                views.pathElevationMin.Content(Modifier.weight(1f))
-                views.pathElevationMax.Content(Modifier.weight(1f))
+
+            // Hero stats
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                PathHeroStat(views.pathDistance, Modifier.weight(1f))
+                PathHeroStat(views.pathDuration, Modifier.weight(1f))
             }
+
+            // Grouped stats
+            TrailSenseCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                    views.pathWaypoints.Content(Modifier.weight(1f))
+                    views.pathDifficulty.Content(Modifier.weight(1f))
+                }
+            }
+
+            // Elevation
+            TrailSenseSectionHeader(title = stringResource(R.string.elevation))
+            TrailSenseCard {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                    ) {
+                        views.pathElevationGain.Content(Modifier.weight(1f))
+                        views.pathElevationLoss.Content(Modifier.weight(1f))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                    ) {
+                        views.pathElevationMin.Content(Modifier.weight(1f))
+                        views.pathElevationMax.Content(Modifier.weight(1f))
+                    }
+                }
+            }
+
+            views.chart.Content(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(with(density) {
+                        context.resources.getDimensionPixelSize(R.dimen.chart_height).toDp()
+                    })
+            )
+
+            views.pathActions.Content(Modifier.fillMaxWidth())
+
+            views.pathsTiming.Content(Modifier.fillMaxWidth())
         }
-        Text(
-            text = stringResource(R.string.elevation),
+    }
+}
+
+/**
+ * Hero readout for the screen's primary stats (distance, duration) — tonal primaryContainer card.
+ */
+@Composable
+private fun PathHeroStat(
+    state: PathDataPointState,
+    modifier: Modifier = Modifier
+) {
+    if (!state.isVisible) {
+        return
+    }
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
-        views.chart.Content(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(with(density) {
-                    context.resources.getDimensionPixelSize(R.dimen.chart_height).toDp()
-                })
-                .padding(horizontal = 16.dp)
-        )
-        views.pathActions.Content(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-        )
-        views.pathsTiming.Content(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp)
-        )
+                .clickable(
+                    enabled = state.onClick != null,
+                    onClick = { state.onClick?.invoke() }
+                )
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = state.title,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(TrailSenseSpacing.xs))
+            Text(
+                text = state.description,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -1332,42 +1408,19 @@ private class PathActionsView(private val context: Context) {
     fun Content(modifier: Modifier = Modifier) {
         Row(
             modifier = modifier,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            PathActionButton(
+            TrailSenseButton(
                 text = context.getString(R.string.navigate),
-                icon = R.drawable.ic_beacon,
-                onClick = onNavigateClick
+                onClick = onNavigateClick,
+                modifier = Modifier.weight(1f)
             )
-            PathActionButton(
+            TrailSenseButton(
                 text = context.getString(R.string.point),
-                icon = R.drawable.ic_add,
                 onClick = onAddPointClick,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.weight(1f)
             )
         }
-    }
-}
-
-@Composable
-private fun PathActionButton(
-    text: String,
-    icon: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(end = 8.dp)
-                .size(18.dp)
-        )
-        Text(text = text)
     }
 }
 
@@ -1383,18 +1436,23 @@ private class PathIconButton(
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        Box(
-            modifier = modifier
-                .size(48.dp)
-                .clickable { onClick?.invoke() },
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = modifier.size(48.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            shadowElevation = TrailSenseSpacing.xs
         ) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                tint = ComposeColor.White,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier.clickable { onClick?.invoke() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

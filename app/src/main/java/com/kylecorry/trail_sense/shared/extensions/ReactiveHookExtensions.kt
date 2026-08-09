@@ -70,9 +70,11 @@ fun <T : ITopic, V> ReactiveComponent.useTopic(
 ): V {
     val (value, setValue) = useState(default)
     val owner = useLifecycleOwner()
-    useEffectWithCleanup(arrayOf(topic, owner, mapper)) {
+    val currentMapper = useRef(mapper)
+    currentMapper.current = mapper
+    useEffectWithCleanup(arrayOf(topic, owner)) {
         val callback = {
-            setValue(mapper(topic))
+            setValue(currentMapper.current(topic))
             true
         }
         topic.subscribe(callback)
@@ -97,9 +99,11 @@ fun <T : Any, V> ReactiveComponent.useTopic(
 ): V {
     val (value, setValue) = useState(default)
     val owner = useLifecycleOwner()
-    useEffectWithCleanup(arrayOf(topic, owner, mapper)) {
+    val currentMapper = useRef(mapper)
+    currentMapper.current = mapper
+    useEffectWithCleanup(arrayOf(topic, owner)) {
         val callback = { updated: T ->
-            setValue(mapper(updated))
+            setValue(currentMapper.current(updated))
             true
         }
         topic.subscribe(callback)

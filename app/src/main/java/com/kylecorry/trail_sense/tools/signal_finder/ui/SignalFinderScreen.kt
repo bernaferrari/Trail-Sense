@@ -5,18 +5,27 @@ package com.kylecorry.trail_sense.tools.signal_finder.ui
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -57,7 +67,11 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -219,24 +233,43 @@ private fun SignalFinderScreen(
     onCreateBeacon: (ApproximateCoordinate) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Presentation-only: the strongest registered/available signal is surfaced as
+    // the hero. Derived purely from the existing list, no state or behavior change.
+    val bestSignal = signals.maxByOrNull { it.strength }
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Surface(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("title"),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    Text(
-                        text = stringResource(R.string.cell_towers),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                    .testTag("title")
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.sm
                     )
-                    if (loading) {
+            ) {
+                Text(
+                    text = stringResource(R.string.cell_towers),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                if (loading) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
                         Text(
                             text = stringResource(R.string.loading),
                             style = MaterialTheme.typography.bodyMedium,
@@ -248,37 +281,157 @@ private fun SignalFinderScreen(
 
             Box(modifier = Modifier.weight(1f)) {
                 if (signals.isEmpty() && towers.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.no_cell_towers_found),
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    TrailSenseEmptyState(
+                        icon = Icons.Default.Sensors,
+                        title = stringResource(R.string.no_cell_towers_found)
                     )
                 }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .testTag("list")
+                        .testTag("list"),
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.sm,
+                        bottom = TrailSenseSpacing.lg
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                 ) {
-                    items(signals) { signal ->
-                        CellSignalRow(signal, formatter, prefs)
-                        HorizontalDivider()
+                    if (bestSignal != null) {
+                        item {
+                            SignalHeroCard(
+                                signal = bestSignal,
+                                formatter = formatter
+                            )
+                        }
                     }
-                    items(towers) { tower ->
-                        CellTowerRow(
-                            tower = tower,
-                            location = location,
-                            formatter = formatter,
-                            prefs = prefs,
-                            onNavigate = { onNavigateToTower(tower) },
-                            onCreateBeacon = { onCreateBeacon(tower) }
-                        )
-                        HorizontalDivider()
+
+                    if (signals.isNotEmpty()) {
+                        item {
+                            SectionLabel(stringResource(R.string.cell_towers))
+                        }
+                        item {
+                            TrailSenseCard {
+                                signals.forEachIndexed { index, signal ->
+                                    if (index > 0) {
+                                        TrailSenseDivider(
+                                            modifier = Modifier.padding(
+                                                vertical = TrailSenseSpacing.sm
+                                            )
+                                        )
+                                    }
+                                    CellSignalRow(signal, formatter, prefs)
+                                }
+                            }
+                        }
+                    }
+
+                    if (towers.isNotEmpty()) {
+                        item {
+                            SectionLabel(stringResource(R.string.cell_tower))
+                        }
+                        items(towers) { tower ->
+                            TrailSenseCard {
+                                CellTowerRow(
+                                    tower = tower,
+                                    location = location,
+                                    formatter = formatter,
+                                    prefs = prefs,
+                                    onNavigate = { onNavigateToTower(tower) },
+                                    onCreateBeacon = { onCreateBeacon(tower) }
+                                )
+                            }
+                        }
                     }
                 }
             }
 
             SignalDisclaimer(disclaimer)
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier.padding(
+            start = TrailSenseSpacing.xs,
+            top = TrailSenseSpacing.sm,
+            bottom = TrailSenseSpacing.xxs
+        )
+    )
+}
+
+@Composable
+private fun SignalHeroCard(
+    signal: CellSignal,
+    formatter: FormatService,
+    modifier: Modifier = Modifier
+) {
+    // Strength accent animates between quality colors (tertiary -> error) as the
+    // best signal changes. Color comes from the shared quality palette.
+    val strengthColor by animateColorAsState(
+        targetValue = Color(CustomUiUtils.getQualityColor(signal.quality)),
+        animationSpec = tween(durationMillis = 250),
+        label = "heroStrength"
+    )
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(
+                            CellSignalUtils.getCellQualityImage(signal.quality)
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = strengthColor
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = formatter.formatCellNetwork(signal.network),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.height(TrailSenseSpacing.xxs))
+                Text(
+                    text = formatter.formatPercentage(signal.strength),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = if (signal.isRegistered) {
+                        stringResource(R.string.full_service)
+                    } else {
+                        stringResource(R.string.emergency_calls_only)
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = strengthColor
+                )
+            }
         }
     }
 }
@@ -358,9 +511,9 @@ private fun CellTowerRow(
         title = stringResource(R.string.cell_tower),
         description = description,
         icon = R.drawable.cell_tower,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        tint = MaterialTheme.colorScheme.onPrimaryContainer,
         trailing = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                 TextButton(onClick = onNavigate) {
                     Text(stringResource(R.string.navigate))
                 }
@@ -383,28 +536,33 @@ private fun SignalFinderRow(
     trailing: @Composable (() -> Unit)? = null
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .size(24.dp),
-                tint = tint
-            )
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = tint
+                    )
+                }
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -413,7 +571,7 @@ private fun SignalFinderRow(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = TrailSenseSpacing.sm),
                 horizontalArrangement = Arrangement.End
             ) {
                 trailing()
@@ -431,7 +589,11 @@ private fun SignalDisclaimer(
         text = disclaimer,
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .padding(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                bottom = TrailSenseSpacing.lg
+            )
             .testTag("disclaimer"),
         style = MaterialTheme.typography.labelSmall,
         textAlign = TextAlign.Center

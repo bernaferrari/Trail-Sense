@@ -4,15 +4,21 @@ package com.kylecorry.trail_sense.tools.light.ui
 
 import android.graphics.Paint
 import android.graphics.Canvas as AndroidCanvas
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -23,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,6 +39,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,6 +53,10 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
@@ -104,123 +116,209 @@ fun LightMeterScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            LightHeader(
-                title = formatter.formatLux(illuminance),
-                subtitle = if (beamDistance == null) "" else formatter.formatCandela(candela)
+            // Hero: live illuminance reading in a bold tonal card.
+            LightHeroCard(
+                lux = illuminance,
+                luxText = formatter.formatLux(illuminance),
+                candelaText = if (beamDistance == null) "" else formatter.formatCandela(candela),
+                beamDistanceText = beamDistanceText
             )
-            Text(
-                text = beamDistanceText,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .testTag("beam_distance_text"),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            LightBeamChart(
+
+            // Beam visualization grouped in a surface card.
+            LightBeamCard(
                 candela = candela,
-                units = beamDistanceUnit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(125.dp)
-                    .padding(top = 8.dp)
-                    .testTag("light_chart")
+                units = beamDistanceUnit
             )
-            Text(
-                text = stringResource(R.string.distance_from_flashlight),
-                modifier = Modifier.padding(start = 16.dp, top = 32.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            OutlinedTextField(
-                value = beamDistanceAmount,
-                onValueChange = {
+
+            // Controls: distance input + unit selection + reset.
+            LightControls(
+                distanceUnits = distanceUnits,
+                beamDistanceUnit = beamDistanceUnit,
+                beamDistanceAmount = beamDistanceAmount,
+                formatter = formatter,
+                onAmountChange = {
                     beamDistanceAmount = it
                     maxLux = 0f
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                    .testTag("beam_distance"),
-                label = { Text(stringResource(R.string.distance)) },
-                suffix = { Text(formatter.getDistanceUnitName(beamDistanceUnit, true)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true
-            )
-            UnitSelector(
-                units = distanceUnits,
-                selected = beamDistanceUnit,
-                formatter = formatter,
-                onSelected = {
+                onUnitSelected = {
                     beamDistanceUnit = it
                     maxLux = 0f
                 }
             )
-            Button(
+
+            TrailSenseButton(
+                text = stringResource(R.string.reset),
                 onClick = { maxLux = 0f },
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 16.dp)
+                    .fillMaxWidth()
                     .testTag("reset_btn")
-            ) {
-                Text(stringResource(R.string.reset))
-            }
-            Spacer(modifier = Modifier.weight(1f))
+            )
         }
     }
 }
 
 @Composable
-private fun LightHeader(
-    title: String,
-    subtitle: String
+private fun LightHeroCard(
+    lux: Float,
+    luxText: String,
+    candelaText: String,
+    beamDistanceText: String
 ) {
-    Column(
+    val animatedLux by animateFloatAsState(
+        targetValue = lux,
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "luxValue"
+    )
+    // Drive a subtle brightness ramp on the hero based on the live reading so the
+    // card visibly reacts to light. Purely cosmetic; the displayed text is exact.
+    val brightness = (ln(animatedLux + 1f) / ln(10001f)).coerceIn(0f, 1f)
+
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .testTag("light_title")
+            .testTag("light_title"),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            // Sun-like indicator whose glow tracks the measured illuminance.
+            Box(
+                modifier = Modifier.height(8.dp).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(TrailSenseSpacing.xs),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f + 0.75f * brightness),
+                    modifier = Modifier
+                        .fillMaxWidth(0.2f + 0.6f * brightness)
+                        .height(6.dp)
+                ) {}
+            }
+            Text(
+                text = luxText,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            if (candelaText.isNotEmpty()) {
+                Text(
+                    text = candelaText,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+            }
+            if (beamDistanceText.isNotEmpty()) {
+                Text(
+                    text = beamDistanceText,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("beam_distance_text"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                // Preserve the test target even when empty (matches original behavior).
+                Text(
+                    text = beamDistanceText,
+                    modifier = Modifier.testTag("beam_distance_text"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun UnitSelector(
-    units: List<DistanceUnits>,
-    selected: DistanceUnits,
-    formatter: FormatService,
-    onSelected: (DistanceUnits) -> Unit
+private fun LightBeamCard(
+    candela: Float,
+    units: DistanceUnits
 ) {
-    androidx.compose.foundation.layout.Row(
-        modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
-        units.forEach { unit ->
-            Button(
-                onClick = { onSelected(unit) },
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = stringResource(R.string.preview),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            LightBeamChart(
+                candela = candela,
+                units = units,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
+                    .fillMaxWidth()
+                    .height(125.dp)
+                    .testTag("light_chart")
+            )
+        }
+    }
+}
+
+@Composable
+private fun LightControls(
+    distanceUnits: List<DistanceUnits>,
+    beamDistanceUnit: DistanceUnits,
+    beamDistanceAmount: String,
+    formatter: FormatService,
+    onAmountChange: (String) -> Unit,
+    onUnitSelected: (DistanceUnits) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = stringResource(R.string.distance_from_flashlight),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            OutlinedTextField(
+                value = beamDistanceAmount,
+                onValueChange = onAmountChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("beam_distance"),
+                label = { Text(stringResource(R.string.distance)) },
+                suffix = { Text(formatter.getDistanceUnitName(beamDistanceUnit, true)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                shape = MaterialTheme.shapes.medium,
+                singleLine = true
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
-                Text(
-                    text = formatter.getDistanceUnitName(unit, true),
-                    color = if (unit == selected) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onPrimary
-                    }
-                )
+                distanceUnits.forEach { unit ->
+                    TrailSenseChip(
+                        text = formatter.getDistanceUnitName(unit, true),
+                        selected = unit == beamDistanceUnit,
+                        onClick = { onUnitSelected(unit) }
+                    )
+                }
             }
         }
     }
@@ -232,51 +330,57 @@ private fun LightBeamChart(
     units: DistanceUnits,
     modifier: Modifier = Modifier
 ) {
-    Canvas(modifier = modifier) {
-        drawRect(Color.Black)
-        if (candela <= 0f) {
-            return@Canvas
-        }
-
-        val fullMoon = android.hardware.SensorManager.LIGHT_FULLMOON
-        val sunrise = android.hardware.SensorManager.LIGHT_SUNRISE
-        val minLux = ln(fullMoon - 0.05f)
-        val maxLux = ln(sunrise)
-        val gradients = (1..100).map {
-            val distance = if (units == DistanceUnits.Feet) it * 3 else it
-            val lux = Optics.luxAtDistance(candela, Distance.from(distance.toFloat(), units))
-            val pct = ((ln(lux) - minLux) / (maxLux - minLux)).coerceIn(0f, 1f)
-            floor(pct * 255).toInt()
-        }
-        val gradWidth = size.width / gradients.size.toFloat()
-        val treeIndices = setOf(9, 24, 49, 74)
-        val paint = Paint().apply {
-            color = android.graphics.Color.WHITE
-            textAlign = Paint.Align.CENTER
-            textSize = 10.dp.toPx()
-        }
-
-        gradients.forEachIndexed { index, alpha ->
-            val start = index * gradWidth
-            val color = Color.White.copy(alpha = alpha / 255f)
-            if (index in treeIndices) {
-                val center = start + gradWidth / 2f
-                drawIntoCanvas { canvas ->
-                    drawTree(canvas.nativeCanvas, center, size.height - 18.dp.toPx(), color)
-                    val distance = ((index + 1) * if (units == DistanceUnits.Feet) 3 else 1).toString()
-                    canvas.nativeCanvas.drawText(
-                        distance,
-                        center,
-                        size.height / 2f,
-                        paint
-                    )
-                }
+    val shape = MaterialTheme.shapes.medium
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = Color.Black
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            if (candela <= 0f) {
+                return@Canvas
             }
-            drawRect(
-                color = color,
-                topLeft = Offset(start, size.height - 22.dp.toPx()),
-                size = Size(gradWidth, 22.dp.toPx())
-            )
+
+            val fullMoon = android.hardware.SensorManager.LIGHT_FULLMOON
+            val sunrise = android.hardware.SensorManager.LIGHT_SUNRISE
+            val minLux = ln(fullMoon - 0.05f)
+            val maxLux = ln(sunrise)
+            val gradients = (1..100).map {
+                val distance = if (units == DistanceUnits.Feet) it * 3 else it
+                val lux = Optics.luxAtDistance(candela, Distance.from(distance.toFloat(), units))
+                val pct = ((ln(lux) - minLux) / (maxLux - minLux)).coerceIn(0f, 1f)
+                floor(pct * 255).toInt()
+            }
+            val gradWidth = size.width / gradients.size.toFloat()
+            val treeIndices = setOf(9, 24, 49, 74)
+            val paint = Paint().apply {
+                color = android.graphics.Color.WHITE
+                textAlign = Paint.Align.CENTER
+                textSize = 10.dp.toPx()
+            }
+
+            gradients.forEachIndexed { index, alpha ->
+                val start = index * gradWidth
+                val color = Color.White.copy(alpha = alpha / 255f)
+                if (index in treeIndices) {
+                    val center = start + gradWidth / 2f
+                    drawIntoCanvas { canvas ->
+                        drawTree(canvas.nativeCanvas, center, size.height - 18.dp.toPx(), color)
+                        val distance = ((index + 1) * if (units == DistanceUnits.Feet) 3 else 1).toString()
+                        canvas.nativeCanvas.drawText(
+                            distance,
+                            center,
+                            size.height / 2f,
+                            paint
+                        )
+                    }
+                }
+                drawRect(
+                    color = color,
+                    topLeft = Offset(start, size.height - 22.dp.toPx()),
+                    size = Size(gradWidth, 22.dp.toPx())
+                )
+            }
         }
     }
 }

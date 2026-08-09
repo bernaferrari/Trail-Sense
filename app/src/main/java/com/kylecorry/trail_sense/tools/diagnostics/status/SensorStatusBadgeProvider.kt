@@ -23,14 +23,16 @@ class SensorStatusBadgeProvider(
             return StatusBadge(
                 context.getString(R.string.unavailable),
                 CustomUiUtils.getQualityColor(Quality.Unknown),
-                icon
+                icon,
+                isHealthy = false
             )
         }
 
         return StatusBadge(
             formatter.formatQuality(sensor.quality),
             CustomUiUtils.getQualityColor(sensor.quality),
-            icon
+            icon,
+            isHealthy = sensor.quality == Quality.Good
         )
     }
 }

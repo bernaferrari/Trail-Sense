@@ -9,6 +9,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,7 +71,9 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
@@ -631,51 +637,61 @@ private fun ClinometerTitle(
     state: ClinometerTitleState,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        ClinometerTitleButton(
-            icon = state.leftButtonIcon,
-            isSelected = state.isLeftButtonSelected,
-            onClick = { state.onLeftButtonClick?.invoke() }
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.md,
+                vertical = TrailSenseSpacing.lg
+            ),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            ClinometerTitleButton(
+                icon = state.leftButtonIcon,
+                isSelected = state.isLeftButtonSelected,
+                onClick = { state.onLeftButtonClick?.invoke() }
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = TrailSenseSpacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = state.title,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                    if (state.isLocked) {
+                        Icon(
+                            painter = painterResource(R.drawable.lock),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .padding(start = TrailSenseSpacing.sm)
+                                .size(24.dp)
+                        )
+                    }
+                }
                 Text(
-                    text = state.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = state.subtitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
                 )
-                if (state.isLocked) {
-                    Icon(
-                        painter = painterResource(R.drawable.lock),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .size(24.dp)
-                    )
-                }
             }
-            Text(
-                text = state.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+            ClinometerTitleButton(
+                icon = state.rightButtonIcon,
+                isSelected = state.isRightButtonSelected,
+                onClick = { state.onRightButtonClick?.invoke() }
             )
         }
-        ClinometerTitleButton(
-            icon = state.rightButtonIcon,
-            isSelected = state.isRightButtonSelected,
-            onClick = { state.onRightButtonClick?.invoke() }
-        )
     }
 }
 
@@ -685,17 +701,29 @@ private fun ClinometerTitleButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    IconButton(onClick = onClick) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = if (isSelected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            modifier = Modifier.size(24.dp)
-        )
+    val containerColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.primaryContainer
+    }
+    val iconTint = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    Surface(
+        shape = CircleShape,
+        color = containerColor,
+        modifier = Modifier.size(40.dp)
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp)
+            )
+        }
     }
 }
 
@@ -709,12 +737,19 @@ private fun ClinometerHost(
             views.onTouch?.invoke(event) ?: false
         }
     ) {
-        ClinometerTitle(views.clinometerTitle)
+        ClinometerTitle(
+            views.clinometerTitle,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.lg
+            )
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(16.dp),
+                .padding(TrailSenseSpacing.lg),
             contentAlignment = Alignment.Center
         ) {
             views.clinometer.Content(Modifier.fillMaxSize())
@@ -756,14 +791,25 @@ private fun ClinometerHost(
                 ClinometerInstruction(icon = R.drawable.ic_rotate_landscape_to_portrait)
             }
         }
-        Row(
+        TrailSenseCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xl
+                )
         ) {
-            views.avalancheRisk.Content(Modifier.weight(1f))
-            views.estimatedHeight.Content(Modifier.weight(1f))
+            Text(
+                text = LocalContext.current.getString(R.string.measure),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                views.avalancheRisk.Content(Modifier.weight(1f))
+                views.estimatedHeight.Content(Modifier.weight(1f))
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
@@ -9,13 +10,16 @@ group = "com.kylecorry.trail_sense"
 version = "1.0.0"
 
 kotlin {
-    // JVM target — allows the existing classic Android app (and future Desktop) to consume the common code
-    jvm()
+    android {
+        namespace = "com.kylecorry.trail_sense.shared"
+        compileSdk = 37
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
 
-    // Real iOS targets — this module is now genuinely multiplatform
     iosArm64()
     iosSimulatorArm64()
-    // Add more targets later (wasmJs, etc.) when ready
 
     sourceSets {
         commonMain.dependencies {
@@ -29,5 +33,15 @@ kotlin {
             // Portable expressive theming
             implementation("com.materialkolor:material-kolor:4.1.1")
         }
+
+        androidMain.dependencies {
+            api(libs.compose.foundation)
+            api(libs.compose.material3)
+            api(libs.compose.ui)
+        }
     }
+}
+
+dependencies {
+    add("androidMainApi", platform(libs.compose.bom))
 }

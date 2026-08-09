@@ -24,13 +24,6 @@ object TrailSenseElevation {
     val highest = 12.dp
 }
 
-object TrailSenseShapes {
-    val small      = 8.dp
-    val medium     = 16.dp
-    val large      = 24.dp
-    val extraLarge = 32.dp
-}
-
 object TrailSenseMotion {
     const val short  = 150
     const val medium = 250

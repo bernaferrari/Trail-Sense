@@ -9,6 +9,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 
 /**
  * Reusable expressive card component — shared design system building block.
@@ -19,6 +21,9 @@ import androidx.compose.ui.Modifier
 fun TrailSenseCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    elevation: Dp = TrailSenseElevation.none,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -28,10 +33,11 @@ fun TrailSenseCard(
                     Modifier.clickable(onClick = onClick)
                 } else Modifier
             ),
-        shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = TrailSenseElevation.low),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = containerColor,
+            contentColor = contentColor
         )
     ) {
         Column(

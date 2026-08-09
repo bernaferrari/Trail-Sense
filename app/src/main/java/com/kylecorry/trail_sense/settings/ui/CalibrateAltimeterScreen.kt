@@ -4,11 +4,36 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.text.util.Linkify.WEB_URLS
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.Lifecycle
@@ -52,7 +77,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
@@ -177,215 +201,185 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
                     setConditionalState = { conditionalState = it }
                     setDemSummary = { demSummary = it }
 
-                    androidx.compose.material3.Surface(
-                        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.background
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
                     ) {
                         androidx.compose.foundation.lazy.LazyColumn(
-                            modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                                 start = TrailSenseSpacing.lg,
                                 end = TrailSenseSpacing.lg,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
-                            )
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
                         ) {
-                            item("header") {
-                                TrailSenseSectionHeader(
-                                    title = androidx.compose.ui.res.stringResource(
-                                        R.string.pref_altimeter_calibration_title
+                            item("title") {
+                                Text(
+                                    text = stringResource(R.string.pref_altimeter_calibration_title),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(
+                                        top = TrailSenseSpacing.sm,
+                                        bottom = TrailSenseSpacing.xs
                                     )
                                 )
                             }
-                            item("altitude") {
-                                SettingsInfoRow(
-                                    label = androidx.compose.ui.res.stringResource(
-                                        R.string.elevation
-                                    ),
-                                    summary = altitude,
-                                    modifier = androidx.compose.ui.Modifier.padding(
-                                        horizontal = TrailSenseSpacing.lg
-                                    )
-                                )
+
+                            item("altitude_hero") {
+                                AltimeterStatusHero(altitude = altitude)
                             }
-                            item("mode") {
-                                SettingsPickerRow(
-                                    label = androidx.compose.ui.res.stringResource(R.string.source),
-                                    selected = optionLabel(modeOptions, mode),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.source),
-                                            modeOptions,
-                                            mode
-                                        ) {
-                                            putString(
-                                                R.string.pref_altimeter_calibration_mode,
-                                                it
-                                            )
-                                            mode = it
-                                            onAltimeterModeChanged()
+
+                            item("source_section") {
+                                AltimeterSection(title = stringResource(R.string.source)) {
+                                    AltimeterChipPickerRow(
+                                        icon = painterResource(R.drawable.ic_altitude),
+                                        label = stringResource(R.string.source),
+                                        selected = optionLabel(modeOptions, mode),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.source),
+                                                modeOptions,
+                                                mode
+                                            ) {
+                                                putString(
+                                                    R.string.pref_altimeter_calibration_mode,
+                                                    it
+                                                )
+                                                mode = it
+                                                onAltimeterModeChanged()
+                                            }
                                         }
-                                    },
-                                    modifier = androidx.compose.ui.Modifier.padding(
-                                        horizontal = TrailSenseSpacing.lg
                                     )
-                                )
-                            }
-                            if (conditionalState.canProvideOverrides) {
-                                item("override") {
-                                    SettingsActionRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.pref_elevation_override_title
-                                        ),
-                                        summary = overrideSummary,
-                                        onClick = ::pickAltitudeOverride,
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
-                                }
-                                item("override_gps") {
-                                    SettingsActionRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.override_from_gps
-                                        ),
-                                        onClick = ::setOverrideFromGPS,
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
-                                }
-                                if (conditionalState.hasBarometer) {
-                                    item("override_barometer") {
-                                        SettingsActionRow(
-                                            label = androidx.compose.ui.res.stringResource(
-                                                R.string.elevation_from_pressure
+                                    if (conditionalState.canProvideOverrides) {
+                                        TrailSenseDivider()
+                                        AltimeterChipPickerRow(
+                                            icon = painterResource(R.drawable.ic_recenter),
+                                            label = stringResource(
+                                                R.string.pref_elevation_override_title
                                             ),
-                                            summary = androidx.compose.ui.res.stringResource(
-                                                R.string.pref_elevation_override_sea_level_title
-                                            ),
-                                            onClick = ::pickOverrideFromBarometer,
-                                            modifier = androidx.compose.ui.Modifier.padding(
-                                                horizontal = TrailSenseSpacing.lg
+                                            selected = overrideSummary,
+                                            onClick = ::pickAltitudeOverride
+                                        )
+                                        TrailSenseDivider()
+                                        AltimeterChipActionRow(
+                                            icon = painterResource(R.drawable.ic_location),
+                                            label = stringResource(R.string.override_from_gps),
+                                            onClick = ::setOverrideFromGPS
+                                        )
+                                        if (conditionalState.hasBarometer) {
+                                            TrailSenseDivider()
+                                            AltimeterChipActionRow(
+                                                icon = painterResource(R.drawable.ic_barometer),
+                                                label = stringResource(
+                                                    R.string.elevation_from_pressure
+                                                ),
+                                                summary = stringResource(
+                                                    R.string.pref_elevation_override_sea_level_title
+                                                ),
+                                                onClick = ::pickOverrideFromBarometer
                                             )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (conditionalState.isFused) {
+                                item("calibration_section") {
+                                    AltimeterSection(
+                                        title = forceCalibrationTitle
+                                    ) {
+                                        AltimeterChipPickerRow(
+                                            icon = painterResource(R.drawable.ic_update),
+                                            label = forceCalibrationTitle,
+                                            selected = forceCalibrationSummary,
+                                            onClick = {
+                                                showForceCalibrationPicker = true
+                                            }
+                                        )
+                                        TrailSenseDivider()
+                                        AltimeterChipSwitchRow(
+                                            icon = painterResource(R.drawable.refresh_altitude),
+                                            label = stringResource(R.string.continuous_calibration),
+                                            summary = stringResource(
+                                                R.string.continuous_calibration_description
+                                            ),
+                                            checked = continuousCalibration,
+                                            onCheckedChange = {
+                                                continuousCalibration = it
+                                                putBoolean(
+                                                    R.string.pref_altimeter_continuous_calibration,
+                                                    it
+                                                )
+                                                restartAltimeter()
+                                            }
+                                        )
+                                        TrailSenseDivider()
+                                        AltimeterChipActionRow(
+                                            icon = painterResource(R.drawable.ic_delete),
+                                            label = stringResource(R.string.reset_calibration),
+                                            onClick = {
+                                                FusedAltimeter.clearCachedCalibration(cache)
+                                                host.toast(getString(R.string.done))
+                                            }
                                         )
                                     }
                                 }
                             }
-                            if (conditionalState.isFused) {
-                                item("force_calibration") {
-                                    SettingsActionRow(
-                                        label = forceCalibrationTitle,
-                                        summary = forceCalibrationSummary,
-                                        onClick = {
-                                            showForceCalibrationPicker = true
-                                        },
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
-                                }
-                                item("continuous_calibration") {
-                                    SettingsSwitchRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.continuous_calibration
-                                        ),
-                                        summary = androidx.compose.ui.res.stringResource(
-                                            R.string.continuous_calibration_description
-                                        ),
-                                        checked = continuousCalibration,
-                                        onCheckedChange = {
-                                            continuousCalibration = it
-                                            putBoolean(
-                                                R.string.pref_altimeter_continuous_calibration,
-                                                it
-                                            )
-                                            restartAltimeter()
-                                        },
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
-                                    TrailSenseDivider()
-                                }
-                            }
-                            item("dem") {
-                                SettingsActionRow(
-                                    label = androidx.compose.ui.res.stringResource(
+
+                            item("data_section") {
+                                AltimeterSection(
+                                    title = stringResource(
                                         R.string.plugin_digital_elevation_model
-                                    ),
-                                    summary = demSummary,
-                                    onClick = ::loadDEM,
-                                    modifier = androidx.compose.ui.Modifier.padding(
-                                        horizontal = TrailSenseSpacing.lg
                                     )
-                                )
-                            }
-                            if (conditionalState.clearDemVisible) {
-                                item("clear_dem") {
-                                    SettingsActionRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.remove_dem
+                                ) {
+                                    AltimeterChipActionRow(
+                                        icon = painterResource(R.drawable.ic_layers),
+                                        label = stringResource(
+                                            R.string.plugin_digital_elevation_model
                                         ),
-                                        onClick = ::clearDEM,
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
+                                        summary = demSummary,
+                                        onClick = ::loadDEM
+                                    )
+                                    if (conditionalState.clearDemVisible) {
+                                        TrailSenseDivider()
+                                        AltimeterChipActionRow(
+                                            icon = painterResource(R.drawable.ic_delete),
+                                            label = stringResource(R.string.remove_dem),
+                                            onClick = ::clearDEM
                                         )
-                                    )
-                                }
-                            }
-                            if (conditionalState.showSamples) {
-                                item("samples") {
-                                    SettingsPickerRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.samples
-                                        ),
-                                        selected = samples.toString(),
-                                        onClick = {
-                                            pickSamples {
-                                                samples = it
+                                    }
+                                    if (conditionalState.showSamples) {
+                                        TrailSenseDivider()
+                                        AltimeterChipPickerRow(
+                                            icon = painterResource(R.drawable.satellite),
+                                            label = stringResource(R.string.samples),
+                                            selected = samples.toString(),
+                                            onClick = {
+                                                pickSamples {
+                                                    samples = it
+                                                }
                                             }
-                                        },
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
                                         )
+                                    }
+                                    TrailSenseDivider()
+                                    AltimeterChipSwitchRow(
+                                        icon = painterResource(R.drawable.satellite),
+                                        label = stringResource(
+                                            R.string.pref_nmea_elevation_title
+                                        ),
+                                        summary = stringResource(
+                                            R.string.pref_nmea_elevation_summary
+                                        ),
+                                        checked = useNmea,
+                                        onCheckedChange = {
+                                            useNmea = it
+                                            putBoolean(R.string.pref_nmea_altitude, it)
+                                            restartAltimeter()
+                                        }
                                     )
                                 }
-                            }
-                            item("nmea") {
-                                SettingsSwitchRow(
-                                    label = androidx.compose.ui.res.stringResource(
-                                        R.string.pref_nmea_elevation_title
-                                    ),
-                                    summary = androidx.compose.ui.res.stringResource(
-                                        R.string.pref_nmea_elevation_summary
-                                    ),
-                                    checked = useNmea,
-                                    onCheckedChange = {
-                                        useNmea = it
-                                        putBoolean(R.string.pref_nmea_altitude, it)
-                                        restartAltimeter()
-                                    },
-                                    modifier = androidx.compose.ui.Modifier.padding(
-                                        horizontal = TrailSenseSpacing.lg
-                                    )
-                                )
-                                TrailSenseDivider()
-                            }
-                            if (conditionalState.isFused) {
-                                item("clear_cache") {
-                                    SettingsActionRow(
-                                        label = androidx.compose.ui.res.stringResource(
-                                            R.string.reset_calibration
-                                        ),
-                                        onClick = {
-                                            FusedAltimeter.clearCachedCalibration(cache)
-                                            host.toast(getString(R.string.done))
-                                        },
-                                        modifier = androidx.compose.ui.Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
-                                    )
                             }
                         }
                     }
@@ -406,7 +400,6 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
                             }
                         )
                     }
-                }
     }
 
     private fun onViewCreated() {
@@ -824,4 +817,217 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
         val value: String,
         val label: String
     )
+}
+
+@Composable
+private fun AltimeterStatusHero(
+    altitude: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(56.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_altitude),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                Text(
+                    text = stringResource(R.string.elevation),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = altitude,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AltimeterIconChip(icon: Painter) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AltimeterChipActionRow(
+    icon: Painter,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AltimeterIconChip(icon)
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun AltimeterChipPickerRow(
+    icon: Painter,
+    label: String,
+    selected: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    AltimeterChipActionRow(
+        icon = icon,
+        label = label,
+        summary = selected,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled
+    )
+}
+
+@Composable
+private fun AltimeterChipSwitchRow(
+    icon: Painter,
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AltimeterIconChip(icon)
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
+}
+
+@Composable
+private fun AltimeterSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+                content()
+            }
+        }
+    }
 }

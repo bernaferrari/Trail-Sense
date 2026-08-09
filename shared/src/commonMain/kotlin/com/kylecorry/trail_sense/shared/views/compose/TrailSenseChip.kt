@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +20,7 @@ fun TrailSenseChip(
         onClick = onClick,
         label = { Text(text) },
         modifier = modifier.padding(horizontal = TrailSenseSpacing.xs),
-        shape = RoundedCornerShape(TrailSenseShapes.small),
+        shape = MaterialTheme.shapes.small,
         colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer

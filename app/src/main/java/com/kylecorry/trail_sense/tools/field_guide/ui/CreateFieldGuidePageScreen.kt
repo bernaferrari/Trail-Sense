@@ -20,12 +20,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -39,7 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -59,6 +63,8 @@ import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
@@ -303,111 +309,186 @@ private fun CreateFieldGuidePageContent(
                     .verticalScroll(rememberScrollState())
                     .testTag("scroll_view")
                     .padding(horizontal = TrailSenseSpacing.lg)
-                    .padding(bottom = TrailSenseSpacing.xl)
+                    .padding(bottom = TrailSenseSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                OutlinedTextField(
-                    value = page.name,
-                    onValueChange = onNameChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("name"),
-                    label = { Text(stringResource(R.string.name)) },
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                TagSelector(
-                    label = stringResource(R.string.classification),
-                    type = FieldGuidePageTagType.Classification,
-                    tags = tags,
-                    selected = page.directTags,
-                    tagNames = tagNames,
-                    onSelectionChange = onTagsChange,
-                    modifier = Modifier.testTag("tag_classifications")
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                if (image != null) {
-                    FieldGuideImage(
-                        image = image,
-                        onDelete = onDeleteImage,
+                Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
+
+                // Details
+                FieldGuideSection(
+                    label = stringResource(R.string.details),
+                    icon = painterResource(R.drawable.ic_edit)
+                ) {
+                    OutlinedTextField(
+                        value = page.name,
+                        onValueChange = onNameChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("name"),
+                        label = { Text(stringResource(R.string.name)) },
+                        singleLine = true
+                    )
+                    TagSelector(
+                        label = stringResource(R.string.classification),
+                        type = FieldGuidePageTagType.Classification,
+                        tags = tags,
+                        selected = page.directTags,
+                        tagNames = tagNames,
+                        onSelectionChange = onTagsChange,
+                        modifier = Modifier.testTag("tag_classifications")
+                    )
+                }
+
+                // Photo
+                FieldGuideSection(
+                    label = stringResource(R.string.map_type_photo),
+                    icon = painterResource(R.drawable.ic_camera)
+                ) {
+                    if (image != null) {
+                        FieldGuideImage(
+                            image = image,
+                            onDelete = onDeleteImage,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(MaterialTheme.shapes.large)
+                                .testTag("image")
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                    ) {
+                        Button(
+                            onClick = onTakePhoto,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("take_photo_button")
+                        ) {
+                            Text(stringResource(R.string.take_photo))
+                        }
+                        Button(
+                            onClick = onSelectPhoto,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("select_photo_button")
+                        ) {
+                            Text(stringResource(R.string.select_from_gallery))
+                        }
+                    }
+                }
+
+                // Notes
+                FieldGuideSection(
+                    label = stringResource(R.string.tool_notes_title),
+                    icon = painterResource(R.drawable.ic_tool_notes)
+                ) {
+                    OutlinedTextField(
+                        value = page.notes.orEmpty(),
+                        onValueChange = onNotesChange,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
-                            .testTag("image")
+                            .testTag("notes"),
+                        label = { Text(stringResource(R.string.tool_notes_title)) }
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+
+                // Tags
+                FieldGuideSection(
+                    label = stringResource(R.string.field_guide),
+                    icon = painterResource(R.drawable.field_guide)
                 ) {
-                    Button(
-                        onClick = onTakePhoto,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("take_photo_button")
-                    ) {
-                        Text(stringResource(R.string.take_photo))
-                    }
-                    Button(
-                        onClick = onSelectPhoto,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("select_photo_button")
-                    ) {
-                        Text(stringResource(R.string.select_from_gallery))
-                    }
+                    TagSelector(
+                        label = stringResource(R.string.location),
+                        type = FieldGuidePageTagType.Location,
+                        tags = tags,
+                        selected = page.directTags,
+                        tagNames = tagNames,
+                        onSelectionChange = onTagsChange,
+                        modifier = Modifier.testTag("tag_locations")
+                    )
+                    TagSelector(
+                        label = stringResource(R.string.habitat),
+                        type = FieldGuidePageTagType.Habitat,
+                        tags = tags,
+                        selected = page.directTags,
+                        tagNames = tagNames,
+                        onSelectionChange = onTagsChange,
+                        modifier = Modifier.testTag("tag_habitats")
+                    )
+                    TagSelector(
+                        label = stringResource(R.string.human_interaction),
+                        type = FieldGuidePageTagType.HumanInteraction,
+                        tags = tags,
+                        selected = page.directTags,
+                        tagNames = tagNames,
+                        onSelectionChange = onTagsChange,
+                        modifier = Modifier.testTag("tag_human_interactions")
+                    )
+                    TagSelector(
+                        label = stringResource(R.string.activity_pattern),
+                        type = FieldGuidePageTagType.ActivityPattern,
+                        tags = tags,
+                        selected = page.directTags,
+                        tagNames = tagNames,
+                        onSelectionChange = onTagsChange,
+                        modifier = Modifier.testTag("tag_activity_patterns")
+                    )
                 }
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                OutlinedTextField(
-                    value = page.notes.orEmpty(),
-                    onValueChange = onNotesChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .testTag("notes"),
-                    label = { Text(stringResource(R.string.tool_notes_title)) }
+
+                TrailSenseButton(
+                    text = stringResource(R.string.save),
+                    onClick = onSave,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                TagSelector(
-                    label = stringResource(R.string.location),
-                    type = FieldGuidePageTagType.Location,
-                    tags = tags,
-                    selected = page.directTags,
-                    tagNames = tagNames,
-                    onSelectionChange = onTagsChange,
-                    modifier = Modifier.testTag("tag_locations")
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                TagSelector(
-                    label = stringResource(R.string.habitat),
-                    type = FieldGuidePageTagType.Habitat,
-                    tags = tags,
-                    selected = page.directTags,
-                    tagNames = tagNames,
-                    onSelectionChange = onTagsChange,
-                    modifier = Modifier.testTag("tag_habitats")
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                TagSelector(
-                    label = stringResource(R.string.human_interaction),
-                    type = FieldGuidePageTagType.HumanInteraction,
-                    tags = tags,
-                    selected = page.directTags,
-                    tagNames = tagNames,
-                    onSelectionChange = onTagsChange,
-                    modifier = Modifier.testTag("tag_human_interactions")
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                TagSelector(
-                    label = stringResource(R.string.activity_pattern),
-                    type = FieldGuidePageTagType.ActivityPattern,
-                    tags = tags,
-                    selected = page.directTags,
-                    tagNames = tagNames,
-                    onSelectionChange = onTagsChange,
-                    modifier = Modifier.testTag("tag_activity_patterns")
-                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FieldGuideSection(
+    label: String,
+    icon: Painter,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = TrailSenseSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                content()
             }
         }
     }
@@ -432,9 +513,13 @@ private fun CreateFieldGuidePageHeader(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        IconButton(
+        FilledIconButton(
             onClick = onSave,
-            modifier = Modifier.testTag("create_field_guide_page_save_btn")
+            modifier = Modifier.testTag("create_field_guide_page_save_btn"),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_check),
@@ -457,11 +542,16 @@ private fun FieldGuideImage(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        IconButton(
+        FilledIconButton(
             onClick = onDelete,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .testTag("delete_image_button")
+                .padding(TrailSenseSpacing.sm)
+                .testTag("delete_image_button"),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_cancel),

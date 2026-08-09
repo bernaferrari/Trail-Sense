@@ -4,20 +4,44 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.os.Bundle
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -25,13 +49,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
-import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunriseAlarmReceiver
@@ -184,246 +204,216 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
                                 end = TrailSenseSpacing.lg,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
-                            )
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                         ) {
-                            item("general_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.general))
-                            }
-                            item("sun_time_mode") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_sun_time_mode_title),
-                                    selected = optionLabel(sunTimeOptions, sunTimeMode),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_sun_time_mode_title),
-                                            sunTimeOptions,
-                                            sunTimeMode
-                                        ) {
-                                            sunTimeMode = it
-                                            putString(R.string.pref_sun_time_mode, it)
+                            item("general_section") {
+                                AstronomySettingsSection(
+                                    title = stringResource(R.string.general)
+                                ) {
+                                    AstronomySettingsClickRow(
+                                        title = stringResource(R.string.pref_sun_time_mode_title),
+                                        subtitle = optionLabel(sunTimeOptions, sunTimeMode),
+                                        icon = painterResource(R.drawable.ic_sun),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_sun_time_mode_title),
+                                                sunTimeOptions,
+                                                sunTimeMode
+                                            ) {
+                                                sunTimeMode = it
+                                                putString(R.string.pref_sun_time_mode, it)
+                                            }
                                         }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("center_sun_moon") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_center_sun_and_moon_title),
-                                    checked = centerSunAndMoon,
-                                    onCheckedChange = {
-                                        centerSunAndMoon = it
-                                        putBoolean(R.string.pref_center_sun_and_moon, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("astronomy_bands") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_show_astronomy_bands_title),
-                                    checked = showAstronomyBands,
-                                    onCheckedChange = {
-                                        showAstronomyBands = it
-                                        prefs.astronomy.showAstronomyBands = it
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("left_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.left_quick_action),
-                                    selected = optionLabel(quickActionOptions, leftQuickAction),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.left_quick_action),
-                                            quickActionOptions,
-                                            leftQuickAction
-                                        ) {
-                                            leftQuickAction = it
-                                            putString(
-                                                R.string.pref_astronomy_quick_action_left,
-                                                it
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("right_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.right_quick_action),
-                                    selected = optionLabel(quickActionOptions, rightQuickAction),
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.right_quick_action),
-                                            quickActionOptions,
-                                            rightQuickAction
-                                        ) {
-                                            rightQuickAction = it
-                                            putString(
-                                                R.string.pref_astronomy_quick_action_right,
-                                                it
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            if (showStartCameraIn3D) {
-                                item("start_camera_3d") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_start_camera_in_3d_view_title),
-                                        summary = stringResource(R.string.pref_start_camera_in_3d_view_summary),
-                                        checked = startCameraIn3D,
-                                        onCheckedChange = {
-                                            startCameraIn3D = it
-                                            putBoolean(
-                                                R.string.pref_start_camera_in_3d_view,
-                                                it
-                                            )
-                                        },
-                                        modifier = Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
-                                        )
                                     )
-                                    TrailSenseDivider()
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.pref_center_sun_and_moon_title),
+                                        checked = centerSunAndMoon,
+                                        onCheckedChange = {
+                                            centerSunAndMoon = it
+                                            putBoolean(R.string.pref_center_sun_and_moon, it)
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.pref_show_astronomy_bands_title),
+                                        checked = showAstronomyBands,
+                                        onCheckedChange = {
+                                            showAstronomyBands = it
+                                            prefs.astronomy.showAstronomyBands = it
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsClickRow(
+                                        title = stringResource(R.string.left_quick_action),
+                                        subtitle = optionLabel(quickActionOptions, leftQuickAction),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.left_quick_action),
+                                                quickActionOptions,
+                                                leftQuickAction
+                                            ) {
+                                                leftQuickAction = it
+                                                putString(
+                                                    R.string.pref_astronomy_quick_action_left,
+                                                    it
+                                                )
+                                            }
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsClickRow(
+                                        title = stringResource(R.string.right_quick_action),
+                                        subtitle = optionLabel(quickActionOptions, rightQuickAction),
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.right_quick_action),
+                                                quickActionOptions,
+                                                rightQuickAction
+                                            ) {
+                                                rightQuickAction = it
+                                                putString(
+                                                    R.string.pref_astronomy_quick_action_right,
+                                                    it
+                                                )
+                                            }
+                                        }
+                                    )
+                                    if (showStartCameraIn3D) {
+                                        AstronomySettingsCardDivider()
+                                        AstronomySettingsSwitchRow(
+                                            label = stringResource(R.string.pref_start_camera_in_3d_view_title),
+                                            summary = stringResource(R.string.pref_start_camera_in_3d_view_summary),
+                                            checked = startCameraIn3D,
+                                            onCheckedChange = {
+                                                startCameraIn3D = it
+                                                putBoolean(
+                                                    R.string.pref_start_camera_in_3d_view,
+                                                    it
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                            item("alerts_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.alerts))
-                            }
-                            item("sunset_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.sunset),
-                                    checked = sunsetAlerts,
-                                    onCheckedChange = {
-                                        sunsetAlerts = it
-                                        prefs.astronomy.sendSunsetAlerts = it
-                                        onSunsetAlertsPreferenceChanged(it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("sunset_alert_time") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_sunset_alert_time_title),
-                                    selected = optionLabel(sunsetTimeOptions, sunsetAlertTime),
-                                    enabled = sunsetAlerts,
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_sunset_alert_time_title),
-                                            sunsetTimeOptions,
-                                            sunsetAlertTime
-                                        ) {
-                                            sunsetAlertTime = it
-                                            putString(R.string.pref_sunset_alert_time, it)
-                                            restartSunsetAlerts()
+
+                            item("alerts_section") {
+                                AstronomySettingsSection(
+                                    title = stringResource(R.string.alerts)
+                                ) {
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.sunset),
+                                        icon = painterResource(R.drawable.ic_sunset_notification),
+                                        checked = sunsetAlerts,
+                                        onCheckedChange = {
+                                            sunsetAlerts = it
+                                            prefs.astronomy.sendSunsetAlerts = it
+                                            onSunsetAlertsPreferenceChanged(it)
                                         }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("sunset_alarm") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.use_alarm_for_sunset_alert),
-                                    summary = stringResource(R.string.alarm_description),
-                                    checked = useAlarmForSunset,
-                                    onCheckedChange = {
-                                        useAlarmForSunset = it
-                                        putBoolean(
-                                            R.string.pref_astronomy_use_alarm_for_sunset_alert,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("sunrise_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.sunrise),
-                                    checked = sunriseAlerts,
-                                    onCheckedChange = {
-                                        sunriseAlerts = it
-                                        prefs.astronomy.sendSunriseAlerts = it
-                                        onSunriseAlertsPreferenceChanged(it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("sunrise_alert_time") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_sunrise_alert_time_title),
-                                    selected = optionLabel(sunriseTimeOptions, sunriseAlertTime),
-                                    enabled = sunriseAlerts,
-                                    onClick = {
-                                        pickOption(
-                                            getString(R.string.pref_sunrise_alert_time_title),
-                                            sunriseTimeOptions,
-                                            sunriseAlertTime
-                                        ) {
-                                            sunriseAlertTime = it
-                                            putString(R.string.pref_sunrise_alert_time, it)
-                                            restartSunriseAlerts()
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsClickRow(
+                                        title = stringResource(R.string.pref_sunset_alert_time_title),
+                                        subtitle = optionLabel(sunsetTimeOptions, sunsetAlertTime),
+                                        enabled = sunsetAlerts,
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_sunset_alert_time_title),
+                                                sunsetTimeOptions,
+                                                sunsetAlertTime
+                                            ) {
+                                                sunsetAlertTime = it
+                                                putString(R.string.pref_sunset_alert_time, it)
+                                                restartSunsetAlerts()
+                                            }
                                         }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("sunrise_alarm") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.use_alarm_for_sunrise_alert),
-                                    summary = stringResource(R.string.alarm_description),
-                                    checked = useAlarmForSunrise,
-                                    onCheckedChange = {
-                                        useAlarmForSunrise = it
-                                        putBoolean(
-                                            R.string.pref_astronomy_use_alarm_for_sunrise_alert,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("meteor_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_meteor_showers_title),
-                                    checked = meteorAlerts,
-                                    onCheckedChange = {
-                                        meteorAlerts = it
-                                        prefs.astronomy.sendMeteorShowerAlerts = it
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("lunar_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.lunar_eclipses),
-                                    checked = lunarEclipseAlerts,
-                                    onCheckedChange = {
-                                        lunarEclipseAlerts = it
-                                        prefs.astronomy.sendLunarEclipseAlerts = it
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("solar_alerts") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.solar_eclipses),
-                                    checked = solarEclipseAlerts,
-                                    onCheckedChange = {
-                                        solarEclipseAlerts = it
-                                        prefs.astronomy.sendSolarEclipseAlerts = it
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.use_alarm_for_sunset_alert),
+                                        summary = stringResource(R.string.alarm_description),
+                                        checked = useAlarmForSunset,
+                                        onCheckedChange = {
+                                            useAlarmForSunset = it
+                                            putBoolean(
+                                                R.string.pref_astronomy_use_alarm_for_sunset_alert,
+                                                it
+                                            )
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.sunrise),
+                                        icon = painterResource(R.drawable.ic_sunrise_notification),
+                                        checked = sunriseAlerts,
+                                        onCheckedChange = {
+                                            sunriseAlerts = it
+                                            prefs.astronomy.sendSunriseAlerts = it
+                                            onSunriseAlertsPreferenceChanged(it)
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsClickRow(
+                                        title = stringResource(R.string.pref_sunrise_alert_time_title),
+                                        subtitle = optionLabel(sunriseTimeOptions, sunriseAlertTime),
+                                        enabled = sunriseAlerts,
+                                        onClick = {
+                                            pickOption(
+                                                getString(R.string.pref_sunrise_alert_time_title),
+                                                sunriseTimeOptions,
+                                                sunriseAlertTime
+                                            ) {
+                                                sunriseAlertTime = it
+                                                putString(R.string.pref_sunrise_alert_time, it)
+                                                restartSunriseAlerts()
+                                            }
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.use_alarm_for_sunrise_alert),
+                                        summary = stringResource(R.string.alarm_description),
+                                        checked = useAlarmForSunrise,
+                                        onCheckedChange = {
+                                            useAlarmForSunrise = it
+                                            putBoolean(
+                                                R.string.pref_astronomy_use_alarm_for_sunrise_alert,
+                                                it
+                                            )
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.pref_meteor_showers_title),
+                                        icon = painterResource(R.drawable.ic_meteor),
+                                        checked = meteorAlerts,
+                                        onCheckedChange = {
+                                            meteorAlerts = it
+                                            prefs.astronomy.sendMeteorShowerAlerts = it
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.lunar_eclipses),
+                                        icon = painterResource(R.drawable.ic_moon_total_eclipse),
+                                        checked = lunarEclipseAlerts,
+                                        onCheckedChange = {
+                                            lunarEclipseAlerts = it
+                                            prefs.astronomy.sendLunarEclipseAlerts = it
+                                        }
+                                    )
+                                    AstronomySettingsCardDivider()
+                                    AstronomySettingsSwitchRow(
+                                        label = stringResource(R.string.solar_eclipses),
+                                        icon = painterResource(R.drawable.ic_total_solar_eclipse),
+                                        checked = solarEclipseAlerts,
+                                        onCheckedChange = {
+                                            solarEclipseAlerts = it
+                                            prefs.astronomy.sendSolarEclipseAlerts = it
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -590,4 +580,160 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
         val value: String,
         val label: String
     )
+}
+
+@Composable
+private fun AstronomySettingsSection(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun AstronomySettingsCardDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    )
+}
+
+@Composable
+private fun AstronomySettingsIconChip(icon: Painter) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AstronomySettingsClickRow(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            AstronomySettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun AstronomySettingsSwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            AstronomySettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
 }

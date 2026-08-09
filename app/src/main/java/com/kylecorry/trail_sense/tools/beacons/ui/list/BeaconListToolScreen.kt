@@ -4,29 +4,33 @@ import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -41,9 +45,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -77,9 +83,12 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.ui.Colors
@@ -749,30 +758,37 @@ private fun BeaconListScreen(
         modifier = modifier,
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                BeaconListHeader(
-                    title = title,
-                    sortMenuText = sortMenuText,
-                    onToolbarAction = onToolbarAction,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = onSearchChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = TrailSenseSpacing.lg)
-                        .testTag("searchbox"),
-                    label = { Text(stringResource(R.string.search)) },
-                    singleLine = true
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(top = TrailSenseSpacing.lg)
-                ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            BeaconListHeader(
+                title = title,
+                sortMenuText = sortMenuText,
+                onToolbarAction = onToolbarAction,
+                modifier = Modifier.fillMaxWidth()
+            )
+            TrailSenseSearchBar(
+                value = searchText,
+                onValueChange = onSearchChange,
+                placeholder = stringResource(R.string.search),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("searchbox")
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = TrailSenseSpacing.lg)
+            ) {
+                if (isEmpty) {
+                    TrailSenseEmptyState(
+                        icon = Icons.Default.Place,
+                        title = stringResource(R.string.no_beacons),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("beacon_empty_text")
+                    )
+                } else {
                     BeaconList(
                         items = items,
                         resetKey = resetKey,
@@ -783,26 +799,16 @@ private fun BeaconListScreen(
                         onGroupAction = onGroupAction,
                         modifier = Modifier.fillMaxSize()
                     )
-                    if (isEmpty) {
-                        Text(
-                            text = stringResource(R.string.no_beacons),
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .testTag("beacon_empty_text"),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
+                BeaconCreateButton(
+                    isOpen = isCreateMenuOpen,
+                    onOpenChange = onCreateMenuOpenChange,
+                    onAction = onCreateAction,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(TrailSenseSpacing.lg)
+                )
             }
-            BeaconCreateButton(
-                isOpen = isCreateMenuOpen,
-                onOpenChange = onCreateMenuOpenChange,
-                onAction = onCreateAction,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(TrailSenseSpacing.lg)
-            )
         }
     }
 }

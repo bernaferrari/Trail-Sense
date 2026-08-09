@@ -2,12 +2,26 @@
 
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,14 +29,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
-import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
@@ -36,8 +52,8 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheet
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -277,299 +293,368 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                 end = TrailSenseSpacing.lg,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
-                            )
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                         ) {
-                            item("general_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.general))
-                            }
-                            item("left_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.left_quick_action),
-                                    selected = controller.optionLabel(quickActionOptions, leftQuickAction),
-                                    onClick = {
-                                        controller.pickOption(
-                                            context.getString(R.string.left_quick_action),
-                                            quickActionOptions,
-                                            leftQuickAction
-                                        ) {
-                                            leftQuickAction = it
-                                            controller.putString(
-                                                R.string.pref_navigation_quick_action_left,
-                                                it
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("right_action") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.right_quick_action),
-                                    selected = controller.optionLabel(quickActionOptions, rightQuickAction),
-                                    onClick = {
-                                        controller.pickOption(
-                                            context.getString(R.string.right_quick_action),
-                                            quickActionOptions,
-                                            rightQuickAction
-                                        ) {
-                                            rightQuickAction = it
-                                            controller.putString(
-                                                R.string.pref_navigation_quick_action_right,
-                                                it
-                                            )
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("navigation_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.navigation))
-                            }
-                            if (hasCompass) {
-                                item("calibrate_dialog") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_show_calibrate_on_navigate_dialog_title),
-                                        checked = showCalibrationDialog,
-                                        onCheckedChange = {
-                                            showCalibrationDialog = it
-                                            controller.putBoolean(
-                                                R.string.pref_show_calibrate_on_navigate_dialog,
-                                                it
-                                            )
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                            }
-                            item("lock_screen_navigation") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_navigation_lock_screen_presence_title),
-                                    checked = keepScreenUnlockedWhileNavigating,
-                                    onCheckedChange = {
-                                        keepScreenUnlockedWhileNavigating = it
-                                        controller.putBoolean(
-                                            R.string.pref_navigation_lock_screen_presence,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("lock_screen_open") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
-                                    checked = keepScreenUnlockedWhileOpen,
-                                    onCheckedChange = {
-                                        keepScreenUnlockedWhileOpen = it
-                                        controller.putBoolean(R.string.pref_navigation_keep_unlocked, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("lock_bearing_to_location") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.lock_bearing_to_location),
-                                    summary = stringResource(R.string.lock_bearing_to_location_description),
-                                    checked = lockBearingToLocation,
-                                    onCheckedChange = {
-                                        lockBearingToLocation = it
-                                        prefs.lockBearingToLocation = it
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("speedometer") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.speedometer),
-                                    selected = controller.optionLabel(speedometerOptions, speedometerType),
-                                    onClick = {
-                                        controller.pickOption(
-                                            context.getString(R.string.speedometer),
-                                            speedometerOptions,
-                                            speedometerType
-                                        ) {
-                                            speedometerType = it
-                                            controller.putString(
-                                                R.string.pref_navigation_speedometer_type,
-                                                it
-                                            )
-                                            if (it == "instant_pedometer") {
-                                                controller.onCurrentPaceSpeedometerSelected()
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("compass_header") {
-                                TrailSenseSectionHeader(
-                                    title = stringResource(R.string.pref_compass_sensor_title)
-                                )
-                            }
-                            if (hasCompass) {
-                                item("linear_compass") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_show_linear_compass_title),
-                                        summary = stringResource(R.string.pref_show_linear_compass_summary),
-                                        checked = showLinearCompass,
-                                        onCheckedChange = {
-                                            showLinearCompass = it
-                                            controller.putBoolean(R.string.pref_show_linear_compass, it)
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                            } else {
-                                item("dial_ticks_no_compass") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.show_dial_ticks_on_nearby_radar),
-                                        summary = stringResource(R.string.show_dial_ticks_on_nearby_radar_summary),
-                                        checked = showDialTicksWhenNoCompass,
-                                        onCheckedChange = {
-                                            showDialTicksWhenNoCompass = it
-                                            controller.putBoolean(
-                                                R.string.pref_show_dial_ticks_when_no_compass,
-                                                it
-                                            )
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                            }
-                            item("sun_moon_compass") {
-                                SettingsPickerRow(
-                                    label = stringResource(R.string.pref_show_sun_moon_compass_title),
-                                    selected = controller.optionLabel(sunMoonOptions, showSunMoonCompass),
-                                    onClick = {
-                                        controller.pickOption(
-                                            context.getString(R.string.pref_show_sun_moon_compass_title),
-                                            sunMoonOptions,
-                                            showSunMoonCompass
-                                        ) {
-                                            showSunMoonCompass = it
-                                            controller.putString(R.string.pref_show_sun_moon_compass, it)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            if (hasCompass) {
-                                item("multi_beacons") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_display_multi_beacons_title),
-                                        summary = stringResource(R.string.pref_display_multi_beacons_summary),
-                                        checked = displayMultipleBeacons,
-                                        onCheckedChange = {
-                                            displayMultipleBeacons = it
-                                            controller.putBoolean(R.string.pref_display_multi_beacons, it)
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
-                                }
-                                item("visible_beacons") {
-                                    SettingsPickerRow(
-                                        label = stringResource(R.string.pref_num_visible_beacons_title),
-                                        selected = numberOfVisibleBeacons.toString(),
-                                        enabled = displayMultipleBeacons,
+                            item("general_section") {
+                                NavSettingsSection(
+                                    title = stringResource(R.string.general),
+                                    icon = painterResource(R.drawable.ic_category_navigation)
+                                ) {
+                                    NavPickerRow(
+                                        label = stringResource(R.string.left_quick_action),
+                                        selected = controller.optionLabel(quickActionOptions, leftQuickAction),
                                         onClick = {
-                                            controller.pickVisibleBeaconCount(numberOfVisibleBeacons) {
-                                                numberOfVisibleBeacons = it
+                                            controller.pickOption(
+                                                context.getString(R.string.left_quick_action),
+                                                quickActionOptions,
+                                                leftQuickAction
+                                            ) {
+                                                leftQuickAction = it
+                                                controller.putString(
+                                                    R.string.pref_navigation_quick_action_left,
+                                                    it
+                                                )
                                             }
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
-                                }
-                                item("nearby_radius") {
-                                    SettingsPickerRow(
-                                        label = stringResource(R.string.pref_max_beacon_distance_title),
-                                    selected = controller.formatDistance(nearbyRadius),
-                                    enabled = displayMultipleBeacons,
-                                    onClick = {
-                                            controller.pickNearbyRadius(nearbyRadius) {
-                                                nearbyRadius = it
+                                    NavDivider()
+                                    NavPickerRow(
+                                        label = stringResource(R.string.right_quick_action),
+                                        selected = controller.optionLabel(quickActionOptions, rightQuickAction),
+                                        onClick = {
+                                            controller.pickOption(
+                                                context.getString(R.string.right_quick_action),
+                                                quickActionOptions,
+                                                rightQuickAction
+                                            ) {
+                                                rightQuickAction = it
+                                                controller.putString(
+                                                    R.string.pref_navigation_quick_action_right,
+                                                    it
+                                                )
                                             }
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
-                                }
-                                item("nearby_linear_only") {
-                                    SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_nearby_linear_only_title),
-                                        checked = nearbyLinearOnly,
-                                        enabled = displayMultipleBeacons,
-                                        onCheckedChange = {
-                                            nearbyLinearOnly = it
-                                            controller.putBoolean(R.string.pref_nearby_linear_only, it)
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                    )
-                                    TrailSenseDivider()
                                 }
                             }
-                            item("dial_bezel") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_title),
-                                    summary = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_summary),
-                                    checked = drawCompassDialBezel,
-                                    onCheckedChange = {
-                                        drawCompassDialBezel = it
-                                        controller.putBoolean(
-                                            R.string.pref_navigation_draw_compass_dial_bezel,
-                                            it
+
+                            item("navigation_section") {
+                                NavSettingsSection(title = stringResource(R.string.navigation)) {
+                                    if (hasCompass) {
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.pref_show_calibrate_on_navigate_dialog_title),
+                                            checked = showCalibrationDialog,
+                                            onCheckedChange = {
+                                                showCalibrationDialog = it
+                                                controller.putBoolean(
+                                                    R.string.pref_show_calibrate_on_navigate_dialog,
+                                                    it
+                                                )
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                         )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            if (hasCompass) {
-                                item("azimuth_indicator") {
+                                        NavDivider()
+                                    }
                                     SettingsSwitchRow(
-                                        label = stringResource(R.string.pref_navigation_show_azimuth_indicator_title),
-                                        summary = stringResource(R.string.pref_navigation_show_azimuth_indicator_summary),
-                                        checked = showAzimuthIndicator,
+                                        label = stringResource(R.string.pref_navigation_lock_screen_presence_title),
+                                        checked = keepScreenUnlockedWhileNavigating,
                                         onCheckedChange = {
-                                            showAzimuthIndicator = it
+                                            keepScreenUnlockedWhileNavigating = it
                                             controller.putBoolean(
-                                                R.string.pref_navigation_show_azimuth_indicator,
+                                                R.string.pref_navigation_lock_screen_presence,
                                                 it
                                             )
                                         },
                                         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                                     )
-                                    TrailSenseDivider()
+                                    NavDivider()
+                                    SettingsSwitchRow(
+                                        label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
+                                        checked = keepScreenUnlockedWhileOpen,
+                                        onCheckedChange = {
+                                            keepScreenUnlockedWhileOpen = it
+                                            controller.putBoolean(R.string.pref_navigation_keep_unlocked, it)
+                                        },
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                    NavDivider()
+                                    SettingsSwitchRow(
+                                        label = stringResource(R.string.lock_bearing_to_location),
+                                        summary = stringResource(R.string.lock_bearing_to_location_description),
+                                        checked = lockBearingToLocation,
+                                        onCheckedChange = {
+                                            lockBearingToLocation = it
+                                            prefs.lockBearingToLocation = it
+                                        },
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                    NavDivider()
+                                    NavPickerRow(
+                                        label = stringResource(R.string.speedometer),
+                                        selected = controller.optionLabel(speedometerOptions, speedometerType),
+                                        onClick = {
+                                            controller.pickOption(
+                                                context.getString(R.string.speedometer),
+                                                speedometerOptions,
+                                                speedometerType
+                                            ) {
+                                                speedometerType = it
+                                                controller.putString(
+                                                    R.string.pref_navigation_speedometer_type,
+                                                    it
+                                                )
+                                                if (it == "instant_pedometer") {
+                                                    controller.onCurrentPaceSpeedometerSelected()
+                                                }
+                                            }
+                                        }
+                                    )
                                 }
                             }
-                            item("map_header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.map))
+
+                            item("compass_section") {
+                                NavSettingsSection(
+                                    title = stringResource(R.string.pref_compass_sensor_title),
+                                    icon = painterResource(R.drawable.ic_compass_icon)
+                                ) {
+                                    if (hasCompass) {
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.pref_show_linear_compass_title),
+                                            summary = stringResource(R.string.pref_show_linear_compass_summary),
+                                            checked = showLinearCompass,
+                                            onCheckedChange = {
+                                                showLinearCompass = it
+                                                controller.putBoolean(R.string.pref_show_linear_compass, it)
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        )
+                                        NavDivider()
+                                    } else {
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.show_dial_ticks_on_nearby_radar),
+                                            summary = stringResource(R.string.show_dial_ticks_on_nearby_radar_summary),
+                                            checked = showDialTicksWhenNoCompass,
+                                            onCheckedChange = {
+                                                showDialTicksWhenNoCompass = it
+                                                controller.putBoolean(
+                                                    R.string.pref_show_dial_ticks_when_no_compass,
+                                                    it
+                                                )
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        )
+                                        NavDivider()
+                                    }
+                                    NavPickerRow(
+                                        label = stringResource(R.string.pref_show_sun_moon_compass_title),
+                                        selected = controller.optionLabel(sunMoonOptions, showSunMoonCompass),
+                                        onClick = {
+                                            controller.pickOption(
+                                                context.getString(R.string.pref_show_sun_moon_compass_title),
+                                                sunMoonOptions,
+                                                showSunMoonCompass
+                                            ) {
+                                                showSunMoonCompass = it
+                                                controller.putString(R.string.pref_show_sun_moon_compass, it)
+                                            }
+                                        }
+                                    )
+                                    if (hasCompass) {
+                                        NavDivider()
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.pref_display_multi_beacons_title),
+                                            summary = stringResource(R.string.pref_display_multi_beacons_summary),
+                                            checked = displayMultipleBeacons,
+                                            onCheckedChange = {
+                                                displayMultipleBeacons = it
+                                                controller.putBoolean(R.string.pref_display_multi_beacons, it)
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        )
+                                        NavDivider()
+                                        NavPickerRow(
+                                            label = stringResource(R.string.pref_num_visible_beacons_title),
+                                            selected = numberOfVisibleBeacons.toString(),
+                                            enabled = displayMultipleBeacons,
+                                            onClick = {
+                                                controller.pickVisibleBeaconCount(numberOfVisibleBeacons) {
+                                                    numberOfVisibleBeacons = it
+                                                }
+                                            }
+                                        )
+                                        NavDivider()
+                                        NavPickerRow(
+                                            label = stringResource(R.string.pref_max_beacon_distance_title),
+                                            selected = controller.formatDistance(nearbyRadius),
+                                            enabled = displayMultipleBeacons,
+                                            onClick = {
+                                                controller.pickNearbyRadius(nearbyRadius) {
+                                                    nearbyRadius = it
+                                                }
+                                            }
+                                        )
+                                        NavDivider()
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.pref_nearby_linear_only_title),
+                                            checked = nearbyLinearOnly,
+                                            enabled = displayMultipleBeacons,
+                                            onCheckedChange = {
+                                                nearbyLinearOnly = it
+                                                controller.putBoolean(R.string.pref_nearby_linear_only, it)
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        )
+                                    }
+                                    NavDivider()
+                                    SettingsSwitchRow(
+                                        label = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_title),
+                                        summary = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_summary),
+                                        checked = drawCompassDialBezel,
+                                        onCheckedChange = {
+                                            drawCompassDialBezel = it
+                                            controller.putBoolean(
+                                                R.string.pref_navigation_draw_compass_dial_bezel,
+                                                it
+                                            )
+                                        },
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                    if (hasCompass) {
+                                        NavDivider()
+                                        SettingsSwitchRow(
+                                            label = stringResource(R.string.pref_navigation_show_azimuth_indicator_title),
+                                            summary = stringResource(R.string.pref_navigation_show_azimuth_indicator_summary),
+                                            checked = showAzimuthIndicator,
+                                            onCheckedChange = {
+                                                showAzimuthIndicator = it
+                                                controller.putBoolean(
+                                                    R.string.pref_navigation_show_azimuth_indicator,
+                                                    it
+                                                )
+                                            },
+                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        )
+                                    }
+                                }
                             }
-                            item("high_detail") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_high_detail_mode_title),
-                                    summary = stringResource(R.string.pref_high_detail_mode_summary),
-                                    checked = highDetailMode,
-                                    onCheckedChange = {
-                                        highDetailMode = it
-                                        controller.putBoolean(R.string.pref_navigation_high_detail_mode, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("layers") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.layers),
-                                    onClick = controller::showLayerSheet,
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
+
+                            item("map_section") {
+                                NavSettingsSection(
+                                    title = stringResource(R.string.map),
+                                    icon = painterResource(R.drawable.maps)
+                                ) {
+                                    SettingsSwitchRow(
+                                        label = stringResource(R.string.pref_high_detail_mode_title),
+                                        summary = stringResource(R.string.pref_high_detail_mode_summary),
+                                        checked = highDetailMode,
+                                        onCheckedChange = {
+                                            highDetailMode = it
+                                            controller.putBoolean(R.string.pref_navigation_high_detail_mode, it)
+                                        },
+                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                    )
+                                    NavDivider()
+                                    NavActionRow(
+                                        label = stringResource(R.string.layers),
+                                        onClick = controller::showLayerSheet
+                                    )
+                                }
                             }
                         }
                     }
+}
+
+@Composable
+private fun NavSettingsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    icon: Painter? = null,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        TrailSenseCard {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun NavDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    )
+}
+
+@Composable
+private fun NavPickerRow(
+    label: String,
+    selected: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    NavActionRow(
+        label = label,
+        summary = selected,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled
+    )
+}
+
+@Composable
+private fun NavActionRow(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    enabled: Boolean = true
+) {
+    TrailSenseListItem(
+        title = label,
+        subtitle = summary,
+        trailing = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        onClick = if (enabled) onClick else null,
+        animateEntrance = false,
+        modifier = modifier
+    )
 }

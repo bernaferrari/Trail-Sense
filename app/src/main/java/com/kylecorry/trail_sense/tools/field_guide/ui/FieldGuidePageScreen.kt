@@ -5,18 +5,22 @@ package com.kylecorry.trail_sense.tools.field_guide.ui
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -34,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
@@ -49,7 +55,9 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
@@ -138,65 +146,68 @@ private fun FieldGuidePageScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            FieldGuidePageHeader(
-                title = page?.name ?: stringResource(R.string.loading),
-                canEdit = page?.isReadOnly == false,
-                onEdit = onEdit
-            )
-            if (page == null) {
+        if (page == null) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                FieldGuidePageTopBar(
+                    title = stringResource(R.string.loading),
+                    canEdit = false,
+                    onEdit = onEdit
+                )
                 Text(
                     text = stringResource(R.string.loading),
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(TrailSenseSpacing.lg),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            } else {
-                FieldGuidePageContent(
-                    page = page,
-                    files = files,
-                    tagNameMapper = tagNameMapper,
-                    onSightings = onSightings
-                )
             }
+        } else {
+            FieldGuidePageContent(
+                page = page,
+                files = files,
+                tagNameMapper = tagNameMapper,
+                onEdit = onEdit,
+                onSightings = onSightings
+            )
         }
     }
 }
 
+/**
+ * Slim top bar holding the edit affordance. The prominent title lives in the
+ * hero header below so the entry reads like a field-guide card.
+ */
 @Composable
-private fun FieldGuidePageHeader(
+private fun FieldGuidePageTopBar(
     title: String,
     canEdit: Boolean,
     onEdit: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .height(56.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Text(
+            text = title,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("field_guide_page_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (canEdit) {
-                IconButton(
-                    onClick = onEdit,
-                    modifier = Modifier.testTag("field_guide_page_edit_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_edit),
-                        contentDescription = null
-                    )
-                }
+                .weight(1f)
+                .testTag("field_guide_page_title"),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (canEdit) {
+            IconButton(
+                onClick = onEdit,
+                modifier = Modifier.testTag("field_guide_page_edit_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_edit),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -207,57 +218,204 @@ private fun FieldGuidePageContent(
     page: FieldGuidePage,
     files: FileSubsystem,
     tagNameMapper: FieldGuideTagNameMapper,
+    onEdit: () -> Unit,
     onSightings: () -> Unit
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp)
     ) {
-        val image = page.images.firstOrNull()
-        if (image != null) {
-            val bitmap = remember(image, files) {
-                files.bitmap(image, 1000, 500)
+        FieldGuidePageTopBar(
+            title = page.name,
+            canEdit = !page.isReadOnly,
+            onEdit = onEdit
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xl
+                ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            // Hero card: photo + entry name in a tonal primaryContainer surface
+            HeroCard(page = page, files = files)
+
+            SightingsCard(
+                count = page.sightings.size,
+                onClick = onSightings
+            )
+
+            val notes = page.notes.orEmpty()
+            if (notes.isNotBlank()) {
+                NotesCard(notes = notes)
             }
+
+            TagsCard(
+                tags = page.tags,
+                tagNameMapper = tagNameMapper
+            )
+        }
+    }
+}
+
+/**
+ * Circular tonal icon chip used as a section/leading affordance.
+ */
+@Composable
+private fun TonalIconChip(
+    icon: Painter,
+    contentDescription: String?
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeroCard(
+    page: FieldGuidePage,
+    files: FileSubsystem
+) {
+    val image = page.images.firstOrNull()
+    val bitmap = remember(image, files) {
+        image?.let { files.bitmap(it, 1000, 500) }
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Column {
             if (bitmap != null) {
                 Image(
                     bitmap = bitmap.asImageBitmap(),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(250.dp)
+                        .height(260.dp)
                         .testTag("image")
                 )
             }
-        }
-
-        Text(
-            text = stringResource(R.string.sightings_count, page.sightings.size),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .clickable { onSightings() },
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        val notes = page.notes.orEmpty()
-        if (notes.isNotBlank()) {
-            LinkifiedNotes(
-                notes = notes,
+            Text(
+                text = page.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .padding(TrailSenseSpacing.lg),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
+    }
+}
 
+@Composable
+private fun SightingsCard(
+    count: Int,
+    onClick: () -> Unit
+) {
+    TrailSenseCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Text(
+            text = stringResource(R.string.sightings),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TonalIconChip(
+                icon = painterResource(R.drawable.ic_binoculars),
+                contentDescription = null
+            )
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+            Text(
+                text = count.toString(),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = stringResource(R.string.sightings_count, count),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotesCard(notes: String) {
+    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TonalIconChip(
+                icon = painterResource(R.drawable.ic_tool_notes),
+                contentDescription = null
+            )
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+            Text(
+                text = stringResource(R.string.note),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+        LinkifiedNotes(
+            notes = notes,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun TagsCard(
+    tags: List<FieldGuidePageTag>,
+    tagNameMapper: FieldGuideTagNameMapper
+) {
+    val sortedTags = tags.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
+    if (sortedTags.isEmpty()) {
+        return
+    }
+
+    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TonalIconChip(
+                icon = painterResource(R.drawable.ic_info),
+                contentDescription = null
+            )
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+            Text(
+                text = stringResource(R.string.details),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
         FieldGuideTags(
-            tags = page.tags,
-            tagNameMapper = tagNameMapper,
-            modifier = Modifier.padding(top = 16.dp)
+            tags = sortedTags,
+            tagNameMapper = tagNameMapper
         )
     }
 }
@@ -276,7 +434,7 @@ private fun LinkifiedNotes(
         TrailSenseLinkedText(
             text = noteText,
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 }
@@ -295,8 +453,8 @@ private fun FieldGuideTags(
 
     FlowRow(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
         sortedTags.forEach {
             FieldGuideTagChip(
@@ -324,8 +482,9 @@ private fun FieldGuideTagChip(
     ) {
         Text(
             text = label,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium,
             color = Color(foreground)
         )
     }

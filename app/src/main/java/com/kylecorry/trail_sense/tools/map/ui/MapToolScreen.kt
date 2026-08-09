@@ -4,7 +4,14 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -20,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +53,7 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.extensions.useCoordinatePreference
 import com.kylecorry.trail_sense.shared.extensions.useDestroyEffect
@@ -62,7 +74,11 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseElevation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMotion
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReactiveDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -106,6 +122,10 @@ private class MapController(
     val views = createMapViews(host.requireContext())
     private var wasViewCreated = true
     private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
+    private val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
+    private var showMapDisclaimer by mutableStateOf(
+        preferences.getBoolean(MAP_DISCLAIMER_KEY) != true
+    )
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -114,6 +134,34 @@ private class MapController(
             modifier = modifier
         )
         layerEditSheet.Content(host.requireContext(), ::navigateFromLayerSheet)
+        if (showMapDisclaimer) {
+            AlertDialog(
+                onDismissRequest = ::dismissMapDisclaimer,
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.maps),
+                        contentDescription = null
+                    )
+                },
+                title = { Text(host.getString(R.string.map)) },
+                text = {
+                    Text(
+                        text = host.getString(R.string.map_tool_disclaimer),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = ::dismissMapDisclaimer) {
+                        Text(host.getString(android.R.string.ok))
+                    }
+                }
+            )
+        }
+    }
+
+    private fun dismissMapDisclaimer() {
+        preferences.putBoolean(MAP_DISCLAIMER_KEY, true)
+        showMapDisclaimer = false
     }
 
     private fun navigateFromLayerSheet(action: Int) {
@@ -458,16 +506,6 @@ private class MapController(
             }
         }
 
-        // Disclaimer
-        component.useEffect(context) {
-            CustomUiUtils.disclaimer(
-                context,
-                host.getString(R.string.map),
-                host.getString(R.string.map_tool_disclaimer),
-                "pref_map_tool_disclaimer_shown"
-            )
-        }
-
         // Sensor status
         component.useEffect(sensorStatusBadges, navigation.gps, navigation.compass) {
             val gps = navigation.gps ?: return@useEffect
@@ -477,6 +515,10 @@ private class MapController(
                 ImproveAccuracyAlerter(context).alert(sensorStatusBadges.getSensors())
             }
         }
+    }
+
+    private companion object {
+        const val MAP_DISCLAIMER_KEY = "pref_map_tool_disclaimer_shown"
     }
 
     private fun switchMapLockMode(
@@ -711,35 +753,32 @@ private fun MapHost(
                 views.mapAttribution.Content()
             }
         }
+
+        // Menu control (top end)
         views.menuButton.Content(
             Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 8.dp, end = 16.dp)
+                .padding(top = TrailSenseSpacing.sm, end = TrailSenseSpacing.lg)
         )
-        views.timeButton.Content(
-            Modifier
+
+        // Grouped control cluster: time / zoom / lock (bottom end)
+        Column(
+            modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 256.dp)
-        )
-        views.zoomInButton.Content(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 200.dp)
-        )
-        views.zoomOutButton.Content(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 144.dp)
-        )
-        views.lockButton.Content(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 88.dp)
-        )
+                .padding(end = TrailSenseSpacing.lg, bottom = 88.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            views.timeButton.Content()
+            views.zoomInButton.Content()
+            views.zoomOutButton.Content()
+            views.lockButton.Content()
+        }
+
         views.sensorStatusBadges.Content(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = 96.dp)
+                .padding(start = TrailSenseSpacing.lg, bottom = 96.dp)
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             views.timeSheet.Content(Modifier.fillMaxWidth())
@@ -842,27 +881,48 @@ private class MapIconButton(icon: Int) {
         if (!buttonVisible) {
             return
         }
-        val background = if (isOn) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        }
-        val foreground = if (isOn) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        }
+        val interactionSource = remember { MutableInteractionSource() }
+        val pressed by interactionSource.collectIsPressedAsState()
+        val scale by animateFloatAsState(
+            targetValue = if (pressed) 0.9f else 1f,
+            animationSpec = TrailSenseAnimation.quickSpring,
+            label = "map-fab-scale"
+        )
+
+        val background by animateColorAsState(
+            targetValue = if (isOn) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+            animationSpec = tween(durationMillis = TrailSenseMotion.medium),
+            label = "map-fab-bg"
+        )
+        val foreground by animateColorAsState(
+            targetValue = if (isOn) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            animationSpec = tween(durationMillis = TrailSenseMotion.medium),
+            label = "map-fab-fg"
+        )
 
         androidx.compose.material3.Surface(
             modifier = modifier
-                .size(40.dp)
+                .size(48.dp)
+                .scale(scale)
                 .alpha(alphaState)
-                .clickable(enabled = clickListener != null) {
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = clickListener != null
+                ) {
                     clickListener?.invoke()
                 },
             shape = androidx.compose.foundation.shape.CircleShape,
             color = background,
-            shadowElevation = 6.dp
+            shadowElevation = TrailSenseElevation.high
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(

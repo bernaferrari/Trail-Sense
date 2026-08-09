@@ -5,8 +5,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.content.Context
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +18,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -66,7 +65,11 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseElevation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -511,7 +514,7 @@ private fun PhotoMapCalibrationHost(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 16.dp)
+                    .padding(top = TrailSenseSpacing.lg)
             ) {
                 views.previewButton.Content()
             }
@@ -519,12 +522,12 @@ private fun PhotoMapCalibrationHost(
         views.zoomInBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 232.dp)
+                .padding(end = TrailSenseSpacing.lg, bottom = 232.dp)
         )
         views.zoomOutBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 176.dp)
+                .padding(end = TrailSenseSpacing.lg, bottom = 176.dp)
         )
         if (views.mapCalibrationBottomPanel.isVisible) {
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
@@ -636,51 +639,65 @@ private class PhotoMapCalibrationPanelState(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            panelHeader()
-            Spacer(modifier = Modifier.height(16.dp))
-            coordinateInput()
-            Spacer(modifier = Modifier.height(16.dp))
+            instructionCard()
+            coordinateCard()
             panelActions()
         }
     }
 
     @Composable
-    private fun panelHeader() {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onTitleClick() },
-            verticalAlignment = Alignment.CenterVertically
+    private fun instructionCard() {
+        TrailSenseCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onTitleClick() }
         ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp)
                 )
-                if (notice.isNotBlank()) {
+                Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = notice,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(
-                            Resources.getAndroidColorAttr(
-                                context,
-                                androidx.appcompat.R.attr.colorError
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (notice.isNotBlank()) {
+                        Text(
+                            text = notice,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(
+                                Resources.getAndroidColorAttr(
+                                    context,
+                                    androidx.appcompat.R.attr.colorError
+                                )
                             )
                         )
-                    )
+                    }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun coordinateCard() {
+        TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = context.getString(R.string.location),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
+            coordinateInput()
         }
     }
 
@@ -693,18 +710,23 @@ private class PhotoMapCalibrationPanelState(
             if (isLoadingLocation) {
                 CircularProgressIndicator(modifier = Modifier.size(32.dp))
             } else {
-                IconButton(
+                FilledIconButton(
                     onClick = { pickAutofillSource() },
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_location),
-                        contentDescription = null
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(TrailSenseSpacing.sm))
 
             OutlinedTextField(
                 value = coordinateText,
@@ -715,7 +737,9 @@ private class PhotoMapCalibrationPanelState(
                 isError = coordinateText.isNotBlank() && Coordinate.parse(coordinateText) == null
             )
 
-            IconButton(
+            Spacer(modifier = Modifier.size(TrailSenseSpacing.sm))
+
+            FilledIconButton(
                 onClick = {
                     Alerts.dialog(
                         context,
@@ -724,11 +748,16 @@ private class PhotoMapCalibrationPanelState(
                         cancelText = null
                     )
                 },
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_help),
-                    contentDescription = null
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -738,17 +767,30 @@ private class PhotoMapCalibrationPanelState(
     private fun panelActions() {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (showPrevious) {
-                Button(onClick = { onPreviousClick() }) {
-                    Text(context.getString(R.string.previous))
+                FilledIconButton(
+                    onClick = { onPreviousClick() },
+                    modifier = Modifier.size(56.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_prev),
+                        contentDescription = context.getString(R.string.previous),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
-                Spacer(modifier = Modifier.size(16.dp))
             }
-            Button(onClick = { onNextClick() }) {
-                Text(nextText)
-            }
+            TrailSenseButton(
+                text = nextText,
+                onClick = { onNextClick() },
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -767,16 +809,20 @@ private class PhotoMapTextButtonState(
         Button(
             onClick = onClick,
             enabled = isEnabled,
+            shape = CircleShape,
             colors = if (checked) {
                 ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                ButtonDefaults.buttonColors()
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
             }
         ) {
-            Text(text = text)
+            Text(text = text, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -793,20 +839,20 @@ private class PhotoMapIconButtonState(
         val background = if (isOn) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.primaryContainer
         }
         val foreground = if (isOn) {
             MaterialTheme.colorScheme.onPrimary
         } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
+            MaterialTheme.colorScheme.onPrimaryContainer
         }
 
         Surface(
             onClick = onClick,
-            modifier = modifier.size(40.dp),
+            modifier = modifier.size(44.dp),
             shape = CircleShape,
             color = background,
-            shadowElevation = 6.dp
+            shadowElevation = TrailSenseElevation.high
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(

@@ -2,13 +2,14 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.Gravity
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -30,8 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,7 +68,6 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.CompassCalibrationContent
-import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -73,6 +76,7 @@ import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
@@ -82,13 +86,14 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.Share
-import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.map.ui.MapView
@@ -529,8 +534,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     fun displayAccuracyTips() {
-        val alerter = ImproveAccuracyAlerter(host.requireContext())
-        alerter.alert(listOf(gps, compass))
+        host.findNavController().navigate(R.id.calibrateCompassFragment)
     }
 
     private fun pickLocationFormat(
@@ -1026,27 +1030,31 @@ private class NavigationTitleState {
 }
 
 private class NavigatorDataPointState(
-    private val icon: Int
+    private val icon: ImageVector
 ) {
     var title by mutableStateOf("")
     var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        Box(
-            modifier = modifier.clickable(
-                enabled = onClick != null,
-                onClick = { onClick?.invoke() }
-            )
+        Row(
+            modifier = modifier
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            DataPointContent(
-                title = title,
-                description = "",
-                icon = icon,
-                tint = MaterialTheme.colorScheme.onSurface,
-                showDescription = false,
-                gravity = Gravity.START,
-                onDescriptionClick = null
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
         }
     }
@@ -1061,30 +1069,33 @@ private fun NavigationTitle(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(vertical = TrailSenseSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         state.leftButton.Content()
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = TrailSenseSpacing.sm),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
         ) {
             if (state.isTitleVisible) {
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }
             Text(
                 text = state.subtitle,
-                modifier = Modifier.combinedClickable(
+                modifier = Modifier
+                    .combinedClickable(
                     onClick = { state.onSubtitleClick?.invoke() },
                     onLongClick = { state.onSubtitleLongClick?.invoke() }
-                ),
+                )
+                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -1099,71 +1110,69 @@ private fun NavigatorHost(
     views: NavigatorViews,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        NavigationTitle(views.navigationTitle)
-        Row(
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = TrailSenseSpacing.lg)
         ) {
-            views.altitude.Content(
-                Modifier.weight(1f)
-            )
-            views.speed.Content(Modifier.weight(1f))
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            val radarModifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .aspectRatio(1f)
-            views.radarCompassMap.Content(radarModifier)
-            views.radarCompass.Content(radarModifier)
-            views.linearCompass.Content(
-                Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
-            views.mapAttribution.Content(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            views.accuracyView.Content(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 16.dp)
-            )
-            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                views.northReferenceIndicator.Content()
+            NavigationTitle(views.navigationTitle)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                views.altitude.Content(
+                    Modifier.weight(1f)
+                )
+                views.speed.Content(Modifier.weight(1f))
             }
-            NavigatorIconButton(
-                icon = R.drawable.ic_beacon,
+            BoxWithConstraints(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp)
-                    .combinedClickable(
-                        onClick = { views.onBeaconClick?.invoke() },
-                        onLongClick = { views.onBeaconLongClick?.invoke() }
-                    )
-            )
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.sm)
+            ) {
+                val compassSize = minOf(maxWidth, maxHeight)
+                val radarModifier = Modifier
+                    .align(Alignment.Center)
+                    .size(compassSize)
+                views.radarCompassMap.Content(radarModifier)
+                views.radarCompass.Content(radarModifier)
+                views.linearCompass.Content(
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                )
+                views.mapAttribution.Content(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(TrailSenseSpacing.sm),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    views.accuracyView.Content()
+                    views.northReferenceIndicator.Content()
+                }
+                NavigatorIconButton(
+                    icon = TrailSenseIcons.Filled.LocationOn,
+                    onClick = { views.onBeaconClick?.invoke() },
+                    onLongClick = { views.onBeaconLongClick?.invoke() },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(TrailSenseSpacing.sm)
+                )
+            }
+            views.navigationSheet.Content()
         }
-        views.navigationSheet.Content()
     }
 }
 
@@ -1175,8 +1184,8 @@ private fun createNavigatorViews(
     onOpenBeacon: ((Long) -> Unit)? = null
 ): NavigatorViews {
     val title = NavigationTitleState()
-    val altitude = NavigatorDataPointState(R.drawable.ic_altitude)
-    val speed = NavigatorDataPointState(R.drawable.ic_speed)
+    val altitude = NavigatorDataPointState(TrailSenseIcons.Filled.Straighten)
+    val speed = NavigatorDataPointState(TrailSenseIcons.Filled.Speed)
     val radarCompassMap = MapView(context).apply {
         id = R.id.radar_compass_map
     }
@@ -1219,23 +1228,25 @@ private fun createNavigatorViews(
 
 @Composable
 private fun NavigatorIconButton(
-    icon: Int,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    androidx.compose.material3.Surface(
-        modifier = modifier.size(56.dp),
-        shape = androidx.compose.foundation.shape.CircleShape,
-        color = MaterialTheme.colorScheme.primary,
-        shadowElevation = 6.dp
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        contentAlignment = Alignment.Center
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 

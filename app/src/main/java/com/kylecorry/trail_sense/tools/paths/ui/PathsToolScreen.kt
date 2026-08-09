@@ -3,22 +3,29 @@ package com.kylecorry.trail_sense.tools.paths.ui
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -31,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -59,9 +67,10 @@ import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
@@ -592,15 +601,14 @@ private fun PathsScreen(
                 onMenuAction = onMenuAction,
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
+            TrailSenseSearchBar(
                 value = searchText,
                 onValueChange = onSearchChange,
+                placeholder = stringResource(R.string.search),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.lg)
-                    .testTag("searchbox"),
-                label = { Text(stringResource(R.string.search)) },
-                singleLine = true
+                    .testTag("searchbox")
             )
             Box(
                 modifier = Modifier
@@ -608,23 +616,23 @@ private fun PathsScreen(
                     .weight(1f)
                     .padding(top = TrailSenseSpacing.lg)
             ) {
-                PathsList(
-                    items = items,
-                    resetKey = resetKey,
-                    formatService = formatService,
-                    baseDistanceUnits = baseDistanceUnits,
-                    onPathAction = onPathAction,
-                    onGroupAction = onGroupAction,
-                    modifier = Modifier.fillMaxSize()
-                )
                 if (isEmpty) {
-                    Text(
-                        text = stringResource(R.string.no_paths),
+                    TrailSenseEmptyState(
+                        icon = Icons.Default.Place,
+                        title = stringResource(R.string.no_paths),
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .testTag("waypoints_empty_text"),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                            .fillMaxSize()
+                            .testTag("waypoints_empty_text")
+                    )
+                } else {
+                    PathsList(
+                        items = items,
+                        resetKey = resetKey,
+                        formatService = formatService,
+                        baseDistanceUnits = baseDistanceUnits,
+                        onPathAction = onPathAction,
+                        onGroupAction = onGroupAction,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 PathsCreateButton(
@@ -642,7 +650,9 @@ private fun PathsScreen(
                 formatService = formatService,
                 onSubtitleClick = onBacktrackFrequencyClick,
                 onPlayClick = onBacktrackToggleClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TrailSenseSpacing.lg)
             )
         }
     }
@@ -666,7 +676,7 @@ private fun PathsHeader(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Box {
@@ -778,24 +788,19 @@ private fun BacktrackPlayBar(
         }"
     } ?: "")
 
-    Surface(
-        modifier = modifier.testTag("backtrack_play_bar"),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.small
+    TrailSenseCard(
+        modifier = modifier.testTag("backtrack_play_bar")
     ) {
         Row(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_tool_backtrack),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+            TonalIconChip(
+                icon = painterResource(R.drawable.ic_tool_backtrack)
             )
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = TrailSenseSpacing.lg)
+                    .padding(start = TrailSenseSpacing.md)
                     .testTag("play_bar_title")
             ) {
                 Text(
@@ -818,9 +823,35 @@ private fun BacktrackPlayBar(
                     painter = painterResource(
                         if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
                     ),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    }
+}
+
+/**
+ * Circular tonal icon chip used as a leading element on cards/rows.
+ */
+@Composable
+private fun TonalIconChip(
+    icon: Painter,
+    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer
+) {
+    Surface(
+        shape = CircleShape,
+        color = containerColor,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 }
@@ -843,7 +874,13 @@ private fun PathsList(
 
     LazyColumn(
         state = listState,
-        modifier = modifier.testTag("paths_list")
+        modifier = modifier.testTag("paths_list"),
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            bottom = TrailSenseSpacing.xxxl
+        ),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
     ) {
         items(items, key = { item ->
             if (item is PathGroup) {
@@ -865,7 +902,46 @@ private fun PathsList(
                     onAction = { onGroupAction(item, it) }
                 )
             }
-            TrailSenseDivider()
+        }
+    }
+}
+
+@Composable
+private fun PathCardRow(
+    title: String,
+    subtitle: String,
+    icon: Painter,
+    iconTint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    trailing: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TrailSenseCard(onClick = onClick, modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TonalIconChip(
+                icon = icon,
+                tint = iconTint,
+                containerColor = iconTint.copy(alpha = 0.15f)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = TrailSenseSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            trailing()
         }
     }
 }
@@ -892,7 +968,7 @@ private fun PathRow(
         distanceString
     }
 
-    TrailSenseListItem(
+    PathCardRow(
         title = title,
         subtitle = subtitle,
         icon = painterResource(getPathIcon(path)),
@@ -906,9 +982,7 @@ private fun PathRow(
                 onMenuOpenChange = { menuOpen = it },
                 onAction = onAction
             )
-        },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        }
     )
 }
 
@@ -991,7 +1065,7 @@ private fun PathGroupRow(
     var menuOpen by remember { mutableStateOf(false) }
     val count = group.count ?: 0
 
-    TrailSenseListItem(
+    PathCardRow(
         title = group.name,
         subtitle = stringResource(R.plurals.path_group_summary, count, count),
         icon = painterResource(R.drawable.ic_path_group),
@@ -1021,9 +1095,7 @@ private fun PathGroupRow(
                     PathGroupMenuItem(R.string.move_to, { menuOpen = it }, onAction, PathGroupAction.Move)
                 }
             }
-        },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        }
     )
 }
 

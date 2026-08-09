@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,14 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -48,9 +48,15 @@ internal fun GuideScreen(name: String, resource: Int) {
             Text(
                 text = name,
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(
+                        start = TrailSenseSpacing.xl,
+                        end = TrailSenseSpacing.xl,
+                        top = TrailSenseSpacing.xl,
+                        bottom = TrailSenseSpacing.md
+                    )
                     .testTag("guide_name"),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
@@ -61,16 +67,17 @@ internal fun GuideScreen(name: String, resource: Int) {
                         .weight(1f)
                         .testTag("guide_scroll")
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = TrailSenseSpacing.xl)
+                        .padding(bottom = TrailSenseSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                 ) {
                     val loadedSections = sections
                     if (loadedSections == null) {
-                        Text(
-                            text = stringResource(R.string.loading),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(top = TrailSenseSpacing.md)
+                                .align(Alignment.CenterHorizontally),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     } else {
                         loadedSections.forEach {

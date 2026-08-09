@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,9 +44,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -269,39 +275,47 @@ private fun TidesScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TidesHeader(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            TidesHero(
                 title = title,
                 subtitle = subtitle,
                 isRising = isRising,
                 isLoading = isLoading,
                 onOpenTideList = onOpenTideList
             )
-            DatePickerInput(
-                date = displayDate,
-                onDateChange = onDateChange,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-            )
-            TideChartView(
-                daily = daily,
-                displayDate = displayDate,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TideList(
-                tides = tides,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
+
+            TrailSenseCard {
+                DatePickerInput(
+                    date = displayDate,
+                    onDateChange = onDateChange
+                )
+                Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                TideChartView(
+                    daily = daily,
+                    displayDate = displayDate
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                SectionLabel(text = stringResource(R.string.tides))
+                TrailSenseCard {
+                    TideList(tides = tides)
+                }
+            }
+
             Text(
                 text = stringResource(R.string.disclaimer_estimated_tide),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
                     .padding(bottom = dimensionResource(R.dimen.default_bottom_margin))
                     .testTag("tide_disclaimer"),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -310,22 +324,60 @@ private fun TidesScreen(
 }
 
 @Composable
-private fun TidesHeader(
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun TonalIconChip(
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.size(40.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painter,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TidesHero(
     title: String,
     subtitle: String,
     isRising: Boolean,
     isLoading: Boolean,
     onOpenTideList: () -> Unit
 ) {
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.sm,
+                        top = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.lg
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -333,24 +385,24 @@ private fun TidesHeader(
                         if (isRising) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down
                     ),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp)
+                        .padding(start = TrailSenseSpacing.md)
                 ) {
                     Text(
                         text = title,
                         modifier = Modifier.testTag("tide_title"),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     if (subtitle.isNotBlank()) {
                         Text(
                             text = subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
                     }
                 }
@@ -360,7 +412,8 @@ private fun TidesHeader(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_tide_table),
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -368,7 +421,8 @@ private fun TidesHeader(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .testTag("loading")
+                        .testTag("loading"),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
@@ -404,12 +458,12 @@ private fun DatePickerInput(
         Text(
             text = formatter.formatRelativeDate(date),
             modifier = Modifier.testTag("tide_list_date"),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         Box(
             modifier = Modifier
-                .padding(start = 16.dp)
+                .padding(start = TrailSenseSpacing.lg)
                 .size(48.dp)
                 .combinedClickable(
                     onClick = {
@@ -553,14 +607,25 @@ private fun TideList(
     tides: List<Tide>,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .testTag("tide_list")
+            .testTag("tide_list"),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
-        items(tides, key = { it.time.toInstant().toEpochMilli() }) { tide ->
+        if (tides.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_data),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = TrailSenseSpacing.md),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        tides.forEach { tide ->
             TideRow(tide)
-            HorizontalDivider()
         }
     }
 }
@@ -584,18 +649,18 @@ private fun TideRow(tide: Tide) {
                     )
                 }
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(vertical = TrailSenseSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        TonalIconChip(
+            painter = painterResource(
+                if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low
+            )
         )
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 12.dp)
+                .padding(start = TrailSenseSpacing.md)
         ) {
             Text(
                 text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),

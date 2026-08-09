@@ -6,14 +6,20 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -26,10 +32,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
@@ -38,6 +47,9 @@ import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,119 +88,183 @@ internal fun PluginDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            // Hero card: plugin icon, name, version
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.primaryContainer
             ) {
-                Text(
-                    text = plugin?.name ?: stringResource(R.string.plugins),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "$packageId ($version)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TrailSenseSpacing.xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(64.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(R.drawable.apps),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = plugin?.name ?: stringResource(R.string.plugins),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "$packageId ($version)",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                if (details == null || isUnavailable) {
+            if (details == null || isUnavailable) {
+                TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+                    if (details == null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.loading),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.plugin_unavailable),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Map layers group
+            TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_layers),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
                     Text(
-                        text = if (details == null) {
-                            stringResource(R.string.loading)
-                        } else {
-                            stringResource(R.string.plugin_unavailable)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(R.string.map_layers),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                Text(
-                    text = stringResource(R.string.map_layers),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Spacer(Modifier.height(TrailSenseSpacing.md))
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
                     mapLayers.forEach {
                         MapLayerRow(it)
                     }
                 }
+            }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = { launchIntent?.let { context.startActivity(it) } },
-                            enabled = !isUnavailable && launchIntent != null,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.open))
-                        }
-                        Button(
-                            onClick = {
-                                context.startActivity(
-                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = Uri.parse("package:$packageId")
-                                    }
-                                )
-                            },
-                            enabled = !isUnavailable,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.app_info))
-                        }
-                    }
+            // Primary actions
+            TrailSenseButton(
+                text = stringResource(R.string.open),
+                onClick = { launchIntent?.let { context.startActivity(it) } },
+                enabled = !isUnavailable && launchIntent != null,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = {
+            TrailSenseButton(
+                text = stringResource(R.string.app_info),
+                onClick = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.parse("package:$packageId")
+                        }
+                    )
+                },
+                enabled = !isUnavailable,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            pluginSubsystem.reloadRegistration(packageId)
+                            reloadKey += 1
+                            Alerts.toast(context, context.getString(R.string.done))
+                        }
+                    },
+                    enabled = !isUnavailable,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Text(stringResource(R.string.reload))
+                }
+                OutlinedButton(
+                    onClick = {
+                        val currentPlugin = plugin ?: return@OutlinedButton
+                        Alerts.dialog(
+                            context,
+                            context.getString(R.string.plugin_disconnect_title),
+                            context.getString(
+                                R.string.plugin_disconnect_message,
+                                currentPlugin.name
+                            )
+                        ) { cancelled ->
+                            if (!cancelled) {
                                 scope.launch {
-                                    pluginSubsystem.reloadRegistration(packageId)
-                                    reloadKey += 1
-                                    Alerts.toast(context, context.getString(R.string.done))
+                                    pluginSubsystem.disconnect(currentPlugin)
+                                    onNavigateUp()
                                 }
-                            },
-                            enabled = !isUnavailable,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.reload))
+                            }
                         }
-                        OutlinedButton(
-                            onClick = {
-                                val currentPlugin = plugin ?: return@OutlinedButton
-                                Alerts.dialog(
-                                    context,
-                                    context.getString(R.string.plugin_disconnect_title),
-                                    context.getString(
-                                        R.string.plugin_disconnect_message,
-                                        currentPlugin.name
-                                    )
-                                ) { cancelled ->
-                                    if (!cancelled) {
-                                        scope.launch {
-                                            pluginSubsystem.disconnect(currentPlugin)
-                                            onNavigateUp()
-                                        }
-                                    }
-                                }
-                            },
-                            enabled = !isUnavailable,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.disconnect))
-                        }
-                    }
+                    },
+                    enabled = !isUnavailable,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Text(stringResource(R.string.disconnect))
                 }
             }
         }
@@ -197,11 +273,11 @@ internal fun PluginDetailsScreen(
 
 @Composable
 private fun MapLayerRow(layer: MapLayerDetails) {
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
         Text(
             text = layer.name,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium
         )
         layer.description?.let {

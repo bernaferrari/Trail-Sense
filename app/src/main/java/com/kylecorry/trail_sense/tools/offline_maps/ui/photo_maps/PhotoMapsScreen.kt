@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -447,7 +449,10 @@ private fun PhotoMapHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 64.dp)
-                .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                .padding(
+                    horizontal = TrailSenseSpacing.sm,
+                    vertical = TrailSenseSpacing.sm
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (showRecenter) {
@@ -457,13 +462,13 @@ private fun PhotoMapHeader(
                     onClick = { _ -> onRecenter() }
                 )
             } else {
-                Spacer(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.size(40.dp))
             }
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = TrailSenseSpacing.md)
                     .testTag("map_title")
             ) {
                 Text(
@@ -500,16 +505,19 @@ private fun HeaderImageButton(
     onClick: (View) -> Unit
 ) {
     val anchor = LocalView.current
-    IconButton(
+    FilledTonalIconButton(
         onClick = { onClick(anchor) },
         modifier = Modifier
-            .size(48.dp)
-            .testTag(tag)
+            .size(40.dp)
+            .testTag(tag),
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            contentDescription = null
         )
     }
 }

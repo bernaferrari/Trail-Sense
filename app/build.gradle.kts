@@ -182,6 +182,7 @@ dependencies {
     androidTestImplementation(composeBom)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite")
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)

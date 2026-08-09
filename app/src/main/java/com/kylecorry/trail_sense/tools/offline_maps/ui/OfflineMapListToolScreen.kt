@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -58,7 +59,9 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
@@ -625,15 +628,14 @@ private fun OfflineMapListScreen(
                     onToolbarAction = onToolbarAction,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
+                TrailSenseSearchBar(
                     value = searchText,
                     onValueChange = onSearchChange,
+                    placeholder = stringResource(R.string.search),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = TrailSenseSpacing.lg)
-                        .testTag("searchbox"),
-                    label = { Text(stringResource(R.string.search)) },
-                    singleLine = true
+                        .testTag("searchbox")
                 )
                 Box(
                     modifier = Modifier
@@ -641,23 +643,23 @@ private fun OfflineMapListScreen(
                         .weight(1f)
                         .padding(top = TrailSenseSpacing.lg)
                 ) {
-                    OfflineMapList(
-                        items = items,
-                        resetKey = resetKey,
-                        gpsLocationOnMap = gpsLocationOnMap,
-                        onPhotoMapAction = onPhotoMapAction,
-                        onVectorMapAction = onVectorMapAction,
-                        onMapGroupAction = onMapGroupAction,
-                        modifier = Modifier.fillMaxSize()
-                    )
                     if (isEmpty) {
-                        Text(
-                            text = stringResource(R.string.no_maps),
+                        TrailSenseEmptyState(
+                            icon = Icons.Default.Place,
+                            title = stringResource(R.string.no_maps),
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .testTag("map_empty_text"),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                                .fillMaxSize()
+                                .testTag("map_empty_text")
+                        )
+                    } else {
+                        OfflineMapList(
+                            items = items,
+                            resetKey = resetKey,
+                            gpsLocationOnMap = gpsLocationOnMap,
+                            onPhotoMapAction = onPhotoMapAction,
+                            onVectorMapAction = onVectorMapAction,
+                            onMapGroupAction = onMapGroupAction,
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 }
@@ -686,7 +688,7 @@ private fun OfflineMapListHeader(
     var isMenuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("map_list_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -754,7 +756,7 @@ private fun OfflineMapCreateButton(
                 OfflineMapCreateMenuItem(R.string.blank, onAction, OfflineMapCreateAction.CreateBlank)
             }
         }
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = {
                 if (enabled) {
                     onOpenChange(!isOpen)
@@ -763,11 +765,14 @@ private fun OfflineMapCreateButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .testTag("add_btn"),
-            content = {
+            icon = {
                 Icon(
                     painter = painterResource(if (isOpen) R.drawable.ic_cancel else R.drawable.ic_add),
-                    contentDescription = stringResource(R.string.add)
+                    contentDescription = null
                 )
+            },
+            text = {
+                Text(stringResource(R.string.add))
             }
         )
     }

@@ -65,8 +65,10 @@ class TrailSenseReactiveComponent(
             states[key] = initialValue
         }
         return states[key] as T to {
-            states[key] = it
-            onStateChanged()
+            if (states[key] != it) {
+                states[key] = it
+                onStateChanged()
+            }
         }
     }
 

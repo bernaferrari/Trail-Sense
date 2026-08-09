@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,6 +49,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -408,139 +414,163 @@ private fun PlaceBeaconScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            PlaceBeaconHeader(
-                title = stringResource(R.string.create_beacon),
-                canSave = canSave,
-                onSave = onSave
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .testTag("create_beacon_scroll")
+                .padding(TrailSenseSpacing.xl)
+                .padding(bottom = TrailSenseSpacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+        ) {
+            Text(
+                text = stringResource(R.string.create_beacon),
+                modifier = Modifier.testTag("create_beacon_title"),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .testTag("create_beacon_scroll")
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp, bottom = 96.dp)
-            ) {
-                TextInput(
-                    text = data.name,
-                    label = stringResource(R.string.name),
-                    tag = "beacon_name",
-                    errorText = stringResource(R.string.beacon_invalid_name),
-                    validateOnBlur = { it.isNotBlank() },
-                    onTextChange = onNameChange
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                CoordinateInput(
-                    coordinate = data.coordinate,
-                    onCoordinateChange = onCoordinateChange,
-                    autoFillRequest = locationAutofillRequest,
-                    onAutoLocationClick = onAutoLocationClick,
-                    onBeaconSelected = onCoordinateBeaconSelected
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                ElevationInput(
-                    elevation = data.elevation,
-                    onElevationChange = onElevationChange,
-                    autoFillRequest = elevationAutofillRequest
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                CreateAtDistanceSwitch(
-                    checked = data.createAtDistance,
-                    onCheckedChange = onCreateAtDistanceChange
-                )
-                if (data.createAtDistance) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    DistanceInput(
-                        distance = data.distanceTo,
-                        units = hikingDistanceUnits,
-                        onDistanceChange = onDistanceChange
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    BearingInput(
-                        bearing = data.bearingTo,
-                        trueNorth = data.bearingIsTrueNorth,
-                        onBearingChange = onBearingChange,
-                        compassBearingText = compassBearingText,
-                        hasCompass = hasCompass,
-                        onCompassClick = onCompassBearingClick,
-                        onCameraClick = onCameraBearingClick
+
+            // Details group
+            SectionLabel(stringResource(R.string.name))
+            TrailSenseCard {
+                Row(verticalAlignment = Alignment.Top) {
+                    TonalIconChip(icon = R.drawable.ic_beacon)
+                    Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
+                    TextInput(
+                        text = data.name,
+                        label = stringResource(R.string.name),
+                        tag = "beacon_name",
+                        modifier = Modifier.weight(1f),
+                        errorText = stringResource(R.string.beacon_invalid_name),
+                        validateOnBlur = { it.isNotBlank() },
+                        onTextChange = onNameChange
                     )
                 }
-                Spacer(modifier = Modifier.height(24.dp))
-                PickerRow(
-                    tag = "beacon_group_picker",
-                    text = groupName,
-                    icon = R.drawable.ic_beacon_group,
-                    iconTint = AppColor.Gray.color,
-                    onClick = onGroupClick
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                PickerRow(
-                    tag = "beacon_color_picker",
-                    text = stringResource(R.string.color),
-                    icon = R.drawable.bubble,
-                    iconTint = data.color.color,
-                    onClick = onColorClick
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                PickerRow(
-                    tag = "beacon_icon_picker",
-                    text = stringResource(R.string.icon),
-                    icon = data.icon?.icon ?: R.drawable.bubble,
-                    iconTint = null,
-                    onClick = onIconClick
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                TextInput(
-                    text = data.notes,
-                    label = stringResource(R.string.beacon_comment),
-                    tag = "comment",
-                    singleLine = false,
-                    onTextChange = onNotesChange
-                )
             }
+
+            // Location group
+            SectionLabel(stringResource(R.string.location))
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+                    CoordinateInput(
+                        coordinate = data.coordinate,
+                        onCoordinateChange = onCoordinateChange,
+                        autoFillRequest = locationAutofillRequest,
+                        onAutoLocationClick = onAutoLocationClick,
+                        onBeaconSelected = onCoordinateBeaconSelected
+                    )
+                    ElevationInput(
+                        elevation = data.elevation,
+                        onElevationChange = onElevationChange,
+                        autoFillRequest = elevationAutofillRequest
+                    )
+                    CreateAtDistanceSwitch(
+                        checked = data.createAtDistance,
+                        onCheckedChange = onCreateAtDistanceChange
+                    )
+                    if (data.createAtDistance) {
+                        DistanceInput(
+                            distance = data.distanceTo,
+                            units = hikingDistanceUnits,
+                            onDistanceChange = onDistanceChange
+                        )
+                        BearingInput(
+                            bearing = data.bearingTo,
+                            trueNorth = data.bearingIsTrueNorth,
+                            onBearingChange = onBearingChange,
+                            compassBearingText = compassBearingText,
+                            hasCompass = hasCompass,
+                            onCompassClick = onCompassBearingClick,
+                            onCameraClick = onCameraBearingClick
+                        )
+                    }
+                }
+            }
+
+            // Appearance group
+            SectionLabel(stringResource(R.string.appearance))
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                    PickerRow(
+                        tag = "beacon_group_picker",
+                        text = groupName,
+                        icon = R.drawable.ic_beacon_group,
+                        iconTint = AppColor.Gray.color,
+                        onClick = onGroupClick
+                    )
+                    PickerRow(
+                        tag = "beacon_color_picker",
+                        text = stringResource(R.string.color),
+                        icon = R.drawable.bubble,
+                        iconTint = data.color.color,
+                        onClick = onColorClick
+                    )
+                    PickerRow(
+                        tag = "beacon_icon_picker",
+                        text = stringResource(R.string.icon),
+                        icon = data.icon?.icon ?: R.drawable.bubble,
+                        iconTint = null,
+                        onClick = onIconClick
+                    )
+                }
+            }
+
+            // Notes group
+            SectionLabel(stringResource(R.string.beacon_comment))
+            TrailSenseCard {
+                Row(verticalAlignment = Alignment.Top) {
+                    TonalIconChip(icon = R.drawable.ic_help)
+                    Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
+                    TextInput(
+                        text = data.notes,
+                        label = stringResource(R.string.beacon_comment),
+                        tag = "comment",
+                        modifier = Modifier.weight(1f),
+                        singleLine = false,
+                        onTextChange = onNotesChange
+                    )
+                }
+            }
+
+            TrailSenseButton(
+                text = stringResource(android.R.string.ok),
+                onClick = onSave,
+                enabled = canSave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("create_beacon_save_btn")
+            )
         }
     }
 }
 
 @Composable
-private fun PlaceBeaconHeader(
-    title: String,
-    canSave: Boolean,
-    onSave: () -> Unit
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun TonalIconChip(
+    @DrawableRes icon: Int,
+    iconTint: Int? = null
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 18.dp)
-                    .testTag("create_beacon_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.onPrimaryContainer
             )
-            if (canSave) {
-                IconButton(
-                    onClick = onSave,
-                    modifier = Modifier.testTag("create_beacon_save_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_check),
-                        contentDescription = null
-                    )
-                }
-            }
         }
     }
 }

@@ -23,9 +23,10 @@ junitVersion = "1.3.0"
 junit = "4.13.2"
 kotlinxCoroutinesAndroid = "1.11.0"
 ksp = "2.3.9"
-composeCompiler = "2.3.21"
-composeBom = "2026.05.01"
-composeMultiplatform = "1.8.2"
+composeCompiler = "2.4.0"
+composeBom = "2026.06.00"
+composeMultiplatform = "1.12.0-alpha02"
+material3Compose = "1.5.0-alpha22"
 navVersion = "2.9.8"
 nav3 = "1.0.1"
 lifecycleVersion = "2.10.0"
@@ -86,7 +87,7 @@ camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cam
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3Compose" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
@@ -127,6 +128,7 @@ work-testing = { module = "androidx.work:work-testing", version.ref = "workRunti
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidApplication" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidApplication" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "composeCompiler" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

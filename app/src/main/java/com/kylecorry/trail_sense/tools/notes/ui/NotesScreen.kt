@@ -2,23 +2,26 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -36,13 +39,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.notes.domain.Note
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,15 +89,20 @@ fun NotesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = onAdd,
-                modifier = Modifier.testTag("add_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add)
-                )
-            }
+                modifier = Modifier.testTag("add_btn"),
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null
+                    )
+                },
+                text = { Text(stringResource(R.string.add)) }
+            )
         }
     ) { padding ->
         Box(
@@ -95,20 +111,23 @@ fun NotesScreen(
                 .padding(padding)
         ) {
             if (items.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.notes_empty_text),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .testTag("notes_empty_text"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                TrailSenseEmptyState(
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    title = stringResource(R.string.notes_empty_text),
+                    modifier = Modifier.testTag("notes_empty_text")
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("note_list"),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp)
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.sm,
+                        bottom = 96.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                 ) {
                     items(items, key = { it.id }) { note ->
                         NoteListItem(
@@ -117,7 +136,6 @@ fun NotesScreen(
                             onDelete = onDelete,
                             onShowQR = onShowQR
                         )
-                        HorizontalDivider()
                     }
                 }
             }
@@ -138,58 +156,87 @@ private fun NoteListItem(
     } else {
         note.title.orEmpty()
     }
+    val preview = note.contents.orEmpty().trim()
+    val timestamp = remember(note.createdOn) { formatTimestamp(note.createdOn) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onEdit(note) }
-            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+    TrailSenseCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { onEdit(note) }
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = note.contents.orEmpty(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Box {
-            IconButton(onClick = { isMenuOpen = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = null
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
+        Row(verticalAlignment = Alignment.Top) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.qr_code)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onShowQR(note)
-                    }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onDelete(note)
-                    }
-                )
+                if (preview.isNotEmpty()) {
+                    Text(
+                        text = preview,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (timestamp != null) {
+                    Spacer(Modifier.height(TrailSenseSpacing.xs))
+                    Text(
+                        text = timestamp,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Box {
+                IconButton(onClick = { isMenuOpen = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.qr_code)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onShowQR(note)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onDelete(note)
+                        }
+                    )
+                }
             }
         }
     }
+}
+
+private val timestampFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+
+private fun formatTimestamp(epochMillis: Long): String? {
+    if (epochMillis <= 0L) return null
+    return runCatching {
+        Instant.ofEpochMilli(epochMillis)
+            .atZone(ZoneId.systemDefault())
+            .format(timestampFormatter)
+    }.getOrNull()
 }

@@ -2,10 +2,14 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.os.Bundle
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -48,6 +52,7 @@ import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -638,28 +643,49 @@ private fun ViewPhotoMapHost(
     Box(modifier = modifier) {
         views.map.Content(Modifier.fillMaxSize())
         if (views.mapAttribution.isVisible) {
-            Box(
+            Surface(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 120.dp)
+                    .align(Alignment.BottomStart)
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        bottom = 120.dp
+                    ),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tonalElevation = TrailSenseSpacing.xxs,
+                shadowElevation = TrailSenseSpacing.xs
             ) {
-                views.mapAttribution.Content()
+                Box(modifier = Modifier.padding(TrailSenseSpacing.xs)) {
+                    views.mapAttribution.Content()
+                }
             }
         }
-        views.zoomInBtn.Content(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 232.dp)
-        )
-        views.zoomOutBtn.Content(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 176.dp)
-        )
+
+        // Grouped zoom controls in a tonal cluster (mirrors ViewVectorMapScreen)
+        if (views.zoomInBtn.isVisible || views.zoomOutBtn.isVisible) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = TrailSenseSpacing.lg, bottom = 176.dp),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tonalElevation = TrailSenseSpacing.xxs,
+                shadowElevation = TrailSenseSpacing.xs
+            ) {
+                Column(
+                    modifier = Modifier.padding(TrailSenseSpacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                ) {
+                    views.zoomInBtn.Content()
+                    views.zoomOutBtn.Content()
+                }
+            }
+        }
+
         views.lockBtn.Content(
             Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 120.dp)
+                .padding(end = TrailSenseSpacing.lg, bottom = 120.dp)
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             views.navigationSheet.Content(Modifier.fillMaxWidth())

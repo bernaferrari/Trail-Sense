@@ -2,10 +2,17 @@
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @Composable
 fun ConvertScreen(
@@ -56,12 +64,31 @@ fun ConverterTabs(
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        PrimaryScrollableTabRow(selectedTabIndex = selectedIndex) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(
+                    horizontal = TrailSenseSpacing.lg,
+                    vertical = TrailSenseSpacing.md
+                ),
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
             names.forEachIndexed { index, name ->
-                Tab(
+                FilterChip(
                     selected = selectedIndex == index,
                     onClick = { selectedIndex = index },
-                    text = { Text(name) }
+                    label = { Text(name, style = MaterialTheme.typography.labelLarge) },
+                    shape = MaterialTheme.shapes.small,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selectedIndex == index,
+                        borderColor = MaterialTheme.colorScheme.outlineVariant,
+                        selectedBorderColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 )
             }
         }

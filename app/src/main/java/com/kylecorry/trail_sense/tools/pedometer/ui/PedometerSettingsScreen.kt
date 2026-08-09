@@ -3,19 +3,43 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import android.os.Bundle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -27,15 +51,11 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
-import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.AveragePaceTimeMode
@@ -245,112 +265,278 @@ private fun PedometerSettingsContent(
                                 end = TrailSenseSpacing.lg,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
-                            )
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                         ) {
-                            item("header") {
-                                TrailSenseSectionHeader(title = stringResource(R.string.pedometer))
+                            item("title") {
+                                Text(
+                                    text = stringResource(R.string.pedometer),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(
+                                        top = TrailSenseSpacing.sm,
+                                        bottom = TrailSenseSpacing.xs
+                                    )
+                                )
                             }
-                            item("enabled") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pedometer),
-                                    checked = enabled,
-                                    onCheckedChange = {
-                                        enabled = it
-                                        userPrefs.pedometer.isEnabled = it
-                                        controller.onPedometerEnabledChanged(it) { newEnabled ->
-                                            enabled = newEnabled
+
+                            item("pedometer_section") {
+                                PedometerSettingsSection(
+                                    title = stringResource(R.string.pedometer)
+                                ) {
+                                    PedometerSettingsSwitchRow(
+                                        label = stringResource(R.string.pedometer),
+                                        icon = painterResource(R.drawable.steps),
+                                        checked = enabled,
+                                        onCheckedChange = {
+                                            enabled = it
+                                            userPrefs.pedometer.isEnabled = it
+                                            controller.onPedometerEnabledChanged(it) { newEnabled ->
+                                                enabled = newEnabled
+                                                permissionVisible =
+                                                    controller.isPermissionRequestVisible(newEnabled)
+                                            }
                                             permissionVisible =
-                                                controller.isPermissionRequestVisible(newEnabled)
+                                                controller.isPermissionRequestVisible(it)
                                         }
-                                        permissionVisible = controller.isPermissionRequestVisible(it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("stride_length") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.pref_stride_length_title),
-                                    summary = controller.formatStrideLength(strideLength),
-                                    onClick = {
-                                        controller.pickStrideLength(strideLength) {
-                                            strideLength = it
-                                            userPrefs.pedometer.strideLength = it
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("estimate_stride") {
-                                SettingsActionRow(
-                                    label = stringResource(R.string.estimate_stride_length),
-                                    onClick = {
-                                        host.findNavController().navigate(
-                                            R.id.action_calibrate_pedometer_to_estimate_stride_length
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            item("notifications") {
-                                SettingsActionRow(
-                                    label = host.getString(
-                                        R.string.notifications_channel,
-                                        host.getString(R.string.pedometer)
-                                    ),
-                                    summary = notificationSummary,
-                                    onClick = {
-                                        host.startActivity(
-                                            Intents.notificationSettings(
-                                                host.requireContext(),
-                                                StepCounterService.CHANNEL_ID
-                                            )
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                            }
-                            if (permissionVisible) {
-                                item("permission") {
-                                    SettingsActionRow(
-                                        label = stringResource(R.string.request_permission),
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsClickRow(
+                                        title = stringResource(R.string.pref_stride_length_title),
+                                        subtitle = controller.formatStrideLength(strideLength),
+                                        icon = painterResource(R.drawable.ruler),
                                         onClick = {
-                                            host.startActivity(Intents.appSettings(host.requireContext()))
-                                        },
-                                        modifier = Modifier.padding(
-                                            horizontal = TrailSenseSpacing.lg
+                                            controller.pickStrideLength(strideLength) {
+                                                strideLength = it
+                                                userPrefs.pedometer.strideLength = it
+                                            }
+                                        }
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsClickRow(
+                                        title = stringResource(R.string.estimate_stride_length),
+                                        onClick = {
+                                            host.findNavController().navigate(
+                                                R.id.action_calibrate_pedometer_to_estimate_stride_length
+                                            )
+                                        }
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsClickRow(
+                                        title = host.getString(
+                                            R.string.notifications_channel,
+                                            host.getString(R.string.pedometer)
+                                        ),
+                                        subtitle = notificationSummary,
+                                        onClick = {
+                                            host.startActivity(
+                                                Intents.notificationSettings(
+                                                    host.requireContext(),
+                                                    StepCounterService.CHANNEL_ID
+                                                )
+                                            )
+                                        }
+                                    )
+                                    if (permissionVisible) {
+                                        PedometerSettingsCardDivider()
+                                        PedometerSettingsClickRow(
+                                            title = stringResource(R.string.request_permission),
+                                            onClick = {
+                                                host.startActivity(
+                                                    Intents.appSettings(host.requireContext())
+                                                )
+                                            }
                                         )
+                                    }
+                                }
+                            }
+
+                            item("distance_section") {
+                                PedometerSettingsSection(
+                                    title = stringResource(R.string.distance)
+                                ) {
+                                    PedometerSettingsSwitchRow(
+                                        label = stringResource(R.string.pref_odometer_reset_daily_title),
+                                        checked = resetDaily,
+                                        onCheckedChange = {
+                                            resetDaily = it
+                                            controller.putBoolean(
+                                                R.string.pref_odometer_reset_daily,
+                                                it
+                                            )
+                                        }
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsSwitchRow(
+                                        label = stringResource(R.string.use_alarm_for_distance_alert),
+                                        summary = stringResource(R.string.alarm_description),
+                                        checked = useAlarm,
+                                        onCheckedChange = {
+                                            useAlarm = it
+                                            controller.putBoolean(
+                                                R.string.pref_pedometer_use_alarm_for_distance_alert,
+                                                it
+                                            )
+                                        }
                                     )
                                 }
                             }
-                            item("reset_daily") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.pref_odometer_reset_daily_title),
-                                    checked = resetDaily,
-                                    onCheckedChange = {
-                                        resetDaily = it
-                                        controller.putBoolean(R.string.pref_odometer_reset_daily, it)
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
-                            item("alarm") {
-                                SettingsSwitchRow(
-                                    label = stringResource(R.string.use_alarm_for_distance_alert),
-                                    summary = stringResource(R.string.alarm_description),
-                                    checked = useAlarm,
-                                    onCheckedChange = {
-                                        useAlarm = it
-                                        controller.putBoolean(
-                                            R.string.pref_pedometer_use_alarm_for_distance_alert,
-                                            it
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                                )
-                                TrailSenseDivider()
-                            }
                         }
                     }
+}
+
+@Composable
+private fun PedometerSettingsSection(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun PedometerSettingsCardDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    )
+}
+
+@Composable
+private fun PedometerSettingsIconChip(icon: Painter) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PedometerSettingsClickRow(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            PedometerSettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun PedometerSettingsSwitchRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    summary: String? = null,
+    icon: Painter? = null,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            PedometerSettingsIconChip(icon)
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
 }

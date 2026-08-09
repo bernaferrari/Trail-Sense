@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.field_guide.ui
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,12 +41,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -264,46 +270,83 @@ private fun CreateFieldGuideSightingScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .testTag("field_guide_sighting_scroll")
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp, bottom = 16.dp)
+                    .padding(TrailSenseSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                DateTimeInput(
-                    datetime = datetime,
-                    onDatetimeChange = onDatetimeChange
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                CoordinateInput(
-                    location = location,
-                    onLocationChange = onLocationChange,
-                    autoFillRequest = locationAutofillRequest,
-                    onAutoLocationClick = onAutoLocationClick,
-                    onBeaconSelected = onBeaconSelected
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                ElevationInput(
-                    elevation = elevation,
-                    onElevationChange = onElevationChange,
-                    autoFillRequest = elevationAutofillRequest,
-                    onAutoElevationClick = onAutoElevationClick
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                SightingSwitch(
-                    tag = "harvested",
-                    text = stringResource(R.string.harvested),
-                    checked = harvested,
-                    onCheckedChange = onHarvestedChange
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                SightingSwitch(
-                    tag = "show_on_map",
-                    text = stringResource(R.string.show_on_map),
-                    checked = showOnMap,
-                    onCheckedChange = onShowOnMapChange
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                NotesInput(
-                    notes = notes,
-                    onNotesChange = onNotesChange
+                // When & where
+                TrailSenseCard {
+                    SightingSectionLabel(
+                        icon = painterResource(R.drawable.ic_date),
+                        text = stringResource(R.string.record_sighting)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    DateTimeInput(
+                        datetime = datetime,
+                        onDatetimeChange = onDatetimeChange
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+                    SightingSectionLabel(
+                        icon = painterResource(R.drawable.ic_location),
+                        text = stringResource(R.string.location)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    CoordinateInput(
+                        location = location,
+                        onLocationChange = onLocationChange,
+                        autoFillRequest = locationAutofillRequest,
+                        onAutoLocationClick = onAutoLocationClick,
+                        onBeaconSelected = onBeaconSelected
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+                    SightingSectionLabel(
+                        icon = painterResource(R.drawable.ic_altitude),
+                        text = stringResource(R.string.elevation)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    ElevationInput(
+                        elevation = elevation,
+                        onElevationChange = onElevationChange,
+                        autoFillRequest = elevationAutofillRequest,
+                        onAutoElevationClick = onAutoElevationClick
+                    )
+                }
+
+                // Options
+                TrailSenseCard {
+                    SightingSwitch(
+                        tag = "harvested",
+                        text = stringResource(R.string.harvested),
+                        checked = harvested,
+                        onCheckedChange = onHarvestedChange
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
+                    SightingSwitch(
+                        tag = "show_on_map",
+                        text = stringResource(R.string.show_on_map),
+                        checked = showOnMap,
+                        onCheckedChange = onShowOnMapChange
+                    )
+                }
+
+                // Notes
+                TrailSenseCard {
+                    SightingSectionLabel(
+                        icon = painterResource(R.drawable.ic_tool_notes),
+                        text = stringResource(R.string.tool_notes_title)
+                    )
+                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                    NotesInput(
+                        notes = notes,
+                        onNotesChange = onNotesChange
+                    )
+                }
+
+                TrailSenseButton(
+                    text = stringResource(R.string.save),
+                    onClick = onSave,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("field_guide_sighting_save_btn_primary")
                 )
             }
         }
@@ -344,6 +387,39 @@ private fun CreateFieldGuideSightingHeader(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SightingSectionLabel(
+    icon: Painter,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

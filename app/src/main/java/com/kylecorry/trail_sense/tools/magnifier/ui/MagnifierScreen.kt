@@ -3,6 +3,8 @@
 package com.kylecorry.trail_sense.tools.magnifier.ui
 
 import android.graphics.Bitmap
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,15 +12,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +42,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @Composable
 internal fun MagnifierScreen(
@@ -118,54 +123,91 @@ internal fun MagnifierScreen(
             )
         }
 
-        Row(
+        // Floating translucent control pill anchored at the bottom so the controls
+        // read clearly against the live camera preview.
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 56.dp)
                 .testTag("magnifier_controls"),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            shape = MaterialTheme.shapes.extraLarge,
+            color = Color.Black.copy(alpha = 0.45f)
         ) {
-            MagnifierButton(
-                onClick = { isCloseUpFocus = !isCloseUpFocus },
-                modifier = Modifier.testTag("focus_toggle_btn")
+            Row(
+                modifier = Modifier.padding(
+                    horizontal = TrailSenseSpacing.md,
+                    vertical = TrailSenseSpacing.sm
+                ),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = if (isCloseUpFocus) Icons.Default.Search else Icons.Default.CenterFocusStrong,
-                    contentDescription = null
-                )
-            }
-            MagnifierButton(
-                onClick = {
-                    frozenFrame = if (frozenFrame == null) {
-                        cameraState.previewImage
-                    } else {
-                        null
-                    }
-                },
-                modifier = Modifier.testTag("freeze_btn")
-            ) {
-                Icon(
-                    imageVector = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = null
-                )
+                MagnifierButton(
+                    onClick = { isCloseUpFocus = !isCloseUpFocus },
+                    selected = isCloseUpFocus,
+                    modifier = Modifier.testTag("focus_toggle_btn")
+                ) {
+                    Icon(
+                        imageVector = if (isCloseUpFocus) Icons.Default.Search else Icons.Default.CenterFocusStrong,
+                        contentDescription = null
+                    )
+                }
+                MagnifierButton(
+                    onClick = {
+                        frozenFrame = if (frozenFrame == null) {
+                            cameraState.previewImage
+                        } else {
+                            null
+                        }
+                    },
+                    selected = frozenFrame != null,
+                    modifier = Modifier.testTag("freeze_btn")
+                ) {
+                    Icon(
+                        imageVector = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = null
+                    )
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MagnifierButton(
     onClick: () -> Unit,
+    selected: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier.size(48.dp),
-        colors = IconButtonDefaults.iconButtonColors(
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-        ),
-        content = content
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.9f)
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "magnifierButtonContainer"
     )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "magnifierButtonContent"
+    )
+
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(56.dp),
+        shape = CircleShape,
+        color = containerColor,
+        contentColor = contentColor
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            content()
+        }
+    }
 }

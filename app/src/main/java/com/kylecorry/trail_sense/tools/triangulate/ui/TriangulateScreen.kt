@@ -5,8 +5,10 @@ package com.kylecorry.trail_sense.tools.triangulate.ui
 import android.content.res.ColorStateList
 import android.graphics.Color
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -22,9 +25,8 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Card
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -42,12 +44,15 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.buildSpannedString
@@ -93,6 +98,8 @@ import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -688,56 +695,47 @@ private fun TriangulateScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = TrailSenseSpacing.xxxl)
+                .padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
-                    .testTag("triangulate_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
+            // Hero readout: resulting coordinate
+            TriangulateResultCard(
+                title = title,
+                actionsVisible = actionsVisible,
+                navigateVisible = navigateVisible,
+                updateGpsOverrideVisible = updateGpsOverrideVisible,
+                onCreateBeacon = onCreateBeacon,
+                onNavigate = onNavigate,
+                onShareLocation = onShareLocation,
+                onUpdateGpsOverride = onUpdateGpsOverride
             )
 
-            if (actionsVisible) {
-                TriangulateActions(
-                    navigateVisible = navigateVisible,
-                    updateGpsOverrideVisible = updateGpsOverrideVisible,
-                    onCreateBeacon = onCreateBeacon,
-                    onNavigate = onNavigate,
-                    onShareLocation = onShareLocation,
-                    onUpdateGpsOverride = onUpdateGpsOverride
+            // Map preview
+            TrailSenseCard {
+                TriangulateMap(
+                    onMapReady = onMapReady,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(MaterialTheme.shapes.medium)
                 )
             }
 
-            TriangulateMap(
-                onMapReady = onMapReady,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(horizontal = TrailSenseSpacing.sm)
-                    .padding(top = TrailSenseSpacing.sm)
-            )
-
-            Text(
-                text = stringResource(R.string.location_to_triangulate),
-                modifier = Modifier.padding(
-                    start = TrailSenseSpacing.sm,
-                    end = TrailSenseSpacing.sm,
-                    top = TrailSenseSpacing.lg
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            TriangulateModeSelector(
-                shouldCalculateMyLocation = shouldCalculateMyLocation,
-                onModeChanged = onModeChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.sm)
-            )
+            // Mode selection
+            Column(
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            ) {
+                Text(
+                    text = stringResource(R.string.location_to_triangulate),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                TriangulateModeSelector(
+                    shouldCalculateMyLocation = shouldCalculateMyLocation,
+                    onModeChanged = onModeChanged,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             TriangulateLocationCard(
                 title = location1Title.ifBlank { stringResource(R.string.location_number, 1) },
@@ -756,10 +754,7 @@ private fun TriangulateScreen(
                 onBearingChange = onBearing1Change,
                 onCompassBearingClick = onCompassBearing1Click,
                 onCameraBearingClick = onCameraBearing1Click,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.sm)
-                    .padding(top = TrailSenseSpacing.lg)
+                modifier = Modifier.fillMaxWidth()
             )
 
             TriangulateLocationCard(
@@ -779,20 +774,67 @@ private fun TriangulateScreen(
                 onBearingChange = onBearing2Change,
                 onCompassBearingClick = onCompassBearing2Click,
                 onCameraBearingClick = onCameraBearing2Click,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.sm)
-                    .padding(top = TrailSenseSpacing.lg)
+                modifier = Modifier.fillMaxWidth()
             )
 
             TrailSenseButton(
                 text = stringResource(R.string.reset),
                 onClick = onReset,
                 modifier = Modifier
-                    .padding(top = TrailSenseSpacing.lg)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
                     .testTag("reset_btn")
             )
+        }
+    }
+}
+
+@Composable
+private fun TriangulateResultCard(
+    title: String,
+    actionsVisible: Boolean,
+    navigateVisible: Boolean,
+    updateGpsOverrideVisible: Boolean,
+    onCreateBeacon: () -> Unit,
+    onNavigate: () -> Unit,
+    onShareLocation: () -> Unit,
+    onUpdateGpsOverride: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            Text(
+                text = stringResource(R.string.location),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("triangulate_title"),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+
+            if (actionsVisible) {
+                TriangulateActions(
+                    navigateVisible = navigateVisible,
+                    updateGpsOverrideVisible = updateGpsOverrideVisible,
+                    onCreateBeacon = onCreateBeacon,
+                    onNavigate = onNavigate,
+                    onShareLocation = onShareLocation,
+                    onUpdateGpsOverride = onUpdateGpsOverride
+                )
+            }
         }
     }
 }
@@ -806,12 +848,12 @@ private fun TriangulateActions(
     onShareLocation: () -> Unit,
     onUpdateGpsOverride: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = TrailSenseSpacing.lg),
-        verticalAlignment = Alignment.CenterVertically
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(
+            TrailSenseSpacing.sm,
+            Alignment.CenterHorizontally
+        )
     ) {
         TriangulateActionChip(
             label = stringResource(R.string.beacon),
@@ -853,10 +895,15 @@ private fun TriangulateActionChip(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurface
             )
         },
-        modifier = Modifier.padding(end = TrailSenseSpacing.sm)
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = null
     )
 }
 
@@ -885,18 +932,20 @@ private fun TriangulateModeSelector(
     onModeChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier = modifier) {
-        FilterChip(
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    ) {
+        TrailSenseChip(
+            text = stringResource(R.string.destination),
             selected = !shouldCalculateMyLocation,
             onClick = { onModeChanged(false) },
-            label = { Text(stringResource(R.string.destination)) },
             modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.size(TrailSenseSpacing.sm))
-        FilterChip(
+        TrailSenseChip(
+            text = stringResource(R.string.my_location),
             selected = shouldCalculateMyLocation,
             onClick = { onModeChanged(true) },
-            label = { Text(stringResource(R.string.my_location)) },
             modifier = Modifier.weight(1f)
         )
     }
@@ -922,26 +971,41 @@ private fun TriangulateLocationCard(
     onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier) {
+    TrailSenseCard(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onExpandedChange(!isExpanded) }
-                .padding(TrailSenseSpacing.lg),
+                .clickable { onExpandedChange(!isExpanded) },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = if (isComplete) Icons.Default.CheckCircle else Icons.Default.Info,
-                contentDescription = null,
-                tint = if (isComplete) ComposeColor(AppColor.Green.color) else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
+            Surface(
+                shape = CircleShape,
+                color = if (isComplete) {
+                    ComposeColor(AppColor.Green.color).copy(alpha = 0.2f)
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer
+                },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = if (isComplete) Icons.Default.CheckCircle else Icons.Default.Info,
+                        contentDescription = null,
+                        tint = if (isComplete) {
+                            ComposeColor(AppColor.Green.color)
+                        } else {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        },
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
             Text(
                 text = title,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.sm),
-                style = MaterialTheme.typography.bodyLarge,
+                    .padding(horizontal = TrailSenseSpacing.md),
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Icon(
@@ -958,21 +1022,30 @@ private fun TriangulateLocationCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .padding(bottom = TrailSenseSpacing.lg)
+                    .padding(top = TrailSenseSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
                 Text(
                     text = instructions,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = stringResource(R.string.location),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 CoordinateInput(
                     coordinate = coordinate,
                     onCoordinateChange = onCoordinateChange,
                     tag = coordinateTag,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.xl)
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = stringResource(R.string.bearing),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.sm)
                 )
                 BearingInput(
                     bearing = bearing,
@@ -983,9 +1056,7 @@ private fun TriangulateLocationCard(
                     onBearingChange = onBearingChange,
                     onCompassBearingClick = onCompassBearingClick,
                     onCameraBearingClick = onCameraBearingClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.xl)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

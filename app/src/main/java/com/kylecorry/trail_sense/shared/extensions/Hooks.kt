@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.extensions
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import com.kylecorry.andromeda.core.sensors.IAltimeter
@@ -321,7 +320,6 @@ fun ReactiveComponent.useLifecycleEffect(
     action: () -> Unit
 ) {
     val owner = useLifecycleOwner()
-    val (lastObserver, setLastObserver) = useState<LifecycleObserver?>(null)
     val observer = useMemo(*values, lifecycleEvent) {
         LifecycleEventObserver { source: LifecycleOwner, event: Lifecycle.Event ->
             if (event == lifecycleEvent) {
@@ -330,12 +328,11 @@ fun ReactiveComponent.useLifecycleEffect(
         }
     }
 
-    useEffect(owner, observer) {
-        setLastObserver(observer)
-        lastObserver?.let {
-            owner.lifecycle.removeObserver(it)
-        }
+    useEffectWithCleanup(arrayOf(owner, observer)) {
         owner.lifecycle.addObserver(observer)
+        return@useEffectWithCleanup {
+            owner.lifecycle.removeObserver(observer)
+        }
     }
 }
 

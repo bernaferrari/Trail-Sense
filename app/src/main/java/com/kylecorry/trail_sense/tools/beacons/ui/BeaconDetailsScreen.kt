@@ -5,22 +5,26 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 import android.os.Bundle
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,9 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -51,7 +57,10 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
@@ -290,27 +299,34 @@ private fun BeaconDetailsScreen(
     onTemperatureClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val coordinates = beacon?.coordinate?.let {
+        FormatService.getInstance(context).formatLocation(it)
+    }.orEmpty()
+    val comment = beacon?.comment.orEmpty()
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            BeaconHeader(
-                title = beacon?.name.orEmpty(),
-                subtitle = beacon?.coordinate?.let {
-                    FormatService.getInstance(androidx.compose.ui.platform.LocalContext.current)
-                        .formatLocation(it)
-                }.orEmpty(),
-                onShare = onShare,
-                onDelete = onDelete
-            )
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
+                    .padding(TrailSenseSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                BeaconDataGrid(
+                BeaconHero(
+                    title = beacon?.name.orEmpty(),
+                    coordinates = coordinates,
+                    distance = distance,
+                    onShare = onShare,
+                    onDelete = onDelete
+                )
+
+                BeaconDetailsCard(
                     altitude = altitude,
                     distance = distance,
                     temperature = temperature,
@@ -320,8 +336,12 @@ private fun BeaconDetailsScreen(
                     tideIcon = tideIcon,
                     onTemperatureClick = onTemperatureClick
                 )
-                CommentText(comment = beacon?.comment.orEmpty())
+
+                if (comment.isNotBlank()) {
+                    NotesCard(comment = comment)
+                }
             }
+
             ActionRow(
                 showEdit = beacon?.temporary != true,
                 onNavigate = onNavigate,
@@ -332,65 +352,93 @@ private fun BeaconDetailsScreen(
 }
 
 @Composable
-private fun BeaconHeader(
+private fun BeaconHero(
     title: String,
-    subtitle: String,
+    coordinates: String,
+    distance: String,
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
 
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(TrailSenseSpacing.xl)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
                 Text(
                     text = title,
-                    modifier = Modifier.testTag("beacon_title"),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("beacon_title"),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                if (subtitle.isNotBlank()) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Box {
+                    IconButton(
+                        onClick = { isMenuOpen = true },
+                        modifier = Modifier.testTag("beacon_menu_btn")
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_menu_dots),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isMenuOpen,
+                        onDismissRequest = { isMenuOpen = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.share_ellipsis)) },
+                            onClick = {
+                                isMenuOpen = false
+                                onShare()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.delete)) },
+                            onClick = {
+                                isMenuOpen = false
+                                onDelete()
+                            }
+                        )
+                    }
                 }
             }
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("beacon_menu_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = null
+
+            if (distance.isNotBlank()) {
+                Text(
+                    text = distance,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = stringResource(R.string.distance),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
             }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.share_ellipsis)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onShare()
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onDelete()
-                    }
+
+            if (coordinates.isNotBlank()) {
+                Text(
+                    text = coordinates,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.sm),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
             }
         }
@@ -398,7 +446,7 @@ private fun BeaconHeader(
 }
 
 @Composable
-private fun BeaconDataGrid(
+private fun BeaconDetailsCard(
     altitude: String?,
     distance: String,
     temperature: String,
@@ -408,65 +456,61 @@ private fun BeaconDataGrid(
     @DrawableRes tideIcon: Int,
     onTemperatureClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.details),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
             altitude?.let {
-                DataPoint(
+                DetailRow(
                     tag = "beacon_altitude",
                     title = it,
                     description = stringResource(R.string.elevation),
-                    icon = R.drawable.ic_altitude,
-                    modifier = Modifier.weight(1f)
+                    icon = R.drawable.ic_altitude
                 )
             }
-            DataPoint(
+            DetailRow(
                 tag = "beacon_distance",
                 title = distance,
                 description = stringResource(R.string.distance),
-                icon = R.drawable.ruler,
-                modifier = Modifier.weight(1f)
+                icon = R.drawable.ruler
             )
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
-            DataPoint(
+            DetailRow(
                 tag = "beacon_temperature",
                 title = temperature,
                 description = stringResource(R.string.temperature_high_low),
                 icon = R.drawable.ic_temperature_range,
-                onClick = onTemperatureClick,
-                modifier = Modifier.weight(1f)
+                onClick = onTemperatureClick
             )
             sunrise?.let {
-                DataPoint(
+                DetailRow(
                     tag = "beacon_sunrise",
                     title = it,
                     description = stringResource(R.string.sunrise),
-                    icon = R.drawable.ic_sunrise_notification,
-                    modifier = Modifier.weight(1f)
+                    icon = R.drawable.ic_sunrise_notification
                 )
             }
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
             sunset?.let {
-                DataPoint(
+                DetailRow(
                     tag = "beacon_sunset",
                     title = it,
                     description = stringResource(R.string.sunset),
-                    icon = R.drawable.ic_sunset_notification,
-                    modifier = Modifier.weight(1f)
+                    icon = R.drawable.ic_sunset_notification
                 )
             }
             tide?.let {
-                DataPoint(
+                DetailRow(
                     tag = "beacon_tide",
                     title = it,
                     description = stringResource(R.string.tide),
-                    icon = tideIcon,
-                    modifier = Modifier.weight(1f)
+                    icon = tideIcon
                 )
             }
         }
@@ -474,30 +518,35 @@ private fun BeaconDataGrid(
 }
 
 @Composable
-private fun DataPoint(
+private fun DetailRow(
     tag: String,
     title: String,
     description: String,
     @DrawableRes icon: Int,
-    modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
     Row(
-        modifier = modifier
-            .padding(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .testTag(tag),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(end = 16.dp)
-                .size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
-        )
-        Column {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        Column(modifier = Modifier.padding(start = TrailSenseSpacing.lg)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
@@ -513,19 +562,25 @@ private fun DataPoint(
 }
 
 @Composable
-private fun CommentText(comment: String) {
-    SelectionContainer(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 16.dp)
-            .testTag("comment_text")
-    ) {
+private fun NotesCard(comment: String) {
+    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = comment,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            text = stringResource(R.string.notes),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
+        SelectionContainer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.md)
+                .testTag("comment_text")
+        ) {
+            Text(
+                text = comment,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
@@ -535,31 +590,38 @@ private fun ActionRow(
     onNavigate: () -> Unit,
     onEdit: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Button(onClick = onNavigate) {
-            Icon(
-                painter = painterResource(R.drawable.ic_beacon),
-                contentDescription = null
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            TrailSenseButton(
+                text = stringResource(R.string.navigate),
+                onClick = onNavigate,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.padding(4.dp))
-            Text(text = stringResource(R.string.navigate))
-        }
-        if (showEdit) {
-            Spacer(modifier = Modifier.padding(8.dp))
-            IconButton(
-                onClick = onEdit,
-                modifier = Modifier.testTag("edit_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_edit),
-                    contentDescription = null
-                )
+            if (showEdit) {
+                FilledTonalIconButton(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .testTag("edit_btn"),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_edit),
+                        contentDescription = stringResource(R.string.edit)
+                    )
+                }
             }
         }
     }

@@ -42,7 +42,9 @@ fun TrailSenseListItem(
     iconRotation: Float = 0f,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
-    animateEntrance: Boolean = true
+    // Off by default: in a LazyColumn this would re-fire every time a row scrolls
+    // back into view, which reads as jank. Opt in for short, static lists only.
+    animateEntrance: Boolean = false
 ) {
     var visible by remember { mutableStateOf(!animateEntrance) }
 

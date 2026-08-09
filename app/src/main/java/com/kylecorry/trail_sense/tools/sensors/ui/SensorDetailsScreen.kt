@@ -9,15 +9,19 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +39,9 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.core.content.getSystemService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -583,24 +589,32 @@ private fun SensorDetailsScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("sensor_details_title"),
-                color = MaterialTheme.colorScheme.surface
-            ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("sensors_list"),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.xxl
+            ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(vertical = TrailSenseSpacing.sm)
+                        .testTag("sensor_details_title"),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = stringResource(R.string.pref_sensor_details_title),
                         modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     IconButton(
                         onClick = onShowSensorList,
@@ -615,14 +629,30 @@ private fun SensorDetailsScreen(
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("sensors_list")
-            ) {
-                items(sensors) { sensor ->
-                    SensorDetailsRow(sensor)
-                    HorizontalDivider()
+            item {
+                Text(
+                    text = stringResource(R.string.sensors),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(
+                        start = TrailSenseSpacing.xs,
+                        bottom = TrailSenseSpacing.xs
+                    )
+                )
+            }
+
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainer
+                ) {
+                    Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+                        sensors.forEach { sensor ->
+                            SensorDetailsRow(sensor)
+                        }
+                    }
                 }
             }
         }
@@ -634,46 +664,70 @@ private fun SensorDetailsRow(
     sensor: SensorDetails,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = sensor.name,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Row(
-            modifier = Modifier.padding(top = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+        // Tonal circular icon chip
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(44.dp)
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = ComposeColor(sensor.statusColor)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(sensor.statusIcon),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = ComposeColor.Black
-                    )
-                    Text(
-                        text = sensor.statusMessage,
-                        modifier = Modifier.padding(start = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = ComposeColor.Black
-                    )
-                }
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(sensor.statusIcon),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
+        }
+
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = sensor.description,
-                modifier = Modifier.padding(start = 8.dp),
-                style = MaterialTheme.typography.bodySmall,
+                text = sensor.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (sensor.description.isNotBlank()) {
+                Text(
+                    text = sensor.description,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.xxs),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+
+        // Status indicator: colored dot + label
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .then(Modifier)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = ComposeColor(sensor.statusColor),
+                    modifier = Modifier.fillMaxSize()
+                ) {}
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            Text(
+                text = sensor.statusMessage,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

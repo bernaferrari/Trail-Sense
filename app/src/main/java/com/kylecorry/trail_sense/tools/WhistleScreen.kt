@@ -1,5 +1,15 @@
 package com.kylecorry.trail_sense.tools
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,14 +20,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,20 +41,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.morse.SignalPlayer
 import com.kylecorry.trail_sense.shared.morse.Signals
 import com.kylecorry.trail_sense.shared.morse.asSignal
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 import kotlinx.coroutines.CoroutineScope
@@ -122,40 +138,242 @@ fun WhistleScreen(modifier: Modifier = Modifier) {
         currentSignal = name
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(TrailSenseSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            stringResource(R.string.tool_whistle_title),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
-        )
+    val whistleActive = isPlaying && currentSignal == "Whistle"
+    val anyActive = isPlaying
 
-        // Big beautiful hold-to-blow button — M3 Expressive treatment
-        val buttonScale by androidx.compose.animation.core.animateFloatAsState(
-            targetValue = if (isPlaying && currentSignal == "Whistle") 0.96f else 1f,
-            animationSpec = androidx.compose.animation.core.spring(
-                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-            ),
-            label = "whistleButtonScale"
-        )
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            Text(
+                text = stringResource(R.string.tool_whistle_title),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(TrailSenseSpacing.sm))
+
+            // Big satisfying press-and-hold control with a pulsing ring while emitting.
+            HoldToBlowButton(
+                active = whistleActive,
+                onPress = { playContinuous() },
+                onRelease = { stopContinuous() }
+            )
+
+            Spacer(Modifier.height(TrailSenseSpacing.md))
+
+            // Emergency signal section
+            Text(
+                text = "Signals",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                SignalButton(
+                    label = stringResource(R.string.help),
+                    selected = currentSignal == context.getString(R.string.help),
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        playSignal(
+                            context.getString(R.string.help),
+                            emergencySignal,
+                            loop = true
+                        )
+                    }
+                )
+
+                SignalButton(
+                    label = "SOS",
+                    selected = currentSignal == "SOS",
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        playSignal("SOS", sosSignal, loop = true)
+                    }
+                )
+            }
+
+            // More signals
+            var showSignalPicker by remember { mutableStateOf(false) }
+
+            FilledTonalButton(
+                onClick = { showSignalPicker = true },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = MaterialTheme.shapes.large,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
+                Text(
+                    text = "More signals…",
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+
+            if (showSignalPicker) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showSignalPicker = false },
+                    shape = MaterialTheme.shapes.extraLarge,
+                    title = {
+                        Text(
+                            text = "Whistle Signals",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                        ) {
+                            listOf(
+                                "Where are you?" to Signals.comeHere(),
+                                "Acknowledged" to Signals.acknowledged(),
+                                "Come here" to Signals.comeHere(),
+                                "Help (loop)" to Signals.help()
+                            ).forEach { (label, signal) ->
+                                FilledTonalButton(
+                                    onClick = {
+                                        playSignal(label, signal, loop = label.contains("loop", ignoreCase = true))
+                                        showSignalPicker = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                                    shape = MaterialTheme.shapes.large
+                                ) {
+                                    Text(label)
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showSignalPicker = false }) {
+                            Text("Close")
+                        }
+                    }
+                )
+            }
+
+            // Active "now playing" banner — bold tonal state.
+            AnimatedVisibility(
+                visible = anyActive && !whistleActive && currentSignal != null,
+                enter = fadeIn(TrailSenseAnimation.mediumFade),
+                exit = fadeOut(TrailSenseAnimation.fastFade)
+            ) {
+                NowPlayingBanner(signal = currentSignal ?: "")
+            }
+
+            Spacer(Modifier.height(TrailSenseSpacing.sm))
+
+            Text(
+                text = "Tip: Hold the big button for continuous whistle. Tap signals for attention-getting patterns.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md)
+            )
+        }
+    }
+}
+
+/**
+ * Large central press-and-hold control. Calm tonal surface when idle, bold error
+ * tones with a pulsing halo while emitting. Pointer handling preserves the original
+ * hold-to-blow behavior exactly.
+ */
+@Composable
+private fun HoldToBlowButton(
+    active: Boolean,
+    onPress: () -> Unit,
+    onRelease: () -> Unit
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (active)
+            MaterialTheme.colorScheme.error
+        else MaterialTheme.colorScheme.primaryContainer,
+        animationSpec = tween(TrailSenseMotion_medium),
+        label = "whistleContainer"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (active)
+            MaterialTheme.colorScheme.onError
+        else MaterialTheme.colorScheme.onPrimaryContainer,
+        animationSpec = tween(TrailSenseMotion_medium),
+        label = "whistleContent"
+    )
+
+    // Press feedback: a small satisfying spring-driven dip on the whole control.
+    val pressScale by animateFloatAsState(
+        targetValue = if (active) 0.94f else 1f,
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "whistlePressScale"
+    )
+
+    // Continuous halo pulse while emitting.
+    val pulse = rememberInfiniteTransition(label = "whistlePulse")
+    val pulseScale by pulse.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.45f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "whistlePulseScale"
+    )
+    val pulseAlpha by pulse.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "whistlePulseAlpha"
+    )
+
+    Box(
+        modifier = Modifier.size(300.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Expanding halo ring (only meaningful while active; invisible at idle).
+        if (active) {
+            Surface(
+                modifier = Modifier
+                    .size(240.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                    }
+                    .alpha(pulseAlpha),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.error
+            ) {}
+        }
 
         Box(
             modifier = Modifier
-                .size(220.dp)
-                .scale(buttonScale)
+                .size(240.dp)
+                .scale(pressScale)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
                             if (event.changes.any { it.pressed }) {
-                                playContinuous()
+                                onPress()
                             } else {
-                                stopContinuous()
+                                onRelease()
                             }
                         }
                     }
@@ -165,151 +383,107 @@ fun WhistleScreen(modifier: Modifier = Modifier) {
             Button(
                 onClick = { /* handled by pointer */ },
                 modifier = Modifier.fillMaxSize(),
-                shape = androidx.compose.foundation.shape.CircleShape,
+                shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isPlaying && currentSignal == "Whistle")
-                        MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = containerColor,
+                    contentColor = contentColor
                 ),
                 elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = if (isPlaying && currentSignal == "Whistle") 8.dp else 4.dp
+                    defaultElevation = if (active) 10.dp else 4.dp,
+                    pressedElevation = 12.dp
                 )
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Default.Warning,
                         contentDescription = null,
-                        modifier = Modifier.size(56.dp),
-                        tint = if (isPlaying && currentSignal == "Whistle")
-                            Color.White else MaterialTheme.colorScheme.onSecondaryContainer
+                        modifier = Modifier.size(64.dp),
+                        tint = contentColor
                     )
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(TrailSenseSpacing.md))
                     Text(
-                        if (isPlaying && currentSignal == "Whistle") "BLOWING..." else "HOLD TO BLOW",
+                        text = if (active) "BLOWING" else "HOLD TO BLOW",
                         style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center,
+                        color = contentColor
                     )
                 }
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(TrailSenseSpacing.xl))
+@Composable
+private fun SignalButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val container by animateColorAsState(
+        targetValue = if (selected)
+            MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.secondaryContainer,
+        animationSpec = tween(TrailSenseMotion_medium),
+        label = "signalContainer"
+    )
+    val content by animateColorAsState(
+        targetValue = if (selected)
+            MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.onSecondaryContainer,
+        animationSpec = tween(TrailSenseMotion_medium),
+        label = "signalContent"
+    )
 
-        // Signal buttons
-        Text(
-            "Signals",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(64.dp),
+        shape = MaterialTheme.shapes.large,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = container,
+            contentColor = content
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = if (selected) 4.dp else 1.dp
         )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            FilledTonalButton(
-                onClick = {
-                    playSignal(
-                        context.getString(R.string.help),
-                        emergencySignal,
-                        loop = true
-                    )
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = if (currentSignal == context.getString(R.string.help))
-                        MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Text(stringResource(R.string.help))
-            }
-
-            FilledTonalButton(
-                onClick = {
-                    playSignal("SOS", sosSignal, loop = true)
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("SOS")
-            }
-        }
-
-        Spacer(Modifier.height(TrailSenseSpacing.md))
-
-        // More signals card - M3 expressive
-        var showSignalPicker by remember { mutableStateOf(false) }
-
-        TrailSenseCard(
-            onClick = { showSignalPicker = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                "More signals…",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        if (showSignalPicker) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showSignalPicker = false },
-                title = { Text("Whistle Signals") },
-                text = {
-                    Column {
-                        listOf(
-                            "Where are you?" to Signals.comeHere(),
-                            "Acknowledged" to Signals.acknowledged(),
-                            "Come here" to Signals.comeHere(),
-                            "Help (loop)" to Signals.help()
-                        ).forEach { (label, signal) ->
-                            FilledTonalButton(
-                                onClick = {
-                                    playSignal(label, signal, loop = label.contains("loop", ignoreCase = true))
-                                    showSignalPicker = false
-                                },
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                            ) {
-                                Text(label)
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showSignalPicker = false }) {
-                        Text("Close")
-                    }
-                }
-            )
-        }
-
-        Spacer(Modifier.height(TrailSenseSpacing.lg))
-
-        if (currentSignal != null) {
-            TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                ) {
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        "Playing: $currentSignal",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.weight(1f))
-
+    ) {
         Text(
-            "Tip: Hold the big button for continuous whistle. Tap signals for attention-getting patterns.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
+
+@Composable
+private fun NowPlayingBanner(signal: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.errorContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            Icon(
+                Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Text(
+                text = "Playing: $signal",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
+    }
+}
+
+// Local copy of the shared medium motion duration to avoid an extra cross-module
+// import while keeping animation timings consistent with the design tokens.
+private const val TrailSenseMotion_medium = 250

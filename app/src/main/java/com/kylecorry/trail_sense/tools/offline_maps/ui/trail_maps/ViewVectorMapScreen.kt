@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
 import android.graphics.Color as AndroidColor
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,10 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +44,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -210,16 +212,30 @@ private fun VectorMapScreen(
                 ) {
                     Text(
                         text = map?.name ?: stringResource(R.string.offline_maps),
-                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 64.dp, bottom = 16.dp),
+                        modifier = Modifier.padding(
+                            start = TrailSenseSpacing.lg,
+                            top = TrailSenseSpacing.lg,
+                            end = TrailSenseSpacing.xxxl + TrailSenseSpacing.lg,
+                            bottom = TrailSenseSpacing.lg
+                        ),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                        IconButton(onClick = { isMenuOpen = true }) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = TrailSenseSpacing.sm)
+                    ) {
+                        FilledIconButton(
+                            onClick = { isMenuOpen = true },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_menu_dots),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                contentDescription = null
                             )
                         }
                         DropdownMenu(
@@ -268,32 +284,51 @@ private fun VectorMapScreen(
                         .testTag("map")
                 )
 
-                SmallFloatingActionButton(
-                    onClick = onZoomIn,
+                Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 88.dp)
-                        .size(40.dp)
-                        .testTag("zoom_in_btn")
+                        .padding(end = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.xxl),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    tonalElevation = TrailSenseSpacing.xxs,
+                    shadowElevation = TrailSenseSpacing.xs
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = null
-                    )
-                }
+                    Column(
+                        modifier = Modifier.padding(TrailSenseSpacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                    ) {
+                        FilledIconButton(
+                            onClick = onZoomIn,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .testTag("zoom_in_btn"),
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_add),
+                                contentDescription = null
+                            )
+                        }
 
-                SmallFloatingActionButton(
-                    onClick = onZoomOut,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 32.dp)
-                        .size(40.dp)
-                        .testTag("zoom_out_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_zoom_out),
-                        contentDescription = null
-                    )
+                        FilledIconButton(
+                            onClick = onZoomOut,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .testTag("zoom_out_btn"),
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_zoom_out),
+                                contentDescription = null
+                            )
+                        }
+                    }
                 }
             }
         }

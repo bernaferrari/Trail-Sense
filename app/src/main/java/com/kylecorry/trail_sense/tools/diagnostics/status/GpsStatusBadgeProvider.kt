@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.diagnostics.status
 
 import android.content.Context
 import androidx.annotation.ColorInt
+import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.trail_sense.R
@@ -22,7 +23,18 @@ class GpsStatusBadgeProvider(private val gps: ISatelliteGPS, private val context
     private val prefs = UserPreferences(context)
 
     override fun getBadge(): StatusBadge {
-        return StatusBadge(getName(), getColor(), R.drawable.satellite)
+        return StatusBadge(getName(), getColor(), R.drawable.satellite, isHealthy())
+    }
+
+    private fun isHealthy(): Boolean {
+        if (gps is OverrideGPS) return true
+        if (gps is InactiveGPS || !GPS.isAvailable(context)) return false
+        // Searching and stale readings are transient states already communicated by the readout.
+        // Keep the persistent badge for conditions the user can act on.
+        if (Duration.between(gps.time, Instant.now()) > Duration.ofMinutes(2)) return true
+        if (!gps.hasValidReading || (prefs.requiresSatellites && (gps.satellites ?: 0) < 4)) return true
+        if (gps is CustomGPS && gps.isTimedOut) return true
+        return gps.quality != Quality.Poor
     }
 
     @ColorInt

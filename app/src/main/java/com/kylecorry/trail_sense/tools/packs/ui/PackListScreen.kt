@@ -3,9 +3,8 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,30 +13,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,7 +52,9 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -197,6 +204,7 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PackListScreen(
     packs: List<Pack>,
@@ -213,18 +221,43 @@ private fun PackListScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { PackListHeader() },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.packing_lists),
+                        modifier = Modifier.testTag("pack_list_title"),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        },
         floatingActionButton = {
             Box {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
-                    modifier = Modifier.testTag("add_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add)
-                    )
-                }
+                    modifier = Modifier.testTag("add_btn"),
+                    shape = MaterialTheme.shapes.large,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(R.string.add),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                )
                 DropdownMenu(
                     expanded = isCreateMenuOpen,
                     onDismissRequest = { isCreateMenuOpen = false }
@@ -253,20 +286,26 @@ private fun PackListScreen(
                 .padding(padding)
         ) {
             if (packs.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.no_packing_lists),
+                TrailSenseEmptyState(
+                    icon = Icons.AutoMirrored.Filled.List,
+                    title = stringResource(R.string.no_packing_lists),
+                    description = stringResource(R.string.new_packing_list),
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .testTag("empty_text"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        .testTag("empty_text")
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("pack_list"),
-                    contentPadding = PaddingValues(bottom = 96.dp)
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        bottom = 96.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                 ) {
                     items(packs, key = { it.id }) { pack ->
                         PackListItem(
@@ -277,32 +316,9 @@ private fun PackListScreen(
                             onExportPack = onExportPack,
                             onDeletePack = onDeletePack
                         )
-                        HorizontalDivider()
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun PackListHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.packing_lists),
-                modifier = Modifier.testTag("pack_list_title"),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleLarge
-            )
         }
     }
 }
@@ -318,73 +334,96 @@ private fun PackListItem(
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
 
-    Row(
+    TrailSenseCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpenPack(pack) }
-            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
             .testTag("pack_list_item"),
-        verticalAlignment = Alignment.CenterVertically
+        onClick = { onOpenPack(pack) }
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_tool_pack),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Text(
-            text = pack.name,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.md)
-                .testTag("pack_list_item_title"),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("pack_list_item_menu")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Tonal circular icon chip
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = null
-                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_tool_pack),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+                }
             }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.rename)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onRenamePack(pack)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(androidx.preference.R.string.copy)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onCopyPack(pack)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.export)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onExportPack(pack)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onDeletePack(pack)
-                    }
-                )
+
+            Text(
+                text = pack.name,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("pack_list_item_title"),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("pack_list_item_menu")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.rename)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onRenamePack(pack)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(androidx.preference.R.string.copy)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onCopyPack(pack)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.export)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onExportPack(pack)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete)) },
+                        onClick = {
+                            isMenuOpen = false
+                            onDeletePack(pack)
+                        }
+                    )
+                }
             }
         }
     }

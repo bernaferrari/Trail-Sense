@@ -4,24 +4,27 @@ package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Waves
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -54,6 +57,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -221,38 +226,43 @@ private fun TideListScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = onCreate,
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null
+                    )
+                },
+                text = { Text(stringResource(R.string.tides)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .padding(TrailSenseSpacing.lg)
                     .testTag("add_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
+            )
         }
     }
 }
 
 @Composable
 private fun TideListHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Text(
-            text = stringResource(R.string.tides),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp)
-                .testTag("tide_list_title"),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
+    Text(
+        text = stringResource(R.string.tides),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.xl,
+                bottom = TrailSenseSpacing.sm
+            )
+            .testTag("tide_list_title"),
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable
@@ -266,18 +276,23 @@ private fun TideTableList(
 ) {
     Box(modifier = modifier.testTag("tide_list")) {
         if (tides.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_tides),
+            TrailSenseEmptyState(
+                icon = Icons.Outlined.Waves,
+                title = stringResource(R.string.no_tides),
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .testTag("tide_empty_text"),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    .fillMaxSize()
+                    .testTag("tide_empty_text")
             )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 96.dp)
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    bottom = 96.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
                 items(tides, key = { it.first.id }) { tide ->
                     TideTableRow(
@@ -288,7 +303,6 @@ private fun TideTableList(
                         onDelete = onDelete,
                         onToggleVisibility = onToggleVisibility
                     )
-                    HorizontalDivider()
                 }
             }
         }
@@ -308,86 +322,96 @@ private fun TideTableRow(
     val formatter = remember(context) { FormatService.getInstance(context) }
     var isMenuOpen by remember { mutableStateOf(false) }
 
-    Row(
+    TrailSenseCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect(tide) }
-            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
+            .alpha(if (tide.isVisible) 1f else 0.55f)
             .testTag("tide_table_item"),
-        verticalAlignment = Alignment.CenterVertically
+        onClick = { onSelect(tide) }
     ) {
-        Icon(
-            painter = painterResource(getTideIcon(if (tide.isVisible) tideType else null)),
-            contentDescription = null,
-            tint = if (tide.isVisible) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                ComposeColor.Gray
-            },
-            modifier = Modifier.size(24.dp)
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.md)
-        ) {
-            Text(
-                text = getTideTitle(tide, formatter),
-                modifier = Modifier.testTag("tide_table_title"),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = getTideDescription(tide),
-                modifier = Modifier.testTag("tide_table_description"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        if (tide.isEditable) {
-            Box {
-                IconButton(
-                    onClick = { isMenuOpen = true },
-                    modifier = Modifier.testTag("tide_table_menu")
-                ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Tonal water/tide icon chip
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = null
+                        painter = painterResource(
+                            getTideIcon(if (tide.isVisible) tideType else null)
+                        ),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(26.dp)
                     )
                 }
-                DropdownMenu(
-                    expanded = isMenuOpen,
-                    onDismissRequest = { isMenuOpen = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.edit)) },
-                        onClick = {
-                            isMenuOpen = false
-                            onEdit(tide)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                stringResource(
-                                    if (tide.isVisible) R.string.hide else R.string.show
+            }
+
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = getTideTitle(tide, formatter),
+                    modifier = Modifier.testTag("tide_table_title"),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.size(TrailSenseSpacing.xxs))
+                Text(
+                    text = getTideDescription(tide),
+                    modifier = Modifier.testTag("tide_table_description"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (tide.isEditable) {
+                Box {
+                    IconButton(
+                        onClick = { isMenuOpen = true },
+                        modifier = Modifier.testTag("tide_table_menu")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isMenuOpen,
+                        onDismissRequest = { isMenuOpen = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.edit)) },
+                            onClick = {
+                                isMenuOpen = false
+                                onEdit(tide)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    stringResource(
+                                        if (tide.isVisible) R.string.hide else R.string.show
+                                    )
                                 )
-                            )
-                        },
-                        onClick = {
-                            isMenuOpen = false
-                            onToggleVisibility(tide)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.delete)) },
-                        onClick = {
-                            isMenuOpen = false
-                            onDelete(tide)
-                        }
-                    )
+                            },
+                            onClick = {
+                                isMenuOpen = false
+                                onToggleVisibility(tide)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.delete)) },
+                            onClick = {
+                                isMenuOpen = false
+                                onDelete(tide)
+                            }
+                        )
+                    }
                 }
             }
         }

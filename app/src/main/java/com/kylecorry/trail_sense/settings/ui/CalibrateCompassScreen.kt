@@ -3,14 +3,26 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -22,8 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -47,7 +62,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource
 import com.kylecorry.trail_sense.shared.sensors.providers.CompassProvider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
@@ -323,6 +337,9 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
             declinationOverride = it
         }
 
+        val qualityGood = stringResource(R.string.quality_good)
+        val qualityPoor = stringResource(R.string.quality_poor)
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -334,120 +351,118 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                     end = TrailSenseSpacing.lg,
                     top = TrailSenseSpacing.lg,
                     bottom = TrailSenseSpacing.xxxl
-                )
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
                 item("header") {
-                    TrailSenseSectionHeader(
-                        title = stringResource(R.string.pref_compass_sensor_title)
+                    Text(
+                        text = stringResource(R.string.pref_compass_sensor_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(
+                            top = TrailSenseSpacing.sm,
+                            bottom = TrailSenseSpacing.xs
+                        )
                     )
                 }
+
                 if (hasCompass) {
-                    item("azimuth") {
-                        SettingsInfoRow(
-                            label = stringResource(R.string.compass_azimuth),
-                            summary = azimuth,
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    item("hero") {
+                        CompassHeroCard(
+                            azimuth = azimuth,
+                            accuracy = accuracy,
+                            qualityGood = qualityGood,
+                            qualityPoor = qualityPoor,
+                            onCalibrate = { showCalibrationDialog = true }
                         )
                     }
-                    item("calibrate") {
-                        SettingsActionRow(
-                            label = stringResource(R.string.calibrate),
-                            summary = stringResource(
-                                R.string.compass_reported_accuracy,
-                                accuracy
-                            ),
-                            onClick = { showCalibrationDialog = true },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                        )
-                    }
-                    item("source") {
-                        SettingsPickerRow(
-                            label = sourceTitle,
-                            selected = controller.optionLabel(compassSourceOptions, source),
-                            onClick = {
-                                controller.pickOption(
-                                    sourceTitle,
-                                    compassSourceOptions,
-                                    source
-                                ) {
-                                    source = it
-                                    controller.putString(R.string.pref_compass_source, it)
-                                    controller.resetCompass()
+
+                    item("status") {
+                        CalibrateSettingsSection(
+                            title = stringResource(R.string.sensor)
+                        ) {
+                            SettingsInfoRow(
+                                label = stringResource(R.string.compass_azimuth),
+                                summary = azimuth
+                            )
+                            SettingsPickerRow(
+                                label = sourceTitle,
+                                selected = controller.optionLabel(compassSourceOptions, source),
+                                onClick = {
+                                    controller.pickOption(
+                                        sourceTitle,
+                                        compassSourceOptions,
+                                        source
+                                    ) {
+                                        source = it
+                                        controller.putString(R.string.pref_compass_source, it)
+                                        controller.resetCompass()
+                                    }
                                 }
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                        )
+                            )
+                            CompassSmoothingRow(
+                                smoothing = smoothing,
+                                onSmoothingChange = {
+                                    smoothing = it
+                                    controller.putInt(R.string.pref_compass_filter_amt, it)
+                                    controller.resetCompass()
+                                },
+                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            )
+                            TrailSenseDivider()
+                            SettingsSwitchRow(
+                                label = stringResource(R.string.true_north),
+                                checked = useTrueNorth,
+                                onCheckedChange = {
+                                    useTrueNorth = it
+                                    prefs.compass.useTrueNorth = it
+                                    controller.resetCompass()
+                                },
+                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            )
+                        }
                     }
-                    item("smoothing") {
-                        CompassSmoothingRow(
-                            smoothing = smoothing,
-                            onSmoothingChange = {
-                                smoothing = it
-                                controller.putInt(R.string.pref_compass_filter_amt, it)
-                                controller.resetCompass()
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                }
+
+                item("declination_section") {
+                    CalibrateSettingsSection(
+                        title = stringResource(R.string.compass_declination)
+                    ) {
+                        SettingsInfoRow(
+                            label = stringResource(R.string.compass_declination),
+                            summary = declination
                         )
-                        TrailSenseDivider()
-                    }
-                    item("true_north") {
                         SettingsSwitchRow(
-                            label = stringResource(R.string.true_north),
-                            checked = useTrueNorth,
+                            label = stringResource(R.string.compass_auto_declination),
+                            summary = stringResource(R.string.pref_auto_declination_summary),
+                            checked = useAutoDeclination,
                             onCheckedChange = {
-                                useTrueNorth = it
-                                prefs.compass.useTrueNorth = it
-                                controller.resetCompass()
+                                useAutoDeclination = it
+                                prefs.useAutoDeclination = it
+                                controller.update()
                             },
                             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                         )
                         TrailSenseDivider()
-                    }
-                }
-                item("declination") {
-                    SettingsInfoRow(
-                        label = stringResource(R.string.compass_declination),
-                        summary = declination,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-                item("auto_declination") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.compass_auto_declination),
-                        summary = stringResource(R.string.pref_auto_declination_summary),
-                        checked = useAutoDeclination,
-                        onCheckedChange = {
-                            useAutoDeclination = it
-                            prefs.useAutoDeclination = it
-                            controller.update()
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                item("declination_override") {
-                    SettingsPickerRow(
-                        label = stringResource(R.string.compass_declination_override),
-                        selected = stringResource(
-                            R.string.degree_format,
-                            declinationOverride
-                        ),
-                        enabled = !useAutoDeclination,
-                        onClick = {
-                            controller.pickDeclinationOverride(declinationOverride) {
-                                declinationOverride = it
+                        SettingsPickerRow(
+                            label = stringResource(R.string.compass_declination_override),
+                            selected = stringResource(
+                                R.string.degree_format,
+                                declinationOverride
+                            ),
+                            enabled = !useAutoDeclination,
+                            onClick = {
+                                controller.pickDeclinationOverride(declinationOverride) {
+                                    declinationOverride = it
+                                }
                             }
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-                item("declination_gps") {
-                    SettingsActionRow(
-                        label = stringResource(R.string.override_from_gps),
-                        enabled = !useAutoDeclination,
-                        onClick = controller::updateDeclinationFromGps,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+                        )
+                        SettingsActionRow(
+                            label = stringResource(R.string.override_from_gps),
+                            enabled = !useAutoDeclination,
+                            onClick = controller::updateDeclinationFromGps
+                        )
+                    }
                 }
             }
         }
@@ -467,12 +482,19 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                             )
                         )
                         if (hasCompass) {
-                            CompassCalibrationContent(
+                            Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp)
-                                    .padding(top = TrailSenseSpacing.lg)
-                            )
+                                    .padding(top = TrailSenseSpacing.lg),
+                                shape = MaterialTheme.shapes.large,
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest
+                            ) {
+                                CompassCalibrationContent(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                )
+                            }
                         }
                     }
                 },
@@ -514,5 +536,131 @@ private fun CompassSmoothingRow(
             valueRange = 1f..100f,
             steps = 98
         )
+    }
+}
+
+@Composable
+private fun CompassHeroCard(
+    azimuth: String,
+    accuracy: String,
+    qualityGood: String,
+    qualityPoor: String,
+    onCalibrate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Color-code the calibration quality state without changing any behavior.
+    val targetQualityColor = when (accuracy) {
+        qualityGood -> MaterialTheme.colorScheme.tertiary
+        qualityPoor -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    val qualityColor by animateColorAsState(
+        targetValue = targetQualityColor,
+        animationSpec = tween(durationMillis = 250),
+        label = "quality_color"
+    )
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_compass_icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+                Text(
+                    text = stringResource(R.string.compass_azimuth),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            Text(
+                text = azimuth,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            // Color-coded calibration quality state
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(12.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = qualityColor,
+                        modifier = Modifier.fillMaxSize()
+                    ) {}
+                }
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(
+                    text = stringResource(R.string.compass_reported_accuracy, accuracy),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = qualityColor
+                )
+            }
+
+            TextButton(
+                onClick = onCalibrate,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.calibrate),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalibrateSettingsSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.md,
+                bottom = TrailSenseSpacing.sm
+            )
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+                content()
+            }
+        }
     }
 }

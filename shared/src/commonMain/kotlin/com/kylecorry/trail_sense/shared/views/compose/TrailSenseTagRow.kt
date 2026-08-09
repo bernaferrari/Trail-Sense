@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -15,9 +14,9 @@ fun TrailSenseTagRow(
     modifier: Modifier = Modifier
 ) {
     FlowRow(
-        modifier = modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        modifier = modifier.padding(horizontal = TrailSenseSpacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         tags.forEach { tag ->
             TrailSenseChip(

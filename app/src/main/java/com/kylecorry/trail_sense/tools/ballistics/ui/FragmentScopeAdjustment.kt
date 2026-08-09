@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -9,10 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -24,11 +28,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.preferences.IPreferences
@@ -97,66 +107,166 @@ fun ScopeAdjustmentPage(
         "${it.direction.name} ${it.clicks} clicks"
     }.ifBlank { stringResource(R.string.none) }
 
-    BallisticsForm(modifier = modifier) {
-        UnitPickerField(
-            label = stringResource(R.string.adjustment_per_click),
-            selected = selectedClickAmount,
-            options = clickAmounts.map { amount ->
-                stringResource(amount.first.first, amount.first.second) to amount.second
-            },
-            onSelected = setDistancePerClick,
-            modifier = Modifier.testTag("click_amount")
-        )
-        DistanceField(
-            label = stringResource(R.string.distance_to_target),
-            value = distanceToTarget,
-            units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-            defaultUnit = DistanceUnits.Yards,
-            onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
-            modifier = Modifier.testTag("distance_to_target")
-        )
-        SectionLabel(text = stringResource(R.string.windage_miss))
-        DistanceField(
-            label = stringResource(R.string.distance),
-            value = offsetX,
-            units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-            defaultUnit = DistanceUnits.Inches,
-            onValueChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
-            modifier = Modifier.testTag("miss_distance_x")
-        )
-        ToggleRow(
-            options = listOf(
-                stringResource(R.string.left) to ScopeDirection.Left,
-                stringResource(R.string.right) to ScopeDirection.Right
-            ),
-            selected = offsetDirectionX,
-            onSelected = { offsetDirectionX = it },
-            modifier = Modifier.testTag("miss_direction_x")
-        )
-        SectionLabel(text = stringResource(R.string.elevation_miss))
-        DistanceField(
-            label = stringResource(R.string.distance),
-            value = offsetY,
-            units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-            defaultUnit = DistanceUnits.Inches,
-            onValueChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
-            modifier = Modifier.testTag("miss_distance_y")
-        )
-        ToggleRow(
-            options = listOf(
-                stringResource(R.string.above) to ScopeDirection.Up,
-                stringResource(R.string.below) to ScopeDirection.Down
-            ),
-            selected = offsetDirectionY,
-            onSelected = { offsetDirectionY = it },
-            modifier = Modifier.testTag("miss_direction_y")
-        )
-        SectionLabel(text = stringResource(R.string.scope_adjustment))
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = TrailSenseSpacing.xl,
+                    top = TrailSenseSpacing.xl,
+                    end = TrailSenseSpacing.xl,
+                    bottom = TrailSenseSpacing.xxxl
+                ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+        ) {
+            // Hero readout — the calculated scope adjustment
+            ScopeAdjustmentHero(adjustmentText = adjustmentText)
+
+            // Setup group
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+                    ScopeSectionHeader(
+                        icon = R.drawable.ballistics,
+                        title = stringResource(R.string.adjustment_per_click)
+                    )
+                    UnitPickerField(
+                        label = stringResource(R.string.adjustment_per_click),
+                        selected = selectedClickAmount,
+                        options = clickAmounts.map { amount ->
+                            stringResource(amount.first.first, amount.first.second) to amount.second
+                        },
+                        onSelected = setDistancePerClick,
+                        modifier = Modifier.testTag("click_amount")
+                    )
+                    DistanceField(
+                        label = stringResource(R.string.distance_to_target),
+                        value = distanceToTarget,
+                        units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+                        defaultUnit = DistanceUnits.Yards,
+                        onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+                        modifier = Modifier.testTag("distance_to_target")
+                    )
+                }
+            }
+
+            // Windage miss group
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+                    ScopeSectionHeader(
+                        icon = R.drawable.ic_arrow,
+                        title = stringResource(R.string.windage_miss)
+                    )
+                    DistanceField(
+                        label = stringResource(R.string.distance),
+                        value = offsetX,
+                        units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
+                        defaultUnit = DistanceUnits.Inches,
+                        onValueChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
+                        modifier = Modifier.testTag("miss_distance_x")
+                    )
+                    ToggleRow(
+                        options = listOf(
+                            stringResource(R.string.left) to ScopeDirection.Left,
+                            stringResource(R.string.right) to ScopeDirection.Right
+                        ),
+                        selected = offsetDirectionX,
+                        onSelected = { offsetDirectionX = it },
+                        modifier = Modifier.testTag("miss_direction_x")
+                    )
+                }
+            }
+
+            // Elevation miss group
+            TrailSenseCard {
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+                    ScopeSectionHeader(
+                        icon = R.drawable.ic_arrow_up,
+                        title = stringResource(R.string.elevation_miss)
+                    )
+                    DistanceField(
+                        label = stringResource(R.string.distance),
+                        value = offsetY,
+                        units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
+                        defaultUnit = DistanceUnits.Inches,
+                        onValueChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
+                        modifier = Modifier.testTag("miss_distance_y")
+                    )
+                    ToggleRow(
+                        options = listOf(
+                            stringResource(R.string.above) to ScopeDirection.Up,
+                            stringResource(R.string.below) to ScopeDirection.Down
+                        ),
+                        selected = offsetDirectionY,
+                        onSelected = { offsetDirectionY = it },
+                        modifier = Modifier.testTag("miss_direction_y")
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScopeAdjustmentHero(adjustmentText: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+        ) {
+            Text(
+                text = stringResource(R.string.scope_adjustment),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = adjustmentText,
+                modifier = Modifier.testTag("adjustment_amount"),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScopeSectionHeader(icon: Int, title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
         Text(
-            text = adjustmentText,
-            modifier = Modifier.testTag("adjustment_amount"),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }

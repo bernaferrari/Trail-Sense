@@ -2,17 +2,23 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,22 +33,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import kotlinx.coroutines.Dispatchers
@@ -116,37 +126,33 @@ fun LightningScreen(
         context.getString(R.string.dash_separated_pair, lastTime, lastDistance)
     }.orEmpty()
 
+    val waitingForThunder = lightningTime != null
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            Column(
-                modifier = Modifier.align(Alignment.TopCenter),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = distanceText,
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-                if (isDangerous) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.lightning_dangerously_close),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            // Hero distance readout in a tonal primaryContainer card
+            DistanceHero(
+                distanceText = distanceText,
+                isDangerous = isDangerous,
+                waitingForThunder = waitingForThunder,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Button(
+            // Primary record action
+            TrailSenseButton(
+                text = stringResource(
+                    if (!waitingForThunder) R.string.lightning else R.string.thunder
+                ),
                 onClick = {
                     val startedAt = lightningTime
                     if (startedAt == null) {
@@ -164,56 +170,163 @@ fun LightningScreen(
                         }
                     }
                 },
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(250.dp)
-                    .clip(CircleShape),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (lightningTime == null) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                    contentColor = if (lightningTime == null) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onPrimary
-                    }
-                )
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (lightningTime == null) R.drawable.ic_torch_on else R.drawable.ic_thunder
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Text(
-                        text = stringResource(
-                            if (lightningTime == null) R.string.lightning else R.string.thunder
-                        ),
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            if (previousStrikeText.isNotBlank()) {
-                Text(
-                    text = previousStrikeText,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
+            // Instructions and previous strike grouped in a surface card
+            InfoCard(
+                previousStrikeText = previousStrikeText,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun DistanceHero(
+    distanceText: String,
+    isDangerous: Boolean,
+    waitingForThunder: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val hasReading = distanceText.isNotBlank()
+
+    val containerColor by animateColorAsState(
+        targetValue = when {
+            isDangerous -> MaterialTheme.colorScheme.errorContainer
+            else -> MaterialTheme.colorScheme.primaryContainer
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "heroContainer"
+    )
+    val onContainerColor by animateColorAsState(
+        targetValue = when {
+            isDangerous -> MaterialTheme.colorScheme.onErrorContainer
+            else -> MaterialTheme.colorScheme.onPrimaryContainer
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "heroOnContainer"
+    )
+
+    // Spring-animate the readout so a new distance value pops into place.
+    val valueScale by animateFloatAsState(
+        targetValue = if (hasReading) 1f else 0.96f,
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "heroValueScale"
+    )
+
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = containerColor,
+        contentColor = onContainerColor
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.xl,
+                vertical = TrailSenseSpacing.xxl
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            Text(
+                text = if (hasReading) distanceText else "—",
+                modifier = Modifier.scale(valueScale),
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = onContainerColor,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(
+                    when {
+                        isDangerous -> R.string.lightning_dangerously_close
+                        waitingForThunder -> R.string.thunder
+                        else -> R.string.lightning
+                    }
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                color = if (isDangerous) {
+                    onContainerColor
+                } else {
+                    onContainerColor.copy(alpha = 0.7f)
+                },
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoCard(
+    previousStrikeText: String,
+    modifier: Modifier = Modifier
+) {
+    TrailSenseCard(modifier = modifier) {
+        // Instructions section
+        Text(
+            text = stringResource(R.string.instructions),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+        InstructionStep(
+            number = stringResource(R.string.one),
+            iconRes = R.drawable.ic_torch_on,
+            text = stringResource(R.string.lightning)
+        )
+        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+        InstructionStep(
+            number = stringResource(R.string.two),
+            iconRes = R.drawable.ic_thunder,
+            text = stringResource(R.string.thunder)
+        )
+
+        // Previous strike section
+        if (previousStrikeText.isNotBlank()) {
+            Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+            Text(
+                text = stringResource(R.string.previous),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
+            Text(
+                text = previousStrikeText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun InstructionStep(
+    number: String,
+    iconRes: Int,
+    text: String
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
+        Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+        Text(
+            text = "$number. $text",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

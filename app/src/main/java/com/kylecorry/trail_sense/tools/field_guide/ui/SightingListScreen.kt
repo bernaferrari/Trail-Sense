@@ -3,21 +3,27 @@
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
@@ -46,8 +53,9 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -208,35 +216,42 @@ private fun SightingListScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = onCreate,
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null
+                    )
+                },
+                text = { Text(stringResource(R.string.sighting)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .padding(TrailSenseSpacing.lg)
                     .testTag("create_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null
-                )
-            }
+            )
         }
     }
 }
 
 @Composable
 private fun SightingListHeader() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Text(
-            text = stringResource(R.string.sightings),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
+    Text(
+        text = stringResource(R.string.sightings),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.xl,
+                bottom = TrailSenseSpacing.sm
+            ),
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Composable
@@ -244,24 +259,28 @@ private fun SightingListView(
     items: List<SightingListItem>,
     modifier: Modifier = Modifier
 ) {
-    if (items.isEmpty()) {
-        Box(
-            modifier = modifier.testTag("list"),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.no_sightings),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+    Box(modifier = modifier.testTag("list")) {
+        if (items.isEmpty()) {
+            TrailSenseEmptyState(
+                icon = Icons.Outlined.Pets,
+                title = stringResource(R.string.no_sightings),
+                modifier = Modifier.fillMaxSize()
             )
-        }
-        return
-    }
-
-    LazyColumn(modifier = modifier.testTag("list")) {
-        items(items, key = { it.sighting.id }) { item ->
-            SightingRow(item)
-            TrailSenseDivider()
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    bottom = 96.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                items(items, key = { it.sighting.id }) { item ->
+                    SightingRow(item)
+                }
+            }
         }
     }
 }
@@ -270,91 +289,147 @@ private fun SightingListView(
 private fun SightingRow(item: SightingListItem) {
     var menuOpen by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { item.onEdit() }
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-        verticalAlignment = Alignment.CenterVertically
+    TrailSenseCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { item.onEdit() }
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = TrailSenseSpacing.md)
-        ) {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (item.subtitle.isNotBlank()) {
-                Text(
-                    text = item.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Tonal date icon chip
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_date),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
             }
-            if (item.isHarvested) {
-                Text(
-                    text = stringResource(R.string.harvested),
-                    modifier = Modifier
-                        .padding(top = 6.dp)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            MaterialTheme.shapes.extraSmall
-                        )
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
 
-        Box {
-            IconButton(
-                onClick = { menuOpen = true },
-                modifier = Modifier.testTag("field_guide_sighting_menu")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = null
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                if (item.subtitle.isNotBlank()) {
+                    Spacer(Modifier.size(TrailSenseSpacing.xxs))
+                    Text(
+                        text = item.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (item.hasLocation || item.isHarvested) {
+                    Spacer(Modifier.size(TrailSenseSpacing.sm))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                    ) {
+                        if (item.hasLocation) {
+                            SightingTag(
+                                text = stringResource(R.string.location),
+                                iconRes = R.drawable.ic_location
+                            )
+                        }
+                        if (item.isHarvested) {
+                            SightingTag(
+                                text = stringResource(R.string.harvested)
+                            )
+                        }
+                    }
+                }
             }
-            DropdownMenu(
-                expanded = menuOpen,
-                onDismissRequest = { menuOpen = false }
-            ) {
-                if (item.hasLocation) {
+
+            Box {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier.testTag("field_guide_sighting_menu")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    if (item.hasLocation) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.navigate)) },
+                            onClick = {
+                                menuOpen = false
+                                item.onNavigate()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.create_beacon)) },
+                            onClick = {
+                                menuOpen = false
+                                item.onCreateBeacon()
+                            }
+                        )
+                    }
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.navigate)) },
+                        text = { Text(stringResource(R.string.edit)) },
                         onClick = {
                             menuOpen = false
-                            item.onNavigate()
+                            item.onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.create_beacon)) },
+                        text = { Text(stringResource(R.string.delete)) },
                         onClick = {
                             menuOpen = false
-                            item.onCreateBeacon()
+                            item.onDelete()
                         }
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.edit)) },
-                    onClick = {
-                        menuOpen = false
-                        item.onEdit()
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
-                    onClick = {
-                        menuOpen = false
-                        item.onDelete()
-                    }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SightingTag(
+    text: String,
+    iconRes: Int? = null
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.sm,
+                vertical = TrailSenseSpacing.xxs
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(14.dp)
                 )
             }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }

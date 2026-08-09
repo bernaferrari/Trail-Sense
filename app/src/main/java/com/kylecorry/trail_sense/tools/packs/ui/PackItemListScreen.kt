@@ -9,26 +9,31 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,11 +42,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,8 +60,11 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.domain.PackService
@@ -64,7 +73,6 @@ import com.kylecorry.trail_sense.tools.packs.domain.sort.PackedPercentPackItemSo
 import com.kylecorry.trail_sense.tools.packs.domain.sort.WeightPackItemSort
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryColorMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import java.lang.Double.max
@@ -361,6 +369,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PackItemScreen(
     title: String,
@@ -395,55 +404,87 @@ private fun PackItemScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = onAddItem,
-                modifier = Modifier.testTag("add_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add)
-                )
-            }
+                modifier = Modifier.testTag("add_btn"),
+                shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.add),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            PackDetails(
-                totalPercentPacked = totalPercentPacked,
-                totalPackedWeight = totalPackedWeight,
-                showWeightOverview = showWeightOverview
-            )
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (items.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.inventory_empty_text),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .testTag("inventory_empty_text"),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("inventory_list"),
-                        contentPadding = PaddingValues(bottom = 96.dp)
-                    ) {
-                        items(items, key = { it.id }) { item ->
-                            PackItemRow(
-                                item = item,
-                                onClick = { onItemClick(item) },
-                                onCheckedChange = { onItemCheckedChange(item) },
-                                onAddAmount = { onAddAmount(item) },
-                                onSubtractAmount = { onSubtractAmount(item) },
-                                onEditItem = { onEditItem(item) },
-                                onDeleteItem = { onDeleteItem(item) }
+            if (items.isEmpty()) {
+                TrailSenseEmptyState(
+                    icon = Icons.AutoMirrored.Filled.List,
+                    title = stringResource(R.string.inventory_empty_text),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .testTag("inventory_empty_text")
+                )
+            } else {
+                // Group consecutive items by category, preserving the sorted order.
+                val groups = remember(items) {
+                    val result = mutableListOf<Pair<ItemCategory, MutableList<PackItem>>>()
+                    items.forEach { item ->
+                        val last = result.lastOrNull()
+                        if (last != null && last.first == item.category) {
+                            last.second.add(item)
+                        } else {
+                            result.add(item.category to mutableListOf(item))
+                        }
+                    }
+                    result
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("inventory_list"),
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        bottom = 96.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                    item(key = "pack_hero") {
+                        PackHeroCard(
+                            totalPercentPacked = totalPercentPacked,
+                            totalPackedWeight = totalPackedWeight,
+                            showWeightOverview = showWeightOverview
+                        )
+                    }
+
+                    groups.forEachIndexed { index, (category, categoryItems) ->
+                        item(key = "category_$index") {
+                            PackCategoryGroup(
+                                category = category,
+                                items = categoryItems,
+                                onItemClick = onItemClick,
+                                onItemCheckedChange = onItemCheckedChange,
+                                onAddAmount = onAddAmount,
+                                onSubtractAmount = onSubtractAmount,
+                                onEditItem = onEditItem,
+                                onDeleteItem = onDeleteItem
                             )
-                            HorizontalDivider()
                         }
                     }
                 }
@@ -452,6 +493,7 @@ private fun PackItemScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PackItemHeader(
     title: String,
@@ -463,26 +505,22 @@ private fun PackItemHeader(
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    TopAppBar(
+        title = {
             Text(
                 text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("inventory_list_title"),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.testTag("inventory_list_title"),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        actions = {
             Box {
                 IconButton(
                     onClick = { isMenuOpen = true },
@@ -490,7 +528,8 @@ private fun PackItemHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 DropdownMenu(
@@ -520,64 +559,84 @@ private fun PackItemHeader(
                 }
             }
         }
-    }
+    )
 }
 
 @Composable
-private fun PackDetails(
+private fun PackHeroCard(
     totalPercentPacked: String,
     totalPackedWeight: String,
     showWeightOverview: Boolean
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        PackDetailStat(
-            icon = R.drawable.ic_tool_pack,
-            text = totalPercentPacked,
-            tag = "total_percent_packed",
-            modifier = Modifier.weight(1f)
-        )
-        if (showWeightOverview) {
-            PackDetailStat(
-                icon = R.drawable.ic_weight,
-                text = totalPackedWeight,
-                tag = "total_packed_weight",
-                modifier = Modifier.weight(1f)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TrailSenseSpacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = totalPercentPacked,
+                modifier = Modifier.testTag("total_percent_packed"),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
             )
+            if (showWeightOverview) {
+                Spacer(Modifier.height(TrailSenseSpacing.xs))
+                Text(
+                    text = totalPackedWeight,
+                    modifier = Modifier.testTag("total_packed_weight"),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun PackDetailStat(
-    icon: Int,
-    text: String,
-    tag: String,
-    modifier: Modifier = Modifier
+private fun PackCategoryGroup(
+    category: ItemCategory,
+    items: List<PackItem>,
+    onItemClick: (PackItem) -> Unit,
+    onItemCheckedChange: (PackItem) -> Unit,
+    onAddAmount: (PackItem) -> Unit,
+    onSubtractAmount: (PackItem) -> Unit,
+    onEditItem: (PackItem) -> Unit,
+    onDeleteItem: (PackItem) -> Unit
 ) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    val context = LocalContext.current
+    val categoryTextMapper = remember(context) { ItemCategoryStringMapper(context) }
+
+    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = text,
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .testTag(tag),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodyMedium
+            text = categoryTextMapper.getString(category),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
         )
+        Spacer(Modifier.height(TrailSenseSpacing.sm))
+        items.forEachIndexed { index, item ->
+            if (index > 0) {
+                Spacer(Modifier.height(TrailSenseSpacing.xs))
+            }
+            PackItemRow(
+                item = item,
+                onClick = { onItemClick(item) },
+                onCheckedChange = { onItemCheckedChange(item) },
+                onAddAmount = { onAddAmount(item) },
+                onSubtractAmount = { onSubtractAmount(item) },
+                onEditItem = { onEditItem(item) },
+                onDeleteItem = { onDeleteItem(item) }
+            )
+        }
     }
 }
 
@@ -592,9 +651,7 @@ private fun PackItemRow(
     onDeleteItem: () -> Unit
 ) {
     val context = LocalContext.current
-    val categoryTextMapper = remember(context) { ItemCategoryStringMapper(context) }
     val iconMapper = remember { ItemCategoryIconMapper() }
-    val colorMapper = remember { ItemCategoryColorMapper() }
     val formatService = remember(context) { FormatService.getInstance(context) }
     var isMenuOpen by remember { mutableStateOf(false) }
     val count = formatItemCount(item)
@@ -607,8 +664,6 @@ private fun PackItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = 8.dp, top = 10.dp, bottom = 10.dp)
             .testTag("inventory_item"),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -617,50 +672,42 @@ private fun PackItemRow(
             onCheckedChange = { onCheckedChange() },
             modifier = Modifier.testTag("item_checkbox")
         )
-        Icon(
-            painter = painterResource(iconMapper.getIcon(item.category)),
-            contentDescription = null,
-            tint = ComposeColor(colorMapper.map(item.category).color),
-            modifier = Modifier.size(24.dp)
-        )
+
+        // Tonal circular icon chip
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(iconMapper.getIcon(item.category)),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.md)
+                .clickable(onClick = onClick)
+                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
         ) {
             Text(
                 text = item.name,
                 modifier = Modifier.testTag("item_title"),
                 style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Row(
-                modifier = Modifier.padding(top = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = categoryTextMapper.getString(item.category),
-                    modifier = Modifier.testTag("item_category"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (item.isOptional) {
-                    Text(
-                        text = stringResource(R.string.packing_list_optional),
-                        modifier = Modifier.testTag("item_optional"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier.padding(top = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
                 Text(
                     text = count,
@@ -676,8 +723,17 @@ private fun PackItemRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                if (item.isOptional) {
+                    Text(
+                        text = stringResource(R.string.packing_list_optional),
+                        modifier = Modifier.testTag("item_optional"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
+
         Box {
             IconButton(
                 onClick = { isMenuOpen = true },
@@ -685,7 +741,8 @@ private fun PackItemRow(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             DropdownMenu(

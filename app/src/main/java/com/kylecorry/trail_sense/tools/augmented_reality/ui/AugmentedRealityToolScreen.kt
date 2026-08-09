@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -76,7 +77,9 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
@@ -880,35 +883,35 @@ private fun AugmentedRealityHost(
             modifier = Modifier.fillMaxSize()
         )
         views.arView.Content(Modifier.fillMaxSize())
-        views.cameraToggle.Content(
-            Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp, end = 8.dp)
-        )
-        views.searchBtn.Content(
-            Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 48.dp, end = 8.dp)
-        )
-        views.timeBtn.Content(
-            Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 88.dp, end = 8.dp)
-        )
-        views.calibrateBtn.Content(
-            Modifier
+
+        // Top-start floating controls (calibrate, layers)
+        Column(
+            modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = 8.dp, start = 8.dp)
-        )
-        views.layersBtn.Content(
-            Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 48.dp, start = 8.dp)
-        )
+                .padding(TrailSenseSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            views.calibrateBtn.Content()
+            views.layersBtn.Content()
+        }
+
+        // Top-end floating controls (camera toggle, locate, time)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(TrailSenseSpacing.md),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            views.cameraToggle.Content()
+            views.searchBtn.Content()
+            views.timeBtn.Content()
+        }
+
         views.accuracyView.Content(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = 136.dp)
+                .padding(start = TrailSenseSpacing.lg, bottom = 136.dp)
         )
         views.focusActionButton.Content(
             Modifier
@@ -921,29 +924,31 @@ private fun AugmentedRealityHost(
                 .padding(bottom = 96.dp)
         )
         if (views.guidancePanel.isVisible) {
-            Surface(
+            TrailSenseCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(bottom = if (views.timeSheet.isVisible) 96.dp else 0.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        bottom = if (views.timeSheet.isVisible) 96.dp else TrailSenseSpacing.lg
+                    )
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     views.arGuideIcon.Content()
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = TrailSenseSpacing.lg)
                     ) {
                         Text(
                             text = stringResource(R.string.target),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        Box(modifier = Modifier.padding(top = 4.dp)) {
+                        Box(modifier = Modifier.padding(top = TrailSenseSpacing.xs)) {
                             views.arGuideName.Content()
                         }
                     }
