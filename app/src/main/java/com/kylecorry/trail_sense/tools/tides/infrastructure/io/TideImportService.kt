@@ -21,7 +21,7 @@ class TideImportService(private val uriPicker: UriPicker, private val uriService
 //            "text/plain"
 
             )
-        ).getOrNull() ?: return@onIO null
+        ) ?: return@onIO null
         val stream = uriService.inputStream(uri) ?: return@onIO null
         val parsers: List<TideTableParser> = listOf(NoaaHcAndMetadataTideTableConverter())
         stream.use {

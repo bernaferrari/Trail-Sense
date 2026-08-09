@@ -430,7 +430,7 @@
     <string name="pref_backtrack_save_cell_summary">Nehme Mobilfunksignale an den Wegpunkten auf. Das Internet wird nicht genutzt.</string>
     <string name="distance_from_flashlight">Distanz vom Handy zur Taschenlampe</string>
     <string name="beacon_export_error">Beacons konnten nicht exportiert werden</string>
-    <string name="onboarding_user_guide">Lernen Sie mithilfe des Benutzerhandbuchs, wie Sie die Funktionen von Trail Sense nutzen. Es befindet sich auf der Werkzeuge-Seite.</string>
+    <string name="onboarding_user_guide">Lerne mithilfe des Benutzerhandbuchs, wie du die Funktionen von Trail Sense nutzt. Es befindet sich unten auf der Werkzeuge-Seite. \n \nBald werden weitere Anleitungen erscheinenen.</string>
     <string name="backtrack_disabled_low_power_toast">Rückweg ist im Energiespar-Modus deaktiviert</string>
     <string name="magnetic_field_format_precise">%s uT</string>
     <string name="turn_off">Ausschalten</string>
@@ -458,7 +458,7 @@
     <string name="beam_distance">%s Reichweite</string>
     <string name="stratocumulus_desc">Niedrige Wolken, die wie eine Schicht aus Wattebäuschen mit kleinen Lücken aussehen. Die Farbe ist weiß bis dunkelgrau.</string>
     <string name="on_map">Auf der Karte</string>
-    <string name="pref_step_length_title">Schrittlänge</string>
+    <string name="pref_stride_length_title">Schrittlänge</string>
     <string name="pref_daily_weather_time_title">Zeit der täglichen Benachrichtigung</string>
     <string name="none">Keine</string>
     <string name="backtrack_notification_channel_description">Standortaktualisierungen für Rückweg</string>
@@ -470,6 +470,7 @@
     <string name="pedometer_disclaimer">Der Akkuverbrauch und die Genauigkeit des Schrittzählers hängt vom Hersteller des Geräts und der angegeben Schrittgröße ab. Teste es kurz zu Hause, um den Energieverbrauch und die Genauigkeit festzustellen, bevor du es unterwegs verwendest.</string>
     <string name="experimental">Experimentell</string>
     <string name="import_gpx">GPX importieren</string>
+    <string name="error_importing_map">Fehler beim Importieren der Karte</string>
     <string name="importing_map">Karte importieren</string>
     <string name="map_auto_calibrated">Karte wurde automatisch kalibriert, bitte überprüfe ihre Genauigkeit</string>
     <string name="time_until_empty">bis leer</string>
@@ -835,7 +836,7 @@
     <string name="temperature_history">Temperaturverlauf - letzte %s</string>
     <string name="disclaimer_estimated_tide_title">Geschätzte Gezeit</string>
     <string name="tool_temperature_estimation_title">Temperaturschätzung</string>
-    <string name="tool_temperature_estimation_description">Temperatur, Windgeschwindigkeit und Luftfeuchte in einer anderen Höhenlage schätzen</string>
+    <string name="tool_temperature_estimation_description">Temperatur in einer anderen Höhenlage schätzen</string>
     <string name="pressure_tendency">Tendenz</string>
     <string name="explore">Erkunden</string>
     <string name="average_speed">Durchschnittsgeschwindigkeit</string>
@@ -843,9 +844,9 @@
     <string name="distance_alert_distance_reached">Du hast %s erreicht</string>
     <string name="save">Speichern</string>
     <string name="saved">Gespeichert</string>
-    <string name="estimate_step_length">Geschätzte Schrittlänge</string>
-    <string name="step_length_stand_still">Still stehen</string>
-    <string name="step_length_walk">Laufe auf einer geraden Linie, drücke Stopp, wenn du fertig bist</string>
+    <string name="estimate_stride_length">Geschätzte Schrittlänge</string>
+    <string name="stride_length_stand_still">Still stehen</string>
+    <string name="stride_length_walk">Laufe auf einer geraden Linie, drücke Stopp, wenn du fertig bist</string>
     <string name="current_speed">Aktuelle Geschwindigkeit</string>
     <string name="current_speed_pedometer">Aktuelle Geschwindigkeit (Schrittzähler)</string>
     <string name="current_speed_gps">Aktuelle Geschwindigkeit (GPS)</string>
@@ -993,7 +994,7 @@
     <string name="daylight_duration">%s Tagesdauer</string>
     <string name="times">Zeiten</string>
     <string name="horizon">Horizont</string>
-    <string name="map_file">Datei (JPG, PNG, PDF, Mapsforge)</string>
+    <string name="map_file">Datei (JPG, PNG, PDF)</string>
     <string name="no">Nein</string>
     <string name="offline_maps_summary">Ein Foto als Karte benutzen</string>
     <string name="map_calibration">Karte kalibrieren</string>
@@ -1096,7 +1097,7 @@
     <string name="sunrise_alert_scheduled">Alarm vermerkt für %s vor Sonnenaufgang</string>
     <string name="restore">Wiederherstellen</string>
     <string name="no_qr_code_detected">Kein QR-Code erkannt</string>
-    <string name="backup_disclaimer">Eine Backup-Datei mit allen Ihren aktuellen Daten wird erstellt. Diese wird Einstellungen, Pfade, Wegpunkte, Karten, etc. beinhalten\n\nDiese Datei ist nicht verschlüsselt. Teilen Sie sie mit niemandem, dem Sie nicht vertrauen.</string>
+    <string name="backup_disclaimer">Eine Backup-Datei mit allen Ihren aktuellen Daten wird erstellt. Diese wird Einstellungen, Pfade, Leuchtfeuer, Karten, etc. beinhalten\n\nDiese Datei ist nicht verschlüsselt. Teilen Sie sie mit niemandem, dem Sie nicht vertrauen.</string>
     <string name="astronomy_altitude">Höhe</string>
     <string name="backup">Sicherung</string>
     <string name="pref_sunrise_alert_time_title">Sonnenaufgangs-Alarmzeit</string>
@@ -1505,59 +1506,4 @@
     <string name="active_in_month">Aktiv in/im %s</string>
     <string name="active_all_year">Das ganze Jahr über aktiv</string>
     <string name="ecology">Ökölogie</string>
-    <string name="plugins">Erweiterungen</string>
-    <string name="map_layers">Kartenebenen</string>
-    <string name="tile_layer">Kachelebene</string>
-    <string name="disconnect">Verbindung trennen</string>
-    <string name="plugin_unavailable">Dieses Plugin ist nicht verfügbar oder nicht mehr verbunden.</string>
-    <string name="clear_plugin_cache">Plugin-Cache leeren</string>
-    <string name="connected_plugins">Verbundene Plugins</string>
-    <string name="available_plugins">Verfügbare Plugins</string>
-    <string name="plugin_name">Plugin: %s</string>
-    <string name="plugin_connect_title">Plugin verbinden?</string>
-    <string name="plugin_connect_message">Verbinden Sie %s nur wenn Sie ihm/ihr vertrauen.</string>
-    <string name="plugin_disconnect_title">Plugin-Verbindung trennen?</string>
-    <string name="plugin_disconnect_message">Verbindung mit %s trennen?</string>
-    <string name="brightness">Helligkeit</string>
-    <plurals name="offline_map_group_summary">
-        <item quantity="one">%d Karte</item>
-        <item quantity="other">%d Karten</item>
-    </plurals>
-    <string name="do_not_ask_again">Nicht wieder fragen</string>
-    <string name="packing_list_optional">Optional</string>
-    <string name="pref_pedometer_history_days_title">Schrittverlauf</string>
-    <string name="current_session">Aktuelle Sitzung</string>
-    <string name="history">Verlauf</string>
-    <string name="no_pedometer_sessions">Keine Sitzungen</string>
-    <string name="target">Ziel</string>
-    <string name="not_visible">Unsichtbar</string>
-    <plurals name="step_count">
-        <item quantity="one">%d Schritt</item>
-        <item quantity="other">%d Schritte</item>
-    </plurals>
-    <string name="show_all">Alle anzeigen</string>
-    <string name="hide_all">Alle verbergen</string>
-    <string name="tool_magnifier_title">Lupe</string>
-    <string name="offline_maps">Offlinekarten</string>
-    <string name="large_location_indicator">Großer Standortindikator</string>
-    <string name="app_info">Appinfo</string>
-    <string name="reload">Neu laden</string>
-    <string name="quick_action_recalibrate_altimeter">Höhenmesser neu kalibrieren</string>
-    <string name="recalibrating">Kalibriere neu</string>
-    <string name="delete_offline_map_group_message">%s und alle seine Karten werden gelöscht.</string>
-    <string name="clock_source_device">Gerätezeit</string>
-    <string name="clock_source_gps">GPS-Zeit</string>
-    <string name="clock_device_time_accurate">Geräteuhr ist akkurat</string>
-    <plurals name="clock_device_time_slow">
-        <item quantity="one">Geräteuhr geht %d Sekunde nach</item>
-        <item quantity="other">Geräteuhr geht %s Sekunden nach</item>
-    </plurals>
-    <plurals name="clock_device_time_fast">
-        <item quantity="one">Geräteuhr geht %d Sekunde vor</item>
-        <item quantity="other">Geräteuhr geht %d Sekunden vor</item>
-    </plurals>
-    <string name="pref_default_beacon_color_title">Standardwegpunktfarbe</string>
-    <string name="pref_copy_trail_maps_title">Karten zu Trail Sense kopieren</string>
-    <string name="current_temperature">Aktuelle Temperatur</string>
-    <string name="pref_navigation_show_azimuth_indicator_title">Azimutindikator anzeigen</string>
 </resources>

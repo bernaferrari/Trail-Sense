@@ -159,6 +159,7 @@
     <ID>ForbiddenComment:MapLayerLoader.kt:// TODO: Consider loading required attribution with the layer data rather than the definition (definition can contain the long form attribution)</ID>
     <ID>ForbiddenComment:MapPickers.kt:MapPickers$// TODO: Add sort</ID>
     <ID>ForbiddenComment:MapRepo.kt:MapRepo$// TODO: Save the size in the DB</ID>
+    <ID>ForbiddenComment:MapService.kt:MapService.&lt;no name provided&gt;$// TODO: Bulk delete</ID>
     <ID>ForbiddenComment:MapToolWidgetView.kt:MapToolWidgetView$// TODO: Do something with the scale bar (center it or render it like the radar compass)</ID>
     <ID>ForbiddenComment:MapView.kt:MapView$// TODO: If map bounds changed, invalidate layers</ID>
     <ID>ForbiddenComment:MapView.kt:MapView$// TODO: This doesn't work for world maps</ID>
@@ -178,7 +179,6 @@
     <ID>ForbiddenComment:NavigatorUserErrors.kt:NavigatorUserErrors$// TODO: Each error condition should be responsible for its own display and dismissal</ID>
     <ID>ForbiddenComment:NavigatorUserErrors.kt:NavigatorUserErrors$// TODO: Improve architecture using the strategy pattern and remove this class all together</ID>
     <ID>ForbiddenComment:NextPathPointNavigator.kt:NextPathPointNavigator$// TODO: This doesn't take into consideration which points you've already reached - if the path is a out and back type, it will not work properly</ID>
-    <ID>ForbiddenComment:OfflineMapService.kt:OfflineMapService.&lt;no name provided&gt;$// TODO: Bulk delete</ID>
     <ID>ForbiddenComment:PathExtensions.kt:// TODO: Extract this and add solid style</ID>
     <ID>ForbiddenComment:PathOverviewToolScreen.kt:PathOverviewController$// TODO: Eventually move all of this to the path layer (including waypoint rendering)</ID>
     <ID>ForbiddenComment:PdfImageRegionDecoder.kt:PdfImageRegionDecoder$// TODO: Pass in scale</ID>
@@ -748,13 +748,8 @@
     <ID>NestedBlockDepth:GeographicImageUtils.kt:GeographicImageUtils$suspend fun getNearestPixelOfAsset: PixelCoordinate?</ID>
     <ID>PrintStackTrace:Camera.kt:CameraState$e</ID>
     <ID>PrintStackTrace:CustomUiUtils.kt:CustomUiUtils$e</ID>
-    <ID>PrintStackTrace:FeatureRenderer.kt:FeatureRenderer$e</ID>
-    <ID>PrintStackTrace:FragmentToolMetalDetector.kt:FragmentToolMetalDetector$e</ID>
-    <ID>PrintStackTrace:GeoJsonLayer.kt:GeoJsonLayer$e</ID>
     <ID>PrintStackTrace:ImageTile.kt:ImageTile$e</ID>
     <ID>PrintStackTrace:MapViewLayerManager.kt:MapViewLayerManager$e</ID>
-    <ID>PrintStackTrace:QuickActionWhistle.kt:QuickActionWhistle$e</ID>
-    <ID>PrintStackTrace:ScanQRFragment.kt:ScanQRFragment$e</ID>
     <ID>PrintStackTrace:SightingCompassView.kt:SightingCompassView$e</ID>
     <ID>RethrowCaughtException:MapExportService.kt:MapExportService$throw e</ID>
     <ID>ReturnCount:ARPathLayer.kt:ARPathLayer$private fun getNearestPoint: NearestPoint?</ID>
@@ -788,7 +783,13 @@
     <ID>ReturnCount:PixelInterpolators.kt:BicubicInterpolator$override suspend fun interpolate: Float?</ID>
     <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$fun stem: String</ID>
     <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$private fun step1b: String</ID>
+    <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$private fun step4: String</ID>
+    <ID>ReturnCount:PorterStemmer.kt:PorterStemmer.Companion$private fun isConsonant: Boolean</ID>
     <ID>ReturnCount:SensorService.kt:SensorService$fun getAltimeter: IAltimeter</ID>
+    <ID>ReturnCount:SensorService.kt:SensorService$fun getGPS: ISatelliteGPS</ID>
+    <ID>ReturnCount:SensorService.kt:SensorService$private fun getGPSAltimeter: IAltimeter</ID>
+    <ID>ReturnCount:SimpleHikingDifficultyCalculator.kt:SimpleHikingDifficultyCalculator$override fun calculate: HikingDifficulty</ID>
+    <ID>ReturnCount:SystemSettings.kt:SystemSettings$fun isNfcEnabled: Boolean</ID>
     <ID>ReturnCount:TideTableWaterLevelCalculator.kt:TideTableWaterLevelCalculator$private suspend fun getGapCalculator2: IWaterLevelCalculator</ID>
     <ID>ReturnCount:TidesSubsystem.kt:TidesSubsystem$private suspend fun getTideTable: TideTable?</ID>
     <ID>ReturnCount:TileMapLayer.kt:TileMapLayer$private fun getTilesToRender: List&lt;ImageTile&gt;</ID>
@@ -805,6 +806,7 @@
     <ID>SwallowedException:FileSubsystem.kt:FileSubsystem$e: Exception</ID>
     <ID>SwallowedException:GPSDiagnosticScanner.kt:GPSDiagnosticScanner$e: Exception</ID>
     <ID>SwallowedException:PreferenceMigrator.kt:PreferenceMigrator.Companion$e: Exception</ID>
+    <ID>SwallowedException:RebaseMapCalibrationWorker.kt:RebaseMapCalibrationWorker$e: Exception</ID>
     <ID>SwallowedException:RestoreCommand.kt:RestoreCommand$e: BackupService.InvalidBackupException</ID>
     <ID>SwallowedException:RestoreCommand.kt:RestoreCommand$e: BackupService.NewerBackupException</ID>
     <ID>SwallowedException:SpeciesImportService.kt:SpeciesImportService$e: Exception</ID>

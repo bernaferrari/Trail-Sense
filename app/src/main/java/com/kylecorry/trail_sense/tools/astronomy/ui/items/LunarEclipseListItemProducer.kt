@@ -1,13 +1,11 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
-import androidx.core.graphics.drawable.toDrawable
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
-import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
-import com.kylecorry.trail_sense.tools.astronomy.ui.LunarEclipseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
 import java.time.LocalDate
 
@@ -21,13 +19,11 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         val eclipse = astronomyService.getLunarEclipse(location, date) ?: return@onDefault null
 
         // Advanced
-        val moon = astronomyService.getMoonPosition(location, eclipse.peak)
+        val peakAltitude = astronomyService.getMoonAltitude(location, eclipse.peak)
         val peakAzimuth = DeclinationUtils.fromTrueNorthBearing(
-            moon.azimuth,
+            astronomyService.getMoonAzimuth(location, eclipse.peak),
             declination
         )
-        val shadow = astronomyService.getLunarEclipseShadow(location, eclipse.peak)
-        val moonTilt = astronomyService.getMoonTilt(location, eclipse.peak)
 
         list(
             4,
@@ -69,7 +65,7 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
                 ),
                 context.getString(R.string.astronomy_altitude_peak) to data(
                     formatter.formatDegrees(
-                        moon.altitude
+                        peakAltitude
                     )
                 ),
                 context.getString(R.string.astronomy_direction_peak) to data(
@@ -83,20 +79,5 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         }
     }
 
-    private fun getIcon(
-        moon: CelestialObservation,
-        shadow: LunarEclipseShadow,
-        moonTilt: MoonTilt
-    ): DrawableListIcon {
-        return DrawableListIcon(
-            LunarEclipseImageMapper(context).getEclipseImage(
-                moon,
-                shadow,
-                imageSize,
-                imageSize,
-                moonTilt
-            ).toDrawable(context.resources)
-        )
-    }
 
 }

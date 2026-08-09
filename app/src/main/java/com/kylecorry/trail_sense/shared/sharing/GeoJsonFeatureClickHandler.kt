@@ -31,7 +31,7 @@ object GeoJsonFeatureClickHandler {
         }
         Tools.broadcast(MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED, bundle)
 
-        val formatter = DependencyRegistry.get<FormatService>()
+        val formatter = AppServiceRegistry.get<FormatService>()
         val location = getFeatureLocation(feature) ?: return
         val name = feature.getName()
         val title = name ?: host.getString(R.string.location)
@@ -58,7 +58,7 @@ object GeoJsonFeatureClickHandler {
         ) { action ->
             when (action) {
                 ShareAction.Navigate -> {
-                    val navigator = DependencyRegistry.get<Navigator>()
+                    val navigator = AppServiceRegistry.get<Navigator>()
                     val beaconId = feature.getLongProperty(BeaconGeoJsonSource.PROPERTY_BEACON_ID)
                     if (beaconId != null) {
                         navigator.navigateTo(beaconId)

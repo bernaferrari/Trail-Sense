@@ -26,6 +26,7 @@ import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
  * An augmented reality layer that displays paths
  * @param viewDistanceMeters the maximum distance to display paths
  * @param adjustForPathElevation true if the layer should adjust for path elevation, otherwise paths will be 2 meters below the camera
+ * @param updateEveryCycle true if the layer should update every cycle, otherwise the layer will only update when the paths change (snapping and clipping may become out of date if this is false)
  * @param onFocus the callback to call when a path is focused, return true if focus is claimed
  */
 class ARPathLayer(
@@ -238,8 +239,6 @@ class ARPathLayer(
                     lastPixel = null
                     return@forEachLine
                 }
-
-                currentLine.add(spherical)
             }
 
             // The line continues

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.locators.Planet
@@ -35,37 +34,30 @@ class AstronomyGuidanceTarget(
 
         when (selection) {
             AstronomySelection.Sun -> {
-                val position = astronomyService.getSunPosition(location, time)
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(
                         view.context.getString(R.string.sun),
                         R.drawable.ic_sun
                     ),
                     SphericalARPoint(
-                        position.azimuth.value,
-                        position.altitude,
+                        astronomyService.getSunAzimuth(location, time).value,
+                        astronomyService.getSunAltitude(location, time),
                         isTrueNorth = true
                     )
                 )
             }
 
             AstronomySelection.Moon -> {
-                val phase = astronomyService.getMoonPhase(time)
-                val position = astronomyService.getMoonPosition(location, time)
+                val phase = Astronomy.getMoonPhase(time)
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(
                         view.context.getString(R.string.moon),
-                        R.drawable.ic_moon,
-                        iconBitmap = MoonPhaseImageMapper(view.context).getPhaseImage(
-                            phase.phaseAngle,
-                            Resources.dp(view.context, 24f).toInt(),
-                            Resources.dp(view.context, 24f).toInt(),
-                            astronomyService.getMoonTilt(location, time)
-                        )
+                        MoonPhaseImageMapper().getPhaseImage(phase.phase),
+                        iconRotation = astronomyService.getMoonTilt(location, time)
                     ),
                     SphericalARPoint(
-                        position.azimuth.value,
-                        position.altitude,
+                        astronomyService.getMoonAzimuth(location, time).value,
+                        astronomyService.getMoonAltitude(location, time),
                         isTrueNorth = true
                     )
                 )

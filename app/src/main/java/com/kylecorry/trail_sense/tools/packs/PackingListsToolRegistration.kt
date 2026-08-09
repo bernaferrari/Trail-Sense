@@ -6,7 +6,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object PackingListsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -20,9 +19,6 @@ object PackingListsToolRegistration : ToolRegistration {
             additionalNavigationIds = listOf(
                 R.id.createItemFragment,
                 R.id.packItemListFragment
-            ),
-            diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context)
             )
         )
     }

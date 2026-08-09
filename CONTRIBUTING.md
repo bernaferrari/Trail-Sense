@@ -38,7 +38,6 @@ All code/translation contributors will be credited in the Licenses section of Tr
 
 ## Pull Requests
 - All sections of the pull request description template must be filled out.
-- Use the PR description to describe what this change does and why (not how). Please don't generate it with an LLM - it doesn't know why you made the decisions you did.
 - There must be a related issue and your code must implement it as specified. Raise in discussions or the issue if you believe something different is needed before submitting the pull request for review.
 - If your change involves modifications to the app code (ex. not just tests/docs/etc), a screenshot is required.
 - Only include changes related to the issue you are addressing. For example, don't adjust the code styling of the file.
@@ -50,7 +49,7 @@ All code/translation contributors will be credited in the Licenses section of Tr
 - You must understand the code you are submitting for review and be able to answer questions about the code.
 - If your pull request contains a portion of the issue, explicitly call out what was changed and what is remaining.
 - If you spent time designing the feature before implementing, feel free to post the design documents in the PR description. Or even better, post it in the related issue before making changes if you want a maintainer to review.
-- If your feature involves a change to how the app is used, document it in the user guide. If you are unsure, comment on the issue. If you would like a maintainer to write this, please note that in your PR description.
+- If your feature involves a change to how the app is used, document it in the user guide. See `.agents/skills/trail-sense-user-guides` for more info. If you are unsure, comment on the issue. If you would like a maintainer to write this, please note that in your PR description.
 - Most features that have a user guide change will also need an automated test change. See `.agents/skills/trail-sense-android-tests` for more info. If you are unsure, comment on the issue.
 - Unit tests are not required for UI or infrastructure changes, but should be added if you are writing domain logic (most logic lives in the `kylecorry31/sol` repo). If you are unsure, comment on the issue.
 - Pull requests that have requested changes which haven't received activity (response / commit / etc) after 1 week will be closed due to inactivity. If you are planning on addressing the changes but they are taking a while, please reply to the review comments. If you make changes after the pull request is closed, tag me in a comment or re-open a pull request.
@@ -68,4 +67,4 @@ I don't care what tools you use*. Review and understand the output, clean it up 
 *The following uses are banned in Trail Sense:
 - Generating artwork
 - Generating survival guide content (survival guide is locked for contributions anyway)
-- Generating in-app translations in a language you are not proficient in
+- Generating translations in a language you are not proficient in

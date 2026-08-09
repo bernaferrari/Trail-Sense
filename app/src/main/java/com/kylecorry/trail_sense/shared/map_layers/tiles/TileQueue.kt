@@ -4,17 +4,13 @@ import android.util.Log
 import com.kylecorry.luna.concurrency.Parallel
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 import kotlin.math.log
 
 class TileQueue {
     // Enable this to log what tiles are being loaded
     private val shouldLog = false
-    private var changeListener: suspend (tile: ImageTile) -> Unit = {}
+    private var changeListener: (tile: ImageTile) -> Unit = {}
     private val loadingKeys = mutableSetOf<String>()
-    private val loadingLock = ReentrantReadWriteLock()
     private val queuedKeys = mutableSetOf<String>()
     private val loadingCount = AtomicInteger(0)
 
@@ -42,7 +38,7 @@ class TileQueue {
         if (state != TileState.Idle && state != TileState.Stale) {
             return
         }
-        loadingLock.read {
+        synchronized(loadingKeys) {
             if (loadingKeys.contains(tile.key)) {
                 return
             }
@@ -62,7 +58,7 @@ class TileQueue {
         synchronized(queuedKeys) {
             queuedKeys.clear()
         }
-        loadingLock.write {
+        synchronized(loadingKeys) {
             loadingKeys.clear()
             loadingCount.set(0)
         }
@@ -95,7 +91,7 @@ class TileQueue {
             val key = tile.key
             val tileState = tile.state
             if (tileState == TileState.Idle || tileState == TileState.Stale) {
-                val shouldLoad = loadingLock.write {
+                val shouldLoad = synchronized(loadingKeys) {
                     loadingKeys.add(key).also {
                         if (it) {
                             loadingCount.incrementAndGet()
@@ -119,7 +115,7 @@ class TileQueue {
                 onStateChange(it)
             }
         } finally {
-            loadingLock.write {
+            synchronized(loadingKeys) {
                 jobs.forEach {
                     if (loadingKeys.remove(it.key)) {
                         loadingCount.decrementAndGet()
@@ -129,8 +125,8 @@ class TileQueue {
         }
     }
 
-    private suspend fun onStateChange(tile: ImageTile) {
-        loadingLock.write {
+    private fun onStateChange(tile: ImageTile) {
+        synchronized(loadingKeys) {
             if (loadingKeys.remove(tile.key)) {
                 loadingCount.decrementAndGet()
             }
@@ -156,7 +152,7 @@ class TileQueue {
         return 65536 * log(resolution, 10.0) + distance / resolution
     }
 
-    fun setChangeListener(listener: suspend (tile: ImageTile) -> Unit) {
+    fun setChangeListener(listener: (tile: ImageTile) -> Unit) {
         changeListener = listener
     }
 

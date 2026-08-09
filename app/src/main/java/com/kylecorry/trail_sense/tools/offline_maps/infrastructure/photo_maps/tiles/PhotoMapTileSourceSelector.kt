@@ -17,7 +17,6 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -33,7 +32,7 @@ class PhotoMapTileSourceSelector(
 ) : TileSource {
 
     private val sortedMaps = maps
-        .filter { it.state == OfflineMapState.Ready }
+        .filter { it.isCalibrated }
         .sortedBy { it.distancePerPixel() }
 
     private var recentMaps = ConcurrentLinkedQueue<PhotoMap>()
@@ -109,7 +108,7 @@ class PhotoMapTileSourceSelector(
             .meters().value.toDouble() * 0.25
 
         val possibleMaps = sortedMaps.filter {
-            val boundary = it.bounds ?: return@filter false
+            val boundary = it.boundary() ?: return@filter false
             if (boundary == CoordinateBounds.world) {
                 return@filter true
             }
@@ -120,7 +119,7 @@ class PhotoMapTileSourceSelector(
 
         val firstContained = possibleMaps.firstOrNull {
             contains(
-                it.bounds ?: return@firstOrNull false,
+                it.boundary() ?: return@firstOrNull false,
                 bounds,
                 fullyContained = true
             )
@@ -128,7 +127,7 @@ class PhotoMapTileSourceSelector(
 
         val containedMaps = possibleMaps.filter {
             contains(
-                it.bounds ?: return@filter false,
+                it.boundary() ?: return@filter false,
                 bounds
             )
         }.take(maxLayers).toMutableList()

@@ -6,7 +6,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object DiagnosticsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -16,10 +15,7 @@ object DiagnosticsToolRegistration : ToolRegistration {
             R.drawable.ic_alert,
             R.id.diagnosticsFragment,
             ToolCategory.Other,
-            guideId = R.raw.guide_tool_diagnostics,
-            diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context)
-            )
+            guideId = R.raw.guide_tool_diagnostics
         )
     }
 }

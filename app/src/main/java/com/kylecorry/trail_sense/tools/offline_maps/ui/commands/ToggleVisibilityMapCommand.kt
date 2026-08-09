@@ -1,16 +1,18 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMap
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 
 class ToggleVisibilityMapCommand(
-    private val mapService: OfflineMapService
-) : CoroutineCommand<OfflineMapCatalogItem> {
-    override suspend fun execute(value: OfflineMapCatalogItem) {
-        if (value is OfflineMap) {
-            mapService.setVisible(value, !value.visible)
+    private val mapService: MapService
+) : CoroutineCommand<IMap> {
+    override suspend fun execute(value: IMap) {
+        when (value) {
+            is PhotoMap -> mapService.add(value.copy(visible = !value.visible))
+            is VectorMap -> mapService.add(value.copy(visible = !value.visible))
         }
     }
 }

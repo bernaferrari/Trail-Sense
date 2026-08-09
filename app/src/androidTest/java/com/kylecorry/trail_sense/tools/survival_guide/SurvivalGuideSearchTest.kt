@@ -44,9 +44,6 @@ class SurvivalGuideSearchTest {
         search("get help", "Overview", "Signaling for help")
         search("remove tick", "Medical", "Bites, stings, and attacks", "Ticks")
 
-        // References are available as a chapter, but are not part of guide search.
-        search("3-50")
-
         // Spelling mistakes
         search("how do i reed map", "Navigation", "Map")
         search("get watter", "Water", "Finding water")

@@ -24,7 +24,7 @@ import com.kylecorry.trail_sense.shared.io.ExportService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.UriPicker
 import com.kylecorry.trail_sense.shared.io.UriService
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.MapProjectionType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 
 class MapExportService(
@@ -37,11 +37,11 @@ class MapExportService(
 
     override suspend fun export(data: PhotoMap, filename: String): Boolean {
         // If the map was auto calibrated and the PDF exists, just copy it
-        if (data.pdfFile != null && isGeospatialPdf(data.pdfFile.path)) {
+        if (data.hasPdf(context) && isGeospatialPdf(data.pdfFileName)) {
             val uri = uriPicker.create(filename, "application/pdf") ?: return false
             val outputStream = files.output(uri) ?: return false
             val saver = FileSaver()
-            saver.save(files.get(data.pdfFile.path), outputStream)
+            saver.save(files.get(data.pdfFileName), outputStream)
             return true
         }
 
@@ -70,7 +70,7 @@ class MapExportService(
             val maxImageSize = 2048
 
             bitmap =
-                files.bitmap(map.imageFile.path, Size(maxImageSize, maxImageSize)) ?: return emptyList()
+                files.bitmap(map.filename, Size(maxImageSize, maxImageSize)) ?: return emptyList()
 
             if (map.georeference.rotation != 0f) {
                 val rotated = bitmap.rotate(map.georeference.rotation)
@@ -80,7 +80,7 @@ class MapExportService(
 
             val width = bitmap.width
             val height = bitmap.height
-            val bounds = map.bounds
+            val bounds = map.boundary()
 
             if (bounds == null) {
                 // No calibration, just generate a PDF containing the image

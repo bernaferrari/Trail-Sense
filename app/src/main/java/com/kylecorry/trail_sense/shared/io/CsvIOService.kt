@@ -4,7 +4,6 @@ import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.csv.CSVConvert
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.streams.readText
-import com.kylecorry.trail_sense.shared.andromeda_temp.getOrNull
 
 class CsvIOService(private val uriPicker: UriPicker, private val uriService: UriService) :
     IOService<List<List<String>>> {
@@ -24,7 +23,8 @@ class CsvIOService(private val uriPicker: UriPicker, private val uriService: Uri
                         "text/comma-separated-values",
                         "text/plain"
                     )
-                ).getOrNull() ?: return@onIO null
+                )
+                    ?: return@onIO null
             val stream = uriService.inputStream(uri) ?: return@onIO null
             CSVConvert.parse(stream.readText())
         }

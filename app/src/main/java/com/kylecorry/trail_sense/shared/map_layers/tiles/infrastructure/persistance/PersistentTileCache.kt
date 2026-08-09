@@ -3,9 +3,9 @@ package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persist
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Bundle
 import com.kylecorry.andromeda.files.CacheFileSystem
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.andromeda_temp.ImageSaver
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapType
@@ -127,10 +127,8 @@ class PersistentTileCache(context: Context) {
         val filename = "${UUID.randomUUID()}.webp"
         val file = files.getFile("${CachedTileRepo.TILES_FOLDER}/$filename", create = true)
 
-        onIO {
-            FileOutputStream(file).use { out ->
-                imageSaver.save(bitmap, out, LOSSLESS_QUALITY)
-            }
+        FileOutputStream(file).use { out ->
+            imageSaver.save(bitmap, out, LOSSLESS_QUALITY)
         }
 
         val hasAlpha = bitmap.config == Bitmap.Config.ARGB_8888

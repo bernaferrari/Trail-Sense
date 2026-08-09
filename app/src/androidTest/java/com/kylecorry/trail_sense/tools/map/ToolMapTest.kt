@@ -159,10 +159,6 @@ class ToolMapTest : ToolTestBase(Tools.MAP) {
         longClick(R.id.map)
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         hasText(Regex("Elevation: -?\\d+(\\.\\d+)?\\s*(ft|m)"))
-        // Verify the distance, direction, and elevation-difference data points are shown.
-        hasText(R.id.location_data_distance, Regex("-?\\d+(\\.\\d+)?\\s*(mi|ft|km|m)"))
-        hasText(R.id.location_data_direction, Regex("-?\\d+°\\s+\\w+"))
-        hasText(R.id.location_data_elevation_diff, Regex("[+-]?\\d+(\\.\\d+)?\\s*(ft|m)"))
         hasText("Beacon")
         hasText("Navigate")
         hasText("Distance")

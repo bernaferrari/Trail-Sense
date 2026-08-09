@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
-import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -17,16 +16,15 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
-import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapFile
-import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapRepo
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -209,13 +207,15 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         val path = "offline_maps/$filename.map"
         files.get(path, true).writeBytes(ByteArray(0))
 
-        MapRepo.getInstance(TestUtils.context).add(
-            TrailMap(
+        getAppService<MapService>().add(
+            VectorMap(
                 0,
                 name,
-                listOf(OfflineMapFile(path, 0, TrailMap.FILE_ROLE_MAPSFORGE_MAP)),
+                VectorMapFileType.Mapsforge,
+                path,
+                0,
                 Instant.now(),
-                CoordinateBounds(1.0, 1.0, -1.0, -1.0),
+                null,
                 null,
                 visible = true
             )
@@ -249,7 +249,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(R.id.calibration_map, xPercent = 0.7f, yPercent = 0.3f)
         input("Location", "42.1, -72.1")
         click(string(R.string.preview))
-        click("Finish calibration")
+        click("Done")
 
         hasText("Test Map")
         if (goBack) {
@@ -365,10 +365,6 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         longClick(R.id.map)
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         hasText(Regex("Elevation: -?\\d+(\\.\\d+)?\\s*(ft|m)"))
-        // Verify the distance, direction, and elevation-difference data points are shown.
-        hasText(R.id.location_data_distance, Regex("-?\\d+(\\.\\d+)?\\s*(mi|ft|km|m)"))
-        hasText(R.id.location_data_direction, Regex("-?\\d+°\\s+\\w+"))
-        hasText(R.id.location_data_elevation_diff, Regex("[+-]?\\d+(\\.\\d+)?\\s*(ft|m)"))
         hasText("Beacon")
         hasText("Navigate")
         hasText("Distance")
@@ -398,9 +394,9 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         // Calibrate
         click(id("map_menu_btn"))
         click("Calibrate")
-        hasText("Point 1 of 2")
+        hasText("Calibrate with known locations")
         click("Next")
-        click("Finish calibration")
+        click("Done")
         isVisible(R.id.map)
 
         // User guide

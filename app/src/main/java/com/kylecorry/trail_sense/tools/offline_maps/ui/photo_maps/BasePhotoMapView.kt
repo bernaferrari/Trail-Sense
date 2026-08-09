@@ -20,7 +20,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toCoordinate
 import com.kylecorry.trail_sense.shared.views.EnhancedImageView
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.PhotoMapProjection
 import kotlin.math.max
@@ -250,7 +249,7 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
         super.draw()
         val map = map ?: return
 
-        if (map.state != OfflineMapState.Ready) {
+        if (!map.isCalibrated) {
             return
         }
         maxScale = getScale(0.1f).coerceAtLeast(2 * minScale)
@@ -278,10 +277,10 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
             mapAzimuth = 0f
         }
 
-        if (map.pdfFile != null) {
-            setImage(map.pdfFile.path, rotation)
+        if (files.get(map.pdfFileName).exists()) {
+            setImage(map.pdfFileName, rotation)
         } else {
-            setImage(map.imageFile.path, rotation)
+            setImage(map.filename, rotation)
         }
     }
 

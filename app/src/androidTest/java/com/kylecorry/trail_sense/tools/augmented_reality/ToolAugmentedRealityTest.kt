@@ -14,6 +14,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -40,7 +41,6 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
 
         canTurnOffCamera()
         canCalibrate()
-        canSearch()
         canToggleLayers()
     }
 
@@ -58,14 +58,6 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
         click(R.id.calibrate_btn)
         clickOk()
         click(R.id.confirm_calibration_button)
-    }
-
-    private fun canSearch() {
-        click(R.id.ar_search_btn)
-        click(string(R.string.astronomy))
-        clickOk()
-        hasText(string(R.string.locate))
-        click(string(android.R.string.cancel))
     }
 
     private fun canToggleLayers() {

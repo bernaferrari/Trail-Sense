@@ -181,7 +181,7 @@
     <string name="coordinates_tab">Koordinater</string>
     <string name="on">Aktiv</string>
     <string name="pref_show_nearest_tide_title">Vis nærmeste tidevand</string>
-    <string name="step_length_walk">Gå i en lige linje, tryk på stop når du er færdig</string>
+    <string name="stride_length_walk">Gå i en lige linje, tryk på stop når du er færdig</string>
     <string name="navigating_to_nearest_path_point">Navigerer til nærmeste stipunkt</string>
     <string name="done">Færdig</string>
     <string name="descent">Nedstigning</string>
@@ -700,7 +700,7 @@
     <string name="half_tide">Halv</string>
     <string name="time_not_set">Tid ikke indstillet</string>
     <string name="since_time">siden %s</string>
-    <string name="pref_step_length_title">Skridtlængde</string>
+    <string name="pref_stride_length_title">Skridtlængde</string>
     <string name="on_map">På kort</string>
     <string name="gps_cache">GPS Cache</string>
     <string name="always_on">Altid til</string>
@@ -795,8 +795,8 @@
     <string name="errors">Fejl</string>
     <string name="gps_timeouts">GPS-timeouts</string>
     <string name="saved">Gemt</string>
-    <string name="estimate_step_length">Anslå skridtlængde</string>
-    <string name="step_length_stand_still">Stå stille</string>
+    <string name="estimate_stride_length">Anslå skridtlængde</string>
+    <string name="stride_length_stand_still">Stå stille</string>
     <string name="no_qr_code_found">Ingen QR-kode fundet</string>
     <string name="undo">Fortryd</string>
     <string name="estimated">Anslået</string>
@@ -895,6 +895,7 @@
     <string name="tool_light_meter_title">Lysmåler</string>
     <string name="previous">Tidligere</string>
     <string name="pedometer_disclaimer">Skridttællerens nøjagtighed og batteriforbrug afhænger af din enheds producent og den indtastede skridtlængde. Prøv det derhjemme et stykke tid for at kontrollere batteriets afladning og nøjagtighed, før du bruger det på stien.</string>
+    <string name="error_importing_map">Fejl ved import af kort</string>
     <string name="actual_frequency_disclaimer">Den faktiske frekvens kan variere, da nogle enheder har baggrundsgrænser.</string>
     <string name="camera_permission_denied">Kameratilladelse nægtet, kan ikke aktivere kamerafunktioner. Du kan aktivere det i indstillinger.</string>
     <string name="whistle_signal_acknowledged">Bekræftet</string>

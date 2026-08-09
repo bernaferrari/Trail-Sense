@@ -41,8 +41,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
-import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Distance

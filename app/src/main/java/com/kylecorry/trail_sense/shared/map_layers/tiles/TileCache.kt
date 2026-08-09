@@ -1,11 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
 import androidx.collection.LruCache
-import java.util.concurrent.ConcurrentHashMap
 
 class TileCache(val source: String, maxSize: Int) : LruCache<String, ImageTile>(maxSize) {
-
-    private val entries = ConcurrentHashMap<String, ImageTile>()
 
     override fun entryRemoved(
         evicted: Boolean,
@@ -14,7 +11,6 @@ class TileCache(val source: String, maxSize: Int) : LruCache<String, ImageTile>(
         newValue: ImageTile?
     ) {
         super.entryRemoved(evicted, key, oldValue, newValue)
-        entries.remove(key, oldValue)
         oldValue.recycle()
     }
 
@@ -23,7 +19,7 @@ class TileCache(val source: String, maxSize: Int) : LruCache<String, ImageTile>(
     }
 
     fun peek(tile: Tile): ImageTile? {
-        return entries[getKey(tile)]
+        return snapshot()[getKey(tile)]
     }
 
     fun getOrPut(key: String, provider: () -> ImageTile): ImageTile {
@@ -34,7 +30,6 @@ class TileCache(val source: String, maxSize: Int) : LruCache<String, ImageTile>(
             }
             val newValue = provider()
             put(key, newValue)
-            entries[key] = newValue
             return newValue
         }
     }

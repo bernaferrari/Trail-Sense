@@ -29,13 +29,8 @@ import com.kylecorry.trail_sense.test_utils.views.viewWithResourceId
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.Timeout
-import java.util.concurrent.TimeUnit
 
 class SmokeTest {
-
-    @get:Rule
-    val timeoutRule: Timeout = Timeout(45, TimeUnit.MINUTES)
 
     @get:Rule
     val screenshotRule: ScreenshotFailureRule = ScreenshotFailureRule()
@@ -171,7 +166,7 @@ class SmokeTest {
             yPercent = 0.3f
         )
         input("Location", "42.1, -72.1")
-        click("Finish calibration")
+        click("Done")
 
         hasText("Test Map")
         back()

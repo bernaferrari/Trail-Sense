@@ -417,25 +417,3 @@ fun ReactiveComponent.useTrigger(): Pair<String, () -> Unit> {
     }
     return useMemo(key, trigger) { key to trigger }
 }
-
-fun ReactiveComponent.useToolEventListener(eventId: String, callback: suspend (data: Bundle?) -> Unit) {
-    val callbackRef = useRef(callback)
-
-    useEffect(callback) {
-        callbackRef.current = callback
-    }
-
-    val subscriber: suspend (Bundle?) -> Unit = useMemo {
-        { data ->
-            callbackRef.current(data)
-        }
-    }
-
-    useResumeEffect(eventId) {
-        Tools.subscribe(eventId, subscriber)
-    }
-
-    usePauseEffect(eventId) {
-        Tools.unsubscribe(eventId, subscriber)
-    }
-}

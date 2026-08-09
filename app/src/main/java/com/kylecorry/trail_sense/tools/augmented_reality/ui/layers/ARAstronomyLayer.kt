@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import android.content.Context
 import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
@@ -32,8 +31,8 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasBitmap
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasCircle
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceLayer
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.AstronomyGuidanceTargetPicker
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
 import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,12 +98,7 @@ class ARAstronomyLayer(
             triggers.frequency("positions", updateFrequency),
             triggers.distance("positions", location, updateDistance, highAccuracy = false)
         ) {
-            updatePositions(
-                view.context,
-                drawer,
-                location,
-                timeOverride ?: ZonedDateTime.now()
-            )
+            updatePositions(drawer, location, timeOverride ?: ZonedDateTime.now())
         }
 
         lineLayer.update(drawer, view)
@@ -171,7 +165,6 @@ class ARAstronomyLayer(
     }
 
     private fun updatePositions(
-        context: Context,
         drawer: ICanvasDrawer,
         location: Coordinate,
         time: ZonedDateTime
@@ -215,13 +208,12 @@ class ARAstronomyLayer(
                             moonAfterPathObject
                         }
 
-                        val phase = astro.getMoonPhase(it)
-                        val position = astro.getMoonPosition(location, it)
+                        val phase = Astronomy.getMoonPhase(it)
 
                         ARMarker(
                             SphericalARPoint(
-                                position.azimuth.value,
-                                position.altitude,
+                                astro.getMoonAzimuth(location, it).value,
+                                astro.getMoonAltitude(location, it),
                                 isTrueNorth = true,
                                 angularDiameter = 0.5f
                             ),
@@ -247,11 +239,11 @@ class ARAstronomyLayer(
                         } else {
                             sunAfterPathObject
                         }
-                        val position = astro.getSunPosition(location, it)
+
                         ARMarker(
                             SphericalARPoint(
-                                position.azimuth.value,
-                                position.altitude,
+                                astro.getSunAzimuth(location, it).value,
+                                astro.getSunAltitude(location, it),
                                 isTrueNorth = true,
                                 angularDiameter = 0.5f
                             ),
@@ -264,24 +256,17 @@ class ARAstronomyLayer(
                 } else {
                     emptyList()
                 }
-                val moonPosition = astro.getMoonPosition(location, time)
-                val sunPosition = astro.getSunPosition(location, time)
+                val moonAltitude = astro.getMoonAltitude(location, time)
+                val moonAzimuth = astro.getMoonAzimuth(location, time).value
 
-                val moonAltitude = moonPosition.altitude
-                val moonAzimuth = moonPosition.azimuth.value
+                val sunAltitude = astro.getSunAltitude(location, time)
+                val sunAzimuth = astro.getSunAzimuth(location, time).value
 
-                val sunAltitude = sunPosition.altitude
-                val sunAzimuth = sunPosition.azimuth.value
-
-                val phase = astro.getMoonPhase(time)
+                val phase = Astronomy.getMoonPhase(time)
+                val moonIconId = MoonPhaseImageMapper().getPhaseImage(phase.phase)
                 val moonImageSize = drawer.dp(24f).toInt()
+                val moonBitmap = bitmapLoader?.load(moonIconId, moonImageSize)
                 val moonTilt = astro.getMoonTilt(location, time)
-                val moonBitmap = MoonPhaseImageMapper(context).getPhaseImage(
-                    phase.phaseAngle,
-                    moonImageSize,
-                    moonImageSize,
-                    moonTilt
-                )
 
                 val moonOpacity = if (moonAltitude < 0) 255 / belowHorizonAlphaDivisor else 255
                 val moon = ARMarker(
@@ -291,11 +276,14 @@ class ARAstronomyLayer(
                         isTrueNorth = true,
                         angularDiameter = 2f
                     ),
-                    canvasObject = CanvasBitmap(
-                        moonBitmap,
-                        opacity = moonOpacity
-                    ),
-                    keepFacingUp = true,
+                    canvasObject = moonBitmap?.let {
+                        CanvasBitmap(
+                            moonBitmap,
+                            rotation = moonTilt,
+                            opacity = moonOpacity
+                        )
+                    }
+                        ?: CanvasCircle(Color.WHITE.withAlpha(moonOpacity)),
                     onFocusedFn = {
                         onMoonFocus(time, phase)
                     }

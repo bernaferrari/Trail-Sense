@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
@@ -31,7 +30,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -93,57 +91,27 @@ object AstronomyToolRegistration : ToolRegistration {
                     usesLocation = true
                 )
             ),
-            notificationChannelGroups = listOf(
-                ToolNotificationChannelGroup(NOTIFICATION_CHANNEL_GROUP_ASTRONOMY, context.getString(R.string.astronomy))
-            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     NOTIFICATION_CHANNEL_SUNSET_ALERT,
                     context.getString(R.string.sunset_alert_channel_title),
                     context.getString(R.string.sunset_alerts),
                     Notify.CHANNEL_IMPORTANCE_HIGH,
-                    false,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_ASTRONOMY
-                ),
-                ToolNotificationChannel(
-                    NOTIFICATION_CHANNEL_SUNSET_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.sunset_alert_channel_title),
-                        context.getString(R.string.alarm)
-                    ),
-                    context.getString(R.string.sunset_alerts),
-                    Notify.CHANNEL_IMPORTANCE_HIGH,
-                    isAlarm = true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_ASTRONOMY
+                    false
                 ),
                 ToolNotificationChannel(
                     NOTIFICATION_CHANNEL_SUNRISE_ALERT,
                     context.getString(R.string.sunrise_alert_channel_title),
                     context.getString(R.string.sunrise_alerts),
                     Notify.CHANNEL_IMPORTANCE_HIGH,
-                    false,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_ASTRONOMY
-                ),
-                ToolNotificationChannel(
-                    NOTIFICATION_CHANNEL_SUNRISE_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.sunrise_alert_channel_title),
-                        context.getString(R.string.alarm)
-                    ),
-                    context.getString(R.string.sunrise_alerts),
-                    Notify.CHANNEL_IMPORTANCE_HIGH,
-                    isAlarm = true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_ASTRONOMY
+                    false
                 ),
                 ToolNotificationChannel(
                     AstronomyAlertCommand.NOTIFICATION_CHANNEL,
                     context.getString(R.string.astronomy_alerts),
                     context.getString(R.string.astronomy_alerts),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    false,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_ASTRONOMY
+                    false
                 )
             ),
             services = listOf(
@@ -160,24 +128,8 @@ object AstronomyToolRegistration : ToolRegistration {
                     context.getString(R.string.sunset_alerts)
                 ),
                 ToolDiagnosticFactory.notification(
-                    NOTIFICATION_CHANNEL_SUNSET_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.sunset_alerts),
-                        context.getString(R.string.alarm)
-                    )
-                ),
-                ToolDiagnosticFactory.notification(
                     SunriseAlarmCommand.NOTIFICATION_CHANNEL_ID,
                     context.getString(R.string.sunrise_alerts)
-                ),
-                ToolDiagnosticFactory.notification(
-                    NOTIFICATION_CHANNEL_SUNRISE_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.sunrise_alerts),
-                        context.getString(R.string.alarm)
-                    )
                 ),
                 ToolDiagnosticFactory.notification(
                     AstronomyAlertCommand.NOTIFICATION_CHANNEL,
@@ -257,9 +209,9 @@ object AstronomyToolRegistration : ToolRegistration {
                     refreshInterval = Duration.ofMinutes(1)
                 )
             ),
-            initialize = {
-                DependencyRegistry.addSingleton(AstronomySubsystem.getInstance(it))
-            }
+            singletons = listOf(
+                AstronomySubsystem::getInstance
+            )
         )
     }
 
@@ -283,7 +235,4 @@ object AstronomyToolRegistration : ToolRegistration {
 
     const val NOTIFICATION_CHANNEL_SUNRISE_ALERT = SunriseAlarmCommand.NOTIFICATION_CHANNEL_ID
     const val NOTIFICATION_CHANNEL_SUNSET_ALERT = SunsetAlarmCommand.NOTIFICATION_CHANNEL_ID
-    const val NOTIFICATION_CHANNEL_SUNRISE_ALARM = "sunrise-alarm"
-    const val NOTIFICATION_CHANNEL_SUNSET_ALARM = "sunset-alarm"
-    const val NOTIFICATION_CHANNEL_GROUP_ASTRONOMY = "astronomy"
 }

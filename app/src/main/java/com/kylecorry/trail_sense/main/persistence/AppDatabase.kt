@@ -36,13 +36,13 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.Nav
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingEntity
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteDao
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.persistence.PhotoMapEntity
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapEntity
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupDao
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupEntity
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.persistence.PhotoMapDao
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapDao
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.RebaseMapCalibrationWorker
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.persistence.TrailMapDao
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.persistence.TrailMapEntity
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.persistence.VectorMapDao
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.persistence.VectorMapEntity
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackDao
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackEntity
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackItemDao
@@ -53,9 +53,6 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathEnti
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathGroupDao
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathGroupEntity
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.WaypointDao
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence.StepCountBucketEntity
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence.StepTrackerDao
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence.StepTrackingPeriodEntity
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideConstituentEntry
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableDao
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableEntity
@@ -68,8 +65,8 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.Pressu
  */
 @Suppress("LocalVariableName")
 @Database(
-    entities = [PackItemEntity::class, Note::class, WaypointEntity::class, PressureReadingEntity::class, BeaconEntity::class, BeaconGroupEntity::class, PhotoMapEntity::class, BatteryReadingEntity::class, PackEntity::class, CloudReadingEntity::class, PathEntity::class, TideTableEntity::class, TideTableRowEntity::class, PathGroupEntity::class, LightningStrikeEntity::class, MapGroupEntity::class, TideConstituentEntry::class, FieldGuidePageEntity::class, FieldGuideSightingEntity::class, DigitalElevationModelEntity::class, NavigationBearingEntity::class, CachedTileEntity::class, PluginEntity::class, PluginRegistrationEntity::class, TrailMapEntity::class, StepTrackingPeriodEntity::class, StepCountBucketEntity::class],
-    version = 60,
+    entities = [PackItemEntity::class, Note::class, WaypointEntity::class, PressureReadingEntity::class, BeaconEntity::class, BeaconGroupEntity::class, PhotoMapEntity::class, BatteryReadingEntity::class, PackEntity::class, CloudReadingEntity::class, PathEntity::class, TideTableEntity::class, TideTableRowEntity::class, PathGroupEntity::class, LightningStrikeEntity::class, MapGroupEntity::class, TideConstituentEntry::class, FieldGuidePageEntity::class, FieldGuideSightingEntity::class, DigitalElevationModelEntity::class, NavigationBearingEntity::class, CachedTileEntity::class, PluginEntity::class, PluginRegistrationEntity::class, VectorMapEntity::class],
+    version = 56,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -96,8 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cachedTileDao(): CachedTileDao
     abstract fun pluginDao(): PluginDao
     abstract fun pluginRegistrationDao(): PluginRegistrationDao
-    abstract fun trailMapDao(): TrailMapDao
-    abstract fun stepTrackerDao(): StepTrackerDao
+    abstract fun vectorMapDao(): VectorMapDao
 
     companion object {
 
@@ -535,54 +531,6 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-            val MIGRATION_56_57 = object : Migration(56, 57) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    db.execSQL(
-                        """
-                        CREATE TABLE IF NOT EXISTS `step_tracking_periods` (
-                            `_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                            `start_time` INTEGER NOT NULL,
-                            `end_time` INTEGER DEFAULT NULL
-                        )
-                    """.trimIndent()
-                    )
-                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_step_tracking_periods_end_time` ON `step_tracking_periods` (`end_time`)")
-                    db.execSQL(
-                        """
-                        CREATE TABLE IF NOT EXISTS `step_count_buckets` (
-                            `_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                            `period_id` INTEGER NOT NULL,
-                            `start_time` INTEGER NOT NULL,
-                            `end_time` INTEGER NOT NULL,
-                            `steps` INTEGER NOT NULL
-                        )
-                    """.trimIndent()
-                    )
-                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_step_count_buckets_period_id` ON `step_count_buckets` (`period_id`)")
-                }
-            }
-
-            val MIGRATION_57_58 = object : Migration(57, 58) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    db.execSQL("ALTER TABLE `step_count_buckets` ADD COLUMN `active_time` INTEGER NOT NULL DEFAULT 0")
-                }
-            }
-
-            val MIGRATION_58_59 = object : Migration(58, 59) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    db.execSQL(
-                        "UPDATE `step_count_buckets` SET `active_time` = 2000 * `steps` " +
-                            "WHERE `steps` > 0 AND `active_time` = 0"
-                    )
-                }
-            }
-
-            val MIGRATION_59_60 = object : Migration(59, 60) {
-                override fun migrate(db: SupportSQLiteDatabase) {
-                    db.execSQL("ALTER TABLE `field_guide_pages` ADD COLUMN `scientific_name` TEXT DEFAULT NULL")
-                }
-            }
-
             return Room.databaseBuilder(context, AppDatabase::class.java, "trail_sense")
                 .addMigrations(
                     MIGRATION_1_2,
@@ -639,11 +587,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_52_53,
                     MIGRATION_53_54,
                     MIGRATION_54_55,
-                    MIGRATION_55_56,
-                    MIGRATION_56_57,
-                    MIGRATION_57_58,
-                    MIGRATION_58_59,
-                    MIGRATION_59_60
+                    MIGRATION_55_56
                 )
                 // TODO: Temporary for the android tests, will remove once AppDatabase is injected with hilt
                 .allowMainThreadQueries()

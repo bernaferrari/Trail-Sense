@@ -465,10 +465,11 @@
     <string name="pedometer_disclaimer">Точность шагомера и его использование батареи зависят от производителя вашего устройства и введенной длины шага. Попробуйте походить немного дома, чтобы проверить разряд батареи и точность перед использованием на тропе.</string>
     <string name="meteors_per_hour">Максимум %d метеоров в час</string>
     <string name="no_tides">Нет приливов</string>
-    <string name="pref_step_length_title">Длина шага</string>
+    <string name="pref_stride_length_title">Длина шага</string>
     <string name="pedometer">Шагомер</string>
     <string name="delete_tide_prompt">Удалить прилив\?</string>
     <string name="import_gpx">Импорт GPX</string>
+    <string name="error_importing_map">Ошибка при импорте карты</string>
     <string name="importing_map">Импорт карты</string>
     <string name="map_auto_calibrated">Карта откалибрована автоматически, проверьте её точность</string>
     <string name="time_until_empty">до опустения</string>
@@ -860,15 +861,15 @@
     <string name="remove_distance_alert">Удалить предупреждение о расстоянии (%s)\?</string>
     <string name="distance_alert_distance_reached">Вы достигли %s</string>
     <string name="off">Выкл.</string>
-    <string name="step_length_stand_still">Стойте на месте</string>
+    <string name="stride_length_stand_still">Стойте на месте</string>
     <string name="average_speed_pedometer">Средняя скорость (шагомер)</string>
-    <string name="estimate_step_length">Оценить длину шага</string>
+    <string name="estimate_stride_length">Оценить длину шага</string>
     <string name="activity_recognition_permission_denied">Разрешение на физическую активность не предоставлено, не удается включить функцию шагомера. Вы можете включить ее в настройках.</string>
     <string name="save">Сохранить</string>
     <string name="saved">Сохранено</string>
     <string name="current_speed">Текущая скорость</string>
     <string name="current_speed_gps">Текущая скорость (GPS)</string>
-    <string name="step_length_walk">Идите по прямой линии, нажмите \"стоп\", когда закончите</string>
+    <string name="stride_length_walk">Идите по прямой линии, нажмите \"стоп\", когда закончите</string>
     <string name="current_speed_pedometer">Текущая скорость (шагомер)</string>
     <string name="average_speed_backtrack">Средняя скорость (история маршрута)</string>
     <string name="reset_distance_title">Сбросить расстояние\?</string>
@@ -1128,7 +1129,9 @@
     <string name="ar_layer_override_message">Настройки слоев могут быть переопределены по руководству, таким как руководство по Астрономии.</string>
     <string name="date">Дата</string>
     <string name="show_dial_ticks_on_nearby_radar">Показать насечки на ближнем радаре</string>
-    <string name="map_calibration_instructions">Коснитесь известного местоположения на карте, затем введите реальные координаты. Вы можете сохранить калибровку нажав кнопку «Готово». \n \nПримерами хороших точек калибровки являются парковка, указатель, ориентир или перекресток вдоль тропы.</string>
+    <string name="map_calibration_instructions">Коснитесь известного местоположения на карте, затем введите реальные координаты. Вы можете сохранить калибровку нажав кнопку «Готово».
+\n
+\nПримерами хороших точек калибровки являются парковка, указатель, ориентир или перекресток вдоль тропы.</string>
     <string name="map_file">Файл (JPG, PNG, PDF)</string>
     <string name="pref_backfill_temperatures_title">Обновить записанные температуры</string>
     <string name="accelerometer">Акселерометр</string>

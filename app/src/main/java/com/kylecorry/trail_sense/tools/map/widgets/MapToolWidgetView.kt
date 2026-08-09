@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.graphics.Path
 import android.view.View
 import androidx.core.graphics.createBitmap
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.geography.projections.AzimuthalEquidistantProjection

@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
-import com.kylecorry.trail_sense.tools.pedometer.domain.StepLengthPaceCalculator
+import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.sync.Mutex
@@ -137,7 +137,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
     }
 
     private fun calculateDistance(): Distance {
-        val paceCalculator = StepLengthPaceCalculator(prefs.pedometer.stepLength)
+        val paceCalculator = StrideLengthPaceCalculator(prefs.pedometer.strideLength)
         return paceCalculator.distance(steps.value.getOrDefault(0L)).meters()
     }
 

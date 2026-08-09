@@ -5,6 +5,5 @@ import androidx.annotation.DrawableRes
 data class Chapter(
     val title: String,
     val resource: Int,
-    @DrawableRes val icon: Int,
-    val searchable: Boolean = true
+    @DrawableRes val icon: Int
 )

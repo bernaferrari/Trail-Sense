@@ -70,19 +70,24 @@ import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
-import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapState
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
-import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroupLoader
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.ClosestMapSortStrategy
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.MapSortMethod
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.MostRecentMapSortStrategy
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.NameMapSortStrategy
-import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.CreateBlankMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.CreateMapFromCameraCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.CreateMapFromFileCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.CreateMapFromUriCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.ICreateMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupLoader
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.MapCleanupCommand
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.PrintMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.reduce.HighQualityMapReducer
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.CreateMapGroupCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.EditOfflineMapAttributionCommand
@@ -137,7 +142,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
     private var sort = MapSortMethod.Closest
 
-    private var lastRoot: OfflineMapCatalogItem? = null
+    private var lastRoot: IMap? = null
     private var backPressedCallback: OnBackPressedCallback? = null
     private var mapItems by mutableStateOf<List<IMap>>(emptyList())
     private var mapListResetKey by mutableIntStateOf(0)
@@ -310,7 +315,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         manager.refresh(true)
     }
 
-    private suspend fun sortMaps(maps: List<OfflineMapCatalogItem>): List<OfflineMapCatalogItem> = onDefault {
+    private suspend fun sortMaps(maps: List<IMap>): List<IMap> = onDefault {
         val strategy = when (sort) {
             MapSortMethod.Closest -> ClosestMapSortStrategy(gps.location, mapService.loader)
             MapSortMethod.MostRecent -> MostRecentMapSortStrategy(mapService.loader)
@@ -370,16 +375,15 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
     }
 
-    private fun onTrailMapAction(map: TrailMap, action: TrailMapAction) {
+    private fun onVectorMapAction(map: VectorMap, action: VectorMapAction) {
         when (action) {
-            TrailMapAction.View -> view(map)
-            TrailMapAction.Rename -> rename(map)
-            TrailMapAction.EditAttribution -> editAttribution(map)
-            TrailMapAction.Export -> exportTrailMap(map)
-            TrailMapAction.Delete -> delete(map)
-            TrailMapAction.Move -> move(map)
-            TrailMapAction.ToggleVisibility -> toggleVisibility(map)
-            TrailMapAction.CopyToAppStorage -> copyToAppStorage(map)
+            VectorMapAction.View -> view(map)
+            VectorMapAction.Rename -> rename(map)
+            VectorMapAction.EditAttribution -> editAttribution(map)
+            VectorMapAction.Delete -> delete(map)
+            VectorMapAction.Move -> move(map)
+            VectorMapAction.ToggleVisibility -> toggleVisibility(map)
+            VectorMapAction.CopyToAppStorage -> copyToAppStorage(map)
         }
     }
 
@@ -447,7 +451,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
     }
 
-    private fun view(map: OfflineMapCatalogItem) {
+    private fun view(map: IMap) {
         when (map) {
             is MapGroup -> manager.open(map.id)
             is PhotoMap -> host.findNavController().navigate(
@@ -462,14 +466,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 Bundle().apply {
                     putLong("offline_map_file_id", map.id)
                 }
-
-                findNavController().navigateWithAnimation(
-                    R.id.offlineMapViewFragment,
-                    Bundle().apply {
-                        putLong("offline_map_file_id", map.id)
-                    }
-                )
-            }
+            )
         }
     }
 
@@ -535,18 +532,23 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                     isCreateEnabled = false
                 }
 
-                val request = command.execute().map { it.copy(parentId = manager.root?.id) }
+                val map = command.execute()?.let {
+                    when (it) {
+                        is PhotoMap -> it.copy(parentId = manager.root?.id)
+                        is VectorMap -> it.copy(parentId = manager.root?.id)
+                        else -> null
+                    }
+                }
 
                 if (map == null) {
                     host.toast(host.getString(R.string.error_importing_map))
                     return@inBackground
                 }
 
-                mapImportingIndicator.show()
-                val result = try {
-                    mapService.createMap(request.unwrap())
-                } finally {
-                    mapImportingIndicator.hide()
+                if (map.parentId != null) {
+                    onIO {
+                        mapService.add(map)
+                    }
                 }
 
                 if (map is PhotoMap) {
@@ -579,15 +581,6 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 }
             }
 
-        }
-    }
-
-    private fun getCreateMapErrorMessage(error: CreateOfflineMapError): String? {
-        return when (error) {
-            CreateOfflineMapError.InvalidMapFile -> getString(R.string.map_error_invalid_map_file)
-            CreateOfflineMapError.AccessDenied -> getString(R.string.map_error_access_denied)
-            CreateOfflineMapError.UnableToCopy -> getString(R.string.map_error_unable_to_copy)
-            CreateOfflineMapError.Cancelled -> null
         }
     }
 

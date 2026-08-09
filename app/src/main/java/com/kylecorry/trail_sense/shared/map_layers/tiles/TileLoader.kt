@@ -30,7 +30,7 @@ class TileLoader(
     private val updateListener: () -> Unit = {}
 ) {
 
-    val tileCache = TileCache(tag ?: "", STANDARD_DETAIL_CACHE_SIZE)
+    val tileCache = TileCache(tag ?: "", 256)
 
     private val persistentCache =
         if (key != null) getAppService<PersistentTileCache>() else null
@@ -71,15 +71,8 @@ class TileLoader(
         featureId: String? = null,
         isWidget: Boolean = false,
         isHighDetailMode: Boolean = false,
-        useHighDetailCache: Boolean = isHighDetailMode,
         context: Context
     ) {
-        val cacheSize =
-            if (useHighDetailCache) HIGH_DETAIL_CACHE_SIZE else STANDARD_DETAIL_CACHE_SIZE
-        if (tileCache.maxSize() != cacheSize) {
-            tileCache.resize(cacheSize)
-        }
-
         val params = Bundle().apply {
             putLong(MapLayerParams.PARAM_TIME, time.toEpochMilli())
             putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
@@ -160,7 +153,6 @@ class TileLoader(
         tileCache.peek(tile)?.withImage { bitmap ->
             bitmap ?: return@withImage
             tryOrNothing {
-                // NOTE: This modifies the bitmap in place under a read lock, but if we use the write lock then the UI will block until the bitmap is loaded, which is worse
                 fillNeighborPixels(tile, bitmap)
             }
         }
@@ -313,15 +305,15 @@ class TileLoader(
                             destX + destWidth,
                             destY + destHeight
                         )
-                        Bitmap.createBitmap(
-                            fallbackBitmap,
-                            fallbackSrcRect.left,
-                            fallbackSrcRect.top,
-                            fallbackSrcRect.width(),
-                            fallbackSrcRect.height()
-                        ).use {
-                            canvas.drawBitmap(this, null, destRect, neighborPaint)
-                        }
+                        fallbackBitmap.copy(fallbackBitmap.config ?: Bitmap.Config.ARGB_8888, false)
+                            .use {
+                                canvas.drawBitmap(
+                                    this,
+                                    fallbackSrcRect,
+                                    destRect,
+                                    neighborPaint
+                                )
+                            }
                     }
                     return@withImage
                 }
@@ -347,11 +339,6 @@ class TileLoader(
                 )
             }
         }
-    }
-
-    companion object {
-        private const val STANDARD_DETAIL_CACHE_SIZE = 150
-        private const val HIGH_DETAIL_CACHE_SIZE = 256
     }
 
 }

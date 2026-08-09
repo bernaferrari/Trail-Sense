@@ -8,10 +8,10 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import com.kylecorry.andromeda.bitmaps.ImagePixelReader
+import com.kylecorry.luna.cache.LRUCache
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.files.AssetFileSystem
-import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.arithmetic.Arithmetic.wrap
 import com.kylecorry.sol.math.interpolation.Interpolation
@@ -28,8 +28,8 @@ import kotlin.math.roundToInt
 object TideModel {
 
     // Cache
-    private val cache = MemoryLRUCache<PixelCoordinate, TideModelResult>(size = 5)
-    private val locationToPixelCache = MemoryLRUCache<Coordinate, PixelCoordinate?>(size = 20)
+    private val cache = LRUCache<PixelCoordinate, TideModelResult>(size = 5)
+    private val locationToPixelCache = LRUCache<Coordinate, PixelCoordinate?>(size = 20)
 
     // Image data source
     private val size = Size(720, 360)
@@ -71,17 +71,10 @@ object TideModel {
         TideConstituent.T2 to 79.61186981201172,
     )
 
-    private data class LargeAmplitude(
-        val constituent: TideConstituent,
-        val x: Int,
-        val y: Int,
-        val amplitude: Double
-    )
-
     private val largeAmplitudes = listOf(
-        LargeAmplitude(TideConstituent.S1, 257, 181, 3582.0),
-        LargeAmplitude(TideConstituent.S2, 257, 181, 3022.0),
-        LargeAmplitude(TideConstituent.T2, 257, 181, 504.0),
+        listOf(TideConstituent.S1, 181, 257, 3582),
+        listOf(TideConstituent.S2, 181, 257, 3022),
+        listOf(TideConstituent.T2, 181, 257, 504),
     )
 
     suspend fun getHarmonics(
@@ -167,11 +160,8 @@ object TideModel {
 
                 // If there's a match in the large amplitudes array, use that for the amplitude
                 val largeAmplitude =
-                    largeAmplitudes.firstOrNull {
-                        it.constituent == harmonic &&
-                                it.x == pixel.x.roundToInt() &&
-                                it.y == pixel.y.roundToInt()
-                    }?.amplitude?.toFloat()
+                    (largeAmplitudes.firstOrNull { it[0] == harmonic && it[1] == pixel.x.roundToInt() && it[2] == pixel.y.roundToInt() }
+                        ?.get(3) as Double?)?.toFloat()
 
                 val amplitude = (largeAmplitude ?: Interpolation.lerp(
                     (getColorIndex(amplitudePixel, j).toDouble() / 255),

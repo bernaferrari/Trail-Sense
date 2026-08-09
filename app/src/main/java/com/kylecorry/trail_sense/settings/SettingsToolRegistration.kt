@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.settings
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
@@ -18,7 +17,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionToolWidgets
 import com.kylecorry.trail_sense.tools.tools.services.WidgetUpdateToolService
 
@@ -83,7 +81,6 @@ object SettingsToolRegistration : ToolRegistration {
                 WidgetUpdateToolService(context)
             ),
             diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnostic(
                     "settings-auto-backup",
                     context.getString(R.string.automatic_backup),
@@ -96,9 +93,9 @@ object SettingsToolRegistration : ToolRegistration {
                     "Update in-app widget"
                 )
             ),
-            initialize = {
-                DependencyRegistry.addSingleton(SensorService(it))
-            }
+            singletons = listOf(
+                { SensorService(it) }
+            )
         )
     }
 

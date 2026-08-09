@@ -8,11 +8,11 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import android.util.Log
 import android.util.Size
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
+import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -20,10 +20,8 @@ import com.kylecorry.andromeda.files.AssetFileSystem
 import com.kylecorry.andromeda.files.ExternalFileSystem
 import com.kylecorry.andromeda.files.FileSaver
 import com.kylecorry.andromeda.files.LocalFileSystem
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.andromeda_temp.ImageSaver
 import com.kylecorry.trail_sense.shared.debugging.ifDebug
-import kotlinx.coroutines.CancellationException
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ImageSaver
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -37,6 +35,8 @@ class FileSubsystem private constructor(private val context: Context) {
     private val external = ExternalFileSystem(context)
     private val local = LocalFileSystem(context)
     private val assetFiles = AssetFileSystem(context)
+
+    val SCHEME_ASSETS = "android-assets://"
 
     fun bitmap(path: String, maxWidth: Int, maxHeight: Int): Bitmap? {
         return bitmap(path, Size(maxWidth, maxHeight))
@@ -166,7 +166,7 @@ class FileSubsystem private constructor(private val context: Context) {
 
     fun canRead(path: String): Boolean {
         return if (isExternal(path)) {
-            canRead(path.toUri()).canRead
+            canRead(path.toUri())
         } else {
             get(path).isFile
         }
@@ -204,24 +204,10 @@ class FileSubsystem private constructor(private val context: Context) {
         return get(path, create).toUri()
     }
 
-    data class CanReadResult(val canRead: Boolean, val deniedByPackage: String? = null)
-
-    fun canRead(uri: Uri): CanReadResult {
-        return try {
-            CanReadResult(context.contentResolver.openFileDescriptor(uri, "r")?.use { true } ?: false)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e("FileSubsystem", "Error thrown while checking if file can be read", e)
-            val packageName = if (e is SecurityException) {
-                // Format: com.android.externalstorage has no access
-                val regex = Regex("""([\w.]+) has no access""")
-                regex.find(e.message.orEmpty())?.groupValues?.get(1)
-            } else {
-                null
-            }
-
-            return CanReadResult(false, packageName)
+    fun canRead(uri: Uri): Boolean {
+        return tryOrDefault(false) {
+            context.contentResolver.openFileDescriptor(uri, "r")?.close()
+            true
         }
     }
 
@@ -289,7 +275,7 @@ class FileSubsystem private constructor(private val context: Context) {
 
     companion object {
         const val SCHEME_CONTENT = "content://"
-        const val SCHEME_ASSETS = "android-assets://"
+
         private const val TEMP_DIR = "tmp"
 
         @SuppressLint("StaticFieldLeak")

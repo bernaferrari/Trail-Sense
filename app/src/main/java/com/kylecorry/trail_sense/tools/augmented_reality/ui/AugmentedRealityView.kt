@@ -26,14 +26,14 @@ import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
 import com.kylecorry.andromeda.canvas.TextMode
+import com.kylecorry.luna.signals.SchmittTrigger
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.luna.signals.SchmittTrigger
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.math.Euler
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Quaternion
@@ -111,7 +111,6 @@ class AugmentedRealityView(val context: Context) {
     private val orientation = FloatArray(3)
     private var previewRect: RectF? = null
     private var cameraMapper: CameraAnglePixelMapper? = null
-    private var lastActiveCamera: ICamera? = null
     private val defaultMapper = SimplePerspectiveCameraAnglePixelMapper()
 
     // Sensors / preferences
@@ -628,7 +627,6 @@ class AugmentedRealityView(val context: Context) {
         syncTimer.stop()
         fovRunner.cancel()
         cameraMapper = null
-        lastActiveCamera = null
         camera = null
         owner = null
     }
@@ -684,15 +682,13 @@ class AugmentedRealityView(val context: Context) {
                 if (previewRect == null) {
                     previewRect = camera.camera?.getPreviewRect(false)
                 }
-                val activeCamera = camera.camera
-                if (activeCamera !== lastActiveCamera || cameraMapper == null) {
-                    cameraMapper = activeCamera?.let {
+                if (cameraMapper == null) {
+                    cameraMapper = camera.camera?.let {
                         CameraAnglePixelMapperFactory().getMapper(
                             userPrefs.camera.projectionType,
                             it
                         )
                     }
-                    lastActiveCamera = activeCamera
                 }
                 requestRedraw()
             }

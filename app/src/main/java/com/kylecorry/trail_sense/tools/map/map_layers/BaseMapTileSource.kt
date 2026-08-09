@@ -7,16 +7,14 @@ import android.os.Bundle
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapFile
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationPoint
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.MapProjectionType
-import com.kylecorry.andromeda.core.units.PercentCoordinate
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles.PhotoMapDecoderCache
@@ -24,7 +22,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ti
 
 class BaseMapTileSource : TileSource {
 
-    private val context = DependencyRegistry.get<Context>()
+    private val context = AppServiceRegistry.get<Context>()
     private val decoderCache = PhotoMapDecoderCache()
     private val internalSelector = PhotoMapTileSourceSelector(
         context,
@@ -32,9 +30,8 @@ class BaseMapTileSource : TileSource {
             PhotoMap(
                 -1,
                 "Land",
-                listOf(
-                    OfflineMapFile("${FileSubsystem.SCHEME_ASSETS}land.webp", 0, PhotoMap.FILE_ROLE_IMAGE)
-                ),
+                "land.webp",
+                0,
                 PhotoMapGeoreference(
                     Size(3800f, 1900f),
                     projectionType = MapProjectionType.CylindricalEquidistant,
@@ -50,7 +47,8 @@ class BaseMapTileSource : TileSource {
                         )
                     ),
                     isFullWorld = true // TODO: Derive this using calibration points
-                )
+                ),
+                isAsset = true,
             )
         ),
         decoderCache,

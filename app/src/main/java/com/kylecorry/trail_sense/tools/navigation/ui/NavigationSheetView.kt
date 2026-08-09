@@ -56,9 +56,9 @@ import kotlinx.coroutines.launch
 class NavigationSheetView(private val context: Context) {
 
 
-    private val prefs = DependencyRegistry.get<UserPreferences>()
-    private val formatter = DependencyRegistry.get<FormatService>()
-    private val navigator = DependencyRegistry.get<Navigator>()
+    private val prefs = AppServiceRegistry.get<UserPreferences>()
+    private val formatter = AppServiceRegistry.get<FormatService>()
+    private val navigator = AppServiceRegistry.get<Navigator>()
 
     private val useTrueNorth = prefs.compass.useTrueNorth
 

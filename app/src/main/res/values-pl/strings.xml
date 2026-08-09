@@ -403,7 +403,7 @@
     <string name="half_tide">Połowa przypływu</string>
     <string name="beacon_export_error">Nie udało się wyeksportować punktów nawigacyjnych</string>
     <string name="turn_off">Wyłącz</string>
-    <string name="pref_step_length_title">Długość kroku</string>
+    <string name="pref_stride_length_title">Długość kroku</string>
     <string name="pedometer">Krokomierz</string>
     <string name="delete_tide_prompt">Usunąć pływ\?</string>
     <string name="no_tides">Brak pływów</string>
@@ -418,6 +418,7 @@
     <string name="rename">Zmień nazwę</string>
     <string name="experimental">Eksperymentalne</string>
     <string name="import_gpx">Importuj plik GPX</string>
+    <string name="error_importing_map">Wystąpił błąd podczas importowania mapy</string>
     <string name="importing_map">Importowanie mapy</string>
     <string name="pref_odometer_reset_daily_title">Resetuj codziennie</string>
     <string name="calibrate_new_tide">Skalibrować do nowego przypływu\?</string>
@@ -761,8 +762,8 @@
     <string name="reset_distance_title">Zresetować odległość\?</string>
     <string name="save">Zapisz</string>
     <string name="saved">Zapisano</string>
-    <string name="step_length_stand_still">Stój w miejscu</string>
-    <string name="step_length_walk">Idź linią prostą, naciśnij \"Stop\", aby zakończyć</string>
+    <string name="stride_length_stand_still">Stój w miejscu</string>
+    <string name="stride_length_walk">Idź linią prostą, naciśnij \"Stop\", aby zakończyć</string>
     <string name="current_speed">Aktualna prędkość</string>
     <string name="current_speed_pedometer">Aktualna prędkość (Krokomierz)</string>
     <string name="current_speed_gps">Aktualna prędkość (GPS)</string>
@@ -885,7 +886,7 @@
     <string name="photo_maps">Mapy ze zdjęć</string>
     <string name="historic_temperature_years" tools:ignore="PluralsCandidate">Historyczne (%d rok)</string>
     <string name="astronomy_altitude_peak">Wysokość górowania</string>
-    <string name="map_calibration_instructions">Wybierz dwie lokalizacje, które możesz rozpoznać na mapie oraz w świecie. Naciśnij dokładną pozycję na mapie, następnie wprowadź rzeczywiste współrzędne obu punktów.\n \nPrzykłady dobrych punktów to takie, które są oddalone od siebie oraz łatwe w rozpoznaniu, np: początek szlaku, parking, punkt informacyjny, punkt orientacyjny, przecięcie siatki mapy lub skrzyżowanie szlaków.\n\nJeśli lokalizacje obu punktów są poprawne, naciśnij \"Zakończ kalibracje\". Jeśli masz tylko jeden punkt lub chcesz dokończyć później, naciśnij \"Zapisz szkic\".</string>
+    <string name="map_calibration_instructions">Naciśnij znaną lokalizację na mapie, następnie wprowadź współrzędne rzeczywiste. Zapisz kalibrację naciskając \"Gotowe\". \n \nPrzykłady dobrych punktów kalibracji to parking, punkt informacyjny, punkt orientacyjny lub skrzyżowanie wzdłuż szlaku.</string>
     <string name="compass_source_mag_gyro">Magnetometr + Żyroskop</string>
     <string name="pref_keep_map_facing_up_title">Zablokuj orientację mapy, aby północ była na górze</string>
     <string name="pref_keep_map_facing_up_summary">Wyrównaj mapę do górnej krawędzi ekranu, zamiast do rzeczywistej północy.</string>
@@ -936,7 +937,7 @@
     <string name="bearing">Namiar</string>
     <string name="sunrise_alert_channel_title">Alert wschodu słońca</string>
     <string name="square">Kwadrat</string>
-    <string name="estimate_step_length">Szacowana długość kroku</string>
+    <string name="estimate_stride_length">Szacowana długość kroku</string>
     <string name="cross">Krzyż</string>
     <string name="astronomy_altitude">Wysokość</string>
     <string name="theme_system_black">Systemowy (Czarny)</string>
@@ -1276,7 +1277,7 @@
     <string name="climate_continental">Kontynentalny</string>
     <string name="active_period">Aktywność; %1$s - %2$s</string>
     <string name="ticks">Kleszcze</string>
-    <string name="record_sighting">Rejestruj obserwację</string>
+    <string name="record_sighting">Rejestracja obserwacji</string>
     <string name="harvested">Zbiory</string>
     <string name="sightings">Obserwacje</string>
     <string name="sightings_count">Obserwacje (%d)</string>
@@ -1529,13 +1530,14 @@
     <string name="clock_source_gps">Czas GPS</string>
     <string name="map_calibration_error_same_pixel">Wybierz dwa różne punkty na mapie.</string>
     <string name="map_calibration_error_same_image_axis">Wybierz dwa różne punkty na mapie, które nie są bezpośrednio obok lub nad sobą.</string>
-    <string name="map_calibration_error_same_location">Wprowadź dwie różne rzeczywiste lokalizacje.</string>
+    <string name="map_calibration_error_same_location">Wprowadź dwie pary różnych współrzędnych.</string>
     <string name="manage_maps">Zarządzaj mapami</string>
     <string name="map_calibration_error_implausible_scale">Kalibracja jest niewiarygodna. Sprawdź punkty oraz współrzędne.</string>
     <string name="offline_maps">Mapy offline</string>
     <string name="offline_map_import_failed">Nie można zaimportować mapy</string>
     <string name="no_offline_maps">Brak map offline</string>
     <string name="unsupported_offline_map_file">Nieprawidłowy plik mapy</string>
+    <string name="mapsforge">Mapsforge</string>
     <string name="map_type_photo">Zdjęcie</string>
     <string name="photo_map_disclaimer">Zawsze noś przy sobie mapę fizyczną jako zapasowe narzędzie oraz weryfikuj dokładność Trail Sense.\n\nTrail sense nie zawiera plików map, które należy pobrać oddzielnie lub zaimportować ze zdjęcia. Możesz pobrać pliki map z https://kylecorry.com/Trail-Sense/offline_maps.html</string>
     <string name="include_mapsforge_backups">Załącz mapy szlaków w kopii zapasowej</string>
@@ -1550,25 +1552,4 @@
     <string name="map_external">Zewnętrzna</string>
     <string name="map_file_missing">Brak pliku</string>
     <string name="copy_to_trail_sense">Kopiuj do Trail Sense</string>
-    <string name="pref_pedometer_history_days_title">Historia kroków</string>
-    <string name="current_session">Aktualna sesja</string>
-    <string name="history">Historia</string>
-    <string name="widget_icon_compatibility_mode">Tryb kompatybilności ikon widżetów</string>
-    <string name="widget_icon_compatibility_mode_summary">Naprawia brakujące ikony na niektórych urządzeniach</string>
-    <string name="no_pedometer_sessions">Brak sesji</string>
-    <plurals name="step_count">
-        <item quantity="one">%d krok</item>
-        <item quantity="few">%d kroki</item>
-        <item quantity="many">%d kroków</item>
-        <item quantity="other">%d kroków</item>
-    </plurals>
-    <string name="created">Utworzono</string>
-    <string name="recording_sighting_for_page">Rejestrowanie obserwacji: \'%s\'</string>
-    <string name="draft">Szkic</string>
-    <string name="save_draft">Zapisz szkic</string>
-    <string name="finish_calibration">Zakończ kalibrację</string>
-    <string name="calibrate_map_point_title">Punkt %1$d z %2$d</string>
-    <string name="calibrate_map_point_instructions">Naciśnij lokalizację na mapie, następnie wprowadź rzeczywiste współrzędne.</string>
-    <string name="invalid_trail_map">Nieprawidłowa mapa szlaku</string>
-    <string name="invalid_trail_map_message">Nieprawidłowy lub brakujący plik mapy szlaku. Usuń oraz zaimportuj nową mapę.</string>
 </resources>

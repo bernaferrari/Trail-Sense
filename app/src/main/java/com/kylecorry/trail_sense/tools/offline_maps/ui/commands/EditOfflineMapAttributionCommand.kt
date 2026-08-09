@@ -5,15 +5,15 @@ import com.kylecorry.andromeda.pickers.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 
 class EditOfflineMapAttributionCommand(
     private val context: Context
-) : CoroutineCommand<TrailMap> {
-    private val service = getAppService<OfflineMapService>()
+) : CoroutineCommand<VectorMap> {
+    private val service = getAppService<MapService>()
 
-    override suspend fun execute(value: TrailMap) {
+    override suspend fun execute(value: VectorMap) {
         val attribution = CoroutinePickers.text(
             context,
             context.getString(R.string.attribution),
@@ -21,6 +21,6 @@ class EditOfflineMapAttributionCommand(
             default = value.attribution.orEmpty()
         ) ?: return
 
-        service.setAttribution(value, attribution)
+        service.add(value.copy(attribution = attribution.trim()))
     }
 }

@@ -1,16 +1,14 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
 import android.content.Context
-import com.kylecorry.luna.cache.MemoryLRUCache
+import com.kylecorry.luna.cache.LRUCache
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
-import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.oceanography.Oceanography
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.TideType
 import com.kylecorry.sol.time.Time
-import com.kylecorry.sol.time.Time.atEndOfDay
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.tools.tides.domain.range.TideTableRangeCalculator
@@ -18,7 +16,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideTableWaterLev
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -26,7 +23,7 @@ class TideService(private val context: Context) {
 
     private val maxSearchIterations = 10
 
-    private val cache = MemoryLRUCache<TideTable, TideTableWaterLevelCalculator>(100)
+    private val cache = LRUCache<TideTable, TideTableWaterLevelCalculator>(100)
 
     suspend fun getTides(
         table: TideTable,
@@ -114,7 +111,7 @@ class TideService(private val context: Context) {
         val delta = Duration.between(previous.time, time).toMillis().toDouble()
         val progress = (delta / total).toFloat()
         return if (next.isHigh) {
-            Trigonometry.normalizeAngle(Interpolation.map(progress, 0f, 1f, 180f, 360f))
+            Interpolation.map(progress, 0f, 1f, 180f, 270f)
         } else {
             Interpolation.map(progress, 0f, 1f, 0f, 180f)
         }
@@ -173,7 +170,7 @@ class TideService(private val context: Context) {
             todayTides.lastOrNull { it.time <= time && (isTypeHigh == null || it.isHigh == isTypeHigh) }
         return previous ?: getPreviousTide(
             table,
-            time.toLocalDate().minusDays(1).atEndOfDay().atZone(time.zone),
+            time.toLocalDate().minusDays(1).atStartOfDay().atZone(time.zone),
             iteration + 1,
             type
         )

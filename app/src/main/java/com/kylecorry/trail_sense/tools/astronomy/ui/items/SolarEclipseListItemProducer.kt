@@ -5,7 +5,6 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
-import com.kylecorry.trail_sense.tools.astronomy.ui.SolarEclipseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
 import java.time.LocalDate
 
@@ -19,12 +18,11 @@ class SolarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         val eclipse = astronomyService.getSolarEclipse(location, date) ?: return@onDefault null
 
         // Advanced
-        val sun = astronomyService.getSunPosition(location, eclipse.peak)
+        val peakAltitude = astronomyService.getSunAltitude(location, eclipse.peak)
         val peakAzimuth = DeclinationUtils.fromTrueNorthBearing(
-            sun.azimuth,
+            astronomyService.getSunAzimuth(location, eclipse.peak),
             declination
         )
-        val moon = astronomyService.getMoonPosition(location, eclipse.peak)
 
         list(
             5,
@@ -54,7 +52,7 @@ class SolarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
                     )
                 ),
                 context.getString(R.string.magnitude) to decimal(eclipse.magnitude, 2),
-                context.getString(R.string.astronomy_altitude_peak) to degrees(sun.altitude),
+                context.getString(R.string.astronomy_altitude_peak) to degrees(peakAltitude),
                 context.getString(R.string.astronomy_direction_peak) to direction(peakAzimuth)
             )
 

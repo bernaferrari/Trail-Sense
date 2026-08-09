@@ -371,6 +371,7 @@
     <string name="sun_civil">Αστική</string>
     <string name="category_natural">Φυσιοδιφία</string>
     <string name="new_packing_list">Νέα λίστα συσκευασίας</string>
+    <string name="error_importing_map">Σφάλμα κατά την εισαγωγή χάρτη</string>
     <string name="milliliter_format">%s ml</string>
     <string name="sun_nautical">Ναυτική</string>
     <string name="guide_recommended_apps_description">Χρήσιμες εφαρμογές για καταστάσεις επιβίωσης</string>
@@ -641,7 +642,7 @@
     <string name="keep_forever">Διατήρηση για πάντα</string>
     <string name="weight">Βάρος</string>
     <string name="show">Εμφάνιση</string>
-    <string name="pref_step_length_title">Μήκος βηματισμού</string>
+    <string name="pref_stride_length_title">Μήκος βηματισμού</string>
     <string name="map_perspective_instructions">Σκιαγράφηση χάρτη</string>
     <string name="pref_display_multi_beacons_title">Εμφάνιση κοντινών τοπόσημων</string>
     <string name="pref_display_multi_beacons_summary">Εμφάνιση κοντινών τοπόσημων στην πυξίδα</string>
@@ -784,10 +785,10 @@
     <string name="reset_distance_title">Επαναφορά απόστασης;</string>
     <string name="distance_alert">Ειδοποίηση απόστασης</string>
     <string name="saved">Αποθηκεύτηκε</string>
-    <string name="step_length_stand_still">Σταθείτε σε ακινησία</string>
+    <string name="stride_length_stand_still">Σταθείτε σε ακινησία</string>
     <string name="explore">Εξερευνήστε</string>
     <string name="merging">Γίνεται συγχώνευση</string>
-    <string name="estimate_step_length">Υπολογισμός μήκους βηματισμού</string>
+    <string name="estimate_stride_length">Υπολογισμός μήκους βηματισμού</string>
     <string name="difficulty">Βαθμός δυσκολίας</string>
     <string name="exporting_map">Ο χάρτης εξάγεται</string>
     <string name="navigating_to_nearest_path_point">Πλοήγηση στον πλησιέστερο δείκτη στη διαδρομή</string>
@@ -822,7 +823,7 @@
     <string name="tool_temperature_estimation_description">Κάντε πρόβλεψη της θερμοκρασίας σε διαφορετικό υψόμετρο</string>
     <string name="pressure_tendency">Τάση</string>
     <string name="pref_start_on_boot_title">Άνοιγμα εφαρμογής στην εκκίνηση του τηλεφώνου</string>
-    <string name="step_length_walk">Προχωρήστε σε ευθεία γραμμή, αγγίξτε τέλος στην οθόνη όταν ολοκληρώσετε</string>
+    <string name="stride_length_walk">Προχωρήστε σε ευθεία γραμμή, αγγίξτε τέλος στην οθόνη όταν ολοκληρώσετε</string>
     <string name="remove_distance_alert">Αφαίρεση ειδοποίησης απόστασης (%s);</string>
     <string name="error">Σφάλμα</string>
     <string name="map_exported">Ο χάρτης εξήχθη</string>
@@ -943,7 +944,9 @@
     <string name="disclaimer_estimated_tide">Οι προβλεπόμενες παλίρροιες ενδέχεται να είναι ανακριβείς. Παρακαλώ χρησιμοποιείστε έναν επίσημο πίνακα παλιρροιών για τις ακριβείς ώρες.</string>
     <string name="tide_instructions">Χρησιμοποιήστε έναν επίσημο πίνακα παλιρροιών για να εισαγάγετε τις παλίρροιες αναφοράς για το μήκος του ταξιδιού σας.</string>
     <string name="tide_user_guide_recommendation">Για τις επίσημες ιστοσελίδες με τους πίνακες παλιρροιών μπορείτε να ανατρέξετε στο εγχειρίδιο χρήσης.</string>
-    <string name="map_calibration_instructions">Επιλέξτε μία γνωστή τοποθεσία στο χάρτη και συμπληρώστε τις γεωγραφικές συντεταγμένες της. Μπορείτε να αποθηκεύσετε τη βαθμονόμηση με την επιλογή \"Ολοκληρώθηκε\". \n \nΜερικά καλά παραδείγματα τοποθεσιών για χρήση κατά τη βαθμονόμηση θα μπορούσαν να είναι ένας χώρος στάθμευσης οχημάτων, ενα σημείο σήμανσης, ένα ορόσημο, ή μία διασταύρωση στην πορεία μίας διαδρομής.</string>
+    <string name="map_calibration_instructions">Επιλέξτε μία γνωστή τοποθεσία στο χάρτη και συμπληρώστε τις γεωγραφικές συντεταγμένες της. Μπορείτε να αποθηκεύσετε τη βαθμονόμηση με την επιλογή \"Ολοκληρώθηκε\".
+\n
+\nΜερικά καλά παραδείγματα τοποθεσιών για χρήση κατά τη βαθμονόμηση θα μπορούσαν να είναι ένας χώρος στάθμευσης οχημάτων, ενα σημείο σήμανσης, ένα ορόσημο, ή μία διασταύρωση στην πορεία μίας διαδρομής.</string>
     <string name="missing_sensor_message_1">Η συσκευή σας, %1$s, δεν υποστηρίζει αισθητήρα για χρήση ως %2$s. Δυστυχώς, αυτό σημαίνει πως κάποιες δυνατότητες από τη λειτουργία %3$s δεν θα είναι διαθέσιμες.</string>
     <string name="on">Ενεργό</string>
     <string name="no">Όχι</string>

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.settings.migrations
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.preferences.getIntArray
@@ -69,7 +69,7 @@ class PreferenceMigrator private constructor() {
         private var instance: PreferenceMigrator? = null
         private val staticLock = Any()
 
-        private const val version = 30
+        private const val version = 28
         private val migrations = listOf(
             PreferenceMigration(0, 1) { _, prefs ->
                 if (prefs.contains("pref_enable_experimental")) {
@@ -109,9 +109,9 @@ class PreferenceMigrator private constructor() {
             PreferenceMigration(6, 7) { context, prefs ->
                 val distance = prefs.getFloat("odometer_distance")
                 if (distance != null) {
-                    val stepLength = UserPreferences(context).pedometer.stepLength.meters().value
-                    if (stepLength > 0f) {
-                        val steps = (distance / stepLength).toLong()
+                    val stride = UserPreferences(context).pedometer.strideLength.meters().value
+                    if (stride > 0f) {
+                        val steps = (distance / stride).toLong()
                         prefs.putLong("cache_steps", steps)
                     }
                 }
@@ -348,7 +348,7 @@ class PreferenceMigrator private constructor() {
                 }
             },
             PreferenceMigration(23, 24) { _, prefs ->
-                val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
+                val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
                 val allLayers = listOf(
                     BaseMapTileSource.SOURCE_ID,
                     ElevationMapTileSource.SOURCE_ID,
@@ -465,15 +465,6 @@ class PreferenceMigrator private constructor() {
                     prefs.putBoolean(context.getString(R.string.pref_use_bottom_navigation_labels), false)
                 }
 
-            },
-            PreferenceMigration(28, 29) { context, _ ->
-                PedometerPreferenceMigrationWorker.start(context)
-            },
-            PreferenceMigration(29, 30) { context, prefs ->
-                val key = context.getString(R.string.pref_odometer_reset_daily)
-                if (AppState.isReturningUser && !prefs.contains(key)) {
-                    prefs.putBoolean(key, false)
-                }
             }
         )
 
@@ -494,6 +485,7 @@ class PreferenceMigrator private constructor() {
             val key = "pref_${mapId}_${layerId}_layer_enabled"
             return prefs.getBoolean(key) ?: true
         }
+
 
     }
 

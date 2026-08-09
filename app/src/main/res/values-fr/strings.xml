@@ -158,7 +158,7 @@
     <string name="calibrate_compass_dialog_content">Faites tourner votre téléphone plusieurs fois en formant un « 8 » ou dans toutes les directions, puis cliquez sur %s lorsque vous avez terminé.</string>
     <string name="pref_adjust_for_temperature_title">Prendre en compte la température</string>
     <string name="coordinate_format_degrees_decimal_minutes">Degrés minutes décimales</string>
-    <string name="access_background_location_rationale">Trail Sense utilise les données de localisation en arrière-plan, même lorsque l\'application est fermée ou n\'est pas utilisée. Cet accès en arrière-plan sert à l\'étalonnage de la pression au niveau de la mer pour la surveillance météorologique, au retracement du parcours, à la mise à jour des widgets et à fournir des alertes plus précises concernant le lever et le coucher du soleil. [Consulter la politique de confidentialité](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
+    <string name="access_background_location_rationale">Trail Sense utilise les données de localisation en arrière-plan pour calibrer la pression atmosphérique au niveau de la mer dans le cadre de la surveillance météorologique et pour fournir des alertes plus précises concernant le coucher du soleil. [Consulter la politique de confidentialité](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
     <string name="access_background_location">Mettre à jour les paramètres de localisation</string>
     <string name="error_occurred_message">Trail Sense a rencontré une erreur. Veuillez envoyer un e-mail au développeur pour résoudre ce problème.</string>
     <string name="error_occurred">Une erreur est survenue</string>
@@ -421,7 +421,7 @@
     <string name="tap_to_turn_off">Appuyez pour éteindre</string>
     <string name="always_on">Toujours activé</string>
     <string name="guide_light_meter_description">Comment déterminer la portée d’une source lumineuse</string>
-    <string name="pref_step_length_title">Longueur d’enjambée</string>
+    <string name="pref_stride_length_title">Longueur d’enjambée</string>
     <string name="pref_meteor_showers_title">Pluies de météores</string>
     <string name="time_until_empty">jusqu\'à ce que ce soit vide</string>
     <string name="time_until_full">jusqu\'à ce que ça soit plein</string>
@@ -448,7 +448,7 @@
     <string name="elevation_history_length">Longueur de l’historique d’altitude</string>
     <string name="camera">Caméra</string>
     <string name="dashed">Tirets</string>
-    <string name="pref_nmea_elevation_summary">Utiliser les données NMEA (satellite) pour corriger les altitudes, plutôt que le modèle intégré</string>
+    <string name="pref_nmea_elevation_summary">Utilisez NMEA (satellite) pour corriger les altitudes, plutôt que le modèle intégré.</string>
     <string name="pref_nmea_elevation_title">Correction d\'élévation NMEA</string>
     <string name="sensor_gyroscope">Gyroscope</string>
     <string name="gallon_format">%s gal</string>
@@ -469,12 +469,13 @@
     <string name="speedometer">Tachymètre</string>
     <string name="since_time">depuis %s</string>
     <string name="meteors_per_hour" tools:ignore="PluralsCandidate">Max %d météores / h</string>
-    <string name="pedometer_disclaimer">La précision et l\'autonomie de la batterie du podomètre dépendent du fabricant de votre appareil et de la longueur de pas que vous avez saisie. Testez-le un peu chez vous pour vérifier son autonomie et sa précision avant de l\'utiliser en randonnée.</string>
+    <string name="pedometer_disclaimer">La précision et la consommation de batterie du podomètre dépend du fabricant de l’appareil ainsi que de la longueur d’enjambée défini. À essayer chez soi avant d’aller sur le terrain.</string>
     <string name="no_maps">Pas de cartes</string>
     <string name="on_map">Sur la carte</string>
     <string name="previous">Précédent</string>
     <string name="next">Suivant</string>
     <string name="importing_map">Importation de carte</string>
+    <string name="error_importing_map">Erreur d’importation de carte</string>
     <string name="import_gpx">Importation de GPX</string>
     <string name="sleep_timer">Minuteur de sommeil</string>
     <string name="actual_frequency_disclaimer">La fréquence varie selon la limite d’activité en arrière plan des appareils.</string>
@@ -865,7 +866,7 @@
     <string name="distance_alert">Distance d\'alerte</string>
     <string name="current_speed_gps">Vitesse actuelle (GPS)</string>
     <string name="navigating_to_nearest_path_point">Navigation jusqu’au point de cheminement le plus proche</string>
-    <string name="estimate_step_length">Estimer la longueur de foulée</string>
+    <string name="estimate_stride_length">Estimer la longueur de foulée</string>
     <string name="tide_semidiurnal">Semi diurne</string>
     <string name="ascent">Ascension</string>
     <string name="lowest_point_elevation">Point le plus bas</string>
@@ -934,8 +935,8 @@
     <string name="off">Eteint</string>
     <string name="explore">Explorer</string>
     <string name="current_speed">Vitesse actuelle</string>
-    <string name="step_length_stand_still">S\'arrêter</string>
-    <string name="step_length_walk">Marchez en ligne droite, appuyez sur arrêt lorsque vous avez terminé</string>
+    <string name="stride_length_stand_still">S\'arrêter</string>
+    <string name="stride_length_walk">Marchez en ligne droite, appuyez sur arrêt lorsque vous avez terminé</string>
     <string name="warning">Alerte</string>
     <string name="map_export_error">Impossible d\'exporter la carte dans le fichier sélectionné</string>
     <string name="point">Point</string>
@@ -1004,7 +1005,9 @@
     <string name="unable_to_find_next_astronomy">Impossible de trouver le suivant %s</string>
     <string name="until_sunrise">jusqu’au lever du soleil</string>
     <string name="map_calibration">Calibration de la carte</string>
-    <string name="map_calibration_instructions">Choisissez deux points que vous pouvez identifier à la fois sur cette carte et dans la réalité. Pour chaque point, appuyez sur sa position exacte sur la carte, puis saisissez ses coordonnées réelles.\n\nLes points appropriés sont éloignés les uns des autres et faciles à reconnaître, comme le départ d\'un sentier, un parking, un panneau, un point de repère, une intersection de la grille cartographique ou un croisement de sentiers.\n\nSi les deux points sont valides, appuyez sur « Terminer l\'étalonnage ». Si vous n\'avez qu\'un seul point ou si vous souhaitez terminer plus tard, appuyez sur « Enregistrer le brouillon ».</string>
+    <string name="map_calibration_instructions">Touchez un emplacement connu sur la carte, puis saisissez les coordonnées réelles. Vous pouvez enregistrer l’étalonnage en cliquant sur le bouton « Terminé ».
+\n
+\nDes exemples de bons points d’étalonnage sont un stationnement, un point de signalisation, un point de repère ou une jonction le long d’un sentier.</string>
     <string name="compass_source_legacy_ts">Héritage (Trail Sense)</string>
     <string name="compass_source_legacy_android">Héritage (Android)</string>
     <string name="photo_maps">Cartes illustrées</string>
@@ -1136,7 +1139,7 @@
         <item quantity="many">%d pas</item>
         <item quantity="other">%d pas</item>
     </plurals>
-    <string name="pref_dialog_battery_log_summary">Le journal de la batterie est désactivé ; l\'historique et l\'autonomie restante peuvent ne pas être disponibles. Vous pouvez réactiver cette fonctionnalité dans les paramètres.</string>
+    <string name="pref_dialog_battery_log_summary">Vous ne pourrez ni accéder à l\'historique de la batterie, ni voir le temps restant avant que votre téléphone soit déchargé. Vous pouvez réactiver ces fonctionnalités dans les paramètres.</string>
     <string name="select_from_gallery">Choisir dans la galerie</string>
     <string name="feature_unavailable">%s indisponible</string>
     <string name="ar_calibration_disclaimer">Avant chaque utilisation de l\'outil de Réalité Augmentée, vérifiez que le soleil ou la lune dans l\'outil est au même emplacement dans le monde réel. Si ce n\'est pas le cas, cliquez sur la boussole en haut à gauche de l\'écran et suivez les instructions de calibration.</string>
@@ -1237,7 +1240,7 @@
     <string name="climate_tropical_monsoon">mousson tropicale</string>
     <string name="adaptive_brightness">Luminosité adaptative</string>
     <string name="pref_night_mode_fullscreen_title">Plein écran en mode nuit</string>
-    <string name="quick_actions_are_unavailable">Les actions rapides ne sont pas disponibles</string>
+    <string name="quick_actions_are_unavailable">Les actions rapides ne sont pas disponibles.</string>
     <string name="sunrise">Lever du soleil</string>
     <string name="pref_night_mode_fullscreen_summary">Masquer l\'interface utilisateur du système pour une meilleure préservation de la vision nocturne</string>
     <string name="pref_bubble_level_threshold_title">Seuil de niveau</string>
@@ -1270,7 +1273,7 @@
     <string name="shelter">Refuge</string>
     <string name="overview">Aperçu</string>
     <string name="crafting">Artisanat</string>
-    <string name="survival_guide_disclaimer">Ce guide fournit uniquement des informations éducatives d\'ordre général. Il ne constitue ni une formation professionnelle, ni un avis médical, un diagnostic ou un traitement, et ne remplace pas les services d\'urgence, les professionnels de santé qualifiés, les directives locales ou les instructions du fabricant. En cas d\'urgence, contactez les services de secours dans les plus brefs délais, suivez leurs instructions et ne retardez pas l\'appel aux secours pour consulter ce guide. Ne vous fiez pas uniquement à ce guide, à Trail Sense ou à votre téléphone pour assurer votre sécurité ou communiquer. Les conditions, les risques, la réglementation et les pratiques recommandées varient selon le lieu et la situation ; vérifiez les informations avant d\'agir et faites preuve de discernement.</string>
+    <string name="survival_guide_disclaimer">Ce guide est fourni à titre informatif uniquement, et ni l\'auteur, ni l\'éditeur, ni aucun contributeur ne garantissent son exactitude ou son adéquation à quelque fin que ce soit. En utilisant ce guide, vous reconnaissez que les activités de plein air comportent des risques et que vous les pratiquez à vos propres risques, acceptant de dégager de toute responsabilité et d\'indemniser l\'auteur, l\'éditeur et tout contributeur pour toute réclamation ou tout dommage résultant de votre utilisation de ce guide. Consultez toujours des professionnels pour obtenir des conseils spécifiques à votre situation, car ce guide ne remplace pas les conseils d\'un professionnel. De plus, sachez que les lois et réglementations locales peuvent avoir une incidence sur l\'utilisation légale des techniques décrites dans le présent document, et que vous êtes responsable de leur respect.</string>
     <string name="field_required">%s (obligatoire)</string>
     <string name="reduce_photo_resolution">Réduire la résolution des photos</string>
     <string name="survival_guide_empty_desc">Recherchez des sujets liés à la survie, tels que l\'eau, les soins médicaux, la nourriture, la météo, les abris ou les techniques d\'orientation.</string>
@@ -1319,7 +1322,7 @@
     <string name="cell_towers">Antennes-relais</string>
     <string name="signal_finder_description">Afficher les antennes-relais et les signaux à proximité.</string>
     <string name="no_cell_towers_found">Aucune antenne-relais trouvée</string>
-    <string name="cell_tower_disclaimer">Les emplacements des antennes-relais sont estimés à partir des données d\'OpenCelliD, du service de localisation de Mozilla et des registres d\'antennes de la FCC.\n\nLe [projet OpenCelliD](https://opencellid.org/) est soumis à une [licence Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/)</string>
+    <string name="cell_tower_disclaimer">Les emplacements des tours sont approximatifs et proviennent d\'OpenCelliD, du service de localisation Mozilla et des enregistrements d\'antennes FCC.\n\n[OpenCelliD Project](https://opencellid.org/) est sous licence [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).</string>
     <string name="full_service">Service complet</string>
     <string name="australia">Océanie</string>
     <string name="emergency_calls_only">Appels d\'urgence uniquement</string>
@@ -1601,6 +1604,7 @@
     <string name="offline_map_import_failed">Impossible d\'importer la carte</string>
     <string name="no_offline_maps">Aucune carte hors ligne</string>
     <string name="unsupported_offline_map_file">Fichier de carte non pris en charge</string>
+    <string name="mapsforge">Mapsforge</string>
     <string name="trail_maps">Cartes des sentiers</string>
     <string name="map_layer_trail_maps_description">Vos cartes de sentiers enregistrées</string>
     <string name="manage_maps">Gérer les cartes</string>
@@ -1611,54 +1615,4 @@
     <string name="map_external">Externe</string>
     <string name="map_file_missing">Fichier manquant</string>
     <string name="copy_to_trail_sense">Copier dans Trail Sense</string>
-    <string name="widget_icon_compatibility_mode">Mode de compatibilité des icônes de widgets</string>
-    <string name="widget_icon_compatibility_mode_summary">Corrige l\'absence d\'icônes de widgets sur certains appareils</string>
-    <string name="pref_pedometer_history_days_title">Historique des étapes</string>
-    <string name="current_session">Session en cours</string>
-    <string name="history">Historique</string>
-    <string name="no_pedometer_sessions">Aucune session</string>
-    <plurals name="step_count">
-        <item quantity="one">%d pas</item>
-        <item quantity="many">%d pas</item>
-        <item quantity="other">%d pas</item>
-    </plurals>
-    <string name="created">Créé</string>
-    <string name="recording_sighting_for_page">Enregistrement de l\'observation de « %s »</string>
-    <string name="draft">Brouillon</string>
-    <string name="save_draft">Enregistrer le brouillon</string>
-    <string name="finish_calibration">Terminer l\'étalonnage</string>
-    <string name="calibrate_map_point_title">Point %1$d sur %2$d</string>
-    <string name="calibrate_map_point_instructions">Appuyez sur cet emplacement sur la carte, puis saisissez ses coordonnées réelles.</string>
-    <string name="invalid_trail_map">Carte des sentiers non valide</string>
-    <string name="invalid_trail_map_message">Le fichier de la carte des sentiers n\'est pas valide ou est manquant. Vous pouvez supprimer cette carte et en importer une nouvelle.</string>
-    <string name="average_pace">Allure moyenne</string>
-    <string name="pref_pedometer_average_pace_time_title">Temps moyen par allure</string>
-    <string name="current_pace">Rythme actuel</string>
-    <string name="active_time">Temps d\'activité</string>
-    <string name="active_duration">Actif : %s</string>
-    <string name="elapsed_time">Temps écoulé</string>
-    <string name="references">Références</string>
-    <string name="alarm">Alarme</string>
-    <string name="turn_back_alarm_channel">Faire demi-tour (Alarme)</string>
-    <string name="clock_device_time_accurate">L\'horloge de l\'appareil est précise</string>
-    <plurals name="clock_device_time_slow">
-        <item quantity="one">L\'horloge de l\'appareil est en retard de %d seconde</item>
-        <item quantity="many">L\'horloge de l\'appareil est en retard de %d secondes</item>
-        <item quantity="other">L\'horloge de l\'appareil est en retard de %d secondes</item>
-    </plurals>
-    <plurals name="clock_device_time_fast">
-        <item quantity="one">L\'horloge de l\'appareil est en avance de %d seconde</item>
-        <item quantity="many">L\'horloge de l\'appareil est en avance de %d secondes</item>
-        <item quantity="other">L\'horloge de l\'appareil est en avance de %d secondes</item>
-    </plurals>
-    <string name="export_logs">Exporter les journaux</string>
-    <string name="exporting">Exportation</string>
-    <string name="export_failed">Impossible d\'exporter</string>
-    <string name="external_storage">Stockage externe</string>
-    <string name="external_storage_diagnostic_instructions">Le sélecteur de fichiers système ne dispose pas des autorisations nécessaires pour accéder aux fichiers de votre appareil. Cela peut empêcher Trail Sense de s\'ouvrir ou d\'enregistrer les fichiers que vous sélectionnez. Activez l\'option « Autoriser l\'accès pour gérer tous les fichiers » pour le sélecteur de fichiers système (qui peut s\'intituler « Stockage externe »).</string>
-    <string name="use_legacy_file_picker">Utiliser l\'ancien sélecteur de fichiers</string>
-    <string name="map_error_invalid_map_file">Fichier de carte non valide</string>
-    <string name="map_error_access_denied">L\'accès au fichier de carte a été refusé</string>
-    <string name="map_error_unable_to_copy">Impossible de copier le fichier de carte</string>
-    <string name="color_by_classification">Couleur par catégorie</string>
 </resources>

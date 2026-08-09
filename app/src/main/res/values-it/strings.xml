@@ -65,7 +65,7 @@
     <string name="high_tide">Alta</string>
     <string name="precise_meters_format">%s m</string>
     <string name="precise_kilometers_format">%s km</string>
-    <string name="access_background_location_rationale">Trail Sense usa i dati sulla posizione in background anche quando l\'app e chiusa o non in uso. L\'accesso in background è utilizzato per calibrare la pressione al livello del mare, nelle osservazioni meteo, backtrack, update dei widgets e per fornire dati più accurati sulle notifiche sull\'alba/tramonto. [Informativa sulla Privacy](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
+    <string name="access_background_location_rationale">Trail Sense usa i dati sulla posizione in background. Sono utilizzati per calibrare la pressione al livello del mare nelle osservazioni meteo e per fornire dati più accurati sulle notifiche sull\'alba. [Informativa sulla Privacy](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
     <string name="access_background_location">Aggiorna le impostazioni di geolocalizzazione</string>
     <string name="pref_num_visible_beacons_title">Segnaposto vicini</string>
     <string name="never">Mai</string>
@@ -496,6 +496,7 @@
     <string name="next">Successivo</string>
     <string name="map_auto_calibrated">Mappa calibrata automaticamente, per favore verificane l\'accuratezza</string>
     <string name="importing_map">Importando la mappa</string>
+    <string name="error_importing_map">Errore importando la mappa</string>
     <string name="pref_odometer_reset_daily_title">Azzera giornalmente</string>
     <string name="search">Cerca</string>
     <string name="pref_weather_show_detailed_icon_title">Mostra un\'icona di notifica colorata</string>
@@ -533,7 +534,7 @@
     <string name="cumulus_forecast" tools:ignore="PluralsCandidate">Può indicare bel tempo. Se cresce in altezza, può indicare precipitazioni o temporali nelle prossime %d ore.</string>
     <string name="since_time">da %s</string>
     <string name="pref_include_leading_zero_title">Aggiungi lo zero iniziale all\'ora</string>
-    <string name="pref_step_length_title">Lunghezza del passo</string>
+    <string name="pref_stride_length_title">Lunghezza del passo</string>
     <string name="time_until_full">fino alla ricarica</string>
     <string name="actual_frequency_disclaimer">La frequenza effettiva può variare in quanto alcuni dispositivi hanno delle limitazioni alle attività in background.</string>
     <string name="weather_no_change">Nessun cambiamento</string>
@@ -741,7 +742,7 @@
     <string name="pref_flashlight_should_timeout_title">Spegni automaticamente</string>
     <string name="pref_flashlight_timeout_title">Spegni dopo</string>
     <string name="tool_temperature_estimation_description">Prevede la temperatura ad una quota differente</string>
-    <string name="step_length_stand_still">Rimani fermo</string>
+    <string name="stride_length_stand_still">Rimani fermo</string>
     <string name="no_clouds">Niente nuvole</string>
     <string name="reduce_map_resolution_crop_disclaimer">Il ritaglio della mappa ne ridurrà la risoluzione. Se è necessario ritagliare la mappa con un alta risoluzione, utilizzare un\'applicazione per la modifica di foto. Si prevede di risolvere questo problema in futuro.</string>
     <string name="solar_eclipses">Eclissi solari</string>
@@ -757,9 +758,9 @@
     <string name="most_recent">Più recente</string>
     <string name="qr_text_too_long">Il testo è troppo lungo, il codice QR è stato troncato</string>
     <string name="distance_alert">Avviso di distanza</string>
-    <string name="estimate_step_length">Stima la lunghezza della falcata</string>
+    <string name="estimate_stride_length">Stima la lunghezza della falcata</string>
     <string name="current_speed">Velocità attuale</string>
-    <string name="step_length_walk">Cammina in una linea retta, premi stop quando hai fatto</string>
+    <string name="stride_length_walk">Cammina in una linea retta, premi stop quando hai fatto</string>
     <string name="average_speed_backtrack">Velocità media (percorso di ritorno)</string>
     <string name="pref_only_navigate_path_points_title">Naviga solo verso punti registrati</string>
     <string name="file">File</string>
@@ -920,7 +921,9 @@
     <string name="hot">Molto caldo</string>
     <string name="weather_thunderstorm">Temporale</string>
     <string name="unable_to_find_next_astronomy">Impossibile trovare la prossima %s</string>
-    <string name="map_calibration_instructions">Tocca una posizione nota sulla mappa poi inserisci le coordinate reali. Puoi salvare la calibrazione premendo il tasto \"Fatto\". \n \nEsempi di buoni punti di calibrazione sono un parcheggio, un punti di segnalazione, un punto di riferimento, o un incrocio lungo un sentiero.</string>
+    <string name="map_calibration_instructions">Tocca una posizione nota sulla mappa poi inserisci le coordinate reali. Puoi salvare la calibrazione premendo il tasto \"Fatto\".
+\n
+\nEsempi di buoni punti di calibrazione sono un parcheggio, un punti di segnalazione, un punto di riferimento, o un incrocio lungo un sentiero.</string>
     <string name="compass_source_legacy_ts">Dati precedenti (Trail Sense)</string>
     <string name="allow_schedule_exact_alarms_instructions">Questo permette a %1$s di impostare notifiche e promemoria esatti, come gli avvisi di tramonto. Senza questa autorizzazione, le notifiche potrebbero venir mostrate al momento sbagliato.
 \n
@@ -1240,22 +1243,4 @@
     <string name="grains_format">%s gr</string>
     <string name="pref_night_mode_fullscreen_title">Schermo intero in modalità notturna</string>
     <string name="pref_night_mode_fullscreen_summary">Nascondi l\'interfaccia di sistema per una migliore conservazione della visione notturna</string>
-    <string name="plugins">Plugins</string>
-    <string name="map_layers">Livelli della mappa</string>
-    <string name="app_info">App info</string>
-    <string name="reload">Ricarica</string>
-    <string name="disconnect">Disconnetti</string>
-    <string name="plugin_unavailable">Il plugin non è disponibile o non è connesso</string>
-    <string name="clear_plugin_cache">Svuota la cache del plugin</string>
-    <string name="connected_plugins">Plugin connessi</string>
-    <string name="available_plugins">Plugin disponibili</string>
-    <string name="plugin_connect_title">Connetti il plugin?</string>
-    <string name="plugin_disconnect_title">Disconnetti il plugin?</string>
-    <string name="brightness">Luminosità</string>
-    <string name="scientific_name">Nome scientifico</string>
-    <string name="common_name">Nome comune</string>
-    <string name="both_names">Entrambi i nomi</string>
-    <string name="do_not_ask_again">Non chiedere più</string>
-    <string name="quick_action_recalibrate_altimeter">Ricalibra l\'altimetro</string>
-    <string name="recalibrating">Ricalibrazione</string>
 </resources>

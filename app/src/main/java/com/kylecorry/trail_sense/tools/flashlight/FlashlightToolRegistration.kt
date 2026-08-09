@@ -19,7 +19,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -78,17 +77,13 @@ object FlashlightToolRegistration : ToolRegistration {
                     { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }
                 )
             ),
-            notificationChannelGroups = listOf(
-                ToolNotificationChannelGroup(NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT, context.getString(R.string.flashlight_title))
-            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     FlashlightService.CHANNEL_ID,
                     context.getString(R.string.flashlight_title),
                     context.getString(R.string.flashlight_title),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    muteSound = true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT
+                    muteSound = true
                 )
             ),
             services = listOf(FlashlightToolService(context)),
@@ -123,5 +118,4 @@ object FlashlightToolRegistration : ToolRegistration {
     const val WIDGET_FLASHLIGHT = "flashlight-widget-flashlight"
 
     const val BROADCAST_FLASHLIGHT_STATE_CHANGED = "flashlight-broadcast-flashlight-state-changed"
-    const val NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT = "flashlight"
 }

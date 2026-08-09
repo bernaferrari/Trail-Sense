@@ -26,15 +26,17 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
         val nautical = astronomyService.getSunTimes(location, SunTimesMode.Nautical, date)
         val astronomical = astronomyService.getSunTimes(location, SunTimesMode.Astronomical, date)
         val peak = times.transit?.let {
-            astronomyService.getSunPosition(location, it).altitude
+            astronomyService.getSunAltitude(location, it)
         }
         val night = Duration.ofDays(1) - daylight
         val season = astronomyService.getSeason(location, date)
-        val currentPosition = if (date == LocalDate.now()) astronomyService.getSunPosition(location) else null
-        val azimuth = currentPosition?.let {
-            DeclinationUtils.fromTrueNorthBearing(it.azimuth, declination)
-        }
-        val altitude = currentPosition?.altitude
+        val azimuth = if (date == LocalDate.now()) DeclinationUtils.fromTrueNorthBearing(
+            astronomyService.getSunAzimuth(location),
+            declination
+        ) else null
+        val altitude =
+            if (date == LocalDate.now()) astronomyService.getSunAltitude(location) else null
+
         list(
             1,
             context.getString(R.string.sun),

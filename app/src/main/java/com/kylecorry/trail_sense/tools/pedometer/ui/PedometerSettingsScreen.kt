@@ -58,11 +58,9 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
-import com.kylecorry.trail_sense.tools.pedometer.domain.AveragePaceTimeMode
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
 
 @Composable
 fun PedometerSettingsToolScreen(host: TrailSenseDestinationHost) {

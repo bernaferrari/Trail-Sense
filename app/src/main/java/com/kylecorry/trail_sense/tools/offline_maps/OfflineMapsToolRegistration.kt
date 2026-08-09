@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps
 
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.findNavController
@@ -11,9 +10,7 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefi
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapRepo
-import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileCacheInvalidationHandler
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
 import com.kylecorry.trail_sense.tools.offline_maps.quickactions.QuickActionOpenPhotoMap
@@ -64,25 +61,14 @@ object OfflineMapsToolRegistration : ToolRegistration {
                 R.id.offlineMapViewFragment
             ),
             diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.gps(context),
                 ToolDiagnosticFactory.camera(context),
                 *ToolDiagnosticFactory.compass(context)
             ).distinctBy { it.id },
             intentHandlers = listOf(importMapIntentHandler),
-            initialize = {
-                DependencyRegistry.addSingleton(MapRepo.getInstance(it))
-                DependencyRegistry.addSingleton(
-                    OfflineMapService(
-                        it,
-                        getAppService(),
-                        getAppService(),
-                        getAppService()
-                    )
-                )
-
-                PhotoMapTileCacheInvalidationHandler(getAppService()).run()
-            },
+            singletons = listOf(
+                MapService::getInstance
+            ),
             broadcasts = listOf(
                 ToolBroadcast(BROADCAST_OFFLINE_MAP_CHANGED, "Offline map changed"),
                 ToolBroadcast(BROADCAST_OFFLINE_MAP_ADDED, "Offline map added"),
@@ -124,7 +110,11 @@ object OfflineMapsToolRegistration : ToolRegistration {
                     ),
                     tileSource = ::TrailMapsTileSource,
                     attributionLoader = {
-                        val attributions = getAppService<OfflineMapService>().getVisibleTrailMapAttributions()
+                        val attributions = getAppService<MapService>()
+                            .getAllVectorMaps()
+                            .filter { it.visible }
+                            .mapNotNull { it.attribution?.trim()?.takeIf { attribution -> attribution.isNotBlank() } }
+                            .distinct()
 
                         if (attributions.isEmpty()) {
                             null

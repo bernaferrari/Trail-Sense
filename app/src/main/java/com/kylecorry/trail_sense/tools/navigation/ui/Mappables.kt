@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.graphics.Bitmap
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -20,7 +19,6 @@ interface IMappableReferencePoint : Identifiable {
     val opacity: Float
     val bearing: Float
     val rotation: Float
-    val bitmap: Bitmap?
 }
 
 data class MappableReferencePoint(
@@ -29,8 +27,7 @@ data class MappableReferencePoint(
     override val bearing: Float,
     override val tint: Int? = null,
     override val opacity: Float = 1f,
-    override val rotation: Float = 0f,
-    override val bitmap: Bitmap? = null
+    override val rotation: Float = 0f
 ) : IMappableReferencePoint
 
 

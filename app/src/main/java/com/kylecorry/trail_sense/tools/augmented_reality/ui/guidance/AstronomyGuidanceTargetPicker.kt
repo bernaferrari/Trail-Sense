@@ -57,11 +57,12 @@ class AstronomyGuidanceTargetPicker(
             val location = view.location
             val time = getDisplayedTime()
             val planetMapper = PlanetMapper(view.context)
+            val moonPhaseMapper = MoonPhaseImageMapper()
             val notVisible = view.context.getString(R.string.not_visible)
 
             val options = mutableListOf<AstronomyGuidanceOption>()
 
-            val sunAltitude = astronomyService.getSunPosition(location, time).altitude
+            val sunAltitude = astronomyService.getSunAltitude(location, time)
             if (drawBelowHorizon || sunAltitude > 0f) {
                 options.add(
                     AstronomyGuidanceOption(
@@ -74,21 +75,16 @@ class AstronomyGuidanceTargetPicker(
                 )
             }
 
-            val moonAltitude = astronomyService.getMoonPosition(location, time).altitude
+            val moonAltitude = astronomyService.getMoonAltitude(location, time)
             if (drawBelowHorizon || moonAltitude > 0f) {
-                val phase = astronomyService.getMoonPhase(time)
+                val phase = Astronomy.getMoonPhase(time)
                 options.add(
                     AstronomyGuidanceOption(
                         AstronomyGuidanceTarget(astronomyService, AstronomySelection.Moon, getDisplayedTime),
                         view.context.getString(R.string.moon),
                         if (moonAltitude > 0f) null else notVisible,
-                        R.drawable.ic_moon,
-                        iconBitmap = MoonPhaseImageMapper(view.context).getPhaseImage(
-                            phase.phaseAngle,
-                            Resources.dp(view.context, 24f).toInt(),
-                            Resources.dp(view.context, 24f).toInt(),
-                            astronomyService.getMoonTilt(location, time)
-                        ),
+                        moonPhaseMapper.getPhaseImage(phase.phase),
+                        iconRotation = astronomyService.getMoonTilt(location, time),
                         sortOrder = if (moonAltitude > 0f) 1 else 3
                     )
                 )
@@ -274,7 +270,6 @@ class AstronomyGuidanceTargetPicker(
         val name: String,
         val subtitle: String? = null,
         val icon: Int,
-        val iconBitmap: android.graphics.Bitmap? = null,
         val iconTint: Int? = null,
         val iconRotation: Float = 0f,
         val sortOrder: Int

@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures
 
 import android.util.Size
+import com.kylecorry.luna.cache.LRUCache
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Temperature
@@ -19,7 +19,7 @@ import kotlin.math.min
 internal object HistoricMonthlyTemperatureRangeRepo {
 
     // Cache
-    private val cache = MemoryLRUCache<PixelCoordinate, Map<Month, Range<Temperature>>>(size = 5)
+    private val cache = LRUCache<PixelCoordinate, Map<Month, Range<Temperature>>>(size = 5)
 
     // Image data source
     private const val highA = 1.3492063283920288
@@ -27,7 +27,6 @@ internal object HistoricMonthlyTemperatureRangeRepo {
     private const val lowA = 1.4010988473892212
     private const val lowB = 56.0
     private val size = Size(576, 361)
-    private const val verticalResolutionDegrees = 0.5
 
     private val extensionMap = mapOf(
         "1-3" to Triple(Month.JANUARY, Month.FEBRUARY, Month.MARCH),
@@ -46,8 +45,7 @@ internal object HistoricMonthlyTemperatureRangeRepo {
                 SingleImageReader(size, AssetInputStreamable(file)),
                 decoder = EncodedDataImageReader.scaledDecoder(lowA, lowB),
                 maxChannels = 3
-            ),
-            verticalResolutionDegrees = verticalResolutionDegrees
+            )
         )
     }
 
@@ -58,8 +56,7 @@ internal object HistoricMonthlyTemperatureRangeRepo {
                 SingleImageReader(size, AssetInputStreamable(file)),
                 decoder = EncodedDataImageReader.scaledDecoder(highA, highB),
                 maxChannels = 3
-            ),
-            verticalResolutionDegrees = verticalResolutionDegrees
+            )
         )
     }
 

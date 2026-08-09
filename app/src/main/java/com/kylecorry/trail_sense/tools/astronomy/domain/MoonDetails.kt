@@ -10,9 +10,8 @@ data class MoonDetails(
     val transit: LocalDateTime?,
     val isUp: Boolean,
     val phase: MoonTruePhase,
-    val phaseAngle: Float,
     val illumination: Float,
     val altitude: Float,
     val azimuth: Bearing,
-    val tilt: MoonTilt
+    val tilt: Float
 )

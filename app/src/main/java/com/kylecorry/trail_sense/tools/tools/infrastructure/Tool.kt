@@ -23,7 +23,6 @@ data class Tool(
     val volumeActions: List<ToolVolumeAction> = emptyList(),
     val tiles: List<String> = emptyList(),
     val notificationChannels: List<ToolNotificationChannel> = emptyList(),
-    val notificationChannelGroups: List<ToolNotificationChannelGroup> = emptyList(),
     val services: List<ToolService> = emptyList(),
     val diagnostics: List<ToolDiagnostic> = emptyList(),
     val intentHandlers: List<ToolIntentHandler> = emptyList(),
@@ -31,6 +30,7 @@ data class Tool(
     val broadcasts: List<ToolBroadcast> = emptyList(),
     val actions: List<ToolAction> = emptyList(),
     val initialize: (context: Context) -> Unit = {},
+    val singletons: List<(Context) -> Any> = emptyList(),
     val mapLayers: List<MapLayerDefinition> = emptyList()
 ) : Identifiable {
     fun isOpen(currentNavId: Int): Boolean {

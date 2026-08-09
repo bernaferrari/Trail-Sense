@@ -22,23 +22,23 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MAX_BOTTOM_NAVIGATION_ITEMS
 import com.kylecorry.trail_sense.settings.backup.BackupPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.AltimeterPreferences
-import com.kylecorry.trail_sense.tools.augmented_reality.infrastructure.AugmentedRealityPreferences
-import com.kylecorry.trail_sense.tools.level.infrastructure.BubbleLevelPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.AugmentedRealityPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.BubbleLevelPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.CellSignalPreferences
-import com.kylecorry.trail_sense.tools.clinometer.infrastructure.ClinometerPreferences
-import com.kylecorry.trail_sense.tools.clock.infrastructure.ClockPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.ClinometerPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.ClockPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.CompassPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
-import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightPreferenceRepo
+import com.kylecorry.trail_sense.settings.infrastructure.FlashlightPreferenceRepo
 import com.kylecorry.trail_sense.settings.infrastructure.IDeclinationPreferences
-import com.kylecorry.trail_sense.tools.metaldetector.infrastructure.MetalDetectorPreferences
-import com.kylecorry.trail_sense.tools.packs.infrastructure.PackPreferences
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.PedometerPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.MetalDetectorPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.PackPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.PedometerPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.PowerPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.PrivacyPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ThermometerPreferences
-import com.kylecorry.trail_sense.tools.tides.infrastructure.TidePreferences
+import com.kylecorry.trail_sense.settings.infrastructure.TidePreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.MapSite
@@ -46,7 +46,6 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyPrefere
 import com.kylecorry.trail_sense.tools.ballistics.infrastructure.BallisticsPreferences
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPreferences
 import com.kylecorry.trail_sense.tools.climate.infrastructure.ClimatePreferenceRepo
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuidePreferences
 import com.kylecorry.trail_sense.tools.map.infrastructure.MapPreferences
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
@@ -92,7 +91,6 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
     val waterBoilTimer by lazy { WaterBoilTimerPreferences(context) }
     val turnBack by lazy { TurnBackPreferences(context) }
     val bubbleLevel by lazy { BubbleLevelPreferences(context) }
-    val fieldGuide by lazy { FieldGuidePreferences(context) }
 
     private val isMetricPreferred = Resources.isMetricPreferred(context)
 
@@ -102,27 +100,9 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         false
     )
 
-    val useWidgetIconCompatibilityMode by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_widget_icon_compatibility),
-        false
-    )
-
-    val useLegacyFilePicker by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_use_legacy_file_picker),
-        false
-    )
-
     var isCliffHeightEnabled by BooleanPreference(
         cache,
         context.getString(R.string.pref_cliff_height_enabled),
-        false
-    )
-
-    val arePluginsEnabled by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_plugins_enabled),
         false
     )
 

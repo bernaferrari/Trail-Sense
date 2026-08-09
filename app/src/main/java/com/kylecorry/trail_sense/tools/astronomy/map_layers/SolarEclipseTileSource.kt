@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.map_layers
 
 import android.content.Context
+
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
@@ -10,15 +11,14 @@ import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.Lut
 import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
-import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.tiles.InterpolatedGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileImageUtils
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import java.time.Instant
@@ -85,16 +85,11 @@ class SolarEclipseTileSource : TileSource {
         time: ZonedDateTime,
         showPath: Boolean
     ): Float? {
-        val obscuration = if (showPath) {
+        return if (showPath) {
             astronomy.getPeakSolarEclipseObscuration(location, time)
         } else {
             astronomy.getSolarEclipseObscuration(location, time)
-        }?.coerceIn(0f, 1f) ?: return null
-        return if (Arithmetic.isZero(obscuration)) {
-            null
-        } else {
-            obscuration
-        }
+        }?.coerceIn(0f, 1f)
     }
 
     private fun constructLookupTable(): LookupTable {

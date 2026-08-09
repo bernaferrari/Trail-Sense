@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.main
 import android.content.Context
 import android.text.Layout
 import android.text.style.AlignmentSpan
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.markdown.MarkdownExtension
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
@@ -29,13 +29,13 @@ object TrailSenseServiceRegister {
         val appContext = context.applicationContext
 
         // Shared services
-        DependencyRegistry.addSingleton(appContext)
-        DependencyRegistry.addSingleton(StringLoader(appContext))
-        DependencyRegistry.addSingleton(FormatService.getInstance(appContext))
-        DependencyRegistry.addSingleton(PreferencesSubsystem.getInstance(appContext))
-        DependencyRegistry.addSingleton(UserPreferences(appContext))
-        DependencyRegistry.addSingleton(NotificationSubsystem(appContext))
-        DependencyRegistry.addSingleton(
+        AppServiceRegistry.register(appContext)
+        AppServiceRegistry.register(StringLoader(appContext))
+        AppServiceRegistry.register(FormatService.getInstance(appContext))
+        AppServiceRegistry.register(PreferencesSubsystem.getInstance(appContext))
+        AppServiceRegistry.register(UserPreferences(appContext))
+        AppServiceRegistry.register(NotificationSubsystem(appContext))
+        AppServiceRegistry.register(
             MarkdownService(
                 appContext, extensions = listOf(
                     MarkdownExtension(2, '%') {
@@ -46,21 +46,30 @@ object TrailSenseServiceRegister {
                         '+'
                     ) { AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER) }
                 )))
-        DependencyRegistry.addSingleton(SensorService(appContext))
-        DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
-        DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
-        DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))
-        DependencyRegistry.addSingleton(LocationSubsystem.getInstance(appContext))
-        DependencyRegistry.addSingleton(DeviceSubsystem(appContext))
-        DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
+        AppServiceRegistry.register(SensorService(appContext))
+        AppServiceRegistry.register(FileSubsystem.getInstance(appContext))
+        AppServiceRegistry.register(AppDatabase.getInstance(appContext))
+        AppServiceRegistry.register(SensorSubsystem.getInstance(appContext))
+        AppServiceRegistry.register(LocationSubsystem.getInstance(appContext))
+        AppServiceRegistry.register(DeviceSubsystem(appContext))
+        AppServiceRegistry.register(PluginSubsystem.getInstance(appContext))
 
         // Map layers
-        DependencyRegistry.addSingleton(MapLayerLoader(appContext))
-        DependencyRegistry.addSingleton(MapLayerPreferenceRepo())
-        DependencyRegistry.addSingleton(PersistentTileCache(appContext))
+        AppServiceRegistry.register(MapLayerLoader(appContext))
+        AppServiceRegistry.register(MapLayerPreferenceRepo())
+        AppServiceRegistry.register(PersistentTileCache(appContext))
+
+        Tools.getTools(context, false).forEach { tool ->
+            tool.singletons.forEach { producer ->
+                val service = producer(appContext)
+                // Updating directly since it will loose the type name when using register
+                AppServiceRegistry.services[service::class.java.name] = service
+            }
+        }
+
     }
 }
 
 inline fun <reified T : Any> getAppService(): T {
-    return DependencyRegistry.get()
+    return AppServiceRegistry.get()
 }

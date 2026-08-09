@@ -12,12 +12,7 @@ object NotificationChannels {
 
     fun createChannels(context: Context) {
         val tools = Tools.getTools(context)
-        val channelGroups = tools.flatMap { it.notificationChannelGroups }
         val channels = tools.flatMap { it.notificationChannels }
-
-        channelGroups.forEach {
-            Notify.createChannelGroup(context, it.id, it.name, it.description)
-        }
 
         channels.forEach {
             Notify.createChannel(
@@ -27,9 +22,7 @@ object NotificationChannels {
                 it.description,
                 it.importance,
                 muteSound = it.muteSound,
-                showBadge = it.showBadge,
-                isAlarm = it.isAlarm,
-                groupId = it.groupId
+                showBadge = it.showBadge
             )
         }
 

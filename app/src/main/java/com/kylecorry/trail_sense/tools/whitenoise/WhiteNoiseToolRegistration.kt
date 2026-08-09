@@ -5,10 +5,8 @@ import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
@@ -43,25 +41,12 @@ object WhiteNoiseToolRegistration : ToolRegistration {
                     { SystemVolumeAction() }
                 )
             ),
-            notificationChannelGroups = listOf(
-                ToolNotificationChannelGroup(
-                    NOTIFICATION_CHANNEL_GROUP_WHITE_NOISE,
-                    context.getString(R.string.tool_white_noise_title)
-                )
-            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     WhiteNoiseService.NOTIFICATION_CHANNEL_ID,
                     context.getString(R.string.tool_white_noise_title),
                     context.getString(R.string.tool_white_noise_title),
-                    Notify.CHANNEL_IMPORTANCE_LOW,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_WHITE_NOISE
-                )
-            ),
-            broadcasts = listOf(
-                ToolBroadcast(
-                    BROADCAST_PLAYBACK_FINISHED,
-                    "White noise playback finished"
+                    Notify.CHANNEL_IMPORTANCE_LOW
                 )
             ),
             services = listOf(WhiteNoiseToolService(context)),
@@ -75,6 +60,4 @@ object WhiteNoiseToolRegistration : ToolRegistration {
     }
 
     const val SERVICE_WHITE_NOISE = "whitenoise-service-white-noise"
-    const val NOTIFICATION_CHANNEL_GROUP_WHITE_NOISE = "white-noise"
-    const val BROADCAST_PLAYBACK_FINISHED = "whitenoise-broadcast-playback-finished"
 }

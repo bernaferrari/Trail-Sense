@@ -18,10 +18,9 @@ class MeteorShowerListItemProducer(context: Context) : BaseAstroListItemProducer
         val shower = astronomyService.getMeteorShower(location, date) ?: return@onDefault null
 
         // Advanced
-        val peakPosition = astronomyService.getMeteorShowerPeakPosition(shower, location)
-        val peakAltitude = peakPosition.altitude
+        val peakAltitude = astronomyService.getMeteorShowerPeakAltitude(shower, location)
         val peakAzimuth = DeclinationUtils.fromTrueNorthBearing(
-            peakPosition.azimuth,
+            astronomyService.getMeteorShowerPeakAzimuth(shower, location),
             declination
         )
 

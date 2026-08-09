@@ -1,1 +1,1 @@
-sh scripts/create-staging-builds.sh ../trail_sense_release_signing_config.txt
+sh scripts/staging-builds.sh ../trail_sense_release_signing_config.txt

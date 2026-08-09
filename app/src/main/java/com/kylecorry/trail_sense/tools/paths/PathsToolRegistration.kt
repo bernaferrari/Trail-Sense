@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
@@ -24,7 +23,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -68,22 +66,17 @@ object PathsToolRegistration : ToolRegistration {
                     )
                 )
             ),
-            notificationChannelGroups = listOf(
-                ToolNotificationChannelGroup(NOTIFICATION_CHANNEL_GROUP_PATHS, context.getString(R.string.paths))
-            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     BacktrackService.FOREGROUND_CHANNEL_ID,
                     context.getString(R.string.backtrack),
                     context.getString(R.string.backtrack_notification_channel_description),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    muteSound = true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_PATHS
+                    muteSound = true
                 )
             ),
             services = listOf(BacktrackToolService(context)),
             diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.gps(context),
                 *ToolDiagnosticFactory.altimeter(context),
                 *ToolDiagnosticFactory.compass(context),
@@ -129,9 +122,9 @@ object PathsToolRegistration : ToolRegistration {
                     PauseBacktrackAction()
                 )
             ),
-            initialize = {
-                DependencyRegistry.addSingleton(PathService.getInstance(it))
-            },
+            singletons = listOf(
+                PathService::getInstance
+            ),
             mapLayers = listOf(
                 MapLayerDefinition(
                     PathGeoJsonSource.SOURCE_ID,
@@ -174,5 +167,4 @@ object PathsToolRegistration : ToolRegistration {
     const val SERVICE_BACKTRACK = "paths-service-backtrack"
 
     const val WIDGET_BACKTRACK = "paths-widget-backtrack"
-    const val NOTIFICATION_CHANNEL_GROUP_PATHS = "paths"
 }

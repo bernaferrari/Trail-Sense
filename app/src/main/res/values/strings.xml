@@ -32,7 +32,7 @@
     <string name="plugin_disconnect_message">Disconnect %s?</string>
     <!--Permissions-->
     <string name="access_background_location">Update location settings</string>
-    <string name="access_background_location_rationale">Trail Sense uses location data in the background, even when the app is closed or not in use. This background access is used for the weather monitor sea level pressure calibration, backtrack, widget updates, and to provide more accurate sunrise/sunset alerts. [View Privacy Policy](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
+    <string name="access_background_location_rationale">Trail Sense uses location data in the background for the sea level pressure calibration in weather monitoring and to provide more accurate sunset alerts. [View Privacy Policy](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
     <!--Disclaimer-->
     <string name="disclaimer_message_title">Disclaimer</string>
     <string name="app_disclaimer_message_title">Disclaimer / terms of service</string>
@@ -107,15 +107,6 @@
     <string name="maps">Maps</string>
     <!--Navigation Tab - Create beacon-->
     <string name="name">Name</string>
-    <string name="scientific_name">Scientific name</string>
-    <string name="field_guide_name_display">Name display</string>
-    <string name="pref_field_guide_name_display" translatable="false">pref_field_guide_name_display</string>
-    <string name="built_in_pages">Built-in pages</string>
-    <string name="pref_field_guide_built_in_pages_holder" translatable="false">pref_field_guide_built_in_pages_holder</string>
-    <string name="pref_field_guide_hidden_pages" translatable="false">pref_field_guide_hidden_pages</string>
-    <string name="hide_field_guide_page_message">%1$s\n\nYou can unhide this page in the Field Guide settings.</string>
-    <string name="common_name">Common name</string>
-    <string name="both_names">Both names</string>
     <string name="beacon_invalid_name">Invalid name</string>
     <string name="beacon_comment">Notes (Optional)</string>
     <!--Weather Tab-->
@@ -467,15 +458,6 @@
     <string name="tool_ruler_title">Ruler</string>
     <string name="clock_source_device">Device time</string>
     <string name="clock_source_gps">GPS time</string>
-    <string name="clock_device_time_accurate">Device clock is accurate</string>
-    <plurals name="clock_device_time_slow">
-        <item quantity="one">Device clock is %d second slow</item>
-        <item quantity="other">Device clock is %d seconds slow</item>
-    </plurals>
-    <plurals name="clock_device_time_fast">
-        <item quantity="one">Device clock is %d second fast</item>
-        <item quantity="other">Device clock is %d seconds fast</item>
-    </plurals>
     <string name="one">1</string>
     <string name="two">2</string>
     <string name="three">3</string>
@@ -692,8 +674,8 @@
     <string name="speedometer">Speedometer</string>
     <string name="since_time">since %s</string>
     <string name="pedometer">Pedometer</string>
-    <string name="pref_step_length_title">Step length</string>
-    <string name="pref_step_length_holder" translatable="false">pref_step_length_holder</string>
+    <string name="pref_stride_length_title">Stride length</string>
+    <string name="pref_stride_length_holder" translatable="false">pref_stride_length_holder</string>
     <string name="pref_stride_length" translatable="false">pref_stride_length</string>
     <string name="pref_odometer_request_permission" translatable="false">pref_odometer_request_permission</string>
     <string name="pref_nearby_radar" translatable="false">pref_nearby_radar</string>
@@ -703,7 +685,7 @@
     <string name="meteor_shower">Meteor shower</string>
     <string name="meteors_per_hour" tools:ignore="PluralsCandidate">Max %d meteors / h</string>
     <string name="pref_meteor_showers_title">Meteor showers</string>
-    <string name="pedometer_disclaimer">The accuracy and battery usage of the pedometer is dependent on your device\'s manufacturer and the step length entered. Try it out at home for a bit to verify battery drain and accuracy before using on the trail.</string>
+    <string name="pedometer_disclaimer">The accuracy and battery usage of the pedometer is dependent on your device\'s manufacturer and the stride length entered. Try it out at home for a bit to verify battery drain and accuracy before using on the trail.</string>
     <string name="rename">Rename</string>
     <string name="no_maps">No maps</string>
     <string name="on_map">On map</string>
@@ -717,6 +699,7 @@
     <string name="pref_backtrack_interval" translatable="false">pref_backtrack_interval</string>
     <string name="importing_map">Importing map</string>
     <string name="scanning_image">Scanning image</string>
+    <string name="error_importing_map">Error importing map</string>
     <string name="import_gpx">Import GPX</string>
     <string name="sleep_timer">Sleep timer</string>
     <string name="pref_odometer_reset_daily_title">Reset daily</string>
@@ -811,7 +794,6 @@
     <string name="pref_unit_settings" translatable="false">pref_unit_settings</string>
     <string name="pref_experimental_metal_direction" translatable="false">pref_experimental_metal_direction</string>
     <string name="pref_experimental_metal_direction_title">Show metal direction</string>
-    <string name="pref_plugins_enabled" translatable="false">pref_plugins_enabled</string>
     <string name="pref_experimental_settings" translatable="false">pref_experimental_settings</string>
     <string name="pref_sensor_settings" translatable="false">pref_sensor_settings</string>
     <string name="location_mocked">Using mocked location</string>
@@ -936,9 +918,6 @@
     <string name="camera">Camera</string>
     <string name="no_permission">Permission not granted</string>
     <string name="diagnostics">Diagnostics</string>
-    <string name="export_logs">Export logs</string>
-    <string name="external_storage">External storage</string>
-    <string name="external_storage_diagnostic_instructions">The system file picker does not have permission to access files on your device. This can prevent Trail Sense from opening or saving files you choose. Enable “Allow access to manage all files” for the system file picker (it might be called "External Storage").</string>
     <string name="pref_diagnostics" translatable="false">pref_diagnostics</string>
     <string name="battery_usage_restricted">Battery usage restricted</string>
     <string name="overridden">Overridden</string>
@@ -966,7 +945,6 @@
     <string name="auto">Auto</string>
     <string name="dash_separated_pair" translatable="false">%1$s - %2$s</string>
     <string name="dot_separated_pair" translatable="false">%1$s • %2$s</string>
-    <string name="parenthesized_pair" translatable="false">%1$s (%2$s)</string>
     <string name="dot" translatable="false">•</string>
     <string name="slash_separated_pair" translatable="false">%1$s / %2$s</string>
     <string name="delete_path">Delete path?</string>
@@ -1114,7 +1092,6 @@
     <string name="note">Note</string>
     <string name="beacon">Beacon</string>
     <string name="beacon_created">Beacon created</string>
-    <string name="created">Created</string>
     <string name="result_deleted">Result deleted</string>
     <string name="undo">Undo</string>
     <string name="share_ellipsis">Share…</string>
@@ -1140,13 +1117,8 @@
     <!--This is in Markdown format-->
     <string name="onboarding_explore">- Designed for hiking, backpacking, camping, and geocaching\n\n- Place beacons and navigate to them\n\n- Follow paths\n\n- Retrace your steps with backtrack\n\n- Plan what to pack\n\n- Be alerted before the sun sets\n\n- Predict the weather\n\n- Use your phone as a flashlight\n\n- And much more!</string>
     <string name="average_speed">Average speed</string>
-    <string name="average_pace">Average pace</string>
     <string name="steps">Steps</string>
     <string name="pref_pedometer_enabled" translatable="false">pref_pedometer_enabled</string>
-    <string name="pref_pedometer_history_days" translatable="false">pref_pedometer_history_days</string>
-    <string name="pref_pedometer_history_days_title">Step history</string>
-    <string name="pref_pedometer_average_pace_time" translatable="false">pref_pedometer_average_pace_time</string>
-    <string name="pref_pedometer_average_pace_time_title">Average pace time</string>
     <string name="pref_distance_alert" translatable="false">pref_distance_alert</string>
     <string name="distance_alert">Distance alert</string>
     <string name="remove_distance_alert">Remove distance alert (%s)?</string>
@@ -1154,12 +1126,11 @@
     <string name="off">Off</string>
     <string name="save">Save</string>
     <string name="saved">Saved</string>
-    <string name="estimate_step_length">Estimate step length</string>
-    <string name="pref_estimate_step_length_holder" translatable="false">pref_estimate_step_length_holder</string>
-    <string name="step_length_stand_still">Stand still</string>
-    <string name="step_length_walk">Walk in a straight line, press stop when you are done</string>
+    <string name="estimate_stride_length">Estimate stride length</string>
+    <string name="pref_estimate_stride_length_holder" translatable="false">pref_estimate_stride_length_holder</string>
+    <string name="stride_length_stand_still">Stand still</string>
+    <string name="stride_length_walk">Walk in a straight line, press stop when you are done</string>
     <string name="current_speed">Current speed</string>
-    <string name="current_pace">Current pace</string>
     <string name="current_speed_pedometer">Current speed (Pedometer)</string>
     <string name="current_speed_gps">Current speed (GPS)</string>
     <string name="average_speed_pedometer">Average speed (Pedometer)</string>
@@ -1181,8 +1152,6 @@
     <string name="exporting_map">Exporting map</string>
     <string name="map_exported">Map exported</string>
     <string name="exported">Exported</string>
-    <string name="exporting">Exporting</string>
-    <string name="export_failed">Unable to export</string>
     <string name="camera_capture">Capture</string>
     <string name="file">File</string>
     <string name="map_file">File (JPG, PNG, PDF, Mapsforge)</string>
@@ -1196,21 +1165,10 @@
     <string name="tide_semidiurnal">Semidiurnal</string>
     <string name="frequency">Frequency</string>
     <string name="tide_frequency_description">The number of high tides per day. Most tides are semidiurnal.</string>
-    <string name="current_session">Current session</string>
-    <string name="active_time">Active time</string>
-    <string name="active_duration">Active: %s</string>
-    <string name="elapsed_time">Elapsed time</string>
-    <string name="history">History</string>
-    <string name="no_pedometer_sessions">No sessions</string>
     <string name="permission_alarms_and_reminders">Alarms and reminders</string>
-    <string name="alarm">Alarm</string>
     <string name="change_resolution">Change resolution</string>
     <string name="done">Done</string>
-    <string name="save_draft">Save draft</string>
-    <string name="finish_calibration">Finish calibration</string>
     <string name="calibrate_map_point">Calibrate with known locations (%1$d / %2$d)</string>
-    <string name="calibrate_map_point_title">Point %1$d of %2$d</string>
-    <string name="calibrate_map_point_instructions">Tap this location on the map, then enter its real-world coordinates.</string>
     <string name="descent">Descent</string>
     <string name="ascent">Ascent</string>
     <string name="lowest_point_elevation">Lowest point</string>
@@ -1308,8 +1266,6 @@
     <string name="create_blank_map">Create blank map</string>
     <string name="create_path">Create path</string>
     <string name="map_is_not_calibrated">Map is not calibrated</string>
-    <!-- As in "a preliminary sketch, outline, or version". Used for maps which aren't fully calibrated. -->
-    <string name="draft">Draft</string>
     <string name="loading">Loading</string>
     <!--    Unable to find the next astronomy event (ex. solar eclipse)-->
     <string name="unable_to_find_next_astronomy">Unable to find next %s</string>
@@ -1317,7 +1273,7 @@
     <string name="print">Print</string>
     <string name="autofill_source">Autofill source</string>
     <string name="map_calibration">Map calibration</string>
-    <string name="map_calibration_instructions">Choose two points that you can identify both on this map and in the real world. For each point, tap its exact position on the map, then enter its real-world coordinates.\n\nGood points are far apart and easy to recognize, such as a trailhead, parking lot, sign, landmark, map grid intersection, or trail junction.\n\nIf both points are valid, tap "Finish calibration". If you only have one point or want to finish later, tap "Save draft".</string>
+    <string name="map_calibration_instructions">Tap a known location on the map, then enter the real-world coordinates. You can save the calibration by clicking the “Done” button.\n\nExamples of good calibration points are a parking lot, a signage point, a landmark, or a junction along a trail.</string>
     <string name="map_calibration_error_same_pixel">Select two different points on the map.</string>
     <string name="map_calibration_error_same_image_axis">Select two map points that are not directly beside or above each other.</string>
     <string name="map_calibration_error_same_location">Enter two different real-world locations.</string>
@@ -1492,21 +1448,12 @@
     <!-- Whether to use path elevations on the augmented reality tool -->
     <string name="use_path_elevation">Use path elevation</string>
     <string name="pref_use_filtered_gps" translatable="false">pref_use_filtered_gps</string>
-    <string name="pref_use_legacy_file_picker" translatable="false">pref_use_legacy_file_picker</string>
     <string name="pref_use_metal_audio" translatable="false">pref_use_metal_audio</string>
     <string name="pref_no_use_metal_vibration" translatable="false">pref_no_use_metal_vibration</string>
     <string name="smooth_gps_readings">Smooth GPS readings</string>
-    <string name="use_legacy_file_picker">Use legacy file picker</string>
-    <string name="pref_widget_icon_compatibility" translatable="false">pref_widget_icon_compatibility</string>
-    <string name="widget_icon_compatibility_mode">Widget icon compatibility mode</string>
-    <string name="widget_icon_compatibility_mode_summary">Fixes missing widget icons on some devices</string>
     <plurals name="map_group_summary">
         <item quantity="one">%d map</item>
         <item quantity="other">%d maps</item>
-    </plurals>
-    <plurals name="step_count">
-        <item quantity="one">%d step</item>
-        <item quantity="other">%d steps</item>
     </plurals>
     <plurals name="number_steps">
         <item quantity="one">%d step</item>
@@ -1572,7 +1519,6 @@
     <!--    First %s is the time to turn back (10:24), the second is the countdown to turn back (1h 10m), the third is the time of return (14:24)-->
     <string name="turn_back_instructions">Turn around by %1$s (%2$s) to return at %3$s</string>
     <string name="turn_back_alerts">Turn back alerts</string>
-    <string name="turn_back_alarm_channel">Turn back (Alarm)</string>
     <string name="turn_back_notification_title">It\'s time to turn back</string>
     <!--    The %s is the return time (14:24)-->
     <string name="turn_back_notification_description">Turn back now to return at %s</string>
@@ -1615,9 +1561,8 @@
     <string name="water">Water</string>
     <string name="shelter">Shelter</string>
     <string name="overview">Overview</string>
-    <string name="references">References</string>
     <string name="crafting">Crafting</string>
-    <string name="survival_guide_disclaimer">This guide provides general educational information only. It is not professional training, medical advice, diagnosis, or treatment, and it does not replace emergency services, qualified healthcare providers, local guidance, or product/manufacturer instructions. In an emergency, contact emergency services as soon as possible, follow their instructions, and do not delay seeking help to consult this guide. Do not rely on this guide, Trail Sense, or your phone as your only safety plan or means of communication. Conditions, risks, laws, and recommended practices vary by location and situation; verify information before acting and use your own judgment.</string>
+    <string name="survival_guide_disclaimer">This guide is provided for informational purposes only, and neither the author, publisher, or any contributors guarantee its accuracy or suitability for any purpose. By using this guide, you acknowledge that outdoor activities involve risks, and you do so at your own risk, agreeing to hold harmless and indemnify the author, publisher, and any contributors from any claims or damages arising from your use of this guide. Always consult professionals for advice specific to your situation, as this guide does not substitute for professional guidance. Furthermore, be aware that local laws and regulations may affect the legal use of the techniques described herein, and compliance is your responsibility.</string>
     <string name="field_required">%s (required)</string>
     <string name="reduce_photo_resolution">Reduce photo resolution</string>
     <string name="survival_guide_empty_desc">Search for survival topics like water, medical, food, weather, shelter, or navigation techniques.</string>
@@ -1865,6 +1810,7 @@
     <string name="offline_map_import_failed">Unable to import map</string>
     <string name="no_offline_maps">No offline maps</string>
     <string name="unsupported_offline_map_file">Unsupported map file</string>
+    <string name="mapsforge">Mapsforge</string>
     <string name="trail_maps">Trail maps</string>
     <string name="show_labels">Show labels</string>
     <string name="planet_mercury">Mercury</string>
@@ -1956,11 +1902,6 @@
     <string name="pref_lock_bearing_to_location" translatable="false">pref_lock_bearing_to_location</string>
     <string name="lock_bearing_to_location">Lock bearing to location</string>
     <string name="lock_bearing_to_location_description">Lock the bearing line to your starting location</string>
-    <string name="pref_bearing_distance_holder" translatable="false">pref_bearing_distance_holder</string>
-    <string name="pref_bearing_distance" translatable="false">pref_bearing_distance</string>
-    <string name="bearing_length">Bearing length</string>
-    <string name="bearing_length_description">The length of the bearing line when a bearing is active</string>
-    <string name="bearing_length_max">Max: %s</string>
     <string name="pref_show_astronomy_bands_title">Show sunrise/set bands</string>
     <string name="pref_show_astronomy_bands" translatable="false">pref_show_astronomy_bands</string>
     <string name="settings_copied">Settings copied</string>
@@ -2024,14 +1965,5 @@
     <string name="map_type_trail">Trail</string>
     <string name="map_external">External</string>
     <string name="map_file_missing">File missing</string>
-    <string name="invalid_trail_map">Invalid trail map</string>
-    <string name="invalid_trail_map_message">The trail map file is invalid or missing. You may want to delete this map and import a new one.</string>
     <string name="copy_to_trail_sense">Copy to Trail Sense</string>
-    <!--%s is the name of the field guide page the sighting is being recorded for-->
-    <string name="recording_sighting_for_page">Recording \'%s\' sighting</string>
-    <string name="map_error_invalid_map_file">Invalid map file</string>
-    <string name="map_error_access_denied">Access to map file was denied</string>
-    <string name="map_error_unable_to_copy">Unable to copy map file</string>
-    <!--Whether field guide sightings should be colored based on the classification (ex. animal, plant) on the map-->
-    <string name="color_by_classification">Color by classification</string>
 </resources>

@@ -28,7 +28,7 @@ class DiagnosticAlerter(private val context: Context) {
         Alerts.dialog(
             context,
             item.result.name,
-            DependencyRegistry.get<MarkdownService>().toMarkdown(message),
+            AppServiceRegistry.get<MarkdownService>().toMarkdown(message),
             cancelText = if (item.result.action != null) context.getString(android.R.string.cancel) else null,
             okText = item.result.action?.name ?: context.getString(android.R.string.ok)
         ) { cancelled ->

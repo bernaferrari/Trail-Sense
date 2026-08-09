@@ -10,8 +10,7 @@ import com.kylecorry.trail_sense.plugins.infrastructure.PluginResourceServiceCon
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PersistedPlugin
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PluginRegistrationRepo
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PluginRepo
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.debugging.isPlayStoreBuild
+import com.kylecorry.trail_sense.shared.debugging.isDebug
 
 @Suppress("TooManyFunctions")
 class PluginSubsystem private constructor(private val context: Context) {
@@ -19,10 +18,9 @@ class PluginSubsystem private constructor(private val context: Context) {
     private val pluginLoader = PluginLoader(context)
     private val pluginRepo = PluginRepo.getInstance(context)
     private val pluginRegistrationRepo = PluginRegistrationRepo.getInstance(context)
-    private val preferences = UserPreferences(context)
 
     fun arePluginsEnabled(): Boolean {
-        return !isPlayStoreBuild() && preferences.arePluginsEnabled && !SafeMode.isEnabled()
+        return isDebug() && !SafeMode.isEnabled()
     }
 
     // ======== Connection ========
@@ -64,9 +62,6 @@ class PluginSubsystem private constructor(private val context: Context) {
      * Connect a plugin
      */
     suspend fun connect(plugin: Plugin) {
-        if (!arePluginsEnabled()) {
-            return
-        }
         pluginRepo.upsert(PersistedPlugin(plugin.packageId, plugin.signatureString()))
     }
 
@@ -87,9 +82,6 @@ class PluginSubsystem private constructor(private val context: Context) {
      * Determines if a plugin is installed and connected
      */
     suspend fun isConnected(packageId: String): Boolean {
-        if (!arePluginsEnabled()) {
-            return false
-        }
         val plugin = pluginLoader.getPlugin(packageId) ?: return false
         return pluginRepo.get(packageId)?.signature == plugin.signatureString()
     }

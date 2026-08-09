@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.offline_maps.domain.sort.mappers
 
 import com.kylecorry.trail_sense.shared.grouping.mapping.ISuspendMapper
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 
-class MapNameMapper : ISuspendMapper<OfflineMapCatalogItem, String> {
-    override suspend fun map(item: OfflineMapCatalogItem): String {
+class MapNameMapper : ISuspendMapper<IMap, String> {
+    override suspend fun map(item: IMap): String {
         return item.name
     }
 }

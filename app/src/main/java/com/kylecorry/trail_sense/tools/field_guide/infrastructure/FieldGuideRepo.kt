@@ -9,40 +9,32 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 
-class FieldGuideRepo private constructor(private val context: Context) : IFieldGuideRepo {
+class FieldGuideRepo private constructor(private val context: Context) {
 
     private val pageDao = AppDatabase.getInstance(context).fieldGuidePageDao()
     private val sightingDao = AppDatabase.getInstance(context).fieldGuideSightingDao()
-    private val preferences = FieldGuidePreferences(context)
     private val files = FileSubsystem.getInstance(context)
 
-    override suspend fun getAllPages(): List<FieldGuidePage> = onIO {
+    suspend fun getAllPages(): List<FieldGuidePage> = onIO {
         val saved = pageDao.getAllPages().map { it.toFieldGuidePage() }
         val sightings = sightingDao.getAllSightings().map { it.toSighting() }
         val all = BuiltInFieldGuide.getFieldGuide(context) + saved
-        val hidden = getHiddenPageIds()
-        all.map {
-            it.copy(
-                sightings = sightings.filter { s -> s.fieldGuidePageId == it.id },
-                isHidden = hidden.contains(it.id)
-            )
-        }
+        all.map { it.copy(sightings = sightings.filter { s -> s.fieldGuidePageId == it.id }) }
     }
 
-    override suspend fun getPage(id: Long): FieldGuidePage? = onIO {
-        val page = if (isBuiltInPage(id)) {
+    suspend fun getPage(id: Long): FieldGuidePage? = onIO {
+        val page = if (id < 0) {
             BuiltInFieldGuide.getFieldGuidePage(context, id)
         } else {
             pageDao.getPage(id)?.toFieldGuidePage()
         }
 
         val sightings = sightingDao.getSightingsForPage(id).map { it.toSighting() }
-        val isHidden = getHiddenPageIds().contains(id)
-        page?.copy(sightings = sightings, isHidden = isHidden)
+        page?.copy(sightings = sightings)
     }
 
-    override suspend fun delete(page: FieldGuidePage) = onIO {
-        if (page.isBuiltIn) {
+    suspend fun delete(page: FieldGuidePage) = onIO {
+        if (page.isReadOnly) {
             return@onIO
         }
         page.images.forEach { files.delete(it) }
@@ -50,8 +42,8 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
         pageDao.delete(FieldGuidePageEntity.fromFieldGuidePage(page))
     }
 
-    override suspend fun add(page: FieldGuidePage): Long = onIO {
-        if (page.isBuiltIn) {
+    suspend fun add(page: FieldGuidePage): Long = onIO {
+        if (page.isReadOnly) {
             return@onIO -1
         }
         // Delete photos if they've changed
@@ -64,34 +56,16 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
         pageDao.upsert(entity).getUpsertedId(page.id)
     }
 
-    override suspend fun addSighting(sighting: Sighting): Long = onIO {
+    suspend fun addSighting(sighting: Sighting): Long = onIO {
         sightingDao.upsert(FieldGuideSightingEntity.fromSighting(sighting)).getUpsertedId(sighting.id)
     }
 
-    override suspend fun getSighting(id: Long): Sighting? = onIO {
+    suspend fun getSighting(id: Long): Sighting? = onIO {
         sightingDao.getSighting(id)?.toSighting()
     }
 
-    override suspend fun deleteSighting(sighting: Sighting) = onIO {
+    suspend fun deleteSighting(sighting: Sighting) = onIO {
         sightingDao.delete(FieldGuideSightingEntity.fromSighting(sighting))
-    }
-
-    override suspend fun setPageHidden(pageId: Long, isHidden: Boolean) {
-        val hiddenPageIds = preferences.hiddenPageIds.toMutableSet()
-        if (isHidden) {
-            hiddenPageIds.add(pageId)
-        } else {
-            hiddenPageIds.remove(pageId)
-        }
-        preferences.hiddenPageIds = hiddenPageIds.toList()
-    }
-
-    private fun getHiddenPageIds(): List<Long> {
-        return preferences.hiddenPageIds
-    }
-
-    override fun isBuiltInPage(pageId: Long): Boolean {
-        return pageId < 0
     }
 
     companion object {

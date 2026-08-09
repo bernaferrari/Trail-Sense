@@ -35,12 +35,15 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
 
         // Advanced
         val isSuperMoon = astronomyService.isSuperMoon(date)
-        val peak = times.transit?.let { astronomyService.getMoonPosition(location, it).altitude }
-        val currentPosition = if (date == LocalDate.now()) astronomyService.getMoonPosition(location) else null
-        val azimuth = currentPosition?.let {
-            DeclinationUtils.fromTrueNorthBearing(it.azimuth, declination)
-        }
-        val altitude = currentPosition?.altitude
+        val peak = times.transit?.let { astronomyService.getMoonAltitude(location, it) }
+        val azimuth =
+            if (date == LocalDate.now()) DeclinationUtils.fromTrueNorthBearing(
+                astronomyService.getMoonAzimuth(location),
+                declination
+            ) else null
+        val altitude =
+            if (date == LocalDate.now()) astronomyService.getMoonAltitude(location) else null
+
         list(
             2,
             context.getString(R.string.moon),

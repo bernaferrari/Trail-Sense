@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projectio
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapFile
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationPoint
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
-import com.kylecorry.andromeda.core.units.PercentCoordinate
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -120,7 +120,8 @@ internal class PhotoMapProjectionTest {
         return PhotoMap(
             id = 0,
             name = "",
-            files = listOf(OfflineMapFile("", 0, PhotoMap.FILE_ROLE_IMAGE)),
+            filename = "",
+            fileSizeBytes = 0,
             georeference = metadata.copy(
                 isWarpingCompleted = false,
                 rotation = rotation,

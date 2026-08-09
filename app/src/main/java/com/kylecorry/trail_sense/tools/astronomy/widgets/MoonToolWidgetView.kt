@@ -44,4 +44,18 @@ class MoonToolWidgetView : SimpleToolWidgetView() {
         )
     }
 
+    private fun rotate(bitmap: Bitmap, degrees: Float): Bitmap {
+        val newBitmap = createBitmap(
+            bitmap.width,
+            bitmap.height,
+            bitmap.config ?: Bitmap.Config.ARGB_8888,
+        )
+
+        val canvas = Canvas(newBitmap)
+
+        canvas.rotate(degrees, bitmap.width / 2f, bitmap.height / 2f)
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+
+        return newBitmap
+    }
 }

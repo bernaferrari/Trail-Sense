@@ -10,16 +10,14 @@ import android.os.Bundle
 import android.util.Size
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
@@ -28,14 +26,12 @@ import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuideService
-import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideFormatService
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 
 class FieldGuideSightingGeoJsonSource : GeoJsonSource {
 
-    private val service = DependencyRegistry.get<FieldGuideService>()
-    private val files = DependencyRegistry.get<FileSubsystem>()
-    private val formatter = DependencyRegistry.get<FieldGuideFormatService>()
+    private val repo = AppServiceRegistry.get<FieldGuideRepo>()
+    private val files = AppServiceRegistry.get<FileSubsystem>()
     var nameFormat = ""
     private val size = 12f
     private val imageSize = size * 1.5f
@@ -56,13 +52,6 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         FieldGuidePageTag.Other to BeaconIcon.Information
     )
 
-    private val tagColorMap = mapOf(
-        FieldGuidePageTag.Plant to AppColor.Green.color,
-        FieldGuidePageTag.Fungus to AppColor.Pink.color,
-        FieldGuidePageTag.Animal to AppColor.DarkBlue.color,
-        FieldGuidePageTag.Invertebrate to AppColor.Red.color
-    )
-
     override suspend fun load(
         context: Context,
         bounds: CoordinateBounds,
@@ -72,12 +61,10 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         val preferences = params.getPreferences()
         val showImages =
             preferences.getBoolean(PREFERENCE_SHOW_IMAGES, false)
-        val colorByClassification =
-            preferences.getBoolean(PREFERENCE_COLOR_BY_CLASSIFICATION, true)
         if (nameFormat.isEmpty()) {
             nameFormat = context.getString(R.string.sighting_label)
         }
-        val pages = service.getAllPages()
+        val pages = repo.getAllPages()
 
         val allSightings = pages
             .flatMap { page ->
@@ -96,28 +83,21 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
             allSightings.map { (sighting, page) ->
                 val icon = getIconForPage(page)
                 val bitmap = if (showImages) getBitmapForPage(page, context) else null
-                val color = if (bitmap == null && colorByClassification) getColorForPage(page) else Color.BLACK
                 val point = GeoJsonFeature.point(
                     sighting.location!!,
                     sighting.id,
-                    nameFormat.format(formatter.formatName(page)),
-                    color = color,
+                    nameFormat.format(page.name),
+                    color = Color.BLACK,
                     icon = if (bitmap == null) icon.id else null,
                     iconSize = if (bitmap == null) size * 0.75f else imageSize,
-                    iconColor = if (bitmap == null) Colors.mostContrastingColor(
-                        Color.BLACK,
-                        Color.WHITE,
-                        color
-                    ) else null,
+                    iconColor = if (bitmap == null) Color.WHITE else null,
                     markerShape = if (bitmap == null) "circle" else null,
-                    strokeColor = if (bitmap == null) Color.WHITE else null,
                     size = size,
                     isClickable = true,
                     layerId = SOURCE_ID,
                     bitmap = bitmap,
                     additionalProperties = mapOf(
-                        PROPERTY_PAGE_ID to page.id,
-                        PROPERTY_SIGHTING_ID to sighting.id
+                        PROPERTY_PAGE_ID to page.id
                     )
                 )
                 point
@@ -176,24 +156,9 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         return tagIconMap[lowestTag] ?: BeaconIcon.Information
     }
 
-    private fun getColorForPage(page: FieldGuidePage): Int {
-        val classificationTags = page.tags.filter {
-            it.type == FieldGuidePageTagType.Classification
-        }
-
-        val filteredTags = classificationTags
-            .filter { tagColorMap.containsKey(it) }
-
-        val lowestTag = filteredTags.maxByOrNull { it.parentId != null } ?: filteredTags.firstOrNull()
-
-        return tagColorMap[lowestTag] ?: Color.BLACK
-    }
-
     companion object {
         const val SOURCE_ID = "field_guide_sighting"
         const val PROPERTY_PAGE_ID = "pageId"
-        const val PROPERTY_SIGHTING_ID = "sightingId"
         const val PREFERENCE_SHOW_IMAGES = "show_images"
-        const val PREFERENCE_COLOR_BY_CLASSIFICATION = "color_by_classification"
     }
 }

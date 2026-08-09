@@ -12,7 +12,6 @@ import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.diagnostics.infrastructure.DiagnosticsLogConfig
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class TrailSenseExceptionHandler(
@@ -32,8 +31,7 @@ class TrailSenseExceptionHandler(
         )
     ),
     "errors/error.txt",
-    shouldRestartApp = false,
-    retainedErrorCount = DiagnosticsLogConfig.STACK_TRACE_COUNT
+    shouldRestartApp = false
 ) {
 
     override fun handleBugReport(log: String) {

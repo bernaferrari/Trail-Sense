@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 
 class NavigationCompassLayerManager {
-    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
+    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
 
     var key = 0
         private set

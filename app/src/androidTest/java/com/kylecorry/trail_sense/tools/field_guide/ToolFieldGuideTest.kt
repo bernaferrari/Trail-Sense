@@ -13,7 +13,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToStart
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
-import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickDate
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickTime
@@ -32,19 +31,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasCategories()
         canOpenPage()
         canCreatePage()
-        canRecordSightingWithQuickAction()
         canEditPage()
         canDeletePage()
         canSearch()
-        canHideBuiltInPage()
-    }
-
-    private fun canHideBuiltInPage() {
-        click("Animal")
-        hasText("Ant")
-        clickListItemMenu("Hide")
-        clickOk()
-        not { hasText("Ant") }
     }
 
     private fun canSearch() {
@@ -133,24 +122,6 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
                 hasText(tag)
             }
         }
-        back()
-    }
-
-    private fun canRecordSightingWithQuickAction() {
-        TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_RECORD_SIGHTING))
-        input(R.id.search, "A Test")
-        click("A Test")
-
-        hasText("Created")
-        click("View")
-        input("Notes", "Quick action sighting")
-        click(toolbarButton(R.id.title, Side.Right))
-
-        // The quick action deep link returns to the sightings list after saving.
-        hasText("Quick action sighting")
-        back()
-        hasText("Sightings (1)")
         back()
     }
 

@@ -123,31 +123,11 @@ inline fun tryStartForegroundOrNotify(context: Context, action: () -> Unit) {
     try {
         action()
     } catch (e: Exception) {
-        if (isForegroundServiceStartError(e)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && (e is ForegroundServiceStartNotAllowedException || e is SecurityException)) {
             ServiceRestartAlerter(context.applicationContext).alert()
-            Log.w("tryStartForegroundOrNotify", "Cannot start service", e)
+            Log.d("tryStartForegroundOrNotify", "Cannot start service")
         } else {
             throw e
         }
     }
-}
-
-@Suppress("TooGenericExceptionCaught")
-inline fun Service.tryStartForegroundOrNotify(action: () -> Int): Int {
-    return try {
-        action()
-    } catch (e: Exception) {
-        if (!isForegroundServiceStartError(e)) {
-            throw e
-        }
-        Log.w("tryStartForegroundOrNotify", "Cannot start service", e)
-        ServiceRestartAlerter(this).alert()
-        stopSelf()
-        Service.START_NOT_STICKY
-    }
-}
-
-fun isForegroundServiceStartError(error: Exception): Boolean {
-    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            (error is ForegroundServiceStartNotAllowedException || error is SecurityException)
 }

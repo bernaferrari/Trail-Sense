@@ -30,7 +30,7 @@ class MapToolLayerManager {
     private val selectedPointLayer = ConfigurableGeoJsonLayer()
     private val distanceLayer = MapDistanceLayer()
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
-    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
+    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
 
     var key: Int = 0
 

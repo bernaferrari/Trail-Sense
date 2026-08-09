@@ -60,11 +60,8 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
-import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.sol.science.astronomy.SunTimesMode
+import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.time.Time.atEndOfDay
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -104,12 +101,10 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMode
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.openAugmentedReality
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @Composable
@@ -160,7 +155,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     private val astronomyService = AstronomyService()
     private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
-    private val markdownService by lazy { DependencyRegistry.get<MarkdownService>() }
+    private val markdownService by lazy { AppServiceRegistry.get<MarkdownService>() }
 
     private var lastAstronomyEventSearch: AstronomyEvent? = null
 
@@ -304,13 +299,6 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                                 }
                             }
                         }
-
-                        Alerts.withCancelableLoading(
-                            requireContext(),
-                            getString(R.string.loading),
-                            onCancel = { job.cancel() }) {
-                            job.join()
-                        }
                     }
                 }
             }
@@ -399,18 +387,19 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun getSunMoonPositions(time: ZonedDateTime): AstroPositions {
-        val moonPosition = astronomyService.getMoonPosition(location, time)
-        val sunPosition = astronomyService.getSunPosition(location, time)
+        val moonAltitude = astronomyService.getMoonAltitude(location, time)
+        val sunAltitude = astronomyService.getSunAltitude(location, time)
+
         val declination = if (!prefs.compass.useTrueNorth) getDeclination() else 0f
 
         val sunAzimuth =
-            sunPosition.azimuth.withDeclination(-declination).value
+            astronomyService.getSunAzimuth(location, time).withDeclination(-declination).value
         val moonAzimuth =
-            moonPosition.azimuth.withDeclination(-declination).value
+            astronomyService.getMoonAzimuth(location, time).withDeclination(-declination).value
 
         return AstroPositions(
-            moonPosition.altitude,
-            sunPosition.altitude,
+            moonAltitude,
+            sunAltitude,
             moonAzimuth,
             sunAzimuth
         )
@@ -478,19 +467,10 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             }
         }
 
-        val moonPhase = onDefault { astronomyService.getMoonPhase(time) }
-        val tilt = onDefault { astronomyService.getMoonTilt(location, time) }
+        currentMoonTilt = onDefault { astronomyService.getMoonTilt(location) }
 
         withContext(Dispatchers.Main) {
-            val size = Resources.dp(requireContext(), 24f).toInt()
-            chart.setMoonImage(
-                MoonPhaseImageMapper(requireContext()).getPhaseImage(
-                    moonPhase.phaseAngle,
-                    size,
-                    size,
-                    tilt
-                )
-            )
+            chart.setMoonImage(getMoonImage(moonPhase.phase))
         }
     }
 
@@ -505,7 +485,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
 
         minChartTime = data.sun.first().time.toZonedDateTime()
-        maxChartTime = data.sun.last().time.toZonedDateTime()
+        maxChartTime = minChartTime.atEndOfDay()
 
         onMain {
             chart.plot(data.sun, data.moon)
@@ -533,12 +513,13 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     private fun plotMoonImage(
         altitudes: List<Reading<Float>>,
         time: ZonedDateTime = ZonedDateTime.now(),
+        tilt: Float? = null
     ) {
         val instant = time.toInstant()
         val current = altitudes.minByOrNull {
             Duration.between(instant, it.time).abs()
         }
-        chart.moveMoon(current)
+        chart.moveMoon(current, tilt ?: currentMoonTilt)
     }
 
     private suspend fun updateAstronomyDetails() {
@@ -560,6 +541,10 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+
+    private fun getMoonImage(phase: MoonTruePhase): Int {
+        return MoonPhaseImageMapper().getPhaseImage(phase)
+    }
 
     private suspend fun displayTimeUntilNextSunEvent() {
         val currentTime = LocalDateTime.now()

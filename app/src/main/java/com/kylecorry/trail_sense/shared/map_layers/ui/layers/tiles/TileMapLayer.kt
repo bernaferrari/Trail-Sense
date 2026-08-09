@@ -23,7 +23,6 @@ import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.errors.SafeMode
-import com.kylecorry.trail_sense.shared.concurrency.CustomDispatchers
 import com.kylecorry.trail_sense.shared.getBounds
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
@@ -37,7 +36,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import kotlinx.coroutines.CoroutineScope
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
@@ -87,11 +85,8 @@ open class TileMapLayer<T : TileSource>(
     protected var layerPreferences: Bundle = Bundle()
     private var featureId: String? = null
 
-    private val loadTimer = CoroutineTimer(
-        scope = CoroutineScope(tileLoadDispatcher),
-        observeOn = tileLoadDispatcher
-    ) {
-        queue.load(maxConcurrentLoads)
+    private val loadTimer = CoroutineTimer {
+        queue.load(maxOf(4, Runtime.getRuntime().availableProcessors()))
         isLoaded = queue.isEmpty()
     }
     private val refreshTimer = refreshInterval?.let { CoroutineTimer { refresh() } }
@@ -206,9 +201,8 @@ open class TileMapLayer<T : TileSource>(
                 layerPreferences,
                 featureId,
                 map.isWidget,
-                isHighDetailMode = map.isHighDetailMode,
-                useHighDetailCache = map.isHighDetailMode || zoomOffset > 0,
-                context = context
+                map.isHighDetailMode,
+                context
             )
         } else if (desiredTiles.size > MAX_TILES) {
             Log.d("TileLoader", "Too many tiles to load: ${desiredTiles.size}")
@@ -563,10 +557,5 @@ open class TileMapLayer<T : TileSource>(
     companion object {
         const val MAX_TILES = 150
         private const val TILE_BORDER_PIXELS = 2
-        private val maxConcurrentLoads = maxOf(4, Runtime.getRuntime().availableProcessors())
-        private val tileLoadDispatcher = CustomDispatchers.newFixedThreadDispatcher(
-            threads = maxConcurrentLoads,
-            name = "TileMapLayer"
-        )
     }
 }

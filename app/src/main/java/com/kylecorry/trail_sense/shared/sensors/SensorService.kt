@@ -66,7 +66,7 @@ import com.kylecorry.trail_sense.shared.sensors.thermometer.HistoricThermometer
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
-import com.kylecorry.trail_sense.tools.pedometer.domain.StepLengthPaceCalculator
+import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
 import java.time.Duration
@@ -137,13 +137,12 @@ class SensorService(ctx: Context) {
             NavigationPreferences.SpeedometerMode.Backtrack -> BacktrackSpeedometer(context)
             NavigationPreferences.SpeedometerMode.GPS -> gps ?: getGPS()
             NavigationPreferences.SpeedometerMode.CurrentPace -> CurrentPaceSpeedometer(
-                getPedometer(), StepLengthPaceCalculator(userPrefs.pedometer.stepLength)
+                getPedometer(), StrideLengthPaceCalculator(userPrefs.pedometer.strideLength)
             )
 
             NavigationPreferences.SpeedometerMode.AveragePace -> AveragePaceSpeedometer(
                 getAppService<StepTrackerService>(),
-                StepLengthPaceCalculator(userPrefs.pedometer.stepLength),
-                userPrefs.pedometer
+                StrideLengthPaceCalculator(userPrefs.pedometer.strideLength)
             )
         }
     }

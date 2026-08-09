@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
@@ -10,7 +9,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -45,9 +43,7 @@ object WeatherToolRegistration : ToolRegistration {
             ToolCategory.Weather,
             guideId = R.raw.guide_tool_weather,
             settingsNavAction = R.id.weatherSettingsFragment,
-            initialize = {
-                DependencyRegistry.addSingleton(WeatherSubsystem.getInstance(it))
-            },
+            initialize = { WeatherSubsystem.getInstance(it) },
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_WEATHER_MONITOR,
@@ -85,49 +81,30 @@ object WeatherToolRegistration : ToolRegistration {
             tiles = listOf(
                 "com.kylecorry.trail_sense.tools.weather.tiles.WeatherMonitorTile"
             ),
-            notificationChannelGroups = listOf(
-                ToolNotificationChannelGroup(NOTIFICATION_CHANNEL_GROUP_WEATHER, context.getString(R.string.weather))
-            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     NOTIFICATION_CHANNEL_STORM_ALERT,
                     context.getString(R.string.storm_alerts),
                     context.getString(R.string.storm_alerts),
-                    Notify.CHANNEL_IMPORTANCE_HIGH,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_WEATHER
-                ),
-                ToolNotificationChannel(
-                    NOTIFICATION_CHANNEL_STORM_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.storm_alerts),
-                        context.getString(R.string.alarm)
-                    ),
-                    context.getString(R.string.storm_alerts),
-                    Notify.CHANNEL_IMPORTANCE_HIGH,
-                    isAlarm = true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_WEATHER
+                    Notify.CHANNEL_IMPORTANCE_HIGH
                 ),
                 ToolNotificationChannel(
                     CurrentWeatherAlerter.WEATHER_CHANNEL_ID,
                     context.getString(R.string.weather_monitor),
                     context.getString(R.string.notification_monitoring_weather),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_WEATHER
+                    true
                 ),
                 ToolNotificationChannel(
                     DailyWeatherAlerter.DAILY_CHANNEL_ID,
                     context.getString(R.string.todays_forecast),
                     context.getString(R.string.todays_forecast),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    true,
-                    groupId = NOTIFICATION_CHANNEL_GROUP_WEATHER
+                    true
                 )
             ),
             services = listOf(WeatherMonitorToolService(context)),
             diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.barometer(context),
                 *ToolDiagnosticFactory.altimeter(context),
                 ToolDiagnosticFactory.backgroundLocation(context),
@@ -139,14 +116,6 @@ object WeatherToolRegistration : ToolRegistration {
                 ToolDiagnosticFactory.notification(
                     NOTIFICATION_CHANNEL_STORM_ALERT,
                     context.getString(R.string.storm_alerts),
-                ),
-                ToolDiagnosticFactory.notification(
-                    NOTIFICATION_CHANNEL_STORM_ALARM,
-                    context.getString(
-                        R.string.parenthesized_pair,
-                        context.getString(R.string.storm_alerts),
-                        context.getString(R.string.alarm)
-                    )
                 ),
                 ToolDiagnosticFactory.notification(
                     DailyWeatherAlerter.DAILY_CHANNEL_ID,
@@ -197,6 +166,9 @@ object WeatherToolRegistration : ToolRegistration {
                     "Refresh weather widget",
                     RefreshWidgetAction(WIDGET_WEATHER)
                 )
+            ),
+            singletons = listOf(
+                WeatherSubsystem::getInstance
             )
         )
     }
@@ -224,6 +196,4 @@ object WeatherToolRegistration : ToolRegistration {
     const val WIDGET_PRESSURE_CHART = "weather-widget-pressure-chart"
 
     const val NOTIFICATION_CHANNEL_STORM_ALERT = StormAlerter.STORM_CHANNEL_ID
-    const val NOTIFICATION_CHANNEL_STORM_ALARM = "storm-alarm"
-    const val NOTIFICATION_CHANNEL_GROUP_WEATHER = "weather"
 }

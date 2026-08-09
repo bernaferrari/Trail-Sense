@@ -122,7 +122,7 @@
     <string name="precise_meters_format">%s m</string>
     <string name="precise_miles_format">%s mill</string>
     <string name="precise_feet_format">%s pies</string>
-    <string name="access_background_location_rationale">Trail Sense usa datos de ubicación en segundo plano incluso cuando la app no se usa o está cerrada. El acceso en segundo plano se usa para la monitorización y calibración de la presión a nivel del mar, actualización de widgets, retroceder, y para proporcionar alertas más precisas sobre las salidas y puestas de sol. [Ver política de privacidad](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
+    <string name="access_background_location_rationale">Trail Sense usa datos de ubicación en segundo plano para calibrar la presión a nivel del mar en la monitorización meteorológica y proporcionar alertas más precisas de la puesta de sol. [Ver política de privacidad](https://kylecorry.com/Trail-Sense/privacy_policy.html)</string>
     <string name="access_background_location">Actualizar ajustes de ubicación</string>
     <string name="dash">-</string>
     <string name="battery_capacity_format">%s mAh</string>
@@ -441,7 +441,7 @@
     <string name="half_tide">Media</string>
     <string name="pref_daily_weather_time_title">Hora meteorología diaria</string>
     <string name="screen_flashlight">Pantalla</string>
-    <string name="pref_step_length_title">Longitud de la zancada</string>
+    <string name="pref_stride_length_title">Longitud de la zancada</string>
     <string name="meteor_shower">Lluvia de meteoros</string>
     <string name="meteors_per_hour" tools:ignore="PluralsCandidate">Máximo %d meteoros / h</string>
     <string name="no_maps">Sin mapas</string>
@@ -450,6 +450,7 @@
     <string name="next">Siguiente</string>
     <string name="time_until_full">Hasta que se cargue</string>
     <string name="importing_map">Importando mapa</string>
+    <string name="error_importing_map">Error importando mapa</string>
     <string name="import_gpx">Importar GPX</string>
     <string name="sleep_timer">Temporizador de hora de dormir</string>
     <string name="pref_odometer_reset_daily_title">Reiniciar a diario</string>
@@ -806,9 +807,9 @@
     <string name="cross">Cruz</string>
     <string name="humidity_history">Historial de humedad - últimas %s</string>
     <string name="steps">Pasos</string>
-    <string name="estimate_step_length">Estimar longitud de zancada</string>
-    <string name="step_length_stand_still">Manténgase inmóvil</string>
-    <string name="step_length_walk">Camine en una línea recta; pulse Parar cuando haya acabado</string>
+    <string name="estimate_stride_length">Estimar longitud de zancada</string>
+    <string name="stride_length_stand_still">Manténgase inmóvil</string>
+    <string name="stride_length_walk">Camine en una línea recta; pulse Parar cuando haya acabado</string>
     <string name="current_speed">Velocidad actual</string>
     <string name="current_speed_pedometer">Velocidad actual (Podómetro)</string>
     <string name="reset_distance_title">¿Reiniciar la distancia?</string>
@@ -947,7 +948,9 @@
     <string name="calibrate_map_point">Calibrar con ubicaciones conocidas (%1$d/%2$d)</string>
     <string name="map_calibration">Calibración del mapa</string>
     <string name="accelerometer">Acelerómetro</string>
-    <string name="map_calibration_instructions">Elige dos puntos que puedas identificar tanto en el mapa como en el mundo real. Para cada uno, pulsa en su lugar exacto en el mapa e introduce sus coordenadas reales.\n \nPuntos buenos son los que están muy separados y son fáciles de reconocer, como un inicio de sendero, estacionamiento, señal, punto de referencia, intersección de la cuadrícula del mapa o cruce de senderos.\n\nSi ambos puntos son válidos, pulsa \"Terminar calibración\". Si sólo tiene un punto o deseas terminar más tarde, pulsa en \"Guardar borrador\".</string>
+    <string name="map_calibration_instructions">Toca una ubicación conocida en el mapa y, a continuación, introduce las coordenadas reales. Puedes guardar la calibración pulsando el botón \"Hecho\".
+\n
+\nEjemplos de buenos puntos de calibración son un aparcamiento, un punto de señalización, un punto de referencia o un cruce a lo largo de un sendero.</string>
     <string name="compass_source_mag_gyro">Magnetómetro + Giróscopo</string>
     <string name="compass_source_legacy_android">Heredado (Android)</string>
     <string name="compass_source_legacy_ts">Heredado (Trail Sense)</string>
@@ -1298,7 +1301,7 @@
     <string name="pref_navigation_lock_screen_when_open_title">Mostrar en pantalla de bloqueo mientras está abierto</string>
     <string name="caliber_format">%s cal</string>
     <string name="grains_format">%s gr</string>
-    <string name="survival_guide_disclaimer">Esta guía proporciona únicamente información educativa general. No constituye formación profesional, consejo médico, diagnóstico ni tratamiento, y no sustituye a los servicios de emergencia, a profesionales sanitarios cualificados, a las guías locales, ni a las instrucciones del fabricante del producto. En caso de emergencia, contacta con los servicios de emergencia lo antes posible, sigue sus instrucciones y no retrases la búsqueda de ayuda para consultar esta guía. No confíes en esta guía, en Trail Sense ni en el teléfono como tu único plan de seguridad o medio de comunicación. Las condiciones, los riesgos, las leyes y las prácticas recomendadas varían según el lugar y la situación; verifica la información antes de actuar y usa tu propio criterio.</string>
+    <string name="survival_guide_disclaimer">Esta guía se proporciona únicamente con fines informativos. Ni el autor ni el editor ni ninguno de los colaboradores garantizan su exactitud o idoneidad para cualquier propósito. Al usar esta guía aceptas que las actividades al aire libre implican riesgos y lo haces bajo tu responsabilidad eximiendo de toda responsabilidad al autor, al editor y a cualquier colaborador por cualquier reclamación o daño derivado del uso de esta guía. Consulta siempre a profesionales para obtener asesoramiento específico para la situación ya que esta guía no sustituye a la orientación profesional. Además, ten en cuenta que las leyes y normativas locales pueden afectar al uso legal de las técnicas aquí descritas, y su cumplimiento es tu responsabilidad.</string>
     <string name="survival_guide_empty_desc">Busca en temas de supervivencia como agua, medicina, alimentos, meteorología, refugios o técnicas de navegación.</string>
     <string name="signal_finder_description">Ver torres de telefonía móvil y señales cercanas.</string>
     <string name="cell_tower_disclaimer">La ubicación de las torres es aproximada a partir de OpenCelliD, Mozilla Location Service, y FCC Antenna Registrations\n\n[OpenCelliD Project](https://opencellid.org/) está bajo licencia [Creative Commons Attribution-ShareAlike 4.0 International].(https://creativecommons.org/licenses/by-sa/4.0/)</string>
@@ -1552,54 +1555,10 @@
     <string name="offline_map_import_failed">No se pudo importar el mapa</string>
     <string name="no_offline_maps">Sin mapas offline</string>
     <string name="unsupported_offline_map_file">Archivo de mapa no reconocido</string>
+    <string name="mapsforge">Mapsforge</string>
     <string name="trail_maps">Mapas de recorridos</string>
     <string name="map_layer_trail_maps_description">Mapas de recorridos guardados</string>
     <string name="map_type_trail">Recorrido</string>
     <string name="manage_maps">Gestionar mapas</string>
     <string name="map_type_photo">Foto</string>
-    <string name="pref_copy_trail_maps_title">Copiar mapas a Trail Sense</string>
-    <string name="pref_copy_trail_maps_summary">Al importar. Cuando está apagado usa el archivo original que debe estar en tu dispositivo.</string>
-    <string name="pref_pedometer_history_days_title">Historial de pasos</string>
-    <string name="current_session">Sesión actual</string>
-    <string name="history">Historial</string>
-    <string name="no_pedometer_sessions">Sin sesiones</string>
-    <string name="widget_icon_compatibility_mode">Icono widget en modo compatible</string>
-    <string name="widget_icon_compatibility_mode_summary">Soluciona la ausencia del icono de widget en ciertos dispositivos</string>
-    <plurals name="step_count">
-        <item quantity="one">%d paso</item>
-        <item quantity="many">%d pasos</item>
-        <item quantity="other">%d pasos</item>
-    </plurals>
-    <string name="map_external">Externo</string>
-    <string name="map_file_missing">Falta el archivo</string>
-    <string name="copy_to_trail_sense">Copiar a Trail Sense</string>
-    <string name="created">Creado</string>
-    <string name="draft">Borrador</string>
-    <string name="recording_sighting_for_page">Registrando en avistamienos \'%s\'</string>
-    <string name="save_draft">Guardar borrador</string>
-    <string name="finish_calibration">Terminar calibración</string>
-    <string name="calibrate_map_point_title">Punto %1$d de %2$d</string>
-    <string name="calibrate_map_point_instructions">Pulsa esta posición del mapa, después ingresa las cordenadas reales.</string>
-    <string name="invalid_trail_map">Mapa de recorrido no válido</string>
-    <string name="invalid_trail_map_message">El archivo del mapa de recorrido falta o es no válido. Puedes borrar este mapa e importar uno nuevo.</string>
-    <string name="average_pace">Paso medio</string>
-    <string name="pref_pedometer_average_pace_time_title">Tiempo de paso medio</string>
-    <string name="current_pace">Paso actual</string>
-    <string name="active_time">Tiempo activo</string>
-    <string name="active_duration">Activo:%s</string>
-    <string name="elapsed_time">Tiempo transcurrido</string>
-    <string name="clock_device_time_accurate">El reloj del dispositivo es preciso</string>
-    <plurals name="clock_device_time_slow">
-        <item quantity="one">El reloj del dispositivo está atrasado %d segundo</item>
-        <item quantity="many">El reloj del dispositivo está atrasado %d segundos</item>
-        <item quantity="other">El reloj del dispositivo está atrasado %d segundos</item>
-    </plurals>
-    <plurals name="clock_device_time_fast">
-        <item quantity="one">El reloj del dispositivo está adelantado %d segundo</item>
-        <item quantity="many">El reloj del dispositivo está adelantado %d segundos</item>
-        <item quantity="other">El reloj del dispositivo está adelantado %d segundos</item>
-    </plurals>
-    <string name="alarm">Alarma</string>
-    <string name="references">Referencias</string>
-    <string name="turn_back_alarm_channel">Volver (Alarma)</string>
 </resources>

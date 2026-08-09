@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
@@ -79,8 +78,7 @@ object CustomUiUtils {
     @ColorInt
     fun getQualityColor(quality: Quality): Int {
         return when (quality) {
-            Quality.Poor -> AppColor.Red.color
-            Quality.Unknown -> AppColor.Gray.color
+            Quality.Poor, Quality.Unknown -> AppColor.Red.color
             Quality.Moderate -> AppColor.Yellow.color
             Quality.Good -> AppColor.Green.color
         }

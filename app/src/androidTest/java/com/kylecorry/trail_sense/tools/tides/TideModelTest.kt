@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.tides
 
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.oceanography.Oceanography
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
-import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.waterlevel.HarmonicWaterLevelCalculator
 import com.kylecorry.sol.time.Time.atEndOfDay
@@ -28,21 +27,9 @@ import kotlin.math.roundToInt
 class TideModelTest {
 
     @Test
-    fun loadsLargeAmplitudeTide() = runBlocking {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
-
-        val harmonics = TideModel.getHarmonics(context, Coordinate(-0.5, -51.5))!!.harmonics
-
-        assertEquals(35.82f, harmonics.first { it.constituent == TideConstituent.S1 }.amplitude, 0.001f)
-        assertEquals(30.22f, harmonics.first { it.constituent == TideConstituent.S2 }.amplitude, 0.001f)
-        assertEquals(5.04f, harmonics.first { it.constituent == TideConstituent.T2 }.amplitude, 0.001f)
-    }
-
-    @Test
     fun testTideModel() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
+        AppServiceRegistry.register(FileSubsystem.getInstance(context))
 
         val tests = listOf(
             // Semi-diurnal tides

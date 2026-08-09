@@ -4,19 +4,29 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCalibrationMigrator
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 
 class RebaseMapCalibrationWorker(
     context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
-    private val migration = OfflineMapCalibrationMigrator(getAppService())
+    private val service = getAppService<MapService>()
 
     override suspend fun doWork(): Result {
         try {
-            migration.migrate()
-        } catch (_: Exception) {
+            val maps = service.getAllPhotoMaps()
+            maps.forEach {
+                if (it.georeference.calibrationPoints.isEmpty()) {
+                    return@forEach
+                }
+                // Convert all calibration points to rotation 0
+                val points = it.georeference.calibrationPoints.map { point ->
+                    point.copy(imageLocation = point.imageLocation.rotate(-it.baseRotation()))
+                }
+                service.add(it.copy(georeference = it.georeference.copy(calibrationPoints = points)))
+            }
+        } catch (e: Exception) {
             // Could not migrate
             return Result.failure()
         }

@@ -3,7 +3,7 @@
 
 Food gives you energy but is a low priority in most survival situations since you can go weeks without it. If you haven't eaten in a while, focus on foraging for bugs, shellfish, and aggregate berries.
 
-**This chapter provides general educational information only. It is not a substitute for professional training, emergency services, local guidance, or product/manufacturer instructions. Conditions, risks, laws, and recommended practices vary by location and situation; verify information before acting, follow local laws and instructions, and do not delay seeking help in an emergency. Do not rely on this guide or your phone as your only safety plan or means of communication.**
+**This chapter is for informational purposes only and does not replace professional advice; use at your own risk and ensure compliance with local laws.**
 
 ## Be prepared
 <!-- K: prepare, gear, knowledge, skill, nuts, seeds, dried, fruit, jerky, energy, bar, mre, can, knife, multitool, bag, canister, utensil, stove, fuel -->
@@ -57,12 +57,12 @@ The average person needs around 2,000 calories per day. Balance carbohydrates, p
 ### Storage
 <!-- K: storage, spoil, contamination, airtight, zipper, bag -->
 
-Food should be stored in airtight containers to reduce the chance of spoilage and contamination. Do not pack foods that spoil quickly or require refrigeration. If you bring zipper storage bags, you can also use them for water procurement.
+Food should be stored in airtight containers to prevent spoilage and contamination. Do not pack foods that spoil quickly or require refrigeration. If you bring zipper storage bags, you can also use them for water procurement.
 
 ### Rationing
 <!-- K: ration -->
 
-If you are in a survival situation, ration your food to make it last longer. Plan to eat most of your food by your expected return date, and eat the remaining 10 - 30% of your food during the days following. Eating food will give you the energy to construct a shelter and plan.
+If you are in a survival situation, ration your food to make it last longer. Eat two-thirds of your food in the first half of your survival situation (about 2-3 days after your expected return date) and the remaining third in the following days. Eating food will give you the energy to construct a shelter and plan.
 
 ### Starvation
 <!-- K: starvation -->
@@ -71,26 +71,16 @@ Starvation occurs when the body does not receive enough nutrients to function co
 
 ## Plants and mushrooms
 <!-- K: plant, mushroom, seaweed, weeds, green, fungus, berries -->
-<!-- S: Only eat plants you can confidently identify as safe, and don't eat mushrooms. Aggregate berries, like raspberries and blackberries, are generally edible. -->
+<!-- S: Only eat plants you can confidently identify as safe, and don't eat mushrooms. Aggregate berries, like raspberries and blackberries, are generally safe. -->
 
 Plants typically contain fewer calories than animals but can be easier to obtain if you can identify them. If you can't identify which plants are safe, just focus on bugs and shellfish. You should also avoid mushrooms unless you are experienced in foraging, since many can make you sick. Familiarize yourself with local plants and mushrooms before your trip.
 
 ### Foraging
 <!-- K: forage, identify, edible, inedible, poison, toxic, sap, safe -->
 
-**Never eat a plant or mushroom you aren't certain is edible**; even if you are certain, only eat a small amount and monitor for side effects. Also, just because you see an animal eating a plant doesn't mean it is safe for human consumption.
+The safest plants to forage are aggregate berries, such as raspberries and blackberries, since they have a distinctive look and are generally edible. Nuts and seeds are higher in calories than leafy greens, but some nuts, such as acorns, require multiple rounds of boiling to remove bitterness. Also, just because you see an animal eating a plant doesn't mean it is safe for human consumption. Never eat a plant you aren't certain is edible; even if you are certain, only eat a small amount and be on the lookout for side effects.
 
-You should learn common edible plants in your area that are both easy to identify and distinguish from lookalikes. Be sure to learn which parts of the plants are edible and how they should be prepared. Some examples of plants that you should learn to identify include:
-- Raspberries, blackberries, and other aggregate berries in the Rubus genus
-- Blueberries
-- Grapes
-- Dandelions
-- Common purslane
-- Wood sorrel
-- Acorns
-- Walnuts
-
-Here's an example of what an aggregate berry in the Rubus genus looks like (brambles):
+Here's an example of what an aggregate berry looks like (brambles):
 
 ![](file:///android_asset/field_guide/brambles.webp)
 
@@ -115,7 +105,7 @@ Here's an example of what an aggregate berry in the Rubus genus looks like (bram
 ### Preparation
 <!-- K: leach, wash, cook, boil, prepare -->
 
-All edible plants you gather should be washed. If the plants you forage can be eaten raw but you have the means to cook them, it will likely be safer to cook them.
+All plants you gather should be washed and cooked. Many can be eaten raw, but if you have the means to cook them, it will be safer to avoid the risk of contamination.
 
 ## Insects
 <!-- K: insect, bug, grub, worm, ant, termite, locust, grasshopper, cricket, dragonfly, bait -->
@@ -152,7 +142,7 @@ Shellfish and crustaceans are good sources of protein and can be found in both f
 
 Search shallow waters, tide pools, and rocky areas for shellfish and crustaceans. Snails and limpets are often attached to rocks, which may be easier to access during low tide. Crayfish, lobsters, and crabs can be found under and around stones, in soft mud or sand, and may be more active at night. Crustaceans can be caught by attaching bait onto a line (no hook required; they'll grab it), baiting the shoreline and waiting for them to leave the water, or using a fish trap with bait.
 
-Some shellfish may be poisonous. Be especially cautious of mussels in tropical waters during the summer, any shellfish within three days of a red tide, or shellfish not covered by water during high tide. Check and abide by local warnings regarding the harvesting of shellfish.
+Some shellfish may be poisonous. Be especially cautious of mussels in tropical waters during the summer, any shellfish within three days of a red tide, or shellfish not covered by water during high tide.
 
 ### Preparation
 <!-- K: prepare, cook, boil, roast, bake -->
@@ -184,7 +174,7 @@ If you need to craft a hook, go with a gorge hook since it is easy to make and d
 
 If you do not have fishing line, you can make it from plant fibers, inner strands of paracord (using a bend knot to join them together), or other strong cordage.
 
-If you do not have a fishing pole, you can tie the line to both the base and tip of a sturdy stick—try to mimic what an actual fishing pole looks like. You can also wrap the line around a short stick and use it as a hand line. An easier technique may be to tie the line to a tree branch so you can do other things and check it frequently.
+If you do not have a fishing pole, you can tie the line to both the base and tip of a sturdy stick-try to mimic what an actual fishing pole looks like. You can also wrap the line around a short stick and use it as a hand line. An easier technique may be to tie the line to a tree branch so you can do other things and check it frequently.
 
 **Traps**
 
@@ -266,7 +256,7 @@ To prepare a bird for cooking:
 3. For larger birds, cut off the feet and separate the bird into usable pieces along the joints.
 4. Cook the bird.
 
-If you catch a seabird, skin it instead of plucking the feathers to remove the oil glands. Avoid scavenger birds.
+If you catch a seabird, skin it instead of plucking the feathers to remove the oil glands. If you catch a scavenger bird like a vulture, boil it for at least 20 minutes to kill parasites.
 
 ### Reptiles and amphibians
 <!-- K: reptile, amphibian, frog, snake, turtle, lizard, skin, prepare, cook, clean, boil, bake, roast -->
@@ -350,6 +340,6 @@ See the Shelter chapter for details on how to tie knots.
 ### Bear canisters
 <!-- K: canister, box, bear -->
 
-A bear canister is a bear-resistant rigid container used to store food that can be left on the ground. Some campsites may provide a large metal bear box for storing food.
+A bear canister is a rigid plastic container used to store food. It is bear-proof and can be left on the ground. Some campsites may provide a large metal bear box for storing food.
 
 Ideally, the location where you leave this container should be 20–70 yards/meters downwind from your shelter. You may find tooth or claw marks on the canister in the morning, and it may be some distance from where you left it. Using brightly colored stickers on the outside may help you find it.

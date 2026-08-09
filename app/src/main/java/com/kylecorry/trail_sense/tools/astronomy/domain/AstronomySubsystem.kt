@@ -30,7 +30,8 @@ class AstronomySubsystem(context: Context) {
             val sunTimesMode = prefs.astronomy.sunTimesMode
             val location = location.location
             val times = astronomyService.getSunTimes(location, sunTimesMode, LocalDate.now())
-            val position = astronomyService.getSunPosition(location)
+            val azimuth = astronomyService.getSunAzimuth(location)
+            val altitude = astronomyService.getSunAltitude(location)
 
             val nextSunrise = astronomyService.getNextSunrise(location, sunTimesMode)
             val nextSunset = astronomyService.getNextSunset(location, sunTimesMode)
@@ -39,11 +40,11 @@ class AstronomySubsystem(context: Context) {
                 times.rise?.toLocalDateTime(),
                 times.set?.toLocalDateTime(),
                 times.transit?.toLocalDateTime(),
-                position.altitude > 0,
+                altitude > 0,
                 nextSunrise,
                 nextSunset,
-                position.altitude,
-                position.azimuth
+                altitude,
+                azimuth
             )
         }
 
@@ -56,19 +57,19 @@ class AstronomySubsystem(context: Context) {
             val location = location.location
             val moonTimes = astronomyService.getMoonTimes(location, LocalDate.now())
             val phase = astronomyService.getCurrentMoonPhase()
-            val position = astronomyService.getMoonPosition(location)
+            val altitude = astronomyService.getMoonAltitude(location)
+            val azimuth = astronomyService.getMoonAzimuth(location)
             val tilt = astronomyService.getMoonTilt(location)
 
             MoonDetails(
                 moonTimes.rise?.toLocalDateTime(),
                 moonTimes.set?.toLocalDateTime(),
                 moonTimes.transit?.toLocalDateTime(),
-                position.altitude > 0,
+                altitude > 0,
                 phase.phase,
-                phase.phaseAngle,
                 phase.illumination,
-                position.altitude,
-                position.azimuth,
+                altitude,
+                azimuth,
                 tilt
             )
         }
@@ -107,3 +108,4 @@ class AstronomySubsystem(context: Context) {
     }
 
 }
+

@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
 import android.content.Context
-import androidx.core.app.NotificationCompat
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.AlarmAlerter
 import com.kylecorry.trail_sense.shared.alerts.IDismissibleAlerter
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -14,27 +14,28 @@ import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 class StormAlerter(private val context: Context) : IDismissibleAlerter {
 
     override fun alert() {
-        val prefs = DependencyRegistry.get<UserPreferences>()
+        val prefs = AppServiceRegistry.get<UserPreferences>()
         val useAlarm = prefs.weather.useAlarmForStormAlert
-        val notificationChannel = if (useAlarm) {
-            WeatherToolRegistration.NOTIFICATION_CHANNEL_STORM_ALARM
-        } else {
-            WeatherToolRegistration.NOTIFICATION_CHANNEL_STORM_ALERT
-        }
         val notification = Notify.alert(
             context,
-            notificationChannel,
+            STORM_CHANNEL_ID,
             context.getString(R.string.notification_storm_alert_title),
             context.getString(R.string.notification_storm_alert_text),
             R.drawable.ic_alert,
             group = NOTIFICATION_GROUP_STORM,
             intent = NavigationUtils.pendingIntent(context, R.id.action_weather),
             autoCancel = true,
-            isAlarm = useAlarm,
-            category = NotificationCompat.CATEGORY_STATUS
+            mute = useAlarm
         )
-        DependencyRegistry.get<NotificationSubsystem>()
+        AppServiceRegistry.get<NotificationSubsystem>()
             .send(STORM_ALERT_NOTIFICATION_ID, notification)
+
+        val alarm = AlarmAlerter(
+            context,
+            useAlarm,
+            WeatherToolRegistration.NOTIFICATION_CHANNEL_STORM_ALERT
+        )
+        alarm.alert()
     }
 
     override fun dismiss() {

@@ -36,9 +36,9 @@ class PhotoMapToolLayerManager {
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
     private var photoMapLayer: TileMapLayer<*>? = null
 
-    private val preferences = DependencyRegistry.get<PreferencesSubsystem>()
-    private val photoMapPreferences = PhotoMapPreferences(DependencyRegistry.get())
-    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
+    private val preferences = AppServiceRegistry.get<PreferencesSubsystem>()
+    private val photoMapPreferences = PhotoMapPreferences(AppServiceRegistry.get())
+    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
 
     private var lastMapDetails: Pair<CoordinateBounds, Int>? = null
 

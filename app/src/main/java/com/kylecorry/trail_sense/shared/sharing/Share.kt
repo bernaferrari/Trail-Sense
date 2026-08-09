@@ -80,7 +80,6 @@ object Share {
         title: String,
         actions: List<ActionItem>,
         subtitle: String? = null,
-        customView: android.view.View? = null,
         noActionSelected: () -> Unit
     ) {
         var called = false

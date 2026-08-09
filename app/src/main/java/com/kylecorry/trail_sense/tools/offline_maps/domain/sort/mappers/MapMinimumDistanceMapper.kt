@@ -3,19 +3,29 @@ package com.kylecorry.trail_sense.tools.offline_maps.domain.sort.mappers
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.grouping.mapping.GroupMapper
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapCatalogItem
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 
 class MapMinimumDistanceMapper(
-    override val loader: IGroupLoader<OfflineMapCatalogItem>,
+    override val loader: IGroupLoader<IMap>,
     private val offMapPenalty: Float = 0f,
     private val locationProvider: () -> Coordinate
-) : GroupMapper<OfflineMapCatalogItem, Float, Float>() {
+) : GroupMapper<IMap, Float, Float>() {
 
-    override suspend fun getValue(item: OfflineMapCatalogItem): Float {
+    override suspend fun getValue(item: IMap): Float {
         val bounds = when (item) {
-            is OfflineMap -> item.bounds
-            else -> null
+            is PhotoMap -> {
+                item.boundary()
+            }
+
+            is VectorMap -> {
+                item.bounds
+            }
+
+            else -> {
+                null
+            }
         } ?: return Float.MAX_VALUE
         val location = locationProvider.invoke()
         val onMap = bounds.contains(location)

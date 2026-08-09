@@ -15,10 +15,10 @@ class PrintMapCommand(private val context: Context) {
         val printer = Printer(context)
         val files = FileSubsystem.getInstance(context)
 
-        val uri = if (map.pdfFile != null) {
-            files.uri(map.pdfFile.path)
+        val uri = if (map.hasPdf(context)) {
+            files.uri(map.pdfFileName)
         } else {
-            files.uri(map.imageFile.path)
+            files.uri(map.filename)
         }
 
         printer.setColorMode(ColorMode.Color)

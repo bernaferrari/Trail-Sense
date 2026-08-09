@@ -10,6 +10,7 @@ import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.AlarmAlerter
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
@@ -23,7 +24,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         context ?: return
         val prefs = PreferencesSubsystem.getInstance(context)
-        val userPrefs = DependencyRegistry.get<UserPreferences>()
+        val userPrefs = AppServiceRegistry.get<UserPreferences>()
 
         val returnTime =
             prefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
@@ -32,26 +33,27 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
             FormatService.getInstance(context).formatTime(returnTime, includeSeconds = false)
 
         val useAlarm = userPrefs.turnBack.useAlarm
-        val notificationChannel = if (useAlarm) {
-            TurnBackToolRegistration.NOTIFICATION_CHANNEL_TURN_BACK_ALARM
-        } else {
-            TurnBackToolRegistration.NOTIFICATION_CHANNEL_TURN_BACK_ALERT
-        }
         val notification = Notify.alert(
             context,
-            notificationChannel,
+            NOTIFICATION_CHANNEL_ID,
             context.getString(R.string.turn_back_notification_title),
             context.getString(R.string.turn_back_notification_description, formattedReturnTime),
             R.drawable.ic_undo,
             group = NOTIFIATION_GROUP,
             autoCancel = true,
-            isAlarm = useAlarm,
-            category = NotificationCompat.CATEGORY_REMINDER
+            mute = useAlarm
         )
-        DependencyRegistry.get<NotificationSubsystem>().send(
+        AppServiceRegistry.get<NotificationSubsystem>().send(
             TURN_BACK_NOTIFICATION_ID,
             notification
         )
+
+        val alarm = AlarmAlerter(
+            context,
+            useAlarm,
+            TurnBackToolRegistration.NOTIFICATION_CHANNEL_TURN_BACK_ALERT
+        )
+        alarm.alert()
 
         // Clear the times
         prefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
@@ -89,7 +91,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
 
         // TODO: Extract this out of the receiver
         /**
-         * Enable turn back alerts and request permissions if needed
+         * Enable sunset alerts and request permissions if needed
          */
         fun enable(
             host: TrailSenseDestinationHost,

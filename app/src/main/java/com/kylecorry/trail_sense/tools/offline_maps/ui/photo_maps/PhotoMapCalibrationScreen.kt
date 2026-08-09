@@ -76,12 +76,11 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapService
-import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapState
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationManager
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationValidationResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationValidator
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationManager
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationValidationResult
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.calibration.MapCalibrationValidator
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 import kotlinx.coroutines.CoroutineScope
@@ -331,7 +330,7 @@ class PhotoMapCalibrationController(
 
     private fun updateRotation() {
         val map = map ?: return
-        val rotation = if (map.state == OfflineMapState.Ready) {
+        val rotation = if (map.isCalibrated) {
             rotationCalculator.calculate(map)
         } else {
             map.baseRotation().toFloat()
@@ -376,7 +375,7 @@ class PhotoMapCalibrationController(
     private fun updateCompletionState() {
         val validation = validateCalibration()
         val notice = getCalibrationNotice(validation)
-        updateCalibrationText(notice)
+        updateCalibrationTitle(notice)
 
         val isValid = validation == MapCalibrationValidationResult.Valid
         views.previewButton.isEnabled = isValid
@@ -391,14 +390,6 @@ class PhotoMapCalibrationController(
             notice.isNotBlank() -> Color(getErrorColor())
             manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
             else -> Color(Resources.androidTextColorSecondary(host.requireContext()))
-        }
-    }
-
-    private fun updateNextButtonText() {
-        binding.calibrationNext.text = when {
-            calibrationIndex != maxPoints - 1 -> getString(R.string.next)
-            validateCalibration() == MapCalibrationValidationResult.Valid -> getString(R.string.finish_calibration)
-            else -> getString(R.string.save_draft)
         }
     }
 
@@ -476,7 +467,11 @@ class PhotoMapCalibrationController(
     }
 
     private suspend fun save(map: PhotoMap): PhotoMap {
-        return service.calibrate(map, manager.getCalibration())
+        var updated = service.getPhotoMap(map.id) ?: return map
+        updated =
+            updated.copy(georeference = updated.georeference.copy(calibrationPoints = manager.getCalibration()))
+        service.add(updated)
+        return updated
     }
 
     private fun loadCalibrationPointsFromMap() {

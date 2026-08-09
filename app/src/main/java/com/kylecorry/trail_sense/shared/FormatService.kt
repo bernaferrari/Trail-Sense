@@ -40,9 +40,10 @@ import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.domain.Probability
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
 import com.kylecorry.trail_sense.tools.navigation.domain.LocationMath
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingDifficulty
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.MapProjectionType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.weather.domain.RelativeArrivalTime
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival.WeatherArrivalTime
 import java.time.Duration
@@ -54,7 +55,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.math.roundToLong
 
 class FormatService private constructor(private val context: Context) {
 
@@ -520,30 +520,6 @@ class FormatService private constructor(private val context: Context) {
         }
     }
 
-    fun formatPace(metersPerSecond: Float): String {
-        if (!metersPerSecond.isFinite() || metersPerSecond <= 0f) {
-            return strings.getString(R.string.dash)
-        }
-
-        val distanceUnit = if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) {
-            DistanceUnits.Kilometers
-        } else {
-            DistanceUnits.Miles
-        }
-        val metersPerUnit = Distance.from(1f, distanceUnit)
-            .convertTo(DistanceUnits.Meters)
-            .value
-        val duration = Duration.ofSeconds((metersPerUnit / metersPerSecond).roundToLong())
-        val minutes = duration.toMinutes()
-        val seconds = duration.seconds % 60
-        val formattedPace = "$minutes:${seconds.toString().padStart(2, '0')}"
-        return strings.getString(
-            R.string.slash_separated_pair,
-            formattedPace,
-            getDistanceUnitName(distanceUnit, short = true)
-        )
-    }
-
     val builtInCoordinateFormatMap = mapOf<BuiltInCoordinateFormat, CoordinateFormat>(
         BuiltInCoordinateFormat.DecimalDegrees to DecimalDegreesCoordinateFormat(),
         BuiltInCoordinateFormat.DegreesMinutesSeconds to DegreesMinutesSecondsCoordinateFormat(),
@@ -617,6 +593,12 @@ class FormatService private constructor(private val context: Context) {
             Formatter.formatShortFileSize(context, bytes)
         } else {
             Formatter.formatFileSize(context, bytes)
+        }
+    }
+
+    fun formatOfflineMapFileTypeName(type: VectorMapFileType): String {
+        return when (type) {
+            VectorMapFileType.Mapsforge -> strings.getString(R.string.mapsforge)
         }
     }
 

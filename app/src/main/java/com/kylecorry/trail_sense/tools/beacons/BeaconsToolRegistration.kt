@@ -80,7 +80,6 @@ object BeaconsToolRegistration : ToolRegistration {
                 R.id.placeBeaconFragment
             ),
             diagnostics = listOf(
-                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.gps(context),
                 *ToolDiagnosticFactory.altimeter(context),
                 ToolDiagnosticFactory.camera(context),
@@ -90,9 +89,9 @@ object BeaconsToolRegistration : ToolRegistration {
             broadcasts = listOf(
                 ToolBroadcast(BROADCAST_BEACONS_CHANGED, "Beacons changed")
             ),
-            initialize = {
-                DependencyRegistry.addSingleton(BeaconService(it))
-            },
+            singletons = listOf(
+                { BeaconService(it) }
+            ),
             widgets = listOf(
                 ToolWidget(
                     WIDGET_NEARBY_BEACONS,
@@ -127,8 +126,7 @@ object BeaconsToolRegistration : ToolRegistration {
                     },
                     geoJsonSource = ::BeaconGeoJsonSource,
                     refreshBroadcasts = listOf(
-                        NavigationToolRegistration.BROADCAST_DESTINATION_CHANGED,
-                        BROADCAST_BEACONS_CHANGED
+                        NavigationToolRegistration.BROADCAST_DESTINATION_CHANGED
                     )
                 )
             )

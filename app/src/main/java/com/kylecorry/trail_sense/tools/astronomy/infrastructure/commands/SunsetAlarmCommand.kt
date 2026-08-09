@@ -2,15 +2,15 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
 import android.content.Context
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.AlarmAlerter
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -105,14 +105,9 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
         val openIntent = NavigationUtils.pendingIntent(context, R.id.action_astronomy)
 
         val useAlarm = userPrefs.astronomy.useAlarmForSunsetAlert
-        val notificationChannel = if (useAlarm) {
-            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNSET_ALARM
-        } else {
-            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNSET_ALERT
-        }
         val notification = Notify.alert(
             context,
-            notificationChannel,
+            NOTIFICATION_CHANNEL_ID,
             context.getString(R.string.sunset_alert_notification_title),
             context.getString(
                 R.string.sunset_alert_notification_text,
@@ -121,11 +116,17 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
             R.drawable.ic_sunset_notification,
             intent = openIntent,
             autoCancel = true,
-            isAlarm = useAlarm,
-            category = NotificationCompat.CATEGORY_REMINDER
+            mute = useAlarm
         )
 
-        DependencyRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, notification)
+        AppServiceRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, notification)
+
+        val alarm = AlarmAlerter(
+            context,
+            useAlarm,
+            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNSET_ALERT
+        )
+        alarm.alert()
     }
 
     private fun setAlarm(time: ZonedDateTime) {

@@ -273,7 +273,7 @@
     <string name="import_btn">Importovat</string>
     <string name="pref_backtrack_save_cell_summary">Zaznamenává telefonní signál v navigačním bodě. Nepoužívá internet.</string>
     <string name="pref_backtrack_save_cell_title">Nahrát telefonní signál</string>
-    <string name="pref_step_length_title">Délka kroku</string>
+    <string name="pref_stride_length_title">Délka kroku</string>
     <string name="gps_user">Uživatel</string>
     <string name="gps_stale">Zastaralá</string>
     <string name="contents">Obsah</string>
@@ -497,6 +497,7 @@
     <string name="tool_notes_title">Poznámky</string>
     <string name="cross">Kříž</string>
     <string name="pref_default_path_color_title">Výchozí barva cesty</string>
+    <string name="error_importing_map">Chyba při importu mapy</string>
     <string name="import_gpx">Import GPX</string>
     <string name="diamond">Diamant</string>
     <string name="camera_permission_denied">Povolení používání fotoaparátu bylo zamítnuto, nelze zapnout funkce, které používající fotoaparát. Můžete je povolit v nastavení.</string>
@@ -818,7 +819,7 @@
     <string name="remove_distance_alert">Odebrat upozornění na vzdálenost (%s)\?</string>
     <string name="off">Vypnuto</string>
     <string name="save">Uložit</string>
-    <string name="estimate_step_length">Odhad délky kroku</string>
+    <string name="estimate_stride_length">Odhad délky kroku</string>
     <string name="warning">Varování</string>
     <string name="exporting_map">Exportuji mapu</string>
     <string name="map_exported">Mapa exportována</string>
@@ -832,7 +833,7 @@
     <string name="gps_unavailable">GPS není k dispozici</string>
     <string name="result_deleted">Výsledek odstraněn</string>
     <string name="qr_text_too_long">Text je příliš dlouhý, QR kód byl zkrácen</string>
-    <string name="step_length_stand_still">Zůstaňte stát</string>
+    <string name="stride_length_stand_still">Zůstaňte stát</string>
     <string name="reset_distance_title">Obnovit vzdálenost\?</string>
     <string name="easy">Snadná</string>
     <string name="hard">Obtížná</string>
@@ -882,7 +883,7 @@
     <string name="saved_to_note">Uloženo do poznámky</string>
     <string name="open">Otevřít</string>
     <string name="tool_temperature_estimation_title">Odhad teploty</string>
-    <string name="step_length_walk">Jděte v přímé linii, až budete hotovi, stiskněte stop</string>
+    <string name="stride_length_walk">Jděte v přímé linii, až budete hotovi, stiskněte stop</string>
     <string name="simplifying">Zjednodušuji</string>
     <string name="simplification_quality">Kvalita zjednodušení</string>
     <string name="tide_deleted">Příliv/odliv odstraněn</string>
@@ -1031,7 +1032,9 @@
     <string name="horizon">Horizont</string>
     <string name="weather_thunderstorm">Bouřka</string>
     <string name="astronomy_direction_peak">Špičkový směr</string>
-    <string name="map_calibration_instructions">Klepněte na známou pozici na mapě a poté zadejte její skutečné souřadnice. Kalibraci můžete uložit klepnutím na tlačítko „Hotovo“. \n \nPříklady dobrých bodů kalibrace: parkoviště, bod značení, orientační bod nebo křižovatka podél stezky.</string>
+    <string name="map_calibration_instructions">Klepněte na známou pozici na mapě a poté zadejte její skutečné souřadnice. Kalibraci můžete uložit klepnutím na tlačítko „Hotovo“.
+\n
+\nPříklady dobrých bodů kalibrace: parkoviště, bod značení, orientační bod nebo křižovatka podél stezky.</string>
     <string name="rotation_amount">Rotace: %s</string>
     <string name="i_agree">Souhlasím</string>
     <string name="reset_calibration">Resetovat kalibraci</string>

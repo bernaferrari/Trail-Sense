@@ -338,5 +338,4 @@ object Tools {
     const val QUICK_ACTION_CONVERT = 27
     const val QUICK_ACTION_SURVIVAL_GUIDE = 28
     const val QUICK_ACTION_RECALIBRATE_ALTIMETER = 29
-    const val QUICK_ACTION_RECORD_SIGHTING = 30
 }

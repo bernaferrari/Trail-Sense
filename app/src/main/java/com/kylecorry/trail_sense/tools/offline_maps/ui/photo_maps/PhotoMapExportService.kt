@@ -8,11 +8,8 @@ import com.kylecorry.trail_sense.shared.io.ExternalUriService
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
-import com.kylecorry.trail_sense.tools.offline_maps.domain.trail_maps.TrailMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.MapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.ExportMapCommand
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.TrailMapExportService
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.trail_maps.commands.ExportTrailMapCommand
 
 class PhotoMapExportService(private val host: TrailSenseDestinationHost) {
     private val uriPicker = IntentUriPicker(
@@ -28,13 +25,8 @@ class PhotoMapExportService(private val host: TrailSenseDestinationHost) {
         uriPicker,
         ExternalUriService(host.requireContext())
     )
-    private val trailMapExporter = TrailMapExportService(
-        fragment.requireContext(),
-        uriPicker
-    )
 
-    private val photoMapCommand = ExportMapCommand(photoMapExporter, loading)
-    private val trailMapCommand = ExportTrailMapCommand(trailMapExporter, loading)
+    private val command = ExportMapCommand(exporter, loading)
 
     fun export(map: PhotoMap) {
         host.inBackground(BackgroundMinimumState.Created) {
@@ -46,4 +38,5 @@ class PhotoMapExportService(private val host: TrailSenseDestinationHost) {
             }
         }
     }
+
 }

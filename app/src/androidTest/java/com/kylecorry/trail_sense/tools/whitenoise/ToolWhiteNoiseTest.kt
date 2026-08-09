@@ -7,8 +7,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isFalse
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isTrue
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.TestUtils
@@ -58,8 +56,6 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
 
         canChangeSleepSound()
 
-        sleepTimerUiClearsAfterPlaybackStops()
-
         verifyQuickAction()
     }
 
@@ -96,18 +92,6 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
             not { notification(WhiteNoiseService.NOTIFICATION_ID) }
         }
         isFalse { TestUtils.isPlayingMusic() }
-    }
-
-    private fun sleepTimerUiClearsAfterPlaybackStops() {
-        click(R.id.sleep_timer_switch)
-        click(R.id.white_noise_btn)
-        isTrue { TestUtils.isPlayingMusic() }
-
-        click(R.id.white_noise_btn)
-        isFalse { TestUtils.isPlayingMusic() }
-
-        isNotChecked(R.id.sleep_timer_switch)
-        isNotVisible(R.id.sleep_timer_picker)
     }
 
     private fun verifyQuickAction() {

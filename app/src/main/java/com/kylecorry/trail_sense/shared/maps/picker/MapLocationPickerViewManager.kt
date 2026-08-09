@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MapLocationPickerViewManager {
-    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
+    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
     private val selectedPointLayer = ConfigurableGeoJsonLayer()
     private var isRunning = false
     private val runningLock = Any()

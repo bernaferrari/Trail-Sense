@@ -27,7 +27,7 @@ class SpeciesImportService(
                 "application/json",
                 "application/zip"
             )
-        ).getOrNull() ?: return@onIO null
+        ) ?: return@onIO null
         val stream = uriService.inputStream(uri) ?: return@onIO null
         stream.use {
             if (files.getMimeType(uri) == "application/json") {
@@ -60,11 +60,11 @@ class SpeciesImportService(
             val images = parsed.images.map { saveImage(it) }
             listOf(
                 FieldGuidePage(
-                    id = 0,
-                    name = parsed.name,
-                    images = images,
-                    directTags = parsed.tags.mapNotNull { FieldGuidePageTag.entries.withId(it) },
-                    notes = parsed.notes ?: ""
+                    0,
+                    parsed.name,
+                    images,
+                    parsed.tags.mapNotNull { FieldGuidePageTag.entries.withId(it) },
+                    parsed.notes ?: ""
                 )
             )
         } catch (e: Exception) {
