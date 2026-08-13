@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -93,18 +95,28 @@ fun ToolsScreen(
     }
     val categories = remember(filteredTools, sorter) { sorter.sort(filteredTools) }
 
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 108.dp),
+    Surface(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            top = TrailSenseSpacing.sm,
-            bottom = TrailSenseSpacing.xxxl
-        ),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        color = MaterialTheme.colorScheme.surface
     ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 108.dp),
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
+                    top = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.xxxl
+                ),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
         // Title + settings
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
@@ -121,9 +133,10 @@ fun ToolsScreen(
                 )
                 FilledIconButton(
                     onClick = onSettingsClick,
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
                     Icon(
@@ -175,6 +188,8 @@ fun ToolsScreen(
                 )
             }
         }
+            }
+        }
     }
 }
 
@@ -197,10 +212,13 @@ private fun ToolSearchField(
         },
         trailingIcon = if (value.isNotEmpty()) {
             {
-                IconButton(onClick = { onValueChange("") }) {
+                IconButton(
+                    onClick = { onValueChange("") },
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(android.R.string.cancel),
+                        contentDescription = stringResource(R.string.clouds_clear),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -242,7 +260,7 @@ private fun ToolTile(
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column(
@@ -253,15 +271,15 @@ private fun ToolTile(
             verticalArrangement = Arrangement.Center
         ) {
             Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = painterResource(tool.icon),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(26.dp)
                     )
                 }

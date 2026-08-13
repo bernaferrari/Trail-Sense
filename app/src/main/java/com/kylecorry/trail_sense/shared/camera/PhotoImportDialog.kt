@@ -285,9 +285,10 @@ private fun PhotoImportContent(
     modifier: Modifier = Modifier
 ) {
     val isPreview = LocalInspectionMode.current
+    val cameraDescription = stringResource(R.string.camera)
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             PhotoImportToolbar(
@@ -309,6 +310,9 @@ private fun PhotoImportContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
+                        .padding(horizontal = TrailSenseSpacing.screen)
+                        .clip(MaterialTheme.shapes.large)
+                        .semantics { contentDescription = cameraDescription }
                         .testTag("camera")
                 )
             } else {
@@ -316,13 +320,16 @@ private fun PhotoImportContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
+                        .padding(horizontal = TrailSenseSpacing.screen)
+                        .clip(MaterialTheme.shapes.large)
+                        .semantics { contentDescription = cameraDescription }
                         .testTag("camera")
                 )
             }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.lg),
+                    .padding(TrailSenseSpacing.screen),
                 contentAlignment = Alignment.Center
             ) {
                 if (isCapturing) {
@@ -356,8 +363,8 @@ private fun CaptureButton(
             this.contentDescription = contentDescription
         },
         shape = CircleShape,
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
         Box(
             modifier = Modifier
@@ -375,7 +382,7 @@ private fun PhotoImportToolbar(
 ) {
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.xl, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("tool_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -386,7 +393,10 @@ private fun PhotoImportToolbar(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        IconButton(onClick = onClose) {
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(48.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(android.R.string.cancel)

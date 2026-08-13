@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -64,7 +66,8 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
@@ -164,18 +167,24 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        LazyColumn(
+                        Box(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                            contentAlignment = Alignment.TopCenter
                         ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .widthIn(max = TrailSenseSize.maximumContentWidth),
+                                contentPadding = PaddingValues(
+                                    start = TrailSenseSpacing.screen,
+                                    end = TrailSenseSpacing.screen,
+                                    top = TrailSenseSpacing.lg,
+                                    bottom = TrailSenseSpacing.xxxl
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                            ) {
                             item("title") {
                                 Text(
                                     text = stringResource(R.string.tool_thermometer_title),
@@ -200,10 +209,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                         TemperatureChartView(
                                             data = chartData.data,
                                             raw = chartData.raw,
-                                            modifier = Modifier.padding(
-                                                horizontal = TrailSenseSpacing.lg,
-                                                vertical = TrailSenseSpacing.md
-                                            )
+                                            modifier = Modifier
                                         )
                                     }
                                 }
@@ -227,7 +233,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                                 onSourceChanged(sourceFromPreference(it))
                                             }
                                         },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        modifier = Modifier
                                     )
                                     TrailSenseDivider()
                                     ThermometerSmoothingRow(
@@ -237,7 +243,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                             smoothing = it
                                             putInt(R.string.pref_temperature_smoothing, it)
                                         },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        modifier = Modifier
                                     )
                                 }
                             }
@@ -386,8 +392,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                     TrailSenseDivider()
                                     SettingsActionRow(
                                         label = stringResource(R.string.reset_calibration),
-                                        onClick = ::resetCalibration,
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        onClick = ::resetCalibration
                                     )
                                 }
                             }
@@ -399,8 +404,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                     if (backfillVisible) {
                                         SettingsActionRow(
                                             label = stringResource(R.string.pref_backfill_temperatures_title),
-                                            onClick = ::backfillTemperatures,
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            onClick = ::backfillTemperatures
                                         )
                                     }
                                     SettingsActionRow(
@@ -411,10 +415,10 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                                                 host.findNavController(),
                                                 R.raw.guide_tool_settings
                                             )
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                 }
+                            }
                             }
                         }
                     }
@@ -429,8 +433,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
         SettingsPickerRow(
             label = getString(title),
             selected = DecimalFormatter.format(value, 1),
-            onClick = onClick,
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+            onClick = onClick
         )
     }
 
@@ -785,7 +788,7 @@ private fun ThermometerSettingsSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
                 start = TrailSenseSpacing.md,
@@ -795,10 +798,10 @@ private fun ThermometerSettingsSection(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer
+            color = Color.Transparent
         ) {
             Column(
-                modifier = Modifier.padding(vertical = TrailSenseSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
                 content = content
             )
         }
@@ -816,9 +819,15 @@ private fun TemperatureChartView(
     val rawColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
 
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
+            .padding(TrailSenseSpacing.lg)
             .height(dimensionResource(R.dimen.chart_height)),
         contentAlignment = Alignment.Center
     ) {
@@ -883,6 +892,7 @@ private fun TemperatureChartView(
             drawSeries(points, primary, 2.dp.toPx())
         }
     }
+    }
 }
 
 @Composable
@@ -892,10 +902,15 @@ private fun ThermometerSmoothingRow(
     onSmoothingChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.md)
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
     ) {
         Text(
             text = stringResource(R.string.smoothing),
@@ -916,4 +931,10 @@ private fun ThermometerSmoothingRow(
             steps = 999
         )
     }
+    }
+}
+
+@Composable
+private fun TrailSenseDivider() {
+    Spacer(modifier = Modifier.height(0.dp))
 }

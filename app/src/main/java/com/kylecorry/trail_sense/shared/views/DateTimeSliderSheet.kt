@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -36,6 +38,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -118,12 +121,13 @@ private fun DateTimeSliderSheetContent(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(TrailSenseSpacing.screen),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             DatePickerRow(
@@ -137,7 +141,8 @@ private fun DateTimeSliderSheetContent(
             Text(
                 text = formatter.formatTime(currentTime.toLocalTime(), includeSeconds = false),
                 modifier = Modifier
-                    .padding(top = 16.dp)
+                    .padding(top = TrailSenseSpacing.lg)
+                    .heightIn(min = 48.dp)
                     .clickable {
                         CustomUiUtils.pickTime(
                             context,
@@ -150,7 +155,9 @@ private fun DateTimeSliderSheetContent(
                         }
                     }
                     .testTag("time_text"),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             ComposeSlider(
@@ -185,11 +192,13 @@ private fun DatePickerRow(
     ) {
         IconButton(
             onClick = { onDateChanged(date.minusDays(1)) },
-            modifier = Modifier.testTag("prev_date")
+            modifier = Modifier
+                .size(48.dp)
+                .testTag("prev_date")
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -198,12 +207,12 @@ private fun DatePickerRow(
         Text(
             text = formatter.formatRelativeDate(date),
             modifier = Modifier.testTag("date"),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
             color = MaterialTheme.colorScheme.onSurface
         )
         Box(
             modifier = Modifier
-                .padding(start = 16.dp)
+                .padding(start = TrailSenseSpacing.lg)
                 .size(48.dp)
                 .combinedClickable(
                     onClick = {
@@ -220,18 +229,20 @@ private fun DatePickerRow(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_date),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.date),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(Modifier.weight(1f))
         IconButton(
             onClick = { onDateChanged(date.plusDays(1)) },
-            modifier = Modifier.testTag("next_date")
+            modifier = Modifier
+                .size(48.dp)
+                .testTag("next_date")
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

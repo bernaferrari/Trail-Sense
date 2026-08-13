@@ -621,7 +621,7 @@ private fun OfflineMapListScreen(
                         placeholder = stringResource(R.string.search),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = TrailSenseSpacing.lg)
+                            .padding(horizontal = TrailSenseSpacing.screen)
                             .testTag("searchbox")
                     )
                 }
@@ -660,7 +660,7 @@ private fun OfflineMapListScreen(
                 onAction = onCreateAction,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(TrailSenseSpacing.lg)
+                    .padding(TrailSenseSpacing.screen)
             )
         }
     }
@@ -677,7 +677,7 @@ private fun OfflineMapListHeader(
     var isMenuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("map_list_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -896,7 +896,7 @@ private fun PhotoMapRow(
             )
         },
         animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
     )
 }
 
@@ -914,7 +914,7 @@ private fun PhotoMapMenu(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_menu_dots),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -984,7 +984,7 @@ private fun VectorMapRow(
             )
         },
         animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
     )
 }
 
@@ -1002,7 +1002,7 @@ private fun VectorMapMenu(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_menu_dots),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -1052,7 +1052,7 @@ private fun MapVisibilityButton(
                     R.drawable.ic_not_visible
                 }
             ),
-            contentDescription = null,
+            contentDescription = stringResource(if (visible) R.string.hide else R.string.show),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -1080,7 +1080,7 @@ private fun MapGroupRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_dots),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.details),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1097,7 +1097,7 @@ private fun MapGroupRow(
             }
         },
         animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
     )
 }
 

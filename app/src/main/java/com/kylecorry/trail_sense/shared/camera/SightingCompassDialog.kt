@@ -227,9 +227,10 @@ private fun SightingCompassContent(
     modifier: Modifier = Modifier
 ) {
     val isPreview = LocalInspectionMode.current
+    val cameraDescription = stringResource(R.string.camera)
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SightingCompassToolbar(
@@ -241,6 +242,8 @@ private fun SightingCompassContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .padding(horizontal = TrailSenseSpacing.screen)
+                    .clip(MaterialTheme.shapes.large)
             ) {
                 if (!isPreview) {
                     val context = LocalContext.current
@@ -254,12 +257,14 @@ private fun SightingCompassContent(
                         state = cameraState,
                         modifier = Modifier
                             .fillMaxSize()
+                            .semantics { contentDescription = cameraDescription }
                             .testTag("camera")
                     )
                 } else {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .semantics { contentDescription = cameraDescription }
                             .testTag("camera")
                     )
                 }
@@ -284,7 +289,7 @@ private fun SightingCompassContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.lg),
+                    .padding(TrailSenseSpacing.screen),
                 contentAlignment = Alignment.Center
             ) {
                 CaptureButton(
@@ -407,7 +412,7 @@ private fun SightingCompassToolbar(
 ) {
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.xl, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("tool_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -415,10 +420,15 @@ private fun SightingCompassToolbar(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontFeatureSettings = "tnum"
+            ),
             color = MaterialTheme.colorScheme.onSurface
         )
-        IconButton(onClick = onClose) {
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(48.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(android.R.string.cancel)

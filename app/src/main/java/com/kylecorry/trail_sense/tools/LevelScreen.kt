@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +34,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sense.level.Level
 import com.kylecorry.luna.time.Throttle
@@ -41,6 +44,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -75,15 +79,27 @@ fun LevelScreen(modifier: Modifier = Modifier) {
 
     // "In tolerance" / level state: both axes within a tight band.
     val isLevel = hypot(xAngle.toDouble(), yAngle.toDouble()) <= LEVEL_TOLERANCE_DEGREES
+    val formattedX = formatService.formatDegrees(abs(xAngle), 1)
+    val formattedY = formatService.formatDegrees(abs(yAngle), 1)
+    val levelDescription = stringResource(
+        R.string.bubble_level_angles,
+        formattedX,
+        formattedY
+    )
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TrailSenseSpacing.xl),
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
@@ -91,7 +107,10 @@ fun LevelScreen(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = levelDescription
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 LevelStage(
@@ -108,17 +127,18 @@ fun LevelScreen(modifier: Modifier = Modifier) {
             ) {
                 AngleReadout(
                     label = "X",
-                    value = formatService.formatDegrees(abs(xAngle), 1),
+                    value = formattedX,
                     isLevel = isLevel,
                     modifier = Modifier.weight(1f)
                 )
                 AngleReadout(
                     label = "Y",
-                    value = formatService.formatDegrees(abs(yAngle), 1),
+                    value = formattedY,
                     isLevel = isLevel,
                     modifier = Modifier.weight(1f)
                 )
             }
+        }
         }
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -68,10 +69,10 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -241,22 +242,30 @@ private fun SignalFinderScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("title")
                     .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.lg,
                         bottom = TrailSenseSpacing.sm
                     )
             ) {
                 Text(
                     text = stringResource(R.string.cell_towers),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 if (loading) {
@@ -291,8 +300,8 @@ private fun SignalFinderScreen(
                         .fillMaxSize()
                         .testTag("list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.sm,
                         bottom = TrailSenseSpacing.lg
                     ),
@@ -315,11 +324,7 @@ private fun SignalFinderScreen(
                             TrailSenseCard {
                                 signals.forEachIndexed { index, signal ->
                                     if (index > 0) {
-                                        TrailSenseDivider(
-                                            modifier = Modifier.padding(
-                                                vertical = TrailSenseSpacing.sm
-                                            )
-                                        )
+                                        Spacer(Modifier.height(TrailSenseSpacing.xs))
                                     }
                                     CellSignalRow(signal, formatter, prefs)
                                 }
@@ -348,6 +353,7 @@ private fun SignalFinderScreen(
             }
 
             SignalDisclaimer(disclaimer)
+        }
         }
     }
 }
@@ -418,7 +424,9 @@ private fun SignalHeroCard(
                 Spacer(Modifier.height(TrailSenseSpacing.xxs))
                 Text(
                     text = formatter.formatPercentage(signal.strength),
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -48,6 +49,8 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -65,6 +68,7 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 
 @Composable
 fun RulerScreen(
@@ -137,13 +141,15 @@ fun RulerScreen(
                     .width(80.dp)
                     .fillMaxHeight()
                     .testTag("ruler")
+                    .semantics { contentDescription = measurement }
             )
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
                     .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
-                    .padding(TrailSenseSpacing.xl),
+                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
@@ -181,7 +187,9 @@ fun RulerScreen(
                         Text(
                             text = measurement,
                             modifier = Modifier.testTag("measurement"),
-                            style = MaterialTheme.typography.displaySmall,
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center

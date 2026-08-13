@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -55,7 +57,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
@@ -333,13 +336,17 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.surface
         ) {
+            Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .align(Alignment.TopCenter),
                 contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     top = TrailSenseSpacing.lg,
                     bottom = TrailSenseSpacing.xxxl
                 ),
@@ -367,11 +374,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                     ) {
                         PressureChartView(
                             data = chartData.data,
-                            raw = chartData.raw,
-                            modifier = Modifier.padding(
-                                horizontal = TrailSenseSpacing.lg,
-                                vertical = TrailSenseSpacing.md
-                            )
+                            raw = chartData.raw
                         )
                     }
                 }
@@ -387,8 +390,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                                 useSeaLevelPressure = it
                                 controller.putBoolean(R.string.pref_use_sea_level_pressure, it)
                                 controller.updateChart()
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            }
                         )
                         TrailSenseDivider()
                         BarometerSmoothingRow(
@@ -400,7 +402,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                                 pressureSmoothing = it
                                 controller.putInt(R.string.pref_barometer_pressure_smoothing, it)
                             },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            modifier = Modifier
                         )
                         TrailSenseDivider()
                         SettingsSwitchRow(
@@ -412,8 +414,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                                 adjustForTemperature = it
                                 controller.putBoolean(R.string.pref_adjust_for_temperature, it)
                                 controller.updateChart()
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            }
                         )
                         TrailSenseDivider()
                         SettingsActionRow(
@@ -424,8 +425,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                                 controller.pickBarometerOffset {
                                     barometerOffset = it
                                 }
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            }
                         )
                         SettingsActionRow(
                             label = stringResource(R.string.reset_calibration),
@@ -433,8 +433,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                                 controller.resetBarometerOffset {
                                     barometerOffset = it
                                 }
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            }
                         )
                     }
                 }
@@ -450,6 +449,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
                         )
                     )
                 }
+            }
             }
         }
 }
@@ -515,19 +515,19 @@ private fun CalibrateBarometerSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
-                start = TrailSenseSpacing.md,
+                start = TrailSenseSpacing.lg,
                 bottom = TrailSenseSpacing.sm
             )
         )
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer
+            color = Color.Transparent
         ) {
-            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 content()
             }
         }
@@ -545,10 +545,16 @@ private fun PressureChartView(
     val rawColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
 
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height)),
+            .height(dimensionResource(R.dimen.chart_height))
+            .padding(TrailSenseSpacing.lg),
         contentAlignment = Alignment.Center
     ) {
         if (data.isEmpty()) {
@@ -614,6 +620,7 @@ private fun PressureChartView(
             drawSeries(points, primary, 2.dp.toPx())
         }
     }
+    }
 }
 
 @Composable
@@ -623,10 +630,16 @@ private fun BarometerSmoothingRow(
     onSmoothingChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.md)
+        modifier = Modifier.padding(
+            horizontal = TrailSenseSpacing.lg,
+            vertical = TrailSenseSpacing.md
+        )
     ) {
         Text(
             text = stringResource(R.string.smoothing),
@@ -647,4 +660,10 @@ private fun BarometerSmoothingRow(
             steps = 999
         )
     }
+    }
+}
+
+@Composable
+private fun TrailSenseDivider() {
+    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
 }

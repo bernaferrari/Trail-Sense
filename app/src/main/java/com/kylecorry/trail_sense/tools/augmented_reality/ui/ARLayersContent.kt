@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
@@ -40,7 +39,7 @@ fun ARLayersContent(
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -53,8 +52,8 @@ fun ARLayersContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            start = TrailSenseSpacing.xl,
-                            end = TrailSenseSpacing.sm,
+                            start = TrailSenseSpacing.screen,
+                            end = TrailSenseSpacing.md,
                             top = TrailSenseSpacing.sm,
                             bottom = TrailSenseSpacing.sm
                         ),
@@ -80,8 +79,8 @@ fun ARLayersContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(
-                        start = TrailSenseSpacing.xl,
-                        end = TrailSenseSpacing.xl,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         bottom = TrailSenseSpacing.md
                     )
                 )
@@ -94,9 +93,8 @@ fun ARLayersContent(
                     label = stringResource(R.string.visible),
                     checked = showBeaconLayer,
                     onCheckedChange = onShowBeaconLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
                 )
-                TrailSenseDivider()
             }
             item("paths_header") {
                 TrailSenseSectionHeader(title = stringResource(R.string.paths))
@@ -106,9 +104,8 @@ fun ARLayersContent(
                     label = stringResource(R.string.visible),
                     checked = showPathLayer,
                     onCheckedChange = onShowPathLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
                 )
-                TrailSenseDivider()
             }
             item("astronomy_header") {
                 TrailSenseSectionHeader(title = stringResource(R.string.astronomy))
@@ -118,9 +115,8 @@ fun ARLayersContent(
                     label = stringResource(R.string.visible),
                     checked = showAstronomyLayer,
                     onCheckedChange = onShowAstronomyLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
                 )
-                TrailSenseDivider()
             }
             item("grid_header") {
                 TrailSenseSectionHeader(title = stringResource(R.string.grid))
@@ -130,9 +126,8 @@ fun ARLayersContent(
                     label = stringResource(R.string.visible),
                     checked = showGridLayer,
                     onCheckedChange = onShowGridLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
                 )
-                TrailSenseDivider()
             }
         }
     }

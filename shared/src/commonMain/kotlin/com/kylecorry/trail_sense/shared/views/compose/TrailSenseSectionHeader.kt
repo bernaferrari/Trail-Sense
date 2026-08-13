@@ -33,8 +33,9 @@ fun TrailSenseSectionHeader(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = TrailSenseSpacing.md)
         )
 
         Spacer(Modifier.weight(1f))

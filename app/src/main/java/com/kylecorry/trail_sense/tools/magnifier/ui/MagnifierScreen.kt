@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.R
 
 @Composable
 internal fun MagnifierScreen(
@@ -115,7 +117,7 @@ internal fun MagnifierScreen(
         frozenFrame?.let {
             Image(
                 bitmap = it.asImageBitmap(),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.camera_capture),
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("frozen_frame"),
@@ -148,7 +150,7 @@ internal fun MagnifierScreen(
                 ) {
                     Icon(
                         imageVector = if (isCloseUpFocus) Icons.Default.Search else Icons.Default.CenterFocusStrong,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.camera)
                     )
                 }
                 MagnifierButton(
@@ -164,7 +166,7 @@ internal fun MagnifierScreen(
                 ) {
                     Icon(
                         imageVector = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.camera_capture)
                     )
                 }
             }

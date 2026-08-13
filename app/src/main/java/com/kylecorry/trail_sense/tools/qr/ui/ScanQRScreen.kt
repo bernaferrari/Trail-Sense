@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -39,11 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -327,6 +331,7 @@ private fun QrScannerScreen(
 ) {
     val listState = rememberLazyListState()
     val results = history.ifEmpty { listOf("") }
+    val scannerDescription = stringResource(R.string.qr_code_scanner)
 
     LaunchedEffect(scrollRequest) {
         listState.animateScrollToItem(0)
@@ -345,12 +350,21 @@ private fun QrScannerScreen(
         LaunchedEffect(cameraState) {
             onCameraReady(cameraState)
         }
-        LazyColumn(
-            state = listState,
+        Box(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            contentAlignment = Alignment.TopCenter
         ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = TrailSenseSpacing.screen,
+                    vertical = TrailSenseSpacing.xl
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
             // Camera viewfinder framed by a tonal card. The AndroidView canvas
             // itself is left untouched — only the surrounding chrome is styled.
             item {
@@ -366,6 +380,7 @@ private fun QrScannerScreen(
                             .fillMaxWidth()
                             .aspectRatio(1f)
                             .testTag("camera")
+                            .semantics { contentDescription = scannerDescription }
                     )
                 }
             }
@@ -381,6 +396,7 @@ private fun QrScannerScreen(
                     onDelete = onDelete
                 )
             }
+        }
         }
     }
 }
@@ -517,12 +533,12 @@ private fun QrActionChip(
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier
-            .height(40.dp)
+            .height(TrailSenseSize.minimumTouchTarget)
             .testTag(tag)
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = null,
+            contentDescription = text,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.size(TrailSenseSpacing.sm))

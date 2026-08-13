@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -57,6 +58,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
@@ -115,13 +117,18 @@ fun LightMeterScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+            ) {
             // Hero: live illuminance reading in a bold tonal card.
             LightHeroCard(
                 lux = illuminance,
@@ -159,6 +166,7 @@ fun LightMeterScreen(
                     .fillMaxWidth()
                     .testTag("reset_btn")
             )
+        }
         }
     }
 }
@@ -206,7 +214,9 @@ private fun LightHeroCard(
             }
             Text(
                 text = luxText,
-                style = MaterialTheme.typography.displayMedium,
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center

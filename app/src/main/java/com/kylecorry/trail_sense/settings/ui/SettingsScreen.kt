@@ -12,16 +12,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,6 +32,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.system.Intents
@@ -43,8 +42,10 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
@@ -167,18 +168,24 @@ private fun SettingsScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        LazyColumn(
+        Box(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = TrailSenseSpacing.lg,
-                end = TrailSenseSpacing.lg,
-                top = TrailSenseSpacing.lg,
-                bottom = TrailSenseSpacing.xxxl
-            ),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+            contentAlignment = Alignment.TopCenter
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xxxl
+                ),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+            ) {
             item("title") {
                 Text(
                     text = stringResource(R.string.settings),
@@ -194,11 +201,11 @@ private fun SettingsScreen(
             item("general_section") {
                 SettingsSection(title = stringResource(R.string.general)) {
                     generalItems.forEachIndexed { index, item ->
-                        if (index > 0) SettingsCardDivider()
                         SettingsCardRow(
                             title = item.title,
                             subtitle = item.subtitle,
                             icon = item.icon?.let { painterResource(it) },
+                            position = TrailSenseGroupPosition.at(index, generalItems.size),
                             onClick = { onNavigate(item.navId) }
                         )
                     }
@@ -211,14 +218,15 @@ private fun SettingsScreen(
                         title = allToolsItem.title,
                         subtitle = allToolsItem.subtitle,
                         icon = allToolsItem.icon?.let { painterResource(it) },
+                        position = TrailSenseGroupPosition.at(0, toolItems.size + 1),
                         onClick = { onNavigate(allToolsItem.navId) }
                     )
-                    toolItems.forEach { tool ->
-                        SettingsCardDivider()
+                    toolItems.forEachIndexed { index, tool ->
                         SettingsCardRow(
                             title = tool.name,
                             subtitle = null,
                             icon = painterResource(tool.icon),
+                            position = TrailSenseGroupPosition.at(index + 1, toolItems.size + 1),
                             onClick = { tool.settingsNavAction?.let(onNavigate) }
                         )
                     }
@@ -231,46 +239,48 @@ private fun SettingsScreen(
                         title = stringResource(R.string.diagnostics),
                         subtitle = null,
                         icon = null,
+                        position = TrailSenseGroupPosition.at(0, 6),
                         onClick = { onNavigate(navigationMap.getValue(R.string.pref_diagnostics)) }
                     )
-                    SettingsCardDivider()
                     SettingsCardRow(
                         title = stringResource(R.string.pref_app_version_title),
                         subtitle = version,
                         icon = null,
+                        position = TrailSenseGroupPosition.at(1, 6),
                         onClick = null
                     )
-                    SettingsCardDivider()
                     SettingsCardRow(
                         title = stringResource(R.string.pref_privacy_policy_title),
                         subtitle = stringResource(R.string.privacy_policy_url),
                         icon = null,
+                        position = TrailSenseGroupPosition.at(2, 6),
                         onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
                     )
-                    SettingsCardDivider()
                     SettingsCardRow(
                         title = stringResource(R.string.pref_email_title),
                         subtitle = stringResource(R.string.email),
                         icon = null,
+                        position = TrailSenseGroupPosition.at(3, 6),
                         onClick = onEmailDeveloper
                     )
-                    SettingsCardDivider()
                     SettingsCardRow(
                         title = stringResource(R.string.pref_github_title),
                         subtitle = GITHUB_URL,
                         icon = null,
+                        position = TrailSenseGroupPosition.at(4, 6),
                         onClick = { onOpenUrl(GITHUB_URL) }
                     )
-                    SettingsCardDivider()
                     SettingsCardRow(
                         title = stringResource(R.string.pref_open_source_licenses_title),
                         subtitle = null,
                         icon = null,
+                        position = TrailSenseGroupPosition.at(5, 6),
                         onClick = {
                             onNavigate(navigationMap.getValue(R.string.pref_open_source_licenses))
                         }
                     )
                 }
+            }
             }
         }
     }
@@ -281,35 +291,19 @@ private fun SettingsSection(
     title: String,
     content: @Composable () -> Unit
 ) {
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
-                start = TrailSenseSpacing.md,
-                bottom = TrailSenseSpacing.sm
+                start = TrailSenseSpacing.lg
             )
         )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            )
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
             content()
         }
     }
-}
-
-@Composable
-private fun SettingsCardDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
-        thickness = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    )
 }
 
 @Composable
@@ -317,63 +311,87 @@ private fun SettingsCardRow(
     title: String,
     subtitle: String?,
     icon: Painter?,
+    position: TrailSenseGroupPosition,
     onClick: (() -> Unit)?
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        if (icon != null) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(40.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(
+                            role = Role.Button,
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    end = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.sm
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Surface(
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(22.dp)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-        }
 
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            if (onClick != null) {
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Box(
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
-
-        if (onClick != null) {
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

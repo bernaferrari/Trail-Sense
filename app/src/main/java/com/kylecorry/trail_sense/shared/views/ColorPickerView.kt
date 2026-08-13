@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +26,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun ColorPickerDialog(
@@ -57,7 +61,9 @@ fun ColorPickerDialog(
             TextButton(onClick = onDismiss) {
                 Text(text = androidx.compose.ui.res.stringResource(android.R.string.cancel))
             }
-        }
+        },
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )
 }
 
@@ -71,7 +77,9 @@ fun ColorPickerContent(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .testTag("color_picker")
+            .testTag("color_picker"),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
         AppColor.values().forEach { color ->
             ColorSwatch(
@@ -93,6 +101,7 @@ private fun ColorSwatch(
         modifier = Modifier
             .size(64.dp)
             .clickable(onClick = onClick)
+            .semantics { contentDescription = color.name }
             .testTag("color_${color.name}"),
         contentAlignment = Alignment.Center
     ) {

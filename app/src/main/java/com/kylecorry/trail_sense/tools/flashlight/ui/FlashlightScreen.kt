@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -62,6 +63,7 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.delay
@@ -235,12 +237,17 @@ fun FlashlightScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .padding(TrailSenseSpacing.screen),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Spacer(modifier = Modifier.weight(1f))
             Column(
                 modifier = Modifier.testTag("flashlight_btn_holder"),
@@ -286,6 +293,7 @@ fun FlashlightScreen(
                     )
                 }
             }
+        }
         }
     }
 }
@@ -371,7 +379,7 @@ private fun PowerToggle(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_power),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.flashlight_title),
                     modifier = Modifier.size(96.dp),
                     tint = content
                 )
@@ -379,7 +387,9 @@ private fun PowerToggle(
                     Text(
                         text = timerText,
                         modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         fontWeight = FontWeight.SemiBold,
                         color = content,
                         textAlign = TextAlign.Center
@@ -423,7 +433,7 @@ private fun ScreenFlashlightCard(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = painterResource(R.drawable.ic_screen_flashlight),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.screen_flashlight),
                         modifier = Modifier.size(24.dp)
                     )
                 }

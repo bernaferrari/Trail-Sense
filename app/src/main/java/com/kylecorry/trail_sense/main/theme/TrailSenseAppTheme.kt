@@ -4,7 +4,6 @@ package com.kylecorry.trail_sense.main.theme
 
 import android.os.Build
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -12,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.shared.views.TrailSenseColorScheme
-import com.kylecorry.trail_sense.shared.views.TrailSenseExpressiveShapes
 import com.kylecorry.trail_sense.shared.views.TrailSenseExpressiveTypography
 import com.kylecorry.trail_sense.shared.views.rememberTrailSenseColorScheme
 
@@ -55,7 +53,6 @@ fun TrailSenseAppTheme(
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        shapes = TrailSenseExpressiveShapes,
         typography = TrailSenseExpressiveTypography,
         content = content
     )

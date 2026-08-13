@@ -19,17 +19,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,6 +70,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -299,18 +303,26 @@ private fun CreateFieldGuidePageContent(
         modifier = modifier,
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            CreateFieldGuidePageHeader(onSave = onSave)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .testTag("scroll_view")
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .padding(bottom = TrailSenseSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
             ) {
+                CreateFieldGuidePageHeader(onSave = onSave)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .testTag("scroll_view")
+                        .padding(horizontal = TrailSenseSpacing.screen)
+                        .padding(bottom = TrailSenseSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
                 Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
 
                 // Details
@@ -358,7 +370,7 @@ private fun CreateFieldGuidePageContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                     ) {
-                        Button(
+                        FilledTonalButton(
                             onClick = onTakePhoto,
                             modifier = Modifier
                                 .weight(1f)
@@ -366,7 +378,7 @@ private fun CreateFieldGuidePageContent(
                         ) {
                             Text(stringResource(R.string.take_photo))
                         }
-                        Button(
+                        OutlinedButton(
                             onClick = onSelectPhoto,
                             modifier = Modifier
                                 .weight(1f)
@@ -443,6 +455,7 @@ private fun CreateFieldGuidePageContent(
                 )
             }
         }
+        }
     }
 }
 
@@ -464,25 +477,28 @@ private fun FieldGuideSection(
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(40.dp)
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(36.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
-        TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+        TrailSenseCard(
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
@@ -501,7 +517,7 @@ private fun CreateFieldGuidePageHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("create_field_guide_page_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -512,17 +528,15 @@ private fun CreateFieldGuidePageHeader(
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-        FilledIconButton(
+        IconButton(
             onClick = onSave,
-            modifier = Modifier.testTag("create_field_guide_page_save_btn"),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            modifier = Modifier
+                .size(TrailSenseSize.minimumTouchTarget)
+                .testTag("create_field_guide_page_save_btn")
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_check),
-                contentDescription = stringResource(android.R.string.ok)
+                contentDescription = stringResource(R.string.save)
             )
         }
     }
@@ -554,7 +568,7 @@ private fun FieldGuideImage(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_cancel),
-                contentDescription = stringResource(android.R.string.cancel)
+                contentDescription = stringResource(R.string.delete)
             )
         }
     }

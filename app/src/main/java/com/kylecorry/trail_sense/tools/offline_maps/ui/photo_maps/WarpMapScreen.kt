@@ -197,9 +197,9 @@ private fun WarpMapScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
-                        top = TrailSenseSpacing.lg
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
+                        top = TrailSenseSpacing.screen
                     )
                     .testTag("instructions_text"),
                 onClick = onInstructionsClick
@@ -250,7 +250,7 @@ private fun WarpMapScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(TrailSenseSpacing.lg)
+                    .padding(TrailSenseSpacing.screen)
                     .testTag("perspective")
             )
 
@@ -261,7 +261,7 @@ private fun WarpMapScreen(
                 enabled = map != null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TrailSenseSpacing.lg)
+                    .padding(TrailSenseSpacing.screen)
                     .testTag("next_button")
             )
         }

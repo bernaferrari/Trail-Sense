@@ -140,7 +140,7 @@ private fun StrideLengthScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.xl),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
             // Hero readout: estimated stride length
@@ -234,7 +234,9 @@ private fun StrideLengthHero(value: String) {
                 Text(
                     modifier = Modifier.scale(scale),
                     text = value,
-                    style = MaterialTheme.typography.displayMedium,
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center

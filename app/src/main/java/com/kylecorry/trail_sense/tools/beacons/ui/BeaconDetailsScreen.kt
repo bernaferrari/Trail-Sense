@@ -315,7 +315,7 @@ private fun BeaconDetailsScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(TrailSenseSpacing.xl),
+                    .padding(TrailSenseSpacing.screen),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
                 BeaconHero(
@@ -393,7 +393,7 @@ private fun BeaconHero(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_menu_dots),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.details),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
@@ -597,7 +597,7 @@ private fun ActionRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TrailSenseSpacing.xl),
+                .padding(TrailSenseSpacing.screen),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {

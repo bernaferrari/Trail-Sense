@@ -4,16 +4,17 @@ import android.view.MotionEvent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,31 +61,36 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
             return
         }
 
-        val tint = if (isOn) {
-            MaterialTheme.colorScheme.primary
+        val container = if (isOn) {
+            MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.surfaceContainerHigh
         }
+        val tint = if (isOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
 
-        Box(
-            modifier = modifier
-                .size(48.dp)
-                .pointerInteropFilter { isClickable && (onTouch?.invoke(it) ?: false) }
-                .combinedClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    enabled = isClickable,
-                    onClick = { onClick?.invoke() },
-                    onLongClick = { onLongClick?.invoke() }
-                ),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = modifier.size(48.dp),
+            shape = CircleShape,
+            color = container
         ) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = contentDescription?.toString(),
-                tint = tint,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInteropFilter { isClickable && (onTouch?.invoke(it) ?: false) }
+                    .combinedClickable(
+                        enabled = isClickable,
+                        onClick = { onClick?.invoke() },
+                        onLongClick = { onLongClick?.invoke() }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = contentDescription?.toString(),
+                    tint = tint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

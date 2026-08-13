@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.settings.ui
 import android.text.util.Linkify.WEB_URLS
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -25,14 +27,19 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
@@ -75,8 +82,9 @@ import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import androidx.compose.runtime.getValue
@@ -202,13 +210,17 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.surface
                     ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
                         androidx.compose.foundation.lazy.LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                                .fillMaxSize()
+                                .align(Alignment.TopCenter),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
+                                start = TrailSenseSpacing.screen,
+                                end = TrailSenseSpacing.screen,
                                 top = TrailSenseSpacing.lg,
                                 bottom = TrailSenseSpacing.xxxl
                             ),
@@ -380,6 +392,7 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
                                     )
                                 }
                             }
+                        }
                         }
                     }
 
@@ -872,16 +885,16 @@ private fun AltimeterStatusHero(
 @Composable
 private fun AltimeterIconChip(icon: Painter) {
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.size(40.dp)
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.size(48.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(22.dp)
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
@@ -896,17 +909,19 @@ private fun AltimeterChipActionRow(
     summary: String? = null,
     enabled: Boolean = true
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .alpha(if (enabled) 1f else 0.5f)
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         AltimeterIconChip(icon)
         Spacer(Modifier.width(TrailSenseSpacing.lg))
         Column(
@@ -927,11 +942,14 @@ private fun AltimeterChipActionRow(
             }
         }
         Spacer(Modifier.width(TrailSenseSpacing.md))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        }
     }
 }
 
@@ -964,16 +982,28 @@ private fun AltimeterChipSwitchRow(
     summary: String? = null,
     enabled: Boolean = true
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .alpha(if (enabled) 1f else 0.5f)
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.55f),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = if (checked && enabled) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .toggleable(
+                    value = checked,
+                    enabled = enabled,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange
+                )
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         AltimeterIconChip(icon)
         Spacer(Modifier.width(TrailSenseSpacing.lg))
         Column(
@@ -996,9 +1026,10 @@ private fun AltimeterChipSwitchRow(
         Spacer(Modifier.width(TrailSenseSpacing.md))
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
             enabled = enabled
         )
+        }
     }
 }
 
@@ -1012,21 +1043,26 @@ private fun AltimeterSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
-                start = TrailSenseSpacing.md,
+                start = TrailSenseSpacing.lg,
                 bottom = TrailSenseSpacing.sm
             )
         )
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer
+            color = Color.Transparent
         ) {
-            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 content()
             }
         }
     }
+}
+
+@Composable
+private fun TrailSenseDivider() {
+    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
 }

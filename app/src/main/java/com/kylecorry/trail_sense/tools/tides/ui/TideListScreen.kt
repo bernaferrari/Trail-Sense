@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -60,6 +60,7 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
@@ -212,10 +213,16 @@ private fun TideListScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .align(Alignment.TopCenter)
+                    .padding(horizontal = TrailSenseSpacing.screen)
+            ) {
                 TideListHeader()
                 TideTableList(
                     tides = tides,
@@ -234,7 +241,7 @@ private fun TideListScreen(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.add)
                     )
                 },
                 text = { Text(stringResource(R.string.tides)) },
@@ -254,8 +261,6 @@ private fun TideListHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = TrailSenseSpacing.lg,
-                end = TrailSenseSpacing.lg,
                 top = TrailSenseSpacing.xl,
                 bottom = TrailSenseSpacing.sm
             )
@@ -287,12 +292,10 @@ private fun TideTableList(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
                     top = TrailSenseSpacing.sm,
                     bottom = 96.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 items(tides, key = { it.first.id }) { tide ->
                     TideTableRow(
@@ -332,9 +335,9 @@ private fun TideTableRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Tonal water/tide icon chip
             Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -342,8 +345,8 @@ private fun TideTableRow(
                             getTideIcon(if (tide.isVisible) tideType else null)
                         ),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(26.dp)
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
                 }
             }
@@ -372,11 +375,13 @@ private fun TideTableRow(
                 Box {
                     IconButton(
                         onClick = { isMenuOpen = true },
-                        modifier = Modifier.testTag("tide_table_menu")
+                        modifier = Modifier
+                            .size(TrailSenseSize.minimumTouchTarget)
+                            .testTag("tide_table_menu")
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = null,
+                            contentDescription = getTideTitle(tide, formatter),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

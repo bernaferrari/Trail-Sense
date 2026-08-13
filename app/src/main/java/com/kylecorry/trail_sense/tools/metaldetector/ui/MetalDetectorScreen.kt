@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -44,12 +45,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -455,12 +459,17 @@ private fun MetalDetectorScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .padding(TrailSenseSpacing.screen),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
             // Compact action bar: vibration and audio toggles
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -474,7 +483,7 @@ private fun MetalDetectorScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.vibrate),
-                        contentDescription = null
+                        contentDescription = "Vibration"
                     )
                 }
                 Spacer(Modifier.weight(1f))
@@ -487,7 +496,7 @@ private fun MetalDetectorScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.volume_up),
-                            contentDescription = null
+                            contentDescription = "Audio"
                         )
                     }
                 }
@@ -534,7 +543,9 @@ private fun MetalDetectorScreen(
                     Text(
                         text = title,
                         modifier = Modifier.testTag("metal_detector_title"),
-                        style = MaterialTheme.typography.displaySmall,
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = heroContentColor,
                         textAlign = TextAlign.Center
@@ -558,7 +569,9 @@ private fun MetalDetectorScreen(
                         Text(
                             text = thresholdText,
                             modifier = Modifier.testTag("threshold_amount"),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -607,6 +620,7 @@ private fun MetalDetectorScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
         }
     }
 }
@@ -720,10 +734,13 @@ private fun MagnetometerDirection(
     val formatter = androidx.compose.runtime.remember {
         FormatService.getInstance(context)
     }
+    val reading = formatter.formatMagneticField(fieldStrength)
     val lineColor = MaterialTheme.colorScheme.onSurface
 
     Box(
-        modifier = modifier.testTag("magnetometerView"),
+        modifier = modifier
+            .testTag("magnetometerView")
+            .semantics { contentDescription = reading },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -774,8 +791,10 @@ private fun MagnetometerDirection(
             }
         }
         Text(
-            text = formatter.formatMagneticField(fieldStrength),
-            style = MaterialTheme.typography.titleMedium,
+            text = reading,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontFeatureSettings = "tnum"
+            ),
             color = lineColor
         )
     }

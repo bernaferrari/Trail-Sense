@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -68,6 +69,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -316,8 +318,8 @@ private fun FieldGuideScreen(
                     title = {
                         Text(
                             text = stringResource(R.string.field_guide),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -336,7 +338,7 @@ private fun FieldGuideScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.add)
                         )
                     },
                     text = {
@@ -351,7 +353,8 @@ private fun FieldGuideScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
+                    .padding(padding),
+                contentAlignment = Alignment.TopCenter
             ) {
                 FieldGuideList(
                     query = query,
@@ -361,7 +364,9 @@ private fun FieldGuideScreen(
                     onEditPage = onEditPage,
                     onDeletePage = onDeletePage,
                     loadThumbnail = loadThumbnail,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
+                        .fillMaxSize()
                 )
             }
         }
@@ -382,8 +387,8 @@ private fun FieldGuideList(
     LazyColumn(
         modifier = modifier.testTag("list"),
         contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
+            start = TrailSenseSpacing.screen,
+            end = TrailSenseSpacing.screen,
             top = TrailSenseSpacing.lg,
             bottom = 96.dp
         ),
@@ -466,7 +471,9 @@ private fun FieldGuideTagRow(item: FieldGuideListItem.TagItem) {
                 )
                 Text(
                     text = item.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -543,7 +550,9 @@ private fun FieldGuidePageRow(
                 if (item.subtitle.isNotBlank()) {
                     Text(
                         text = item.subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -557,7 +566,7 @@ private fun FieldGuidePageRow(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_menu_dots),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.edit),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

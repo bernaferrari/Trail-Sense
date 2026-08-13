@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -61,7 +64,8 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource
 import com.kylecorry.trail_sense.shared.sensors.providers.CompassProvider
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
@@ -342,13 +346,17 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.surface
         ) {
+            Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .align(Alignment.TopCenter),
                 contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     top = TrailSenseSpacing.lg,
                     bottom = TrailSenseSpacing.xxxl
                 ),
@@ -406,8 +414,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                                     smoothing = it
                                     controller.putInt(R.string.pref_compass_filter_amt, it)
                                     controller.resetCompass()
-                                },
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                }
                             )
                             TrailSenseDivider()
                             SettingsSwitchRow(
@@ -417,8 +424,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                                     useTrueNorth = it
                                     prefs.compass.useTrueNorth = it
                                     controller.resetCompass()
-                                },
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                }
                             )
                         }
                     }
@@ -440,8 +446,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                                 useAutoDeclination = it
                                 prefs.useAutoDeclination = it
                                 controller.update()
-                            },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                            }
                         )
                         TrailSenseDivider()
                         SettingsPickerRow(
@@ -464,6 +469,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                         )
                     }
                 }
+            }
             }
         }
 
@@ -513,10 +519,16 @@ private fun CompassSmoothingRow(
     onSmoothingChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.md)
+        modifier = Modifier.padding(
+            horizontal = TrailSenseSpacing.lg,
+            vertical = TrailSenseSpacing.md
+        )
     ) {
         Text(
             text = stringResource(R.string.smoothing),
@@ -536,6 +548,7 @@ private fun CompassSmoothingRow(
             valueRange = 1f..100f,
             steps = 98
         )
+    }
     }
 }
 
@@ -576,7 +589,7 @@ private fun CompassHeroCard(
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -597,8 +610,8 @@ private fun CompassHeroCard(
 
             Text(
                 text = azimuth,
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
 
@@ -646,21 +659,26 @@ private fun CalibrateSettingsSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
-                start = TrailSenseSpacing.md,
+                start = TrailSenseSpacing.lg,
                 bottom = TrailSenseSpacing.sm
             )
         )
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer
+            color = Color.Transparent
         ) {
-            Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 content()
             }
         }
     }
+}
+
+@Composable
+private fun TrailSenseDivider() {
+    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
 }

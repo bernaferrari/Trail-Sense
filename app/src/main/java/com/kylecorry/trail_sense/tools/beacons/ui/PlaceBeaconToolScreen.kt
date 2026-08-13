@@ -419,7 +419,7 @@ private fun PlaceBeaconScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .testTag("create_beacon_scroll")
-                .padding(TrailSenseSpacing.xl)
+                .padding(TrailSenseSpacing.screen)
                 .padding(bottom = TrailSenseSpacing.xxl),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {

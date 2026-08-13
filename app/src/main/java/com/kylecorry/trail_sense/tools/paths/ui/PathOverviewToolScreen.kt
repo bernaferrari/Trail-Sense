@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -1023,7 +1024,7 @@ private fun PathTitle(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        modifier = modifier.padding(horizontal = TrailSenseSpacing.screen, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Balance the trailing menu button so the title remains centered.
@@ -1051,7 +1052,7 @@ private fun PathTitle(
         IconButton(onClick = { state.onMenuClick?.invoke() }) {
             Icon(
                 painter = painterResource(R.drawable.ic_menu_dots),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -1077,7 +1078,7 @@ private fun PathOverviewHost(
                     state = views.root.scrollState,
                     enabled = views.root.isScrollable
                 )
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             PathTitle(views.pathTitle, Modifier.fillMaxWidth())
@@ -1231,7 +1232,7 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         keepScreenOn = true
     }
 
-    val fullscreenToggle = PathIconButton(R.drawable.ic_recenter)
+    val fullscreenToggle = PathIconButton(R.drawable.ic_recenter, R.string.center)
 
     val selectedPoint = PathSelectedPointView().apply {
         isVisible = false
@@ -1319,7 +1320,9 @@ private fun PathStyleDropdownText(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -1425,7 +1428,8 @@ private class PathActionsView(private val context: Context) {
 }
 
 private class PathIconButton(
-    icon: Int
+    icon: Int,
+    private val contentDescription: Int
 ) {
     private var iconRes by mutableIntStateOf(icon)
     var onClick by mutableStateOf<(() -> Unit)?>(null)
@@ -1448,7 +1452,7 @@ private class PathIconButton(
             ) {
                 Icon(
                     painter = painterResource(iconRes),
-                    contentDescription = null,
+                    contentDescription = stringResource(contentDescription),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )

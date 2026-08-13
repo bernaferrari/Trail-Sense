@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -64,6 +65,7 @@ import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -227,9 +229,11 @@ fun SolarPanelScreen(
 
             Column(
                 modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
                     .fillMaxSize()
+                    .align(Alignment.TopCenter)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.xxl, vertical = TrailSenseSpacing.xl),
+                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {

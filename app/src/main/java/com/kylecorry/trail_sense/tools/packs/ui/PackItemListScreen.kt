@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -63,6 +64,7 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
@@ -413,7 +415,7 @@ private fun PackItemScreen(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.add)
                     )
                 },
                 text = {
@@ -428,7 +430,8 @@ private fun PackItemScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
             if (items.isEmpty()) {
                 TrailSenseEmptyState(
@@ -455,11 +458,12 @@ private fun PackItemScreen(
 
                 LazyColumn(
                     modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
                         .fillMaxSize()
                         .testTag("inventory_list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.lg,
                         bottom = 96.dp
                     ),
@@ -510,8 +514,8 @@ private fun PackItemHeader(
             Text(
                 text = title,
                 modifier = Modifier.testTag("inventory_list_title"),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -528,7 +532,7 @@ private fun PackItemHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.sort),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -582,7 +586,9 @@ private fun PackHeroCard(
             Text(
                 text = totalPercentPacked,
                 modifier = Modifier.testTag("total_percent_packed"),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
@@ -592,7 +598,9 @@ private fun PackHeroCard(
                 Text(
                     text = totalPackedWeight,
                     modifier = Modifier.testTag("total_packed_weight"),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
                 )
@@ -673,7 +681,6 @@ private fun PackItemRow(
             modifier = Modifier.testTag("item_checkbox")
         )
 
-        // Tonal circular icon chip
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primaryContainer,
@@ -712,14 +719,18 @@ private fun PackItemRow(
                 Text(
                     text = count,
                     modifier = Modifier.testTag("item_count"),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (packedWeight != null) {
                     Text(
                         text = packedWeight,
                         modifier = Modifier.testTag("item_weight"),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -741,7 +752,7 @@ private fun PackItemRow(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.edit),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

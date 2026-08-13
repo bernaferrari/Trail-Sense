@@ -4,16 +4,21 @@ package com.kylecorry.trail_sense.tools.survival_guide.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -38,6 +43,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TextBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 
@@ -62,9 +69,15 @@ fun SurvivalGuideListScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .padding(horizontal = TrailSenseSpacing.screen)
+        ) {
             SurvivalGuideSearchBox(
                 query = query,
                 onQueryChange = onQueryChange
@@ -78,16 +91,16 @@ fun SurvivalGuideListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp)
-                        .padding(horizontal = 8.dp)
-                        .padding(top = 8.dp)
+                        .padding(top = TrailSenseSpacing.sm)
                 )
             }
             SurvivalGuideChapterList(
                 listItems = listItems,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = if (summary.isBlank()) 16.dp else 8.dp)
+                    .padding(top = if (summary.isBlank()) TrailSenseSpacing.lg else TrailSenseSpacing.sm)
             )
+        }
         }
     }
 }
@@ -104,7 +117,7 @@ private fun SurvivalGuideSearchBox(
         placeholder = { Text(text = stringResource(R.string.search)) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(vertical = TrailSenseSpacing.lg)
             .testTag("search")
     )
 }
@@ -145,13 +158,18 @@ private fun SurvivalGuideSummary(
                     .testTag("summary_title"),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
-            Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Box(
+                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                    contentDescription = getSummaryTitle(result),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Box(
@@ -178,7 +196,8 @@ private fun SurvivalGuideChapterList(
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = modifier.testTag("list")
+        modifier = modifier.testTag("list"),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         items(listItems, key = { it.id }) { item ->
             SurvivalGuideChapterRow(item)
@@ -188,20 +207,35 @@ private fun SurvivalGuideChapterList(
 
 @Composable
 private fun SurvivalGuideChapterRow(item: SurvivalGuideListItem) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 72.dp)
             .testTag("guide_item")
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
-            .clickable { item.onClick() },
+            .clickable { item.onClick() }
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(item.icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = TrailSenseSpacing.md)
-        )
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(item.icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                )
+            }
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.md))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.title,
@@ -230,6 +264,17 @@ private fun SurvivalGuideChapterRow(item: SurvivalGuideListItem) {
                 )
             }
         }
+        Box(
+            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                contentDescription = item.title,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
     }
 }
 

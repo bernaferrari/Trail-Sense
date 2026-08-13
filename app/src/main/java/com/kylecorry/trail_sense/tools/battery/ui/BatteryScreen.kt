@@ -9,9 +9,11 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -63,6 +66,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryUsage
@@ -361,9 +365,9 @@ private fun BatteryScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag("running_services"),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     top = TrailSenseSpacing.sm,
                     bottom = TrailSenseSpacing.xxl
                 ),
@@ -480,13 +484,15 @@ private fun BatteryHeroCard(
         label = "batteryPercent"
     )
 
-    Surface(
+    TrailSenseCard(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentPadding = PaddingValues(TrailSenseSpacing.xl)
     ) {
         Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             Row(
@@ -497,7 +503,9 @@ private fun BatteryHeroCard(
                     Text(
                         text = formatter.formatPercentage(animatedPercent),
                         modifier = Modifier.testTag("battery_percentage"),
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -630,7 +638,9 @@ private fun BatteryReadoutRow(
             Text(
                 text = title,
                 modifier = titleModifier,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (subtitle != null) {
@@ -649,20 +659,22 @@ private fun LowPowerCard(
     isLowPowerEnabled: Boolean,
     onToggleLowPower: () -> Unit
 ) {
-    Surface(
+    TrailSenseCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onToggleLowPower() },
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer
+            .toggleable(
+                value = isLowPowerEnabled,
+                role = Role.Switch,
+                onValueChange = { onToggleLowPower() }
+            ),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentPadding = PaddingValues(
+            horizontal = TrailSenseSpacing.lg,
+            vertical = TrailSenseSpacing.md
+        )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.lg,
-                    vertical = TrailSenseSpacing.md
-                ),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -674,7 +686,7 @@ private fun LowPowerCard(
             Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
             Switch(
                 checked = isLowPowerEnabled,
-                onCheckedChange = { onToggleLowPower() },
+                onCheckedChange = null,
                 modifier = Modifier.testTag("low_power_mode_switch")
             )
         }
@@ -685,10 +697,10 @@ private fun LowPowerCard(
 private fun BatteryGroupCard(
     content: @Composable () -> Unit
 ) {
-    Surface(
+    TrailSenseCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentPadding = PaddingValues(0.dp)
     ) {
         Column(content = { content() })
     }
@@ -718,14 +730,25 @@ private fun BatteryHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.sm),
+                .padding(
+                    horizontal = TrailSenseSpacing.screen,
+                    vertical = TrailSenseSpacing.sm
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (showHistory) {
-                IconButton(onClick = onShowHistory, modifier = Modifier.testTag("battery_history_btn")) {
+                IconButton(
+                    onClick = onShowHistory,
+                    modifier = Modifier
+                        .size(TrailSenseSize.minimumTouchTarget)
+                        .testTag("battery_history_btn")
+                ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_chart),
-                        contentDescription = null,
+                        contentDescription = stringResource(
+                            R.string.battery_usage,
+                            stringResource(R.string.app_name)
+                        ),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -742,11 +765,13 @@ private fun BatteryHeader(
             if (canOpenSystemBatterySettings) {
                 IconButton(
                     onClick = onOpenBatterySettings,
-                    modifier = Modifier.testTag("battery_settings_btn")
+                    modifier = Modifier
+                        .size(TrailSenseSize.minimumTouchTarget)
+                        .testTag("battery_settings_btn")
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_settings),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.settings),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -799,10 +824,15 @@ private fun RunningServiceRow(
         icon = getUsageIcon(usage),
         iconTint = Color(getUsageColor(usage)),
         trailing = {
-            IconButton(onClick = onDisable, modifier = Modifier.testTag("battery_service_stop_btn")) {
+            IconButton(
+                onClick = onDisable,
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("battery_service_stop_btn")
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_cancel),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.stop),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -877,7 +907,9 @@ private fun BatteryListRow(
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

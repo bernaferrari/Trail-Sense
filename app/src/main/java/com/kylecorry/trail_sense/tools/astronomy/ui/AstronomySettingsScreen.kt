@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 import android.os.Bundle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,16 +14,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,10 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -53,6 +58,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunriseAlarmReceiver
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
@@ -195,18 +202,32 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                        ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .widthIn(max = TrailSenseSize.maximumContentWidth),
+                                contentPadding = PaddingValues(
+                                    start = TrailSenseSpacing.screen,
+                                    end = TrailSenseSpacing.screen,
+                                    top = TrailSenseSpacing.lg,
+                                    bottom = TrailSenseSpacing.xxxl
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                            ) {
+                            item("title") {
+                                Text(
+                                    text = stringResource(R.string.astronomy),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(
+                                        top = TrailSenseSpacing.sm,
+                                        bottom = TrailSenseSpacing.xs
+                                    )
+                                )
+                            }
                             item("general_section") {
                                 AstronomySettingsSection(
                                     title = stringResource(R.string.general)
@@ -415,6 +436,7 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
                                     )
                                 }
                             }
+                            }
                         }
                     }
     }
@@ -591,46 +613,43 @@ private fun AstronomySettingsSection(
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(
                 start = TrailSenseSpacing.md,
                 bottom = TrailSenseSpacing.sm
             )
         )
-        Card(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            )
+            color = Color.Transparent
         ) {
-            content()
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                content()
+            }
         }
     }
 }
 
 @Composable
 private fun AstronomySettingsCardDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
-        thickness = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    )
+    Spacer(modifier = Modifier.height(0.dp))
 }
 
 @Composable
 private fun AstronomySettingsIconChip(icon: Painter) {
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.size(40.dp)
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(22.dp)
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(TrailSenseSize.leadingIcon)
             )
         }
     }
@@ -645,15 +664,18 @@ private fun AstronomySettingsClickRow(
     icon: Painter? = null,
     enabled: Boolean = true
 ) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 72.dp)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -680,11 +702,17 @@ private fun AstronomySettingsClickRow(
             }
         }
         Spacer(Modifier.width(TrailSenseSpacing.md))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(
+            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
     }
 }
 
@@ -698,14 +726,21 @@ private fun AstronomySettingsSwitchRow(
     icon: Painter? = null,
     enabled: Boolean = true
 ) {
+    val containerColor = if (checked && enabled) {
+        lerp(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.colorScheme.primaryContainer, 0.35f)
+    } else MaterialTheme.colorScheme.surfaceContainerLow
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = containerColor
+    ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 72.dp)
             .alpha(if (enabled) 1f else 0.5f)
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -732,8 +767,9 @@ private fun AstronomySettingsSwitchRow(
         Spacer(Modifier.width(TrailSenseSpacing.md))
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
             enabled = enabled
         )
+        }
     }
 }

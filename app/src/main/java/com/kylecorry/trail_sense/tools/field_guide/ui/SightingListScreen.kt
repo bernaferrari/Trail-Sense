@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -56,6 +57,7 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -209,7 +211,12 @@ private fun SightingListScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .align(Alignment.TopCenter)
+            ) {
                 SightingListHeader()
                 SightingListView(
                     items = items,
@@ -224,13 +231,13 @@ private fun SightingListScreen(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.add)
                     )
                 },
                 text = { Text(stringResource(R.string.sighting)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(TrailSenseSpacing.lg)
+                    .padding(TrailSenseSpacing.screen)
                     .testTag("create_btn")
             )
         }
@@ -244,12 +251,12 @@ private fun SightingListHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = TrailSenseSpacing.lg,
-                end = TrailSenseSpacing.lg,
+                start = TrailSenseSpacing.screen,
+                end = TrailSenseSpacing.screen,
                 top = TrailSenseSpacing.xl,
                 bottom = TrailSenseSpacing.sm
             ),
-        style = MaterialTheme.typography.headlineMedium,
+        style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onBackground
     )
 }
@@ -270,8 +277,8 @@ private fun SightingListView(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     top = TrailSenseSpacing.sm,
                     bottom = 96.dp
                 ),
@@ -294,7 +301,6 @@ private fun SightingRow(item: SightingListItem) {
         onClick = { item.onEdit() }
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Tonal date icon chip
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -324,7 +330,9 @@ private fun SightingRow(item: SightingListItem) {
                     Spacer(Modifier.size(TrailSenseSpacing.xxs))
                     Text(
                         text = item.subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -356,7 +364,7 @@ private fun SightingRow(item: SightingListItem) {
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.edit),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

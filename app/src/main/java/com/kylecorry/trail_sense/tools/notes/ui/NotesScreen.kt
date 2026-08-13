@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -24,10 +25,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -48,6 +49,7 @@ import androidx.lifecycle.Observer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import java.time.Instant
@@ -81,8 +83,13 @@ fun NotesScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.tool_notes_title)) },
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.tool_notes_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -98,7 +105,7 @@ fun NotesScreen(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.add)
                     )
                 },
                 text = { Text(stringResource(R.string.add)) }
@@ -108,7 +115,8 @@ fun NotesScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
             if (items.isEmpty()) {
                 TrailSenseEmptyState(
@@ -119,11 +127,12 @@ fun NotesScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
                         .fillMaxSize()
                         .testTag("note_list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.sm,
                         bottom = 96.dp
                     ),
@@ -189,7 +198,9 @@ private fun NoteListItem(
                     Spacer(Modifier.height(TrailSenseSpacing.xs))
                     Text(
                         text = timestamp,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -201,7 +212,7 @@ private fun NoteListItem(
                 IconButton(onClick = { isMenuOpen = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.qr_code),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

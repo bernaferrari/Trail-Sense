@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Email
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,6 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
@@ -58,7 +58,7 @@ internal fun ErrorHandlerScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(TrailSenseSpacing.xl),
+            .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -77,7 +77,7 @@ internal fun ErrorHandlerScreen(
         Spacer(Modifier.height(TrailSenseSpacing.lg))
         Text(
             text = stringResource(R.string.error_occurred),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(TrailSenseSpacing.sm))
@@ -87,20 +87,19 @@ internal fun ErrorHandlerScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(TrailSenseSpacing.xxl))
-        FilledTonalButton(
+        TrailSenseButton(
+            text = stringResource(R.string.reopen_tool),
             onClick = onReopenTool,
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 480.dp)
-        ) {
-            Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(stringResource(R.string.reopen_tool))
-        }
-        Button(
+        )
+        Spacer(Modifier.height(TrailSenseSpacing.sm))
+        FilledTonalButton(
             onClick = onRestartApp,
             modifier = Modifier
                 .fillMaxWidth()
+                .height(TrailSenseSize.minimumTouchTarget)
                 .widthIn(max = 480.dp)
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null)

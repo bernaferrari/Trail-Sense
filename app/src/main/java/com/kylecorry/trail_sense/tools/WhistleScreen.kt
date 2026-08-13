@@ -2,11 +2,7 @@ package com.kylecorry.trail_sense.tools
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,6 +55,7 @@ import com.kylecorry.trail_sense.shared.morse.Signals
 import com.kylecorry.trail_sense.shared.morse.asSignal
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -143,27 +140,35 @@ fun WhistleScreen(modifier: Modifier = Modifier) {
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        horizontal = TrailSenseSpacing.screen,
+                        vertical = TrailSenseSpacing.xl
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
             Text(
                 text = stringResource(R.string.tool_whistle_title),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(TrailSenseSpacing.sm))
 
-            // Big satisfying press-and-hold control with a pulsing ring while emitting.
+            // Dominant press-and-hold control with a clear tonal active state.
             HoldToBlowButton(
                 active = whistleActive,
                 onPress = { playContinuous() },
@@ -285,13 +290,14 @@ fun WhistleScreen(modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = TrailSenseSpacing.md)
             )
+            }
         }
     }
 }
 
 /**
  * Large central press-and-hold control. Calm tonal surface when idle, bold error
- * tones with a pulsing halo while emitting. Pointer handling preserves the original
+ * tones with a static halo while emitting. Pointer handling preserves the original
  * hold-to-blow behavior exactly.
  */
 @Composable
@@ -317,46 +323,27 @@ private fun HoldToBlowButton(
 
     // Press feedback: a small satisfying spring-driven dip on the whole control.
     val pressScale by animateFloatAsState(
-        targetValue = if (active) 0.94f else 1f,
+        targetValue = if (active) 0.97f else 1f,
         animationSpec = TrailSenseAnimation.standardSpring,
         label = "whistlePressScale"
     )
 
-    // Continuous halo pulse while emitting.
-    val pulse = rememberInfiniteTransition(label = "whistlePulse")
-    val pulseScale by pulse.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.45f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1100),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "whistlePulseScale"
-    )
-    val pulseAlpha by pulse.animateFloat(
-        initialValue = 0.45f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1100),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "whistlePulseAlpha"
+    val haloAlpha by animateFloatAsState(
+        targetValue = if (active) 0.28f else 0f,
+        animationSpec = TrailSenseAnimation.mediumFade,
+        label = "whistleHaloAlpha"
     )
 
     Box(
         modifier = Modifier.size(300.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Expanding halo ring (only meaningful while active; invisible at idle).
+        // Static tonal halo communicates activity without continuous motion.
         if (active) {
             Surface(
                 modifier = Modifier
                     .size(240.dp)
-                    .graphicsLayer {
-                        scaleX = pulseScale
-                        scaleY = pulseScale
-                    }
-                    .alpha(pulseAlpha),
+                    .alpha(haloAlpha),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.error
             ) {}

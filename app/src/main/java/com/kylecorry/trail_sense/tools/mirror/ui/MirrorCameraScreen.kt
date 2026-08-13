@@ -7,7 +7,9 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -23,13 +25,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.R
 
 @Composable
 internal fun MirrorCameraScreen(
@@ -51,6 +58,7 @@ internal fun MirrorCameraScreen(
         mutableStateOf(Permissions.isCameraEnabled(context))
     }
     var wasPermissionRequested by remember { mutableStateOf(false) }
+    val cameraDescription = stringResource(R.string.camera)
 
     LaunchedEffect(Unit) {
         if (!wasPermissionRequested) {
@@ -102,13 +110,15 @@ internal fun MirrorCameraScreen(
         modifier = modifier
             .fillMaxSize()
             .background(ComposeColor.White)
-            .padding(TrailSenseSpacing.md),
+            .padding(TrailSenseSpacing.screen),
         contentAlignment = Alignment.Center
     ) {
         // Tonal frame floating over the bright mirror backdrop. The camera
         // canvas itself is left untouched; only the surrounding chrome is styled.
         Surface(
-            modifier = Modifier.fillMaxSize(0.9f),
+            modifier = Modifier
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .fillMaxHeight(0.9f),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainer
         ) {
@@ -118,6 +128,7 @@ internal fun MirrorCameraScreen(
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.large)
                     .testTag("camera")
+                    .semantics { contentDescription = cameraDescription }
             )
         }
     }

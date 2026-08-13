@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -129,12 +130,20 @@ fun WhiteNoiseScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl),
+                .widthIn(max = 560.dp)
+                .padding(
+                    horizontal = TrailSenseSpacing.screen,
+                    vertical = TrailSenseSpacing.xxl
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -201,6 +210,7 @@ fun WhiteNoiseScreen(
                     stopWhiteNoise()
                 }
             )
+        }
         }
     }
 

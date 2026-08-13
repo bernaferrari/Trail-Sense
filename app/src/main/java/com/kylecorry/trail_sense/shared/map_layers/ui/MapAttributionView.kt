@@ -18,7 +18,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 private const val URL_ANNOTATION_TAG = "url"
 
@@ -61,14 +60,14 @@ class MapAttributionState {
 
         Surface(
             modifier = modifier,
-            color = Color(0x88000000)
+            shape = MaterialTheme.shapes.medium,
+            color = Color(0xB8000000)
         ) {
             ClickableText(
                 text = annotated,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = Color.White,
-                    fontSize = 8.sp
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    color = Color.White
                 ),
                 onClick = { offset ->
                     annotated

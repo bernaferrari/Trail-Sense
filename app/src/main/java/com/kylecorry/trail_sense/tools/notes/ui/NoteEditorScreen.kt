@@ -3,15 +3,17 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,12 +21,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlinx.coroutines.Dispatchers
@@ -62,13 +66,18 @@ fun NoteEditorScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
-            OutlinedTextField(
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .padding(TrailSenseSpacing.screen),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+            TextField(
                 value = title,
                 onValueChange = { title = it },
                 modifier = Modifier
@@ -83,7 +92,7 @@ fun NoteEditorScreen(
                 ),
                 singleLine = true
             )
-            OutlinedTextField(
+            TextField(
                 value = content,
                 onValueChange = { content = it },
                 modifier = Modifier
@@ -106,8 +115,10 @@ fun NoteEditorScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("note_create_btn")
+                    .testTag("note_create_btn"),
+                enabled = !isSaving
             )
+        }
         }
     }
 

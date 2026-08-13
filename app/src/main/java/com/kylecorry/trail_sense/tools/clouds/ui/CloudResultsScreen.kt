@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -50,6 +52,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -76,6 +80,7 @@ import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
@@ -262,9 +267,14 @@ private fun CloudResultsScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+        ) {
             CloudResultsHeader(
                 title = title,
                 subtitle = subtitle,
@@ -288,6 +298,7 @@ private fun CloudResultsScreen(
                 }
             }
         }
+        }
     }
 }
 
@@ -306,8 +317,9 @@ private fun CloudResultsHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 72.dp)
                 .padding(
-                    start = TrailSenseSpacing.xl,
+                    start = TrailSenseSpacing.screen,
                     end = TrailSenseSpacing.sm,
                     top = TrailSenseSpacing.md,
                     bottom = TrailSenseSpacing.md
@@ -325,6 +337,7 @@ private fun CloudResultsHeader(
                     text = subtitle,
                     modifier = Modifier
                         .padding(top = TrailSenseSpacing.xxs)
+                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
                         .clickable(onClick = onDateClick)
                         .testTag("cloud_subtitle"),
                     style = MaterialTheme.typography.bodyMedium,
@@ -335,12 +348,13 @@ private fun CloudResultsHeader(
                 onClick = onSave,
                 enabled = canSave,
                 modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
                     .alpha(if (canSave) 1f else 0.38f)
                     .testTag("cloud_save_btn")
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.save)
                 )
             }
         }
@@ -373,8 +387,13 @@ private fun CloudSelectionList(
 
     LazyColumn(
         modifier = modifier.testTag("cloud_list"),
-        contentPadding = PaddingValues(TrailSenseSpacing.xl),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.screen,
+            end = TrailSenseSpacing.screen,
+            top = TrailSenseSpacing.lg,
+            bottom = TrailSenseSpacing.xxl
+        ),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         if (primary != null) {
             item(key = primary.genus?.ordinal ?: -1) {
@@ -452,6 +471,7 @@ private fun CloudPrimaryHero(
                     CloudIconChip(
                         drawable = details.getCloudImage(context, selection.genus),
                         size = 72.dp,
+                        contentDescription = details.getCloudName(selection.genus),
                         onClick = { onCloudImageClick(selection.genus) }
                     )
                 }
@@ -460,7 +480,7 @@ private fun CloudPrimaryHero(
                     Text(
                         text = details.getCloudName(selection.genus),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -524,6 +544,7 @@ private fun CloudSelectionCard(
             CloudIconChip(
                 drawable = details.getCloudImage(context, selection.genus),
                 size = 48.dp,
+                contentDescription = details.getCloudName(selection.genus),
                 onClick = { onCloudImageClick(selection.genus) }
             )
             Column(
@@ -579,6 +600,7 @@ private fun CloudSelectionCard(
 private fun CloudIconChip(
     drawable: Drawable?,
     size: Dp,
+    contentDescription: String,
     onClick: () -> Unit
 ) {
     val px = with(LocalDensity.current) { size.toPx().toInt() }
@@ -590,6 +612,7 @@ private fun CloudIconChip(
         modifier = Modifier
             .size(size)
             .clickable(onClick = onClick)
+            .semantics { this.contentDescription = contentDescription }
     ) {
         if (bitmap != null) {
             Image(

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -50,6 +51,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,6 +77,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
@@ -266,7 +270,7 @@ private fun CloudScreen(
                         Text(
                             text = stringResource(R.string.clouds),
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         if (subtitle.isNotBlank()) {
@@ -279,10 +283,13 @@ private fun CloudScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onGuideClick) {
+                    IconButton(
+                        onClick = onGuideClick,
+                        modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_help),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.help),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -304,7 +311,7 @@ private fun CloudScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.add)
                         )
                     },
                     text = {
@@ -359,15 +366,17 @@ private fun CloudScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
+                        .align(Alignment.TopCenter)
                         .testTag("cloud_list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.lg,
                         bottom = 96.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                 ) {
                     items(clouds) { reading ->
                         CloudReadingListItem(
@@ -406,6 +415,7 @@ private fun CloudReadingListItem(
         ) {
             CloudThumbnail(
                 drawable = details.getCloudImage(context, cloud),
+                contentDescription = details.getCloudName(cloud),
                 onClick = { onCloudImageClick(reading) }
             )
 
@@ -445,11 +455,13 @@ private fun CloudReadingListItem(
             Box {
                 IconButton(
                     onClick = { isMenuOpen = true },
-                    modifier = Modifier.testTag("cloud_item_menu")
+                    modifier = Modifier
+                        .size(TrailSenseSize.minimumTouchTarget)
+                        .testTag("cloud_item_menu")
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
+                        contentDescription = details.getCloudName(cloud),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -473,6 +485,7 @@ private fun CloudReadingListItem(
 @Composable
 private fun CloudThumbnail(
     drawable: Drawable?,
+    contentDescription: String,
     onClick: () -> Unit
 ) {
     val bitmap = remember(drawable) {
@@ -483,6 +496,7 @@ private fun CloudThumbnail(
         .clip(MaterialTheme.shapes.large)
         .background(MaterialTheme.colorScheme.primaryContainer)
         .clickable(onClick = onClick)
+        .semantics { this.contentDescription = contentDescription }
         .testTag("cloud_image")
 
     if (bitmap == null) {

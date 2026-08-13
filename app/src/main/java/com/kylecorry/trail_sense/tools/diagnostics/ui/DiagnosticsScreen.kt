@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -48,9 +50,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
@@ -105,17 +108,19 @@ internal fun DiagnosticsScreen(
                 actions = {
                     IconButton(
                         onClick = onShowSensorDetails,
-                        modifier = Modifier.testTag("diagnostics_title")
+                        modifier = Modifier
+                            .size(TrailSenseSize.minimumTouchTarget)
+                            .testTag("diagnostics_title")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Sensors,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.pref_sensor_details_title),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
@@ -136,11 +141,13 @@ internal fun DiagnosticsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
+                        .align(Alignment.TopCenter)
                         .testTag("diagnostics_list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.md,
                         bottom = TrailSenseSpacing.xxxl
                     ),
@@ -150,7 +157,7 @@ internal fun DiagnosticsScreen(
                         Text(
                             text = stringResource(R.string.diagnostics),
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(
                                 start = TrailSenseSpacing.xs,
@@ -160,16 +167,19 @@ internal fun DiagnosticsScreen(
                     }
 
                     item {
-                        TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.large,
+                            color = Color.Transparent
+                        ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                             items.forEachIndexed { index, item ->
                                 DiagnosticListItem(
                                     item = item,
                                     onClick = { onShowDiagnostic(item) }
                                 )
-                                if (index < items.lastIndex) {
-                                    Spacer(Modifier.height(TrailSenseSpacing.lg))
-                                }
                             }
+                        }
                         }
                     }
                 }
@@ -189,21 +199,22 @@ private fun DiagnosticListItem(
 
     Surface(
         onClick = onClick,
-        color = Color.Transparent,
-        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TrailSenseSpacing.xs),
+                .heightIn(min = 72.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Tonal circular status chip colored by severity
             Surface(
-                shape = CircleShape,
+                shape = MaterialTheme.shapes.large,
                 color = chipColor,
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(

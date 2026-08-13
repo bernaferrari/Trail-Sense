@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,11 +43,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -279,7 +279,7 @@ private fun TidesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             TidesHero(
@@ -316,7 +316,7 @@ private fun TidesScreen(
                     .padding(bottom = dimensionResource(R.dimen.default_bottom_margin))
                     .testTag("tide_disclaimer"),
                 textAlign = TextAlign.Center,
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -327,7 +327,7 @@ private fun TidesScreen(
 private fun SectionLabel(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.titleSmall,
+        style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary
     )
 }
@@ -361,12 +361,12 @@ private fun TidesHero(
     isLoading: Boolean,
     onOpenTideList: () -> Unit
 ) {
-    Card(
+    TrailSenseCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentPadding = PaddingValues(0.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -375,8 +375,8 @@ private fun TidesHero(
                     .padding(
                         start = TrailSenseSpacing.lg,
                         end = TrailSenseSpacing.sm,
-                        top = TrailSenseSpacing.lg,
-                        bottom = TrailSenseSpacing.lg
+                        top = TrailSenseSpacing.xl,
+                        bottom = TrailSenseSpacing.xl
                     ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -395,7 +395,9 @@ private fun TidesHero(
                     Text(
                         text = title,
                         modifier = Modifier.testTag("tide_title"),
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     if (subtitle.isNotBlank()) {
@@ -408,11 +410,13 @@ private fun TidesHero(
                 }
                 IconButton(
                     onClick = onOpenTideList,
-                    modifier = Modifier.testTag("tide_table_btn")
+                    modifier = Modifier
+                        .size(TrailSenseSize.minimumTouchTarget)
+                        .testTag("tide_table_btn")
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_tide_table),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.tide_table),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -438,6 +442,8 @@ private fun DatePickerInput(
 ) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
+    val dateLabel = stringResource(R.string.date)
+    val todayLabel = stringResource(R.string.today)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -449,7 +455,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -458,7 +464,9 @@ private fun DatePickerInput(
         Text(
             text = formatter.formatRelativeDate(date),
             modifier = Modifier.testTag("tide_list_date"),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontFeatureSettings = "tnum"
+            ),
             color = MaterialTheme.colorScheme.onSurface
         )
         Box(
@@ -466,6 +474,9 @@ private fun DatePickerInput(
                 .padding(start = TrailSenseSpacing.lg)
                 .size(48.dp)
                 .combinedClickable(
+                    onClickLabel = dateLabel,
+                    onLongClickLabel = todayLabel,
+                    role = Role.Button,
                     onClick = {
                         CustomUiUtils.pickDate(context, date, null) {
                             if (it != null) {
@@ -480,7 +491,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_date),
-                contentDescription = null,
+                contentDescription = dateLabel,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -491,7 +502,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -684,7 +695,9 @@ private fun TideRow(tide: Tide) {
         }
         Text(
             text = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFeatureSettings = "tnum"
+            ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -82,6 +81,7 @@ import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstroPositions
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyEvent
@@ -733,18 +733,18 @@ private fun AstronomyTitle(
     state: AstronomyTitleState,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    TrailSenseCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentPadding = PaddingValues(
+            horizontal = TrailSenseSpacing.sm,
+            vertical = TrailSenseSpacing.lg
         )
     ) {
         Row(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.sm,
-                vertical = TrailSenseSpacing.lg
-            ),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             state.leftButton.Content()
@@ -757,7 +757,9 @@ private fun AstronomyTitle(
             ) {
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
@@ -894,7 +896,9 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
                 } else {
                     "${it.value}\n${it.label}"
                 },
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("astronomy_detail_data")
@@ -917,19 +921,24 @@ private fun AstronomyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             AstronomyTitle(views.astronomyTitle)
 
             views.displayDate.Content()
 
-            views.sunMoonChart.Content(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-                    .testTag("sunMoonChart")
-            )
+            TrailSenseCard(
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                views.sunMoonChart.Content(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensionResource(R.dimen.chart_height))
+                        .testTag("sunMoonChart")
+                )
+            }
 
             if (views.timeSeeker.isVisible) {
                 TrailSenseCard {
@@ -987,7 +996,8 @@ private class AstronomyTimeSeekerDetailsState {
                     text = time,
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontFeatureSettings = "tnum"
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
@@ -996,11 +1006,11 @@ private class AstronomyTimeSeekerDetailsState {
                     onClick = onClose,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .size(32.dp)
+                        .size(TrailSenseSize.minimumTouchTarget)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_cancel),
-                        contentDescription = null,
+                        contentDescription = stringResource(android.R.string.cancel),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -1046,7 +1056,9 @@ private fun AstronomyPositionText(
     Text(
         text = text,
         modifier = modifier,
-        style = MaterialTheme.typography.bodySmall,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontFeatureSettings = "tnum"
+        ),
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }

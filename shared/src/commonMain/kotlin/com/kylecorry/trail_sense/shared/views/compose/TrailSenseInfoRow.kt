@@ -26,12 +26,13 @@ fun TrailSenseInfoRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
         )
-        Spacer(Modifier.width(TrailSenseSpacing.sm))
+        Spacer(Modifier.width(TrailSenseSpacing.md))
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum")
         )
     }
 }

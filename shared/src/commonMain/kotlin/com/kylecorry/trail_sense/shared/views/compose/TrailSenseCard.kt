@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 
 /**
@@ -24,25 +25,38 @@ fun TrailSenseCard(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     elevation: Dp = TrailSenseElevation.none,
+    enabled: Boolean = true,
+    shape: Shape = MaterialTheme.shapes.large,
+    contentPadding: PaddingValues = PaddingValues(TrailSenseSpacing.lg),
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = modifier
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else Modifier
+    val cardContent: @Composable ColumnScope.() -> Unit = {
+        Column(modifier = Modifier.padding(contentPadding), content = content)
+    }
+
+    if (onClick == null) {
+        Card(
+            modifier = modifier,
+            shape = shape,
+            elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor,
+                contentColor = contentColor
             ),
-        shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
+            content = cardContent
         )
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            content = content
+    } else {
+        Card(
+            onClick = onClick,
+            modifier = modifier,
+            enabled = enabled,
+            shape = shape,
+            elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor,
+                contentColor = contentColor
+            ),
+            content = cardContent
         )
     }
 }

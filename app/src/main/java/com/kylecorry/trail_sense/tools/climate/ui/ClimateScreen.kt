@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,8 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -50,11 +49,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.annotation.StringRes
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -545,7 +544,7 @@ private fun ClimateScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .testTag("climate_scroll")
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
                     .padding(bottom = dimensionResource(R.dimen.default_bottom_margin)),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
@@ -641,33 +640,35 @@ private fun ClimateHeroCard(
     temperatureTitle: String,
     precipitationTitle: String
 ) {
-    Card(
+    TrailSenseCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentPadding = PaddingValues(
+            horizontal = TrailSenseSpacing.xl,
+            vertical = TrailSenseSpacing.xl
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.lg,
-                    vertical = TrailSenseSpacing.xl
-                ),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
             Text(
                 text = temperatureTitle,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = precipitationTitle,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
@@ -698,7 +699,10 @@ private fun ClimateHeader(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(
+                    horizontal = TrailSenseSpacing.screen,
+                    vertical = TrailSenseSpacing.md
+                )
                 .testTag("climate_title")
         ) {
             Text(
@@ -720,7 +724,7 @@ private fun SourceLabel(text: String) {
     Text(
         text = text,
         modifier = Modifier.fillMaxWidth(),
-        fontSize = 10.sp,
+        style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
 }
@@ -734,6 +738,8 @@ private fun DatePickerInput(
 ) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
+    val dateLabel = stringResource(R.string.date)
+    val todayLabel = stringResource(R.string.today)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -745,7 +751,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -754,14 +760,19 @@ private fun DatePickerInput(
         Text(
             text = formatter.formatRelativeDate(date),
             modifier = Modifier.testTag("display_date"),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontFeatureSettings = "tnum"
+            ),
             color = MaterialTheme.colorScheme.onSurface
         )
         Box(
             modifier = Modifier
-                .padding(start = 16.dp)
+                .padding(start = TrailSenseSpacing.lg)
                 .size(48.dp)
                 .combinedClickable(
+                    onClickLabel = dateLabel,
+                    onLongClickLabel = todayLabel,
+                    role = Role.Button,
                     onClick = {
                         CustomUiUtils.pickDate(context, date, null) {
                             if (it != null) {
@@ -776,7 +787,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_date),
-                contentDescription = null,
+                contentDescription = dateLabel,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -787,7 +798,7 @@ private fun DatePickerInput(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

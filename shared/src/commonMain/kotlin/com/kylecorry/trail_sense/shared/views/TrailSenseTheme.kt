@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.shared.views
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
@@ -77,15 +76,12 @@ private fun TrailSenseColorScheme.toSeedColor(): Color = when (this) {
 }
 
 /**
- * Expressive shape scale used by non-Android targets and previews.
+ * The public shape token remains available to older call sites, but the app theme deliberately
+ * uses Material 3 Expressive's native shape scheme. That gives components the richer, more varied
+ * silhouette language used by the owner's other apps instead of forcing every surface onto the
+ * same rounded-rectangle ladder.
  */
-val TrailSenseExpressiveShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(32.dp)
-)
+val TrailSenseExpressiveShapes = Shapes()
 
 /**
  * Type scale with weight-based hierarchy. Material's default tracking is retained so long
@@ -96,14 +92,14 @@ val TrailSenseExpressiveTypography: Typography = with(Typography()) {
         displayLarge = displayLarge.copy(fontWeight = FontWeight.SemiBold),
         displayMedium = displayMedium.copy(fontWeight = FontWeight.SemiBold),
         displaySmall = displaySmall.copy(fontWeight = FontWeight.SemiBold),
-        headlineLarge = headlineLarge.copy(fontWeight = FontWeight.Bold),
-        headlineMedium = headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineLarge = headlineLarge.copy(fontWeight = FontWeight.SemiBold),
+        headlineMedium = headlineMedium.copy(fontWeight = FontWeight.SemiBold),
         headlineSmall = headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-        titleLarge = titleLarge.copy(fontWeight = FontWeight.Bold),
+        titleLarge = titleLarge.copy(fontWeight = FontWeight.SemiBold),
         titleMedium = titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        titleSmall = titleSmall.copy(fontWeight = FontWeight.SemiBold),
-        labelLarge = labelLarge.copy(fontWeight = FontWeight.SemiBold),
-        labelMedium = labelMedium.copy(fontWeight = FontWeight.SemiBold),
+        titleSmall = titleSmall.copy(fontWeight = FontWeight.Medium),
+        labelLarge = labelLarge.copy(fontWeight = FontWeight.Medium),
+        labelMedium = labelMedium.copy(fontWeight = FontWeight.Medium),
         labelSmall = labelSmall.copy(fontWeight = FontWeight.Medium)
     )
 }
@@ -120,7 +116,7 @@ fun rememberTrailSenseColorScheme(
     seedColor = colorScheme.toSeedColor(),
     isDark = darkTheme,
     isAmoled = isAmoled,
-    style = PaletteStyle.Expressive,
+    style = PaletteStyle.TonalSpot,
     specVersion = ColorSpec.SpecVersion.SPEC_2025
 )
 
@@ -134,6 +130,7 @@ fun rememberTrailSenseColorScheme(
  * @param overrideColorScheme A fully-resolved color scheme that takes precedence over [colorScheme].
  * @param content Your UI content.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TrailSenseTheme(
     colorScheme: TrailSenseColorScheme = TrailSenseColorScheme.Orange,
@@ -145,10 +142,9 @@ fun TrailSenseTheme(
     val resolvedScheme = overrideColorScheme
         ?: rememberTrailSenseColorScheme(colorScheme, darkTheme, isAmoled)
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = resolvedScheme,
         typography = TrailSenseExpressiveTypography,
-        shapes = TrailSenseExpressiveShapes,
         content = content
     )
 }

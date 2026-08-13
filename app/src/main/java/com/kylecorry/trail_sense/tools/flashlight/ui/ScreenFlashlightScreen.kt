@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessHigh
 import androidx.compose.material.icons.filled.Close
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 
 @Composable
 fun ScreenFlashlightScreen(
@@ -75,7 +77,8 @@ fun ScreenFlashlightScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(TrailSenseSpacing.lg)
+                .padding(TrailSenseSpacing.screen)
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
                 .fillMaxWidth(),
             shape = MaterialTheme.shapes.extraLarge,
             color = Color.Black.copy(alpha = 0.55f),
@@ -142,7 +145,7 @@ fun ScreenFlashlightScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Lightbulb,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.screen_flashlight)
                         )
                     }
 
@@ -158,7 +161,7 @@ fun ScreenFlashlightScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.turn_off),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(Modifier.width(TrailSenseSpacing.sm))

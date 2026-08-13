@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -1164,6 +1165,7 @@ private fun NavigatorHost(
                 }
                 NavigatorIconButton(
                     icon = TrailSenseIcons.Filled.LocationOn,
+                    contentDescription = stringResource(R.string.location),
                     onClick = { views.onBeaconClick?.invoke() },
                     onLongClick = { views.onBeaconLongClick?.invoke() },
                     modifier = Modifier
@@ -1229,6 +1231,7 @@ private fun createNavigatorViews(
 @Composable
 private fun NavigatorIconButton(
     icon: ImageVector,
+    contentDescription: String,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -1238,12 +1241,17 @@ private fun NavigatorIconButton(
             .size(56.dp)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(
+                onClickLabel = contentDescription,
+                onLongClickLabel = stringResource(R.string.navigate),
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.size(24.dp)
         )

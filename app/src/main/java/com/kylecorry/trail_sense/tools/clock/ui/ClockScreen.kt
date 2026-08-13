@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -62,6 +63,7 @@ import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import kotlinx.coroutines.delay
@@ -163,14 +165,19 @@ private fun ClockScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .padding(TrailSenseSpacing.screen),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Top bar: refresh
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -211,7 +218,9 @@ private fun ClockScreen(
                     Spacer(Modifier.height(TrailSenseSpacing.xl))
                     Text(
                         text = timeText,
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center
                     )
@@ -231,7 +240,9 @@ private fun ClockScreen(
                                     horizontal = TrailSenseSpacing.lg,
                                     vertical = TrailSenseSpacing.xxl
                                 ),
-                            style = MaterialTheme.typography.displayLarge,
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             textAlign = TextAlign.Center
                         )
@@ -290,6 +301,7 @@ private fun ClockScreen(
                     )
                 }
             }
+        }
         }
     }
 }

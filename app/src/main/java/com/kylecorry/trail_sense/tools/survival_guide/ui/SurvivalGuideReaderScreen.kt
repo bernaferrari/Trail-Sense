@@ -5,12 +5,16 @@ package com.kylecorry.trail_sense.tools.survival_guide.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -39,6 +43,8 @@ import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 
 @Composable
@@ -51,7 +57,7 @@ fun SurvivalGuideReaderScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SurvivalGuideHeader(
@@ -78,12 +84,15 @@ private fun SurvivalGuideHeader(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 14.dp),
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .heightIn(min = 72.dp)
+                .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -95,13 +104,18 @@ private fun SurvivalGuideHeader(
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (canPrint) {
-                IconButton(onClick = onPrint) {
+                IconButton(
+                    onClick = onPrint,
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
+                ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_printer),
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.print),
+                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
                 }
             }
+        }
         }
     }
 }
@@ -139,14 +153,22 @@ private fun MarkdownChapterView(
         listState.scrollToItem(target)
     }
 
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
     SelectionContainer(
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxSize()
+            .widthIn(max = TrailSenseSize.maximumContentWidth)
     ) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(
+                start = TrailSenseSpacing.screen,
+                end = TrailSenseSpacing.screen,
+                top = TrailSenseSpacing.lg,
+                bottom = TrailSenseSpacing.xxl
+            ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
             val groups = sectionGroups
             if (groups == null) {
@@ -168,6 +190,7 @@ private fun MarkdownChapterView(
                 }
             }
         }
+    }
     }
 }
 
@@ -193,6 +216,7 @@ private fun MarkdownSectionGroup(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = TrailSenseSize.minimumTouchTarget)
                 .clickable { onExpandedChange(!expanded) },
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -202,15 +226,20 @@ private fun MarkdownSectionGroup(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Icon(
-                imageVector = if (expanded) {
-                    Icons.Default.KeyboardArrowDown
-                } else {
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight
-                },
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Box(
+                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (expanded) {
+                        Icons.Default.KeyboardArrowDown
+                    } else {
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight
+                    },
+                    contentDescription = title,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         AnimatedVisibility(visible = expanded) {

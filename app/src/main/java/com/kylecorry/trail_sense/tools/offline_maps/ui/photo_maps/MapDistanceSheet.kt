@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -25,11 +27,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.view.isVisible
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 class MapDistanceSheetState(context: Context) {
 
@@ -82,30 +86,42 @@ private fun MapDistanceSheetContent(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        shape = RoundedCornerShape(
+            topStart = TrailSenseSpacing.xl,
+            topEnd = TrailSenseSpacing.xl
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        tonalElevation = TrailSenseSpacing.xxs
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
+                .padding(
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
+                    top = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.md
+                )
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(vertical = TrailSenseSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onUndo) {
                     Icon(
                         painter = painterResource(R.drawable.ic_undo),
-                        contentDescription = null
+                        contentDescription = stringResource(R.string.undo)
                     )
                 }
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = TrailSenseSpacing.md),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -116,14 +132,16 @@ private fun MapDistanceSheetContent(
                     )
                     Text(
                         text = distance,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = onCancel) {
                     Icon(
                         painter = painterResource(R.drawable.ic_cancel),
-                        contentDescription = null
+                        contentDescription = stringResource(android.R.string.cancel)
                     )
                 }
             }
@@ -132,11 +150,14 @@ private fun MapDistanceSheetContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Button(onClick = onCreatePath) {
+                Button(
+                    onClick = onCreatePath,
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
                     Text(text = stringResource(R.string.create_path))
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
         }
     }
 }

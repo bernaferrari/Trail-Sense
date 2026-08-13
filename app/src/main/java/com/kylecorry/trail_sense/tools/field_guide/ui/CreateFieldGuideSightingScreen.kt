@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
@@ -259,22 +261,29 @@ private fun CreateFieldGuideSightingScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            CreateFieldGuideSightingHeader(
-                title = stringResource(R.string.record_sighting),
-                onSave = onSave
-            )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .testTag("field_guide_sighting_scroll")
-                    .padding(TrailSenseSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
             ) {
-                // When & where
-                TrailSenseCard {
+                CreateFieldGuideSightingHeader(
+                    title = stringResource(R.string.record_sighting),
+                    onSave = onSave
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .testTag("field_guide_sighting_scroll")
+                        .padding(TrailSenseSpacing.screen),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SightingSectionLabel(
                         icon = painterResource(R.drawable.ic_date),
                         text = stringResource(R.string.record_sighting)
@@ -311,8 +320,7 @@ private fun CreateFieldGuideSightingScreen(
                     )
                 }
 
-                // Options
-                TrailSenseCard {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SightingSwitch(
                         tag = "harvested",
                         text = stringResource(R.string.harvested),
@@ -328,8 +336,7 @@ private fun CreateFieldGuideSightingScreen(
                     )
                 }
 
-                // Notes
-                TrailSenseCard {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SightingSectionLabel(
                         icon = painterResource(R.drawable.ic_tool_notes),
                         text = stringResource(R.string.tool_notes_title)
@@ -350,6 +357,7 @@ private fun CreateFieldGuideSightingScreen(
                 )
             }
         }
+        }
     }
 }
 
@@ -365,25 +373,27 @@ private fun CreateFieldGuideSightingHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp),
+                .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 18.dp)
+                    .padding(vertical = TrailSenseSpacing.md)
                     .testTag("field_guide_sighting_title"),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
             IconButton(
                 onClick = onSave,
-                modifier = Modifier.testTag("field_guide_sighting_save_btn")
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("field_guide_sighting_save_btn")
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.save)
                 )
             }
         }
@@ -402,23 +412,23 @@ private fun SightingSectionLabel(
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(36.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     painter = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
         Text(
             text = text,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -773,23 +783,12 @@ private fun SightingSwitch(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag(tag),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-    }
+    TrailSenseSwitchRow(
+        label = text,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier.testTag(tag)
+    )
 }
 
 @Composable

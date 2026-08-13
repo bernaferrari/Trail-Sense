@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
 import com.kylecorry.trail_sense.shared.views.DataPointContent
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
@@ -372,19 +374,19 @@ private class NavigationSheetToolbarState {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (leftVisible) {
                 IconButton(onClick = { onLeftClick?.invoke() }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_tool_notes),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.notes),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.size(40.dp))
+                Spacer(modifier = Modifier.size(48.dp))
             }
 
             Column(
@@ -424,12 +426,12 @@ private class NavigationSheetToolbarState {
                 IconButton(onClick = { onRightClick?.invoke() }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_cancel),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.stop),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.size(40.dp))
+                Spacer(modifier = Modifier.size(48.dp))
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
@@ -213,7 +214,7 @@ private fun VectorMapScreen(
                     Text(
                         text = map?.name ?: stringResource(R.string.offline_maps),
                         modifier = Modifier.padding(
-                            start = TrailSenseSpacing.lg,
+                            start = TrailSenseSpacing.screen,
                             top = TrailSenseSpacing.lg,
                             end = TrailSenseSpacing.xxxl + TrailSenseSpacing.lg,
                             bottom = TrailSenseSpacing.lg
@@ -235,7 +236,7 @@ private fun VectorMapScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_menu_dots),
-                                contentDescription = null
+                                contentDescription = stringResource(R.string.map_options)
                             )
                         }
                         DropdownMenu(
@@ -287,7 +288,8 @@ private fun VectorMapScreen(
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.xxl),
+                        .navigationBarsPadding()
+                        .padding(end = TrailSenseSpacing.screen, bottom = TrailSenseSpacing.xxl),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerHighest,
                     tonalElevation = TrailSenseSpacing.xxs,
@@ -300,7 +302,7 @@ private fun VectorMapScreen(
                         FilledIconButton(
                             onClick = onZoomIn,
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(48.dp)
                                 .testTag("zoom_in_btn"),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -309,14 +311,14 @@ private fun VectorMapScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_add),
-                                contentDescription = null
+                                contentDescription = stringResource(R.string.zoom_in)
                             )
                         }
 
                         FilledIconButton(
                             onClick = onZoomOut,
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(48.dp)
                                 .testTag("zoom_out_btn"),
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -325,7 +327,7 @@ private fun VectorMapScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_zoom_out),
-                                contentDescription = null
+                                contentDescription = stringResource(R.string.zoom_out)
                             )
                         }
                     }

@@ -103,14 +103,20 @@ private fun ErrorBannerContent(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onBannerClick),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurface
+            .then(
+                if (error.action.isNullOrEmpty()) {
+                    Modifier.clickable(onClick = onBannerClick)
+                } else {
+                    Modifier
+                }
+            ),
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 52.dp)
+                .defaultMinSize(minHeight = 64.dp)
                 .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.xs),
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
@@ -118,8 +124,8 @@ private fun ErrorBannerContent(
             Icon(
                 imageVector = TrailSenseIcons.Filled.Warning,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(24.dp)
             )
             Text(
                 text = error.title,

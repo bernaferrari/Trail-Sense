@@ -49,7 +49,7 @@ fun AltitudeContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TrailSenseSpacing.lg)
+                .padding(TrailSenseSpacing.screen)
         ) {
             Text(
                 text = stringResource(R.string.elevation_history),

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -96,7 +98,7 @@ private fun LocationSheetContent(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(TrailSenseSpacing.screen),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -117,6 +119,7 @@ private fun LocationSheetContent(
                     Row(
                         modifier = Modifier
                             .padding(top = 4.dp)
+                            .heightIn(min = 48.dp)
                             .clickable(onClick = onFormatClick)
                             .testTag("location_format"),
                         verticalAlignment = Alignment.CenterVertically
@@ -143,7 +146,7 @@ private fun LocationSheetContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.share_ellipsis),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }

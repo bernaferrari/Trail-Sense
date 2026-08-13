@@ -10,14 +10,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,9 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.pickers.Pickers
@@ -50,9 +53,9 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheet
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -282,18 +285,32 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.surface
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = TrailSenseSpacing.lg,
-                                end = TrailSenseSpacing.lg,
-                                top = TrailSenseSpacing.lg,
-                                bottom = TrailSenseSpacing.xxxl
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                        ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .widthIn(max = TrailSenseSize.maximumContentWidth),
+                                contentPadding = PaddingValues(
+                                    start = TrailSenseSpacing.screen,
+                                    end = TrailSenseSpacing.screen,
+                                    top = TrailSenseSpacing.lg,
+                                    bottom = TrailSenseSpacing.xxxl
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                            ) {
+                            item("title") {
+                                Text(
+                                    text = stringResource(R.string.navigation),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(
+                                        top = TrailSenseSpacing.sm,
+                                        bottom = TrailSenseSpacing.xs
+                                    )
+                                )
+                            }
                             item("general_section") {
                                 NavSettingsSection(
                                     title = stringResource(R.string.general),
@@ -349,8 +366,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                     R.string.pref_show_calibrate_on_navigate_dialog,
                                                     it
                                                 )
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                         NavDivider()
                                     }
@@ -363,8 +379,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                 R.string.pref_navigation_lock_screen_presence,
                                                 it
                                             )
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                     NavDivider()
                                     SettingsSwitchRow(
@@ -373,8 +388,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                         onCheckedChange = {
                                             keepScreenUnlockedWhileOpen = it
                                             controller.putBoolean(R.string.pref_navigation_keep_unlocked, it)
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                     NavDivider()
                                     SettingsSwitchRow(
@@ -384,8 +398,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                         onCheckedChange = {
                                             lockBearingToLocation = it
                                             prefs.lockBearingToLocation = it
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                     NavDivider()
                                     NavPickerRow(
@@ -424,8 +437,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                             onCheckedChange = {
                                                 showLinearCompass = it
                                                 controller.putBoolean(R.string.pref_show_linear_compass, it)
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                         NavDivider()
                                     } else {
@@ -439,8 +451,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                     R.string.pref_show_dial_ticks_when_no_compass,
                                                     it
                                                 )
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                         NavDivider()
                                     }
@@ -467,8 +478,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                             onCheckedChange = {
                                                 displayMultipleBeacons = it
                                                 controller.putBoolean(R.string.pref_display_multi_beacons, it)
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                         NavDivider()
                                         NavPickerRow(
@@ -500,8 +510,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                             onCheckedChange = {
                                                 nearbyLinearOnly = it
                                                 controller.putBoolean(R.string.pref_nearby_linear_only, it)
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                     }
                                     NavDivider()
@@ -515,8 +524,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                 R.string.pref_navigation_draw_compass_dial_bezel,
                                                 it
                                             )
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                     if (hasCompass) {
                                         NavDivider()
@@ -530,8 +538,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                     R.string.pref_navigation_show_azimuth_indicator,
                                                     it
                                                 )
-                                            },
-                                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                            }
                                         )
                                     }
                                 }
@@ -549,8 +556,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                         onCheckedChange = {
                                             highDetailMode = it
                                             controller.putBoolean(R.string.pref_navigation_high_detail_mode, it)
-                                        },
-                                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                                        }
                                     )
                                     NavDivider()
                                     NavActionRow(
@@ -558,6 +564,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                         onClick = controller::showLayerSheet
                                     )
                                 }
+                            }
                             }
                         }
                     }
@@ -580,16 +587,16 @@ private fun NavSettingsSection(
         ) {
             if (icon != null) {
                 Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(40.dp)
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             painter = icon,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
                         )
                     }
                 }
@@ -598,22 +605,25 @@ private fun NavSettingsSection(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        TrailSenseCard {
-            content()
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = Color.Transparent
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                content()
+            }
         }
     }
 }
 
 @Composable
 private fun NavDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = TrailSenseSpacing.lg),
-        thickness = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    )
+    Spacer(modifier = Modifier.height(0.dp))
 }
 
 @Composable
@@ -647,12 +657,12 @@ private fun NavActionRow(
         trailing = {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
+                contentDescription = label,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
         onClick = if (enabled) onClick else null,
         animateEntrance = false,
-        modifier = modifier
+        modifier = modifier.alpha(if (enabled) 1f else 0.5f)
     )
 }

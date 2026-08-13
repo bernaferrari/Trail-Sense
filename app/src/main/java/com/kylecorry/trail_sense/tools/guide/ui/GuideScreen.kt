@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -42,46 +45,55 @@ internal fun GuideScreen(name: String, resource: Int) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = name,
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Column(
                 modifier = Modifier
-                    .padding(
-                        start = TrailSenseSpacing.xl,
-                        end = TrailSenseSpacing.xl,
-                        top = TrailSenseSpacing.xl,
-                        bottom = TrailSenseSpacing.md
-                    )
-                    .testTag("guide_name"),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            SelectionContainer {
-                Column(
+                    .fillMaxSize()
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+            ) {
+                Text(
+                    text = name,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .testTag("guide_scroll")
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = TrailSenseSpacing.xl)
-                        .padding(bottom = TrailSenseSpacing.xl),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                ) {
-                    val loadedSections = sections
-                    if (loadedSections == null) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .padding(top = TrailSenseSpacing.md)
-                                .align(Alignment.CenterHorizontally),
-                            color = MaterialTheme.colorScheme.primary
+                        .padding(
+                            start = TrailSenseSpacing.xl,
+                            end = TrailSenseSpacing.xl,
+                            top = TrailSenseSpacing.xl,
+                            bottom = TrailSenseSpacing.md
                         )
-                    } else {
-                        loadedSections.forEach {
-                            GuideSection(it)
+                        .testTag("guide_name"),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                SelectionContainer {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .testTag("guide_scroll")
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = TrailSenseSpacing.xl)
+                            .padding(bottom = TrailSenseSpacing.xl),
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                    ) {
+                        val loadedSections = sections
+                        if (loadedSections == null) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(top = TrailSenseSpacing.md)
+                                    .align(Alignment.CenterHorizontally),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            loadedSections.forEach {
+                                GuideSection(it)
+                            }
                         }
                     }
                 }
@@ -101,7 +113,7 @@ private fun GuideSection(section: TextSection) {
                 else -> MaterialTheme.typography.titleMedium
             },
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold
         )
     }
     val body = TextUtils.removeMarkdownComments(section.content)

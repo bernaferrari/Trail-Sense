@@ -98,7 +98,7 @@ internal fun CliffHeightScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(TrailSenseSpacing.xl),
+                    .padding(TrailSenseSpacing.screen),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
@@ -185,7 +185,9 @@ private fun HeroReadout(
                 modifier = Modifier
                     .scale(valueScale)
                     .testTag("cliff_height_title"),
-                style = MaterialTheme.typography.displayMedium,
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = contentColor,
                 textAlign = TextAlign.Center
@@ -279,7 +281,7 @@ private fun CliffHeightHeader(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = TrailSenseSpacing.lg,
+                start = TrailSenseSpacing.screen,
                 top = TrailSenseSpacing.sm,
                 end = TrailSenseSpacing.sm,
                 bottom = TrailSenseSpacing.sm
@@ -301,7 +303,7 @@ private fun CliffHeightHeader(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                contentDescription = null
+                contentDescription = stringResource(R.string.instructions)
             )
         }
     }

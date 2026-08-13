@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -31,12 +32,12 @@ fun ActionSheetContent(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+        modifier = modifier.padding(TrailSenseSpacing.screen),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
@@ -46,11 +47,11 @@ fun ActionSheetContent(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
             )
         }
         FlowRow(
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = TrailSenseSpacing.lg),
             horizontalArrangement = Arrangement.Center,
             verticalArrangement = Arrangement.Center,
             maxItemsInEachRow = 4
@@ -59,7 +60,7 @@ fun ActionSheetContent(
                 ActionTile(
                     action = action,
                     onClick = { onAction(action) },
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(TrailSenseSpacing.sm)
                 )
             }
         }
@@ -74,14 +75,13 @@ private fun ActionTile(
 ) {
     Surface(
         modifier = modifier
-            .size(90.dp)
+            .size(96.dp)
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(TrailSenseSpacing.md),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -96,7 +96,7 @@ private fun ActionTile(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = TrailSenseSpacing.sm)
             )
         }
     }

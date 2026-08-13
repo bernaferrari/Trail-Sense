@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,9 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @Composable
 fun BeaconIconPickerDialog(
@@ -61,7 +64,9 @@ fun BeaconIconPickerDialog(
             TextButton(onClick = onDismiss) {
                 Text(text = androidx.compose.ui.res.stringResource(android.R.string.cancel))
             }
-        }
+        },
+        shape = MaterialTheme.shapes.extraLarge,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )
 }
 
@@ -76,7 +81,9 @@ fun BeaconIconPickerContent(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .testTag("beacon_icon_picker")
+            .testTag("beacon_icon_picker"),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
         BeaconIconButton(
             icon = null,
@@ -108,13 +115,13 @@ private fun BeaconIconButton(
         color = if (selected) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surface
+            MaterialTheme.colorScheme.surfaceContainerHigh
         }
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(icon?.icon ?: R.drawable.bubble),
-                contentDescription = null,
+                contentDescription = icon?.name ?: stringResource(R.string.none),
                 tint = if (selected) {
                     MaterialTheme.colorScheme.onPrimaryContainer
                 } else {

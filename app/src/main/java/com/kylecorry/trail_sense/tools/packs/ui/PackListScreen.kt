@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,6 +56,7 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -227,8 +229,8 @@ private fun PackListScreen(
                     Text(
                         text = stringResource(R.string.packing_lists),
                         modifier = Modifier.testTag("pack_list_title"),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -248,7 +250,7 @@ private fun PackListScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.add)
                         )
                     },
                     text = {
@@ -283,7 +285,8 @@ private fun PackListScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
             if (packs.isEmpty()) {
                 TrailSenseEmptyState(
@@ -297,11 +300,12 @@ private fun PackListScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
                         .fillMaxSize()
                         .testTag("pack_list"),
                     contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.lg,
                         bottom = 96.dp
                     ),
@@ -344,7 +348,6 @@ private fun PackListItem(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tonal circular icon chip
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -373,7 +376,7 @@ private fun PackListItem(
                     .weight(1f)
                     .padding(horizontal = TrailSenseSpacing.lg)
                     .testTag("pack_list_item_title"),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
@@ -387,7 +390,7 @@ private fun PackListItem(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.rename),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

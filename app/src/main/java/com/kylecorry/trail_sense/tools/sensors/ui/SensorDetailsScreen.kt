@@ -594,8 +594,8 @@ private fun SensorDetailsScreen(
                 .fillMaxSize()
                 .testTag("sensors_list"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                start = TrailSenseSpacing.lg,
-                end = TrailSenseSpacing.lg,
+                start = TrailSenseSpacing.screen,
+                end = TrailSenseSpacing.screen,
                 top = TrailSenseSpacing.md,
                 bottom = TrailSenseSpacing.xxl
             ),
@@ -622,7 +622,7 @@ private fun SensorDetailsScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_sensors),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.sensors),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -56,6 +57,7 @@ import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -177,14 +179,19 @@ private fun TemperatureEstimationScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = TrailSenseSpacing.lg)
-                .padding(top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xxxl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TrailSenseSpacing.screen)
+                    .padding(top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xxxl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
             // Hero result
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -207,7 +214,9 @@ private fun TemperatureEstimationScreen(
                     )
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -299,6 +308,7 @@ private fun TemperatureEstimationScreen(
                     )
                 }
             }
+        }
         }
     }
 

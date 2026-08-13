@@ -21,11 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 @Composable
 fun QRImportContent(
@@ -42,7 +42,12 @@ fun QRImportContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+                    .padding(
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.md,
+                        top = TrailSenseSpacing.sm,
+                        bottom = TrailSenseSpacing.sm
+                    )
                     .testTag("tool_title"),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -59,13 +64,21 @@ fun QRImportContent(
                     )
                 }
             }
-            CameraPreview(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .testTag("camera"),
-                state = rememberQrCameraState(onCameraReady)
-            )
+                    .padding(horizontal = TrailSenseSpacing.screen),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
+                CameraPreview(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .testTag("camera"),
+                    state = rememberQrCameraState(onCameraReady)
+                )
+            }
         }
     }
 }

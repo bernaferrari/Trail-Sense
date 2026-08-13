@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +21,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -47,6 +47,13 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
+private val onboardingHeroShape = RoundedCornerShape(
+    topStart = 32.dp,
+    topEnd = 12.dp,
+    bottomEnd = 32.dp,
+    bottomStart = 12.dp
+)
+
 @Composable
 fun UnitSystemOnboardingScreen(
     useMetric: Boolean,
@@ -54,24 +61,25 @@ fun UnitSystemOnboardingScreen(
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier, color = MaterialTheme.colorScheme.background) {
-        Column(
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = TrailSenseSpacing.xl)
-                .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.lg)
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TrailSenseSpacing.screen)
+                    .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.screen)
+            ) {
             Surface(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                shape = RoundedCornerShape(
-                    topStart = 32.dp,
-                    topEnd = 12.dp,
-                    bottomEnd = 32.dp,
-                    bottomStart = 12.dp
-                ),
+                shape = onboardingHeroShape,
                 modifier = Modifier.size(width = 88.dp, height = 76.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -85,8 +93,8 @@ fun UnitSystemOnboardingScreen(
 
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = TrailSenseSpacing.lg)
             )
             Text(
@@ -132,42 +140,60 @@ fun UnitSystemOnboardingScreen(
                 )
             }
 
-            Row(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = TrailSenseSpacing.lg),
-                horizontalArrangement = Arrangement.SpaceBetween
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
-                UnitPreviewValue(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi")
-                UnitPreviewValue(if (useMetric) "21" else "70", if (useMetric) "C" else "F")
-                UnitPreviewValue(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TrailSenseSpacing.lg),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    UnitPreviewValue(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi")
+                    UnitPreviewValue(if (useMetric) "21" else "70", if (useMetric) "C" else "F")
+                    UnitPreviewValue(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg")
+                }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm),
-                verticalAlignment = Alignment.Top
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
-                Icon(
-                    imageVector = TrailSenseIcons.Filled.PrivacyTip,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Column(modifier = Modifier.padding(start = TrailSenseSpacing.md)) {
-                    Text(
-                        text = stringResource(R.string.privacy_and_location),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.onboarding_private_by_design),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = TrailSenseSpacing.xs)
-                    )
+                Row(
+                    modifier = Modifier.padding(TrailSenseSpacing.lg),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = TrailSenseIcons.Filled.PrivacyTip,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.padding(start = TrailSenseSpacing.md)) {
+                        Text(
+                            text = stringResource(R.string.privacy_and_location),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = stringResource(R.string.onboarding_private_by_design),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+                        )
+                    }
                 }
             }
 
@@ -179,6 +205,7 @@ fun UnitSystemOnboardingScreen(
                     .padding(top = TrailSenseSpacing.lg)
                     .testTag("next_button")
             )
+            }
         }
     }
 }
@@ -239,35 +266,37 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .testTag("coordinator")
+                .testTag("coordinator"),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .widthIn(max = 560.dp)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
                     .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.lg),
                 horizontalAlignment = Alignment.Start
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier.size(96.dp)
+                    shape = onboardingHeroShape,
+                    modifier = Modifier.size(width = 88.dp, height = 76.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = page.image,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp).testTag("page_image")
+                            modifier = Modifier.size(38.dp).testTag("page_image")
                         )
                     }
                 }
@@ -275,26 +304,36 @@ fun OnboardingScreen(
                     text = page.title,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = TrailSenseSpacing.xl)
                         .testTag("page_name"),
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Start
                 )
-                OnboardingPageContents(
-                    contents = page.contents,
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.lg)
-                )
+                        .padding(top = TrailSenseSpacing.lg),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    OnboardingPageContents(
+                        contents = page.contents,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(TrailSenseSpacing.screen)
+                    )
+                }
             }
 
             TrailSenseButton(
                 text = page.nextButtonText ?: stringResource(R.string.next),
                 onClick = onNext,
                 modifier = Modifier
+                    .widthIn(max = 560.dp)
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .padding(bottom = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
+                    .padding(bottom = TrailSenseSpacing.screen)
                     .testTag("next_button")
             )
         }

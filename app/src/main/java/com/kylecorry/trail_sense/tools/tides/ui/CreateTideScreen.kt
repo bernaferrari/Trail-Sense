@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -54,6 +55,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -451,9 +453,14 @@ private fun CreateTideScreen(
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+        ) {
             CreateTideHeader(
                 title = stringResource(R.string.tide_table),
                 onHelp = onHelp
@@ -464,7 +471,7 @@ private fun CreateTideScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .testTag("scroll_view")
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
                     .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
@@ -542,7 +549,7 @@ private fun CreateTideScreen(
                         )
                         TonalIconButton(
                             icon = painterResource(R.drawable.ic_add),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.add),
                             onClick = onAddTideEntry,
                             modifier = Modifier.testTag("add_tide_entry")
                         )
@@ -586,6 +593,7 @@ private fun CreateTideScreen(
                 )
             }
         }
+        }
     }
 }
 
@@ -615,11 +623,13 @@ private fun CreateTideHeader(
             )
             IconButton(
                 onClick = onHelp,
-                modifier = Modifier.testTag("create_tide_help_btn")
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("create_tide_help_btn")
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_help),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.help)
                 )
             }
         }
@@ -637,16 +647,16 @@ private fun SectionLabel(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     painter = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(TrailSenseSize.leadingIcon)
                 )
             }
         }
@@ -667,18 +677,18 @@ private fun TonalIconButton(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = modifier
-            .size(40.dp)
+            .size(TrailSenseSize.minimumTouchTarget)
             .clickable(onClick = onClick)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = icon,
                 contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(TrailSenseSize.leadingIcon)
             )
         }
     }
@@ -831,7 +841,9 @@ private fun TideLocationInput(
                         }
                     }
                 },
-                modifier = Modifier.testTag("gps_btn")
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("gps_btn")
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_location),
@@ -870,7 +882,9 @@ private fun TideLocationInput(
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         IconButton(
             onClick = { showHelp = true },
-            modifier = Modifier.testTag("coordinate_input_help_btn")
+            modifier = Modifier
+                .size(TrailSenseSize.minimumTouchTarget)
+                .testTag("coordinate_input_help_btn")
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_help),
@@ -986,11 +1000,15 @@ private fun LunitidalIntervalInput(
                 isNegative = !isNegative
                 publish(negative = isNegative)
             },
-            modifier = Modifier.testTag("negate_btn")
+            modifier = Modifier
+                .size(TrailSenseSize.minimumTouchTarget)
+                .testTag("negate_btn")
         ) {
             Icon(
                 painter = painterResource(if (isNegative) R.drawable.ic_minus else R.drawable.ic_add),
-                contentDescription = null
+                contentDescription = stringResource(
+                    if (isNegative) R.string.add else R.string.subtract
+                )
             )
         }
         OutlinedTextField(
@@ -1113,7 +1131,7 @@ private fun TideEntryCard(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(TrailSenseSize.minimumTouchTarget)
                     .clickable { onEntryChange(entry.copy(isHigh = !entry.isHigh)) }
                     .testTag("tide_type")
             ) {
@@ -1147,7 +1165,9 @@ private fun TideEntryCard(
                 style = MaterialTheme.typography.bodyMedium
             )
             IconButton(
-                modifier = Modifier.testTag("delete"),
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("delete"),
                 onClick = { onEntryDelete(entry) }
             ) {
                 Icon(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -517,12 +519,14 @@ private fun PhotoMapCalibrationHost(
         views.zoomInBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = TrailSenseSpacing.lg, bottom = 232.dp)
+                .navigationBarsPadding()
+                .padding(end = TrailSenseSpacing.screen, bottom = 232.dp)
         )
         views.zoomOutBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = TrailSenseSpacing.lg, bottom = 176.dp)
+                .navigationBarsPadding()
+                .padding(end = TrailSenseSpacing.screen, bottom = 176.dp)
         )
         if (views.mapCalibrationBottomPanel.isVisible) {
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
@@ -536,8 +540,8 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
     return PhotoMapCalibrationViews(
         previewButton = PhotoMapTextButtonState(context.getString(R.string.preview)),
         calibrationMap = MapCalibrationView(context).apply { id = R.id.calibration_map },
-        zoomOutBtn = PhotoMapIconButtonState(R.drawable.ic_zoom_out),
-        zoomInBtn = PhotoMapIconButtonState(R.drawable.ic_add),
+        zoomOutBtn = PhotoMapIconButtonState(R.drawable.ic_zoom_out, R.string.zoom_out),
+        zoomInBtn = PhotoMapIconButtonState(R.drawable.ic_add, R.string.zoom_in),
         mapCalibrationBottomPanel = PhotoMapCalibrationPanelState(context)
     )
 }
@@ -634,7 +638,7 @@ private class PhotoMapCalibrationPanelState(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
             instructionCard()
@@ -707,7 +711,7 @@ private class PhotoMapCalibrationPanelState(
             } else {
                 FilledIconButton(
                     onClick = { pickAutofillSource() },
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(48.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -715,7 +719,7 @@ private class PhotoMapCalibrationPanelState(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_location),
-                        contentDescription = null,
+                        contentDescription = context.getString(R.string.location),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -743,7 +747,7 @@ private class PhotoMapCalibrationPanelState(
                         cancelText = null
                     )
                 },
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(48.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -751,7 +755,7 @@ private class PhotoMapCalibrationPanelState(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_help),
-                    contentDescription = null,
+                    contentDescription = context.getString(R.string.help),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -823,7 +827,8 @@ private class PhotoMapTextButtonState(
 }
 
 private class PhotoMapIconButtonState(
-    icon: Int
+    icon: Int,
+    @StringRes private val contentDescription: Int
 ) {
     var iconRes by mutableIntStateOf(icon)
     var isOn by mutableStateOf(false)
@@ -844,7 +849,7 @@ private class PhotoMapIconButtonState(
 
         Surface(
             onClick = onClick,
-            modifier = modifier.size(44.dp),
+            modifier = modifier.size(48.dp),
             shape = CircleShape,
             color = background,
             shadowElevation = TrailSenseElevation.high
@@ -852,7 +857,7 @@ private class PhotoMapIconButtonState(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     painter = painterResource(iconRes),
-                    contentDescription = null,
+                    contentDescription = stringResource(contentDescription),
                     tint = foreground,
                     modifier = Modifier.size(24.dp)
                 )

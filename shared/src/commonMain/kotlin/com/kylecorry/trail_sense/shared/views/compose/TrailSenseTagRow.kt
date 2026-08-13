@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -19,10 +20,10 @@ fun TrailSenseTagRow(
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         tags.forEach { tag ->
-            TrailSenseChip(
+            TextBadge(
                 text = tag,
-                selected = false,
-                onClick = { }
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -695,7 +696,7 @@ private fun TriangulateScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.xl),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
             // Hero readout: resulting coordinate
@@ -819,7 +820,9 @@ private fun TriangulateResultCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("triangulate_title"),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
@@ -890,6 +893,7 @@ private fun TriangulateActionChip(
 ) {
     AssistChip(
         onClick = onClick,
+        modifier = Modifier.heightIn(min = 48.dp),
         label = { Text(label) },
         leadingIcon = {
             Icon(
@@ -975,7 +979,11 @@ private fun TriangulateLocationCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onExpandedChange(!isExpanded) },
+                .heightIn(min = 48.dp)
+                .clickable(
+                    onClickLabel = title,
+                    onClick = { onExpandedChange(!isExpanded) }
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(

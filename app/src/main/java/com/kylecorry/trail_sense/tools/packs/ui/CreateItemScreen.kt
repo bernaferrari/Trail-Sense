@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +46,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.andromeda.core.cache.AppServiceRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -272,19 +274,26 @@ private fun CreateItemScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            CreateItemHeader(title = title)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxSize()
             ) {
-                // Details: name + category
-                TrailSenseCard {
+                CreateItemHeader(title = title)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = TrailSenseSpacing.screen)
+                        .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SectionLabel(
                         text = stringResource(R.string.details),
                         icon = painterResource(R.drawable.ic_edit)
@@ -305,8 +314,7 @@ private fun CreateItemScreen(
                     )
                 }
 
-                // Amounts: packed + desired
-                TrailSenseCard {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SectionLabel(
                         text = stringResource(R.string.packed_amount),
                         icon = painterResource(R.drawable.ic_tool_pack)
@@ -329,8 +337,7 @@ private fun CreateItemScreen(
                     )
                 }
 
-                // Weight per item
-                TrailSenseCard {
+                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     SectionLabel(
                         text = stringResource(R.string.weight_per_item),
                         icon = painterResource(R.drawable.ic_weight)
@@ -358,6 +365,7 @@ private fun CreateItemScreen(
                 )
             }
         }
+        }
     }
 }
 
@@ -371,7 +379,7 @@ private fun CreateItemHeader(title: String) {
             text = title,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = 18.dp)
+                .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.md)
                 .testTag("create_item_title"),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
@@ -391,23 +399,23 @@ private fun SectionLabel(
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.size(36.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     painter = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
         Text(
             text = text,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

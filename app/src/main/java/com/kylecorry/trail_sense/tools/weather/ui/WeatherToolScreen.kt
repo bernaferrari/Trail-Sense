@@ -11,13 +11,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -71,9 +70,11 @@ import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrict
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -541,7 +542,7 @@ private fun WeatherHost(
                     .weight(1f)
                     .testTag("weather_list"),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    TrailSenseSpacing.lg
+                    TrailSenseSpacing.screen
                 ),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
@@ -555,10 +556,9 @@ private fun WeatherHost(
 
                 // The chart is a section, not another card nested beneath the hero.
                 item(key = "weather_chart") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TrailSenseSpacing.sm)
+                    TrailSenseCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ) {
                         WeatherSectionLabel(
                             icon = TrailSenseIcons.Filled.Speed,
@@ -604,27 +604,34 @@ private fun WeatherHost(
                                     .fillMaxWidth()
                                     .padding(top = TrailSenseSpacing.sm)
                                     .testTag("pressure_marker"),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontFeatureSettings = "tnum"
+                                ),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
                         }
 
-                        TrailSenseDivider(Modifier.padding(top = TrailSenseSpacing.lg))
                     }
                 }
 
                 // Forecast / tendency readouts
                 if (weatherItems.isNotEmpty()) {
                     item(key = "weather_readouts") {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = TrailSenseSpacing.sm)
+                        TrailSenseCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                                vertical = TrailSenseSpacing.xs
+                            )
                         ) {
                             WeatherSectionLabel(
                                 icon = TrailSenseIcons.Filled.PartlyCloudyDay,
-                                text = stringResource(R.string.weather)
+                                text = stringResource(R.string.weather),
+                                modifier = Modifier.padding(
+                                    horizontal = TrailSenseSpacing.lg,
+                                    top = TrailSenseSpacing.md
+                                )
                             )
 
                             Spacer(Modifier.height(TrailSenseSpacing.xs))
@@ -657,9 +664,9 @@ private fun WeatherHost(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
-                        bottom = TrailSenseSpacing.lg
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
+                        bottom = TrailSenseSpacing.screen
                     )
             )
         }
@@ -839,13 +846,13 @@ private fun WeatherMonitorPlayBar(
         }"
     } ?: "")
 
-    Surface(
+    TrailSenseCard(
         modifier = modifier.testTag("weather_play_bar"),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.small
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(TrailSenseSpacing.lg)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -856,8 +863,11 @@ private fun WeatherMonitorPlayBar(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 16.dp)
-                    .testTag("play_bar_title")
+                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                    .clickable(onClick = onSubtitleClick)
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("play_bar_title"),
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = stringResource(R.string.weather_monitor),
@@ -866,20 +876,25 @@ private fun WeatherMonitorPlayBar(
                 )
                 Text(
                     text = subtitle,
-                    modifier = Modifier.clickable(onClick = onSubtitleClick),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(
                 onClick = onPlayClick,
-                modifier = Modifier.testTag("play_btn")
+                modifier = Modifier
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .testTag("play_btn")
             ) {
                 Icon(
                     painter = painterResource(
                         if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
                     ),
-                    contentDescription = null
+                    contentDescription = stringResource(
+                        if (isOn) R.string.stop else R.string.start
+                    )
                 )
             }
         }
@@ -897,7 +912,9 @@ private fun WeatherListItemRow(item: WeatherListItem) {
             {
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -914,12 +931,12 @@ private fun WeatherHeroCard(
     state: WeatherTitleState,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    TrailSenseCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Quick action buttons row
@@ -957,7 +974,7 @@ private fun WeatherHeroCard(
                     Icon(
                         painter = painterResource(it),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier
                             .padding(bottom = TrailSenseSpacing.sm)
                             .size(48.dp)
@@ -965,9 +982,11 @@ private fun WeatherHeroCard(
                 }
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontFeatureSettings = "tnum"
+                    ),
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
                 )
                 if (state.subtitle.isNotEmpty()) {
@@ -975,7 +994,7 @@ private fun WeatherHeroCard(
                         text = state.subtitle,
                         modifier = Modifier.padding(top = TrailSenseSpacing.xs),
                         style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                 }

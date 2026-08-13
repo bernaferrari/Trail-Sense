@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +58,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -147,7 +149,10 @@ private fun FieldGuidePageScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         if (page == null) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 FieldGuidePageTopBar(
                     title = stringResource(R.string.loading),
                     canEdit = false,
@@ -184,8 +189,9 @@ private fun FieldGuidePageTopBar(
 ) {
     Row(
         modifier = Modifier
+            .widthIn(max = TrailSenseSize.maximumContentWidth)
             .fillMaxWidth()
-            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -194,8 +200,8 @@ private fun FieldGuidePageTopBar(
             modifier = Modifier
                 .weight(1f)
                 .testTag("field_guide_page_title"),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         if (canEdit) {
@@ -205,7 +211,7 @@ private fun FieldGuidePageTopBar(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_edit),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.edit),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -224,7 +230,8 @@ private fun FieldGuidePageContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         FieldGuidePageTopBar(
             title = page.name,
@@ -234,10 +241,12 @@ private fun FieldGuidePageContent(
 
         Column(
             modifier = Modifier
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
                 .fillMaxWidth()
+                .align(Alignment.CenterHorizontally)
                 .padding(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     bottom = TrailSenseSpacing.xl
                 ),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
@@ -353,7 +362,9 @@ private fun SightingsCard(
             Text(
                 text = count.toString(),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFeatureSettings = "tnum"
+                ),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )

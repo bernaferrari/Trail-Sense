@@ -134,7 +134,11 @@ class MapLayersSheetState(
             }
         }
 
-        ModalBottomSheet(onDismissRequest = { dismissAndUpdateWidgets(context) }) {
+        ModalBottomSheet(
+            onDismissRequest = { dismissAndUpdateWidgets(context) },
+            shape = MaterialTheme.shapes.extraLarge,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
             MapLayersContent(
                 mapId = mapId,
                 layers = layers,
@@ -343,7 +347,7 @@ private fun MapLayersContent(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -490,7 +494,7 @@ private fun MapLayerTitle(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                start = TrailSenseSpacing.xl,
+                start = TrailSenseSpacing.screen,
                 end = TrailSenseSpacing.sm,
                 top = TrailSenseSpacing.sm,
                 bottom = TrailSenseSpacing.sm
@@ -503,7 +507,10 @@ private fun MapLayerTitle(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = onClose) {
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(48.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(android.R.string.cancel)
@@ -593,7 +600,7 @@ private fun MapLayerHeaderIconButton(
     IconButton(
         enabled = enabled,
         onClick = onClick,
-        modifier = Modifier.size(36.dp)
+        modifier = Modifier.size(48.dp)
     ) {
         Icon(
             painter = painterResource(icon),

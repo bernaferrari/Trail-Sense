@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -458,11 +459,12 @@ private fun PhotoMapHeader(
             if (showRecenter) {
                 HeaderImageButton(
                     icon = R.drawable.ic_recenter,
+                    contentDescription = stringResource(R.string.center),
                     tag = "map_recenter_btn",
                     onClick = { _ -> onRecenter() }
                 )
             } else {
-                Spacer(modifier = Modifier.size(40.dp))
+                Spacer(modifier = Modifier.size(48.dp))
             }
 
             Column(
@@ -491,6 +493,7 @@ private fun PhotoMapHeader(
 
             HeaderImageButton(
                 icon = R.drawable.ic_menu_dots,
+                contentDescription = stringResource(R.string.map_options),
                 tag = "map_menu_btn",
                 onClick = onMenuClick
             )
@@ -501,6 +504,7 @@ private fun PhotoMapHeader(
 @Composable
 private fun HeaderImageButton(
     icon: Int,
+    contentDescription: String,
     tag: String,
     onClick: (View) -> Unit
 ) {
@@ -508,7 +512,7 @@ private fun HeaderImageButton(
     FilledTonalIconButton(
         onClick = { onClick(anchor) },
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp)
             .testTag(tag),
         colors = IconButtonDefaults.filledTonalIconButtonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -517,7 +521,7 @@ private fun HeaderImageButton(
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = null
+            contentDescription = contentDescription
         )
     }
 }

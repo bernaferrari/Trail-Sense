@@ -771,7 +771,7 @@ private fun BeaconListScreen(
                 placeholder = stringResource(R.string.search),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
                     .testTag("searchbox")
             )
             Box(
@@ -806,7 +806,7 @@ private fun BeaconListScreen(
                     onAction = onCreateAction,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(TrailSenseSpacing.lg)
+                        .padding(TrailSenseSpacing.screen)
                 )
             }
         }
@@ -823,7 +823,7 @@ private fun BeaconListHeader(
     var isMenuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("beacon_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -998,7 +998,6 @@ private fun BeaconRow(
         ),
         icon = painterResource(getBeaconIcon(beacon, formatService)),
         iconTint = Color(getBeaconIconTint(beacon, formatService)),
-        onClick = { onAction(BeaconAction.View) },
         trailing = {
             BeaconRowActions(
                 beacon = beacon,
@@ -1010,10 +1009,12 @@ private fun BeaconRow(
         animateEntrance = false,
         modifier = Modifier
             .combinedClickable(
+                onClickLabel = stringResource(R.string.details),
+                onLongClickLabel = stringResource(R.string.navigate),
                 onClick = { onAction(BeaconAction.View) },
                 onLongClick = { onAction(BeaconAction.Navigate) }
             )
-            .padding(horizontal = TrailSenseSpacing.lg)
+            .padding(horizontal = TrailSenseSpacing.screen)
     )
 }
 
@@ -1038,7 +1039,9 @@ private fun BeaconRowActions(
                             R.drawable.ic_not_visible
                         }
                     ),
-                    contentDescription = null,
+                    contentDescription = stringResource(
+                        if (beacon.visible) R.string.hide else R.string.show
+                    ),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1051,7 +1054,7 @@ private fun BeaconRowActions(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.details),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1108,7 +1111,7 @@ private fun BeaconGroupRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_dots),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.details),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1125,7 +1128,7 @@ private fun BeaconGroupRow(
             }
         },
         animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
     )
 }
 

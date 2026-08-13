@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,6 +76,7 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
@@ -651,6 +654,7 @@ private fun ClinometerTitle(
         ) {
             ClinometerTitleButton(
                 icon = state.leftButtonIcon,
+                contentDescription = stringResource(R.string.camera),
                 isSelected = state.isLeftButtonSelected,
                 onClick = { state.onLeftButtonClick?.invoke() }
             )
@@ -663,7 +667,9 @@ private fun ClinometerTitle(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = state.title,
-                        style = MaterialTheme.typography.displayMedium,
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            fontFeatureSettings = "tnum"
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         textAlign = TextAlign.Center
@@ -688,6 +694,7 @@ private fun ClinometerTitle(
             }
             ClinometerTitleButton(
                 icon = state.rightButtonIcon,
+                contentDescription = stringResource(R.string.measure),
                 isSelected = state.isRightButtonSelected,
                 onClick = { state.onRightButtonClick?.invoke() }
             )
@@ -698,6 +705,7 @@ private fun ClinometerTitle(
 @Composable
 private fun ClinometerTitleButton(
     icon: Int,
+    contentDescription: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -714,12 +722,12 @@ private fun ClinometerTitleButton(
     Surface(
         shape = CircleShape,
         color = containerColor,
-        modifier = Modifier.size(40.dp)
+        modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
     ) {
         IconButton(onClick = onClick) {
             Icon(
                 painter = painterResource(icon),
-                contentDescription = null,
+                contentDescription = contentDescription,
                 tint = iconTint,
                 modifier = Modifier.size(22.dp)
             )
@@ -733,15 +741,17 @@ private fun ClinometerHost(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.pointerInteropFilter { event ->
-            views.onTouch?.invoke(event) ?: false
-        }
+        modifier = modifier
+            .widthIn(max = TrailSenseSize.maximumContentWidth)
+            .pointerInteropFilter { event ->
+                views.onTouch?.invoke(event) ?: false
+            }
     ) {
         ClinometerTitle(
             views.clinometerTitle,
             modifier = Modifier.padding(
-                start = TrailSenseSpacing.lg,
-                end = TrailSenseSpacing.lg,
+                start = TrailSenseSpacing.screen,
+                end = TrailSenseSpacing.screen,
                 top = TrailSenseSpacing.lg
             )
         )
@@ -749,7 +759,7 @@ private fun ClinometerHost(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             contentAlignment = Alignment.Center
         ) {
             views.clinometer.Content(Modifier.fillMaxSize())
@@ -795,8 +805,8 @@ private fun ClinometerHost(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
+                    start = TrailSenseSpacing.screen,
+                    end = TrailSenseSpacing.screen,
                     bottom = TrailSenseSpacing.xl
                 )
         ) {

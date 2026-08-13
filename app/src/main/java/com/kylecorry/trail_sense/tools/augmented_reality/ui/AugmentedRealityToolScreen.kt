@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.augmented_reality.ui
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import androidx.annotation.StringRes
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -885,42 +887,57 @@ private fun AugmentedRealityHost(
         views.arView.Content(Modifier.fillMaxSize())
 
         // Top-start floating controls (calibrate, layers)
-        Column(
+        Surface(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(TrailSenseSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                .padding(TrailSenseSpacing.screen),
+            shape = MaterialTheme.shapes.large,
+            color = ComposeColor(Color.BLACK).copy(alpha = 0.58f)
         ) {
-            views.calibrateBtn.Content()
-            views.layersBtn.Content()
+            Column(
+                modifier = Modifier.padding(TrailSenseSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            ) {
+                views.calibrateBtn.Content()
+                views.layersBtn.Content()
+            }
         }
 
         // Top-end floating controls (camera toggle, locate, time)
-        Column(
+        Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(TrailSenseSpacing.md),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                .padding(TrailSenseSpacing.screen),
+            shape = MaterialTheme.shapes.large,
+            color = ComposeColor(Color.BLACK).copy(alpha = 0.58f)
         ) {
-            views.cameraToggle.Content()
-            views.searchBtn.Content()
-            views.timeBtn.Content()
+            Column(
+                modifier = Modifier.padding(TrailSenseSpacing.xs),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            ) {
+                views.cameraToggle.Content()
+                views.searchBtn.Content()
+                views.timeBtn.Content()
+            }
         }
 
         views.accuracyView.Content(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = TrailSenseSpacing.lg, bottom = 136.dp)
+                .navigationBarsPadding()
+                .padding(start = TrailSenseSpacing.screen, bottom = 136.dp)
         )
         views.focusActionButton.Content(
             Modifier
                 .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
                 .padding(bottom = 96.dp)
         )
         views.calibrationPanel.Content(
             Modifier
                 .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
                 .padding(bottom = 96.dp)
         )
         if (views.guidancePanel.isVisible) {
@@ -928,10 +945,11 @@ private fun AugmentedRealityHost(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
-                        bottom = if (views.timeSheet.isVisible) 96.dp else TrailSenseSpacing.lg
+                        start = TrailSenseSpacing.screen,
+                        end = TrailSenseSpacing.screen,
+                        bottom = if (views.timeSheet.isVisible) 96.dp else TrailSenseSpacing.screen
                     )
             ) {
                 Row(
@@ -952,7 +970,7 @@ private fun AugmentedRealityHost(
                             views.arGuideName.Content()
                         }
                     }
-                    views.arGuideCancel.Content(Modifier.size(24.dp))
+                    views.arGuideCancel.Content()
                 }
             }
         }
@@ -969,13 +987,13 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val arView = AugmentedRealityView(context)
 
-    val cameraToggle = createArIconButton(R.drawable.ic_camera)
-    val calibrate = createArIconButton(R.drawable.ic_compass_icon)
-    val layers = createArIconButton(R.drawable.ic_layers)
-    val search = createArIconButton(R.drawable.ic_search).apply {
+    val cameraToggle = createArIconButton(R.drawable.ic_camera, R.string.camera)
+    val calibrate = createArIconButton(R.drawable.ic_compass_icon, R.string.calibrate)
+    val layers = createArIconButton(R.drawable.ic_layers, R.string.map_layers)
+    val search = createArIconButton(R.drawable.ic_search, R.string.search).apply {
         isVisible = false
     }
-    val time = createArIconButton(R.drawable.ic_tool_clock)
+    val time = createArIconButton(R.drawable.ic_tool_clock, R.string.time)
     val accuracy = SensorStatusBadgeView(context).apply {
         alpha = 0.6f
     }
@@ -989,7 +1007,8 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     val guideIcon = ArGuideIconView()
     val guideCancel = createTransparentIconButton(
         R.drawable.ic_cancel,
-        Resources.androidTextColorSecondary(context)
+        Resources.androidTextColorSecondary(context),
+        android.R.string.cancel
     )
     val guideName = ArTextView(
         style = ArTextStyle.Title
@@ -1015,20 +1034,22 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     )
 }
 
-private fun createArIconButton(icon: Int): ArIconButton {
-    return createTransparentIconButton(icon, Color.WHITE)
+private fun createArIconButton(icon: Int, @StringRes contentDescription: Int): ArIconButton {
+    return createTransparentIconButton(icon, Color.WHITE, contentDescription)
 }
 
 private fun createTransparentIconButton(
     icon: Int,
-    tint: Int
+    tint: Int,
+    @StringRes contentDescription: Int
 ): ArIconButton {
-    return ArIconButton(icon, tint)
+    return ArIconButton(icon, tint, contentDescription)
 }
 
 private class ArIconButton(
     icon: Int,
-    private val tint: Int
+    private val tint: Int,
+    @StringRes private val contentDescription: Int
 ) {
     private var iconRes by mutableIntStateOf(icon)
     private var buttonVisible by mutableStateOf(true)
@@ -1059,9 +1080,10 @@ private class ArIconButton(
         }
         Box(
             modifier = modifier
-                .size(32.dp)
+                .size(48.dp)
                 .alpha(alphaState)
                 .combinedClickable(
+                    onClickLabel = stringResource(contentDescription),
                     onClick = { onClick?.invoke() },
                     onLongClick = { onLongClick?.invoke() }
                 ),
@@ -1069,7 +1091,7 @@ private class ArIconButton(
         ) {
             Icon(
                 painter = painterResource(iconRes),
-                contentDescription = null,
+                contentDescription = stringResource(contentDescription),
                 tint = ComposeColor(tint),
                 modifier = Modifier.size(24.dp)
             )
@@ -1137,7 +1159,7 @@ private class ArCalibrationPanelView {
             IconButton(onClick = { onCancelClick?.invoke() }) {
                 Icon(
                     painter = painterResource(R.drawable.ic_cancel),
-                    contentDescription = null,
+                    contentDescription = stringResource(android.R.string.cancel),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )

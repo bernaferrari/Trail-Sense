@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
@@ -731,20 +732,22 @@ private fun MapHost(
         views.menuButton.Content(
             Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = TrailSenseSpacing.sm, end = TrailSenseSpacing.lg)
+                .padding(top = TrailSenseSpacing.sm, end = TrailSenseSpacing.screen)
         )
 
         MapControlRail(
             views = views,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = TrailSenseSpacing.lg, bottom = 88.dp)
+                .navigationBarsPadding()
+                .padding(end = TrailSenseSpacing.screen, bottom = 88.dp)
         )
 
         views.sensorStatusBadges.Content(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = TrailSenseSpacing.lg, bottom = 96.dp)
+                .navigationBarsPadding()
+                .padding(start = TrailSenseSpacing.screen, bottom = 96.dp)
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             views.timeSheet.Content(Modifier.fillMaxWidth())

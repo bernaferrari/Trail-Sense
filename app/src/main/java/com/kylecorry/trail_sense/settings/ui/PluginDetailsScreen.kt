@@ -92,7 +92,7 @@ internal fun PluginDetailsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.lg),
+                .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             // Hero card: plugin icon, name, version

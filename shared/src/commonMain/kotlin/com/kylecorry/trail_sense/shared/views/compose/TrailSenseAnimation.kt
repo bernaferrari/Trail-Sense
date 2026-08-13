@@ -3,16 +3,14 @@ package com.kylecorry.trail_sense.shared.views.compose
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.dp
-
 object TrailSenseAnimation {
     val quickSpring = spring<Float>(
-        dampingRatio = Spring.DampingRatioMediumBouncy,
-        stiffness = Spring.StiffnessMedium
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessHigh
     )
 
     val standardSpring = spring<Float>(
-        dampingRatio = Spring.DampingRatioLowBouncy,
+        dampingRatio = Spring.DampingRatioNoBouncy,
         stiffness = Spring.StiffnessMediumLow
     )
 

@@ -17,6 +17,6 @@ fun TrailSenseDivider(
             .fillMaxWidth()
             .padding(horizontal = TrailSenseSpacing.lg),
         thickness = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
     )
 }

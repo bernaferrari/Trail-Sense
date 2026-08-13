@@ -607,7 +607,7 @@ private fun PathsScreen(
                 placeholder = stringResource(R.string.search),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.screen)
                     .testTag("searchbox")
             )
             Box(
@@ -641,7 +641,7 @@ private fun PathsScreen(
                     onCreatePath = onCreatePath,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(TrailSenseSpacing.lg)
+                        .padding(TrailSenseSpacing.screen)
                 )
             }
             BacktrackPlayBar(
@@ -652,7 +652,7 @@ private fun PathsScreen(
                 onPlayClick = onBacktrackToggleClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TrailSenseSpacing.lg)
+                    .padding(TrailSenseSpacing.screen)
             )
         }
     }
@@ -668,7 +668,7 @@ private fun PathsHeader(
     var isMenuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
-            .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
             .padding(vertical = TrailSenseSpacing.sm)
             .testTag("paths_title"),
         verticalAlignment = Alignment.CenterVertically
@@ -823,7 +823,9 @@ private fun BacktrackPlayBar(
                     painter = painterResource(
                         if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
                     ),
-                    contentDescription = null,
+                    contentDescription = stringResource(
+                        if (isOn) R.string.stop else R.string.start
+                    ),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -1007,7 +1009,9 @@ private fun PathRowActions(
                         R.drawable.ic_not_visible
                     }
                 ),
-                contentDescription = null,
+                contentDescription = stringResource(
+                    if (path.style.visible) R.string.hide else R.string.show
+                ),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -1020,7 +1024,7 @@ private fun PathRowActions(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_menu_dots),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -1079,7 +1083,7 @@ private fun PathGroupRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_dots),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.details),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

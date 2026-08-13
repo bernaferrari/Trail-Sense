@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -125,8 +126,11 @@ class QuickActionSheetState(private val context: Context) {
 
         Surface(
             modifier = modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            shadowElevation = 8.dp
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            shape = RoundedCornerShape(
+                topStart = 32.dp,
+                topEnd = 32.dp
+            )
         ) {
             QuickActionSheetContent(
                 selectedTab = selectedTab,
@@ -175,10 +179,13 @@ private fun QuickActionSheetContent(
                     text = { Text(stringResource(R.string.widgets)) }
                 )
             }
-            IconButton(onClick = onClose) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(48.dp)
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_cancel),
-                    contentDescription = null,
+                    contentDescription = stringResource(android.R.string.cancel),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -205,7 +212,7 @@ private fun QuickActionsContent(state: MainActivityQuickActionState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.outlineVariant
         ) {
             Box(modifier = Modifier.padding(top = 1.dp))
         }
@@ -256,9 +263,8 @@ private fun QuickActionButtonRow(buttons: List<ComposeQuickActionButtonView>) {
         buttons.forEach { button ->
             Surface(
                 modifier = Modifier.padding(8.dp),
-                shape = RoundedCornerShape(4.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainer
             ) {
                 button.Content()
             }
