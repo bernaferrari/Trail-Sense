@@ -55,7 +55,6 @@ import com.kylecorry.trail_sense.tools.paths.ui.PathOverviewToolScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
-import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
 import com.kylecorry.trail_sense.tools.qr.ui.ScanQRToolScreen
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
@@ -96,7 +95,6 @@ fun DestinationContent(
             DESTINATION_LIGHT_METER -> LightMeterScreen()
             DESTINATION_CONVERT -> ConvertScreen()
             DESTINATION_BALLISTICS -> BallisticsScreen()
-            DESTINATION_PERMITS -> PermitsScreen()
             DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
             DESTINATION_LIGHTNING -> LightningScreen()
             DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()

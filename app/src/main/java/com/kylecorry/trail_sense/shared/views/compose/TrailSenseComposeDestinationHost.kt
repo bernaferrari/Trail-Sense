@@ -220,7 +220,6 @@ import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
-import com.kylecorry.trail_sense.tools.permits.ui.PermitsScreen
 import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen

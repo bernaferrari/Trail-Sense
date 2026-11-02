@@ -781,16 +781,6 @@ object TrailSenseNavGraph {
         }
 
         composeNavigator.createDestination().apply {
-            id = R.id.fragmentToolPermits
-            label = "ScreenToolPermits"
-            addArgument(ARG_DESTINATION, NavArgument.Builder()
-                .setType(NavType.StringType)
-                .setDefaultValue(DESTINATION_PERMITS)
-                .build())
-            graph.addDestination(this)
-        }
-
-        composeNavigator.createDestination().apply {
             id = R.id.fragmentToolMetalDetector
             label = "ScreenToolMetalDetector"
             addArgument(ARG_DESTINATION, NavArgument.Builder()

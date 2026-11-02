@@ -81,7 +81,6 @@
     <item name="fragmentToolNotes" type="id" />
     <item name="fragmentToolNotesCreate" type="id" />
     <item name="fragmentToolPedometer" type="id" />
-    <item name="fragmentToolPermits" type="id" />
     <item name="fragmentToolScreenFlashlight" type="id" />
     <item name="fragmentToolSolarPanel" type="id" />
     <item name="fragmentToolSurvivalGuideList" type="id" />
