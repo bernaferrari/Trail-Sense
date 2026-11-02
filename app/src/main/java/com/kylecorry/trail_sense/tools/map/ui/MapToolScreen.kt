@@ -41,7 +41,7 @@ import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
 import com.kylecorry.andromeda.pickers.Pickers
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -297,6 +297,7 @@ private class MapController(
 
         // Distance
         val stopDistanceMeasurement = component.useCallback<Unit>(mapDistanceSheetView, manager) {
+            manager.setOnDistanceEditStateChangedCallback(null)
             manager.stopDistanceMeasurement()
             mapDistanceSheetView.hide()
         }
@@ -313,7 +314,7 @@ private class MapController(
                 val initialPoints = listOfNotNull(
                     if (startWithUserLocation) navigation.location else null,
                     location
-                ).toTypedArray()
+                )
                 manager.startDistanceMeasurement(initialPoints)
                 mapDistanceSheetView.show()
                 mapDistanceSheetView.cancelListener = {
@@ -323,7 +324,7 @@ private class MapController(
                     host.inBackground {
                         val id = CreatePathCommand(
                             pathService,
-                            prefs.navigation,
+                            prefs.paths,
                             null
                         ).execute(manager.getDistanceMeasurementPoints())
 
@@ -340,6 +341,13 @@ private class MapController(
                 mapDistanceSheetView.undoListener = {
                     manager.undoLastDistanceMeasurement()
                 }
+                mapDistanceSheetView.redoListener = {
+                    manager.redoDistanceMeasurement()
+                }
+                manager.setOnDistanceEditStateChangedCallback { state ->
+                    mapDistanceSheetView.setEditState(state)
+                }
+                mapDistanceSheetView.setEditState(manager.getDistanceEditState())
             }
 
         // Update layer values

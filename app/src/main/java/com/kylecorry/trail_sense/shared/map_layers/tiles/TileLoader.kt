@@ -12,10 +12,13 @@ import android.os.Bundle
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
 import com.kylecorry.andromeda.bitmaps.operations.Pad
 import com.kylecorry.andromeda.bitmaps.operations.Resize
-import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
+import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
@@ -30,7 +33,11 @@ class TileLoader(
     private val updateListener: () -> Unit = {}
 ) {
 
-    val tileCache = TileCache(tag ?: "", 256)
+    private val owner = tag ?: ""
+    private val debugLogs = false
+    private val prefs = getAppService<UserPreferences>()
+
+    val tileCache = LayerTileCache(owner, 1)
 
     private val persistentCache =
         if (key != null) getAppService<PersistentTileCache>() else null
@@ -53,15 +60,29 @@ class TileLoader(
     init {
         // TODO: This should be handled by a higher level component
         tileQueue.setChangeListener { imageTile ->
+            tileCache.onLoadComplete(imageTile)
             tryOrLog {
                 populateBorderAndNeighbors(imageTile)
+            }
+            if (debugLogs) {
+                val formatter = getAppService<FormatService>()
+                getAppService<Logger>().debug(
+                    "TileCache",
+                    "Layer cache ($owner): ${formatter.formatFileSize(tileCache.sizeBytes())}, " +
+                            "shared cache: ${formatter.formatFileSize(tileCache.sharedSizeBytes())}",
+                    writeToFile = false
+                )
             }
             updateListener()
         }
     }
 
     fun clearCache() {
-        tileCache.evictAll()
+        tileCache.clear()
+    }
+
+    fun invalidateCache() {
+        tileCache.invalidate()
     }
 
     fun loadTiles(
@@ -73,6 +94,16 @@ class TileLoader(
         isHighDetailMode: Boolean = false,
         context: Context
     ) {
+        val screenCacheSize = (tiles.size * 2).coerceAtLeast(1)
+        val cacheSize = if (prefs.useLargeTileCache) {
+            maxOf(LARGE_LAYER_CACHE_SIZE, screenCacheSize)
+        } else {
+            screenCacheSize
+        }
+        if (tileCache.maxSize() != cacheSize) {
+            tileCache.resize(cacheSize)
+        }
+
         val params = Bundle().apply {
             putLong(MapLayerParams.PARAM_TIME, time.toEpochMilli())
             putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
@@ -80,23 +111,22 @@ class TileLoader(
             putBundle(MapLayerParams.PARAM_PREFERENCES, Bundle(preferences))
         }
         featureId?.let { params.putString(MapLayerParams.PARAM_FEATURE_ID, it) }
-        val imageTiles = tiles.map { tile ->
-            val key = "${tag}_${tile.x}_${tile.y}_${tile.z}"
-            val newTile = tileCache.getOrPut(key) {
-                ImageTile(
-                    key = key,
-                    tile = tile,
-                    shouldFadeIn = !isWidget,
-                    loadFunction = {
-                        loadTile(source, context, tile, params)
-                    }
-                )
-            }
+        val imageTiles = tileCache.getOrPut(tiles) { tile, key ->
+            ImageTile(
+                key = key,
+                tile = tile,
+                shouldFadeIn = !isWidget,
+                owner = owner,
+                loadFunction = {
+                    loadTile(source, context, tile, params)
+                }
+            )
+        }
+        imageTiles.forEach { imageTile ->
             // Replace the load function every cycle to ensure it uses the latest parameters
-            newTile.setLoader {
-                loadTile(source, context, tile, params)
+            imageTile.setLoader {
+                loadTile(source, context, imageTile.tile, params)
             }
-            newTile
         }
 
         imageTiles.forEach { tileQueue.enqueue(it) }
@@ -121,7 +151,7 @@ class TileLoader(
         } else {
             sourceSelector.loadTile(context, tile, params)
         }
-        return existing?.applyOperationsOrNull(
+        return existing?.applyOperations(
             Resize(
                 tile.size,
                 exact = false
@@ -339,6 +369,11 @@ class TileLoader(
                 )
             }
         }
+    }
+
+    companion object {
+        private const val LARGE_LAYER_CACHE_SIZE = 256
+
     }
 
 }

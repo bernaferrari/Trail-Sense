@@ -107,6 +107,18 @@
         <item>never</item>
     </string-array>
 
+    <string-array name="navigation_lock_screen_entries">
+        <item>@string/never</item>
+        <item>@string/pref_navigation_lock_screen_while_navigating</item>
+        <item>@string/pref_navigation_lock_screen_while_open</item>
+    </string-array>
+
+    <string-array name="navigation_lock_screen_values" translatable="false">
+        <item>never</item>
+        <item>navigating</item>
+        <item>open</item>
+    </string-array>
+
     <string-array name="speedometer_entries">
         <item>@string/current_speed_gps</item>
         <item>@string/average_speed_backtrack</item>
@@ -206,4 +218,21 @@
         <item>stone</item>
     </string-array>
 
+    <string-array name="compass_update_frequency_entries">
+        <item>@string/compass_update_frequency_normal</item>
+        <item>@string/compass_update_frequency_fast</item>
+    </string-array>
+    <string-array name="compass_update_frequency_values" translatable="false">
+        <item>normal</item>
+        <item>fast</item>
+    </string-array>
+
+    <string-array name="ar_path_appearance_entries">
+        <item>@string/ar_path_appearance_ribbon</item>
+        <item>@string/ar_path_appearance_line</item>
+    </string-array>
+    <string-array name="ar_path_appearance_values" translatable="false">
+        <item>ribbon</item>
+        <item>line</item>
+    </string-array>
 </resources>

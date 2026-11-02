@@ -51,6 +51,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.luna.time.CoroutineTimer
@@ -65,7 +66,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
+import com.kylecorry.trail_sense.tools.pedometer.domain.AveragePaceTimeMode
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
+import java.time.Duration
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -192,6 +195,49 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
         return formatter.formatDistance(distance, 2)
     }
 
+    fun averagePaceTimeLabel(mode: AveragePaceTimeMode): String {
+        return host.getString(
+            when (mode) {
+                AveragePaceTimeMode.Active -> R.string.active_time
+                AveragePaceTimeMode.Elapsed -> R.string.elapsed_time
+            }
+        )
+    }
+
+    fun pickAveragePaceTime(onPicked: (AveragePaceTimeMode) -> Unit) {
+        val modes = AveragePaceTimeMode.entries
+        Pickers.item(
+            host.requireContext(),
+            host.getString(R.string.pref_pedometer_average_pace_time_title),
+            modes.map { averagePaceTimeLabel(it) },
+            modes.indexOf(userPrefs.pedometer.averagePaceTimeMode).coerceAtLeast(0)
+        ) { index ->
+            if (index != null) {
+                val mode = modes.getOrElse(index) { AveragePaceTimeMode.Active }
+                userPrefs.pedometer.averagePaceTimeMode = mode
+                onPicked(mode)
+            }
+        }
+    }
+
+    fun pickStepHistory(onPicked: (Int) -> Unit) {
+        Pickers.number(
+            host.requireContext(),
+            host.getString(R.string.pref_pedometer_history_days_title),
+            null,
+            userPrefs.pedometer.stepHistory.toDays().toInt(),
+            allowDecimals = false,
+            allowNegative = false,
+            hint = host.getString(R.string.days)
+        ) { days ->
+            if (days != null) {
+                val dayCount = if (days.toInt() > 0) days.toInt() else 1
+                userPrefs.pedometer.stepHistory = Duration.ofDays(dayCount.toLong())
+                onPicked(dayCount)
+            }
+        }
+    }
+
     fun isPermissionRequestVisible(enabled: Boolean): Boolean {
         return (enabled && !Permissions.canRecognizeActivity(host.requireContext())) ||
                 (!enabled && !Permissions.isBackgroundLocationEnabled(host.requireContext()))
@@ -240,6 +286,12 @@ private fun PedometerSettingsContent(
                         mutableStateOf(
                             controller.getBoolean(R.string.pref_pedometer_use_alarm_for_distance_alert)
                         )
+                    }
+                    var averagePaceTimeMode by remember {
+                        mutableStateOf(userPrefs.pedometer.averagePaceTimeMode)
+                    }
+                    var stepHistoryDays by remember {
+                        mutableStateOf(userPrefs.pedometer.stepHistory.toDays().toInt())
                     }
                     var permissionVisible by remember {
                         mutableStateOf(controller.isPermissionRequestVisible(enabled))
@@ -372,6 +424,26 @@ private fun PedometerSettingsContent(
                                                 R.string.pref_odometer_reset_daily,
                                                 it
                                             )
+                                        }
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsClickRow(
+                                        title = stringResource(R.string.pref_pedometer_history_days_title),
+                                        subtitle = controller.formatter.formatDays(stepHistoryDays),
+                                        onClick = {
+                                            controller.pickStepHistory {
+                                                stepHistoryDays = it
+                                            }
+                                        }
+                                    )
+                                    PedometerSettingsCardDivider()
+                                    PedometerSettingsClickRow(
+                                        title = stringResource(R.string.pref_pedometer_average_pace_time_title),
+                                        subtitle = controller.averagePaceTimeLabel(averagePaceTimeMode),
+                                        onClick = {
+                                            controller.pickAveragePaceTime {
+                                                averagePaceTimeMode = it
+                                            }
                                         }
                                     )
                                     PedometerSettingsCardDivider()

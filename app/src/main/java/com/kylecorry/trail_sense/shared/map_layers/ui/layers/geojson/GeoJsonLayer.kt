@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -11,8 +11,8 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.isClickable
-import com.kylecorry.trail_sense.shared.getBounds
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
+import com.kylecorry.trail_sense.shared.map_layers.MapViewState
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
@@ -39,7 +39,11 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     private val refreshBroadcasts: List<String> = emptyList()
 ) : IAsyncLayer {
     val renderer = GeoJsonRenderer()
+    @Volatile private var isStopped = false
     private var isInvalid = true
+
+    @Volatile
+    private var viewState: MapViewState? = null
     private var updateListener: (() -> Unit)? = null
     private val sourceCleanupTask = BackgroundTask {
         source.cleanup()
@@ -77,8 +81,8 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     init {
-        val prefs = AppServiceRegistry.get<UserPreferences>()
-        renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.navigation.useFastPathRendering)
+        val prefs = DependencyRegistry.get<UserPreferences>()
+        renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.paths.useFastPathRendering)
         renderer.setOnClickListener(this::onClick)
         taskRunner.addTask { context, viewBounds, bounds, projection ->
             isInvalid = false
@@ -103,6 +107,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
                     source.load(context, bounds, zoomLevel, params) ?: GeoJsonFeatureCollection(
                         emptyList()
                     )
+                if (isStopped) return@addTask
                 renderer.setGeoJsonObject(obj)
                 isLoaded = true
             } catch (e: CancellationException) {
@@ -149,13 +154,24 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         drawer: ICanvasDrawer,
         map: IMapView
     ) {
+        if (isStopped) return
         isWidget = map.isWidget
         renderer.draw(context, drawer, map)
+    }
+
+    override fun onViewChanged(state: MapViewState) {
+        viewState = state
+        renderer.onViewChanged(state)
+        requestUpdate(state)
+    }
+
+    private fun requestUpdate(state: MapViewState) {
+        if (isStopped) return
         taskRunner.scheduleUpdate(
-            context,
-            drawer.getBounds(45f),
-            map.mapBounds,
-            map.mapProjection,
+            state.context,
+            state.viewBounds,
+            state.bounds,
+            state.projection,
             isInvalid
         )
     }
@@ -171,6 +187,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     override fun invalidate() {
         isInvalid = true
         renderer.invalidate()
+        viewState?.let { requestUpdate(it) }
     }
 
     override fun onClick(
@@ -194,6 +211,8 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     override fun start() {
+        isStopped = false
+        invalidate()
         Tools.subscribe(
             MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
@@ -205,6 +224,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     override fun stop() {
+        isStopped = true
         Tools.unsubscribe(
             MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
@@ -214,7 +234,10 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         }
         refreshTimer?.stop()
         taskRunner.stop()
+        renderer.clear()
         sourceCleanupTask.start()
+        isInvalid = true
+        isLoaded = false
     }
 
     private fun onSelectionBroadcast(bundle: Bundle) {

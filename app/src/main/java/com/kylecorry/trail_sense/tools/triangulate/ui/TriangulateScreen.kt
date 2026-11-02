@@ -94,6 +94,7 @@ import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -299,7 +300,7 @@ private class TriangulateController(
 
     private fun updateGpsOverride() {
         location?.let { coord ->
-            prefs.locationOverride = coord
+            prefs.gps.locationOverride = coord
             Alerts.toast(host.requireContext(), host.getString(R.string.location_override_updated))
         }
     }
@@ -574,7 +575,8 @@ private class TriangulateController(
         }
 
         navigateVisible = !shouldCalculateMyLocation
-        updateGpsOverrideVisible = !prefs.useAutoLocation && shouldCalculateMyLocation
+        updateGpsOverrideVisible =
+            prefs.gps.locationSource == GPSLocationSource.Manual && shouldCalculateMyLocation
 
         updateMap()
         updateDistances()

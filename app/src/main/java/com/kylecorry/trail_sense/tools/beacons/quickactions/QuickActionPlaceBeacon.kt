@@ -5,7 +5,6 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
@@ -14,6 +13,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import java.time.ZonedDateTime
@@ -34,10 +34,11 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
             var wasSuccessful = false
             var id = 0L
             val job = launch {
-                val sensors = SensorService(host.requireContext())
-                val gps = sensors.getGPS()
-                val altimeter = sensors.getAltimeter(gps = gps)
-                readAll(listOf(gps, altimeter))
+                val (location, elevation) = SensorSubsystem.getInstance(host.requireContext())
+                    .getLocationAndElevation(
+                        SensorSubsystem.SensorRefreshPolicy.Refresh,
+                        timeout = SensorService.EXTENDED_GPS_READ_TIMEOUT
+                    )
 
                 // Create a beacon
                 val formatter = FormatService.getInstance(host.requireContext())
@@ -49,8 +50,8 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
                     Beacon(
                         0,
                         time,
-                        gps.location,
-                        elevation = altimeter.altitude,
+                        location,
+                        elevation = elevation.meters().value,
                         color = prefs.beacons.defaultBeaconColor.color,
                     )
                 )

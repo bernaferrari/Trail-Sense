@@ -79,8 +79,8 @@ internal fun PedometerScreen(
     val paceCalculator = remember(prefs.pedometer.strideLength) {
         StrideLengthPaceCalculator(prefs.pedometer.strideLength)
     }
-    val averageSpeedometer = remember(counter, paceCalculator) {
-        AveragePaceSpeedometer(counter, paceCalculator)
+    val averageSpeedometer = remember(counter, paceCalculator, prefs.pedometer.averagePaceTimeMode) {
+        AveragePaceSpeedometer(counter, paceCalculator, prefs.pedometer)
     }
     val instantSpeedometer = remember(paceCalculator) {
         CurrentPaceSpeedometer(Pedometer(context), paceCalculator)

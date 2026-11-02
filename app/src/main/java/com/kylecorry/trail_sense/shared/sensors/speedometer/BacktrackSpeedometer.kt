@@ -1,10 +1,13 @@
 package com.kylecorry.trail_sense.shared.sensors.speedometer
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.kylecorry.andromeda.core.sensors.AbstractSensor
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
@@ -14,28 +17,50 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.specifications.LocationChangedSpecification
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.time.Duration
+import java.time.Instant
 
 class BacktrackSpeedometer(private val context: Context) : AbstractSensor(), ISpeedometer {
 
     private val pathService by lazy { PathService.getInstance(context) }
     private val prefs by lazy { UserPreferences(context) }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val scope = CoroutineScope(Dispatchers.Default)
+    private var loadJob: Job? = null
+
     private var path: LiveData<List<PathPoint>>? = null
 
     private var _speed: Speed? = null
+    private var lastPointTime: Instant? = null
 
     private var pathObserver = Observer<List<PathPoint>> {
-        _speed = getSpeed(it.sortedBy { point -> point.time })
+        val waypoints = it.sortedBy { point -> point.time }
+        _speed = getSpeed(waypoints)
+        lastPointTime = waypoints.lastOrNull()?.time
         notifyListeners()
     }
 
     override val hasValidReading: Boolean
-        get() = prefs.backtrackEnabled && _speed != null
+        get() = prefs.paths.backtrackEnabled && _speed != null
 
+    // Points are only recorded once the user has moved the minimum distance, so a missing point means they stopped
     override val speed: Speed
-        get() = _speed ?: Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
+        get() {
+            val stopped = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
+            val lastTime = lastPointTime ?: return _speed ?: stopped
+            val staleAfter = prefs.paths.backtrackRecordFrequency.multipliedBy(2).plus(TIMING_BUFFER)
+            return if (Duration.between(lastTime, Instant.now()) > staleAfter) {
+                stopped
+            } else {
+                _speed ?: stopped
+            }
+        }
 
     private fun getSpeed(waypoints: List<PathPoint>): Speed? {
         return if (waypoints.size < 2) {
@@ -66,18 +91,36 @@ class BacktrackSpeedometer(private val context: Context) : AbstractSensor(), ISp
             }
 
             val time = Duration.between(secondLast.time, last.time)
-            Speed.from(distance / time.seconds.toFloat(), DistanceUnits.Meters, TimeUnits.Seconds)
+            Speed.from(
+                distance / time.seconds.coerceAtLeast(1).toFloat(),
+                DistanceUnits.Meters,
+                TimeUnits.Seconds
+            )
         }
     }
 
     override fun startImpl() {
         // TODO: Listen for path changes for backtrack ID
-        val backtrack = runBlocking { pathService.getBacktrackPathId() } ?: return
-        path = pathService.getWaypointsLive(backtrack)
-        path?.observeForever(pathObserver)
+        loadJob = scope.launch {
+            val backtrack = pathService.getBacktrackPathId() ?: return@launch
+            val waypoints = pathService.getWaypointsLive(backtrack)
+            onMain {
+                path = waypoints
+                waypoints.observeForever(pathObserver)
+            }
+        }
     }
 
     override fun stopImpl() {
-        path?.removeObserver(pathObserver)
+        loadJob?.cancel()
+        loadJob = null
+        mainHandler.post {
+            path?.removeObserver(pathObserver)
+            path = null
+        }
+    }
+
+    private companion object {
+        val TIMING_BUFFER: Duration = Duration.ofSeconds(30)
     }
 }

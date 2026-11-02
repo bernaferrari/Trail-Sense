@@ -129,7 +129,6 @@
     <string name="pref_elevation_override_title">Смещение</string>
     <string name="elevation_from_pressure">Задать смещение с помощью барометра</string>
     <string name="request_permission">Запрос разрешения</string>
-    <string name="pref_auto_location_title">Автоматически отслеживать перемещение</string>
     <string name="compass_accuracy_improved">Точность компаса поднялась: %s</string>
     <string name="compass_reported_accuracy">Текущая точность: %s</string>
     <string name="calibrate_compass_on_navigate_dialog_content">Проведите ваше устройство восьмеркой или во всех направлениях несколько раз и нажмите %s.
@@ -243,8 +242,6 @@
     <string name="tool_solar_panel_title">Выравниватель солнечных панелей</string>
     <string name="tool_solar_panel_summary">Наилучшее положение солнечных панелей для выработки электроэнергии</string>
     <string name="pref_privacy_policy_title">Политика конфиденциальности</string>
-    <string name="guide_recommended_apps_description">Полезные приложения для выживания</string>
-    <string name="guide_recommended_apps">Рекомендуемые приложения</string>
     <string name="unit_nautical_miles">Морские мили</string>
     <string name="unit_kilometers">Километры</string>
     <string name="unit_meters">Метры</string>
@@ -299,8 +296,6 @@
     <string name="map_distance">Карта: %s</string>
     <string name="unit_inches">Дюймы</string>
     <string name="unit_centimeters">Сантиметры</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="contents">Содержание</string>
     <string name="note_title_hint">Название</string>
     <string name="tool_notes_title">Заметки</string>
@@ -373,10 +368,8 @@
     <string name="altocumulus">Высококучевые</string>
     <string name="cirrostratus">Перисто-слоистые</string>
     <string name="cirrus">Перистые</string>
-    <string name="pref_require_satellites_title">Требуется исправление спутниковой связи</string>
     <string name="unavailable">Недоступен</string>
     <string name="gps_searching">Поиск</string>
-    <string name="gps_stale">Устаревший</string>
     <string name="gps_user">Пользователь</string>
     <string name="import_btn">Импорт</string>
     <string name="export">Экспорт</string>
@@ -404,7 +397,6 @@
     <string name="onboarding_user_guide">Научитесь как использовать функции Trail Sense с помощью руководства пользователя. Доступно в нижней части вкладки Инструменты. \n \nСкоро появятся другие руководства.</string>
     <string name="privacy_and_location">Конфиденциальность и местоположение</string>
     <string name="cirrocumulus">Перисто-кучевые</string>
-    <string name="pref_require_satellites_description">Требуется как минимум 4 спутника, повышает точность</string>
     <string name="unit_inches_abbreviation">д</string>
     <string name="unit_centimeters_abbreviation">см</string>
     <string name="magnetometer">Магнитометр</string>
@@ -528,7 +520,6 @@
     <string name="import_map">Импортировать карту</string>
     <string name="pref_cell_signal_refresh_cache_summary">Заставляет загружать последние уровни сигнала</string>
     <string name="pref_cell_signal_refresh_cache_title">Обновить кэш сигнала</string>
-    <string name="pref_navigation_lock_screen_presence_title">Показывать на экране блокировки во время навигации</string>
     <string name="preview">Предпросмотр</string>
     <string name="moved_to">Перемещено в %s</string>
     <string name="move">Переместить</string>
@@ -536,8 +527,6 @@
     <string name="coordinates_tab">Координаты</string>
     <string name="distance">Расстояние</string>
     <string name="convert">Конвертировать</string>
-    <string name="pref_nmea_elevation_summary">Использовать NMEA (спутник) для коректировки высоты вместо встроеной модели</string>
-    <string name="pref_nmea_elevation_title">Смещение высоты по NMEA</string>
     <string name="pref_barometer_info_summary">Давление может отличаться от давления на близлежащих станциях</string>
     <string name="battery_history">История батареи - последняя %s</string>
     <string name="weather_monitor">Монитор погоды</string>
@@ -606,7 +595,6 @@
     <string name="liter_format">%s л</string>
     <string name="clear_cache">Очистить кэш</string>
     <string name="destination_elevation">Высота места назначения</string>
-    <string name="base_temperature">Базовая температура</string>
     <string name="base_elevation">Базовая высота</string>
     <string name="unit_yards">Ярды</string>
     <string name="yards_format">%s ярд</string>
@@ -739,7 +727,6 @@
     <string name="sort_by">Сортировка: %s</string>
     <string name="difficulty">Сложность</string>
     <string name="merging">Слияние</string>
-    <string name="simplification_quality">Качество упрощения</string>
     <string name="pref_auto_simplify_paths_title">Упростить пути при импорте</string>
     <plurals name="waypoints_deleted">
         <item quantity="one">%d путевая точка удалена</item>
@@ -831,7 +818,6 @@
     <string name="weather_no_change">Без изменений</string>
     <string name="very_soon">Очень скоро</string>
     <string name="temperature_history">История температуры - последняя %s</string>
-    <string name="since_time">с %s</string>
     <string name="tool_temperature_estimation_title">Оценка температуры</string>
     <string name="humidity_history">История влажности - последняя %s</string>
     <string name="tool_temperature_estimation_description">Предсказать температуру на другой высоте</string>
@@ -873,7 +859,6 @@
     <string name="current_speed_pedometer">Текущая скорость (шагомер)</string>
     <string name="average_speed_backtrack">Средняя скорость (история маршрута)</string>
     <string name="reset_distance_title">Сбросить расстояние\?</string>
-    <string name="navigating_to_nearest_path_point">Навигация к ближайшей точке маршрута</string>
     <string name="beacons">Ориентиры</string>
     <string name="move_to">Перейти к</string>
     <string name="pref_start_on_boot_title">Запуск при включении</string>
@@ -882,7 +867,6 @@
     <string name="square">Квадратами</string>
     <string name="diamond">Бриллиантами</string>
     <string name="cross">Крестами</string>
-    <string name="pref_only_navigate_path_points_title">Переход только к записанным точкам</string>
     <string name="bearing">Пеленг</string>
     <string name="exporting_map">Экспорт карты</string>
     <string name="map_exported">Карта экспортирована</string>
@@ -981,7 +965,6 @@
     <string name="create_blank_map">Создать пустую карту</string>
     <string name="photo_maps">Фотографии карт</string>
     <string name="illumination">Освещение</string>
-    <string name="calibrate_map_point">Калибрировать по известным местоположениям (%1$d / %2$d)</string>
     <string name="compass_source_legacy_android">Старый (Android)</string>
     <string name="triangulate_self_location_1_instructions">Выберите известное место которое вы можете увидеть и записать направление от того места где вы находитесь.</string>
     <string name="solar_eclipses">Солнечные затмения</string>
@@ -1115,7 +1098,6 @@
     <string name="fast_path_rendering">Отрисовка быстрого пути</string>
     <string name="ar_calibration_instructions">Отцентрируйте %s на экране и нажмите «Калибрация»</string>
     <string name="reset_calibration_question">Сбросить калибровку?</string>
-    <string name="smooth_gps_readings">Гладкие показания GPS</string>
     <string name="projection_type">Проекция Дополненной Реальности</string>
     <string name="projection_estimated_intrinsics">Примерные интрисики</string>
     <string name="projection_manufacturer_intrinsics">Интрисики производителя</string>
@@ -1127,7 +1109,6 @@
     <string name="visible">Видимый</string>
     <string name="grid">Сетка</string>
     <string name="ar_layer_override_message">Настройки слоев могут быть переопределены по руководству, таким как руководство по Астрономии.</string>
-    <string name="date">Дата</string>
     <string name="show_dial_ticks_on_nearby_radar">Показать насечки на ближнем радаре</string>
     <string name="map_calibration_instructions">Коснитесь известного местоположения на карте, затем введите реальные координаты. Вы можете сохранить калибровку нажав кнопку «Готово».
 \n
@@ -1169,7 +1150,6 @@
     <string name="tool_quick_action_summary">Длительное нажатие на нижнюю навигационную панель или просмотр на вкладке инструментов</string>
     <string name="quick_actions_are_unavailable">Быстрые действия недоступны</string>
     <string name="bottom_navigation_slot">Нижний слот навигации %d</string>
-    <string name="forecast_algorithm">Алгоритм прогнозирования</string>
     <string name="no_items_found">Предметы не найдены</string>
     <string name="import_packing_list">Импортировать список упаковки</string>
     <string name="barometer_offset">Смещение барометра</string>

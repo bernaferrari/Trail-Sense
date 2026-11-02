@@ -199,14 +199,14 @@ private class PathsSettingsController(private val host: TrailSenseDestinationHos
             host.requireContext(),
             host.getString(R.string.pref_backtrack_history_days_title),
             null,
-            prefs.navigation.backtrackHistory.toDays().toInt(),
+            prefs.paths.backtrackHistory.toDays().toInt(),
             allowDecimals = false,
             allowNegative = false,
             hint = host.getString(R.string.days)
         ) { days ->
             if (days != null) {
                 val dayCount = days.toInt()
-                prefs.navigation.backtrackHistory = Duration.ofDays(days.toLong())
+                prefs.paths.backtrackHistory = Duration.ofDays(days.toLong())
                 onPicked(dayCount)
             }
         }
@@ -214,14 +214,14 @@ private class PathsSettingsController(private val host: TrailSenseDestinationHos
 
     fun formatBacktrackInterval(): String {
         return formatService.formatDuration(
-            prefs.backtrackRecordFrequency,
+            prefs.paths.backtrackRecordFrequency,
             includeSeconds = true
         )
     }
 
     fun formatBacktrackHistory(): String {
         return formatService.formatDays(
-            prefs.navigation.backtrackHistory.toDays().toInt()
+            prefs.paths.backtrackHistory.toDays().toInt()
         )
     }
 
@@ -296,7 +296,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
     }
 
     var backtrackEnabled by remember {
-        mutableStateOf(prefs.backtrackEnabled)
+        mutableStateOf(prefs.paths.backtrackEnabled)
     }
     var backtrackIntervalSummary by remember {
         mutableStateOf(controller.formatBacktrackInterval())
@@ -308,7 +308,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
         mutableStateOf(controller.notificationSummary())
     }
     var saveCellSignal by remember {
-        mutableStateOf(prefs.backtrackSaveCellHistory)
+        mutableStateOf(prefs.paths.backtrackSaveCellHistory)
     }
     var showLastSignalBeacon by remember {
         mutableStateOf(controller.getBoolean(R.string.pref_show_last_signal_beacon, true))
@@ -322,15 +322,10 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
         )
     }
     var pathColor by remember {
-        mutableStateOf(prefs.navigation.defaultPathColor)
+        mutableStateOf(prefs.paths.defaultPathColor)
     }
     var simplifyPaths by remember {
         mutableStateOf(controller.getBoolean(R.string.pref_auto_simplify_paths, true))
-    }
-    var onlyNavigateToPoints by remember {
-        mutableStateOf(
-            controller.getBoolean(R.string.pref_only_navigate_path_points, true)
-        )
     }
     var fastPathRendering by remember {
         mutableStateOf(controller.getBoolean(R.string.pref_fast_path_rendering, false))
@@ -426,7 +421,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
                         checked = saveCellSignal,
                         onCheckedChange = {
                             saveCellSignal = it
-                            prefs.backtrackSaveCellHistory = it
+                            prefs.paths.backtrackSaveCellHistory = it
                         }
                     )
                     PathSettingsCardDivider()
@@ -486,15 +481,6 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
                     )
                     PathSettingsCardDivider()
                     PathSettingsSwitchRow(
-                        label = stringResource(R.string.pref_only_navigate_path_points_title),
-                        checked = onlyNavigateToPoints,
-                        onCheckedChange = {
-                            onlyNavigateToPoints = it
-                            controller.putBoolean(R.string.pref_only_navigate_path_points, it)
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsSwitchRow(
                         label = stringResource(R.string.fast_path_rendering),
                         summary = stringResource(R.string.fast_path_rendering_summary),
                         checked = fastPathRendering,
@@ -516,7 +502,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
             onColorPicked = {
                 if (it != null) {
                     pathColor = it
-                    prefs.navigation.defaultPathColor = it
+                    prefs.paths.defaultPathColor = it
                 }
                 showPathColorPicker = false
             },
@@ -529,7 +515,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
     if (showBacktrackFrequencyPicker) {
         DurationPickerDialog(
             title = backtrackFrequencyTitle,
-            duration = prefs.backtrackRecordFrequency,
+            duration = prefs.paths.backtrackRecordFrequency,
             message = stringResource(R.string.actual_frequency_disclaimer),
             hint = stringResource(R.string.frequency),
             showSeconds = true,

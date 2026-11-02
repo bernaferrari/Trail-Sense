@@ -216,7 +216,6 @@
     <string name="compass_declination_override">Deklinazioa ordezkatu</string>
     <string name="none">Bat ere ez</string>
     <string name="satellites">sateliteak</string>
-    <string name="gps_stale">Zaharkituta</string>
     <string name="map_scale_verbal">Hitzez</string>
     <string name="precise_temp_c_format">%s °C</string>
     <string name="precise_temp_f_format">%s °F</string>
@@ -232,7 +231,6 @@
     <string name="pref_sensor_details_title">Sentsoreen xehetasunak</string>
     <string name="water_boil_timer_title">Ura irakin</string>
     <string name="pref_privacy_policy_title">Pribatutasun politika</string>
-    <string name="guide_recommended_apps">Gomendatutako aplikazioak</string>
     <string name="unit_nautical_miles">Itsas miliak</string>
     <string name="inventory_empty_text">Elementurik ez</string>
     <string name="no_group">Talderik ez</string>
@@ -350,7 +348,6 @@
     <string name="delete_path_group_message">%s eta bere bide guztiak ezabatuko dira.</string>
     <string name="tool_bubble_level_summary">Azaleraren bat laua den determinatzen du</string>
     <string name="tool_cliff_height_disclaimer">Tresna hau soilik segurua denean erabili, eta ziurtatu zer dagoen amildegiaren beheran zauriak ekiditeko. Erabiltzailearen gida irakurri argibideentzako.</string>
-    <string name="guide_recommended_apps_description">Aplikazio erabilgarriak biziraupen uneentzako</string>
     <string name="solar_panel_instructions">Hasteko, kokatu zure mugikorra eguzki-panelaren aurrealdean.</string>
     <string name="water_boil_timer_done_content">Zure ura edangarria da</string>
     <string name="one">1</string>
@@ -362,7 +359,6 @@
     <string name="calibrate_compass_on_navigate_dialog_content">Biratu zure mugikorra 8 formako patroi bat irudikatuz edo norabide guztietan behin baino gehiagotan, %s sakatu amaitzean.
 \n
 \nAbisu hau ken daiteke aplikazioaren ezarpenetan.</string>
-    <string name="pref_auto_location_title">Automatikoki doitu kokapena</string>
     <string name="elevation_override_updated_toast">Altueraren ordezkapena eguneratua</string>
     <string name="pref_adjust_for_temperature_summary">Erabili tenperatura presio atmosferikoaren bihurketetan</string>
     <string name="pref_display_multi_beacons_title">Erakutsi gertuko balizak</string>
@@ -431,8 +427,6 @@
     <string name="notification_channel_clock_sync_description">Jakinarazpen bat zure erlojua GPSaren orduarekin sinkronizatzeko</string>
     <string name="clock_sync_instructions">Jakinarazpena jasotzean ordu hau ezarri: %s</string>
     <string name="update_gps_override">Eguneratu GPSaren ordezkapena</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="min_temp_uncalibrated">Mugikorraren gutxieneko tenperatura (kalibratu gabea)</string>
     <string name="backtrack_notification_channel_description">Trazatu kokapenaren eguneraketak</string>
     <string name="pref_backtrack_frequency_title">Trazaduraren bitarteak</string>
@@ -456,12 +450,10 @@
     <string name="location_override_not_set_resolution">Ezarri kokapenaren ordezkapena ezarpenetan</string>
     <string name="backtrack_disabled_low_power_toast">Atzera-egitea desgaituta dago energia aurrezteko moduan</string>
     <string name="pref_low_power_mode_title">Energia aurrezteko modua</string>
-    <string name="pref_require_satellites_title">Satelitea zuzentzea behar da</string>
     <string name="delete_tide_prompt">Ezabatu marea\?</string>
     <string name="low_power_mode_on_message">Energia aurrezteko modua gaituta, ezaugarri batzuk desgaituta egon daitezke.</string>
     <string name="unsaved_changes_message">Egin dituzun aldaketak ez dira gordeko.</string>
     <string name="pref_low_power_mode_summary">Ezaugarri batzuk desgaitzen ditu energia aurrezteko</string>
     <string name="open_beacon_in_maps">Ikusi mapan</string>
     <string name="compass_calibrate_toast">Iparrorratzaren zehaztasuna %s, kalibratzea gomendatzen da</string>
-    <string name="pref_require_satellites_description">Gutxienez 4 satelite behar dira, zehaztasuna hobetzen du</string>
 </resources>

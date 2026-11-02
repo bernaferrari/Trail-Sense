@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.settings.migrations
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.putIntArray
@@ -17,11 +18,16 @@ import com.kylecorry.trail_sense.shared.dem.map_layers.ContourGeoJsonSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.ElevationMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.HillshadeMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.SlopeMapTileSource
+import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.CustomGPS
+import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.GPSCacheData
 import com.kylecorry.trail_sense.shared.sensors.providers.CompassProvider
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyDailyWorker
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
@@ -31,6 +37,7 @@ import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.map_layers.NavigationGeoJsonSource
+import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
@@ -49,19 +56,27 @@ class PreferenceMigrator private constructor() {
     fun migrate(context: Context) {
         synchronized(lock) {
             val prefs = PreferencesSubsystem.getInstance(context).preferences
-            var currentVersion = prefs.getInt("pref_version") ?: 0
-
-            AppState.isReturningUser = currentVersion > 0
-
-            while (currentVersion < version) {
-                val current = currentVersion
-                val next = currentVersion + 1
-                val migration =
-                    migrations.find { it.fromVersion == current && it.toVersion == next }
-                migration?.action?.invoke(context, prefs)
-                currentVersion++
-                prefs.putInt("pref_version", currentVersion)
+            val startVersion = prefs.getInt(VERSION_KEY) ?: 0
+            if (startVersion < version) {
+                getAppService<Logger>().info(TAG, "Migrating preferences from version $startVersion to $version")
             }
+            migrate(prefs) { migration -> migration.action(context, prefs) }
+        }
+    }
+
+    internal fun migrate(prefs: IPreferences, runMigration: (PreferenceMigration) -> Unit) {
+        var currentVersion = prefs.getInt(VERSION_KEY) ?: 0
+
+        AppState.isReturningUser = currentVersion > 0
+
+        while (currentVersion < version) {
+            val current = currentVersion
+            val next = currentVersion + 1
+            val migration =
+                migrations.find { it.fromVersion == current && it.toVersion == next }
+            migration?.let(runMigration)
+            currentVersion++
+            prefs.putInt(VERSION_KEY, currentVersion)
         }
     }
 
@@ -69,8 +84,22 @@ class PreferenceMigrator private constructor() {
         private var instance: PreferenceMigrator? = null
         private val staticLock = Any()
 
-        private const val version = 28
-        private val migrations = listOf(
+        internal const val VERSION_KEY = "pref_version"
+        private const val TAG = "PreferenceMigrator"
+
+        internal const val LEGACY_LAST_KALMAN_VARIANCE = "last_kalman_variance"
+        internal const val LEGACY_LAST_KALMAN_VELOCITY_VARIANCE = "last_kalman_velocity_variance"
+        internal const val LEGACY_LAST_LATITUDE = "last_latitude_double"
+        internal const val LEGACY_LAST_LONGITUDE = "last_longitude_double"
+        internal const val LEGACY_LAST_ALTITUDE = "last_altitude"
+        internal const val LEGACY_LAST_BEARING = "last_bearing"
+        internal const val LEGACY_LAST_SPEED = "last_speed"
+        internal const val LEGACY_LAST_UPDATE = "last_update"
+        internal const val LEGACY_LAST_HORIZONTAL_ACCURACY = "last_horizontal_accuracy"
+        internal const val LEGACY_LAST_VERTICAL_ACCURACY = "last_vertical_accuracy"
+
+        internal const val version = 40
+        internal val migrations = listOf(
             PreferenceMigration(0, 1) { _, prefs ->
                 if (prefs.contains("pref_enable_experimental")) {
                     prefs.remove("pref_enable_experimental")
@@ -133,7 +162,7 @@ class PreferenceMigrator private constructor() {
             PreferenceMigration(8, 9) { context, prefs ->
                 val userPrefs = UserPreferences(context)
                 prefs.getString("pref_backtrack_frequency")?.toLongOrNull()?.let {
-                    userPrefs.backtrackRecordFrequency = Duration.ofMinutes(it)
+                    userPrefs.paths.backtrackRecordFrequency = Duration.ofMinutes(it)
                 }
                 prefs.getString("pref_weather_update_frequency")?.toLongOrNull()?.let {
                     userPrefs.weather.weatherUpdateFrequency = Duration.ofMinutes(it)
@@ -160,7 +189,7 @@ class PreferenceMigrator private constructor() {
                 prefs.remove("pref_astronomy_alerts_last_run_date")
             },
             PreferenceMigration(11, 12) { _, prefs ->
-                val elevation = prefs.getFloat(CustomGPS.LAST_ALTITUDE)
+                val elevation = prefs.getFloat(LEGACY_LAST_ALTITUDE)
                 if (elevation != null) {
                     prefs.putFloat(CachingAltimeterWrapper.LAST_ALTITUDE_KEY, elevation)
                 }
@@ -348,7 +377,7 @@ class PreferenceMigrator private constructor() {
                 }
             },
             PreferenceMigration(23, 24) { _, prefs ->
-                val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
+                val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
                 val allLayers = listOf(
                     BaseMapTileSource.SOURCE_ID,
                     ElevationMapTileSource.SOURCE_ID,
@@ -465,6 +494,159 @@ class PreferenceMigrator private constructor() {
                     prefs.putBoolean(context.getString(R.string.pref_use_bottom_navigation_labels), false)
                 }
 
+            },
+            PreferenceMigration(28, 29) { context, _ ->
+                PedometerPreferenceMigrationWorker.start(context)
+            },
+            PreferenceMigration(29, 30) { context, prefs ->
+                val key = context.getString(R.string.pref_odometer_reset_daily)
+                if (AppState.isReturningUser && !prefs.contains(key)) {
+                    prefs.putBoolean(key, false)
+                }
+            },
+            PreferenceMigration(30, 31) { _, prefs ->
+                val legacyKeys = listOf(
+                    LEGACY_LAST_KALMAN_VARIANCE,
+                    LEGACY_LAST_KALMAN_VELOCITY_VARIANCE,
+                    LEGACY_LAST_LATITUDE,
+                    LEGACY_LAST_LONGITUDE,
+                    LEGACY_LAST_ALTITUDE,
+                    LEGACY_LAST_BEARING,
+                    LEGACY_LAST_SPEED,
+                    LEGACY_LAST_UPDATE,
+                    LEGACY_LAST_HORIZONTAL_ACCURACY,
+                    LEGACY_LAST_VERTICAL_ACCURACY
+                )
+
+                if (legacyKeys.any(prefs::contains)) {
+                    val cached = GPSCacheData(
+                        latitude = prefs.getDouble(LEGACY_LAST_LATITUDE) ?: 0.0,
+                        longitude = prefs.getDouble(LEGACY_LAST_LONGITUDE) ?: 0.0,
+                        altitude = prefs.getFloat(LEGACY_LAST_ALTITUDE) ?: 0f,
+                        bearing = prefs.getFloat(LEGACY_LAST_BEARING)
+                            ?.takeIf { it.isFinite() },
+                        speed = prefs.getFloat(LEGACY_LAST_SPEED) ?: 0f,
+                        updateTimeMillis = prefs.getLong(LEGACY_LAST_UPDATE) ?: 0L,
+                        horizontalAccuracy = prefs.getFloat(LEGACY_LAST_HORIZONTAL_ACCURACY),
+                        verticalAccuracy = prefs.getFloat(LEGACY_LAST_VERTICAL_ACCURACY)
+                    )
+                    prefs.putString(CacheGPSModule.LAST_GPS, JsonConvert.toJson(cached))
+                }
+
+                legacyKeys.forEach(prefs::remove)
+            },
+            PreferenceMigration(32, 33) { _, prefs ->
+                val smoothingKey = "pref_gps_smoothing"
+                val legacyKey = "pref_use_filtered_gps"
+                if (!prefs.contains(smoothingKey)) {
+                    val smoothing = if (prefs.getBoolean(legacyKey) == true) 50 else 0
+                    prefs.putInt(smoothingKey, smoothing)
+                }
+                prefs.remove(legacyKey)
+            },
+            PreferenceMigration(33, 34) { _, prefs ->
+                prefs.remove("pref_filter_location_readings")
+                prefs.remove("pref_require_satellites")
+            },
+            PreferenceMigration(34, 35) { context, prefs ->
+                val backtrackEnabledKey = context.getString(R.string.pref_backtrack_enabled)
+                val backtrackFrequencyKey = context.getString(R.string.pref_backtrack_frequency)
+                // If the user enabled backtrack in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
+                if (prefs.contains(backtrackEnabledKey) && !prefs.contains(backtrackFrequencyKey)) {
+                    prefs.putDuration(backtrackFrequencyKey, Duration.ofMinutes(15))
+                }
+            },
+            PreferenceMigration(35, 36) { context, prefs ->
+                val weatherMonitorEnabledKey = context.getString(R.string.pref_monitor_weather)
+                val weatherFrequencyKey = context.getString(R.string.pref_weather_update_frequency)
+                // If the user enabled the weather monitor in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
+                if (prefs.contains(weatherMonitorEnabledKey) && !prefs.contains(weatherFrequencyKey)) {
+                    prefs.putDuration(weatherFrequencyKey, Duration.ofMinutes(15))
+                }
+            },
+            PreferenceMigration(36, 37) { context, prefs ->
+                val key = context.getString(R.string.pref_auto_location)
+                val source = if (prefs.getBoolean(key) == false) {
+                    GPSLocationSource.Manual
+                } else {
+                    GPSLocationSource.GPS
+                }
+                prefs.remove(key)
+                prefs.putString(key, source.id)
+            },
+            PreferenceMigration(37, 38) { _, prefs ->
+                val repo = getAppService<MapLayerPreferenceRepo>()
+                // Navigation is above paths and below beacons
+                val idealOrdering = listOf(
+                    BaseMapTileSource.SOURCE_ID,
+                    ElevationMapTileSource.SOURCE_ID,
+                    TrailMapsTileSource.SOURCE_ID,
+                    HillshadeMapTileSource.SOURCE_ID,
+                    AspectMapTileSource.SOURCE_ID,
+                    SlopeMapTileSource.SOURCE_ID,
+                    PhotoMapTileSource.SOURCE_ID,
+                    ContourGeoJsonSource.SOURCE_ID,
+                    CellTowerGeoJsonSource.SOURCE_ID,
+                    TideGeoJsonSource.SOURCE_ID,
+                    PathGeoJsonSource.SOURCE_ID,
+                    NavigationGeoJsonSource.SOURCE_ID,
+                    BeaconGeoJsonSource.SOURCE_ID,
+                    MyLocationGeoJsonSource.SOURCE_ID
+                )
+
+                val mapIds = listOf(
+                    NavigationToolRegistration.MAP_ID,
+                    MapToolRegistration.MAP_ID,
+                    OfflineMapsToolRegistration.PHOTO_MAPS_ID
+                )
+                for (mapId in mapIds) {
+                    val layers = repo.getActiveLayerIds(mapId)
+                    if (NavigationGeoJsonSource.SOURCE_ID in layers) {
+                        // Returning users keep their existing placement
+                        if (AppState.isReturningUser) {
+                            continue
+                        }
+                        repo.setActiveLayerIds(
+                            mapId,
+                            layers.filter { it != NavigationGeoJsonSource.SOURCE_ID }
+                        )
+                    }
+                    repo.addLayerInBestPosition(
+                        mapId,
+                        NavigationGeoJsonSource.SOURCE_ID,
+                        idealOrdering
+                    )
+                    prefs.remove(
+                        MapLayerPreferenceRepo.getPreferenceKey(
+                            mapId,
+                            NavigationGeoJsonSource.SOURCE_ID,
+                            DefaultMapLayerDefinitions.ENABLED
+                        )
+                    )
+                }
+            },
+            PreferenceMigration(38, 39) { context, prefs ->
+                val showWhileNavigatingKey = "pref_navigation_show_on_lock_screen"
+                val showWhileOpenKey = "pref_navigation_keep_unlocked"
+                val modeKey = context.getString(R.string.pref_navigation_lock_screen_mode)
+                // Showing while open also covers navigating, so it takes priority
+                val mode = when {
+                    prefs.getBoolean(showWhileOpenKey) == true -> "open"
+                    prefs.getBoolean(showWhileNavigatingKey) == true -> "navigating"
+                    else -> null
+                }
+                if (mode != null) {
+                    prefs.putString(modeKey, mode)
+                }
+                prefs.remove(showWhileNavigatingKey)
+                prefs.remove(showWhileOpenKey)
+            },
+            PreferenceMigration(39, 40) { context, prefs ->
+                val sessionState = SessionStateSubsystem.getInstance(context).preferences
+                prefs.getLong(Navigator.BEACON_DESTINATION_ID_KEY)?.let {
+                    sessionState.putLong(Navigator.BEACON_DESTINATION_ID_KEY, it)
+                }
+                prefs.remove(Navigator.BEACON_DESTINATION_ID_KEY)
             }
         )
 

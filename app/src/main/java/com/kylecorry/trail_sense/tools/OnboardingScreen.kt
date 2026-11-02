@@ -38,7 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -345,7 +345,7 @@ private fun OnboardingPageContents(
     contents: CharSequence,
     modifier: Modifier = Modifier
 ) {
-    val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
+    val markdown = remember { DependencyRegistry.get<MarkdownService>() }
     val parsed = remember(contents, markdown) {
         if (contents is String) {
             markdown.toMarkdown(contents)

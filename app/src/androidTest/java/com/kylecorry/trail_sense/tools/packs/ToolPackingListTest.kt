@@ -176,6 +176,21 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
 
     private fun canDeleteAnItem() {
         clickItemMenu(string(R.string.delete), 0)
+        hasText(string(R.string.delete_packing_list_item))
+        hasText("Test Item 2")
+        click(string(android.R.string.cancel))
+        hasItem(
+            "Test Item 2",
+            0,
+            2,
+            string(R.string.category_clothing),
+            "0 lb",
+            false,
+            0
+        )
+
+        clickItemMenu(string(R.string.delete), 0)
+        clickOk()
         not {
             hasItem(
                 "Test Item 2",

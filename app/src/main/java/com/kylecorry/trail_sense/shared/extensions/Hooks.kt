@@ -1,14 +1,26 @@
 package com.kylecorry.trail_sense.shared.extensions
 
+import android.os.Bundle
+import androidx.activity.ComponentDialog
+import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
 import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
+import com.kylecorry.andromeda.fragments.ReactiveAndromedaFragment
+import com.kylecorry.andromeda.fragments.onBackPressed
+import com.kylecorry.andromeda.fragments.useBackgroundEffect
+import com.kylecorry.andromeda.fragments.useTopic
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.sense.compass.ICompass
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -22,6 +34,8 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
@@ -29,6 +43,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.time.Duration
@@ -37,23 +52,29 @@ import kotlin.coroutines.CoroutineContext
 
 // Sensors
 
-fun ReactiveComponent.useGPSSensor(frequency: Duration = Duration.ofMillis(20)): IGPS {
+fun ReactiveComponent.useGPSSensor(
+    frequency: Duration = SensorService.DEFAULT_GPS_FREQUENCY,
+    tag: String? = null
+): IGPS {
     val sensors = useService<SensorService>()
-    return useMemo(sensors, frequency.seconds, frequency.nano) { sensors.getGPS(frequency) }
+    return useMemo(sensors, frequency.seconds, frequency.nano, tag) { sensors.getGPS(frequency, tag = tag) }
 }
 
-fun ReactiveComponent.useCellSignalSensor(removeUnregisteredSignals: Boolean = true): ICellSignalSensor {
+fun ReactiveComponent.useCellSignalSensor(
+    removeUnregisteredSignals: Boolean = true,
+    vararg values: Any?
+): ICellSignalSensor {
     val sensors = useService<SensorService>()
-    return useMemo(sensors, removeUnregisteredSignals) {
+    return useMemo(sensors, removeUnregisteredSignals, *values) {
         sensors.getCellSignal(
             removeUnregisteredSignals
         )
     }
 }
 
-fun ReactiveComponent.useCompassSensor(): ICompass {
+fun ReactiveComponent.useCompassSensor(delay: Int = SensorService.MOTION_SENSOR_DELAY): ICompass {
     val sensors = useService<SensorService>()
-    return useMemo(sensors) { sensors.getCompass() }
+    return useMemo(sensors, delay) { sensors.getCompass(delay = delay) }
 }
 
 fun ReactiveComponent.useAltimeterSensor(gps: IGPS? = null): IAltimeter {
@@ -71,19 +92,22 @@ fun ReactiveComponent.useSpeedometerSensor(gps: IGPS? = null): ISpeedometer {
 }
 
 // Common sensor readings
-fun ReactiveComponent.useGPSLocation(frequency: Duration = Duration.ofMillis(20)): Pair<Coordinate, Float?> {
-    val gps = useGPSSensor(frequency)
+fun ReactiveComponent.useGPSLocation(
+    frequency: Duration = SensorService.DEFAULT_GPS_FREQUENCY
+): Pair<Coordinate, Float?> {
+    val gps = useGPSSensor(frequency, this::class.java.simpleName)
     return useTopic(gps, gps.location to gps.horizontalAccuracy) {
         it.location to it.horizontalAccuracy
     }
 }
 
 fun ReactiveComponent.useNavigationSensors(
-    gpsFrequency: Duration = Duration.ofMillis(20),
-    trueNorth: Boolean = false
+    gpsFrequency: Duration = SensorService.DEFAULT_GPS_FREQUENCY,
+    trueNorth: Boolean = false,
+    compassDelay: Int = SensorService.MOTION_SENSOR_DELAY
 ): NavigationSensorValues {
-    val gps = useGPSSensor(gpsFrequency)
-    val compass = useCompassSensor()
+    val gps = useGPSSensor(gpsFrequency, this::class.java.simpleName)
+    val compass = useCompassSensor(compassDelay)
     val altimeter = useAltimeterSensor(gps)
     val speedometer = useSpeedometerSensor(gps)
     val prefs = useService<UserPreferences>()
@@ -181,6 +205,103 @@ fun ReactiveComponent.useLocation(refreshPolicy: SensorSubsystem.SensorRefreshPo
     }
 
     return location to isUpToDate
+}
+
+fun ReactiveComponent.useMainActivity(): MainActivity {
+    return useActivity() as MainActivity
+}
+
+fun <T> T.useNavController(): NavController where T : ReactiveComponent, T : Fragment {
+    return useMemo(useRootView()) { findNavController() }
+}
+
+fun <T> T.useBackPressedCallback(
+    vararg values: Any?,
+    callback: OnBackPressedCallback.() -> Boolean
+) where T : Fragment, T : ReactiveComponent {
+    val navController = useNavController()
+    val listenerRef = useRef<OnBackPressedCallback?>(null)
+    useEffect(*values) {
+        listenerRef.current?.remove()
+        listenerRef.current = onBackPressed {
+            val consumed = callback()
+            if (!consumed) {
+                remove()
+                navController.popBackStack()
+            }
+        }
+    }
+    useDestroyEffect {
+        listenerRef.current?.remove()
+    }
+}
+
+fun <T> T.useBottomSheetBackPressedCallback(
+    vararg values: Any?,
+    callback: OnBackPressedCallback.() -> Boolean
+) where T : BottomSheetDialogFragment, T : ReactiveComponent {
+    val listenerRef = useRef<OnBackPressedCallback?>(null)
+    useEffect(*values) {
+        listenerRef.current?.remove()
+        listenerRef.current = null
+        val dispatcher = (dialog as? ComponentDialog)?.onBackPressedDispatcher
+            ?: return@useEffect
+        val listener = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val consumed = callback()
+                if (!consumed) {
+                    isEnabled = false
+                    dispatcher.onBackPressed()
+                }
+            }
+        }
+        dispatcher.addCallback(viewLifecycleOwner, listener)
+        listenerRef.current = listener
+    }
+    useDestroyEffect {
+        listenerRef.current?.remove()
+    }
+}
+
+fun <T> T.useUnsavedChangesPrompt(hasChanges: Boolean) where T : Fragment, T : ReactiveComponent {
+    val activity = useActivity() as? FragmentActivity
+    useBackPressedCallback(hasChanges, activity) {
+        if (hasChanges && activity != null) {
+            CustomUiUtils.confirmDiscardChanges(activity) {
+                remove()
+                activity.onBackPressedDispatcher.onBackPressed()
+            }
+            true
+        } else {
+            false
+        }
+    }
+}
+
+fun ReactiveAndromedaFragment.useShowDisclaimer(
+    title: String,
+    message: CharSequence,
+    shownKey: String,
+    okText: String = getString(android.R.string.ok),
+    cancelText: String? = getString(android.R.string.cancel),
+    considerShownIfCancelled: Boolean = true,
+    shownValue: Boolean = true,
+    onClose: (cancelled: Boolean, agreed: Boolean) -> Unit = { _, _ -> }
+) {
+    val context = useAndroidContext()
+    useEffect {
+        CustomUiUtils.disclaimer(
+            context,
+            title,
+            message,
+            shownKey,
+            okText,
+            cancelText,
+            considerShownIfCancelled,
+            shownValue,
+            onClose
+        )
+    }
 }
 
 fun ReactiveComponent.useLoadingIndicator(isLoading: Boolean, indicator: ILoadingIndicator) {
@@ -397,8 +518,13 @@ fun ReactiveComponent.useTimer(
     actionBehavior: TimerActionBehavior = TimerActionBehavior.Wait,
     runnable: suspend () -> Unit
 ) {
+    val runnableRef = useRef(runnable)
+    runnableRef.current = runnable
+
     val timer = useMemo {
-        CoroutineTimer(scope, observeOn, actionBehavior, runnable)
+        CoroutineTimer(scope, observeOn, actionBehavior) {
+            runnableRef.current()
+        }
     }
 
     useResumeEffect(timer, interval) {
@@ -416,4 +542,26 @@ fun ReactiveComponent.useTrigger(): Pair<String, () -> Unit> {
         setKey(UUID.randomUUID().toString())
     }
     return useMemo(key, trigger) { key to trigger }
+}
+
+fun ReactiveComponent.useToolEventListener(eventId: String, callback: (data: Bundle) -> Unit) {
+    val callbackRef = useRef(callback)
+
+    useEffect(callback) {
+        callbackRef.current = callback
+    }
+
+    val subscriber: (Bundle) -> Unit = useMemo {
+        { data ->
+            callbackRef.current(data)
+        }
+    }
+
+    useResumeEffect(eventId) {
+        Tools.subscribe(eventId, subscriber)
+    }
+
+    usePauseEffect(eventId) {
+        Tools.unsubscribe(eventId, subscriber)
+    }
 }

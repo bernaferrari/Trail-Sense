@@ -57,6 +57,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import android.view.View
+import android.widget.TextView
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
@@ -70,6 +74,12 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
+import com.kylecorry.trail_sense.shared.views.Slider
+import java.time.Duration
+import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
@@ -114,7 +124,7 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
 
     private var gps: IGPS = sensorService.getGPS()
     private var realGps: IGPS = getRealGPS()
-    var locationOverride by mutableStateOf(prefs.locationOverride)
+    var locationOverride by mutableStateOf(prefs.gps.locationOverride)
         private set
     var isOverrideLocationLoading by mutableStateOf(false)
         private set
@@ -182,7 +192,7 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     }
 
     fun isLocationOverrideEnabled(): Boolean {
-        return !isAutoGPSPreferenceEnabled() || !prefs.useAutoLocation
+        return !isAutoGPSPreferenceEnabled() || prefs.gps.locationSource == GPSLocationSource.Manual
     }
 
     fun isAutoGPSPreferenceEnabled(): Boolean {
@@ -199,18 +209,96 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     }
 
     fun clearCache() {
-        val cache = PreferencesSubsystem.getInstance(host.requireContext()).preferences
-        cache.remove(CustomGPS.LAST_ALTITUDE)
-        cache.remove(CustomGPS.LAST_UPDATE)
-        cache.remove(CustomGPS.LAST_SPEED)
-        cache.remove(CustomGPS.LAST_LONGITUDE)
-        cache.remove(CustomGPS.LAST_LATITUDE)
+        host.lifecycleOwner.lifecycleScope.launch {
+            CacheGPSModule.clearCache()
+        }
+    }
+
+    fun accuracyFilterSummary(): String {
+        val filter = prefs.gps.accuracyFilter
+        val accuracy = filter.minAccuracy
+        val wait = filter.maxAccuracyWait
+        return if (accuracy == null || wait == null) {
+            host.getString(R.string.none)
+        } else {
+            host.getString(
+                R.string.gps_accuracy_filter_summary,
+                formatService.formatElevation(Distance.meters(accuracy)),
+                formatService.formatDuration(wait, includeSeconds = true)
+            )
+        }
+    }
+
+    fun showAccuracyFilterDialog(onChanged: () -> Unit) {
+        val context = host.requireContext()
+        val view = View.inflate(context, R.layout.view_gps_accuracy_filter, null)
+        val accuracyLabel = view.findViewById<TextView>(R.id.accuracy_label)
+        val waitLabel = view.findViewById<TextView>(R.id.wait_label)
+        val accuracySlider = view.findViewById<Slider>(R.id.accuracy_slider)
+        val waitSlider = view.findViewById<Slider>(R.id.wait_slider)
+        val current = prefs.gps.accuracyFilter
+        val distanceUnits = prefs.baseDistanceUnits
+        val minimumAccuracy = Distance.meters(GPSAccuracyFilter.MIN_ACCURACY_METERS.toFloat())
+            .convertTo(distanceUnits).value.roundToInt()
+        val maximumAccuracy = Distance.meters(GPSAccuracyFilter.MAX_ACCURACY_METERS.toFloat())
+            .convertTo(distanceUnits).value.roundToInt()
+
+        var accuracy = Distance.meters(
+            current.minAccuracy ?: GPSAccuracyFilter.Default.minAccuracy!!
+        ).convertTo(distanceUnits).value.roundToInt().coerceIn(minimumAccuracy, maximumAccuracy)
+        var wait = current.maxAccuracyWait?.seconds?.toInt()
+            ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.seconds.toInt()
+
+        accuracySlider.valueFrom = minimumAccuracy.toFloat()
+        accuracySlider.valueTo = maximumAccuracy.toFloat()
+        accuracySlider.stepSize = 1f
+        accuracySlider.value = accuracy.toFloat()
+        accuracySlider.addOnChangeListener { _, value, _ ->
+            accuracy = value.toInt()
+            accuracyLabel.text = context.getString(
+                R.string.gps_accuracy_target,
+                formatService.formatDistance(Distance.from(accuracy.toFloat(), distanceUnits))
+            )
+        }
+
+        waitSlider.valueFrom = GPSAccuracyFilter.MIN_WAIT_SECONDS.toFloat()
+        waitSlider.valueTo = GPSAccuracyFilter.MAX_WAIT_SECONDS.toFloat()
+        waitSlider.stepSize = 1f
+        waitSlider.value = wait.toFloat()
+        waitSlider.addOnChangeListener { _, value, _ ->
+            wait = value.toInt()
+            waitLabel.text = context.getString(
+                R.string.gps_accuracy_wait,
+                formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
+            )
+        }
+
+        accuracyLabel.text = context.getString(
+            R.string.gps_accuracy_target,
+            formatService.formatDistance(Distance.from(accuracy.toFloat(), distanceUnits))
+        )
+        waitLabel.text = context.getString(
+            R.string.gps_accuracy_wait,
+            formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
+        )
+
+        Alerts.dialog(
+            context,
+            context.getString(R.string.pref_gps_accuracy_requirement_title),
+            contentView = view
+        ) { cancelled ->
+            if (!cancelled) {
+                val accuracyMeters = Distance.from(accuracy.toFloat(), distanceUnits).meters().value
+                prefs.gps.accuracyFilter = GPSAccuracyFilter.custom(accuracyMeters, wait)
+                onChanged()
+            }
+        }
     }
 
     fun setLocationOverride(coordinate: Coordinate?) {
         val updated = coordinate ?: Coordinate.zero
         locationOverride = updated
-        prefs.locationOverride = updated
+        prefs.gps.locationOverride = updated
         resetGPS()
         update()
     }
@@ -317,8 +405,10 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         var accuracySummary by remember {
             mutableStateOf(controller.formatAccuracy())
         }
-        var autoLocation by remember { mutableStateOf(prefs.useAutoLocation) }
-        var requireSatellites by remember { mutableStateOf(prefs.requiresSatellites) }
+        var autoLocation by remember {
+            mutableStateOf(prefs.gps.locationSource == GPSLocationSource.GPS)
+        }
+        var accuracyFilterSummary by remember { mutableStateOf(controller.accuracyFilterSummary()) }
         var permissionVisible by remember {
             mutableStateOf(!controller.isAutoGPSPreferenceEnabled())
         }
@@ -380,21 +470,22 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                             enabled = autoLocationEnabled,
                             onCheckedChange = {
                                 autoLocation = it
-                                prefs.useAutoLocation = it
+                                prefs.gps.locationSource =
+                                    if (it) GPSLocationSource.GPS else GPSLocationSource.Manual
                                 overrideEnabled = controller.isLocationOverrideEnabled()
                                 controller.onAutoLocationChanged()
                             }
                         )
                         TrailSenseDivider()
-                        GPSChipSwitchRow(
+                        GPSChipActionRow(
                             icon = painterResource(R.drawable.satellite),
-                            label = stringResource(R.string.pref_require_satellites_title),
-                            summary = stringResource(R.string.pref_require_satellites_description),
-                            checked = requireSatellites,
+                            label = stringResource(R.string.pref_gps_accuracy_requirement_title),
+                            summary = accuracyFilterSummary,
                             enabled = autoLocation,
-                            onCheckedChange = {
-                                requireSatellites = it
-                                controller.putBoolean(R.string.pref_require_satellites, it)
+                            onClick = {
+                                controller.showAccuracyFilterDialog {
+                                    accuracyFilterSummary = controller.accuracyFilterSummary()
+                                }
                             }
                         )
                         TrailSenseDivider()
@@ -596,6 +687,7 @@ private fun GPSChipActionRow(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    summary: String? = null,
     enabled: Boolean = true
 ) {
     Surface(
@@ -614,12 +706,23 @@ private fun GPSChipActionRow(
     ) {
         GPSIconChip(icon)
         Spacer(Modifier.width(TrailSenseSpacing.lg))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         Spacer(Modifier.width(TrailSenseSpacing.md))
         Box(
             modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),

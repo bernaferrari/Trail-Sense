@@ -70,12 +70,15 @@ abstract class BaseCompassView(
         get() = contentVisible
         set(value) {
             contentVisible = value
+            if (!value) {
+                bitmapLoader.clear()
+            }
         }
 
     var isInvisible: Boolean
         get() = !contentVisible
         set(value) {
-            contentVisible = !value
+            isVisible = !value
         }
 
     val width: Int

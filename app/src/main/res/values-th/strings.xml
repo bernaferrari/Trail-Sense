@@ -224,11 +224,7 @@
     <string name="sensors">เซ็นเซอร์</string>
     <string name="pref_auto_declination_summary">อิงจากตำแหน่งปัจจุบันของคุณ</string>
     <string name="location">ตำแหน่ง</string>
-    <string name="pref_auto_location_title">ปรับตำแหน่งอัตโนมัติ</string>
-    <string name="pref_require_satellites_title">จำเป็นต้องจับตำแหน่งดาวเทียม</string>
-    <string name="pref_require_satellites_description">ต้องการดาวเทียมอย่างน้อย 4 ดวง เพื่อเพื่มความแม่นยำ</string>
     <string name="satellites">ดาวเทียม</string>
-    <string name="pref_nmea_elevation_summary">ใช้ NMEA (ดาวเทียม) เพื่อแก้ไขค่าความสูง แทนที่จะใช้โมเดลในตัว</string>
     <string name="num_satellites">%d ดวง</string>
     <string name="clear_cache">ล้างแคช</string>
     <string name="pref_gps_override_title">ตำแหน่งที่ระบุไว้เอง</string>
@@ -271,11 +267,9 @@
         <item quantity="other">นำเข้า %d บีคอนแล้ว</item>
     </plurals>
     <string name="pref_navigation_lock_screen_when_open_title">แสดงบนหน้าจอล็อกไว้ระหว่างที่เปิด</string>
-    <string name="pref_navigation_lock_screen_presence_title">แสดงบนหน้าจอล็อกไว้ระหว่างที่นำทาง</string>
     <string name="guide_map_layers">ชั้นเลเยอร์แผนที่</string>
     <string name="layers">เลเยอร์</string>
     <string name="gps_signal_lost">สัญญาณ GPS ขาดหาย</string>
-    <string name="gps_stale">คาดเคลื่อน</string>
     <string name="reduce_pdf_resolution">ลดความละเอียดไฟล์ PDF</string>
     <string name="compass_dynamic_colors_summary">ใช้สีแบบไดนามิกสำหรับการนำทางด้วยเข็มทิศ</string>
     <string name="default_widget_theme">ธีมของวิดเจ็ตเรื่มต้น</string>

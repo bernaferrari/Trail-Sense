@@ -8,7 +8,10 @@ class StrideLengthEstimatorFactory(context: Context) {
     private val sensors = SensorService(context)
 
     fun getEstimator(): IStrideLengthEstimator {
-        return EndPointStrideLengthEstimator(sensors.getGPS(), sensors.getPedometer())
+        return EndPointStrideLengthEstimator(
+            sensors.getGPS(tag = "StepLengthEstimatorFactory"),
+            sensors.getPedometer()
+        )
     }
 
 }

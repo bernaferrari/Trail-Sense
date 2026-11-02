@@ -213,7 +213,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
         if (showBacktrackFrequencyPicker) {
             DurationPickerDialog(
                 title = backtrackFrequencyTitle,
-                duration = prefs.backtrackRecordFrequency,
+                duration = prefs.paths.backtrackRecordFrequency,
                 message = stringResource(R.string.actual_frequency_disclaimer),
                 hint = stringResource(R.string.frequency),
                 showSeconds = true,
@@ -250,7 +250,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             title = (root as PathGroup?)?.name ?: host.getString(R.string.paths)
         }
 
-        sort = prefs.navigation.pathSort
+        sort = prefs.paths.pathSort
         sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
 
         // Path updates currently require loading all paths because the repository exposes full snapshots.
@@ -346,10 +346,10 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             host.requireContext(),
             host.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
-            sortOptions.indexOf(prefs.navigation.pathSort)
+            sortOptions.indexOf(prefs.paths.pathSort)
         ) { newSort ->
             if (newSort != null) {
-                prefs.navigation.pathSort = sortOptions[newSort]
+                prefs.paths.pathSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
                 sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
@@ -478,7 +478,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             host.lifecycleOwner,
             gpxService,
             pathService,
-            prefs.navigation
+            prefs.paths
         )
         command.execute(manager.root?.id)
     }
@@ -516,7 +516,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun createPath() {
-        val command = CreatePathCommand(host.requireContext(), pathService, prefs.navigation)
+        val command = CreatePathCommand(host.requireContext(), pathService, prefs.paths)
         host.inBackground {
             command.execute(manager.root?.id)?.let {
                 showPath(it)

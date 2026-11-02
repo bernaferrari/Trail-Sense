@@ -17,15 +17,21 @@ interface IWaypointRepo {
 
     suspend fun deleteOlderInPath(pathId: Long, time: Instant)
 
-    suspend fun get(id: Long): PathPoint?
-
-    suspend fun getAll(since: Instant? = null): List<PathPoint>
+    suspend fun getAll(): List<PathPoint>
 
     fun getAllLive(since: Instant? = null): LiveData<List<PathPoint>>
 
     suspend fun getAllInPaths(pathIds: List<Long>): List<PathPoint>
 
     fun getAllInPathLive(pathId: Long): LiveData<List<PathPoint>>
+
+    suspend fun getFirstInPath(pathId: Long): PathPoint?
+
+    suspend fun getLastInPath(pathId: Long): PathPoint?
+
+    suspend fun getCountInPath(pathId: Long): Int
+
+    suspend fun getMostRecentPathIdWithElevationChange(minChange: Float): Long?
 
     suspend fun getAllWithCellSignal(): List<PathPoint>
 }

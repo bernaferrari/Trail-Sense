@@ -4,24 +4,20 @@
   <CurrentIssues>
     <ID>ComplexCondition:AndromedaExtensions.kt:x.isNaN() || y.isNaN() || other.x.isNaN() || other.y.isNaN()</ID>
     <ID>ComplexCondition:CalibratedCameraAnglePixelMapper.kt:CalibratedCameraAnglePixelMapper$focalLength == null || opticalCenter == null || preActiveArray == null || activeArray == null</ID>
-    <ID>ComplexCondition:ClimateScreen.kt:ClimateController$start.month == Month.JANUARY &amp;&amp; start.dayOfMonth &lt; 10 &amp;&amp; end.month == Month.DECEMBER &amp;&amp; end.dayOfMonth &gt; 20</ID>
-    <ID>ComplexCondition:CreateTideScreen.kt:CreateTideController$(tides.isEmpty() &amp;&amp; estimateAlgorithm == TideEstimator.Clock) || (estimateType == EstimateType.LunitidalIntervalManualUTC &amp;&amp; interval == null) || (estimateType == EstimateType.LunitidalIntervalManualLocal &amp;&amp; (interval == null || location == null)) || (tides.isEmpty() &amp;&amp; estimateType == EstimateType.LunitidalIntervalAuto)</ID>
+    <ID>ComplexCondition:ClimateFragment.kt:ClimateFragment$start.month == Month.JANUARY &amp;&amp; start.dayOfMonth &lt; 10 &amp;&amp; end.month == Month.DECEMBER &amp;&amp; end.dayOfMonth &gt; 20</ID>
+    <ID>ComplexCondition:CreateTideFragment.kt:CreateTideFragment$(tides.isEmpty() &amp;&amp; estimateAlgorithm == TideEstimator.Clock) || // Manual lunitidal UTC only requires a lunitidal interval is entered (estimateType == EstimateType.LunitidalIntervalManualUTC &amp;&amp; lunitidalInterval == null) || // Manual lunitidal local requires a lunitidal interval and location are entered (estimateType == EstimateType.LunitidalIntervalManualLocal &amp;&amp; (lunitidalInterval == null || location == null)) || // Auto lunitidal interval requires at least one tide (tides.isEmpty() &amp;&amp; estimateType == EstimateType.LunitidalIntervalAuto)</ID>
     <ID>ComplexCondition:EncodedDataImageReader.kt:EncodedDataImageReader.Companion.&lt;no name provided&gt;$!convertZero &amp;&amp; red == 0f &amp;&amp; green == 0f &amp;&amp; blue == 0f</ID>
     <ID>ComplexCondition:FormatService.kt:FormatService$!(strs.size &gt; 0 &amp;&amp; seconds == 0L) &amp;&amp; seconds &gt;= 0 &amp;&amp; includeSeconds &amp;&amp; (!short || (hours == 0L &amp;&amp; minutes == 0L))</ID>
+    <ID>ComplexCondition:FragmentBallisticsCalculator.kt:FragmentBallisticsCalculator$bulletSpeed != null &amp;&amp; bulletSpeed.value &gt; 0 &amp;&amp; zeroDistance != null &amp;&amp; scopeHeight != null</ID>
+    <ID>ComplexCondition:FragmentToolTriangulate.kt:FragmentToolTriangulate$location1 == null || location2 == null || direction1 == null || direction2 == null</ID>
     <ID>ComplexCondition:GeoJsonPointRenderer.kt:GeoJsonPointRenderer$shape == GEO_JSON_PROPERTY_MARKER_SHAPE_CIRCLE || (shape == null &amp;&amp; iconRes == null &amp;&amp; bitmap == null)</ID>
-    <ID>ComplexCondition:GpsStatusBadgeProvider.kt:GpsStatusBadgeProvider$!gps.hasValidReading || (prefs.requiresSatellites &amp;&amp; (gps.satellites ?: 0) &lt; 4) || (gps is CustomGPS &amp;&amp; gps.isTimedOut)</ID>
     <ID>ComplexCondition:LineClipper.kt:LineClipper$!(start.x &lt; bounds.left &amp;&amp; end.x &lt; bounds.left || start.x &gt; bounds.right &amp;&amp; end.x &gt; bounds.right || start.y &lt; bounds.bottom &amp;&amp; end.y &lt; bounds.bottom || start.y &gt; bounds.top &amp;&amp; end.y &gt; bounds.top)</ID>
-    <ID>ComplexCondition:MapLayerBackgroundTask.kt:MapLayerBackgroundTask$!isDirty &amp;&amp; !isInvalid &amp;&amp; areBoundsEqual( newBounds, lastRunBounds ?: CoordinateBounds.empty ) &amp;&amp; zoom == lastRunZoom</ID>
-    <ID>ComplexCondition:OfflineMapListToolScreen.kt:OfflineMapListController$(isPdfMap &amp;&amp; prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap &amp;&amp; prefs.photoMaps.autoReducePhotoMaps)</ID>
-    <ID>ComplexCondition:PerspectiveCorrectionView.kt:PerspectiveCorrectionState$image == null &amp;&amp; imagePath != null &amp;&amp; size.width &gt; 0 &amp;&amp; size.height &gt; 0</ID>
+    <ID>ComplexCondition:PerspectiveCorrectionView.kt:PerspectiveCorrectionView$image == null &amp;&amp; imagePath != null &amp;&amp; width &gt; 0 &amp;&amp; height &gt; 0</ID>
     <ID>ComplexCondition:PhotoMapEntity.kt:PhotoMapEntity$percentX1 != null &amp;&amp; percentY1 != null &amp;&amp; longitude1 != null &amp;&amp; latitude1 != null</ID>
     <ID>ComplexCondition:PhotoMapEntity.kt:PhotoMapEntity$percentX2 != null &amp;&amp; percentY2 != null &amp;&amp; longitude2 != null &amp;&amp; latitude2 != null</ID>
-    <ID>ComplexCondition:PhotoMapTileSource.kt:PhotoMapTileSource$internalSelector == null || loadPdfs != lastLoadPdfs || backgroundColor != lastBackgroundColor || featureId != lastFeatureId</ID>
     <ID>ComplexCondition:PixelInterpolators.kt:BilinearInterpolator$x1y1 == null || x1y2 == null || x2y1 == null || x2y2 == null || x1y1.isNaN() || x1y2.isNaN() || x2y1.isNaN() || x2y2.isNaN()</ID>
-    <ID>ComplexCondition:SensorDetailsScreen.kt:SensorDetailsController$!gps.hasValidReading || (prefs.requiresSatellites &amp;&amp; (gps.satellites ?: 0) &lt; 4) || (gps is CustomGPS &amp;&amp; (gps as CustomGPS).isTimedOut)</ID>
     <ID>ComplexCondition:TideService.kt:TideService$(nextIsHigh &amp;&amp; closeToNextTide) || (nextIsLow &amp;&amp; farFromNextTide)</ID>
     <ID>ComplexCondition:TideService.kt:TideService$(nextIsLow &amp;&amp; closeToNextTide) || (nextIsHigh &amp;&amp; farFromNextTide)</ID>
-    <ID>ComplexCondition:TriangulateScreen.kt:TriangulateController$location1 == null || location2 == null || direction1 == null || direction2 == null</ID>
     <ID>ConstructorParameterNaming:DEMElevation.kt:DEMElevation$private val _elevation: Float</ID>
     <ID>ConstructorParameterNaming:DigitalElevationModelLoader.kt:DigitalElevationModelFile$val latitude_end: Double</ID>
     <ID>ConstructorParameterNaming:DigitalElevationModelLoader.kt:DigitalElevationModelFile$val latitude_start: Double</ID>
@@ -31,60 +27,28 @@
     <ID>ConstructorParameterNaming:DigitalElevationModelLoader.kt:DigitalElevationModelIndex$val has_water_mask: Boolean? = null</ID>
     <ID>ConstructorParameterNaming:DigitalElevationModelLoader.kt:DigitalElevationModelIndex$val resolution_arc_seconds: Int</ID>
     <ID>CyclomaticComplexMethod:AstronomyGuidanceTargetPicker.kt:AstronomyGuidanceTargetPicker$private suspend fun getGuidanceOptions: List&lt;AstronomyGuidanceOption&gt;</ID>
-    <ID>CyclomaticComplexMethod:AstronomyService.kt:AstronomyService$fun findNextEvent: LocalDate?</ID>
-    <ID>CyclomaticComplexMethod:BatteryScreen.kt:@Composable fun BatteryToolScreen</ID>
-    <ID>CyclomaticComplexMethod:BatteryService.kt:BatteryService$fun getSystemBatteryTips: List&lt;SystemBatteryTip&gt;</ID>
-    <ID>CyclomaticComplexMethod:CalibrateBarometerScreen.kt:@Composable private fun PressureChartView</ID>
-    <ID>CyclomaticComplexMethod:ClimateScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>CyclomaticComplexMethod:ClimateScreen.kt:@Composable private fun TemperatureChart</ID>
-    <ID>CyclomaticComplexMethod:ClimateScreen.kt:ClimateController$private fun getClimateDescription: Pair&lt;String, String&gt;</ID>
-    <ID>CyclomaticComplexMethod:CreateFieldGuideSightingScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>CyclomaticComplexMethod:CreateTideScreen.kt:CreateTideController$private fun getTide: TideTable?</ID>
-    <ID>CyclomaticComplexMethod:CustomUiUtils.kt:CustomUiUtils$@Composable private fun ElevationPromptContent</ID>
-    <ID>CyclomaticComplexMethod:DestinationContent.kt:@Composable fun DestinationContent</ID>
-    <ID>CyclomaticComplexMethod:EnhancedImageView.kt:EnhancedImageView.TiledImageView$override fun tileVisible: Boolean</ID>
+    <ID>CyclomaticComplexMethod:ClimateFragment.kt:ClimateFragment$private fun getClimateDescription: Pair&lt;String, String&gt;</ID>
+    <ID>CyclomaticComplexMethod:EnhancedImageView.kt:EnhancedImageView$override fun tileVisible: Boolean</ID>
     <ID>CyclomaticComplexMethod:FieldGuideTagNameMapper.kt:FieldGuideTagNameMapper$fun getName: String</ID>
-    <ID>CyclomaticComplexMethod:FlashlightScreen.kt:@Composable fun FlashlightScreen</ID>
     <ID>CyclomaticComplexMethod:FormatService.kt:FormatService$fun getDistanceUnitName: String</ID>
-    <ID>CyclomaticComplexMethod:FormatService.kt:FormatService$fun getWeightUnitName: String</ID>
+    <ID>CyclomaticComplexMethod:FragmentScopeAdjustment.kt:FragmentScopeAdjustment$override fun update</ID>
     <ID>CyclomaticComplexMethod:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$private suspend fun renderFeaturesInBackground</ID>
     <ID>CyclomaticComplexMethod:GeoJsonPointRenderer.kt:GeoJsonPointRenderer$private fun convertFeaturesToMarkers</ID>
     <ID>CyclomaticComplexMethod:GeographicImageSource.kt:GeographicImageSource$suspend fun read</ID>
-    <ID>CyclomaticComplexMethod:ItemCategoryColorMapper.kt:ItemCategoryColorMapper$fun map: AppColor</ID>
-    <ID>CyclomaticComplexMethod:ItemCategoryIconMapper.kt:ItemCategoryIconMapper$@DrawableRes fun getIcon: Int</ID>
-    <ID>CyclomaticComplexMethod:ItemCategoryStringMapper.kt:ItemCategoryStringMapper$fun getString: String</ID>
-    <ID>CyclomaticComplexMethod:LandModel.kt:LandModel$suspend fun getCoastalLocations: List&lt;Coordinate&gt;</ID>
-    <ID>CyclomaticComplexMethod:LightningScreen.kt:@Composable fun LightningScreen</ID>
     <ID>CyclomaticComplexMethod:LineClipper.kt:LineClipper$fun clip</ID>
-    <ID>CyclomaticComplexMethod:MapLayerBackgroundTask.kt:MapLayerBackgroundTask$fun scheduleUpdate</ID>
-    <ID>CyclomaticComplexMethod:MapToolScreen.kt:MapController$override fun onUpdate</ID>
-    <ID>CyclomaticComplexMethod:NavigatorUserErrors.kt:NavigatorUserErrors$fun update</ID>
-    <ID>CyclomaticComplexMethod:OfflineMapListToolScreen.kt:OfflineMapListController$private fun createMap</ID>
-    <ID>CyclomaticComplexMethod:PathOverviewToolScreen.kt:PathOverviewController$private fun showPathMenu</ID>
-    <ID>CyclomaticComplexMethod:PhotoMapsScreen.kt:PhotoMapsController$private fun showMenu</ID>
-    <ID>CyclomaticComplexMethod:PlaceBeaconToolScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>CyclomaticComplexMethod:PluginDetailsScreen.kt:@Composable internal fun PluginDetailsScreen</ID>
-    <ID>CyclomaticComplexMethod:PorterStemmer.kt:PorterStemmer$private fun step1b: String</ID>
-    <ID>CyclomaticComplexMethod:RulerScreen.kt:@Composable internal fun RulerCanvas</ID>
-    <ID>CyclomaticComplexMethod:SensorService.kt:SensorService$fun getAltimeter: IAltimeter</ID>
-    <ID>CyclomaticComplexMethod:SightingCompassDialog.kt:@Composable private fun SightingCompassStrip</ID>
-    <ID>CyclomaticComplexMethod:SolarPanelScreen.kt:@Composable fun SolarPanelScreen</ID>
-    <ID>CyclomaticComplexMethod:StrideLengthEstimationScreen.kt:@Composable private fun StrideLengthScreen</ID>
-    <ID>CyclomaticComplexMethod:TemperatureEstimationScreen.kt:@Composable private fun TemperatureEstimationScreen</ID>
-    <ID>CyclomaticComplexMethod:TideTableWaterLevelCalculator.kt:TideTableWaterLevelCalculator$private suspend fun getGapCalculator2: IWaterLevelCalculator</ID>
-    <ID>CyclomaticComplexMethod:TileQueue.kt:TileQueue$suspend fun load</ID>
-    <ID>CyclomaticComplexMethod:TrailSenseNavGraph.kt:TrailSenseNavGraph$fun create: NavGraph</ID>
-    <ID>CyclomaticComplexMethod:VolumeConverterPage.kt:VolumeConverterPage$override fun getUnitName: String</ID>
-    <ID>CyclomaticComplexMethod:WhistleScreen.kt:@Composable fun WhistleScreen</ID>
-    <ID>CyclomaticComplexMethod:WhiteNoiseScreen.kt:@Composable fun WhiteNoiseScreen</ID>
+    <ID>CyclomaticComplexMethod:MapFragment.kt:MapFragment$override fun update</ID>
+    <ID>CyclomaticComplexMethod:MapLayerPreferenceManager.kt:MapLayerPreferenceManager$fun populatePreferences</ID>
+    <ID>CyclomaticComplexMethod:PhotoMapsFragment.kt:PhotoMapsFragment$override fun onViewCreated</ID>
     <ID>EmptyClassBlock:ProguardIgnore.kt:ProguardIgnore${ }</ID>
     <ID>EmptyFunctionBlock:BeaconCompassLayer.kt:BeaconCompassLayer${ }</ID>
     <ID>EmptyFunctionBlock:BearingCompassLayer.kt:BearingCompassLayer${ }</ID>
     <ID>EmptyFunctionBlock:BearingToCompassLayer.kt:BearingToCompassLayer${ }</ID>
+    <ID>EmptyFunctionBlock:FragmentToolPermits.kt:FragmentToolPermits${ }</ID>
     <ID>EmptyFunctionBlock:MarkerCompassLayer.kt:MarkerCompassLayer${ }</ID>
     <ID>EmptyFunctionBlock:NavigationCompassLayer.kt:NavigationCompassLayer${ }</ID>
+    <ID>EmptyFunctionBlock:ProgressBar.kt:ProgressBar${ }</ID>
+    <ID>EmptyFunctionBlock:QuickActionSheet.kt:QuickActionSheet.&lt;no name provided&gt;${ }</ID>
     <ID>ExplicitItLambdaParameter:LighterPackIOService.kt:LighterPackIOService${ it -&gt; val name = it.getOrNull(nameIdx) ?: "" val category = parseCategoryString(it.getOrNull(categoryIdx) ?: "") val weight = it.getOrNull(weightAmountIdx)?.toFloatOrNull() val unit = it.getOrNull(weightUnitIdx)?.let { parseWeightUnit(it) } ?: WeightUnits.Grams val packedQty = it.getOrNull(packedQtyIdx)?.toDoubleCompat() ?: 0.0 val desiredQty = it.getOrNull(desiredQtyIdx)?.toDoubleCompat() ?: it.getOrNull(qtyIdx) ?.toDoubleCompat() ?: 0.0 val isOptional = parseOptional(it.getOrNull(optionalIdx)) PackItem( 0, 0, name, category, amount = packedQty, desiredAmount = desiredQty, weight = weight?.let { Weight.from(it, unit) }, isOptional = isOptional ) }</ID>
-    <ID>ExplicitItLambdaParameter:Navigator.kt:Navigator${ it -&gt; it + 1 }</ID>
     <ID>ForbiddenComment:ARAstronomyLayer.kt:ARAstronomyLayer$// TODO: The line should be drawn to the horizon</ID>
     <ID>ForbiddenComment:ARAstronomyLayer.kt:ARAstronomyLayer$// TODO: This isn't efficient</ID>
     <ID>ForbiddenComment:ARBeaconLayer.kt:ARBeaconLayer$// TODO: Change opacity if navigating</ID>
@@ -95,23 +59,20 @@
     <ID>ForbiddenComment:AppDatabase.kt:AppDatabase.Companion$// TODO: Temporary for the android tests, will remove once AppDatabase is injected with hilt</ID>
     <ID>ForbiddenComment:AstronomyDailyWorker.kt:AstronomyDailyWorker$// TODO: Autogenerate last run key (pref_andromeda_daily_worker_last_run_date_UNIQUEID)</ID>
     <ID>ForbiddenComment:AstronomyPreferences.kt:AstronomyPreferences$// TODO: Let the user set this</ID>
-    <ID>ForbiddenComment:AugmentedRealityToolScreen.kt:AugmentedRealityController$// Beacon layer setup (TODO: Move this to a layer manager)</ID>
-    <ID>ForbiddenComment:AugmentedRealityToolScreen.kt:AugmentedRealityController$// TODO: Extract focus formatters</ID>
-    <ID>ForbiddenComment:AugmentedRealityToolScreen.kt:AugmentedRealityController$// TODO: Move this to the AR view</ID>
-    <ID>ForbiddenComment:AugmentedRealityUtils.kt:AugmentedRealityUtils$// TODO: Get this working for all mappers</ID>
+    <ID>ForbiddenComment:AugmentedRealityFragment.kt:AugmentedRealityFragment$// Beacon layer setup (TODO: Move this to a layer manager)</ID>
+    <ID>ForbiddenComment:AugmentedRealityFragment.kt:AugmentedRealityFragment$// TODO: Extract focus formatters</ID>
+    <ID>ForbiddenComment:AugmentedRealityFragment.kt:AugmentedRealityFragment$// TODO: Move this to the AR view</ID>
     <ID>ForbiddenComment:AugmentedRealityUtils.kt:AugmentedRealityUtils$// TODO: Go directly to ENU</ID>
     <ID>ForbiddenComment:AugmentedRealityView.kt:AugmentedRealityView$// TODO: Notify location change</ID>
     <ID>ForbiddenComment:AugmentedRealityView.kt:AugmentedRealityView$// TODO: Should the onFocus method just return a string?</ID>
     <ID>ForbiddenComment:AugmentedRealityView.kt:AugmentedRealityView$// TODO: This needs a parent view that has the camera, this, and any buttons (like the freeform button)</ID>
-    <ID>ForbiddenComment:AutoSunCalibrator.kt:AutoSunCalibrator$// TODO: If the sun and actual are too far apart, return null</ID>
-    <ID>ForbiddenComment:AutoSunCalibrator.kt:AutoSunCalibrator$// TODO: This doesn't factor in the inclination of the device or declination (this value should always be with declination applied)</ID>
     <ID>ForbiddenComment:Automations.kt:Automations$// TODO: Load these from the DB</ID>
     <ID>ForbiddenComment:Automations.kt:Automations$// TODO: Should there be a way to unregister? Maybe only register when something is listening? When to cancel queue?</ID>
     <ID>ForbiddenComment:BacktrackSpeedometer.kt:BacktrackSpeedometer$// TODO: Listen for path changes for backtrack ID</ID>
     <ID>ForbiddenComment:BaseMapTileSource.kt:BaseMapTileSource$// TODO: Derive this using calibration points</ID>
-    <ID>ForbiddenComment:BaseSurvivalGuideSearch.kt:BaseSurvivalGuideSearch$// TODO: Other languages?</ID>
     <ID>ForbiddenComment:BeaconCompassLayer.kt:BeaconCompassLayer$// TODO: Load the icon here</ID>
     <ID>ForbiddenComment:BeaconSharesheet.kt:BeaconSharesheet$// TODO: Share other details</ID>
+    <ID>ForbiddenComment:CalibrateBarometerFragment.kt:CalibrateBarometerFragment$// TODO: Only call this on change</ID>
     <ID>ForbiddenComment:CalibratedCameraAnglePixelMapper.kt:CalibratedCameraAnglePixelMapper$// TODO: Distort</ID>
     <ID>ForbiddenComment:CalibratedCameraAnglePixelMapper.kt:CalibratedCameraAnglePixelMapper$// TODO: Factor in pose translation (just add it to the world position?)</ID>
     <ID>ForbiddenComment:CalibratedCameraAnglePixelMapper.kt:CalibratedCameraAnglePixelMapper$// The y axis is inverted (TODO: Why?)</ID>
@@ -120,18 +81,36 @@
     <ID>ForbiddenComment:CalibratedProjection.kt:CalibratedProjection$// TODO: This should be moved into the mercator projection class</ID>
     <ID>ForbiddenComment:CanvasObject.kt:// TODO: Use this on the MapView as well - maybe extract to Andromeda</ID>
     <ID>ForbiddenComment:CellTowerModel.kt:CellTowerModel$// TODO: Load the whole region of the image and get the towers from it</ID>
-    <ID>ForbiddenComment:ClinometerScreen.kt:ClinometerController$// TODO: This should just be clinometer.angle</ID>
+    <ID>ForbiddenComment:ClimateFragment.kt:ClimateFragment$// TODO: Break these down (ex. borreal, tiaga)</ID>
+    <ID>ForbiddenComment:ClimateFragment.kt:ClimateFragment$// TODO: List out dangers</ID>
+    <ID>ForbiddenComment:ClinometerFragment.kt:ClinometerFragment$// TODO: This should just be clinometer.angle</ID>
     <ID>ForbiddenComment:CloudRepo.kt:CloudRepo$// TODO: Only do this if there was a change</ID>
+    <ID>ForbiddenComment:CompassCalibrationView.kt:CompassCalibrationView$// TODO: Pause for a little</ID>
     <ID>ForbiddenComment:CompassOverlayLayer.kt:CompassOverlayLayer$// TODO: Allow setting of position</ID>
+    <ID>ForbiddenComment:CreateTideFragment.kt:CreateTideFragment$// TODO: Eventually this will check for harmonics</ID>
     <ID>ForbiddenComment:CrossBoundaryPixelProvider.kt:CrossBoundaryPixelProvider$// TODO: This can be improved by preloading the neighbor regions that are needed</ID>
     <ID>ForbiddenComment:CurrentWeather.kt:WeatherObservation$// TODO: Expose sea level and barometric pressure</ID>
+    <ID>ForbiddenComment:CustomUiUtils.kt:CustomUiUtils$// TODO: Make this generic - pick icon, takes in a list of resouces, returns selected (and allows user to pick none)</ID>
+    <ID>ForbiddenComment:CustomUiUtils.kt:CustomUiUtils$// TODO: Sort the units properly</ID>
     <ID>ForbiddenComment:DEM.kt:DEM$// TODO: Support tiles with different decoders or an aggregated geographic image source</ID>
     <ID>ForbiddenComment:DataUtils.kt:DataUtils$// TODO: This isn't performant enough, but is the preferred one</ID>
-    <ID>ForbiddenComment:FeatureRenderer.kt:FeatureRenderer$// TODO: Cache this</ID>
+    <ID>ForbiddenComment:DiagnosticsFragment.kt:DiagnosticsFragment$// TODO: Keep the mapping of tools to diagnostics and the mapping of ID to diagnostic</ID>
+    <ID>ForbiddenComment:EnhancedImageView.kt:EnhancedImageView$// TODO: Center the rotated image</ID>
+    <ID>ForbiddenComment:EnhancedImageView.kt:EnhancedImageView$// TODO: Use a flag instead</ID>
+    <ID>ForbiddenComment:FieldGuidePageFragment.kt:FieldGuidePageFragment$// TODO: Handle tag click</ID>
     <ID>ForbiddenComment:FileSubsystem.kt:FileSubsystem$// TODO: Handle maxSize</ID>
-    <ID>ForbiddenComment:Forecast.kt:DailyWeather$// TODO: Is this needed or can Trail Sense figure this out from the hourly data?</ID>
     <ID>ForbiddenComment:FormatService.kt:FormatService$// TODO: Rewrite this</ID>
     <ID>ForbiddenComment:FormatService.kt:FormatService$// TODO: Secondary sort by size</ID>
+    <ID>ForbiddenComment:FragmentBallisticsCalculator.kt:FragmentBallisticsCalculator$// TODO: Determine normal value for metric</ID>
+    <ID>ForbiddenComment:FragmentBallisticsCalculator.kt:FragmentBallisticsCalculator$// TODO: Picker for different bullet types with option for Custom BC</ID>
+    <ID>ForbiddenComment:FragmentBallisticsCalculator.kt:FragmentBallisticsCalculator$// TODO: Set units in header</ID>
+    <ID>ForbiddenComment:FragmentToolBattery.kt:FragmentToolBattery$// TODO: Extract battery reading to a custom hook</ID>
+    <ID>ForbiddenComment:FragmentToolMetalDetector.kt:FragmentToolMetalDetector$// TODO: Have two methods: onMetalFound and onMetalLost</ID>
+    <ID>ForbiddenComment:FragmentToolMetalDetector.kt:FragmentToolMetalDetector$// TODO: Once a better orientation is calculated, use that</ID>
+    <ID>ForbiddenComment:FragmentToolPedometer.kt:FragmentToolPedometer$// TODO: Use pedometer subsystem topics</ID>
+    <ID>ForbiddenComment:FragmentToolSurvivalGuideList.kt:FragmentToolSurvivalGuideList$// TODO: Scroll to the heading</ID>
+    <ID>ForbiddenComment:FragmentToolTriangulate.kt:FragmentToolTriangulate$// TODO: Display distance between locations</ID>
+    <ID>ForbiddenComment:FragmentToolTriangulate.kt:FragmentToolTriangulate$// TODO: Display the distance to the location in the title</ID>
     <ID>ForbiddenComment:GaussianAltimeterWrapper.kt:GaussianAltimeterWrapper$// TODO: Add this to IAltimeter</ID>
     <ID>ForbiddenComment:GeoJsonLayer.kt:GeoJsonLayer$// TODO: Eventually make this a geojson feature property instead of a global setting</ID>
     <ID>ForbiddenComment:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$// TODO: Adjust text size / wrapping based on name length</ID>
@@ -142,25 +121,24 @@
     <ID>ForbiddenComment:GeographicImageSource.kt:GeographicImageSource$// TODO: Extract this and make the size configurable (maybe make it part of the region loader?)</ID>
     <ID>ForbiddenComment:GeographicImageSource.kt:GeographicImageSource$// TODO: Move the interpolation out of this class?</ID>
     <ID>ForbiddenComment:GeographicImageUtils.kt:GeographicImageUtils$// TODO: Redo this</ID>
-    <ID>ForbiddenComment:GrayscaleMomentFinder.kt:GrayscaleMomentFinder$// TODO: Count the number of non-zero pixels (or use moment values to determine the shape/size)</ID>
+    <ID>ForbiddenComment:GroupableSelectView.kt:GroupableSelectView$// TODO: Don't override anything, just intercept the click action to open folders (let the caller decide what to do on click)</ID>
     <ID>ForbiddenComment:HumidityWeatherField.kt:HumidityWeatherField$// TODO: Build chart into this</ID>
     <ID>ForbiddenComment:ICompassView.kt:ICompassView$// TODO: Replace mappable reference point with a compass marker</ID>
     <ID>ForbiddenComment:IWeatherSubsystem.kt:IWeatherSubsystem$// TODO: Split into two subsystems: Weather and Weather Monitor</ID>
     <ID>ForbiddenComment:ImageMagnifier.kt:ImageMagnifier$// TODO: Support zoom</ID>
     <ID>ForbiddenComment:ImportPackingListCommand.kt:ImportPackingListCommand$// TODO: Default to the file name</ID>
+    <ID>ForbiddenComment:LightBarView.kt:LightBarView$// TODO: Calculate distance of each intensity description</ID>
     <ID>ForbiddenComment:LineClipper.kt:LineClipper$// TODO: If the z values are provided, this should be a 3D RDP filter</ID>
     <ID>ForbiddenComment:LineClipper.kt:LineClipper$// TODO: Is this allocation needed? What if the bounds were flipped?</ID>
     <ID>ForbiddenComment:LinearSightingCompassView.kt:LinearSightingCompassView$// TODO: Make this more efficient (only update when the camera changes)</ID>
     <ID>ForbiddenComment:LocalMessagingToolRegistration.kt:LocalMessagingToolRegistration$// TODO: Have an open action rather than navigation ID</ID>
     <ID>ForbiddenComment:LocalTalkToolRegistration.kt:LocalTalkToolRegistration$// TODO: Have an open action rather than navigation ID</ID>
-    <ID>ForbiddenComment:LocationMath.kt:// TODO: Remove this</ID>
     <ID>ForbiddenComment:LocationSubsystem.kt:LocationSubsystem$// TODO: Technically not true - this should probably by another broadcast</ID>
     <ID>ForbiddenComment:MapCalibrationView.kt:MapCalibrationView$// TODO: Support dragging the coordinates</ID>
     <ID>ForbiddenComment:MapLayerLoader.kt:// TODO: Consider loading required attribution with the layer data rather than the definition (definition can contain the long form attribution)</ID>
+    <ID>ForbiddenComment:MapLayersBottomSheet.kt:MapLayersBottomSheet$// TODO: Show loading indicator once plugin layers are in place</ID>
     <ID>ForbiddenComment:MapPickers.kt:MapPickers$// TODO: Add sort</ID>
     <ID>ForbiddenComment:MapRepo.kt:MapRepo$// TODO: Save the size in the DB</ID>
-    <ID>ForbiddenComment:MapService.kt:MapService.&lt;no name provided&gt;$// TODO: Bulk delete</ID>
-    <ID>ForbiddenComment:MapToolWidgetView.kt:MapToolWidgetView$// TODO: Do something with the scale bar (center it or render it like the radar compass)</ID>
     <ID>ForbiddenComment:MapView.kt:MapView$// TODO: If map bounds changed, invalidate layers</ID>
     <ID>ForbiddenComment:MapView.kt:MapView$// TODO: This doesn't work for world maps</ID>
     <ID>ForbiddenComment:MapViewLayerManager.kt:MapViewLayerManager$// TODO: ERROR HANDLING</ID>
@@ -168,753 +146,181 @@
     <ID>ForbiddenComment:MonteCarloPressureForecaster.kt:MonteCarloPressureForecaster$// TODO: Return the CI or only include samples that are confident</ID>
     <ID>ForbiddenComment:MoveBeaconCommand.kt:MoveBeaconCommand$// TODO: Consolidate with move beacon group</ID>
     <ID>ForbiddenComment:NavigationSheetView.kt:NavigationSheetView$// TODO: Listen for navigation and automatically hide/show with override ability (for navigation tool)</ID>
-    <ID>ForbiddenComment:NavigationSheetView.kt:NavigationSheetView$// TODO: These don't change</ID>
     <ID>ForbiddenComment:NavigationSheetView.kt:NavigationSheetView$// TODO: This should be tracked by a service (for background navigation)</ID>
-    <ID>ForbiddenComment:Navigator.kt:Navigator$// TODO: Cache declination</ID>
-    <ID>ForbiddenComment:Navigator.kt:Navigator$// TODO: Replace isNavigating with this</ID>
     <ID>ForbiddenComment:Navigator.kt:Navigator$// TODO: Standardized navigation instructions</ID>
-    <ID>ForbiddenComment:NavigatorToolScreen.kt:NavigatorController$// TODO: Extract this logic to the flashlight (if camera is in use)</ID>
-    <ID>ForbiddenComment:NavigatorToolScreen.kt:NavigatorController$// TODO: Prompt to cancel navigation?</ID>
-    <ID>ForbiddenComment:NavigatorToolScreen.kt:NavigatorController$// TODO: Wait for GPS location to be up to date (show a loading indicator)</ID>
+    <ID>ForbiddenComment:NavigatorFragment.kt:NavigatorFragment$// TODO: Extract this logic to the flashlight (if camera is in use)</ID>
+    <ID>ForbiddenComment:NavigatorFragment.kt:NavigatorFragment$// TODO: Move selected beacon updating to a coroutine</ID>
+    <ID>ForbiddenComment:NavigatorFragment.kt:NavigatorFragment$// TODO: Wait for GPS location to be up to date (show a loading indicator)</ID>
     <ID>ForbiddenComment:NavigatorUserErrors.kt:NavigatorUserErrors$// TODO: Each error condition should be responsible for its own display and dismissal</ID>
     <ID>ForbiddenComment:NavigatorUserErrors.kt:NavigatorUserErrors$// TODO: Improve architecture using the strategy pattern and remove this class all together</ID>
-    <ID>ForbiddenComment:NextPathPointNavigator.kt:NextPathPointNavigator$// TODO: This doesn't take into consideration which points you've already reached - if the path is a out and back type, it will not work properly</ID>
+    <ID>ForbiddenComment:OfflineMapService.kt:OfflineMapService.&lt;no name provided&gt;$// TODO: Bulk delete</ID>
     <ID>ForbiddenComment:PathExtensions.kt:// TODO: Extract this and add solid style</ID>
-    <ID>ForbiddenComment:PathOverviewToolScreen.kt:PathOverviewController$// TODO: Eventually move all of this to the path layer (including waypoint rendering)</ID>
+    <ID>ForbiddenComment:PathOverviewFragment.kt:PathOverviewFragment$// TODO: Eventually move all of this to the path layer (including waypoint rendering)</ID>
+    <ID>ForbiddenComment:PathsFragment.kt:PathsFragment$// TODO: See if it is possible to get notified of changes without loading all paths</ID>
     <ID>ForbiddenComment:PdfImageRegionDecoder.kt:PdfImageRegionDecoder$// TODO: Pass in scale</ID>
+    <ID>ForbiddenComment:PerspectiveCorrectionView.kt:PerspectiveCorrectionView$// TODO: Extend subsampling image view and disable scrolling</ID>
     <ID>ForbiddenComment:PhenologyService.kt:PhenologyService$// TODO: This isn't needed right now, but it should be an interpolated version of astronomy get daylight length (for performance)</ID>
     <ID>ForbiddenComment:PhotoMap.kt:PhotoMap.Companion$// TODO: Make this based on meters per pixel</ID>
     <ID>ForbiddenComment:PhotoMapTileSourceSelector.kt:PhotoMapTileSourceSelector$// TODO: Factor in rotation by using projection to see if the bounds intersect/are contained</ID>
     <ID>ForbiddenComment:PhotoMapToolLayerManager.kt:PhotoMapToolLayerManager$// TODO: Extract these to layer config</ID>
+    <ID>ForbiddenComment:PlaceBeaconFragment.kt:PlaceBeaconFragment$// TODO: Prevent interaction until loaded</ID>
+    <ID>ForbiddenComment:PowerSettingsFragment.kt:PowerSettingsFragment$// TODO: Move preference to it's own repo</ID>
+    <ID>ForbiddenComment:PressureChart.kt:PressureChart$// TODO: Dotted line</ID>
+    <ID>ForbiddenComment:PressureChart.kt:PressureChart$// TODO: Support minimum range</ID>
+    <ID>ForbiddenComment:PressureInputView.kt:PressureInputView$// TODO: Support long name</ID>
     <ID>ForbiddenComment:ScaleBarLayer.kt:ScaleBarLayer$// TODO: Allow position to be adjusted</ID>
     <ID>ForbiddenComment:SensorService.kt:SensorService$// TODO: Expose a way to see that a disturbance is present</ID>
-    <ID>ForbiddenComment:SensorService.kt:SensorService$// TODO: This should control update frequency</ID>
     <ID>ForbiddenComment:SettingsToolRegistration.kt:SettingsToolRegistration$// TODO: Add all the tool settings</ID>
+    <ID>ForbiddenComment:SightingCompassBottomSheetFragment.kt:SightingCompassBottomSheetFragment$// TODO: Width should always match parent, height can be cropped</ID>
+    <ID>ForbiddenComment:SightingListFragment.kt:SightingListFragment$// TODO: Let user set default navigation tool (compass or map)</ID>
     <ID>ForbiddenComment:SingleImageReader.kt:SingleImageReader$// TODO: Handle when the original region was out of bounds (fill with 0)</ID>
     <ID>ForbiddenComment:SunriseAlarmReceiver.kt:SunriseAlarmReceiver.Companion$// TODO: Extract this out of the receiver</ID>
     <ID>ForbiddenComment:SunsetAlarmReceiver.kt:SunsetAlarmReceiver.Companion$// TODO: Extract this out of the receiver</ID>
     <ID>ForbiddenComment:TemperatureWeatherField.kt:TemperatureWeatherField$// TODO: Build chart into this</ID>
+    <ID>ForbiddenComment:ThermometerSettingsFragment.kt:ThermometerSettingsFragment$// TODO: No need for multiple units, use a UnitPreference</ID>
     <ID>ForbiddenComment:TideGeoJsonSource.kt:TideGeoJsonSource$// TODO: Limit max locations?</ID>
-    <ID>ForbiddenComment:TideImportService.kt:TideImportService$// TODO: Add support for CSV</ID>
-    <ID>ForbiddenComment:TideImportService.kt:TideImportService$// TODO: Add support for JSON</ID>
     <ID>ForbiddenComment:TideTableRepo.kt:TideTableRepo$// TODO: Only delete the tides if they changed</ID>
     <ID>ForbiddenComment:TideTableWaterLevelCalculator.kt:TideTableWaterLevelCalculator$// TODO: This should use the same gap filling logic as above</ID>
     <ID>ForbiddenComment:TileLoader.kt:TileLoader$// TODO: This should be handled by a higher level component</ID>
-    <ID>ForbiddenComment:TileMapLayer.kt:TileMapLayer$// TODO: Cache this</ID>
     <ID>ForbiddenComment:TileMapLayer.kt:TileMapLayer$// TODO: This isn't the ideal place to do cleanup since garbage can build up. Likely need some sort of LRU cache for all intermediates.</ID>
     <ID>ForbiddenComment:TileQueue.kt:TileQueue$// TODO: Allow cancellation of a job - likely means storing the actual jobs somewhere</ID>
     <ID>ForbiddenComment:ToolAction.kt:ToolAction$// TODO: Indicate required parameters, so it can be matched with a broadcast</ID>
     <ID>ForbiddenComment:ToolBroadcast.kt:ToolBroadcast$// TODO: Indicate output parameters, so it can be matched with a receiver</ID>
+    <ID>ForbiddenComment:ToolDeclinationFragment.kt:ToolDeclinationFragment$// TODO: Disable the coordinate view instead</ID>
     <ID>ForbiddenComment:ToolWidgetViewBinder.kt:ToolWidgetViewBinder$// TODO: Get a GPS / elevation reading</ID>
     <ID>ForbiddenComment:Tools.kt:Tools$// TODO: Also update in app widgets?</ID>
+    <ID>ForbiddenComment:ToolsFragment.kt:ToolsFragment$// TODO: Add a way to customize this</ID>
     <ID>ForbiddenComment:TurnBackAlarmReceiver.kt:TurnBackAlarmReceiver.Companion$// TODO: Extract this out of the receiver</ID>
-    <ID>ForbiddenComment:ViewPhotoMapScreen.kt:ViewPhotoMapController$// TODO: Don't show if location not on map</ID>
+    <ID>ForbiddenComment:ViewPhotoMapFragment.kt:ViewPhotoMapFragment$// TODO: Don't show if location not on map</ID>
     <ID>ForbiddenComment:WeatherRepo.kt:WeatherRepo$// TODO: Only do this if there was a change</ID>
     <ID>ForbiddenComment:WeatherSubsystem.kt:WeatherSubsystem$// TODO: Determine if the pressure history is reliable - sum of squared errors between raw and smoothed?</ID>
     <ID>ForbiddenComment:WeatherSubsystem.kt:WeatherSubsystem$// TODO: Extract this</ID>
     <ID>ForbiddenComment:WeatherSubsystem.kt:WeatherSubsystem$// TODO: Extract this to Sol (new forecaster)</ID>
     <ID>ForbiddenComment:Whistle.kt:SoundGenerator2$// TODO: Replace with Andromeda SoundGenerator</ID>
-    <ID>FunctionNaming:ARLayersContent.kt:@Composable fun ARLayersContent</ID>
-    <ID>FunctionNaming:ARLayersContent.kt:@Preview(showBackground = true) @Composable private fun ARLayersContentPreview</ID>
-    <ID>FunctionNaming:ActionSheet.kt:@Composable private fun ActionTile</ID>
-    <ID>FunctionNaming:ActionSheet.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun ActionSheetContent</ID>
-    <ID>FunctionNaming:ActionSheet.kt:@Preview(showBackground = true) @Composable private fun ActionSheetContentPreview</ID>
-    <ID>FunctionNaming:AltitudeBottomSheet.kt:@Composable fun AltitudeContent</ID>
-    <ID>FunctionNaming:AltitudeBottomSheet.kt:@Composable private fun AltitudeChartView</ID>
-    <ID>FunctionNaming:AltitudeBottomSheet.kt:@Preview(showBackground = true) @Composable private fun AltitudeContentPreview</ID>
-    <ID>FunctionNaming:AndromedaExtensions.kt:@Composable private fun LoadingDialogContent</ID>
-    <ID>FunctionNaming:AstroChart.kt:AstroChart$@Composable fun Content</ID>
-    <ID>FunctionNaming:AstronomyGuidanceTargetPicker.kt:AstronomyGuidanceTargetPicker$@Composable private fun AstronomyGuidanceTargetPickerContent</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable fun AstronomyToolScreen</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyDataRow</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyDetailList</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyDetailRow</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyPositionText</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyScreen</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Composable private fun AstronomyTitle</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:@Preview(showBackground = true) @Composable private fun AstronomyHostPreview</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:AstronomyController$@Composable fun Content</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:AstronomyDatePickerState$@Composable fun Content</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:AstronomyTextButtonState$@Composable fun Content</ID>
-    <ID>FunctionNaming:AstronomyToolScreen.kt:AstronomyTimeSeekerDetailsState$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:@Composable fun AugmentedRealityToolScreen</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:@Composable private fun AugmentedRealityHost</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:@Preview(showBackground = true) @Composable private fun AugmentedRealityHostPreview</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:ArCalibrationPanelView$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:ArGuideIconView$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:ArIconButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:ArTextButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:ArTextView$@Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityToolScreen.kt:AugmentedRealityController$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:AugmentedRealityView.kt:AugmentedRealityView$@Composable fun Content</ID>
-    <ID>FunctionNaming:BaseCompassView.kt:BaseCompassView$@Composable abstract fun Content</ID>
-    <ID>FunctionNaming:BeaconIconPickerView.kt:@Composable fun BeaconIconPickerDialog</ID>
-    <ID>FunctionNaming:BeaconIconPickerView.kt:@Composable private fun BeaconIconButton</ID>
-    <ID>FunctionNaming:BeaconIconPickerView.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun BeaconIconPickerContent</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable fun BeaconListToolScreen</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconCreateButton</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconCreateMenuItem</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconGroupMenuItem</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconGroupRow</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconList</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconListHeader</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconListScreen</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconMenuItem</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconRow</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconRowActions</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Composable private fun BeaconToolbarMenuItem</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:@Preview(showBackground = true) @Composable private fun BeaconListScreenPreview</ID>
-    <ID>FunctionNaming:BeaconListToolScreen.kt:BeaconListController$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:BeaconsListScreen.kt:@Composable fun BeaconsListScreen</ID>
-    <ID>FunctionNaming:BearingInput.kt:@Composable fun BearingInput</ID>
-    <ID>FunctionNaming:BearingInput.kt:@Composable private fun CompassAutofillButton</ID>
-    <ID>FunctionNaming:BearingInput.kt:@Composable private fun ManualBearingDialog</ID>
-    <ID>FunctionNaming:BearingInput.kt:@Composable private fun NorthReferenceBadge</ID>
-    <ID>FunctionNaming:BearingInput.kt:@Preview(showBackground = true) @Composable private fun BearingInputPreview</ID>
-    <ID>FunctionNaming:Camera.kt:@Composable fun CameraPreview</ID>
-    <ID>FunctionNaming:CameraClinometerView.kt:@Composable private fun CameraClinometerContent</ID>
-    <ID>FunctionNaming:CameraClinometerView.kt:CameraClinometerView$@Composable fun Content</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Composable fun ClinometerToolScreen</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Composable private fun ClinometerHost</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Composable private fun ClinometerInstruction</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Composable private fun ClinometerTitle</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Composable private fun ClinometerTitleButton</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:@Preview(showBackground = true) @Composable private fun ClinometerHostPreview</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:ClinometerController$@Composable fun Content</ID>
-    <ID>FunctionNaming:ClinometerScreen.kt:ClinometerDataPointState$@Composable fun Content</ID>
-    <ID>FunctionNaming:ClinometerView.kt:@Composable private fun ClinometerContent</ID>
-    <ID>FunctionNaming:ClinometerView.kt:ClinometerView$@Composable fun Content</ID>
-    <ID>FunctionNaming:CloudImageDialog.kt:@Composable internal fun CloudImageDialog</ID>
-    <ID>FunctionNaming:ColorPickerView.kt:@Composable fun ColorPickerDialog</ID>
-    <ID>FunctionNaming:ColorPickerView.kt:@Composable private fun ColorSwatch</ID>
-    <ID>FunctionNaming:ColorPickerView.kt:@OptIn(ExperimentalLayoutApi::class) @Composable fun ColorPickerContent</ID>
-    <ID>FunctionNaming:ColorScaleView.kt:@Composable fun ColorScaleContent</ID>
-    <ID>FunctionNaming:CompassCalibrationView.kt:@Composable fun CompassCalibrationContent</ID>
-    <ID>FunctionNaming:ComposeQuickActionButtonView.kt:ComposeQuickActionButtonView$@OptIn(ExperimentalFoundationApi::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:CustomUiUtils.kt:CustomUiUtils$@Composable private fun DistancePromptContent</ID>
-    <ID>FunctionNaming:CustomUiUtils.kt:CustomUiUtils$@Composable private fun ElevationPromptContent</ID>
-    <ID>FunctionNaming:DataPointView.kt:@Composable fun DataPointContent</ID>
-    <ID>FunctionNaming:DatePickerView.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun DatePickerContent</ID>
-    <ID>FunctionNaming:DateTimeSliderSheet.kt:@Composable private fun DateTimeSliderSheetContent</ID>
-    <ID>FunctionNaming:DateTimeSliderSheet.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun DatePickerRow</ID>
-    <ID>FunctionNaming:DateTimeSliderSheet.kt:DateTimeSliderSheetState$@Composable fun Content</ID>
-    <ID>FunctionNaming:DestinationContent.kt:@Composable fun DestinationContent</ID>
-    <ID>FunctionNaming:DurationInput.kt:@Composable fun DurationInput</ID>
-    <ID>FunctionNaming:DurationInput.kt:@Composable fun DurationPickerDialog</ID>
-    <ID>FunctionNaming:EnhancedImageView.kt:EnhancedImageView$@Composable fun Content</ID>
-    <ID>FunctionNaming:EnhancedImageView.kt:EnhancedImageView$@Composable fun EnhancedImageContent</ID>
-    <ID>FunctionNaming:ErrorBannerView.kt:@Composable private fun ErrorBannerContent</ID>
-    <ID>FunctionNaming:ErrorBannerView.kt:ErrorBannerState$@Composable fun Content</ID>
-    <ID>FunctionNaming:ExperimentationScreen.kt:@androidx.compose.runtime.Composable internal fun ExperimentationContent</ID>
-    <ID>FunctionNaming:FieldGuideScreen.kt:@Composable fun FieldGuideScreen</ID>
-    <ID>FunctionNaming:FragmentBallisticsCalculator.kt:@Composable fun BallisticsCalculatorPage</ID>
-    <ID>FunctionNaming:FragmentBallisticsCalculator.kt:@Composable private fun BallisticsTable</ID>
-    <ID>FunctionNaming:FragmentBallisticsCalculator.kt:@Composable private fun BallisticsTableRow</ID>
-    <ID>FunctionNaming:FragmentEnergyCalculator.kt:@Composable fun EnergyCalculatorPage</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable fun ScopeAdjustmentPage</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun &lt;T&gt; ToggleRow</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun &lt;T&gt; UnitPickerField</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun BallisticsForm</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun DistanceField</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun SectionLabel</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun SpeedField</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable internal fun WeightField</ID>
-    <ID>FunctionNaming:FragmentScopeAdjustment.kt:@Composable private fun &lt;T, U&gt; UnitAmountField</ID>
-    <ID>FunctionNaming:GroupablePickers.kt:@Composable private fun &lt;T : Groupable&gt; GroupableSelectContent</ID>
-    <ID>FunctionNaming:GroupablePickers.kt:@Composable private fun &lt;T : Groupable&gt; GroupableSelectList</ID>
-    <ID>FunctionNaming:GroupablePickers.kt:GroupablePickerState$@Composable fun Content</ID>
-    <ID>FunctionNaming:GuideScreen.kt:@Composable internal fun GuideScreen</ID>
-    <ID>FunctionNaming:GuideScreen.kt:@Composable private fun GuideSection</ID>
-    <ID>FunctionNaming:LevelScreen.kt:@Composable fun LevelScreen</ID>
-    <ID>FunctionNaming:LevelScreen.kt:@Composable private fun BubbleLevelCanvas</ID>
-    <ID>FunctionNaming:LinearSightingCompassView.kt:LinearSightingCompassView$@Composable fun Content</ID>
-    <ID>FunctionNaming:LinearSightingCompassView.kt:SightingCompassButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:LocationBottomSheet.kt:@Composable fun LocationSheet</ID>
-    <ID>FunctionNaming:LocationBottomSheet.kt:@Composable private fun LocationSheetContent</ID>
-    <ID>FunctionNaming:LocationBottomSheet.kt:@Composable private fun LocationStat</ID>
-    <ID>FunctionNaming:LocationBottomSheet.kt:@Composable private fun LocationStats</ID>
-    <ID>FunctionNaming:LocationBottomSheet.kt:@Preview(showBackground = true) @Composable private fun LocationSheetContentPreview</ID>
-    <ID>FunctionNaming:MainBottomNavigation.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun MainBottomNavigation</ID>
-    <ID>FunctionNaming:MapAttributionView.kt:MapAttributionState$@Suppress("DEPRECATION") @Composable fun Content</ID>
-    <ID>FunctionNaming:MapDistanceSheet.kt:@Composable private fun MapDistanceSheetContent</ID>
-    <ID>FunctionNaming:MapDistanceSheet.kt:MapDistanceSheetState$@Composable fun Content</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerAttributionRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerEnumPreferenceRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerHeader</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerHeaderIconButton</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerLabelPreferenceRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerMarkdownText</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerPreferenceRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerSliderPreferenceRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerSwitchPreferenceRow</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayerTitle</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Composable private fun MapLayersContent</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:@Preview(showBackground = true) @Composable private fun MapLayersContentPreview</ID>
-    <ID>FunctionNaming:MapLayersSheet.kt:MapLayersSheetState$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:MapToolScreen.kt:@Composable fun MapToolScreen</ID>
-    <ID>FunctionNaming:MapToolScreen.kt:@Composable private fun MapHost</ID>
-    <ID>FunctionNaming:MapToolScreen.kt:@Preview(showBackground = true) @Composable private fun MapHostPreview</ID>
-    <ID>FunctionNaming:MapToolScreen.kt:MapController$@Composable fun Content</ID>
-    <ID>FunctionNaming:MapToolScreen.kt:MapIconButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:MapView.kt:MapView$@Composable fun Content</ID>
-    <ID>FunctionNaming:MapView.kt:MapView$@Composable fun MapContent</ID>
-    <ID>FunctionNaming:NavigationSheetView.kt:NavigationDataPointState$@Composable fun Content</ID>
-    <ID>FunctionNaming:NavigationSheetView.kt:NavigationSheetToolbarState$@Composable fun Content</ID>
-    <ID>FunctionNaming:NavigationSheetView.kt:NavigationSheetView$@Composable fun Content</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@Composable fun NavigatorToolScreen</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@Composable private fun NavigationCalibrationDialogContent</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@Composable private fun NavigatorHost</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@Composable private fun NavigatorIconButton</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun NavigationTitle</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:@Preview(showBackground = true) @Composable private fun NavigatorHostPreview</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:NavigatorController$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:NavigatorToolScreen.kt:NavigatorDataPointState$@Composable fun Content</ID>
-    <ID>FunctionNaming:NorthReferenceBadge.kt:NorthReferenceBadgeState$@Composable fun Content</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable fun OfflineMapListToolScreen</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun MapGroupMenuItem</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun MapGroupRow</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun MapVisibilityButton</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapCreateButton</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapCreateMenuItem</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapList</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapListHeader</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapListScreen</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun PhotoMapMenu</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun PhotoMapMenuItem</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun PhotoMapRow</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun VectorMapMenu</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun VectorMapMenuItem</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Composable private fun VectorMapRow</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:@Preview(showBackground = true) @Composable private fun OfflineMapListScreenPreview</ID>
-    <ID>FunctionNaming:OfflineMapListToolScreen.kt:OfflineMapListController$@Composable fun Content</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable fun OnboardingScreen</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable private fun OnboardingPageContents</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Preview(showBackground = true) @Composable private fun OnboardingScreenPreview</ID>
-    <ID>FunctionNaming:PathElevationChart.kt:PathElevationChart$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Composable fun PathOverviewToolScreen</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Composable private fun PathActionButton</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Composable private fun PathOverviewHost</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Composable private fun PathStyleDropdownText</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Composable private fun PathTitle</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:@Preview(showBackground = true) @Composable private fun PathOverviewHostPreview</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathActionsView$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathDataPointState$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathIconButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathOverviewController$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathSelectedPointView$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathStyleControlsView$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathOverviewToolScreen.kt:PathTimingView$@Composable fun Content</ID>
-    <ID>FunctionNaming:PathPointRow.kt:@Composable fun PathPointRow</ID>
-    <ID>FunctionNaming:PathPointsContent.kt:@Composable fun PathPointsContent</ID>
-    <ID>FunctionNaming:PathPointsContent.kt:@Preview(showBackground = true) @Composable private fun PathPointsContentPreview</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable fun PathsToolScreen</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun BacktrackPlayBar</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathGroupMenuItem</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathGroupRow</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathMenuItem</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathRow</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathRowActions</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathsCreateButton</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathsHeader</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathsList</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Composable private fun PathsScreen</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:@Preview(showBackground = true) @Composable private fun PathsScreenPreview</ID>
-    <ID>FunctionNaming:PathsToolScreen.kt:PathsController$@Composable fun Content</ID>
-    <ID>FunctionNaming:PerspectiveCorrectionView.kt:@Composable fun PerspectiveCorrection</ID>
-    <ID>FunctionNaming:PhotoImportDialog.kt:@Composable private fun CaptureButton</ID>
-    <ID>FunctionNaming:PhotoImportDialog.kt:@Composable private fun PhotoImportContent</ID>
-    <ID>FunctionNaming:PhotoImportDialog.kt:@Composable private fun PhotoImportToolbar</ID>
-    <ID>FunctionNaming:PhotoImportDialog.kt:@Preview(showBackground = true) @Composable private fun PhotoImportContentPreview</ID>
-    <ID>FunctionNaming:PhotoImportDialog.kt:PhotoImportDialog$@Composable fun Content</ID>
-    <ID>FunctionNaming:PhotoMapIconButton.kt:PhotoMapIconButton$@Composable fun Content</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:@Composable fun PhotoMapsToolScreen</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:@Composable private fun HeaderImageButton</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:@Composable private fun PhotoMapHeader</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:@Composable private fun PhotoMapsScreen</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:@Preview(showBackground = true) @Composable private fun PhotoMapsScreenPreview</ID>
-    <ID>FunctionNaming:PhotoMapsScreen.kt:PhotoMapsController$@Composable fun Content</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable fun PlaceBeaconToolScreen</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun BearingInput</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun CreateAtDistanceSwitch</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun DistanceInput</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun ElevationInput</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun PickerRow</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun PlaceBeaconHeader</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun PlaceBeaconScreen</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Composable private fun TextInput</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:@Preview(showBackground = true) @Composable private fun PlaceBeaconScreenPreview</ID>
-    <ID>FunctionNaming:PlaceBeaconToolScreen.kt:PlaceBeaconController$@Composable fun Content</ID>
-    <ID>FunctionNaming:PressureChartToolWidgetView.kt:@Composable private fun WidgetPressureChart</ID>
-    <ID>FunctionNaming:QRImportContent.kt:@Composable fun QRImportContent</ID>
-    <ID>FunctionNaming:QRImportContent.kt:@Preview(showBackground = true) @Composable private fun QRImportContentPreview</ID>
-    <ID>FunctionNaming:QRShareScreen.kt:@Composable fun QRShareScreen</ID>
-    <ID>FunctionNaming:QRShareScreen.kt:@Composable private fun QRShareContent</ID>
-    <ID>FunctionNaming:QRShareScreen.kt:@Preview(showBackground = true) @Composable private fun QRShareContentPreview</ID>
-    <ID>FunctionNaming:SensorStatusBadgeView.kt:@Composable private fun SensorBadgeContent</ID>
-    <ID>FunctionNaming:SensorStatusBadgeView.kt:SensorStatusBadgeView$@Composable fun Content</ID>
-    <ID>FunctionNaming:SettingsCompose.kt:@Composable fun SettingsActionRow</ID>
-    <ID>FunctionNaming:SettingsCompose.kt:@Composable fun SettingsInfoRow</ID>
-    <ID>FunctionNaming:SettingsCompose.kt:@Composable fun SettingsPickerRow</ID>
-    <ID>FunctionNaming:SettingsCompose.kt:@Composable fun SettingsSwitchRow</ID>
-    <ID>FunctionNaming:SettingsCompose.kt:@Composable fun SingleSwitchSettingsScreen</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:@Composable private fun CaptureButton</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:@Composable private fun SightingCompassContent</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:@Composable private fun SightingCompassStrip</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:@Composable private fun SightingCompassToolbar</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:@Preview(showBackground = true) @Composable private fun SightingCompassContentPreview</ID>
-    <ID>FunctionNaming:SightingCompassDialog.kt:SightingCompassDialog$@Composable fun Content</ID>
-    <ID>FunctionNaming:SimpleConverterPage.kt:@Composable fun &lt;T&gt; SimpleConvertScreen</ID>
-    <ID>FunctionNaming:SimpleConverterPage.kt:ConverterPage$@Composable fun Content</ID>
-    <ID>FunctionNaming:TideChartToolWidgetView.kt:@Composable private fun WidgetTideChart</ID>
-    <ID>FunctionNaming:ToolWidgetConfigureActivity.kt:@Composable private fun ThemeDropdown</ID>
-    <ID>FunctionNaming:ToolWidgetConfigureActivity.kt:@Composable private fun ToolWidgetConfigureScreen</ID>
-    <ID>FunctionNaming:ToolWidgetConfigureActivity.kt:@Preview(showBackground = true) @Composable private fun ToolWidgetConfigureScreenPreview</ID>
-    <ID>FunctionNaming:ToolsScreen.kt:@Composable fun ToolsScreen</ID>
-    <ID>FunctionNaming:ToolsScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun ToolGridItem</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun AugmentedRealitySettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BackupSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BatteryTool</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BeaconSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BubbleLevelSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BubbleLevelThresholdDialog</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun CameraSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun CellSignalSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ClinometerSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ClockSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun Diagnostics</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ErrorHandler</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ErrorSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ExperimentalSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun Flashlight</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun FlashlightSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun GuideList</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun LicensesScreen</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun MapSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun MirrorCamera</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun NoteEditor</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun Notes</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun Pedometer</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PhotoMapSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PluginsSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PowerSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PrivacySettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun RulerScaleDialog</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun RulerSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ScreenFlashlight</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun SensorSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun SettingsList</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun SurvivalGuideList</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun SurvivalGuideReader</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ThemeSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun TideSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ToolsHome</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ToolsSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun TurnBackSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun UnitPickerRow</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun UnitSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun WaterBoilSettings</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun WaterPurification</ID>
-    <ID>FunctionNaming:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>FunctionNaming:TrailSenseComposeNavHost.kt:@Composable fun TrailSenseComposeNavHost</ID>
-    <ID>FunctionNaming:TrailSenseComposeRootView.kt:fun TrailSenseComposeRootView: ComposeView</ID>
-    <ID>FunctionNaming:TrailSenseLineChart.kt:@Composable fun TrailSenseLineChart</ID>
-    <ID>FunctionNaming:TrailSenseLinkedText.kt:@Composable fun TrailSenseLinkedText</ID>
-    <ID>FunctionNaming:ViewPhotoMapScreen.kt:@Composable fun ViewPhotoMapToolScreen</ID>
-    <ID>FunctionNaming:ViewPhotoMapScreen.kt:ViewPhotoMapController$@Composable fun Content</ID>
-    <ID>FunctionNaming:WeatherScreen.kt:@Composable fun WeatherScreen</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable fun WeatherToolScreen</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun UpdatingWeather</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun WeatherHost</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun WeatherListItemRow</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun WeatherMonitorPlayBar</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun WeatherPressureChart</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Composable private fun WeatherTitle</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:@Preview(showBackground = true) @Composable private fun WeatherHostPreview</ID>
-    <ID>FunctionNaming:WeatherToolScreen.kt:WeatherController$@Composable fun Content</ID>
-    <ID>FunctionNaming:WhistleScreen.kt:@Composable fun WhistleScreen</ID>
-    <ID>FunctionOnlyReturningConstant:AugmentedRealityView.kt:AugmentedRealityView$private fun onSensorUpdate: Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:BeaconListToolScreen.kt:BeaconListController$private fun onLocationUpdate: Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:CurrentPaceSpeedometer.kt:CurrentPaceSpeedometer$private fun onPedometerUpdate: Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:FusedGPS.kt:FusedGPS$private fun onAccelerometerUpdate: Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:StrideLengthEstimationScreen.kt:fun onStrideLengthChanged: Boolean</ID>
-    <ID>FunctionParameterNaming:PathsSettingsScreen.kt:PathsSettingsController$_data: Bundle</ID>
-    <ID>FunctionParameterNaming:PedometerSettingsScreen.kt:PedometerSettingsController$_data: Bundle</ID>
-    <ID>InvalidPackageDeclaration:BeaconsListScreen.kt:package com.kylecorry.trail_sense.tools.beacons.ui.list</ID>
-    <ID>InvalidPackageDeclaration:FieldGuideScreen.kt:package com.kylecorry.trail_sense.tools.field_guide.ui</ID>
-    <ID>InvalidPackageDeclaration:LevelScreen.kt:package com.kylecorry.trail_sense.tools.level.ui</ID>
-    <ID>InvalidPackageDeclaration:OnboardingScreen.kt:package com.kylecorry.trail_sense.onboarding</ID>
-    <ID>InvalidPackageDeclaration:ToolsScreen.kt:package com.kylecorry.trail_sense.tools.tools.ui</ID>
-    <ID>InvalidPackageDeclaration:WeatherScreen.kt:package com.kylecorry.trail_sense.tools.weather.ui</ID>
-    <ID>LargeClass:CalibrateAltimeterScreen.kt:CalibrateAltimeterController</ID>
-    <ID>LargeClass:CustomUiUtils.kt:CustomUiUtils</ID>
     <ID>LargeClass:FormatService.kt:FormatService</ID>
     <ID>LargeClass:Licenses.kt:Licenses</ID>
-    <ID>LargeClass:NavigatorToolScreen.kt:NavigatorController</ID>
-    <ID>LargeClass:PathOverviewToolScreen.kt:PathOverviewController</ID>
-    <ID>LargeClass:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost : ToolSearchFocusableScreenFlashlightControllerFlashlightControllerClinometerLockControllerBeaconListControllerHostTrailSenseReactiveDestinationHost</ID>
-    <ID>LargeClass:TrailSenseNavGraph.kt:TrailSenseNavGraph</ID>
-    <ID>LargeClass:WeatherSettingsScreen.kt:WeatherSettingsController</ID>
+    <ID>LargeClass:PathOverviewFragment.kt:PathOverviewFragment : BoundFragment</ID>
     <ID>LongMethod:ARAstronomyLayer.kt:ARAstronomyLayer$private fun updatePositions</ID>
-    <ID>LongMethod:ARAstronomyLayer.kt:ARAstronomyLayer$private suspend fun updateStarLayer</ID>
-    <ID>LongMethod:ARLayersContent.kt:@Composable fun ARLayersContent</ID>
     <ID>LongMethod:AppDatabase.kt:AppDatabase.Companion$private fun buildDatabase: AppDatabase</ID>
-    <ID>LongMethod:AstroChart.kt:AstroChart$@Composable fun Content</ID>
-    <ID>LongMethod:AstronomyGuidanceTarget.kt:AstronomyGuidanceTarget$override suspend fun refresh: ARGuidanceTargetState</ID>
-    <ID>LongMethod:AstronomyGuidanceTargetPicker.kt:AstronomyGuidanceTargetPicker$private suspend fun getGuidanceOptions: List&lt;AstronomyGuidanceOption&gt;</ID>
-    <ID>LongMethod:AstronomySettingsScreen.kt:AstronomySettingsController$@Composable fun Content</ID>
-    <ID>LongMethod:AstronomyToolScreen.kt:AstronomyController$fun onCreate</ID>
-    <ID>LongMethod:AugmentedRealityToolScreen.kt:@Composable private fun AugmentedRealityHost</ID>
-    <ID>LongMethod:AugmentedRealityToolScreen.kt:AugmentedRealityController$fun onCreate</ID>
-    <ID>LongMethod:BallisticsCalculator.kt:BallisticsCalculator$fun calculateTrajectory: List&lt;TrajectoryPoint&gt;</ID>
-    <ID>LongMethod:BatteryScreen.kt:@Composable fun BatteryToolScreen</ID>
-    <ID>LongMethod:BatteryScreen.kt:@Composable private fun BatteryScreen</ID>
-    <ID>LongMethod:BatteryService.kt:BatteryService$fun getSystemBatteryTips: List&lt;SystemBatteryTip&gt;</ID>
-    <ID>LongMethod:BeaconDetailsScreen.kt:@Composable private fun BeaconDataGrid</ID>
-    <ID>LongMethod:BeaconListToolScreen.kt:@Composable private fun BeaconListScreen</ID>
-    <ID>LongMethod:BearingInput.kt:@Composable fun BearingInput</ID>
-    <ID>LongMethod:CalibrateAltimeterScreen.kt:CalibrateAltimeterController$@androidx.compose.runtime.Composable fun Content</ID>
-    <ID>LongMethod:CalibrateBarometerScreen.kt:@Composable private fun CalibrateBarometerContent</ID>
-    <ID>LongMethod:CalibrateCompassScreen.kt:@Composable private fun CalibrateCompassContent</ID>
-    <ID>LongMethod:CalibrateGPSScreen.kt:@Composable private fun CalibrateGPSContent</ID>
-    <ID>LongMethod:CalibrateGPSScreen.kt:@Composable private fun GPSOverrideCoordinateInput</ID>
-    <ID>LongMethod:Camera.kt:@Composable fun CameraPreview</ID>
-    <ID>LongMethod:CameraClinometerView.kt:@Composable private fun CameraClinometerContent</ID>
-    <ID>LongMethod:CliffHeightScreen.kt:@Composable internal fun CliffHeightScreen</ID>
-    <ID>LongMethod:ClimateScreen.kt:@Composable private fun ClimateScreen</ID>
-    <ID>LongMethod:ClimateScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>LongMethod:ClimateScreen.kt:@Composable private fun ElevationInput</ID>
-    <ID>LongMethod:ClimateScreen.kt:@Composable private fun PrecipitationChart</ID>
-    <ID>LongMethod:ClimateScreen.kt:@Composable private fun TemperatureChart</ID>
-    <ID>LongMethod:ClimateScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun DatePickerInput</ID>
-    <ID>LongMethod:ClimateScreen.kt:ClimateController$private fun getClimateDescription: Pair&lt;String, String&gt;</ID>
-    <ID>LongMethod:ClinometerScreen.kt:@Composable private fun ClinometerHost</ID>
-    <ID>LongMethod:ClinometerView.kt:@Composable private fun ClinometerContent</ID>
-    <ID>LongMethod:ClockScreen.kt:@Composable private fun ClockScreen</ID>
-    <ID>LongMethod:CloudResultsScreen.kt:@Composable private fun CloudSelectionRow</ID>
-    <ID>LongMethod:CloudScreen.kt:@Composable private fun CloudReadingListItem</ID>
-    <ID>LongMethod:CloudScreen.kt:@Composable private fun CloudScreen</ID>
-    <ID>LongMethod:CompassCalibrationView.kt:@Composable fun CompassCalibrationContent</ID>
-    <ID>LongMethod:CoordinateConverterPage.kt:CoordinateConverterPage$@Composable override fun Content</ID>
-    <ID>LongMethod:CreateFieldGuidePageScreen.kt:@Composable private fun CreateFieldGuidePageContent</ID>
-    <ID>LongMethod:CreateFieldGuideSightingScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>LongMethod:CreateFieldGuideSightingScreen.kt:@Composable private fun CreateFieldGuideSightingScreen</ID>
-    <ID>LongMethod:CreateFieldGuideSightingScreen.kt:@Composable private fun ElevationInput</ID>
-    <ID>LongMethod:CreateItemScreen.kt:@Composable private fun CreateItemScreen</ID>
-    <ID>LongMethod:CreateItemScreen.kt:@Composable private fun WeightInput</ID>
-    <ID>LongMethod:CreateMapFromPDFCommand.kt:CreateMapFromPDFCommand$suspend fun execute: PhotoMap?</ID>
-    <ID>LongMethod:CreateTideScreen.kt:@Composable private fun CreateTideScreen</ID>
-    <ID>LongMethod:CreateTideScreen.kt:@Composable private fun LunitidalIntervalInput</ID>
-    <ID>LongMethod:CreateTideScreen.kt:@Composable private fun TideEntryRow</ID>
-    <ID>LongMethod:CreateTideScreen.kt:@Composable private fun TideLocationInput</ID>
-    <ID>LongMethod:CustomUiUtils.kt:CustomUiUtils$@Composable private fun DistancePromptContent</ID>
-    <ID>LongMethod:CustomUiUtils.kt:CustomUiUtils$@Composable private fun ElevationPromptContent</ID>
-    <ID>LongMethod:DEM.kt:DEM$private suspend fun getSources: List&lt;GeographicImageSource&gt;</ID>
-    <ID>LongMethod:DatePickerView.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun DatePickerContent</ID>
-    <ID>LongMethod:DeclinationScreen.kt:@Composable fun DeclinationScreen</ID>
-    <ID>LongMethod:DeclinationScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>LongMethod:DestinationContent.kt:@Composable fun DestinationContent</ID>
-    <ID>LongMethod:DiagnosticsScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun DiagnosticsScreen</ID>
-    <ID>LongMethod:DurationInput.kt:@Composable fun DurationInput</ID>
-    <ID>LongMethod:ExperimentationScreen.kt:@androidx.compose.runtime.Composable internal fun ExperimentationContent</ID>
-    <ID>LongMethod:FieldGuideListScreen.kt:@Composable private fun FieldGuidePageRow</ID>
-    <ID>LongMethod:FlashlightScreen.kt:@Composable fun FlashlightScreen</ID>
-    <ID>LongMethod:FlashlightScreen.kt:@Composable private fun FlashlightDial</ID>
-    <ID>LongMethod:FragmentBallisticsCalculator.kt:@Composable fun BallisticsCalculatorPage</ID>
-    <ID>LongMethod:FragmentScopeAdjustment.kt:@Composable fun ScopeAdjustmentPage</ID>
-    <ID>LongMethod:GPSDiagnosticScanner.kt:GPSDiagnosticScanner$override fun quickScan: List&lt;ToolDiagnosticResult&gt;</ID>
-    <ID>LongMethod:GeoJsonFeatureClickHandler.kt:GeoJsonFeatureClickHandler$fun handleFeatureClick</ID>
-    <ID>LongMethod:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$override fun draw</ID>
+    <ID>LongMethod:CreateTideFragment.kt:CreateTideFragment$@SuppressLint("ClickableViewAccessibility") override fun onViewCreated</ID>
     <ID>LongMethod:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$private suspend fun renderFeaturesInBackground</ID>
     <ID>LongMethod:GeoJsonPointRenderer.kt:GeoJsonPointRenderer$private fun convertFeaturesToMarkers</ID>
-    <ID>LongMethod:GeographicImageSource.kt:GeographicImageSource$suspend fun read</ID>
-    <ID>LongMethod:HillshadeMapTileSource.kt:HillshadeMapTileSource$override suspend fun loadTile: Bitmap?</ID>
-    <ID>LongMethod:Hooks.kt:fun ReactiveComponent.useNavigationSensors: NavigationSensorValues</ID>
-    <ID>LongMethod:LandModel.kt:LandModel$suspend fun getCoastalLocations: List&lt;Coordinate&gt;</ID>
-    <ID>LongMethod:LightMeterScreen.kt:@Composable fun LightMeterScreen</ID>
-    <ID>LongMethod:LightningScreen.kt:@Composable fun LightningScreen</ID>
-    <ID>LongMethod:LocationBottomSheet.kt:@Composable private fun LocationSheetContent</ID>
-    <ID>LongMethod:MagnifierScreen.kt:@Composable internal fun MagnifierScreen</ID>
-    <ID>LongMethod:MapLayersSheet.kt:@Composable private fun MapLayersContent</ID>
-    <ID>LongMethod:MapLayersSheet.kt:MapLayersSheetState$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>LongMethod:MapToolScreen.kt:MapController$override fun onUpdate</ID>
-    <ID>LongMethod:MapToolWidgetView.kt:MapToolWidgetView$override suspend fun getPopulatedView: RemoteViews</ID>
-    <ID>LongMethod:MetalDetectorScreen.kt:@Composable private fun MagnetometerDirection</ID>
-    <ID>LongMethod:MetalDetectorScreen.kt:@Composable private fun MetalDetectorScreen</ID>
-    <ID>LongMethod:NavigationSettingsScreen.kt:@Composable private fun NavigationSettingsContent</ID>
-    <ID>LongMethod:NavigationSheetView.kt:NavigationSheetToolbarState$@Composable fun Content</ID>
-    <ID>LongMethod:NavigatorToolScreen.kt:@Composable private fun NavigatorHost</ID>
-    <ID>LongMethod:NavigatorToolScreen.kt:NavigatorController$@OptIn(ExperimentalMaterial3Api::class) @Composable fun Content</ID>
-    <ID>LongMethod:NavigatorToolScreen.kt:NavigatorController$fun onCreate</ID>
-    <ID>LongMethod:NearbyBeaconsToolWidgetView.kt:NearbyBeaconsToolWidgetView$override suspend fun getPopulatedView: RemoteViews</ID>
-    <ID>LongMethod:NoteEditorScreen.kt:@Composable fun NoteEditorScreen</ID>
-    <ID>LongMethod:NotesScreen.kt:@Composable private fun NoteListItem</ID>
-    <ID>LongMethod:NotesScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun NotesScreen</ID>
-    <ID>LongMethod:OfflineMapListToolScreen.kt:@Composable private fun OfflineMapListScreen</ID>
-    <ID>LongMethod:OnboardingScreen.kt:@Composable fun OnboardingScreen</ID>
-    <ID>LongMethod:PackItemListScreen.kt:@Composable private fun PackItemHeader</ID>
-    <ID>LongMethod:PackItemListScreen.kt:@Composable private fun PackItemRow</ID>
-    <ID>LongMethod:PackItemListScreen.kt:@Composable private fun PackItemScreen</ID>
-    <ID>LongMethod:PackListScreen.kt:@Composable private fun PackListItem</ID>
-    <ID>LongMethod:PackListScreen.kt:@Composable private fun PackListScreen</ID>
-    <ID>LongMethod:PathElevationChart.kt:PathElevationChart$@Composable fun Content</ID>
-    <ID>LongMethod:PathOverviewToolScreen.kt:@Composable private fun PathOverviewHost</ID>
-    <ID>LongMethod:PathOverviewToolScreen.kt:PathOverviewController$private fun onPathChanged</ID>
-    <ID>LongMethod:PathOverviewToolScreen.kt:PathOverviewController$private fun setupView</ID>
-    <ID>LongMethod:PathPointRow.kt:@Composable fun PathPointRow</ID>
-    <ID>LongMethod:PathsSettingsScreen.kt:@Composable private fun PathsSettingsContent</ID>
-    <ID>LongMethod:PathsToolScreen.kt:@Composable private fun PathsScreen</ID>
-    <ID>LongMethod:PedometerScreen.kt:@Composable fun PedometerScreen</ID>
-    <ID>LongMethod:PedometerSettingsScreen.kt:@Composable private fun PedometerSettingsContent</ID>
-    <ID>LongMethod:PerspectiveCorrectionView.kt:PerspectiveCorrectionState$fun onTouchEvent: Boolean</ID>
-    <ID>LongMethod:PhotoMapRegionLoader.kt:PhotoMapRegionLoader$suspend fun load: Bitmap?</ID>
-    <ID>LongMethod:PlaceBeaconToolScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>LongMethod:PlaceBeaconToolScreen.kt:@Composable private fun DistanceInput</ID>
-    <ID>LongMethod:PlaceBeaconToolScreen.kt:@Composable private fun ElevationInput</ID>
-    <ID>LongMethod:PlaceBeaconToolScreen.kt:@Composable private fun PlaceBeaconScreen</ID>
-    <ID>LongMethod:PlaceBeaconToolScreen.kt:PlaceBeaconController$@Composable fun Content</ID>
-    <ID>LongMethod:PluginDetailsScreen.kt:@Composable internal fun PluginDetailsScreen</ID>
-    <ID>LongMethod:RulerScreen.kt:@Composable fun RulerScreen</ID>
-    <ID>LongMethod:RulerScreen.kt:@Composable internal fun RulerCanvas</ID>
-    <ID>LongMethod:ScanQRScreen.kt:@Composable private fun QrResultCard</ID>
-    <ID>LongMethod:SettingsScreen.kt:@Composable private fun SettingsScreen</ID>
-    <ID>LongMethod:SightingCompassDialog.kt:@Composable private fun SightingCompassContent</ID>
-    <ID>LongMethod:SightingCompassDialog.kt:@Composable private fun SightingCompassStrip</ID>
-    <ID>LongMethod:SightingListScreen.kt:@Composable private fun SightingRow</ID>
-    <ID>LongMethod:SignalFinderScreen.kt:@Composable private fun SignalFinderScreen</ID>
-    <ID>LongMethod:SimpleConverterPage.kt:@Composable fun &lt;T&gt; SimpleConvertScreen</ID>
-    <ID>LongMethod:SlopeMapTileSource.kt:SlopeMapTileSource$override suspend fun loadTile: Bitmap?</ID>
-    <ID>LongMethod:SoftmaxCloudClassifier.kt:SoftmaxCloudClassifier$override suspend fun classify: List&lt;ClassificationResult&lt;CloudGenus?&gt;&gt;</ID>
-    <ID>LongMethod:SolarPanelScreen.kt:@Composable fun SolarPanelScreen</ID>
-    <ID>LongMethod:StrideLengthEstimationScreen.kt:@Composable private fun StrideLengthScreen</ID>
-    <ID>LongMethod:TemperatureEstimationScreen.kt:@Composable private fun TemperatureEstimationScreen</ID>
-    <ID>LongMethod:ThermometerSettingsScreen.kt:ThermometerSettingsController$@Composable fun Content</ID>
-    <ID>LongMethod:TideChartToolWidgetView.kt:@Composable private fun WidgetTideChart</ID>
-    <ID>LongMethod:TideListScreen.kt:@Composable private fun TideTableRow</ID>
-    <ID>LongMethod:TidesScreen.kt:@Composable private fun TideChartView</ID>
-    <ID>LongMethod:TidesScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun DatePickerInput</ID>
+    <ID>LongMethod:MapLayerPreferenceManager.kt:MapLayerPreferenceManager$fun populatePreferences</ID>
+    <ID>LongMethod:NavigatorFragment.kt:NavigatorFragment$override fun onUpdate</ID>
+    <ID>LongMethod:NavigatorFragment.kt:NavigatorFragment$override fun onViewCreated</ID>
+    <ID>LongMethod:PathOverviewFragment.kt:PathOverviewFragment$override fun onViewCreated</ID>
+    <ID>LongMethod:PathsSettingsFragment.kt:PathsSettingsFragment$override fun onCreatePreferences</ID>
+    <ID>LongMethod:ThermometerSettingsFragment.kt:ThermometerSettingsFragment$override fun onCreatePreferences</ID>
     <ID>LongMethod:TileLoader.kt:TileLoader$private fun fillNeighborPixels</ID>
-    <ID>LongMethod:TileMapLayer.kt:TileMapLayer$private fun renderTile</ID>
-    <ID>LongMethod:ToolsScreen.kt:@Composable fun ToolsScreen</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun AugmentedRealitySettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun BackupSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ExperimentalSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun FlashlightSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PhotoMapSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PluginsSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun PowerSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun ThemeSettings</ID>
-    <ID>LongMethod:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost$@Composable internal fun UnitSettings</ID>
-    <ID>LongMethod:TrailSenseNavGraph.kt:TrailSenseNavGraph$fun create: NavGraph</ID>
-    <ID>LongMethod:TriangulateScreen.kt:@Composable private fun CoordinateInput</ID>
-    <ID>LongMethod:TriangulateScreen.kt:@Composable private fun TriangulateLocationCard</ID>
-    <ID>LongMethod:TriangulateScreen.kt:@Composable private fun TriangulateScreen</ID>
-    <ID>LongMethod:TurnBackScreen.kt:@Composable private fun TurnBackScreen</ID>
-    <ID>LongMethod:ViewVectorMapScreen.kt:@Composable private fun VectorMapScreen</ID>
-    <ID>LongMethod:WarpMapScreen.kt:@Composable private fun WarpMapScreen</ID>
-    <ID>LongMethod:WaterPurificationScreen.kt:@Composable internal fun WaterPurificationScreen</ID>
-    <ID>LongMethod:WeatherScreen.kt:@Composable fun WeatherScreen</ID>
-    <ID>LongMethod:WeatherSettingsScreen.kt:WeatherSettingsController$@Composable fun Content</ID>
-    <ID>LongMethod:WeatherToolScreen.kt:@Composable private fun WeatherHost</ID>
-    <ID>LongMethod:WeatherToolScreen.kt:@Composable private fun WeatherPressureChart</ID>
-    <ID>LongMethod:WhistleScreen.kt:@Composable fun WhistleScreen</ID>
-    <ID>LongMethod:WhiteNoiseScreen.kt:@Composable fun WhiteNoiseScreen</ID>
+    <ID>LongMethod:WeatherSettingsFragment.kt:WeatherSettingsFragment$override fun onCreatePreferences</ID>
     <ID>LoopWithTooManyJumpStatements:CrossBoundaryPixelProvider.kt:CrossBoundaryPixelProvider$for</ID>
     <ID>LoopWithTooManyJumpStatements:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$for</ID>
     <ID>LoopWithTooManyJumpStatements:GeographicImageSource.kt:GeographicImageSource$for</ID>
     <ID>LoopWithTooManyJumpStatements:LineClipper.kt:LineClipper$for</ID>
     <ID>LoopWithTooManyJumpStatements:PhenologyService.kt:PhenologyService$for</ID>
-    <ID>LoopWithTooManyJumpStatements:RulerScreen.kt:while</ID>
     <ID>LoopWithTooManyJumpStatements:TideModel.kt:TideModel$for</ID>
     <ID>LoopWithTooManyJumpStatements:TileQueue.kt:TileQueue$while</ID>
     <ID>LoopWithTooManyJumpStatements:TimeSeriesEnsemble.kt:TimeSeriesEnsemble$for</ID>
     <ID>LoopWithTooManyJumpStatements:ToolKeywordLoader.kt:ToolKeywordLoader$for</ID>
-    <ID>MatchingDeclarationName:BeaconListToolScreen.kt:BeaconListControllerHost</ID>
-    <ID>MatchingDeclarationName:Camera.kt:CameraState</ID>
-    <ID>MatchingDeclarationName:ColorScaleView.kt:ColorScaleState</ID>
-    <ID>MatchingDeclarationName:DateTimeSliderSheet.kt:DateTimeSliderSheetState</ID>
-    <ID>MatchingDeclarationName:ErrorBannerView.kt:ErrorBannerState</ID>
-    <ID>MatchingDeclarationName:LocationBottomSheet.kt:LocationSheetState</ID>
-    <ID>MatchingDeclarationName:MapDistanceSheet.kt:MapDistanceSheetState</ID>
     <ID>MatchingDeclarationName:MapLayerExtensions.kt:MapLayerParams</ID>
-    <ID>MatchingDeclarationName:MapLayersSheet.kt:MapLayersSheetState</ID>
-    <ID>MatchingDeclarationName:MapToolScreen.kt:MapControllerHost</ID>
-    <ID>MatchingDeclarationName:NorthReferenceBadge.kt:NorthReferenceBadgeState</ID>
-    <ID>MatchingDeclarationName:QuickActionSheet.kt:QuickActionSheetState</ID>
-    <ID>MatchingDeclarationName:SurvivalGuideListScreen.kt:SurvivalGuideListItem</ID>
-    <ID>MatchingDeclarationName:TurnBackScreen.kt:TurnBackKeys</ID>
-    <ID>MatchingDeclarationName:WeatherSpecifications.kt:CanSendDailyForecast : Specification</ID>
     <ID>NestedBlockDepth:EncodedDataImageReader.kt:EncodedDataImageReader$override suspend fun getRegion: Pair&lt;FloatBitmap, Boolean&gt;?</ID>
     <ID>NestedBlockDepth:GeographicImageUtils.kt:GeographicImageUtils$suspend fun getNearestPixelOfAsset: PixelCoordinate?</ID>
-    <ID>PrintStackTrace:Camera.kt:CameraState$e</ID>
+    <ID>PrintStackTrace:CalibrateAltimeterFragment.kt:CalibrateAltimeterFragment$e</ID>
+    <ID>PrintStackTrace:CameraView.kt:CameraView$e</ID>
     <ID>PrintStackTrace:CustomUiUtils.kt:CustomUiUtils$e</ID>
+    <ID>PrintStackTrace:FeatureRenderer.kt:FeatureRenderer$e</ID>
+    <ID>PrintStackTrace:FragmentToolMetalDetector.kt:FragmentToolMetalDetector$e</ID>
+    <ID>PrintStackTrace:GeoJsonLayer.kt:GeoJsonLayer$e</ID>
     <ID>PrintStackTrace:ImageTile.kt:ImageTile$e</ID>
     <ID>PrintStackTrace:MapViewLayerManager.kt:MapViewLayerManager$e</ID>
+    <ID>PrintStackTrace:QuickActionWhistle.kt:QuickActionWhistle$e</ID>
+    <ID>PrintStackTrace:ScanQRFragment.kt:ScanQRFragment$e</ID>
     <ID>PrintStackTrace:SightingCompassView.kt:SightingCompassView$e</ID>
+    <ID>PrintStackTrace:ToolWhistleFragment.kt:ToolWhistleFragment$e</ID>
+    <ID>PrintStackTrace:TrailSenseTextView.kt:TrailSenseTextView$e</ID>
     <ID>RethrowCaughtException:MapExportService.kt:MapExportService$throw e</ID>
-    <ID>ReturnCount:ARPathLayer.kt:ARPathLayer$private fun getNearestPoint: NearestPoint?</ID>
-    <ID>ReturnCount:ActiveMapSelector.kt:ActiveMapSelector$fun getActiveMap: PhotoMap?</ID>
-    <ID>ReturnCount:AutomaticBackupDiagnosticScanner.kt:AutomaticBackupDiagnosticScanner$override fun quickScan: List&lt;ToolDiagnosticResult&gt;</ID>
-    <ID>ReturnCount:BackupDailyWorker.kt:BackupDailyWorker$override suspend fun execute</ID>
-    <ID>ReturnCount:ClimateScreen.kt:ClimateController$private fun formatActivity: String</ID>
-    <ID>ReturnCount:ClockScreen.kt:private fun getGPSTime: Instant</ID>
-    <ID>ReturnCount:CompassProvider.kt:CompassProvider$private fun getBaseOrientationSensor: IOrientationSensor</ID>
-    <ID>ReturnCount:CreateTideScreen.kt:CreateTideController$private fun getTide: TideTable?</ID>
-    <ID>ReturnCount:CricketsAudioStream.kt:CricketsAudioStream$private suspend fun getChirp: Double</ID>
-    <ID>ReturnCount:CrossBoundaryPixelProvider.kt:CrossBoundaryPixelProvider$private suspend fun loadNeighborRegion: Pair&lt;FloatBitmap, Rect&gt;?</ID>
-    <ID>ReturnCount:CrossBoundaryPixelProvider.kt:CrossBoundaryPixelProvider$suspend fun getPixel: Float?</ID>
-    <ID>ReturnCount:CustomGPS.kt:CustomGPS$private fun shouldUpdateReading: Boolean</ID>
-    <ID>ReturnCount:CustomUiUtils.kt:CustomUiUtils$private fun mapDistance: Distance?</ID>
-    <ID>ReturnCount:DistanceHookTrigger.kt:DistanceHookTrigger$fun getValue: Boolean</ID>
-    <ID>ReturnCount:EnglishContractionSplitter.kt:EnglishContractionSplitter$fun split: List&lt;String&gt;</ID>
-    <ID>ReturnCount:FileSubsystem.kt:FileSubsystem$fun bitmap: Bitmap?</ID>
-    <ID>ReturnCount:FormatService.kt:FormatService$fun formatWeatherArrival: String</ID>
-    <ID>ReturnCount:FrequencyHookTrigger.kt:FrequencyHookTrigger$fun getValue: Boolean</ID>
-    <ID>ReturnCount:GeographicImageUtils.kt:GeographicImageUtils$suspend fun getNearestPixelOfAsset: PixelCoordinate?</ID>
-    <ID>ReturnCount:MainActivity.kt:MainActivity$override fun onKeyDown: Boolean</ID>
-    <ID>ReturnCount:MainActivity.kt:MainActivity$override fun onKeyUp: Boolean</ID>
-    <ID>ReturnCount:MainActivity.kt:MainActivity$private fun getVolumeAction: VolumeAction?</ID>
-    <ID>ReturnCount:MapExportService.kt:MapExportService$@Suppress("FoldInitializerAndIfToElvis") private fun getPDFData: List&lt;PDFValue.PDFObject&gt;</ID>
-    <ID>ReturnCount:MapRotationCalculator.kt:MapRotationCalculator$fun calculate: Float</ID>
-    <ID>ReturnCount:NoaaHcAndMetadataTideTableConverter.kt:NoaaHcAndMetadataTideTableConverter$override fun parse: TideTable?</ID>
-    <ID>ReturnCount:PathElevationChart.kt:PathElevationChart$private fun findNearestPoint: PathPoint?</ID>
-    <ID>ReturnCount:PhotoMapDecoderCache.kt:PhotoMapDecoderCache$private suspend fun getImageLoader: RegionDecoder</ID>
-    <ID>ReturnCount:PhotoMapDecoderCache.kt:PhotoMapDecoderCache$private suspend fun getPdfLoader: RegionDecoder</ID>
-    <ID>ReturnCount:PixelInterpolators.kt:BicubicInterpolator$override suspend fun interpolate: Float?</ID>
-    <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$fun stem: String</ID>
     <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$private fun step1b: String</ID>
-    <ID>ReturnCount:PorterStemmer.kt:PorterStemmer$private fun step4: String</ID>
-    <ID>ReturnCount:PorterStemmer.kt:PorterStemmer.Companion$private fun isConsonant: Boolean</ID>
     <ID>ReturnCount:SensorService.kt:SensorService$fun getAltimeter: IAltimeter</ID>
-    <ID>ReturnCount:SensorService.kt:SensorService$fun getGPS: ISatelliteGPS</ID>
-    <ID>ReturnCount:SensorService.kt:SensorService$private fun getGPSAltimeter: IAltimeter</ID>
-    <ID>ReturnCount:SimpleHikingDifficultyCalculator.kt:SimpleHikingDifficultyCalculator$override fun calculate: HikingDifficulty</ID>
-    <ID>ReturnCount:SystemSettings.kt:SystemSettings$fun isNfcEnabled: Boolean</ID>
     <ID>ReturnCount:TideTableWaterLevelCalculator.kt:TideTableWaterLevelCalculator$private suspend fun getGapCalculator2: IWaterLevelCalculator</ID>
-    <ID>ReturnCount:TidesSubsystem.kt:TidesSubsystem$private suspend fun getTideTable: TideTable?</ID>
-    <ID>ReturnCount:TileMapLayer.kt:TileMapLayer$private fun getTilesToRender: List&lt;ImageTile&gt;</ID>
-    <ID>ReturnCount:TrailSenseExceptionHandler.kt:TrailSenseExceptionHandler$override fun handleException: Boolean</ID>
-    <ID>ReturnCount:TurnBackScreen.kt:TurnBackController$private fun requestBackgroundLocation</ID>
-    <ID>ReturnCount:WeatherArrivalTimeCalculator.kt:WeatherArrivalTimeCalculator$override fun getArrivalTime: WeatherArrivalTime?</ID>
-    <ID>SwallowedException:BacktrackService.kt:BacktrackService$e: Exception</ID>
     <ID>SwallowedException:CachedTileCleanupWorker.kt:CachedTileCleanupWorker$e: Exception</ID>
-    <ID>SwallowedException:Camera.kt:CameraState$e: Exception</ID>
-    <ID>SwallowedException:CoroutineAppWidgetProvider.kt:CoroutineAppWidgetProvider$e: Exception</ID>
-    <ID>SwallowedException:CreateMapFromPDFCommand.kt:CreateMapFromPDFCommand$e: IOException</ID>
+    <ID>SwallowedException:CameraView.kt:CameraView$e: Exception</ID>
     <ID>SwallowedException:Extensions.kt:e: Exception</ID>
-    <ID>SwallowedException:FieldGuideListScreen.kt:FieldGuideController$e: Exception</ID>
+    <ID>SwallowedException:FieldGuidePageListItemMapper.kt:FieldGuidePageListItemMapper$e: Exception</ID>
     <ID>SwallowedException:FileSubsystem.kt:FileSubsystem$e: Exception</ID>
     <ID>SwallowedException:GPSDiagnosticScanner.kt:GPSDiagnosticScanner$e: Exception</ID>
+    <ID>SwallowedException:MaskedProgressView.kt:MaskedProgressView$e: Exception</ID>
+    <ID>SwallowedException:PhotoMapListItemMapper.kt:PhotoMapListItemMapper$e: Exception</ID>
     <ID>SwallowedException:PreferenceMigrator.kt:PreferenceMigrator.Companion$e: Exception</ID>
-    <ID>SwallowedException:RebaseMapCalibrationWorker.kt:RebaseMapCalibrationWorker$e: Exception</ID>
     <ID>SwallowedException:RestoreCommand.kt:RestoreCommand$e: BackupService.InvalidBackupException</ID>
     <ID>SwallowedException:RestoreCommand.kt:RestoreCommand$e: BackupService.NewerBackupException</ID>
-    <ID>SwallowedException:SpeciesImportService.kt:SpeciesImportService$e: Exception</ID>
-    <ID>SwallowedException:WarpMapScreen.kt:WarpMapController$e: IOException</ID>
-    <ID>SwallowedException:WeatherMonitorService.kt:WeatherMonitorService$e: Exception</ID>
-    <ID>SwallowedException:WhistleScreen.kt:e: Exception</ID>
     <ID>SwallowedException:WhiteNoiseService.kt:WhiteNoiseService.Companion$e: Exception</ID>
     <ID>TooGenericExceptionCaught:AndromedaExtensions.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:BacktrackService.kt:BacktrackService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CachedTileCleanupWorker.kt:CachedTileCleanupWorker$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CalibrateAltimeterScreen.kt:CalibrateAltimeterController$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:Camera.kt:CameraState$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CoroutineAppWidgetProvider.kt:CoroutineAppWidgetProvider$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CalibrateAltimeterFragment.kt:CalibrateAltimeterFragment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CameraView.kt:CameraView$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CustomUiUtils.kt:CustomUiUtils$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DigitalElevationModel.kt:DigitalElevationModel$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Extensions.kt:e: Exception</ID>
     <ID>TooGenericExceptionCaught:FeatureRenderer.kt:FeatureRenderer$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:FieldGuideListScreen.kt:FieldGuideController$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FieldGuidePageListItemMapper.kt:FieldGuidePageListItemMapper$e: Exception</ID>
     <ID>TooGenericExceptionCaught:FileSubsystem.kt:FileSubsystem$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:FragmentToolMetalDetector.kt:FragmentToolMetalDetector$e: Exception</ID>
     <ID>TooGenericExceptionCaught:GPSDiagnosticScanner.kt:GPSDiagnosticScanner$e: Exception</ID>
     <ID>TooGenericExceptionCaught:GeoJsonLayer.kt:GeoJsonLayer$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:ImageTile.kt:ImageTile$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:MapExportService.kt:MapExportService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:MapViewLayerManager.kt:MapViewLayerManager$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:MetalDetectorScreen.kt:MetalDetectorController$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:MaskedProgressView.kt:MaskedProgressView$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:PhotoMapListItemMapper.kt:PhotoMapListItemMapper$e: Exception</ID>
     <ID>TooGenericExceptionCaught:PreferenceMigrator.kt:PreferenceMigrator.Companion$e: Exception</ID>
     <ID>TooGenericExceptionCaught:QuickActionWhistle.kt:QuickActionWhistle$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:RebaseMapCalibrationWorker.kt:RebaseMapCalibrationWorker$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:ScanQRScreen.kt:ScanQRController$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ScanQRFragment.kt:ScanQRFragment$e: Exception</ID>
     <ID>TooGenericExceptionCaught:SightingCompassView.kt:SightingCompassView$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:SpeciesImportService.kt:SpeciesImportService$e: Exception</ID>
     <ID>TooGenericExceptionCaught:TemperatureServiceExtensions.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:WeatherMonitorService.kt:WeatherMonitorService$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:WhistleScreen.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ToolWhistleFragment.kt:ToolWhistleFragment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TrailSenseTextView.kt:TrailSenseTextView$e: Exception</ID>
     <ID>TooGenericExceptionCaught:WhiteNoiseService.kt:WhiteNoiseService.Companion$e: Exception</ID>
     <ID>TooManyFunctions:AppDatabase.kt:AppDatabase : RoomDatabase</ID>
     <ID>TooManyFunctions:AstronomyService.kt:AstronomyService</ID>
-    <ID>TooManyFunctions:AugmentedRealityView.kt:AugmentedRealityView</ID>
-    <ID>TooManyFunctions:BaseAstroListItemProducer.kt:BaseAstroListItemProducer : AstronomyListItemProducer</ID>
-    <ID>TooManyFunctions:BeaconDao.kt:BeaconDao</ID>
     <ID>TooManyFunctions:CachedTileDao.kt:CachedTileDao</ID>
-    <ID>TooManyFunctions:CalibrateBarometerScreen.kt:CalibrateBarometerController</ID>
-    <ID>TooManyFunctions:CalibrateCompassScreen.kt:CalibrateCompassController</ID>
-    <ID>TooManyFunctions:CalibrateGPSScreen.kt:CalibrateGPSController</ID>
-    <ID>TooManyFunctions:Camera.kt:CameraState</ID>
     <ID>TooManyFunctions:Converters.kt:Converters</ID>
-    <ID>TooManyFunctions:CreateTideScreen.kt:CreateTideController</ID>
     <ID>TooManyFunctions:CustomUiUtils.kt:CustomUiUtils</ID>
-    <ID>TooManyFunctions:EnhancedImageView.kt:EnhancedImageView</ID>
     <ID>TooManyFunctions:Extensions.kt:com.kylecorry.trail_sense.shared.Extensions.kt</ID>
     <ID>TooManyFunctions:FileSubsystem.kt:FileSubsystem</ID>
     <ID>TooManyFunctions:FormatService.kt:FormatService</ID>
-    <ID>TooManyFunctions:FragmentScopeAdjustment.kt:com.kylecorry.trail_sense.tools.ballistics.ui.FragmentScopeAdjustment.kt</ID>
     <ID>TooManyFunctions:GeoJsonExtensions.kt:com.kylecorry.trail_sense.shared.extensions.GeoJsonExtensions.kt</ID>
+    <ID>TooManyFunctions:HikingService.kt:HikingService</ID>
     <ID>TooManyFunctions:Hooks.kt:com.kylecorry.trail_sense.shared.extensions.Hooks.kt</ID>
-    <ID>TooManyFunctions:IBeaconRepo.kt:IBeaconRepo</ID>
     <ID>TooManyFunctions:IPackRepo.kt:IPackRepo</ID>
     <ID>TooManyFunctions:IPathService.kt:IPathService : ICleanable</ID>
     <ID>TooManyFunctions:IWaypointRepo.kt:IWaypointRepo</ID>
-    <ID>TooManyFunctions:MainActivity.kt:MainActivity : ComponentActivityIntentResultRetriever</ID>
-    <ID>TooManyFunctions:MapRepo.kt:MapRepo</ID>
-    <ID>TooManyFunctions:MapView.kt:MapView : IMapView</ID>
-    <ID>TooManyFunctions:MapViewLayerManager.kt:MapViewLayerManager</ID>
-    <ID>TooManyFunctions:NavigationSettingsScreen.kt:NavigationSettingsController</ID>
-    <ID>TooManyFunctions:Navigator.kt:Navigator</ID>
-    <ID>TooManyFunctions:PackItemListScreen.kt:PackItemListController</ID>
-    <ID>TooManyFunctions:PathsSettingsScreen.kt:PathsSettingsController</ID>
-    <ID>TooManyFunctions:SensorService.kt:SensorService</ID>
+    <ID>TooManyFunctions:OfflineMapService.kt:OfflineMapService</ID>
+    <ID>TooManyFunctions:PermissionUtils.kt:com.kylecorry.trail_sense.shared.permissions.PermissionUtils.kt</ID>
     <ID>TooManyFunctions:TideTableDao.kt:TideTableDao</ID>
     <ID>TooManyFunctions:ToolDiagnosticFactory.kt:ToolDiagnosticFactory</ID>
     <ID>TooManyFunctions:Tools.kt:Tools</ID>
-    <ID>TooManyFunctions:TrailSenseComposeDestinationHost.kt:TrailSenseComposeDestinationHost : ToolSearchFocusableScreenFlashlightControllerFlashlightControllerClinometerLockControllerBeaconListControllerHostTrailSenseReactiveDestinationHost</ID>
-    <ID>TooManyFunctions:TrailSenseDestinationHost.kt:TrailSenseDestinationHost</ID>
     <ID>TooManyFunctions:WaypointDao.kt:WaypointDao</ID>
-    <ID>TopLevelPropertyNaming:MapLayersSheet.kt:private const val UrlAnnotationTag = "url"</ID>
-    <ID>TopLevelPropertyNaming:TrailSenseLinkedText.kt:private const val UrlAnnotationTag = "url"</ID>
-    <ID>UnusedParameter:AstronomySettingsScreen.kt:AstronomySettingsController$data: Bundle</ID>
-    <ID>UnusedParameter:Camera.kt:CameraState$readFrames: Boolean = true</ID>
-    <ID>UnusedParameter:CustomUiUtils.kt:CustomUiUtils$dayViewDecorator: AndromedaDayViewDecorator? = null</ID>
-    <ID>UnusedParameter:DestinationContent.kt:modifier: Modifier = Modifier</ID>
+    <ID>UnusedParameter:AstronomySettingsFragment.kt:AstronomySettingsFragment$data: Bundle</ID>
+    <ID>UnusedParameter:AveragePaceSpeedometer.kt:AveragePaceSpeedometer$data: Bundle</ID>
+    <ID>UnusedParameter:FieldGuidePageFragment.kt:FieldGuidePageFragment$tag: FieldGuidePageTag</ID>
     <ID>UnusedParameter:FileSubsystem.kt:FileSubsystem$maxSize: Size? = null</ID>
     <ID>UnusedParameter:FormatService.kt:FormatService$short: Boolean = false</ID>
     <ID>UnusedParameter:GeoJsonLayer.kt:GeoJsonLayer$data: Bundle</ID>
     <ID>UnusedParameter:GeoJsonLineStringRenderer.kt:GeoJsonLineStringRenderer$context: Context</ID>
     <ID>UnusedParameter:GeoJsonPolygonRenderer.kt:GeoJsonPolygonRenderer$context: Context</ID>
     <ID>UnusedParameter:MainActivity.kt:MainActivity$data: Bundle</ID>
-    <ID>UnusedParameter:MapLayersSheet.kt:layerId: String</ID>
-    <ID>UnusedParameter:MapLayersSheet.kt:mapId: String</ID>
-    <ID>UnusedParameter:MapToolLayerManager.kt:MapToolLayerManager$context: Context</ID>
-    <ID>UnusedParameter:MapView.kt:MapView$resourceId: Int</ID>
-    <ID>UnusedParameter:NavigationCompassLayerManager.kt:NavigationCompassLayerManager$context: Context</ID>
-    <ID>UnusedParameter:PathOverviewToolScreen.kt:PathScrollState$x: Int</ID>
-    <ID>UnusedParameter:PathsSettingsScreen.kt:PathsSettingsController$_data: Bundle</ID>
-    <ID>UnusedParameter:PathsToolScreen.kt:PathsController$data: Bundle</ID>
-    <ID>UnusedParameter:PedometerSettingsScreen.kt:PedometerSettingsController$_data: Bundle</ID>
-    <ID>UnusedParameter:PhotoMap.kt:PhotoMap$context: Context</ID>
-    <ID>UnusedParameter:PhotoMapToolLayerManager.kt:PhotoMapToolLayerManager$context: Context</ID>
-    <ID>UnusedParameter:SurvivalGuideSearch.kt:SurvivalGuideSearch$query: String</ID>
-    <ID>UnusedParameter:TemperatureEstimationScreen.kt:unit: DistanceUnits</ID>
+    <ID>UnusedParameter:PathsFragment.kt:PathsFragment$data: Bundle</ID>
+    <ID>UnusedParameter:PathsSettingsFragment.kt:PathsSettingsFragment$data: Bundle</ID>
+    <ID>UnusedParameter:PedometerSettingsFragment.kt:PedometerSettingsFragment$data: Bundle</ID>
     <ID>UnusedParameter:TileMapLayer.kt:TileMapLayer$data: Bundle</ID>
     <ID>UnusedParameter:ToolServiceQuickAction.kt:ToolServiceQuickAction$data: Bundle</ID>
     <ID>UnusedParameter:ToolServiceTile.kt:ToolServiceTile$data: Bundle</ID>
-    <ID>UnusedParameter:WeatherToolScreen.kt:context: Context</ID>
     <ID>VariableNaming:ChartToolWidgetViewBase.kt:ChartToolWidgetViewBase$private val LAYOUT = R.layout.widget_layout_chart</ID>
     <ID>VariableNaming:ChartToolWidgetViewBase.kt:ChartToolWidgetViewBase$protected val CHART = R.id.widget_chart</ID>
     <ID>VariableNaming:ChartToolWidgetViewBase.kt:ChartToolWidgetViewBase$protected val ROOT = R.id.widget_frame</ID>
     <ID>VariableNaming:ChartToolWidgetViewBase.kt:ChartToolWidgetViewBase$protected val TITLE_TEXTVIEW = R.id.widget_title</ID>
-    <ID>VariableNaming:FileSubsystem.kt:FileSubsystem$val SCHEME_ASSETS = "android-assets://"</ID>
+    <ID>VariableNaming:DurationInputView.kt:DurationInputView$private val PLACES_MINUTES = 3</ID>
+    <ID>VariableNaming:DurationInputView.kt:DurationInputView$private val PLACES_SECONDS = 5</ID>
     <ID>VariableNaming:KalmanFilter.kt:KalmanFilter$// Actual values (measured) var Zk = Matrix.zeros(measurementSize, 1)</ID>
     <ID>VariableNaming:KalmanFilter.kt:KalmanFilter$// Control matrix var B = Matrix.zeros(stateSize, controlSize)</ID>
     <ID>VariableNaming:KalmanFilter.kt:KalmanFilter$// Control vector var Uk = Matrix.zeros(controlSize, 1)</ID>
@@ -944,6 +350,5 @@
     <ID>VariableNaming:SimpleToolWidgetView.kt:SimpleToolWidgetView$protected val ROOT = R.id.widget_frame</ID>
     <ID>VariableNaming:SimpleToolWidgetView.kt:SimpleToolWidgetView$protected val SUBTITLE_TEXTVIEW = R.id.widget_subtitle</ID>
     <ID>VariableNaming:SimpleToolWidgetView.kt:SimpleToolWidgetView$protected val TITLE_TEXTVIEW = R.id.widget_title</ID>
-    <ID>WildcardImport:TrailSenseNavGraph.kt:import com.kylecorry.trail_sense.shared.views.compose.*</ID>
   </CurrentIssues>
 </SmellBaseline>

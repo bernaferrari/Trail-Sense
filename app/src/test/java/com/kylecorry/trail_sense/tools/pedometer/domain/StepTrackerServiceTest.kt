@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
+import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.events.IEventEmitter
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
@@ -24,7 +25,7 @@ internal class StepTrackerServiceTest {
     fun setup() {
         repository = FakeStepTrackerRepository()
         eventBus = mock()
-        service = StepTrackerService(repository, eventBus)
+        service = StepTrackerService(repository, eventBus, mock<IPedometerPreferences>())
     }
 
     @Test
@@ -214,6 +215,15 @@ internal class StepTrackerServiceTest {
             deletedPeriods.add(period)
         }
 
+        override suspend fun setMinimumPeriodStartTime(startTime: Instant): Boolean = false
+
+        override suspend fun getStepCountBuckets(
+            startTime: Instant,
+            endTime: Instant
+        ): List<StepCountBucket> {
+            return buckets.filter { it.startTime.isBefore(endTime) && it.endTime.isAfter(startTime) }
+        }
+
         override suspend fun upsertStepCountBucket(bucket: StepCountBucket): Long {
             val bucketToSave = if (bucket.id == 0L) {
                 bucket.copy(id = nextId++)
@@ -231,6 +241,14 @@ internal class StepTrackerServiceTest {
             buckets.removeAll { it.periodId == periodId }
             deletedBucketPeriodIds.add(periodId)
         }
+
+        override suspend fun deleteBucketsOlderThan(endTime: Instant): Boolean {
+            val before = buckets.size
+            buckets.removeAll { it.endTime.isBefore(endTime) }
+            return buckets.size != before
+        }
+
+        override suspend fun deleteEmptyClosedPeriods(): Boolean = false
 
         fun addPeriod(period: StepTrackingPeriod): StepTrackingPeriod {
             periods.add(period.copy(stepCountBuckets = emptyList()))

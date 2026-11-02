@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.science.astronomy.Astronomy
@@ -23,6 +24,7 @@ import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
+import kotlinx.coroutines.ensureActive
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
@@ -38,7 +40,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     // PUBLIC MOON METHODS
 
     fun getCurrentMoonPhase(): MoonPhase {
-        return Astronomy.getMoonPhase(ZonedDateTime.now(clock))
+        return getMoonPhase(ZonedDateTime.now(clock))
     }
 
     /**
@@ -46,6 +48,10 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
      */
     fun getMoonPhase(date: LocalDate): MoonPhase {
         val time = date.atTime(12, 0).toZonedDateTime()
+        return getMoonPhase(time)
+    }
+
+    fun getMoonPhase(time: ZonedDateTime): MoonPhase {
         return Astronomy.getMoonPhase(time)
     }
 
@@ -74,7 +80,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             endTime,
             altitudeGranularity
         ) {
-            getMoonAltitude(location, it)
+            getMoonPosition(location, it).altitude
         }
     }
 
@@ -84,16 +90,23 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             ZoneId.systemDefault(),
             altitudeGranularity
         ) {
-            getMoonAltitude(location, it)
+            getMoonPosition(location, it).altitude
         }
     }
 
+    fun getMoonPosition(
+        location: Coordinate,
+        time: ZonedDateTime = ZonedDateTime.now()
+    ): CelestialObservation {
+        return Astronomy.getMoonPosition(time, location, withRefraction = true, withParallax = true)
+    }
+
     fun getMoonAltitude(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Float {
-        return Astronomy.getMoonAltitude(time, location, withRefraction = true, withParallax = true)
+        return getMoonPosition(location, time).altitude
     }
 
     fun getMoonAzimuth(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Bearing {
-        return Astronomy.getMoonAzimuth(time, location, withParallax = true)
+        return getMoonPosition(location, time).azimuth
     }
 
     fun isMoonUp(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now(clock)): Boolean {
@@ -174,7 +187,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             ZoneId.systemDefault(),
             altitudeGranularity
         ) {
-            getSunAltitude(location, it)
+            getSunPosition(location, it).altitude
         }
     }
 
@@ -189,7 +202,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             endTime,
             altitudeGranularity
         ) {
-            getSunAltitude(location, it)
+            getSunPosition(location, it).altitude
         }
     }
 
@@ -216,11 +229,18 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     }
 
     fun getSunAzimuth(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Bearing {
-        return Astronomy.getSunAzimuth(time, location)
+        return getSunPosition(location, time).azimuth
     }
 
     fun getSunAltitude(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Float {
-        return Astronomy.getSunAltitude(time, location, true)
+        return getSunPosition(location, time).altitude
+    }
+
+    fun getSunPosition(
+        location: Coordinate,
+        time: ZonedDateTime = ZonedDateTime.now()
+    ): CelestialObservation {
+        return Astronomy.getSunPosition(time, location, withRefraction = true)
     }
 
     fun getSunAboveHorizonTimes(location: Coordinate, time: ZonedDateTime): Range<ZonedDateTime>? {
@@ -235,9 +255,8 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         date: LocalDate = LocalDate.now()
     ): MeteorShowerPeak? {
         val today = date.atTime(12, 0).toZonedDateTime()
-        val todays = Astronomy.getMeteorShower(location, today)
-        val tomorrows = Astronomy.getMeteorShower(location, today.plusDays(1))
-        return todays ?: tomorrows
+        return Astronomy.getMeteorShower(location, today)
+            ?: Astronomy.getMeteorShower(location, today.plusDays(1))
     }
 
     fun getMeteorShowerPeakAltitude(peak: MeteorShowerPeak, location: Coordinate): Float {
@@ -268,7 +287,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         date: LocalDate = LocalDate.now()
     ): Eclipse? {
         return getEclipse(location, date, EclipseType.PartialLunar) {
-            getMoonAzimuth(location, it) to getMoonAltitude(location, it)
+            getMoonPosition(location, it).altitude
         }
     }
 
@@ -277,7 +296,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         date: LocalDate = LocalDate.now()
     ): Eclipse? {
         return getEclipse(location, date, EclipseType.Solar, 1) {
-            getSunAzimuth(location, it) to getSunAltitude(location, it)
+            getSunPosition(location, it).altitude
         }
     }
 
@@ -392,7 +411,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         date: LocalDate,
         eclipseType: EclipseType,
         days: Long = 2,
-        getPosition: (ZonedDateTime) -> Pair<Bearing, Float>
+        getPeakAltitude: (ZonedDateTime) -> Float
     ): Eclipse? {
         val nextEclipse = Astronomy.getNextEclipse(
             date.atStartOfDay(ZoneId.systemDefault()),
@@ -409,84 +428,52 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             return null
         }
 
-        val position = getPosition(peak)
-
         return Eclipse(
             start,
             end,
             peak,
             nextEclipse.magnitude,
             nextEclipse.obscuration,
-            position.second,
-            position.first
+            getPeakAltitude(peak)
         )
     }
 
-    fun findNextEvent(
+    suspend fun findNextEvent(
         event: AstronomyEvent,
         location: Coordinate,
         start: LocalDate = LocalDate.now(),
         maxSearch: Duration = Duration.ofDays(365 * 2L)
-    ): LocalDate? {
+    ): LocalDate? = onDefault {
         // An update to this algorithm is planned to make it more efficient
-        var isInEvent = when (event) {
-            AstronomyEvent.FullMoon -> getMoonPhase(start).phase == MoonTruePhase.Full
-            AstronomyEvent.NewMoon -> getMoonPhase(start).phase == MoonTruePhase.New
-            AstronomyEvent.QuarterMoon -> listOf(
-                MoonTruePhase.FirstQuarter,
-                MoonTruePhase.ThirdQuarter
-            ).contains(getMoonPhase(start).phase)
-
-            AstronomyEvent.MeteorShower -> getMeteorShower(
-                location,
-                start
-            )?.peak?.toLocalDate() == start
-
-            AstronomyEvent.LunarEclipse -> getLunarEclipse(
-                location,
-                start
-            ) != null
-
-            AstronomyEvent.Supermoon -> isSuperMoon(start)
-            AstronomyEvent.SolarEclipse -> getSolarEclipse(
-                location,
-                start
-            ) != null
-        }
+        var isInEvent = hasEvent(event, location, start)
         var date = start.plusDays(1)
         val end = start.plusDays(maxSearch.toDays())
         while (date <= end) {
-            val hasEvent = when (event) {
-                AstronomyEvent.FullMoon -> getMoonPhase(date).phase == MoonTruePhase.Full
-                AstronomyEvent.NewMoon -> getMoonPhase(date).phase == MoonTruePhase.New
-                AstronomyEvent.QuarterMoon -> listOf(
-                    MoonTruePhase.FirstQuarter,
-                    MoonTruePhase.ThirdQuarter
-                ).contains(getMoonPhase(date).phase)
-
-                AstronomyEvent.MeteorShower -> getMeteorShower(
-                    location,
-                    date
-                )?.peak?.toLocalDate() == date
-
-                AstronomyEvent.LunarEclipse -> getLunarEclipse(
-                    location,
-                    date
-                ) != null
-
-                AstronomyEvent.Supermoon -> isSuperMoon(date)
-                AstronomyEvent.SolarEclipse -> getSolarEclipse(
-                    location,
-                    date
-                ) != null
+            ensureActive()
+            val isEventDay = hasEvent(event, location, date)
+            if (isEventDay && !isInEvent) {
+                return@onDefault date
             }
-            if (hasEvent && !isInEvent) {
-                return date
-            }
-            isInEvent = hasEvent
+            isInEvent = isEventDay
             date = date.plusDays(1)
         }
-        return null
+        return@onDefault null
+    }
+
+    private fun hasEvent(event: AstronomyEvent, location: Coordinate, date: LocalDate): Boolean {
+        return when (event) {
+            AstronomyEvent.FullMoon -> getMoonPhase(date).phase == MoonTruePhase.Full
+            AstronomyEvent.NewMoon -> getMoonPhase(date).phase == MoonTruePhase.New
+            AstronomyEvent.QuarterMoon -> getMoonPhase(date).phase in listOf(
+                MoonTruePhase.FirstQuarter,
+                MoonTruePhase.ThirdQuarter
+            )
+
+            AstronomyEvent.MeteorShower -> getMeteorShower(location, date)?.peak?.toLocalDate() == date
+            AstronomyEvent.LunarEclipse -> getLunarEclipse(location, date) != null
+            AstronomyEvent.Supermoon -> isSuperMoon(date)
+            AstronomyEvent.SolarEclipse -> getSolarEclipse(location, date) != null
+        }
     }
 
     companion object {

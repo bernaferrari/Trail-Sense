@@ -2,11 +2,13 @@ package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
+import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARPathAppearance
 
 class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
 
@@ -53,6 +55,13 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
         cache,
         context.getString(R.string.pref_show_ar_path_layer),
         true
+    )
+
+    val pathAppearance by StringEnumPreference(
+        cache,
+        context.getString(R.string.pref_ar_path_appearance),
+        ARPathAppearance.entries.associateBy { it.id },
+        ARPathAppearance.Ribbon
     )
 
     var showAstronomyLayer by BooleanPreference(

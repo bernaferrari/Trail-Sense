@@ -129,7 +129,7 @@ private class CalibrateBarometerController(private val host: TrailSenseDestinati
 
     fun onViewCreated() {
         host.lifecycleScope.launch {
-            weatherSubsystem.weatherChanged.flow().collect {
+            weatherSubsystem.weatherChanged.flow.collect {
                 updateBarometerData()
             }
         }

@@ -5,12 +5,13 @@ import android.hardware.Sensor
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.pedometer.actions.PausePedometerAction
 import com.kylecorry.trail_sense.tools.pedometer.actions.ResumePedometerAction
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.DistanceAlerter
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.LegacyStepTrackerRepository
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence.StepTrackerRepo
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.quickactions.QuickActionPedometer
 import com.kylecorry.trail_sense.tools.pedometer.services.PedometerToolService
@@ -22,6 +23,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolEventEmitter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -32,6 +34,11 @@ import com.kylecorry.trail_sense.tools.tools.widgets.RefreshWidgetAction
 
 object PedometerToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
+        val distanceAlarmName = context.getString(
+            R.string.parenthesized_pair,
+            context.getString(R.string.distance_alert),
+            context.getString(R.string.alarm)
+        )
         return Tool(
             Tools.PEDOMETER,
             context.getString(R.string.pedometer),
@@ -42,7 +49,13 @@ object PedometerToolRegistration : ToolRegistration {
             settingsNavAction = R.id.calibrateOdometerFragment,
             initialize = { PedometerSubsystem.getInstance(it) },
             singletons = listOf(
-                { StepTrackerService(LegacyStepTrackerRepository(), ToolEventEmitter) }
+                {
+                    StepTrackerService(
+                        StepTrackerRepo.getInstance(it),
+                        ToolEventEmitter,
+                        UserPreferences(it).pedometer
+                    )
+                }
             ),
             quickActions = listOf(
                 ToolQuickAction(
@@ -55,21 +68,36 @@ object PedometerToolRegistration : ToolRegistration {
             tiles = listOf(
                 "com.kylecorry.trail_sense.tools.pedometer.tiles.PedometerTile"
             ),
+            notificationChannelGroups = listOf(
+                ToolNotificationChannelGroup(
+                    NOTIFICATION_CHANNEL_GROUP_PEDOMETER,
+                    context.getString(R.string.pedometer)
+                )
+            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     StepCounterService.CHANNEL_ID,
                     context.getString(R.string.pedometer),
                     context.getString(R.string.pedometer),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    true
+                    muteSound = true,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_PEDOMETER
                 ),
-                // This may be shared at some point
                 ToolNotificationChannel(
                     NOTIFICATION_CHANNEL_DISTANCE_ALERT,
                     context.getString(R.string.distance_alert),
                     context.getString(R.string.distance_alert),
                     Notify.CHANNEL_IMPORTANCE_HIGH,
-                    false
+                    false,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_PEDOMETER
+                ),
+                ToolNotificationChannel(
+                    NOTIFICATION_CHANNEL_DISTANCE_ALARM,
+                    distanceAlarmName,
+                    context.getString(R.string.distance_alert),
+                    Notify.CHANNEL_IMPORTANCE_HIGH,
+                    isAlarm = true,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_PEDOMETER
                 )
             ),
             services = listOf(PedometerToolService(context)),
@@ -83,6 +111,10 @@ object PedometerToolRegistration : ToolRegistration {
                 ToolDiagnosticFactory.notification(
                     DistanceAlerter.NOTIFICATION_CHANNEL_ID,
                     context.getString(R.string.distance_alert)
+                ),
+                ToolDiagnosticFactory.notification(
+                    NOTIFICATION_CHANNEL_DISTANCE_ALARM,
+                    distanceAlarmName
                 ),
                 ToolDiagnosticFactory.powerSaver(context),
                 ToolDiagnosticFactory.backgroundService(context)
@@ -150,4 +182,6 @@ object PedometerToolRegistration : ToolRegistration {
     const val WIDGET_PEDOMETER = "pedometer-widget-pedometer"
 
     const val NOTIFICATION_CHANNEL_DISTANCE_ALERT = DistanceAlerter.NOTIFICATION_CHANNEL_ID
+    const val NOTIFICATION_CHANNEL_DISTANCE_ALARM = "distance-alarm"
+    const val NOTIFICATION_CHANNEL_GROUP_PEDOMETER = "pedometer"
 }

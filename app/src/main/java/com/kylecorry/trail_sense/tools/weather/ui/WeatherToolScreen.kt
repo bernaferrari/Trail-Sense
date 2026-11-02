@@ -231,7 +231,7 @@ private class WeatherController(
         ).bind()
 
         host.lifecycleScope.launch {
-            weatherSubsystem.weatherChanged.flow().collect {
+            weatherSubsystem.weatherChanged.flow.collect {
                 updateWeather()
             }
         }
@@ -629,7 +629,8 @@ private fun WeatherHost(
                                 icon = TrailSenseIcons.Filled.PartlyCloudyDay,
                                 text = stringResource(R.string.weather),
                                 modifier = Modifier.padding(
-                                    horizontal = TrailSenseSpacing.lg,
+                                    start = TrailSenseSpacing.lg,
+                                    end = TrailSenseSpacing.lg,
                                     top = TrailSenseSpacing.md
                                 )
                             )

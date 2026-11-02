@@ -622,4 +622,9 @@
     <string name="humidity">الرطوبة</string>
     <string name="on">تشغيل</string>
     <string name="paths">المسارات</string>
+
+    <string name="step_length_walk">امشِ في خط مستقيم، اضغط على إيقاف عند الانتهاء</string>
+    <string name="pref_step_length_title">طول الخطوة</string>
+    <string name="estimate_step_length">تقدير طول الخطوة</string>
+    <string name="step_length_stand_still">قف ساكنًا</string>
 </resources>

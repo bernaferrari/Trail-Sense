@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     private var bottomInsets = 0
     private var appInitialized = false
+    private var isOnboarding = false
     private var navGraphInitialized = false
     private var permissionResultAction: (() -> Unit)? = null
     private var intentResultAction: ((Boolean, Intent?) -> Unit)? = null
@@ -156,7 +157,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         if (cache.getBoolean(getString(R.string.pref_onboarding_completed)) != true) {
             startActivity(Intent(this, OnboardingActivity::class.java))
-            finish()
+            // Calling finish() here can crash some devices, so we need to set the flag and finish in onStart()
+            isOnboarding = true
             return
         }
 
@@ -331,7 +333,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onStart() {
         super.onStart()
-        if (cache.getBoolean(getString(R.string.pref_onboarding_completed)) != true) {
+        if (isOnboarding) {
+            finish()
             return
         }
         if (!appInitialized) {

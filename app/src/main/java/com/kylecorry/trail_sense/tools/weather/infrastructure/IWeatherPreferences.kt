@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -18,7 +17,6 @@ interface IWeatherPreferences {
     var barometerOffset: Float
     val pressureHistory: Duration
     val sendStormAlerts: Boolean
-    val dailyForecastChangeThreshold: Float
     val hourlyForecastChangeThreshold: Float
     val stormAlertThreshold: Float
     var dailyWeatherLastSent: LocalDate
@@ -27,6 +25,5 @@ interface IWeatherPreferences {
     val leftButton: Int
     val rightButton: Int
     val showColoredNotificationIcon: Boolean
-    val forecastSource: ForecastSource
     val useAlarmForStormAlert: Boolean
 }

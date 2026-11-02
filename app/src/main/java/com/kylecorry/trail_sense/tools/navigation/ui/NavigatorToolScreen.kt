@@ -51,6 +51,7 @@ import androidx.lifecycle.map
 import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
@@ -96,11 +97,11 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
-import com.kylecorry.trail_sense.tools.navigation.domain.CompassStyle
-import com.kylecorry.trail_sense.tools.navigation.domain.CompassStyleChooser
+
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
@@ -173,6 +174,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     )
     private val isViewReady: Boolean
         get() = isCreated
+    private var checkCalibrationOnNextReading = false
 
     private val orientation by lazy { sensorService.getOrientation() }
     private val compass by lazy { sensorService.getCompass(orientation) }
@@ -347,6 +349,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
         isCreated = true
         val beaconId = host.destinationArguments?.getLong("destination") ?: 0L
+        checkCalibrationOnNextReading =
+            host.destinationArguments?.getBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED) == true
 
         // Load the destination and start navigation
         if (beaconId != 0L) {
@@ -404,7 +408,14 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             }
         }
 
-        compass.asLiveData().observe(host.lifecycleOwner) { }
+        compass.asLiveData().observe(host.lifecycleOwner) {
+            if (checkCalibrationOnNextReading && compass.quality != Quality.Unknown) {
+                checkCalibrationOnNextReading = false
+                if (compass.quality == Quality.Poor) {
+                    showCalibrationDialog()
+                }
+            }
+        }
         clinometer.asLiveData().observe(host.lifecycleOwner) { }
         altimeter.asLiveData().observe(host.lifecycleOwner) { }
         gps.asLiveData().observe(host.lifecycleOwner) { }
@@ -427,7 +438,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
 
         views.navigationTitle.onSubtitleClick = {
-            locationFormat = userPrefs.navigation.coordinateFormat
+            locationFormat = userPrefs.coordinateFormat
             showLocationSheet = true
         }
 
@@ -564,7 +575,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             host.getString(R.string.accuracy_distance_format, accuracyStr)
         }
 
-        val timeAgo = Duration.between(gps.time, Instant.now())
+        val timeAgo = Duration.between(gps.eventTime, Instant.now())
         return LocationSheetState(
             location = formatService.formatLocation(gps.location, format),
             coordinateFormat = formatService.formatCoordinateType(format),

@@ -103,7 +103,6 @@
     <string name="pref_map_url_source_title">Karta dijeljenja lokacije</string>
     <string name="clear_cache">Očisti predmemoriju</string>
     <string name="destination_elevation">Visina odredišta</string>
-    <string name="base_temperature">Osnovna temperatura</string>
     <string name="base_elevation">Osnovna nadmorska visina</string>
     <string name="unit_yards">Stope</string>
     <string name="yards_format">%s stp</string>
@@ -133,7 +132,6 @@
     <string name="import_map">Uvezi kartu</string>
     <string name="pref_cell_signal_refresh_cache_summary">Prisiljava učitavanje najnovijih snaga signala</string>
     <string name="pref_cell_signal_refresh_cache_title">Osvježite predmemoriju signala</string>
-    <string name="pref_navigation_lock_screen_presence_title">Prikaži na zaključanom ekranu tijekom navigacije</string>
     <string name="map_perspective_instructions">Zacrtajte kartu</string>
     <string name="preview">Pregled</string>
     <string name="move">Premjesti</string>
@@ -236,7 +234,6 @@
     <string name="quality_poor">Jadno</string>
     <string name="unavailable">Nedostupno</string>
     <string name="gps_searching">Pretraživanje</string>
-    <string name="gps_stale">Zastarjelo</string>
     <string name="gps_user">Korisnik</string>
     <string name="import_btn">Uvezite</string>
     <plurals name="beacons_exported">
@@ -294,8 +291,6 @@
     <string name="cirrostratus">Cirrostratus</string>
     <string name="cirrocumulus">Cirrocumulus</string>
     <string name="cirrus">Cirrus</string>
-    <string name="pref_require_satellites_description">Potrebna su najmanje 4 satelita, što poboljšava preciznost</string>
-    <string name="pref_require_satellites_title">Zahtjev za satelitsku popravku</string>
     <string name="clouds">Oblaci</string>
     <string name="how">Kako</string>
     <string name="compass_calibrate_toast">Preciznost kompasa %s, preporučuje se kalibracija</string>
@@ -315,8 +310,6 @@
     <string name="unit_inches_abbreviation">in</string>
     <string name="unit_centimeters_abbreviation">cm</string>
     <string name="unit_centimeters">Centimetri</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="contents">Sadržaj</string>
     <string name="note_title_hint">Naslov</string>
     <string name="tool_notes_title">Napomene</string>
@@ -389,8 +382,6 @@
     <string name="tool_solar_panel_title">Poravnavač Solarnih Ploča</string>
     <string name="tool_solar_panel_summary">Postavite solarne panele za optimalnu proizvodnju energije</string>
     <string name="pref_privacy_policy_title">Politika privatnosti</string>
-    <string name="guide_recommended_apps_description">Korisne aplikacije za situacije preživljavanja</string>
-    <string name="guide_recommended_apps">Preporučene aplikacije</string>
     <string name="unit_nautical_miles">Nautičkih Milja</string>
     <string name="unit_miles">Milja</string>
     <string name="unit_feet">Stopa</string>
@@ -433,8 +424,6 @@
     <string name="pref_open_source_licenses_title">Dozvole</string>
     <string name="pref_sunset_alert_time_title">Vrijeme upozorenja za zalazak sunca</string>
     <string name="pref_center_sun_and_moon_title">Nek bude sunce/mjesec centriran</string>
-    <string name="pref_nmea_elevation_summary">Koristi NMEA pomake za pretvaranje visine</string>
-    <string name="pref_nmea_elevation_title">NMEA pomake nadmorske visine</string>
     <string name="sun_moon_compass_when_up">Kad je gore</string>
     <string name="always">Uvijek</string>
     <string name="pref_weather_update_frequency_title">Učestalost ažuriranja vremena</string>
@@ -567,7 +556,6 @@
     <string name="pref_elevation_override_title">Nadjačavanje nadmorske visine</string>
     <string name="pref_altimeter_calibration_title">Visinomjer</string>
     <string name="request_permission">Zatražite dozvolu</string>
-    <string name="pref_auto_location_title">Automatsko podešavanje lokacije</string>
     <string name="location">Lokacija</string>
     <string name="compass_accuracy_improved">Preciznost kompasa poboljšana na %s</string>
     <string name="compass_reported_accuracy">Prijavljena preciznost: %s</string>
@@ -683,7 +671,6 @@
     <string name="unblock_notification_channel">Deblokirajte %s obavještenje za Trail Sense</string>
     <string name="weather_no_change">Nema promjene</string>
     <string name="soon">Uskoro</string>
-    <string name="since_time">od %s</string>
     <string name="cross">Križ</string>
     <string name="pref_default_path_color_title">Zadana boja putanje</string>
     <string name="diagnostic_message_template">%1$s: %2$s
@@ -753,7 +740,6 @@
     <string name="exporting_map">Izvozi se karta</string>
     <string name="estimated">Procijenjeno</string>
     <string name="distance_alert">Upozorenje na daljinu</string>
-    <string name="navigating_to_nearest_path_point">Naviguje se do najbliže tačke putanje</string>
     <string name="pref_start_on_boot_title">Počnite pri pokretanju</string>
     <string name="warning">Upozorenje</string>
     <string name="night">Noć</string>
@@ -901,7 +887,6 @@
     <string name="autofill">Automatsko punjenje</string>
     <string name="season_winter">Zima</string>
     <string name="precipitation_hail">Grad</string>
-    <string name="simplification_quality">Kvalitet pojednostavljenja</string>
     <string name="pref_auto_simplify_paths_title">Pojednostavite putanje pri uvozu</string>
     <string name="saving">Spašavanje</string>
     <string name="instructions">Instrukcije</string>
@@ -924,7 +909,6 @@
     <string name="simplifying">Pojednostavljenje</string>
     <string name="pressure_tendency">Sklonost pritiska</string>
     <string name="explore">Istražite</string>
-    <string name="pref_only_navigate_path_points_title">Navigirajte samo do snimljenih tačaka</string>
     <string name="file">Datoteka</string>
     <string name="tide_instructions">Koristite službenu tablicu plime i oseke da unesete referentne morske mijene za dužinu vašeg putovanja.</string>
     <plurals name="waypoints_deleted">

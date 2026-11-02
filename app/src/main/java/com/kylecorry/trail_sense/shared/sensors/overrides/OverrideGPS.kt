@@ -2,33 +2,34 @@ package com.kylecorry.trail_sense.shared.sensors.overrides
 
 import android.content.Context
 import android.os.SystemClock
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.IntervalSensor
 import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import java.time.Duration
 import java.time.Instant
 
-class OverrideGPS(context: Context, updateFrequency: Long = 20L) :
+class OverrideGPS(context: Context, updateFrequency: Long = 1000L) :
     IntervalSensor(Duration.ofMillis(updateFrequency)),
     ISatelliteGPS, InactiveGPS {
 
     private val userPrefs by lazy { UserPreferences(context) }
 
     override val location: Coordinate
-        get() = userPrefs.locationOverride
+        get() = userPrefs.gps.locationOverride
     override val speed: Speed
         get() = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
     override val speedAccuracy: Float?
         get() = null
-    override val time: Instant
+    override var eventTime: Instant
         get() = Instant.now()
+        set(_) {}
     override val verticalAccuracy: Float?
         get() = null
     override val horizontalAccuracy: Float?
@@ -43,8 +44,9 @@ class OverrideGPS(context: Context, updateFrequency: Long = 20L) :
         get() = null
     override val bearingAccuracy: Float?
         get() = null
-    override val fixTimeElapsedNanos: Long
+    override var eventTimeElapsedNanos: Long
         get() = SystemClock.elapsedRealtimeNanos()
+        set(_) {}
     override val mslAltitude: Float
         get() = altitude
     override val rawBearing: Float?

@@ -14,6 +14,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
@@ -67,7 +68,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         }
 
         // Offline maps disclaimer
-        optional { clickOk() }
+        clickOkIfShown()
 
         hasText(id("map_list_title"), string(R.string.offline_maps))
         hasText(string(R.string.no_maps))
@@ -85,6 +86,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
         canToggleOfflineMapVisibility()
         canViewOfflineMap()
+        canExportOfflineMapFromList()
+        canExportOpenedOfflineMap()
         canRenameOfflineMapGroup()
         canSearchOfflineMaps()
         canRenameOfflineMap()
@@ -129,6 +132,34 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Test Map")
         click(id("zoom_in_btn"))
         click(id("zoom_out_btn"))
+        back()
+    }
+
+    private fun canExportOfflineMapFromList() {
+        input(R.id.searchbox, "Test Map")
+        clickListItemMenu(string(R.string.export))
+        backUntil {
+            hasText("test-map.map")
+        }
+        backUntil {
+            isVisible(R.id.map_list_title)
+        }
+        input(R.id.searchbox, "")
+    }
+
+    private fun canExportOpenedOfflineMap() {
+        click("Test Map")
+        waitFor {
+            isVisible(R.id.zoom_in_btn)
+        }
+        click(toolbarButton(R.id.title, Side.Right))
+        click(string(R.string.export))
+        backUntil {
+            hasText("test-map.map")
+        }
+        backUntil {
+            isVisible(R.id.map)
+        }
         back()
     }
 
@@ -236,9 +267,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         }
 
         click("Next")
-        optional {
-            clickOk()
-        }
+        clickOkIfShown()
 
         hasText("Test Map")
         hasText("Rotation: 0°")
@@ -372,8 +401,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click("Navigate")
         hasText("Test Map", index = 1)
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
-        click(toolbarButton(R.id.navigation_sheet_title, Side.Right))
-        click("Yes")
+        click(R.id.navigation_cancel)
 
         longClick(R.id.map)
         click("Distance")
@@ -394,9 +422,17 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         // Calibrate
         click(id("map_menu_btn"))
         click("Calibrate")
-        hasText("Calibrate with known locations")
-        click("Next")
-        click("Done")
+        hasText("Point 1 of 2")
+        waitFor {
+            // The click can land before the page settles, so repeat it until the next step shows
+            try {
+                hasText("Finish calibration", waitForTime = 1)
+            } catch (e: Throwable) {
+                click("Next", waitForTime = 1)
+                throw e
+            }
+        }
+        click("Finish calibration")
         isVisible(R.id.map)
 
         // User guide

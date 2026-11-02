@@ -8,6 +8,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
@@ -23,15 +25,23 @@ class LocationSubsystem private constructor(private val context: Context) {
     val location: Coordinate
         get() = sensorSubsystem.lastKnownLocation
 
+    val locationAccuracy: Distance?
+        get() = sensorSubsystem.lastKnownLocationAccuracy
+
     val locationAge: Duration
         get() {
             if (isGPSOverridden()) {
                 return Duration.ZERO
             }
 
-            val lastUpdate = Instant.ofEpochMilli(prefs.getLong(CustomGPS.LAST_UPDATE) ?: 0)
+            val lastUpdate = Instant.ofEpochMilli(
+                CacheGPSModule.getCachedData(prefs)?.updateTimeMillis ?: 0
+            )
             return Duration.between(lastUpdate, Instant.now())
         }
+
+    val isLocationStale: Boolean
+        get() = locationAge > STALE_LOCATION_AGE
 
     val elevation: Distance
         get() = sensorSubsystem.lastKnownElevation
@@ -49,8 +59,7 @@ class LocationSubsystem private constructor(private val context: Context) {
 
     init {
         val locationChangedPrefs = listOf(
-            CustomGPS.LAST_LATITUDE,
-            CustomGPS.LAST_LONGITUDE,
+            CacheGPSModule.LAST_GPS,
             context.getString(R.string.pref_latitude_override),
             context.getString(R.string.pref_longitude_override),
             context.getString(R.string.pref_auto_location),
@@ -88,10 +97,12 @@ class LocationSubsystem private constructor(private val context: Context) {
     }
 
     private fun isGPSOverridden(): Boolean {
-        return !userPrefs.useAutoLocation || !sensorService.hasLocationPermission()
+        return userPrefs.gps.locationSource == GPSLocationSource.Manual || !sensorService.hasLocationPermission()
     }
 
     companion object {
+        private val STALE_LOCATION_AGE: Duration = Duration.ofMinutes(2)
+
         @SuppressLint("StaticFieldLeak")
         private var instance: LocationSubsystem? = null
 

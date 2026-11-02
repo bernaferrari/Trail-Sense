@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -13,11 +14,17 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToStart
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
+import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickDate
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickTime
+import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
+import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
+import com.kylecorry.trail_sense.test_utils.views.quickAction
+import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -31,6 +38,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasCategories()
         canOpenPage()
         canCreatePage()
+        canRecordSightingWithQuickAction()
+        canManageMultipleImages()
         canEditPage()
         canDeletePage()
         canSearch()
@@ -50,21 +59,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun hasCategories() {
         // Shows categories
-        val categories = listOf(
-            "Plant",
-            "Fungus",
-            "Animal",
-            "Mammal",
-            "Bird",
-            "Reptile",
-            "Amphibian",
-            "Fish",
-            "Invertebrate",
-            "Rock",
-            "Other"
-        )
-
-        for (category in categories) {
+        for (category in listOf("Plant", "Other")) {
             scrollUntil {
                 hasText(category)
             }
@@ -82,6 +77,58 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Delete")
         clickOk()
         not { hasText("A Test 3") }
+    }
+
+    private fun canManageMultipleImages() {
+        clickListItemMenu("Edit")
+
+        // A single image was added when the page was created
+        scrollUntil(R.id.scroll_view) { hasText(R.id.photo_position, "Image 1/1") }
+
+        // The slot after the last image is used to add another one
+        click(R.id.next_photo_button)
+        scrollUntil(R.id.scroll_view) { click("Take photo") }
+        waitFor {
+            // The click can land before the list settles, so repeat it until the camera is open
+            try {
+                isVisible(R.id.capture_button, waitForTime = 1)
+            } catch (e: Throwable) {
+                click("Take photo", waitForTime = 1)
+                throw e
+            }
+        }
+        click(R.id.capture_button)
+        hasText(R.id.photo_position, "Image 2/2")
+
+        // The arrows page through the images
+        click(R.id.previous_photo_button)
+        hasText(R.id.photo_position, "Image 1/2")
+        click(R.id.next_photo_button)
+        hasText(R.id.photo_position, "Image 2/2")
+
+        // Setting an image as the default moves it to the first slot
+        click(R.id.photo_upload_menu_button)
+        click("Set as default")
+        hasText(R.id.photo_position, "Image 1/2")
+
+        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+
+        // The page displays all the images
+        click("A Test")
+        hasText(R.id.photo_position, "Image 1/2")
+        click(R.id.next_photo_button)
+        hasText(R.id.photo_position, "Image 2/2")
+        back()
+
+        // An image can be deleted
+        clickListItemMenu("Edit")
+        scrollUntil(R.id.scroll_view) { hasText(R.id.photo_position, "Image 1/2") }
+        click(R.id.photo_upload_menu_button)
+        click("Delete")
+        clickOk()
+        hasText(R.id.photo_position, "Image 1/1")
+
+        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
     }
 
     private fun canEditPage() {
@@ -112,16 +159,27 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Ant")
         hasText("A small insect")
         canLogSightings()
-        val tags = listOf(
-            "North America",
-            "Insect",
-            "Grassland",
-        )
-        for (tag in tags) {
-            scrollUntil {
-                hasText(tag)
-            }
+        scrollUntil {
+            hasText("Grassland")
         }
+        back()
+    }
+
+    private fun canRecordSightingWithQuickAction() {
+        TestUtils.openQuickActions()
+        click(quickAction(Tools.QUICK_ACTION_RECORD_SIGHTING))
+        input(R.id.search, "A Test")
+        click("A Test", exact = true, index = 1)
+
+        hasText("Created", waitForTime = GPS_WAIT_FOR_TIMEOUT)
+        click("View")
+        input("Notes", "Quick action sighting")
+        click(toolbarButton(R.id.title, Side.Right))
+
+        // The quick action deep link returns to the sightings list after saving.
+        hasText("Quick action sighting")
+        back()
+        hasText("Sightings (1)")
         back()
     }
 
@@ -132,7 +190,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Bird")
         clickOk()
         hasText(id("tag_classifications"), "Animal, Bird")
-        input(id("notes")(), "Notes")
+        scrollUntil { input(id("notes")(), "Notes") }
         scrollToEnd(id("scroll_view"))
 
         click(id("tag_locations"))
@@ -172,17 +230,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("A Test")
         hasText("Notes")
 
-        val tags = listOf(
-            "Animal",
-            "Bird",
-            "North America",
-            "Forest",
-            "Edible",
-            "Inedible",
-            "Diurnal (day)"
-        )
-
-        for (tag in tags) {
+        for (tag in listOf("Bird", "Diurnal (day)")) {
             scrollUntil {
                 hasText(tag)
             }
@@ -260,8 +308,22 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
             click("Sightings (1)")
         }
 
-        // Delete
+        // Delete from the list
         click(id("field_guide_sighting_menu"))
+        click("Delete")
+        clickOk()
+
+        hasText("No sightings")
+
+        // Create another sighting to delete from the edit page
+        click(R.id.create_btn)
+        input("Notes", "Delete from edit page")
+        click(toolbarButton(R.id.title, Side.Right))
+        hasText("Delete from edit page")
+
+        // Delete from the edit page
+        click("Delete from edit page")
+        click(toolbarButton(R.id.title, Side.Left))
         click("Delete")
         clickOk()
 

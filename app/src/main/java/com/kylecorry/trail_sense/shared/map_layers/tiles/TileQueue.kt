@@ -1,8 +1,11 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
-import android.util.Log
+import android.os.SystemClock
 import com.kylecorry.luna.concurrency.Parallel
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
+import java.util.PriorityQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.log
 
@@ -17,6 +20,7 @@ class TileQueue {
     private val comparator = compareBy<ImageTile> { getPriority(it) }
 
     private val queue = LazyPriorityQueue(16, comparator)
+    private val delayed = PriorityQueue<ImageTile>(compareBy { it.retryAfterMillis })
 
     @Volatile
     private var mapProjection: IMapViewProjection? = null
@@ -34,8 +38,7 @@ class TileQueue {
     }
 
     fun enqueue(tile: ImageTile) {
-        val state = tile.state
-        if (state != TileState.Idle && state != TileState.Stale) {
+        if (!tile.isLoadable() && tile.state != TileState.Error) {
             return
         }
         synchronized(loadingKeys) {
@@ -49,12 +52,17 @@ class TileQueue {
         }
 
         if (shouldEnqueue) {
-            queue.enqueue(tile)
+            if (tile.isLoadable()) {
+                queue.enqueue(tile)
+            } else {
+                synchronized(delayed) { delayed.add(tile) }
+            }
         }
     }
 
     fun clear() {
         queue.clear()
+        synchronized(delayed) { delayed.clear() }
         synchronized(queuedKeys) {
             queuedKeys.clear()
         }
@@ -65,7 +73,7 @@ class TileQueue {
     }
 
     fun count(): Int {
-        return queue.count()
+        return queue.count() + synchronized(delayed) { delayed.size }
     }
 
     private fun dequeue(): ImageTile? {
@@ -81,6 +89,7 @@ class TileQueue {
     suspend fun load(maxTotalLoads: Int, maxNewLoads: Int = maxTotalLoads) {
         val jobs = mutableListOf<ImageTile>()
         val tiles = desiredTiles ?: return
+        releaseReadyTiles()
         while (loadingCount.get() < maxTotalLoads && jobs.size < maxNewLoads) {
             val tile = dequeue() ?: break
             if (tile.tile !in tiles) {
@@ -89,8 +98,7 @@ class TileQueue {
             }
 
             val key = tile.key
-            val tileState = tile.state
-            if (tileState == TileState.Idle || tileState == TileState.Stale) {
+            if (tile.isLoadable()) {
                 val shouldLoad = synchronized(loadingKeys) {
                     loadingKeys.add(key).also {
                         if (it) {
@@ -106,11 +114,14 @@ class TileQueue {
         // TODO: Allow cancellation of a job - likely means storing the actual jobs somewhere
         try {
             Parallel.forEach(jobs) {
-                val start = System.currentTimeMillis()
+                val start = if (shouldLog) SystemClock.elapsedRealtime() else 0L
                 it.load()
-                val end = System.currentTimeMillis()
                 if (shouldLog) {
-                    Log.d("TileQueue", "${it.key} (${end - start}ms)")
+                    getAppService<Logger>().debug(
+                        "TileQueue",
+                        "${it.key} (${SystemClock.elapsedRealtime() - start}ms)",
+                        writeToFile = false
+                    )
                 }
                 onStateChange(it)
             }
@@ -131,7 +142,21 @@ class TileQueue {
                 loadingCount.decrementAndGet()
             }
         }
+        if (tile.state == TileState.Error) {
+            enqueue(tile)
+        }
         changeListener(tile)
+    }
+
+    private fun releaseReadyTiles() {
+        val ready = synchronized(delayed) {
+            buildList {
+                while (delayed.peek()?.isLoadable() == true) {
+                    add(delayed.remove())
+                }
+            }
+        }
+        ready.forEach { queue.enqueue(it) }
     }
 
     fun getLoadingCount(): Int {

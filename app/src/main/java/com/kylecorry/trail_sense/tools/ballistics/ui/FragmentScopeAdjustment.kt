@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.sol.math.arithmetic.Arithmetic
@@ -60,8 +60,8 @@ import kotlin.math.roundToInt
 fun ScopeAdjustmentPage(
     modifier: Modifier = Modifier
 ) {
-    val formatter = remember { AppServiceRegistry.get<FormatService>() }
-    val prefs = remember { AppServiceRegistry.get<UserPreferences>() }
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
+    val prefs = remember { DependencyRegistry.get<UserPreferences>() }
     val referenceDistance = remember { Distance.from(100f, DistanceUnits.Yards) }
     var offsetX by remember { mutableStateOf(Distance.from(0f, DistanceUnits.Inches)) }
     var offsetY by remember { mutableStateOf(Distance.from(0f, DistanceUnits.Inches)) }
@@ -314,7 +314,7 @@ internal fun DistanceField(
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { AppServiceRegistry.get<FormatService>().getDistanceUnitName(it) },
+        getUnitName = { DependencyRegistry.get<FormatService>().getDistanceUnitName(it) },
         getAmount = { it.value },
         getUnit = { it.units },
         createValue = { amount, unit -> Distance.from(amount, unit) },
@@ -337,7 +337,7 @@ internal fun SpeedField(
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { AppServiceRegistry.get<FormatService>().getBulletSpeedUnitName(it) },
+        getUnitName = { DependencyRegistry.get<FormatService>().getBulletSpeedUnitName(it) },
         getAmount = { it.value },
         getUnit = { it.distanceUnits },
         createValue = { amount, unit -> Speed.from(amount, unit, TimeUnits.Seconds) },
@@ -360,7 +360,7 @@ internal fun WeightField(
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { AppServiceRegistry.get<FormatService>().getWeightUnitName(it) },
+        getUnitName = { DependencyRegistry.get<FormatService>().getWeightUnitName(it) },
         getAmount = { it.value },
         getUnit = { it.units },
         createValue = { amount, unit -> Weight.from(amount, unit) },
@@ -494,7 +494,7 @@ internal fun <T> ToggleRow(
 
 @Composable
 internal fun rememberDistancePreference(key: String): Pair<Distance?, (Distance?) -> Unit> {
-    val prefs = remember { AppServiceRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
     var value by remember(key) { mutableStateOf(prefs.getDistance(key)) }
     val setter: (Distance?) -> Unit = {
         prefs.putDistance(key, it)
@@ -505,7 +505,7 @@ internal fun rememberDistancePreference(key: String): Pair<Distance?, (Distance?
 
 @Composable
 internal fun rememberSpeedPreference(key: String): Pair<Speed?, (Speed?) -> Unit> {
-    val prefs = remember { AppServiceRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
     var value by remember(key) { mutableStateOf(prefs.getSpeed(key)) }
     val setter: (Speed?) -> Unit = {
         prefs.putSpeed(key, it)
@@ -516,7 +516,7 @@ internal fun rememberSpeedPreference(key: String): Pair<Speed?, (Speed?) -> Unit
 
 @Composable
 internal fun rememberWeightPreference(key: String): Pair<Weight?, (Weight?) -> Unit> {
-    val prefs = remember { AppServiceRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
     var value by remember(key) { mutableStateOf(prefs.getWeight(key)) }
     val setter: (Weight?) -> Unit = {
         prefs.putWeight(key, it)
@@ -527,7 +527,7 @@ internal fun rememberWeightPreference(key: String): Pair<Weight?, (Weight?) -> U
 
 @Composable
 internal fun rememberFloatPreference(key: String): Pair<Float?, (Float?) -> Unit> {
-    val prefs = remember { AppServiceRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
     var value by remember(key) { mutableStateOf(prefs.getFloat(key)) }
     val setter: (Float?) -> Unit = {
         if (it == null) {

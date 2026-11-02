@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,14 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.core.view.isVisible
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 
 class MapDistanceSheetState(context: Context) {
 
@@ -42,10 +44,20 @@ class MapDistanceSheetState(context: Context) {
     var view: View? = null
     var cancelListener: (() -> Unit)? = null
     var undoListener: (() -> Unit)? = null
+    var redoListener: (() -> Unit)? = null
     var createPathListener: (() -> Unit)? = null
 
     private var isVisible by mutableStateOf(false)
     private var distanceText by mutableStateOf("")
+    private var canUndo by mutableStateOf(false)
+    private var canRedo by mutableStateOf(false)
+    private var hasSelection by mutableStateOf(false)
+
+    fun setEditState(state: PathEditState) {
+        canUndo = state.canUndo
+        canRedo = state.canRedo
+        hasSelection = state.hasSelection
+    }
 
     fun setDistance(distance: Distance) {
         distanceText =
@@ -69,7 +81,13 @@ class MapDistanceSheetState(context: Context) {
         }
         MapDistanceSheetContent(
             distance = distanceText,
+            canUndo = canUndo,
+            canRedo = canRedo,
+            hint = stringResource(
+                if (hasSelection) R.string.path_edit_hint_selected else R.string.path_edit_hint
+            ),
             onUndo = { undoListener?.invoke() },
+            onRedo = { redoListener?.invoke() },
             onCancel = { cancelListener?.invoke() },
             onCreatePath = { createPathListener?.invoke() },
             modifier = modifier
@@ -80,7 +98,11 @@ class MapDistanceSheetState(context: Context) {
 @Composable
 private fun MapDistanceSheetContent(
     distance: String,
+    canUndo: Boolean,
+    canRedo: Boolean,
+    hint: String,
     onUndo: () -> Unit,
+    onRedo: () -> Unit,
     onCancel: () -> Unit,
     onCreatePath: () -> Unit,
     modifier: Modifier = Modifier
@@ -112,12 +134,6 @@ private fun MapDistanceSheetContent(
                     .padding(vertical = TrailSenseSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onUndo) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_undo),
-                        contentDescription = stringResource(R.string.undo)
-                    )
-                }
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -146,13 +162,38 @@ private fun MapDistanceSheetContent(
                 }
             }
 
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.md)
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = onUndo, enabled = canUndo) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_undo),
+                        contentDescription = stringResource(R.string.undo)
+                    )
+                }
+                IconButton(onClick = onRedo, enabled = canRedo) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_redo),
+                        contentDescription = stringResource(R.string.redo)
+                    )
+                }
                 Button(
                     onClick = onCreatePath,
-                    modifier = Modifier.heightIn(min = 48.dp)
+                    modifier = Modifier
+                        .padding(start = TrailSenseSpacing.lg)
+                        .heightIn(min = 48.dp)
                 ) {
                     Text(text = stringResource(R.string.create_path))
                 }

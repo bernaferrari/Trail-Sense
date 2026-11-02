@@ -4,8 +4,8 @@ import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 import com.kylecorry.trail_sense.tools.navigation.ui.MappableReferencePoint
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +17,7 @@ class BeaconCompassLayer(
 ) : ICompassLayer {
 
     private val markerLayer = MarkerCompassLayer()
+    private val navigationService = NavigationService()
 
     private val _beacons = mutableListOf<Beacon>()
     private var _highlighted: Beacon? = null
@@ -89,14 +90,12 @@ class BeaconCompassLayer(
                 0.5f
             }
 
-            val bearing = if (compass.useTrueNorth) {
-                compass.compassCenter.bearingTo(it.coordinate).value
-            } else {
-                DeclinationUtils.fromTrueNorthBearing(
-                    compass.compassCenter.bearingTo(it.coordinate).value,
-                    compass.declination
-                )
-            }
+            val bearing = navigationService.getBearing(
+                compass.compassCenter,
+                it.coordinate,
+                compass.declination,
+                compass.useTrueNorth
+            )
 
             // Background
             markers.add(

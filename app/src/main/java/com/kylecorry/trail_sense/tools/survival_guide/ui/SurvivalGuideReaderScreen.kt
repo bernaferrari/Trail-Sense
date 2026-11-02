@@ -36,7 +36,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.text.TextUtils
@@ -109,7 +109,7 @@ private fun SurvivalGuideHeader(
                     modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_printer),
+                        painter = painterResource(R.drawable.ic_share),
                         contentDescription = stringResource(R.string.print),
                         modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
@@ -259,7 +259,7 @@ private fun MarkdownText(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
 ) {
     val parsed = remember(text) {
-        AppServiceRegistry.get<MarkdownService>().toMarkdown(text)
+        DependencyRegistry.get<MarkdownService>().toMarkdown(text)
     }
     TrailSenseLinkedText(
         text = parsed,

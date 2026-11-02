@@ -35,12 +35,12 @@ import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.math.Euler
+import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.geometry.Size
-import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.FormatService
@@ -64,7 +64,7 @@ import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.Augment
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARLayer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.Duration
+import kotlin.math.abs
 import kotlin.math.atan2
 
 // TODO: Notify location change
@@ -117,12 +117,15 @@ class AugmentedRealityView(val context: Context) {
     private val userPrefs = UserPreferences(context)
     private val sensors = SensorService(context)
     private var calibrationBearingOffset: Float = 0f
-    val geomagneticOrientationSensor = sensors.getOrientation()
-    val gyroOrientationSensor = sensors.getGyroscope()
+    private var compassSensorDelay = SensorService.MOTION_SENSOR_DELAY
+    var geomagneticOrientationSensor =
+        sensors.getOrientation(compassSensorDelay)
+        private set
+    private var gyroOrientationSensor = sensors.getGyroscope(compassSensorDelay)
     private var customOrientationSensor: IOrientationSensor? = null
     private val hasGyro = Sensors.hasGyroscope(context)
     var orientationSensor = geomagneticOrientationSensor
-    val gps = sensors.getGPS(frequency = Duration.ofMillis(200))
+    val gps = sensors.getGPS(frequency = SensorService.NAVIGATION_GPS_FREQUENCY, tag = "AugmentedRealityView")
     private val altimeter = sensors.getAltimeter(gps = gps)
     private val declinationProvider = DeclinationFactory().getDeclinationStrategy(
         userPrefs,
@@ -249,6 +252,16 @@ class AugmentedRealityView(val context: Context) {
         post {
             renderVersion++
         }
+    }
+
+    fun setCompassSensorDelay(sensorDelay: Int) {
+        if (compassSensorDelay == sensorDelay) return
+        geomagneticOrientationSensor.stop(this::onSensorUpdate)
+        gyroOrientationSensor.stop(this::onSensorUpdate)
+        compassSensorDelay = sensorDelay
+        geomagneticOrientationSensor = sensors.getOrientation(sensorDelay)
+        gyroOrientationSensor = sensors.getGyroscope(sensorDelay)
+        orientationSensor = geomagneticOrientationSensor
     }
 
     fun start(useGPS: Boolean = true, customOrientationSensor: IOrientationSensor? = null) {
@@ -524,7 +537,12 @@ class AugmentedRealityView(val context: Context) {
      * @return The pixel size
      */
     fun sizeToPixel(angularSize: Float): Float {
-        return (width / fov.width) * angularSize
+        val rect = previewRect ?: RectF(0f, 0f, width.toFloat(), height.toFloat())
+        val mapper = getMapper()
+        val halfAngle = angularSize / 2f
+        val left = mapper.getPixel(-halfAngle, 0f, rect, fov)
+        val right = mapper.getPixel(halfAngle, 0f, rect, fov)
+        return abs(right.x - left.x)
     }
 
     /**
@@ -550,7 +568,7 @@ class AugmentedRealityView(val context: Context) {
             rotationMatrix,
             previewRect ?: RectF(0f, 0f, width.toFloat(), height.toFloat()),
             fov,
-            if (camera?.isStarted == true) cameraMapper ?: defaultMapper else defaultMapper
+            getMapper()
         )
         return PixelCoordinate(screenPixel.x - x, screenPixel.y - y)
     }
@@ -566,7 +584,7 @@ class AugmentedRealityView(val context: Context) {
             rotationMatrixOverride ?: rotationMatrix,
             rect,
             fov,
-            if (camera?.isStarted == true) cameraMapper ?: defaultMapper else defaultMapper
+            getMapper()
         )
 
         return AugmentedRealityCoordinate(coordinate, isTrueNorth)
@@ -668,6 +686,14 @@ class AugmentedRealityView(val context: Context) {
         orientationSensor = geomagneticOrientationSensor
     }
 
+    private fun getMapper(): CameraAnglePixelMapper {
+        return if (camera?.isStarted == true) {
+            cameraMapper ?: defaultMapper
+        } else {
+            defaultMapper
+        }
+    }
+
     private fun syncWithCamera() {
         camera?.passThroughTouchEvents = true
         owner?.lifecycleScope?.launch {
@@ -680,7 +706,7 @@ class AugmentedRealityView(val context: Context) {
                 val fov = camera.camera?.getPreviewFOV(false) ?: return@enqueue
                 this@AugmentedRealityView.fov = Size(fov.first, fov.second)
                 if (previewRect == null) {
-                    previewRect = camera.camera?.getPreviewRect(false)
+                    previewRect = camera.camera?.getPreviewRect(false)?.takeUnless { it.isEmpty }
                 }
                 if (cameraMapper == null) {
                     cameraMapper = camera.camera?.let {

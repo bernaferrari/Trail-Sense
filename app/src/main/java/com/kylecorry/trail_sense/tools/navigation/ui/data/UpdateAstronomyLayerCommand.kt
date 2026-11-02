@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.data
 
 import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
+import com.kylecorry.trail_sense.tools.navigation.domain.astronomy.NavAstronomyService
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 import com.kylecorry.trail_sense.tools.navigation.ui.MappableReferencePoint
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.MarkerCompassLayer
@@ -15,11 +17,14 @@ class UpdateAstronomyLayerCommand(
     private val layer: MarkerCompassLayer,
     private val prefs: UserPreferences,
     private val gps: IGPS,
+    private val isActive: () -> Boolean = { true },
     private val declination: () -> Float
 ) : CoroutineCommand {
+    private val astronomyService = NavAstronomyService()
+
     override suspend fun execute() = onDefault {
         val markers = mutableListOf<IMappableReferencePoint>()
-        val astro = NavAstronomyDataCommand(gps).execute()
+        val astro = astronomyService.getData(gps.location)
 
         if (prefs.astronomy.showOnCompass) {
             val showWhenDown = prefs.astronomy.showOnCompassWhenDown
@@ -66,14 +71,14 @@ class UpdateAstronomyLayerCommand(
             }
         }
 
-        layer.setMarkers(markers)
+        onMain {
+            if (isActive()) {
+                layer.setMarkers(markers)
+            }
+        }
     }
 
     private fun fromTrueNorth(bearing: Float): Float {
-        return if (prefs.compass.useTrueNorth) {
-            bearing
-        } else {
-            DeclinationUtils.fromTrueNorthBearing(bearing, declination())
-        }
+        return DeclinationUtils.fromTrueNorthBearing(bearing, declination(), prefs.compass.useTrueNorth)
     }
 }

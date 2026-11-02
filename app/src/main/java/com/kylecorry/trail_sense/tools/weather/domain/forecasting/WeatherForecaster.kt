@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
-import com.kylecorry.andromeda.core.rangeOrNull
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.science.meteorology.PressureTendency
@@ -34,7 +33,6 @@ internal class WeatherForecaster(
 
     private val stormThreshold = prefs.stormAlertThreshold
     private val hourlyForecastChangeThreshold = prefs.hourlyForecastChangeThreshold
-    private val forecastSource = prefs.forecastSource
     private val arrivalCalculator = WeatherArrivalTimeCalculator()
     private val alertGenerator = WeatherAlertGenerator()
 
@@ -111,8 +109,10 @@ internal class WeatherForecaster(
     }
 
     private fun hasEnoughReadings(readings: List<WeatherObservation>): Boolean {
-        val range = readings.map { it.time }.rangeOrNull() ?: return false
-        return Duration.between(range.lower, range.upper) >= minDuration
+        val times = readings.map { it.time }
+        val start = times.minOrNull() ?: return false
+        val end = times.maxOrNull() ?: return false
+        return Duration.between(start, end) >= minDuration
     }
 
     private fun getForecast(
@@ -128,8 +128,7 @@ internal class WeatherForecaster(
             hourlyForecastChangeThreshold.absoluteValue / 3f,
             stormThreshold.absoluteValue / 3f,
             Instant.now(),
-            location ?: Coordinate.zero,
-            forecastSource
+            location ?: Coordinate.zero
         )
     }
 

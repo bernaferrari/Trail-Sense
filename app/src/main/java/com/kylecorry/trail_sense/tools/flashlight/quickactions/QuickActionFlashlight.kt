@@ -1,13 +1,14 @@
 package com.kylecorry.trail_sense.tools.flashlight.quickactions
 
-import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.topics.generic.ITopic
+import com.kylecorry.luna.topics.generic.distinct
 import com.kylecorry.luna.topics.generic.map
 import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.openTool
+import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
@@ -43,6 +44,6 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
         } else {
             FeatureState.Unavailable
         }
-    }.replay()
+    }.distinct().replay()
 
 }

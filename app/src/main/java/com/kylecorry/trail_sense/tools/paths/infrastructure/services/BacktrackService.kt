@@ -6,26 +6,59 @@ import com.kylecorry.andromeda.background.IAlwaysOnTaskScheduler
 import com.kylecorry.andromeda.background.TaskSchedulerFactory
 import com.kylecorry.andromeda.background.services.ForegroundInfo
 import com.kylecorry.andromeda.background.services.IntervalService
-import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.kylecorry.andromeda.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.LocationRequestConfig
+import com.kylecorry.luna.time.CoroutineTimer
+import com.kylecorry.luna.time.FlowableTimer
+import com.kylecorry.luna.time.ITimer
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
+import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSource
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSourceSelector
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.BacktrackCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
 import java.time.Duration
 
 class BacktrackService :
-    IntervalService(wakelockDuration = Duration.ofSeconds(30), useOneTimeWorkers = true) {
+    IntervalService(wakelockDuration = Duration.ofSeconds(60), useOneTimeWorkers = true) {
     private val prefs by lazy { UserPreferences(applicationContext) }
-
-    private val backtrackCommand by lazy {
-        BacktrackCommand(this)
-    }
 
     override val uniqueId: Int
         get() = 7238542
+
+    override val holdWakelockWhenBelowThreshold: Boolean
+        get() = prefs.paths.backtrackKeepDeviceAwake
+
+    override fun getNonWorkerTimer(action: suspend () -> Unit): ITimer {
+        val canWakeWithLocationUpdates = !prefs.paths.backtrackKeepDeviceAwake &&
+                GPSSourceSelector(this).getSource(useCache = false) == GPSSource.Device
+
+        if (!canWakeWithLocationUpdates) {
+            getAppService<Logger>().info(TAG, "Using a coroutine timer (keep awake: ${prefs.paths.backtrackKeepDeviceAwake})")
+            return CoroutineTimer { action() }
+        }
+
+        getAppService<Logger>().info(TAG, "Using location updates as the timer")
+
+        return FlowableTimer({ periodMillis ->
+            // This intentionally does not use the CustomGPS because it only needs to use the GPS as a wakeup source
+            // This has the side effect of warming up the GPS for backtrack
+            GPS(
+                this,
+                LocationRequestConfig(
+                    frequency = Duration.ofMillis(periodMillis),
+                    powerUsage = prefs.paths.backtrackGPSPowerUsage
+                )
+            )
+        }, action = action)
+    }
 
     override fun getForegroundInfo(): ForegroundInfo {
         val units = prefs.baseDistanceUnits
@@ -37,36 +70,48 @@ class BacktrackService :
 
 
     override val period: Duration
-        get() = prefs.backtrackRecordFrequency
+        get() = prefs.paths.backtrackRecordFrequency
 
-    private val runner = CoroutineQueueRunner()
+    private val recordLock = Mutex()
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun doWork() {
-        runner.skipIfRunning {
-            backtrackCommand.execute()
+        if (!recordLock.tryLock()) {
+            return
+        }
+
+        try {
+            BacktrackCommand(this).execute()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            getAppService<Logger>().error(TAG, "Unable to record backtrack point", e)
+        } finally {
+            recordLock.unlock()
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        getAppService<Logger>().info(
+            TAG,
+            "Started (period: $period, keep awake: ${prefs.paths.backtrackKeepDeviceAwake}, restarted by system: ${intent == null})"
+        )
         isRunning = true
-        try {
-            return super.onStartCommand(intent, flags, startId)
-        } catch (e: Exception) {
-            ServiceRestartAlerter(this).alert()
-            stopSelf()
-            return START_NOT_STICKY
+        return tryStartForegroundOrNotify {
+            super.onStartCommand(intent, flags, startId)
         }
     }
 
     override fun onDestroy() {
+        getAppService<Logger>().info(TAG, "Stopped")
         isRunning = false
-        runner.cancel()
         stopService(true)
         super.onDestroy()
     }
 
     companion object {
         const val FOREGROUND_CHANNEL_ID = "Backtrack"
+        private const val TAG = "BacktrackService"
 
         var isRunning = false
             private set(value) {

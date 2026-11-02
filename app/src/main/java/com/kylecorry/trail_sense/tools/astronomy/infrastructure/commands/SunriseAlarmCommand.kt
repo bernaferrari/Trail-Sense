@@ -1,18 +1,20 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
 import android.content.Context
-import android.util.Log
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
-import com.kylecorry.luna.concurrency.onDefault
+import androidx.core.app.NotificationCompat
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.alerts.AlarmAlerter
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
@@ -35,12 +37,10 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
     private val alertWindowAfter = Duration.ofMinutes(5)
 
     override suspend fun execute() = onDefault {
-        Log.i(TAG, "Started")
-
         val now = ZonedDateTime.now()
 
         if (location.location == Coordinate.zero) {
-            setAlarm(now.plusDays(1))
+            setAlarm(now.plusDays(1), "no location available")
             return@onDefault
         }
 
@@ -58,7 +58,8 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
                     // Missed the sunrise, schedule the alarm for tomorrow
                     setAlarm(
                         tomorrowSunrise?.minus(alertDuration)
-                            ?: todaySunrise.plusDays(1)
+                            ?: todaySunrise.plusDays(1),
+                        "past today's sunrise at ${todaySunrise.toInstant()}"
                     )
                 }
 
@@ -67,18 +68,22 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
                     sendNotification(todaySunrise)
                     setAlarm(
                         tomorrowSunrise?.minus(alertDuration)
-                            ?: todaySunrise.plusDays(1)
+                            ?: todaySunrise.plusDays(1),
+                        "within alert window for today's sunrise at ${todaySunrise.toInstant()}"
                     )
                 }
 
                 else -> { // Before the alert window
                     // Schedule alarm for sunrise
-                    setAlarm(todaySunrise.minus(alertDuration))
+                    setAlarm(
+                        todaySunrise.minus(alertDuration),
+                        "before alert window for today's sunrise at ${todaySunrise.toInstant()}"
+                    )
                 }
             }
         } else {
             // There isn't a sunrise today, schedule it for tomorrow
-            setAlarm(tomorrowSunrise?.minus(alertDuration) ?: now.plusDays(1))
+            setAlarm(tomorrowSunrise?.minus(alertDuration) ?: now.plusDays(1), "no sunrise today")
         }
     }
 
@@ -97,6 +102,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
 
         val lastSentDate = userPrefs.astronomy.sunriseAlertLastSent
         if (LocalDate.now() == lastSentDate) {
+            getAppService<Logger>().info(TAG, "Sunrise alert already sent today")
             return
         }
 
@@ -108,9 +114,14 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
         val openIntent = NavigationUtils.pendingIntent(context, R.id.action_astronomy)
 
         val useAlarm = userPrefs.astronomy.useAlarmForSunriseAlert
+        val notificationChannel = if (useAlarm) {
+            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNRISE_ALARM
+        } else {
+            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNRISE_ALERT
+        }
         val notification = Notify.alert(
             context,
-            NOTIFICATION_CHANNEL_ID,
+            notificationChannel,
             context.getString(R.string.sunrise_alert_notification_title),
             context.getString(
                 R.string.sunrise_alert_notification_text,
@@ -119,24 +130,23 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
             R.drawable.ic_sunrise_notification,
             intent = openIntent,
             autoCancel = true,
-            mute = useAlarm
+            isAlarm = useAlarm,
+            category = NotificationCompat.CATEGORY_REMINDER
         )
 
-        AppServiceRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, notification)
-
-        val alarm = AlarmAlerter(
-            context,
-            useAlarm,
-            AstronomyToolRegistration.NOTIFICATION_CHANNEL_SUNRISE_ALERT
-        )
-        alarm.alert()
+        DependencyRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, notification)
+        getAppService<Logger>().info(TAG, "Sunrise alert sent")
     }
 
-    private fun setAlarm(time: ZonedDateTime) {
+    private fun setAlarm(time: ZonedDateTime, reason: String) {
         val scheduler = SunriseAlarmReceiver.scheduler(context)
         scheduler.cancel()
-        scheduler.once(time.toInstant())
-        Log.i(TAG, "Scheduled next run at $time")
+        val instant = time.toInstant()
+        scheduler.once(instant)
+        getAppService<Logger>().info(
+            TAG,
+            "Scheduled next run at $instant (exact: ${Permissions.canScheduleExactAlarms(context)}): $reason"
+        )
     }
 
     companion object {

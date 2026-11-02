@@ -76,6 +76,7 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
             resolutionPixels,
             zoom,
             resolution,
+            center,
         ) {
             val viewNoRotation = toViewNoRotation(center ?: PointF(width / 2f, height / 2f))
             val projection = projection

@@ -63,6 +63,7 @@ import androidx.lifecycle.observe
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -191,7 +192,7 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
                 IntentUriPicker(
                     host.intentResultRetriever,
                     host.requireContext()
-                ).open(listOf("image/*"))
+                ).open(listOf("image/*")).getOrNull()
             val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
             temp?.let { openCloudPicker(it) }
         }

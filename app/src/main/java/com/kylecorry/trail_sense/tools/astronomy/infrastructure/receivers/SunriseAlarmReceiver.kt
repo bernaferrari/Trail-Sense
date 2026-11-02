@@ -6,6 +6,7 @@ import android.content.Intent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
@@ -15,7 +16,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class SunriseAlarmReceiver : BroadcastReceiver() {
 
@@ -69,7 +69,7 @@ class SunriseAlarmReceiver : BroadcastReceiver() {
             service?.enable()
             if (shouldRequestPermissions) {
                 host.requestScheduleExactAlarms {
-                    runBlocking {
+                    host.inBackground(BackgroundMinimumState.Created) {
                         service?.restart()
                     }
                     RequestBackgroundLocationCommand(

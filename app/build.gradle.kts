@@ -16,11 +16,12 @@ android {
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "com.kylecorry.trail_sense"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
-        versionCode = 146
-        versionName = "8.1.0"
+        versionCode = 149
+        versionName = "8.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
     signingConfigs {
         create("nightly") {
@@ -45,6 +46,7 @@ android {
         generateLocaleConfig = true
     }
     buildFeatures {
+        viewBinding = true
         buildConfig = true
         compose = true
     }
@@ -103,6 +105,8 @@ android {
         }
     }
     testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        animationsDisabled = true
         unitTests.all {
             it.useJUnitPlatform()
         }
@@ -160,8 +164,9 @@ dependencies {
     implementation(libs.gridlayout)
     implementation(libs.preference.ktx)
     implementation(libs.work.runtime.ktx)
+    implementation(libs.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
     implementation(libs.navigation.runtime.ktx)
-    // Navigation 3 (pure Compose navigation) - added for the terminal zero-Fragment migration
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.lifecycle.runtime.compose)
@@ -170,9 +175,11 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.lifecycle.service)
     implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.process)
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
+    implementation(libs.androidx.core.remoteviews)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.exifinterface)
 
@@ -196,6 +203,7 @@ dependencies {
 
     // Andromeda
     implementation(libs.andromeda.core)
+    implementation(libs.andromeda.fragments)
     implementation(libs.andromeda.forms)
     implementation(libs.andromeda.csv)
     implementation(libs.andromeda.background)
@@ -214,7 +222,6 @@ dependencies {
     implementation(libs.andromeda.list)
     implementation(libs.andromeda.qr)
     implementation(libs.andromeda.markdown)
-    implementation(libs.andromeda.camera)
     implementation(libs.andromeda.clipboard)
     implementation(libs.andromeda.haptics)
     implementation(libs.andromeda.bitmaps)
@@ -224,7 +231,7 @@ dependencies {
     implementation(libs.andromeda.pdf)
     implementation(libs.andromeda.exceptions)
     implementation(libs.andromeda.print)
-    implementation(libs.andromeda.list)
+    implementation(libs.andromeda.views)
     implementation(libs.andromeda.xml)
     implementation(libs.andromeda.json)
     implementation(libs.andromeda.widgets)
@@ -246,15 +253,18 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.androidx.test.core)
+    androidTestUtil(libs.androidx.test.orchestrator)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.uiautomator)
+    androidTestImplementation(libs.androidx.fragment.testing)
     androidTestImplementation(libs.androidx.test.arch.core)
     androidTestImplementation(libs.work.testing)
-    testImplementation(libs.junit.platform.runner)
+    debugImplementation(libs.androidx.fragment.testing.manifest)
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.kotlin)
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 }

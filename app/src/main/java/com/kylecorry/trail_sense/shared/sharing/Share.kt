@@ -15,7 +15,7 @@ object Share {
     fun shareLocation(
         host: TrailSenseDestinationHost,
         location: Coordinate,
-        format: BuiltInCoordinateFormat = UserPreferences(host.requireContext()).navigation.coordinateFormat,
+        format: BuiltInCoordinateFormat = UserPreferences(host.requireContext()).coordinateFormat,
         title: String = host.getString(R.string.location)
     ) {
         val locationSenders = mapOf(

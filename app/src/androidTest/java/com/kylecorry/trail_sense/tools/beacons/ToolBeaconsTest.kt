@@ -1,24 +1,30 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInOrder
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.TestData
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import org.junit.Assume.assumeFalse
 import org.junit.Test
 
-class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
+class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -127,9 +133,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
     private fun navigate() {
         click(string(R.string.navigate))
 
-        optional {
-            clickOk()
-        }
+        clickOkIfShown()
 
         isVisible(R.id.navigation_title)
         hasText("Test beacon")
@@ -226,4 +230,124 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS) {
         input(id("searchbox")(), "")
         hasText("Test group")
     }
+
+    // Beacons are placed at known offsets from the current location (42.03, -71.97) so the distances
+    // and directions can be checked. They were verified by an independent calculation:
+    // - Camp: 0.69 mi due north
+    // - Parking: 4.15 mi at 120 degrees
+    // - Lake: 14.84 mi at 233 degrees
+    // - Summit: 40.40 mi at 36 degrees
+
+    private fun openWithSavedBeacons() {
+        assumeFalse(isStagingBuild)
+        relaunchTool { seedBeacons() }
+    }
+
+    private fun seedBeacons() {
+        TestData.addBeacon(
+            "Summit",
+            Coordinate(42.5, -71.5),
+            elevation = 304.8f,
+            comment = "Great view"
+        )
+        TestData.addBeacon("Camp", Coordinate(42.04, -71.97), elevation = 100f)
+        TestData.addBeacon("Lake", Coordinate(41.9, -72.2))
+        val group = TestData.addBeaconGroup("Trailheads")
+        TestData.addBeacon("Parking", Coordinate(42.0, -71.9), groupId = group)
+    }
+
+    @Test
+    fun listIsSortedByDistanceFromTheCurrentLocation() {
+        openWithSavedBeacons()
+
+        hasTextsInOrder(
+            com.kylecorry.andromeda.views.R.id.title,
+            listOf("Camp", "Trailheads", "Lake", "Summit")
+        )
+        hasTextsInOrder(
+            com.kylecorry.andromeda.views.R.id.description,
+            listOf("0.69 mi", "1 beacon", "14.86 mi", "40.41 mi")
+        )
+    }
+
+    @Test
+    fun groupsListTheirBeacons() {
+        openWithSavedBeacons()
+
+        click("Trailheads")
+
+        hasText(R.id.beacon_title, "Trailheads")
+        hasText("Parking")
+        // 4.15 mi on a spherical earth
+        hasText(Regex("4\\.1[56] mi"))
+        not { hasText("Camp") }
+    }
+
+    @Test
+    fun canSearchByName() {
+        openWithSavedBeacons()
+
+        input(R.id.searchbox, "lak")
+        hasText("Lake")
+        not { hasText("Summit") }
+        not { hasText("Camp") }
+
+        // Beacons inside of groups are found too
+        input(R.id.searchbox, "park")
+        hasText("Parking")
+        not { hasText("Lake") }
+    }
+
+    @Test
+    fun detailsShowTheSavedBeacon() {
+        openWithSavedBeacons()
+
+        click("Summit")
+
+        hasText(R.id.beacon_title, "Summit")
+        hasText(R.id.beacon_title, "42.500000°,  -71.500000°")
+        // Stored in meters, displayed in feet
+        hasDataPoint("1000 ft", string(R.string.elevation))
+        hasDataPoint("40.41 mi", string(R.string.distance))
+        hasText(R.id.comment_text, "Great view")
+    }
+
+    @Test
+    fun canNavigateToABeacon() {
+        openWithSavedBeacons()
+
+        click("Summit")
+        click(string(R.string.navigate))
+        clickOkIfShown()
+
+        hasText(R.id.navigation_sheet_title, "Summit")
+        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+    }
+
+    @Test
+    fun canCreateABeaconAtADistanceAndBearing() {
+        openWithSavedBeacons()
+
+        click(R.id.create_btn)
+        click(string(R.string.beacon), exact = true)
+        input(R.id.beacon_name, "Mile north")
+        input(R.id.beacon_location, "42, -72")
+        click(R.id.create_at_distance)
+        isChecked(R.id.create_at_distance)
+
+        input(string(R.string.distance), "5280")
+        click(string(R.string.enter_manually))
+        input(R.id.bearing, "0")
+        click(R.id.true_north)
+        clickOk()
+
+        scrollToEnd(R.id.create_beacon_scroll)
+        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+
+        // One mile north of 42, -72
+        click("Mile north")
+        hasText(R.id.beacon_title, Regex("42\\.0144\\d\\d°,\\s+-72\\.0000\\d\\d°"))
+        back()
+    }
+
 }

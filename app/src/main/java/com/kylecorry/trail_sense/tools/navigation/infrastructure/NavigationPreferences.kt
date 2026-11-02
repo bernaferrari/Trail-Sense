@@ -5,26 +5,17 @@ import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.luna.text.toIntCompat
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
-import com.kylecorry.andromeda.preferences.IntEnumPreference
 import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.infrastructure.ICompassStylePreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
-import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
-import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
-import com.kylecorry.trail_sense.tools.paths.ui.PathSortMethod
+import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
 
-class NavigationPreferences(private val context: Context) : ICompassStylePreferences,
-    IPathPreferences {
+class NavigationPreferences(private val context: Context) : ICompassStylePreferences {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val sensors by lazy { SensorService(context) }
@@ -41,15 +32,18 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
             _showCalibrationOnNavigateDialog = value
         }
 
-    val keepScreenUnlockedWhileNavigating: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_navigation_lock_screen_presence))
-            ?: false
-
-    val keepScreenUnlockedWhileOpen by BooleanPreference(
+    private val screenLockMode by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_navigation_keep_unlocked),
-        false
+        context.getString(R.string.pref_navigation_lock_screen_mode),
+        ScreenLockMode.entries.associateBy { it.id },
+        ScreenLockMode.Never
     )
+
+    val keepScreenUnlockedWhileNavigating: Boolean
+        get() = screenLockMode != ScreenLockMode.Never
+
+    val keepScreenUnlockedWhileOpen: Boolean
+        get() = screenLockMode == ScreenLockMode.WhileOpen
 
     override val useLinearCompass: Boolean
         get() = cache.getBoolean(context.getString(R.string.pref_show_linear_compass)) ?: true
@@ -81,67 +75,6 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
         false
     )
 
-    var defaultPathColor: AppColor
-        get() {
-            val id = cache.getLong(context.getString(R.string.pref_backtrack_path_color))
-            return AppColor.values().firstOrNull { it.id == id } ?: AppColor.Gray
-        }
-        set(value) {
-            cache.putLong(context.getString(R.string.pref_backtrack_path_color), value.id)
-        }
-
-    private val backtrackPathLineStyle: LineStyle
-        get() {
-            return when (cache.getString(context.getString(R.string.pref_backtrack_path_style))) {
-                "solid" -> LineStyle.Solid
-                "arrow" -> LineStyle.Arrow
-                "dashed" -> LineStyle.Dashed
-                "square" -> LineStyle.Square
-                "diamond" -> LineStyle.Diamond
-                "cross" -> LineStyle.Cross
-                else -> LineStyle.Dotted
-            }
-        }
-    private val defaultPathPointStyle: PathPointColoringStyle
-        get() = PathPointColoringStyle.None
-
-    override val defaultPathStyle: PathStyle
-        get() = PathStyle(
-            backtrackPathLineStyle,
-            defaultPathPointStyle,
-            defaultPathColor.color,
-            true
-        )
-
-    override var backtrackHistory: Duration
-        get() {
-            val days = cache.getInt(context.getString(R.string.pref_backtrack_history_days)) ?: 2
-            return Duration.ofDays(days.toLong())
-        }
-        set(value) {
-            val d = value.toDays().toInt()
-            cache.putInt(
-                context.getString(R.string.pref_backtrack_history_days),
-                if (d > 0) d else 1
-            )
-        }
-    override val simplifyPathOnImport by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_auto_simplify_paths),
-        true
-    )
-
-    override val onlyNavigateToPoints by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_only_navigate_path_points),
-        true
-    )
-    override val useFastPathRendering by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_fast_path_rendering),
-        false
-    )
-
     var maxBeaconDistance: Float
         get() {
             val raw =
@@ -163,26 +96,6 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
         cache,
         "cache_radar_compass_state_scale",
         2f
-    )
-
-    val coordinateFormat: BuiltInCoordinateFormat
-        get() {
-            return when (cache.getString(context.getString(R.string.pref_coordinate_format))) {
-                "dms" -> BuiltInCoordinateFormat.DegreesMinutesSeconds
-                "ddm" -> BuiltInCoordinateFormat.DegreesDecimalMinutes
-                "utm" -> BuiltInCoordinateFormat.UTM
-                "mgrs" -> BuiltInCoordinateFormat.MGRS
-                "usng" -> BuiltInCoordinateFormat.USNG
-                "osng" -> BuiltInCoordinateFormat.OSGB
-                else -> BuiltInCoordinateFormat.DecimalDegrees
-            }
-        }
-
-    var pathSort: PathSortMethod by IntEnumPreference(
-        cache,
-        context.getString(R.string.pref_path_sort),
-        PathSortMethod.values().associateBy { it.id.toInt() },
-        PathSortMethod.MostRecent
     )
 
     val leftButton: Int
@@ -229,11 +142,36 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
         false
     )
 
+    var bearingDistance: Distance
+        get() {
+            val raw = cache.getString(context.getString(R.string.pref_bearing_distance)) ?: "5.0"
+            return Distance.meters(
+                Distance.kilometers(raw.toFloatCompat() ?: 5.0f)
+                    .meters()
+                    .value
+                    .coerceIn(1f, Destination.Bearing.maxBearingDistance.value)
+            )
+        }
+        set(value) {
+            val km = value.meters().value
+                .coerceIn(1f, Destination.Bearing.maxBearingDistance.value)
+                .let { Distance.meters(it).convertTo(DistanceUnits.Kilometers).value }
+            cache.putString(
+                context.getString(R.string.pref_bearing_distance),
+                km.toString()
+            )
+        }
+
+    enum class ScreenLockMode(val id: String) {
+        Never("never"),
+        WhileNavigating("navigating"),
+        WhileOpen("open")
+    }
+
     enum class SpeedometerMode {
         Backtrack,
         GPS,
         CurrentPace,
         AveragePace
     }
-
 }

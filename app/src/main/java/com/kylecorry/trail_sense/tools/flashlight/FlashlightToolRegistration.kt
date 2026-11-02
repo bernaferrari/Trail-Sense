@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight
 
 import android.content.Context
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -19,6 +20,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
@@ -39,7 +41,9 @@ object FlashlightToolRegistration : ToolRegistration {
             R.drawable.flashlight,
             R.id.fragmentToolFlashlight,
             ToolCategory.Signaling,
-            initialize = { FlashlightSubsystem.getInstance(it) },
+            initialize = {
+                DependencyRegistry.addSingleton(FlashlightSubsystem.getInstance(it))
+            },
             guideId = R.raw.guide_tool_flashlight,
             settingsNavAction = R.id.flashlightSettingsFragment,
             quickActions = listOfNotNull(
@@ -71,10 +75,17 @@ object FlashlightToolRegistration : ToolRegistration {
                 ),
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
-                    { context, _, _ ->
-                        UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
+                    { context, _, host ->
+                        host.findNavController().currentDestination?.id == R.id.fragmentToolScreenFlashlight &&
+                            UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
                     { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }
+                )
+            ),
+            notificationChannelGroups = listOf(
+                ToolNotificationChannelGroup(
+                    NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT,
+                    context.getString(R.string.flashlight_title)
                 )
             ),
             notificationChannels = listOf(
@@ -83,7 +94,8 @@ object FlashlightToolRegistration : ToolRegistration {
                     context.getString(R.string.flashlight_title),
                     context.getString(R.string.flashlight_title),
                     Notify.CHANNEL_IMPORTANCE_LOW,
-                    muteSound = true
+                    muteSound = true,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT
                 )
             ),
             services = listOf(FlashlightToolService(context)),
@@ -118,4 +130,5 @@ object FlashlightToolRegistration : ToolRegistration {
     const val WIDGET_FLASHLIGHT = "flashlight-widget-flashlight"
 
     const val BROADCAST_FLASHLIGHT_STATE_CHANGED = "flashlight-broadcast-flashlight-state-changed"
+    const val NOTIFICATION_CHANNEL_GROUP_FLASHLIGHT = "flashlight"
 }

@@ -44,6 +44,13 @@ internal class LegacyStepTrackerRepository : IStepTrackerRepository {
         counter.reset()
     }
 
+    override suspend fun setMinimumPeriodStartTime(startTime: Instant): Boolean = false
+
+    override suspend fun getStepCountBuckets(
+        startTime: Instant,
+        endTime: Instant
+    ): List<StepCountBucket> = emptyList()
+
     override suspend fun upsertStepCountBucket(bucket: StepCountBucket): Long {
         counter.addSteps(bucket.steps - counter.steps)
         return 1L
@@ -52,4 +59,8 @@ internal class LegacyStepTrackerRepository : IStepTrackerRepository {
     override suspend fun deleteBucketsInPeriod(periodId: Long) {
         counter.reset()
     }
+
+    override suspend fun deleteBucketsOlderThan(endTime: Instant): Boolean = false
+
+    override suspend fun deleteEmptyClosedPeriods(): Boolean = false
 }

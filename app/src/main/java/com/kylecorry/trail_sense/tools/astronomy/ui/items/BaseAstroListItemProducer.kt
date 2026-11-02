@@ -19,6 +19,7 @@ import java.time.ZonedDateTime
 abstract class BaseAstroListItemProducer(protected val context: Context) :
     AstronomyListItemProducer {
 
+    protected val imageSize = Resources.dp(context, 24f).toInt()
     protected val secondaryColor = Resources.androidTextColorSecondary(context)
     protected val formatter = FormatService.getInstance(context)
     protected val astronomyService = AstronomyService()

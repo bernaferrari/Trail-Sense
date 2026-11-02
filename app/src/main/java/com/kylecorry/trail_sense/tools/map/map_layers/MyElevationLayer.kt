@@ -6,7 +6,7 @@ import android.os.Bundle
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.canvas.TextMode
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -21,18 +21,14 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class MyElevationLayer : OverlayLayer() {
 
-    private var bottomLeft = PixelCoordinate(
+    private val bottomLeft = PixelCoordinate(
         16f,
         -16f
     )
 
-    private val formatter = AppServiceRegistry.get<FormatService>()
-    private val prefs = AppServiceRegistry.get<UserPreferences>()
-    private val locationSubsystem = AppServiceRegistry.get<LocationSubsystem>()
-
-    private val onElevationChange = { _: Bundle ->
-        elevation = locationSubsystem.elevation.convertTo(prefs.baseDistanceUnits)
-    }
+    private val formatter = DependencyRegistry.get<FormatService>()
+    private val prefs = DependencyRegistry.get<UserPreferences>()
+    private val locationSubsystem = DependencyRegistry.get<LocationSubsystem>()
 
     override val layerId: String = LAYER_ID
 
@@ -44,10 +40,10 @@ class MyElevationLayer : OverlayLayer() {
 
     private var elevationString = ""
 
-    private lateinit var bitmapLoader: DrawerBitmapLoader
+    private var bitmapLoader: DrawerBitmapLoader? = null
 
     override fun start() {
-        Tools.subscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, onElevationChange)
+        Tools.subscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
     }
 
     override fun drawOverlay(
@@ -55,11 +51,8 @@ class MyElevationLayer : OverlayLayer() {
         drawer: ICanvasDrawer,
         map: IMapView
     ) {
-        if (!::bitmapLoader.isInitialized) {
-            bitmapLoader = DrawerBitmapLoader(drawer)
-        }
-
-        val elevationIcon = bitmapLoader.load(R.drawable.ic_altitude, drawer.sp(20f).toInt())
+        val loader = bitmapLoader ?: DrawerBitmapLoader(drawer).also { bitmapLoader = it }
+        val elevationIcon = loader.load(R.drawable.ic_altitude, drawer.sp(20f).toInt())
 
         drawer.push()
         drawer.translate(drawer.dp(bottomLeft.x), drawer.canvas.height + drawer.dp(bottomLeft.y))
@@ -91,11 +84,15 @@ class MyElevationLayer : OverlayLayer() {
     }
 
     override fun stop() {
-        Tools.unsubscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, onElevationChange)
-        if (::bitmapLoader.isInitialized) {
-            bitmapLoader.clear()
-        }
+        Tools.unsubscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
+        bitmapLoader?.clear()
+        bitmapLoader = null
     }
+
+    private fun onElevationChange(ignored: Bundle) {
+        elevation = locationSubsystem.elevation.convertTo(prefs.baseDistanceUnits)
+    }
+
 
     companion object {
         const val LAYER_ID = "my_elevation"

@@ -9,13 +9,21 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachedAltimeter
 import com.kylecorry.trail_sense.shared.sensors.altimeter.OverrideAltimeter
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSource
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSourceSelector
+import com.kylecorry.trail_sense.shared.sensors.gps.TimezoneGPS
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import java.time.Duration
 
 class SensorSubsystem private constructor(private val context: Context) {
     private val sensorService by lazy { SensorService(context) }
     private val userPrefs by lazy { UserPreferences(context) }
+    private val prefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
+    private val gpsSourceSelector by lazy { GPSSourceSelector(context) }
+    private val timezoneGPS by lazy { TimezoneGPS() }
 
     /**
      * Get the last known location without starting the GPS. May be stale.
@@ -23,7 +31,31 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     val lastKnownLocation: Coordinate
         get() {
-            return sensorService.getGPS().location
+            return when (gpsSourceSelector.getSource(useCache = true)) {
+                GPSSource.Override -> userPrefs.gps.locationOverride
+                GPSSource.Timezone -> timezoneGPS.location
+                // The device GPS is never selected when using the cache
+                else -> {
+                    val cached = CacheGPSModule.getCachedData(prefs)
+                    val override = userPrefs.gps.locationOverride
+                    Coordinate(
+                        cached?.latitude ?: override.latitude,
+                        cached?.longitude ?: override.longitude
+                    )
+                }
+            }
+        }
+
+    /**
+     * Get the horizontal accuracy of the last known location without starting the GPS.
+     * @return the accuracy, or null if it is unknown (ex. the location is overridden)
+     */
+    val lastKnownLocationAccuracy: Distance?
+        get() {
+            return when (gpsSourceSelector.getSource(useCache = true)) {
+                GPSSource.Override, GPSSource.Timezone -> null
+                else -> CacheGPSModule.getCachedData(prefs)?.horizontalAccuracy?.let { Distance.meters(it) }
+            }
         }
 
     /**
@@ -54,13 +86,13 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     suspend fun getLocation(
         preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: Duration = Duration.ofSeconds(15)
+        timeout: Duration = SensorService.GPS_READ_TIMEOUT
     ): Coordinate {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownLocation
         }
 
-        val gps = sensorService.getGPS()
+        val gps = sensorService.getGPS(SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = "SensorSubsystem.getLocation")
 
         readAll(
             listOf(gps),
@@ -79,13 +111,14 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     suspend fun getElevation(
         preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: Duration = Duration.ofSeconds(15)
+        timeout: Duration = SensorService.GPS_READ_TIMEOUT
     ): Distance {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownElevation
         }
 
-        val altimeter = sensorService.getAltimeter()
+        val altimeter =
+            sensorService.getAltimeter(frequency = SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = "SensorSubsystem.getElevation")
 
         readAll(
             listOf(altimeter),
@@ -94,6 +127,32 @@ class SensorSubsystem private constructor(private val context: Context) {
         )
 
         return Distance.meters(altimeter.altitude)
+    }
+
+    /**
+     * Get the current location and elevation using a single GPS reading
+     * @param preferredPolicy the preferred policy for getting the readings
+     * @param timeout the maximum time to wait for the readings
+     * @return the location and elevation, which may be Coordinate.zero / Distance.meters(0f) if unknown
+     */
+    suspend fun getLocationAndElevation(
+        preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
+        timeout: Duration = SensorService.GPS_READ_TIMEOUT
+    ): Pair<Coordinate, Distance> {
+        if (preferredPolicy == SensorRefreshPolicy.Cache) {
+            return lastKnownLocation to lastKnownElevation
+        }
+
+        val gps = sensorService.getGPS(SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = "SensorSubsystem.getLocationAndElevation")
+        val altimeter = sensorService.getAltimeter(gps = gps)
+
+        readAll(
+            listOf(gps, altimeter),
+            timeout,
+            onlyIfInvalid = preferredPolicy == SensorRefreshPolicy.RefreshIfInvalid
+        )
+
+        return gps.location to Distance.meters(altimeter.altitude)
     }
 
     enum class SensorRefreshPolicy {

@@ -50,7 +50,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.signal.CellSignal
@@ -125,7 +125,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     private val gps by lazy { sensorService.getGPS() }
     val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val markdown by lazy { AppServiceRegistry.get<MarkdownService>() }
+    private val markdown by lazy { DependencyRegistry.get<MarkdownService>() }
     private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
     private val handler = Handler(Looper.getMainLooper())
 

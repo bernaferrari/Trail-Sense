@@ -49,7 +49,6 @@
     <string name="quality_poor">Zayıf</string>
     <string name="unavailable">Kullanılamıyor</string>
     <string name="gps_searching">Aranıyor</string>
-    <string name="gps_stale">Vakti geçmiş</string>
     <string name="gps_user">Kullanıcı</string>
     <string name="import_btn">İçeri Aktar</string>
     <plurals name="beacons_exported">
@@ -111,8 +110,6 @@
     <string name="unit_inches_abbreviation">in</string>
     <string name="unit_centimeters_abbreviation">cm</string>
     <string name="unit_centimeters">Santimetre</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="contents">İçerikler</string>
     <string name="note_title_hint">Başlık</string>
     <string name="tool_notes_title">Notlar</string>
@@ -184,8 +181,6 @@
     <string name="tool_solar_panel_title">Güneş Paneli Ayarlayıcısı</string>
     <string name="tool_solar_panel_summary">İdeal güç üretimi için güneş panellerini yerleştir</string>
     <string name="pref_privacy_policy_title">Gizlilik politikası</string>
-    <string name="guide_recommended_apps_description">Hayatta kalma durumları için işe yarar uygulamalar</string>
-    <string name="guide_recommended_apps">Tavsiye Edilen Uygulamalar</string>
     <string name="unit_nautical_miles">Deniz mili</string>
     <string name="unit_miles">Mil</string>
     <string name="unit_feet">Feet</string>
@@ -262,7 +257,6 @@
     <string name="elevation_from_pressure">Üzerine yazma değerini barometreden ayarla</string>
     <string name="pref_altimeter_calibration_title">Yükseklik ölçer</string>
     <string name="request_permission">İzin talep et</string>
-    <string name="pref_auto_location_title">Konumu otomatik ayarla</string>
     <string name="location">Konum</string>
     <string name="gps">GPS</string>
     <string name="compass_accuracy_improved">Pusula verisi doğruluğu %s\'a yükseltildi</string>
@@ -418,8 +412,6 @@
     <string name="network_5g">5G</string>
     <string name="time_ago">%s önce</string>
     <string name="privacy_and_location">Gizlilik ve konum</string>
-    <string name="pref_require_satellites_description">En az 4 uydu gerektirir, doğruluğu arttırır</string>
-    <string name="pref_require_satellites_title">Uydu düzeltmesi gerektir</string>
     <string name="clouds">Bulutlar</string>
     <string name="how">Nasıl</string>
     <string name="compass_calibrate_toast">Pusula doğruluğu %s, kalibrasyon önerilir</string>
@@ -482,8 +474,6 @@
     <string name="hygrometer">Higrometre</string>
     <string name="barometer">Barometre</string>
     <string name="network_no_signal">Sinyal yok</string>
-    <string name="pref_nmea_elevation_summary">Yükseklikleri düzeltmek için yerleşik model yerine NMEA (uydu) kullan</string>
-    <string name="pref_nmea_elevation_title">NMEA yükseklik düzeltmesi</string>
     <string name="pref_barometer_info_summary">Basınç, yakındaki istasyonlardan farklı olabilir</string>
     <string name="battery_history">Pil geçmişi - son %s</string>
     <string name="no_data">Veri yok</string>
@@ -495,7 +485,6 @@
     <string name="convert">Dönüştür</string>
     <string name="map_perspective_instructions">Haritanın ana hatlarını çiz</string>
     <string name="preview">Ön izleme</string>
-    <string name="pref_navigation_lock_screen_presence_title">Gezinirken kilit ekranında göster</string>
     <string name="import_map">Haritayı içe aktar</string>
     <string name="pref_cell_signal_refresh_cache_summary">En yeni sinyal güçlerini yüklemeye zorlar</string>
     <string name="pref_cell_signal_refresh_cache_title">Sinyal ön belleğini yenile</string>
@@ -620,7 +609,6 @@
     <string name="pref_map_url_source_title">Konum paylaşımı haritası</string>
     <string name="clear_cache">Ön belleği temizle</string>
     <string name="destination_elevation">Hedef yüksekliği</string>
-    <string name="base_temperature">Temel sıcaklık</string>
     <string name="base_elevation">Temel yükseklik</string>
     <string name="unit_yards">Yarda</string>
     <string name="yards_format">%s yd</string>
@@ -658,7 +646,6 @@
     <string name="points">Noktalar</string>
     <string name="duration">Süre</string>
     <string name="importing">İçe aktarılıyor</string>
-    <string name="simplification_quality">Sadeleştirme kalitesi</string>
     <string name="pref_auto_simplify_paths_title">İçe aktarma sırasında yolları sadeleştir</string>
     <string name="dashed">Kesikli</string>
     <string name="pref_default_path_style_title">Ön tanımlı yol şekli</string>
@@ -758,7 +745,6 @@
     <string name="duration_second_format">%dsn</string>
     <string name="weather_no_change">Değişmiyor</string>
     <string name="weather_storm">Fırtına</string>
-    <string name="since_time">%s\'den beri</string>
     <string name="humidity_history">Nem geçmişi - son %s</string>
     <string name="instructions">Talimatlar</string>
     <string name="clinometer_measure_height_title">Hedefe uzaklık</string>
@@ -826,7 +812,6 @@
     <string name="current_speed_gps">Geçerli hız (GPS)</string>
     <string name="reset_distance_title">Mesafe sıfırlansın mı\?</string>
     <string name="pref_start_on_boot_title">Önyüklemede başlat</string>
-    <string name="navigating_to_nearest_path_point">En yakın yol noktasına git</string>
     <string name="beacons">İşaretler</string>
     <string name="imperial_gallons">İngiliz galon</string>
     <string name="saving">Kaydet</string>
@@ -837,7 +822,6 @@
     <string name="square">Kare</string>
     <string name="diamond">Elmas</string>
     <string name="cross">Haç</string>
-    <string name="pref_only_navigate_path_points_title">Yalnızca kayıtlı noktalara git</string>
     <string name="warning">Uyarı</string>
     <string name="error">Hata</string>
     <string name="allow_ignore_battery_restrictions_instructions">Trail Sense için pil kısıtlamalarının kaldırılması doğruluğu artırabilir.
@@ -976,7 +960,6 @@
     <string name="triangulate_destination_location_1_instructions">Konumunuzu ve hedef noktasına olan yönü kaydedin.</string>
     <string name="allow_ignore_battery_restrictions">%s için pil kısıtlamalarını yok sayma izni ver</string>
     <string name="i_agree">Kabul Ediyorum</string>
-    <string name="calibrate_map_point">Bilinen konumlarla kalibre et (%1$d / %2$d)</string>
     <string name="gps_elevation_accuracy">GPS yükseklik doğruluğu</string>
     <string name="restore">Geri yükle</string>
     <string name="compass_source_legacy_android">Eski (Android)</string>
@@ -1082,7 +1065,6 @@
     <string name="no_qr_code_detected">QR kodu algılanmadı</string>
     <string name="select_from_gallery">Galeriden seç</string>
     <string name="scanning_image">Resim taranıyor</string>
-    <string name="smooth_gps_readings">Düzgün GPS okumaları</string>
     <string name="magnetometer_gyro_custom">Manyetometre + Gyro (Özel)</string>
     <string name="pref_tiles_enabled_battery_log_summary">Pilin bitmesine kadar geçecek süreyi tahmin etmek için her saat pil yüzdesini kaydeder</string>
     <string name="pref_tiles_battery_log">Pil günlüğü</string>
@@ -1101,7 +1083,6 @@
     <string name="visible">Görünür</string>
     <string name="grid">Izgara</string>
     <string name="ar_layer_override_message">Katman ayarları, gök bilim kılavuzu gibi yönlendirmelerle geçersiz kılınabilir.</string>
-    <string name="date">Tarih</string>
     <string name="ar_calibration_disclaimer">Artırılmış Gerçeklik aracını her kullanmadan önce, güneş veya ay simgelerinin gerçek dünyaya uygun şekilde hizalandığını doğrulayın. Değilse, ekranın sol üst köşesindeki pusula simgesine tıklayın ve kalibre etmek için talimatları izleyin.</string>
     <string name="pref_enable_analog_title">Analog saat</string>
     <string name="no_recorded_cell_signal_nearby">Yakınlarda kayıtlı telefon sinyali yok</string>
@@ -1128,7 +1109,6 @@
     <string name="tool_quick_action_summary">Alt gezinmeye uzun basın veya araçlar sekmesinde görüntüleyin.</string>
     <string name="quick_actions_are_unavailable">Hızlı eylemler kullanılamıyor</string>
     <string name="bottom_navigation_slot">Alt gezinme yuvası %d</string>
-    <string name="forecast_algorithm">Hava tahmini algoritması</string>
     <string name="no_items_found">Öge bulunamadı</string>
     <string name="import_packing_list">Paketleme listesini içe aktar</string>
     <string name="enter_the_current_pressure">Geçerli basıncı girin</string>
@@ -1413,7 +1393,6 @@
     <string name="widget_theme_black_text">Siyah metin</string>
     <string name="widget_theme_white_text">Beyaz metin</string>
     <string name="default_widget_theme">Öntanımlı bileşen teması</string>
-    <string name="cancel_navigation_question">Gezinme iptal edilsin mi?</string>
     <string name="elevation_value">Yükseklik: %s</string>
     <string name="record_sighting">Gözlem Kaydı</string>
     <string name="harvested">Hasat edildi</string>
@@ -1455,4 +1434,8 @@
     <string name="available_plugins">Mevcut eklentiler</string>
     <string name="plugin_name">Eklenti: %s</string>
     <string name="plugin_connect_title">Eklenti bağlansın mı?</string>
+    <string name="disconnect">Bağlantıyı Kes</string>
+    <string name="plugin_unavailable">Bu eklenti kullanılamıyor veya artık bağlı değil.</string>
+    <string name="plugin_connect_message">Yalnızca güveniyorsanız %s adresine bağlanın.</string>
+    <string name="plugin_disconnect_title">Eklentinin bağlantısı kesilsin mi?</string>
 </resources>

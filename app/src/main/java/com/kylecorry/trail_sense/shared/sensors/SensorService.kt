@@ -24,7 +24,6 @@ import com.kylecorry.andromeda.sense.light.ILightSensor
 import com.kylecorry.andromeda.sense.light.LightSensor
 import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.IGPS
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.andromeda.sense.location.filters.GPSGaussianAltitudeFilter
 import com.kylecorry.andromeda.sense.location.filters.GPSPassThroughAltitudeFilter
 import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
@@ -44,8 +43,10 @@ import com.kylecorry.andromeda.signal.CellSignalSensor
 import com.kylecorry.andromeda.signal.ICellSignalSensor
 import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.units.Pressure
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.sensors.compass.MockCompass
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.altimeter.AltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.altimeter.AutoInitializeBarometricAltimeter
@@ -55,6 +56,8 @@ import com.kylecorry.trail_sense.shared.sensors.altimeter.DigitalElevationModel
 import com.kylecorry.trail_sense.shared.sensors.altimeter.GaussianAltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.altimeter.OverrideAltimeter
 import com.kylecorry.trail_sense.shared.sensors.barometer.CalibratedBarometer
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSource
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSSourceSelector
 import com.kylecorry.trail_sense.shared.sensors.gps.TimezoneGPS
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.MockHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
@@ -79,29 +82,19 @@ class SensorService(ctx: Context) {
 
     private var context = ctx.applicationContext
     private val userPrefs by lazy { UserPreferences(context) }
+    private val gpsSourceSelector by lazy { GPSSourceSelector(context) }
 
-    // TODO: This should control update frequency
-    fun getGPS(frequency: Duration = Duration.ofMillis(20)): ISatelliteGPS {
-
-        val hasPermission = hasLocationPermission()
-
-        if (!userPrefs.useAutoLocation || (!hasPermission && userPrefs.hasLocationOverride)) {
-            return OverrideGPS(context, frequency.toMillis())
+    fun getGPS(
+        frequency: Duration = DEFAULT_GPS_FREQUENCY,
+        useCache: Boolean = false,
+        tag: String? = null
+    ): ISatelliteGPS {
+        return when (gpsSourceSelector.getSource(useCache)) {
+            GPSSource.Override -> OverrideGPS(context, frequency.toMillis())
+            GPSSource.Timezone -> TimezoneGPS(frequency.toMillis())
+            GPSSource.Device -> CustomGPS(context, frequency, tag)
+            GPSSource.Cache -> CachedGPS(context, frequency.toMillis())
         }
-
-        if (!hasPermission) {
-            return TimezoneGPS(frequency.toMillis())
-        }
-
-        if (GPS.isAvailable(context)) {
-            return CustomGPS(
-                context,
-                frequency,
-                frequency
-            )
-        }
-
-        return CachedGPS(context, frequency.toMillis())
     }
 
     fun getGPSFromAltimeter(altimeter: IAltimeter): IGPS? {
@@ -132,54 +125,56 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getSpeedometer(gps: IGPS? = null): ISpeedometer {
+    fun getSpeedometer(gps: IGPS? = null, tag: String? = null): ISpeedometer {
         return when (userPrefs.navigation.speedometerMode) {
             NavigationPreferences.SpeedometerMode.Backtrack -> BacktrackSpeedometer(context)
-            NavigationPreferences.SpeedometerMode.GPS -> gps ?: getGPS()
+            NavigationPreferences.SpeedometerMode.GPS -> gps ?: getGPS(tag = tag)
             NavigationPreferences.SpeedometerMode.CurrentPace -> CurrentPaceSpeedometer(
                 getPedometer(), StrideLengthPaceCalculator(userPrefs.pedometer.strideLength)
             )
 
             NavigationPreferences.SpeedometerMode.AveragePace -> AveragePaceSpeedometer(
                 getAppService<StepTrackerService>(),
-                StrideLengthPaceCalculator(userPrefs.pedometer.strideLength)
+                StrideLengthPaceCalculator(userPrefs.pedometer.strideLength),
+                userPrefs.pedometer
             )
         }
     }
 
-    private fun getGPSAltimeter(gps: IGPS? = null): IAltimeter {
+    private fun getGPSAltimeter(gps: IGPS? = null, frequency: Duration, tag: String?): IAltimeter {
         val mode = userPrefs.altimeterMode
 
         if (mode == UserPreferences.AltimeterMode.Override) {
             return OverrideAltimeter(context)
         } else {
+            if (mode.usesDem) {
+                return getDigitalElevationModel(gps, frequency, tag)
+            }
+
             if (!GPS.isAvailable(context)) {
                 return CachedAltimeter(context)
             }
 
-            val actualGPS = gps ?: getGPS()
-
-            if (mode.usesDem) {
-                return getDigitalElevationModel(gps)
-            }
-
-            return actualGPS
+            return gps ?: getGPS(frequency, tag = tag)
         }
     }
 
-    private fun getDigitalElevationModel(gps: IGPS? = null): IGPS {
+    private fun getDigitalElevationModel(gps: IGPS? = null, frequency: Duration, tag: String?): IGPS {
         return DigitalElevationModel(
-            gps ?: getGPS()
+            gps ?: getGPS(frequency, tag = tag)
         )
     }
 
     fun getAltimeter(
-        preferGPS: Boolean = false, gps: IGPS? = null
+        preferGPS: Boolean = false,
+        gps: IGPS? = null,
+        frequency: Duration = DEFAULT_GPS_FREQUENCY,
+        tag: String? = null
     ): IAltimeter {
         if (preferGPS) {
             return CachingAltimeterWrapper(
                 context, GaussianAltimeterWrapper(
-                    getGPSAltimeter(gps), userPrefs.altimeterSamples
+                    getGPSAltimeter(gps, frequency, tag), userPrefs.altimeterSamples
                 )
             )
         }
@@ -198,7 +193,7 @@ class SensorService(ctx: Context) {
                 )
             )
         } else if (mode == UserPreferences.AltimeterMode.DigitalElevationModel) {
-            return CachingAltimeterWrapper(context, getDigitalElevationModel(gps))
+            return CachingAltimeterWrapper(context, getDigitalElevationModel(gps, frequency, tag))
         } else {
             if (!GPS.isAvailable(context)) {
                 if (mode == UserPreferences.AltimeterMode.GPSBarometer && hasBarometer) {
@@ -213,9 +208,9 @@ class SensorService(ctx: Context) {
                 return CachedAltimeter(context)
             }
 
-            var gps = gps ?: getGPS()
+            var gps = gps ?: getGPS(frequency, tag = tag)
             if (mode == UserPreferences.AltimeterMode.DigitalElevationModelBarometer) {
-                gps = getDigitalElevationModel(gps)
+                gps = getDigitalElevationModel(gps, frequency, tag)
             }
 
             return if ((mode == UserPreferences.AltimeterMode.GPSBarometer || mode == UserPreferences.AltimeterMode.DigitalElevationModelBarometer) && hasBarometer) {
@@ -243,7 +238,11 @@ class SensorService(ctx: Context) {
     }
 
     fun hasCompass(): Boolean {
-        return Sensors.hasCompass(context)
+        return !isCompassForcedUnavailable() && Sensors.hasCompass(context)
+    }
+
+    private fun isCompassForcedUnavailable(): Boolean {
+        return userPrefs.debug.compassUnavailable
     }
 
     fun hasGyroscope(): Boolean {
@@ -251,15 +250,21 @@ class SensorService(ctx: Context) {
     }
 
     // TODO: Expose a way to see that a disturbance is present
-    fun getCompass(orientationSensor: IOrientationSensor? = null): ICompass {
+    fun getCompass(
+        orientationSensor: IOrientationSensor? = null,
+        delay: Int = MOTION_SENSOR_DELAY
+    ): ICompass {
+        if (isCompassForcedUnavailable()) {
+            return MockCompass()
+        }
         return CompassProvider(context, userPrefs.compass).get(
-            MOTION_SENSOR_DELAY,
+            delay,
             orientationSensor
         )
     }
 
-    fun getOrientation(): IOrientationSensor {
-        return CompassProvider(context, userPrefs.compass).getOrientationSensor(MOTION_SENSOR_DELAY)
+    fun getOrientation(delay: Int = MOTION_SENSOR_DELAY): IOrientationSensor {
+        return CompassProvider(context, userPrefs.compass).getOrientationSensor(delay)
     }
 
     fun getDeviceOrientationSensor(): DeviceOrientation {
@@ -331,34 +336,37 @@ class SensorService(ctx: Context) {
         )
     }
 
-    fun getGravity(): IAccelerometer {
+    fun getGravity(delay: Int = MOTION_SENSOR_DELAY): IAccelerometer {
         return if (Sensors.hasSensor(context, Sensor.TYPE_GRAVITY)) {
-            GravitySensor(context, MOTION_SENSOR_DELAY)
+            GravitySensor(context, delay)
         } else {
-            LowPassAccelerometer(context, MOTION_SENSOR_DELAY)
+            LowPassAccelerometer(context, delay)
         }
     }
 
-    fun getMagnetometer(filtered: Boolean = false): IMagnetometer {
+    fun getMagnetometer(
+        filtered: Boolean = false,
+        delay: Int = MOTION_SENSOR_DELAY
+    ): IMagnetometer {
         return if (filtered) {
-            LowPassMagnetometer(context, MOTION_SENSOR_DELAY)
+            LowPassMagnetometer(context, delay)
         } else {
-            Magnetometer(context, MOTION_SENSOR_DELAY)
+            Magnetometer(context, delay)
         }
     }
 
-    fun getGyroscope(): IOrientationSensor {
+    fun getGyroscope(delay: Int = MOTION_SENSOR_DELAY): IOrientationSensor {
         if (!Sensors.hasGyroscope(context)) {
             return MockGyroscope()
         }
         if (Sensors.hasSensor(context, Sensor.TYPE_GAME_ROTATION_VECTOR)) {
-            return GameRotationSensor(context, MOTION_SENSOR_DELAY)
+            return GameRotationSensor(context, delay)
         }
-        return Gyroscope(context, MOTION_SENSOR_DELAY)
+        return Gyroscope(context, delay)
     }
 
-    fun getAccelerometer(): IAccelerometer {
-        return Accelerometer(context, MOTION_SENSOR_DELAY)
+    fun getAccelerometer(delay: Int = MOTION_SENSOR_DELAY): IAccelerometer {
+        return Accelerometer(context, delay)
     }
 
     fun getLightSensor(): ILightSensor {
@@ -366,8 +374,15 @@ class SensorService(ctx: Context) {
     }
 
     companion object {
-        const val MOTION_SENSOR_DELAY = SensorManager.SENSOR_DELAY_GAME
+        const val MOTION_SENSOR_DELAY = SensorManager.SENSOR_DELAY_UI
         private const val ENVIRONMENT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
+        val DEFAULT_GPS_FREQUENCY: Duration = Duration.ofSeconds(1)
+        val NAVIGATION_GPS_FREQUENCY: Duration = Duration.ofMillis(200)
+        val SINGLE_FIX_GPS_FREQUENCY: Duration = Duration.ofMillis(20)
+        // Long enough for the GPS to get a fix which satisfies the user's accuracy filter
+        val GPS_READ_TIMEOUT: Duration = Duration.ofSeconds(30)
+        // Used where the user is waiting on a reading they can cancel
+        val EXTENDED_GPS_READ_TIMEOUT: Duration = Duration.ofMinutes(1)
     }
 
 }

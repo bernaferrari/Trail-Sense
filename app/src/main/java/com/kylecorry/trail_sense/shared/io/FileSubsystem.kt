@@ -20,8 +20,11 @@ import com.kylecorry.andromeda.files.AssetFileSystem
 import com.kylecorry.andromeda.files.ExternalFileSystem
 import com.kylecorry.andromeda.files.FileSaver
 import com.kylecorry.andromeda.files.LocalFileSystem
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.debugging.ifDebug
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ImageSaver
+import kotlinx.coroutines.CancellationException
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -85,10 +88,6 @@ class FileSubsystem private constructor(private val context: Context) {
 
     fun delete(path: String) {
         local.delete(path)
-    }
-
-    suspend fun streamLocal(path: String): InputStream = onIO {
-        local.inputStream(path)
     }
 
     suspend fun stream(uri: Uri): InputStream? = onIO {
@@ -166,7 +165,7 @@ class FileSubsystem private constructor(private val context: Context) {
 
     fun canRead(path: String): Boolean {
         return if (isExternal(path)) {
-            canRead(path.toUri())
+            canRead(path.toUri()).canRead
         } else {
             get(path).isFile
         }
@@ -204,10 +203,29 @@ class FileSubsystem private constructor(private val context: Context) {
         return get(path, create).toUri()
     }
 
-    fun canRead(uri: Uri): Boolean {
-        return tryOrDefault(false) {
-            context.contentResolver.openFileDescriptor(uri, "r")?.close()
-            true
+    data class CanReadResult(val canRead: Boolean, val deniedByPackage: String? = null)
+
+    fun canRead(uri: Uri): CanReadResult {
+        return try {
+            CanReadResult(context.contentResolver.openFileDescriptor(uri, "r")?.use { true } ?: false)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            val packageName = if (e is SecurityException) {
+                // Format: com.android.externalstorage has no access
+                val regex = Regex("""([\w.]+) has no access""")
+                regex.find(e.message.orEmpty())?.groupValues?.get(1)
+            } else {
+                null
+            }
+
+            if (e is SecurityException) {
+                getAppService<Logger>().warn(TAG, "No read access to file (denied by: $packageName)")
+            } else {
+                getAppService<Logger>().error(TAG, "Error thrown while checking if file can be read", e)
+            }
+
+            return CanReadResult(false, packageName)
         }
     }
 
@@ -246,11 +264,6 @@ class FileSubsystem private constructor(private val context: Context) {
         get(filename, true)
     }
 
-    suspend fun createTempDirectory(): File = onIO {
-        val filename = "${TEMP_DIR}/${UUID.randomUUID()}"
-        getDirectory(filename, true)
-    }
-
     fun getLocalPath(file: File): String {
         return local.getRelativePath(file)
     }
@@ -274,6 +287,7 @@ class FileSubsystem private constructor(private val context: Context) {
     }
 
     companion object {
+        private const val TAG = "FileSubsystem"
         const val SCHEME_CONTENT = "content://"
 
         private const val TEMP_DIR = "tmp"

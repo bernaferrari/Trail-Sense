@@ -1506,4 +1506,62 @@
     <string name="active_in_month">Aktiv in/im %s</string>
     <string name="active_all_year">Das ganze Jahr über aktiv</string>
     <string name="ecology">Ökölogie</string>
+
+    <string name="pref_step_length_title">Schrittlänge</string>
+    <string name="estimate_step_length">Geschätzte Schrittlänge</string>
+    <string name="step_length_stand_still">Still stehen</string>
+    <string name="step_length_walk">Laufe auf einer geraden Linie, drücke Stopp, wenn du fertig bist</string>
+    <string name="plugins">Erweiterungen</string>
+    <string name="map_layers">Kartenebenen</string>
+    <string name="tile_layer">Kachelebene</string>
+    <string name="disconnect">Verbindung trennen</string>
+    <string name="plugin_unavailable">Dieses Plugin ist nicht verfügbar oder nicht mehr verbunden.</string>
+    <string name="connected_plugins">Verbundene Plugins</string>
+    <string name="available_plugins">Verfügbare Plugins</string>
+    <string name="plugin_name">Plugin: %s</string>
+    <string name="plugin_connect_title">Plugin verbinden?</string>
+    <string name="plugin_connect_message">Verbinden Sie %s nur wenn Sie ihm/ihr vertrauen.</string>
+    <string name="plugin_disconnect_title">Plugin-Verbindung trennen?</string>
+    <string name="plugin_disconnect_message">Verbindung mit %s trennen?</string>
+    <string name="brightness">Helligkeit</string>
+    <plurals name="offline_map_group_summary">
+        <item quantity="one">%d Karte</item>
+        <item quantity="other">%d Karten</item>
+    </plurals>
+    <string name="do_not_ask_again">Nicht wieder fragen</string>
+    <string name="packing_list_optional">Optional</string>
+    <string name="pref_pedometer_history_days_title">Schrittverlauf</string>
+    <string name="current_session">Aktuelle Sitzung</string>
+    <string name="history">Verlauf</string>
+    <string name="no_pedometer_sessions">Keine Sitzungen</string>
+    <string name="target">Ziel</string>
+    <string name="not_visible">Unsichtbar</string>
+    <plurals name="step_count">
+        <item quantity="one">%d Schritt</item>
+        <item quantity="other">%d Schritte</item>
+    </plurals>
+    <string name="show_all">Alle anzeigen</string>
+    <string name="hide_all">Alle verbergen</string>
+    <string name="tool_magnifier_title">Lupe</string>
+    <string name="offline_maps">Offlinekarten</string>
+    <string name="large_location_indicator">Großer Standortindikator</string>
+    <string name="app_info">Appinfo</string>
+    <string name="reload">Neu laden</string>
+    <string name="quick_action_recalibrate_altimeter">Höhenmesser neu kalibrieren</string>
+    <string name="recalibrating">Kalibriere neu</string>
+    <string name="clock_source_device">Gerätezeit</string>
+    <string name="clock_source_gps">GPS-Zeit</string>
+    <string name="clock_device_time_accurate">Geräteuhr ist akkurat</string>
+    <plurals name="clock_device_time_slow">
+        <item quantity="one">Geräteuhr geht %d Sekunde nach</item>
+        <item quantity="other">Geräteuhr geht %s Sekunden nach</item>
+    </plurals>
+    <plurals name="clock_device_time_fast">
+        <item quantity="one">Geräteuhr geht %d Sekunde vor</item>
+        <item quantity="other">Geräteuhr geht %d Sekunden vor</item>
+    </plurals>
+    <string name="pref_default_beacon_color_title">Standardwegpunktfarbe</string>
+    <string name="pref_copy_trail_maps_title">Karten zu Trail Sense kopieren</string>
+    <string name="current_temperature">Aktuelle Temperatur</string>
+    <string name="pref_navigation_show_azimuth_indicator_title">Azimutindikator anzeigen</string>
 </resources>

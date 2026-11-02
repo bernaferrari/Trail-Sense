@@ -65,7 +65,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
@@ -403,10 +403,12 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
         }
     }
 
-    val fixTime = gps.fixTimeElapsedNanos ?: return gps.time
+    if (gps.eventTimeElapsedNanos == 0L) {
+        return gps.eventTime
+    }
     val systemTime = SystemClock.elapsedRealtimeNanos()
-    val timeDiff = fixTime - systemTime
-    return gps.time.plusNanos(timeDiff)
+    val timeDiff = gps.eventTimeElapsedNanos - systemTime
+    return gps.eventTime.plusNanos(timeDiff)
 }
 
 private fun sendNextMinuteNotification(

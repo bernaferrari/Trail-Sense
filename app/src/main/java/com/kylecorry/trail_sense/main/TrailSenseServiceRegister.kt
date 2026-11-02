@@ -3,20 +3,25 @@ package com.kylecorry.trail_sense.main
 import android.content.Context
 import android.text.Layout
 import android.text.style.AlignmentSpan
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownExtension
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
+import com.kylecorry.trail_sense.shared.AltitudeCorrection
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.GeoidService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
+import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
@@ -29,13 +34,16 @@ object TrailSenseServiceRegister {
         val appContext = context.applicationContext
 
         // Shared services
-        AppServiceRegistry.register(appContext)
-        AppServiceRegistry.register(StringLoader(appContext))
-        AppServiceRegistry.register(FormatService.getInstance(appContext))
-        AppServiceRegistry.register(PreferencesSubsystem.getInstance(appContext))
-        AppServiceRegistry.register(UserPreferences(appContext))
-        AppServiceRegistry.register(NotificationSubsystem(appContext))
-        AppServiceRegistry.register(
+        DependencyRegistry.addSingleton(appContext)
+        DependencyRegistry.addSingleton(Logger(appContext))
+        DependencyRegistry.addSingleton(StringLoader(appContext))
+        DependencyRegistry.addSingleton(FormatService.getInstance(appContext))
+        DependencyRegistry.addSingleton(PreferencesSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(SessionStateSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(UserPreferences(appContext))
+        DependencyRegistry.addSingleton<GeoidService>(AltitudeCorrection)
+        DependencyRegistry.addSingleton(NotificationSubsystem(appContext))
+        DependencyRegistry.addSingleton(
             MarkdownService(
                 appContext, extensions = listOf(
                     MarkdownExtension(2, '%') {
@@ -46,30 +54,33 @@ object TrailSenseServiceRegister {
                         '+'
                     ) { AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER) }
                 )))
-        AppServiceRegistry.register(SensorService(appContext))
-        AppServiceRegistry.register(FileSubsystem.getInstance(appContext))
-        AppServiceRegistry.register(AppDatabase.getInstance(appContext))
-        AppServiceRegistry.register(SensorSubsystem.getInstance(appContext))
-        AppServiceRegistry.register(LocationSubsystem.getInstance(appContext))
-        AppServiceRegistry.register(DeviceSubsystem(appContext))
-        AppServiceRegistry.register(PluginSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(SensorService(appContext))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
+        DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(LocationSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(DeviceSubsystem(appContext))
+        DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
 
         // Map layers
-        AppServiceRegistry.register(MapLayerLoader(appContext))
-        AppServiceRegistry.register(MapLayerPreferenceRepo())
-        AppServiceRegistry.register(PersistentTileCache(appContext))
+        DependencyRegistry.addSingleton(MapLayerLoader(appContext))
+        DependencyRegistry.addSingleton(MapLayerPreferenceRepo())
+        DependencyRegistry.addSingleton(PersistentTileCache(appContext))
 
+        // Tool registrations on this branch still publish services through Tool.singletons.
+        // addSingleton<Any> would register them as Any, so the runtime class is supplied explicitly.
         Tools.getTools(context, false).forEach { tool ->
             tool.singletons.forEach { producer ->
                 val service = producer(appContext)
-                // Updating directly since it will loose the type name when using register
-                AppServiceRegistry.services[service::class.java.name] = service
+                @Suppress("UNCHECKED_CAST")
+                val clazz = service.javaClass as Class<Any>
+                DependencyRegistry.addSingleton(clazz, service)
             }
         }
-
     }
 }
 
 inline fun <reified T : Any> getAppService(): T {
-    return AppServiceRegistry.get()
+    return DependencyRegistry.get()
 }

@@ -1,4 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
+
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableBearing
@@ -14,36 +16,53 @@ class NavigationCompassLayer : ICompassLayer {
     private var destination: Beacon? = null
     private var bearing: IMappableBearing? = null
 
+    private var needsUpdate = true
+    private var lastCenter: Coordinate? = null
+    private var lastDeclination = 0f
+    private var lastUseTrueNorth = false
+
     fun setDestination(destination: Beacon?) {
         this.destination = destination
         bearing = null
+        needsUpdate = true
     }
 
     fun setDestination(bearing: IMappableBearing?) {
         this.bearing = bearing
         destination = null
+        needsUpdate = true
     }
 
     override fun draw(compass: ICompassView) {
+        updateLayers(compass)
+
+        if (destination != null) {
+            bearingToLayer.draw(compass)
+            beaconLayer.draw(compass)
+        } else if (bearing != null) {
+            bearingLayer.draw(compass)
+            markerLayer.draw(compass)
+        }
+    }
+
+    private fun updateLayers(compass: ICompassView) {
+        if (!hasInputsChanged(compass)) {
+            return
+        }
+        needsUpdate = false
+        lastCenter = compass.compassCenter
+        lastDeclination = compass.declination
+        lastUseTrueNorth = compass.useTrueNorth
+
         val dest = destination
         val direction = bearing
-
-
         if (dest != null) {
-            // Draw bearing
             bearingToLayer.setDestination(dest.coordinate, dest.color)
-            bearingToLayer.draw(compass)
-
-            // Draw marker
             beaconLayer.setBeacons(listOf(dest))
-            beaconLayer.draw(compass)
         } else if (direction != null) {
-            // Draw bearing
             bearingLayer.clearBearings()
             bearingLayer.addBearing(direction)
-            bearingLayer.draw(compass)
 
-            // Draw marker
             markerLayer.clearMarkers()
             markerLayer.addMarker(
                 MappableReferencePoint(
@@ -54,8 +73,14 @@ class NavigationCompassLayer : ICompassLayer {
                 ),
                 24
             )
-            markerLayer.draw(compass)
         }
+    }
+
+    private fun hasInputsChanged(compass: ICompassView): Boolean {
+        return needsUpdate ||
+                compass.compassCenter != lastCenter ||
+                compass.declination != lastDeclination ||
+                compass.useTrueNorth != lastUseTrueNorth
     }
 
     override fun invalidate() {

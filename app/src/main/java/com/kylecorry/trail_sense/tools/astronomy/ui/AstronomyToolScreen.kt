@@ -51,7 +51,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
@@ -155,7 +155,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     private val astronomyService = AstronomyService()
     private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
-    private val markdownService by lazy { AppServiceRegistry.get<MarkdownService>() }
+    private val markdownService by lazy { DependencyRegistry.get<MarkdownService>() }
 
     private var lastAstronomyEventSearch: AstronomyEvent? = null
 
@@ -580,7 +580,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             return
         }
 
-        if (gps is MockedGPS && prefs.locationOverride == Coordinate.zero) {
+        if (gps is MockedGPS && prefs.gps.locationOverride == Coordinate.zero) {
             val activity = host.mainActivity
             val navController = host.findNavController()
             val error = UserError(

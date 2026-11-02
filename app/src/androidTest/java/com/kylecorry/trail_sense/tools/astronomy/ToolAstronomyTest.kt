@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
 import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
@@ -9,8 +10,8 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.delay
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isTrue
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
@@ -19,11 +20,12 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY) {
+class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -103,7 +105,6 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY) {
 
         click({ quickAction(Tools.QUICK_ACTION_SUNSET_ALERT) })
 
-
         click({ quickAction(Tools.QUICK_ACTION_SUNRISE_ALERT) })
 
         handleExactAlarmsDialog()
@@ -113,5 +114,62 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY) {
         // TODO: Simulate time passing to verify the alerts are shown
 
         TestUtils.closeQuickActions()
+    }
+
+    @Test
+    fun canMoveBetweenDates() {
+        hasText(R.id.date_btn, string(R.string.today))
+
+        click(R.id.next_date)
+        hasText(R.id.date_btn, string(R.string.tomorrow))
+
+        click(R.id.prev_date)
+        click(R.id.prev_date)
+        hasText(R.id.date_btn, string(R.string.yesterday))
+
+        longClick(R.id.date_btn)
+        hasText(R.id.date_btn, string(R.string.today))
+    }
+
+    @Test
+    fun canFindTheNextFullMoonAndNewMoon() {
+        goToDate(2025, 3, 1)
+
+        findNext("Full Moon")
+        // Full moon: March 14, 2025 06:55 UTC
+        hasText(R.id.date_btn, Regex("March 1[345], 2025"), waitForTime = SEARCH_TIMEOUT)
+
+        findNext("New Moon")
+        // New moon: March 29, 2025 10:58 UTC
+        hasText(R.id.date_btn, Regex("March (28|29|30), 2025"), waitForTime = SEARCH_TIMEOUT)
+    }
+
+    @Test
+    fun timeSeekerFollowsTapsOnTheChart() {
+        goToDate(2025, 6, 21)
+
+        click(R.id.sunMoonChart, xPercent = 0.5f, yPercent = 0.5f)
+        val middle = waitFor { view(R.id.seek_time).uiObject.text }
+
+        click(R.id.sunMoonChart, xPercent = 0.9f, yPercent = 0.5f)
+        waitFor {
+            assertTrue(view(R.id.seek_time).uiObject.text != middle)
+        }
+    }
+
+    private fun goToDate(year: Int, month: Int, day: Int) {
+        click(R.id.date_btn)
+        TestUtils.pickDate(year, month, day)
+    }
+
+    private fun findNext(event: String) {
+        click(R.id.search_btn)
+        click(event, exact = true)
+        clickOk()
+    }
+
+    companion object {
+        private val location = Coordinate(42.03, -71.97)
+        private const val SEARCH_TIMEOUT = 30000L
     }
 }

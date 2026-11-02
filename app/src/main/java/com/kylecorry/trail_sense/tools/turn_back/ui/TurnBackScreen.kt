@@ -47,7 +47,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
@@ -195,7 +195,7 @@ private class TurnBackController(private val host: TrailSenseDestinationHost) {
             Snackbar.LENGTH_LONG,
             host.getString(R.string.learn_more)
         ) {
-            val markdown = AppServiceRegistry.get<MarkdownService>()
+            val markdown = DependencyRegistry.get<MarkdownService>()
             val contents =
                 markdown.toMarkdown(host.getString(R.string.access_background_location_rationale))
 

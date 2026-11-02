@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
 import android.os.SystemClock
-import com.kylecorry.andromeda.sense.location.ISatelliteGPS
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.time.Time
@@ -15,22 +14,26 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
-class TimezoneGPS(updateFrequency: Long = 20L) :
+class TimezoneGPS(updateFrequency: Long = 1000L) :
     IntervalSensor(Duration.ofMillis(updateFrequency)),
     ISatelliteGPS, InactiveGPS, MockedGPS {
 
     private val hooks = Hooks()
 
     override val location: Coordinate
-        get() = hooks.memo("location") {
-            Time.getLocationFromTimeZone(ZoneId.systemDefault())
+        get() {
+            val zone = ZoneId.systemDefault()
+            return hooks.memo("location", zone) {
+                Time.getLocationFromTimeZone(zone)
+            }
         }
     override val speed: Speed
         get() = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
     override val speedAccuracy: Float?
         get() = null
-    override val time: Instant
+    override var eventTime: Instant
         get() = Instant.now()
+        set(_) {}
     override val verticalAccuracy: Float?
         get() = null
     override val horizontalAccuracy: Float?
@@ -45,8 +48,9 @@ class TimezoneGPS(updateFrequency: Long = 20L) :
         get() = null
     override val bearingAccuracy: Float?
         get() = null
-    override val fixTimeElapsedNanos: Long
+    override var eventTimeElapsedNanos: Long
         get() = SystemClock.elapsedRealtimeNanos()
+        set(_) {}
     override val mslAltitude: Float
         get() = altitude
     override val rawBearing: Float?

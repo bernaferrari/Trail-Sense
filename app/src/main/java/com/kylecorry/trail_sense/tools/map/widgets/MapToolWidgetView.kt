@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.graphics.Path
 import android.view.View
 import androidx.core.graphics.createBitmap
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.geography.projections.AzimuthalEquidistantProjection
@@ -35,8 +35,7 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val location = SensorSubsystem.getInstance(context).lastKnownLocation
-        val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
+        val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
         var renderedMap: android.graphics.Bitmap? = null
 
         onMain {
@@ -105,19 +104,22 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
 
     private suspend fun drawMap(mapView: MapView, size: Int): Bitmap {
         mapView.layerManager.start()
-        val bitmap = createBitmap(size, size)
-        val canvas = Canvas(bitmap)
-        var totalDelay = 0
-        val maxDelay = 2000
-        while (totalDelay < maxDelay && mapView.layerManager.getLayers().any { !it.isLoaded }) {
-            mapView.draw(canvas)
-            delay(100)
-            totalDelay += 100
+        try {
+            val bitmap = createBitmap(size, size)
+            val canvas = Canvas(bitmap)
+            var totalDelay = 0
+            val maxDelay = 2000
+            while (totalDelay < maxDelay && mapView.layerManager.getLayers().any { !it.isLoaded }) {
+                mapView.draw(canvas)
+                delay(100)
+                totalDelay += 100
+            }
+            repeat(3) {
+                mapView.draw(canvas)
+            }
+            return bitmap
+        } finally {
+            mapView.layerManager.stop()
         }
-        repeat(3) {
-            mapView.draw(canvas)
-        }
-        mapView.layerManager.stop()
-        return bitmap
     }
 }

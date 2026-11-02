@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import android.content.Context
 import android.graphics.Color
 import android.view.View
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.sol.science.geography.Geography
@@ -28,17 +28,21 @@ import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
+import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
 
 class PhotoMapToolLayerManager {
 
     private val selectedPointLayer = ConfigurableGeoJsonLayer()
     private val distanceLayer = MapDistanceLayer()
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
+    private var onDistanceEditStateChanged: ((PathEditState) -> Unit)? = null
+    private val elevationPrefetcher = PathElevationPrefetcher()
     private var photoMapLayer: TileMapLayer<*>? = null
 
-    private val preferences = AppServiceRegistry.get<PreferencesSubsystem>()
-    private val photoMapPreferences = PhotoMapPreferences(AppServiceRegistry.get())
-    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
+    private val preferences = DependencyRegistry.get<PreferencesSubsystem>()
+    private val photoMapPreferences = PhotoMapPreferences(DependencyRegistry.get())
+    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
 
     private var lastMapDetails: Pair<CoordinateBounds, Int>? = null
 
@@ -75,6 +79,8 @@ class PhotoMapToolLayerManager {
             // Hardcoded customization for this tool
             distanceLayer.isEnabled = false
             distanceLayer.onPathChanged = { onDistancePathChange(it) }
+            distanceLayer.onPathDragged = { updateDistance(it) }
+            distanceLayer.onEditStateChanged = { onDistanceEditStateChanged?.invoke(it) }
             lastMapDetails?.let { improveResolution(it.first, it.second) }
 
 
@@ -132,7 +138,11 @@ class PhotoMapToolLayerManager {
     // Distance measurement
 
     private fun onDistancePathChange(points: List<Coordinate>) {
-        // Display distance
+        elevationPrefetcher.update(points)
+        updateDistance(points)
+    }
+
+    private fun updateDistance(points: List<Coordinate>) {
         val distance = Geography.getPathDistance(points)
         onDistanceChangedCallback?.invoke(distance)
     }
@@ -150,8 +160,24 @@ class PhotoMapToolLayerManager {
         distanceLayer.undo()
     }
 
+    fun redoDistanceMeasurement() {
+        distanceLayer.redo()
+    }
+
+    fun getDistanceEditState(): PathEditState {
+        return distanceLayer.editState
+    }
+
+    fun setOnDistanceEditStateChangedCallback(callback: ((PathEditState) -> Unit)?) {
+        onDistanceEditStateChanged = callback
+    }
+
     fun getDistanceMeasurementPoints(): List<Coordinate> {
         return distanceLayer.getPoints()
+    }
+
+    fun getDistanceMeasurementElevations(): Map<Coordinate, Float> {
+        return elevationPrefetcher.getElevations()
     }
 
     fun startDistanceMeasurement(initialPoints: Array<Coordinate>) {

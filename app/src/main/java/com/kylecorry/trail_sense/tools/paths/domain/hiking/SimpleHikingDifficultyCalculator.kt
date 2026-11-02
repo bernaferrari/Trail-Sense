@@ -1,21 +1,20 @@
 package com.kylecorry.trail_sense.tools.paths.domain.hiking
 
-import android.util.Log
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.science.geography.Geography
-import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.debugging.ifDebug
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
 // Adapted from https://www.smcgov.org/parks/county-hiking-trail-difficulty-rating-system
-class SimpleHikingDifficultyCalculator(private val hikingService: IHikingService) :
-    HikingDifficultyCalculator {
+object SimpleHikingDifficultyCalculator {
 
-    override fun calculate(points: List<PathPoint>): HikingDifficulty {
+    fun calculate(points: List<PathPoint>): HikingDifficulty {
         // Distance
         val distance = Geography.getPathDistance(points.map { it.coordinate })
             .convertTo(DistanceUnits.Miles)
@@ -27,7 +26,7 @@ class SimpleHikingDifficultyCalculator(private val hikingService: IHikingService
         }
 
         // Gain / Loss
-        val gainLoss = hikingService.getElevationLossGain(points)
+        val gainLoss = HikingService.getElevationLossGain(points)
         val loss = gainLoss.first.convertTo(DistanceUnits.Feet).value
         val gain = gainLoss.second.convertTo(DistanceUnits.Feet).value
         val elevationChange = max(gain, -loss)
@@ -38,7 +37,7 @@ class SimpleHikingDifficultyCalculator(private val hikingService: IHikingService
         }
 
         // Slopes
-        val slopes = hikingService.getSlopes(points)
+        val slopes = HikingService.getSlopes(points)
         val maxSlope = slopes.maxByOrNull { it.third.absoluteValue }?.third?.absoluteValue ?: 0f
 
         val rating = if (maxSlope >= 25) {
@@ -61,9 +60,10 @@ class SimpleHikingDifficultyCalculator(private val hikingService: IHikingService
         slope: Float?
     ) {
         ifDebug {
-            Log.d(
+            getAppService<Logger>().debug(
                 "HikingDifficulty",
-                "Dist: ${distance?.roundPlaces(2)}, Ele: ${elevationChange?.safeRoundToInt()}, Slope: ${slope?.safeRoundToInt()} ($rating)"
+                "Dist: ${distance?.roundPlaces(2)}, Ele: ${elevationChange?.safeRoundToInt()}, Slope: ${slope?.safeRoundToInt()} ($rating)",
+                writeToFile = false
             )
         }
     }

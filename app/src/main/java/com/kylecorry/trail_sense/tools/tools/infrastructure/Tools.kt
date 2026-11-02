@@ -12,6 +12,7 @@ import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
+import com.kylecorry.luna.subscriptions.EventBus
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionOpenTool
 import com.kylecorry.trail_sense.shared.views.QuickActionNone

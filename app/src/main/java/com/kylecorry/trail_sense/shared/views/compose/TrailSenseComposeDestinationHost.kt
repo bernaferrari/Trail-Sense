@@ -70,7 +70,7 @@ import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.clipboard.Clipboard
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.system.Intents
@@ -151,6 +151,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.camera.PhotoImportDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
 import com.kylecorry.trail_sense.shared.sharing.MapSite
@@ -443,7 +444,7 @@ class TrailSenseComposeDestinationHost(
             SpecialPermission.SCHEDULE_EXACT_ALARMS,
             PermissionRationale(
                 getString(R.string.allow_schedule_exact_alarms, getString(R.string.app_name)),
-                AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                DependencyRegistry.get<MarkdownService>().toMarkdown(
                     getString(
                         R.string.allow_schedule_exact_alarms_instructions,
                         getString(R.string.app_name),
@@ -502,7 +503,7 @@ class TrailSenseComposeDestinationHost(
                     R.string.allow_ignore_battery_restrictions,
                     getString(R.string.app_name)
                 ),
-                AppServiceRegistry.get<MarkdownService>().toMarkdown(
+                DependencyRegistry.get<MarkdownService>().toMarkdown(
                     getString(
                         R.string.allow_ignore_battery_restrictions_instructions,
                         getString(R.string.settings)
@@ -819,7 +820,7 @@ class TrailSenseComposeDestinationHost(
             listItems = getSurvivalGuideListItems(),
             summary = survivalGuideSummary,
             firstResult = survivalGuideSearchResults.firstOrNull(),
-            markdown = AppServiceRegistry.get(),
+            markdown = DependencyRegistry.get(),
             onQueryChange = ::updateSurvivalGuideQuery,
             onSummaryClick = ::openSurvivalGuideSearchResult
         )
@@ -916,7 +917,7 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(weightUnitsValue(userPrefs.weightUnits))
         }
         var coordinateFormat by remember {
-            mutableStateOf(coordinateFormatValue(userPrefs.navigation.coordinateFormat))
+            mutableStateOf(coordinateFormatValue(userPrefs.coordinateFormat))
         }
         var mapSite by remember {
             mutableStateOf(mapSiteValue(userPrefs.mapSite))
@@ -1420,10 +1421,16 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(userPrefs.isCliffHeightEnabled)
         }
         var useFilteredGps by remember {
-            mutableStateOf(userPrefs.useFilteredGPS)
+            mutableStateOf(userPrefs.gps.smoothing > 0)
         }
         var forecastSource by remember {
-            mutableStateOf(forecastSourceValue(userPrefs.weather.forecastSource))
+            mutableStateOf(
+                getStringPreference(
+                    cache,
+                    R.string.pref_weather_forecast_source,
+                    forecastSourceValue(ForecastSource.Sol)
+                )
+            )
         }
         var showPressureForecast by remember {
             mutableStateOf(userPrefs.weather.showPressureForecast)
@@ -1481,7 +1488,7 @@ class TrailSenseComposeDestinationHost(
                     checked = useFilteredGps,
                     onCheckedChange = {
                         useFilteredGps = it
-                        putBoolean(cache, R.string.pref_use_filtered_gps, it)
+                        cache.putInt(getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
                     },
                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                 )
@@ -2025,8 +2032,8 @@ class TrailSenseComposeDestinationHost(
 
     @Composable
     internal fun BubbleLevelSettings() {
-        val prefs = remember { AppServiceRegistry.get<UserPreferences>().bubbleLevel }
-        val formatter = remember { AppServiceRegistry.get<FormatService>() }
+        val prefs = remember { DependencyRegistry.get<UserPreferences>().bubbleLevel }
+        val formatter = remember { DependencyRegistry.get<FormatService>() }
         var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
         var showThresholdDialog by remember { mutableStateOf(false) }
         val title = stringResource(R.string.pref_bubble_level_threshold_title)
@@ -2768,7 +2775,8 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun isLocationMocked(prefs: UserPreferences): Boolean {
-        return !prefs.useAutoLocation || !SensorService(requireContext()).hasLocationPermission()
+        return prefs.gps.locationSource == GPSLocationSource.Manual ||
+            !SensorService(requireContext()).hasLocationPermission()
     }
 
     private fun setLowPowerMode(prefs: UserPreferences, enabled: Boolean) {
@@ -3398,7 +3406,7 @@ class TrailSenseComposeDestinationHost(
     private fun printSurvivalGuideChapter(chapter: Chapter) {
         val context = requireContext()
         val files = FileSubsystem.getInstance(context)
-        val markdown = AppServiceRegistry.get<com.kylecorry.andromeda.markdown.MarkdownService>()
+        val markdown = DependencyRegistry.get<com.kylecorry.andromeda.markdown.MarkdownService>()
         lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val loading = withContext(Dispatchers.Main) {
                 Alerts.loading(context, getString(R.string.loading))
@@ -3496,7 +3504,7 @@ class TrailSenseComposeDestinationHost(
             survivalGuideSearchResults = results
             val firstResult = results.firstOrNull()
             survivalGuideSummary = if (firstResult != null && firstResult.score >= 0.5f) {
-                searchService.getSummary(value, firstResult)
+                searchService.getSummary(firstResult)
             } else {
                 ""
             }
@@ -3732,6 +3740,7 @@ class TrailSenseComposeDestinationHost(
             ErrorBannerReason.CompassPoor -> stringResource(R.string.compass_accuracy)
             ErrorBannerReason.NoCompass -> stringResource(R.string.compass_unavailable)
             ErrorBannerReason.GPSTimeout -> stringResource(R.string.gps_timeouts)
+            ErrorBannerReason.LocationPermissionDenied -> stringResource(R.string.location_permission)
         }
     }
 

@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
@@ -22,13 +23,32 @@ object TurnBackToolRegistration : ToolRegistration {
             ToolCategory.Time,
             guideId = R.raw.guide_tool_turn_back,
             settingsNavAction = R.id.fragmentTurnBackSettings,
+            notificationChannelGroups = listOf(
+                ToolNotificationChannelGroup(
+                    NOTIFICATION_CHANNEL_GROUP_TURN_BACK,
+                    context.getString(R.string.tool_turn_back)
+                )
+            ),
             notificationChannels = listOf(
                 ToolNotificationChannel(
                     NOTIFICATION_CHANNEL_TURN_BACK_ALERT,
                     context.getString(R.string.tool_turn_back),
                     context.getString(R.string.turn_back_alerts),
                     Notify.CHANNEL_IMPORTANCE_HIGH,
-                    false
+                    false,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_TURN_BACK
+                ),
+                ToolNotificationChannel(
+                    NOTIFICATION_CHANNEL_TURN_BACK_ALARM,
+                    context.getString(
+                        R.string.parenthesized_pair,
+                        context.getString(R.string.tool_turn_back),
+                        context.getString(R.string.alarm)
+                    ),
+                    context.getString(R.string.turn_back_alerts),
+                    Notify.CHANNEL_IMPORTANCE_HIGH,
+                    isAlarm = true,
+                    groupId = NOTIFICATION_CHANNEL_GROUP_TURN_BACK
                 )
             ),
             services = listOf(TurnBackToolService(context)),
@@ -38,6 +58,14 @@ object TurnBackToolRegistration : ToolRegistration {
                 ToolDiagnosticFactory.notification(
                     NOTIFICATION_CHANNEL_TURN_BACK_ALERT,
                     context.getString(R.string.turn_back_alerts)
+                ),
+                ToolDiagnosticFactory.notification(
+                    NOTIFICATION_CHANNEL_TURN_BACK_ALARM,
+                    context.getString(
+                        R.string.parenthesized_pair,
+                        context.getString(R.string.turn_back_alerts),
+                        context.getString(R.string.alarm)
+                    )
                 )
             )
         )
@@ -45,4 +73,6 @@ object TurnBackToolRegistration : ToolRegistration {
 
     const val SERVICE_TURN_BACK = "turn_back-service-turn-back"
     const val NOTIFICATION_CHANNEL_TURN_BACK_ALERT = TurnBackAlarmReceiver.NOTIFICATION_CHANNEL_ID
+    const val NOTIFICATION_CHANNEL_TURN_BACK_ALARM = "turn-back-alarm"
+    const val NOTIFICATION_CHANNEL_GROUP_TURN_BACK = "turn-back"
 }

@@ -20,6 +20,10 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMarker
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasCircle
+import com.kylecorry.trail_sense.tools.navigation.domain.Destination
+import com.kylecorry.trail_sense.tools.navigation.ui.MappablePath
+import com.kylecorry.trail_sense.tools.navigation.ui.MappableLocation
+import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 
 /**
@@ -37,6 +41,9 @@ class ARPathLayer(
 
     private val lineLayer = ARLineLayer(renderWithPaths = false)
     private val markerLayer = ARMarkerLayer(1f, 32f, false)
+    private val polygons = ARPathPolygons(widthMeters = 0.45f)
+    private val ribbonLayer = ARPolygonLayer()
+    private val arrowLayer = ARPolygonLayer()
     private var lastElevation: Float? = null
     private var lastLocationAccuracySquared: Float? = null
 
@@ -51,17 +58,31 @@ class ARPathLayer(
     private val clipper = LineClipper()
     private val interpolator = LineInterpolator()
 
-    private val pointSpacing = 5f // meters
+    private val pointSpacing = 2f // meters
     private val pathSimplification = 0.5f // meters
     private val snapDistance = 2 * viewDistanceMeters / 3f // meters
     private val snapDistanceSquared = square(snapDistance)
 
-    private val maxElevationOffset = 5f // meters
+    // Limits how far paths can float above or below the camera
+    private val maxElevationOffset = maxOf(5f, viewDistanceMeters / 4f) // meters
     private val defaultElevationOffset = -2f // meters
 
     private var projection: IMapProjection? = null
 
     private var paths: List<IMappablePath> = listOf()
+
+    var destination: Destination.Path? = null
+
+    @Volatile
+    var appearance: ARPathAppearance = ARPathAppearance.Ribbon
+
+    private val ribbonLayers = listOf<ARLayer>(ribbonLayer, arrowLayer)
+    private val lineLayers = listOf<ARLayer>(lineLayer, markerLayer)
+    private val activeLayers: List<ARLayer>
+        get() = when (appearance) {
+            ARPathAppearance.Ribbon -> ribbonLayers
+            ARPathAppearance.Line -> lineLayers
+        }
 
     private val hooks = Hooks()
 
@@ -85,21 +106,23 @@ class ARPathLayer(
             view.location,
             if (adjustForPathElevation) view.altitude else null,
             view.locationAccuracy,
-            paths
+            paths,
+            destination,
+            destination?.route?.guidance
         ) {
-            updatePaths()
+            updatePaths(getPaths())
         }
 
-        lineLayer.update(drawer, view)
-        markerLayer.update(drawer, view)
+        activeLayers.forEach { it.update(drawer, view) }
     }
 
     override fun draw(drawer: ICanvasDrawer, view: AugmentedRealityView) {
-        lineLayer.draw(drawer, view)
-        markerLayer.draw(drawer, view)
+        activeLayers.forEach { it.draw(drawer, view) }
     }
 
     override fun invalidate() {
+        ribbonLayer.invalidate()
+        arrowLayer.invalidate()
         lineLayer.invalidate()
         markerLayer.invalidate()
     }
@@ -113,15 +136,33 @@ class ARPathLayer(
     }
 
     override fun onFocus(drawer: ICanvasDrawer, view: AugmentedRealityView): Boolean {
-        return markerLayer.onFocus(drawer, view)
+        return activeLayers.any { it.onFocus(drawer, view) }
     }
 
     fun setPaths(paths: List<IMappablePath>) {
         this.paths = paths
     }
 
-    private fun updatePaths() {
-        val paths = paths
+    internal fun getPaths(): List<IMappablePath> {
+        val destination = destination ?: return paths
+        val path = destination.path
+        val guidance = destination.route.guidance
+        val route = MappablePath(
+            path.id,
+            guidance.remainingRoute.mapIndexed { index, point ->
+                MappableLocation(
+                    index.toLong(), point.coordinate, path.style.color, null,
+                    elevation = point.elevation
+                )
+            },
+            path.style.color,
+            LineStyle.Arrow,
+            path.name
+        )
+        return paths.filterNot { it.id == path.id } + route
+    }
+
+    private fun updatePaths(paths: List<IMappablePath>) {
         val elevation = lastElevation
 
         val points = paths.map {
@@ -159,21 +200,27 @@ class ARPathLayer(
                 path to ARLine(it, path.color, 4f)
             }
         }
-
-        val markers = lines.flatMap {
-            it.second.points.map { point ->
+        // Both are kept up to date so switching the appearance doesn't require reloading the paths
+        val markers = lines.flatMap { (path, line) ->
+            line.points.map { point ->
                 ARMarker(
                     point,
-                    CanvasCircle(it.second.color),
-                    onFocusedFn = {
-                        onFocus(it.first)
-                    }
+                    CanvasCircle(line.color),
+                    onFocusedFn = { onFocus(path) }
                 )
             }
         }
 
         markerLayer.setMarkers(markers)
         lineLayer.setLines(lines.map { it.second })
+        ribbonLayer.setSource { view ->
+            lines.map { (path, line) -> polygons.ribbon(line, view) { onFocus(path) } }
+        }
+        val navigationPathId = destination?.path?.id
+        arrowLayer.setSource { view ->
+            lines.filter { (path, _) -> path.id == navigationPathId }
+                .map { (_, line) -> polygons.arrows(line, view) }
+        }
     }
 
     private fun getNearestPoint(points: Pair<MutableList<Float>, MutableList<Float>>): NearestPoint? {

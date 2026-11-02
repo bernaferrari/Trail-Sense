@@ -87,11 +87,11 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.ARCalibratorFactory
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARBeaconGuidanceTarget
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceRefreshRequest
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.BeaconGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceDisplayState
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.BeaconGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARAstronomyLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARBeaconLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARGridLayer
@@ -100,6 +100,7 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARPathLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARSatelliteLayer
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
+import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 import com.kylecorry.trail_sense.tools.paths.map_layers.AugmentedRealityPathLayerManager
@@ -324,9 +325,10 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
             }
         }
         host.lifecycleScope.launch {
-            navigator.destination.collect {
-                beaconLayer.destination = it
-                syncBeaconGuidance(it)
+            navigator.destination.collect { destination ->
+                val beaconDestination = destination as? Destination.Beacon
+                beaconLayer.destination = beaconDestination
+                syncBeaconGuidance(beaconDestination?.beacon)
             }
         }
 
@@ -680,8 +682,8 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
     }
 
     private fun replaceActiveGuidanceTarget(target: ARGuidanceTarget?) {
-        val previousBeaconId = (activeGuidanceTarget as? ARBeaconGuidanceTarget)?.beacon?.id
-        val newBeacon = (target as? ARBeaconGuidanceTarget)?.beacon
+        val previousBeaconId = (activeGuidanceTarget as? BeaconGuidanceTarget)?.beacon?.id
+        val newBeacon = (target as? BeaconGuidanceTarget)?.beacon
 
         activeGuidanceTarget = null
         views.arView.clearGuide()
@@ -706,7 +708,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
             return
         }
 
-        val activeBeaconId = (activeGuidanceTarget as? ARBeaconGuidanceTarget)?.beacon?.id
+        val activeBeaconId = (activeGuidanceTarget as? BeaconGuidanceTarget)?.beacon?.id
 
         if (destination == null) {
             return
@@ -731,7 +733,13 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
         host.inBackground {
             guidanceRefreshRunner.enqueue {
                 tryOrLog {
-                    val state = target.refresh(views.arView)
+                    val state = target.refresh(
+                        ARGuidanceRefreshRequest(
+                            host.requireContext(),
+                            views.arView.location,
+                            ZonedDateTime.now()
+                        )
+                    )
                     onMain {
                         if (!isViewReady || activeGuidanceTarget !== target) {
                             return@onMain

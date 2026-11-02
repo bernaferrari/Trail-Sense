@@ -84,7 +84,6 @@
     <string name="quality_poor">Заслабко</string>
     <string name="unavailable">Недоступно</string>
     <string name="gps_searching">Пошук</string>
-    <string name="gps_stale">Застаріло</string>
     <string name="gps_user">Користувач</string>
     <string name="import_btn">Імпорт</string>
     <plurals name="beacons_exported">
@@ -144,8 +143,6 @@
     <string name="cirrostratus">Перисто-шаруваті</string>
     <string name="cirrocumulus">Перисто-купчасті</string>
     <string name="cirrus">Перисті</string>
-    <string name="pref_require_satellites_description">Потрібно щонайменше 4 супутники, поліпшує точність</string>
-    <string name="pref_require_satellites_title">Потрібне виправлення супутникового зв\'язку</string>
     <string name="clouds">Хмари</string>
     <string name="how">Як</string>
     <string name="compass_calibrate_toast">Точність компаса %s, пораджено калібрування</string>
@@ -247,7 +244,6 @@
     <string name="elevation_override_updated_toast">Значення висоти буде зсунуто на задане число</string>
     <string name="pref_altimeter_calibration_title">Висотомір</string>
     <string name="request_permission">Запит дозволу</string>
-    <string name="pref_auto_location_title">Автоматично відстежувати переміщення</string>
     <string name="location">Місцеперебування</string>
     <string name="compass_accuracy_improved">Точність компаса поліпшено: %s</string>
     <string name="gps">GPS</string>
@@ -366,8 +362,6 @@
     <string name="unit_inches_abbreviation">дюйм</string>
     <string name="unit_centimeters_abbreviation">см</string>
     <string name="unit_centimeters">Сантиметри</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="note_title_hint">Заголовок</string>
     <string name="tool_notes_title">Примітки</string>
     <string name="delete_note_title">Видалити примітку\?</string>
@@ -431,8 +425,6 @@
     <string name="tool_solar_panel_title">Вирівнювач сонячних панелей</string>
     <string name="tool_solar_panel_summary">Визначає найвигідніше положення сонячних батарей</string>
     <string name="pref_privacy_policy_title">Політика приватності</string>
-    <string name="guide_recommended_apps_description">Корисні застосунки для виживання</string>
-    <string name="guide_recommended_apps">Пораджені застосунки</string>
     <string name="unit_nautical_miles">Морські милі</string>
     <string name="unit_miles">Милі</string>
     <string name="unit_feet">Кроки</string>
@@ -515,8 +507,6 @@
     <string name="whistle_signal_where_are_you">Де ви\?</string>
     <string name="noon">Полудень</string>
     <string name="weather_monitor">Відстеження погоди</string>
-    <string name="pref_nmea_elevation_summary">Використовує NMEA (супутник) для корекції висот, а не вбудовану модель</string>
-    <string name="pref_nmea_elevation_title">Корекція висоти NMEA</string>
     <string name="pref_barometer_info_summary">Тиск може відрізнятися від тиску сусідніх станцій</string>
     <string name="battery_history">Історія батареї - остан. %s</string>
     <string name="no_data">Немає даних</string>
@@ -528,7 +518,6 @@
     <string name="convert">Перетворення одиниць</string>
     <string name="map_perspective_instructions">Накресліть мапу</string>
     <string name="preview">Попередній перегляд</string>
-    <string name="pref_navigation_lock_screen_presence_title">Показувати на екрані блокування під час навігації</string>
     <string name="import_map">Імпортувати мапу</string>
     <string name="pref_cell_signal_refresh_cache_summary">Змушує завантажувати останні сили сигналу</string>
     <string name="pref_cell_signal_refresh_cache_title">Оновити кеш сигналу</string>
@@ -600,7 +589,6 @@
     <string name="pref_map_url_source_title">Мапа спільних геолокацій</string>
     <string name="clear_cache">Очистити кеш</string>
     <string name="destination_elevation">Висота призначення</string>
-    <string name="base_temperature">Основна температура</string>
     <string name="weight_per_item">Вага на одиницю</string>
     <string name="pack_sort_weight_high_to_low">Вага (від більшої до меншої)</string>
     <string name="pack_sort_weight_low_to_high">Вага (від меншої до більшої)</string>
@@ -752,7 +740,6 @@
     <string name="merging">Злиття</string>
     <string name="merge">Злити</string>
     <string name="append_onto">Додати до</string>
-    <string name="simplification_quality">Якість спрощення</string>
     <string name="pref_auto_simplify_paths_title">Спростити шляхи при імпорті</string>
     <plurals name="waypoints_deleted">
         <item quantity="one">%d шляхову точку видалено</item>
@@ -854,7 +841,6 @@
     <string name="weather_no_change">Без змін</string>
     <string name="soon">Скоро</string>
     <string name="very_soon">Дуже скоро</string>
-    <string name="since_time">з %s</string>
     <string name="humidity_history">Історія вологості – остан. %s</string>
     <string name="temperature_history">Історія температури - остан. %s</string>
     <string name="tool_temperature_estimation_title">Оцінка температури</string>
@@ -873,14 +859,12 @@
     <string name="average_speed_pedometer">Сер. швидкість (крокомір)</string>
     <string name="average_speed_backtrack">Сер. швидкість (історія маршруту)</string>
     <string name="reset_distance_title">Скинути відстань\?</string>
-    <string name="navigating_to_nearest_path_point">Навігація до найближчої шляхової точки</string>
     <string name="beacons">Маячки</string>
     <string name="pref_start_on_boot_title">Запуск під час увімкнення</string>
     <string name="move_to">Перейти до</string>
     <string name="bearing">Азимут</string>
     <string name="square">Квадрат</string>
     <string name="diamond">Діамант</string>
-    <string name="pref_only_navigate_path_points_title">Перехід лише до записаних точок</string>
     <string name="cross">Хрест</string>
     <string name="error">Помилка</string>
     <string name="warning">Увага</string>
@@ -1007,7 +991,6 @@
     <string name="loading">Завантаження</string>
     <string name="print">Друк</string>
     <string name="autofill_source">Джерело автозаповнення</string>
-    <string name="calibrate_map_point">Відкалібруйте за відомими місцями (%1$d / %2$d)</string>
     <string name="illumination">Освітлення</string>
     <string name="map_calibration">Калібрування мапи</string>
     <string name="compass_source_legacy_android">Старе (Android)</string>
@@ -1144,7 +1127,6 @@
     <string name="show_dial_ticks_on_nearby_radar_summary">У вашому пристрої немає компаса, але ви можете бачити, в якому напрямку знаходяться маячки.</string>
     <string name="augmented_reality_no_gyro_message">Ви все ще можете використовувати інструмент доповненої реальності, але він не буде таким точним.</string>
     <string name="ar_calibration_instructions">Відцентруйте %s на екрані та натисніть \"Калібрувати\"</string>
-    <string name="smooth_gps_readings">Плавні показники GPS</string>
     <string name="cloud_scanner">Зчитувач хмар</string>
     <string name="projection_estimated_intrinsics">Орієнтовні інтринсики</string>
     <string name="ar_layer_override_message">Налаштування шарів можуть бути замінені вказівками, наприклад, вказівками з астрономії.</string>
@@ -1159,7 +1141,6 @@
     <string name="lunitidal_interval_utc">Місячний інтервал (UTC/Ґрінвіч)</string>
     <string name="ar_calibration_instructions_hint">Щоб відкалібрувати засіб доповненої реальності, торкніться піктограми у верхньому лівому кутку екрана і дотримуйтесь указівок, що з\'являться.</string>
     <string name="grid">Сітка</string>
-    <string name="date">Дата</string>
     <string name="mirror_camera">Віддзеркалити камеру</string>
     <string name="tool_turn_back">Повернення назад</string>
     <string name="return_time">Час повернення</string>
@@ -1175,7 +1156,6 @@
     <string name="crafting">Майстрування</string>
     <string name="quick_actions">Швидкі дії</string>
     <string name="layers">Шари</string>
-    <string name="forecast_algorithm">Алгоритм прогнозування</string>
     <string name="pref_flashlight_control_screen_with_volume_title">Регулювання яскравості екранного ліхтарика за допомогою кнопок гучності</string>
     <string name="theme_system_black">Системна (чорна)</string>
     <string name="pref_start_camera_in_3d_view_title">Використовувати камеру для 3D-перегляду</string>

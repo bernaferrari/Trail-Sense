@@ -1,11 +1,14 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
 import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 internal class StepCounter(private val preferences: IPreferences) : IStepTrackerService {
 
@@ -26,9 +29,16 @@ internal class StepCounter(private val preferences: IPreferences) : IStepTracker
         }
     }
 
-    override suspend fun addSteps(steps: Long, time: Instant) {
+    override suspend fun addSteps(steps: Long, time: Instant, activeTime: Duration) {
         addSteps(steps)
     }
+
+    override suspend fun getHourlyStepCounts(
+        date: LocalDate,
+        zoneId: ZoneId
+    ): List<HourlyStepCount> = emptyList()
+
+    override suspend fun clean() = Unit
 
     fun reset() {
         synchronized(this) {

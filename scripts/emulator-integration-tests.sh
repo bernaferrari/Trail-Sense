@@ -38,10 +38,13 @@ if [ -z "$selected_device" ]; then
   exit 1
 fi
 
-args=(connectedAndroidTest)
+gradle_args=(assembleDebug assembleDebugAndroidTest)
 
-if [ "$#" -ge 1 ]; then
-  args+=("-Pandroid.testInstrumentationRunnerArguments.class=$1")
+ANDROID_SERIAL="$selected_device" ./gradlew "${gradle_args[@]}"
+
+gradle_args=(connectedDebugAndroidTest)
+if [ "$#" -ge 1 ] && [ -n "$1" ]; then
+  gradle_args+=("-Pandroid.testInstrumentationRunnerArguments.class=$1")
 fi
 
-ANDROID_SERIAL="$selected_device" timeout "${timeout_seconds}s" ./gradlew "${args[@]}"
+ANDROID_SERIAL="$selected_device" timeout --foreground "${timeout_seconds}s" ./gradlew "${gradle_args[@]}"

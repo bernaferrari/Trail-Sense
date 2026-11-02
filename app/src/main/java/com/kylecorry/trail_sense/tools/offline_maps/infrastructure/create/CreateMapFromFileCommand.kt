@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 import android.content.Context
 import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.shared.io.UriPicker
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 
@@ -15,7 +16,7 @@ class CreateMapFromFileCommand(
         val uri = uriPicker.open(
             listOf("image/*", "application/pdf", "application/octet-stream"),
             requirePersistentAccess = true
-        ) ?: return@onIO null
+        ).getOrNull() ?: return@onIO null
         CreateMapFromUriCommand(context, uri, loadingIndicator).execute()
     }
 }

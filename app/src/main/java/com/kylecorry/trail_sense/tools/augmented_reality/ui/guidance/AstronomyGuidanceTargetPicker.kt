@@ -35,9 +35,9 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.time.ZonedDateTime
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class AstronomyGuidanceTargetPicker(
     private val astronomyService: AstronomyService,
@@ -66,7 +66,7 @@ class AstronomyGuidanceTargetPicker(
             if (drawBelowHorizon || sunAltitude > 0f) {
                 options.add(
                     AstronomyGuidanceOption(
-                        AstronomyGuidanceTarget(astronomyService, AstronomySelection.Sun, getDisplayedTime),
+                        AstronomyGuidanceTarget(astronomyService, AstronomySelection.Sun),
                         view.context.getString(R.string.sun),
                         if (sunAltitude > 0f) null else notVisible,
                         R.drawable.ic_sun,
@@ -80,7 +80,7 @@ class AstronomyGuidanceTargetPicker(
                 val phase = Astronomy.getMoonPhase(time)
                 options.add(
                     AstronomyGuidanceOption(
-                        AstronomyGuidanceTarget(astronomyService, AstronomySelection.Moon, getDisplayedTime),
+                        AstronomyGuidanceTarget(astronomyService, AstronomySelection.Moon),
                         view.context.getString(R.string.moon),
                         if (moonAltitude > 0f) null else notVisible,
                         moonPhaseMapper.getPhaseImage(phase.phase),
@@ -99,8 +99,7 @@ class AstronomyGuidanceTargetPicker(
                     AstronomyGuidanceOption(
                         AstronomyGuidanceTarget(
                             astronomyService,
-                            AstronomySelection.MeteorShowerTarget(it.first),
-                            getDisplayedTime
+                            AstronomySelection.MeteorShowerTarget(it.first)
                         ),
                         it.first.readableName(),
                         if (it.second.altitude > 0f) null else notVisible,
@@ -121,8 +120,7 @@ class AstronomyGuidanceTargetPicker(
                         AstronomyGuidanceOption(
                             AstronomyGuidanceTarget(
                                 astronomyService,
-                                AstronomySelection.PlanetTarget(it.first),
-                                getDisplayedTime
+                                AstronomySelection.PlanetTarget(it.first)
                             ),
                             planetMapper.getName(it.first),
                             if (it.second.altitude > 0f) null else notVisible,
@@ -142,8 +140,7 @@ class AstronomyGuidanceTargetPicker(
                         AstronomyGuidanceOption(
                             AstronomyGuidanceTarget(
                                 astronomyService,
-                                AstronomySelection.StarTarget(it.first),
-                                getDisplayedTime
+                                AstronomySelection.StarTarget(it.first)
                             ),
                             "${view.context.getString(R.string.star)}: ${it.first.name}",
                             if (it.second.second > 0f) null else notVisible,
@@ -163,7 +160,7 @@ class AstronomyGuidanceTargetPicker(
     private suspend fun pickGuidanceOption(
         view: AugmentedRealityView,
         options: List<AstronomyGuidanceOption>
-    ): AstronomyGuidanceOption? = suspendCoroutine { cont ->
+    ): AstronomyGuidanceOption? = suspendCancellableCoroutine { cont ->
         val context = view.context
         var selected: AstronomyGuidanceOption? = null
         var resumed = false

@@ -8,6 +8,6 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
 }
 
-tasks.register("clean") {
+tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

@@ -1,27 +1,31 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.delay
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.OPTIONAL_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.TestData
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import org.junit.Assume.assumeFalse
 import org.junit.Test
 
-class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
+class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.97)) {
     @Test
     fun verifyBasicFunctionality() {
         // Bearing
@@ -42,7 +46,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
     }
 
     private fun canAdjustLayers() {
-        optional {
+        optional(OPTIONAL_WAIT_FOR_TIMEOUT) {
             longClick(R.id.radar_compass)
             scrollUntil { hasText("Location") }
             scrollUntil { hasText("Beacons") }
@@ -60,12 +64,14 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
             { click(R.id.linear_compass, waitForTime = 0) }
         )
 
-        hasText("Bearing")
-        isVisible(R.id.navigation_bearing)
+        hasText(R.id.navigation_sheet_title, Regex("\\d+° [NSEW]+"))
+        isVisible(R.id.navigation_arrow)
+        hasText(R.id.navigation_target_bearing, Regex("\\d+° [NSEW]+"))
+        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_facing), childId = R.id.stat_label)
+        hasText(R.id.navigation_tertiary_stat, Regex("\\d+° [NSEW]+"), childId = R.id.stat_value)
 
-        click(toolbarButton(R.id.navigation_sheet_title, Side.Right))
-        click("Yes")
-        not { hasText("Bearing") }
+        cancelNavigation()
+        not { isVisible(R.id.navigation_sheet) }
     }
 
     private fun canNavigate() {
@@ -83,30 +89,26 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         // Navigate to it
         isVisible(id("beacon_list"))
         click("Test Beacon")
-        delay(200)
+        hasText(R.id.beacon_title, "Test Beacon")
         click(string(R.string.navigate))
-
-        hasText(string(R.string.calibrate_compass_dialog_title))
-        clickOk()
+        clickOkIfShown()
 
         hasText("Test Beacon")
         hasText(Regex("1.000000°,\\s+-1.000000°"))
         hasText("100 ft")
-        hasText(R.id.navigation_distance, Regex("\\d+(\\.\\d+)? (ft|mi)"))
-        hasText(R.id.navigation_distance, Regex("\\d+° [NSEW]+"))
-        hasText(R.id.navigation_eta, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"))
-        hasText(R.id.navigation_eta, Regex("\\d+:\\d+?\\s(AM|PM)"))
-        hasText(R.id.navigation_elevation, Regex("[-+]?\\d+ ft"))
-        click(toolbarButton(R.id.navigation_sheet_title, Side.Left))
-        hasText("Test Comment")
-        clickOk()
+        isVisible(R.id.navigation_arrow)
+        hasText(R.id.navigation_primary_stat, Regex("\\d+(\\.\\d+)? (ft|mi)"), childId = R.id.stat_value)
+        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+        hasText(R.id.navigation_secondary_stat, Regex("Arrive \\d+:\\d+\\s(AM|PM)"), childId = R.id.stat_label)
+        hasText(R.id.navigation_tertiary_stat, Regex("\\d+ ft"), childId = R.id.stat_value)
 
-        click("Test Beacon")
-        hasText(id("beacon_title"), "Test Beacon")
+        // The notes are shown on the beacon
+        click(R.id.navigation_sheet_title)
+        hasText(R.id.beacon_title, "Test Beacon")
+        hasText("Test Comment")
         back()
 
-        click(toolbarButton(R.id.navigation_sheet_title, Side.Right))
-        click("Yes")
+        cancelNavigation()
         not { hasText("Test Beacon") }
 
         hasWorkingTrueNorthIndicator()
@@ -128,7 +130,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         back()
 
         click(toolbarButton(R.id.navigation_title, Side.Right))
-        clickOk()
+        clickOkIfShown()
         isVisible(R.id.map_list_title)
         back()
     }
@@ -149,5 +151,81 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION) {
         back()
         click(string(R.string.dialog_leave))
         back()
+    }
+
+    // The current location is fixed at (42.03, -71.97) and the beacons are at known offsets from it
+    // (verified with an independent calculation):
+    // - Camp: 0.69 mi due north
+    // - Summit: 40.40 mi at 36 degrees true (about 50 degrees magnetic, the declination is -14)
+
+    private fun openWithSavedBeacons() {
+        assumeFalse(isStagingBuild)
+        relaunchTool { seedBeacons() }
+    }
+
+    private fun seedBeacons() {
+        TestData.addBeacon(
+            "Summit",
+            Coordinate(42.5, -71.5),
+            elevation = 304.8f,
+            comment = "Great view"
+        )
+        TestData.addBeacon("Camp", Coordinate(42.04, -71.97), elevation = 100f)
+    }
+
+    @Test
+    fun showsTheCurrentLocation() {
+        openWithSavedBeacons()
+
+        hasText("42.030000°,  -71.970000°")
+        hasText("0.0 mph")
+        hasText(string(R.string.true_north))
+    }
+
+    @Test
+    fun canNavigateToABeaconFromTheList() {
+        openWithSavedBeacons()
+
+        navigateToBeacon("Summit")
+
+        hasText(R.id.navigation_sheet_title, "Summit")
+        hasText("42.500000°,  -71.500000°")
+        // Non-breaking spaces keep the elevation together if the subtitle wraps
+        hasText("(Ele. 1000 ft)")
+        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+        hasText(R.id.navigation_tertiary_stat, "1000 ft", childId = R.id.stat_value)
+        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_remaining_gain), childId = R.id.stat_label)
+        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+    }
+
+    @Test
+    fun canSwitchTheDestination() {
+        openWithSavedBeacons()
+
+        navigateToBeacon("Summit")
+        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+
+        cancelNavigation()
+        not { hasText("Summit") }
+
+        navigateToBeacon("Camp")
+        hasText(R.id.navigation_sheet_title, "Camp")
+        hasText(R.id.navigation_primary_stat, "0.69 mi", childId = R.id.stat_value)
+        not { hasText("Summit") }
+    }
+
+    private fun cancelNavigation() {
+        click(R.id.navigation_cancel)
+        // The undo snackbar covers the beacon button until it times out
+        hasText(string(R.string.navigation_cancelled))
+        not(waitForTime = 15000) { hasText(string(R.string.navigation_cancelled)) }
+    }
+
+    private fun navigateToBeacon(name: String) {
+        click(R.id.beaconBtn)
+        click(name)
+        click(string(R.string.navigate))
+        // Calibration reminder (only shown when the compass accuracy is poor)
+        clickOkIfShown()
     }
 }

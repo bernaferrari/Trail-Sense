@@ -65,7 +65,7 @@ fun MainAdaptiveNavigation(
     val visibleItems = state.items.filter { it.visible }
     NavigationSuiteScaffold(
         modifier = modifier,
-        navigationItems = {
+        navigationSuiteItems = {
             visibleItems.forEach { item ->
                 val selected = item.id == state.selectedItemId
                 this.item(

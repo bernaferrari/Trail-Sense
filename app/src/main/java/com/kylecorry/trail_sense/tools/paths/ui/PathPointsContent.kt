@@ -25,6 +25,7 @@ fun PathPointsContent(
     onCreateBeacon: (PathPoint) -> Unit,
     onDelete: (PathPoint) -> Unit,
     onNavigate: (PathPoint) -> Unit,
+    onNavigateDirect: (PathPoint) -> Unit,
     onView: (PathPoint) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -43,6 +44,7 @@ fun PathPointsContent(
                 onCreateBeacon = onCreateBeacon,
                 onDelete = onDelete,
                 onNavigate = onNavigate,
+                onNavigateDirect = onNavigateDirect,
                 onView = onView,
                 modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
             )
@@ -62,6 +64,7 @@ private fun PathPointsContentPreview() {
             onCreateBeacon = {},
             onDelete = {},
             onNavigate = {},
+            onNavigateDirect = {},
             onView = {}
         )
     }

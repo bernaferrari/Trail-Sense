@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.sol.units.DistanceUnits
@@ -37,7 +37,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 fun EnergyCalculatorPage(
     modifier: Modifier = Modifier
 ) {
-    val formatter = remember { AppServiceRegistry.get<FormatService>() }
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
     val (bulletSpeed, setBulletSpeed) = rememberSpeedPreference("cache-ballistics-bullet-speed")
     val (bulletWeight, setBulletWeight) = rememberWeightPreference("cache-ballistics-bullet-weight")
     val energy = remember(bulletSpeed, bulletWeight) {

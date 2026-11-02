@@ -59,6 +59,7 @@ import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -203,7 +204,7 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
 
     fun selectPhoto() {
         host.inBackground(BackgroundMinimumState.Created) {
-            val uri = uriPicker.open(listOf("image/*"))
+            val uri = uriPicker.open(listOf("image/*")).getOrNull()
             uploadPhoto(uri)
         }
     }

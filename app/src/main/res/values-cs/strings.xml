@@ -131,7 +131,6 @@
     <string name="pref_elevation_override_title">Přepsání nadmořské výšky</string>
     <string name="elevation_from_pressure">Nastavení přepisu z barometru</string>
     <string name="request_permission">Vyžádat oprávnění</string>
-    <string name="pref_auto_location_title">Automatické nastavení polohy</string>
     <string name="compass_accuracy_improved">Přesnost kompasu se zlepšila na %s</string>
     <string name="compass_reported_accuracy">Uváděná přesnost: %s</string>
     <string name="calibrate_compass_on_navigate_dialog_content">Několikrát zatočte telefonem ve tvaru osmičky nebo do všech směrů a po dokončení klikněte na tlačítko %s.
@@ -249,12 +248,10 @@
     <string name="pref_category_about">O aplikaci</string>
     <string name="tool_bubble_level_summary">Určete, zda jsou povrchy rovné</string>
     <string name="distance_to">Na</string>
-    <string name="guide_recommended_apps">Doporučené aplikace</string>
     <string name="tool_bubble_level_title">Bublinová vodováha</string>
     <string name="category_clothing">Oblečení</string>
     <string name="unit_nautical_miles">Námořní míle</string>
     <string name="pref_privacy_policy_title">Zásady ochrany osobních údajů</string>
-    <string name="guide_recommended_apps_description">Užitečné aplikace pro přežití</string>
     <string name="duration_second_format">%ds</string>
     <string name="tap_to_turn_off">Klepněte pro vypnutí</string>
     <string name="thunder">Hrom</string>
@@ -275,7 +272,6 @@
     <string name="pref_backtrack_save_cell_title">Nahrát telefonní signál</string>
     <string name="pref_stride_length_title">Délka kroku</string>
     <string name="gps_user">Uživatel</string>
-    <string name="gps_stale">Zastaralá</string>
     <string name="contents">Obsah</string>
     <string name="export">Exportovat</string>
     <string name="help">Pomoc</string>
@@ -293,7 +289,6 @@
     <string name="battery_power_ac">AC</string>
     <string name="open_beacon_in_maps">Zobrazit na mapě</string>
     <string name="compass_calibrate_toast">Přesnost kompasu %s, doporučuje se kalibrace</string>
-    <string name="pref_require_satellites_title">Vyžadovat fixaci satelitů</string>
     <string name="gps_searching">Vyhledávání</string>
     <string name="unavailable">Nedostupný</string>
     <string name="always_on">Vždy zapnuto</string>
@@ -355,7 +350,6 @@
     <string name="backtrack_disabled_low_power_toast">Zpětná navigace je v úsporném režimu deaktivována</string>
     <string name="pref_low_power_mode_summary">Deaktivuje některé funkce za účelem úspory energie</string>
     <string name="low_power_mode_on_message">Úsporný režim je zapnutý, některé funkce mohou být deaktivovány.</string>
-    <string name="pref_require_satellites_description">Vyžaduje alespoň 4 satelity, zlepšuje přesnost</string>
     <string name="cirrostratus">Řasová sloha</string>
     <string name="altocumulus">Vyvýšená kupa</string>
     <string name="altostratus">Vyvýšená sloha</string>
@@ -410,8 +404,6 @@
     <string name="map_scale_ratio">Poměr</string>
     <string name="min_temp_uncalibrated">Minimální teplota telefonu (nekalibrovaná)</string>
     <string name="note_title_hint">Titulek</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="unit_centimeters">Centimetry</string>
     <string name="unit_centimeters_abbreviation">cm</string>
     <string name="unit_inches_abbreviation">in</string>
@@ -492,7 +484,6 @@
     <string name="gravity">Gravitace</string>
     <string name="magnetometer">Magnetometr</string>
     <string name="speedometer">Tachometr</string>
-    <string name="since_time">od %s</string>
     <string name="pedometer">Krokoměr</string>
     <string name="tool_notes_title">Poznámky</string>
     <string name="cross">Kříž</string>
@@ -536,8 +527,6 @@
     <string name="activity_recognition_permission_denied">Povolení k pohybové aktivitě bylo zamítnuto, nelze zapnout funkce, které používají krokoměr. Můžete je povolit v nastavení.</string>
     <string name="whistle_signal_come_here">Pojďte sem</string>
     <string name="pref_barometer_info_summary">Tlak se může lišit od tlaku okolních stanic</string>
-    <string name="pref_nmea_elevation_title">Oprava nadmořské výšky NMEA</string>
-    <string name="pref_nmea_elevation_summary">Použít NMEA (satelit) pro opravu výšek namísto vestavěného modelu</string>
     <string name="convert">Převést</string>
     <string name="distance">Vzdálenost</string>
     <string name="move">Přesunout</string>
@@ -548,7 +537,6 @@
     <string name="no_groups">Žádné skupiny</string>
     <string name="weather_monitor">Monitor počasí</string>
     <string name="coordinates_tab">Souřadnice</string>
-    <string name="pref_navigation_lock_screen_presence_title">Zobrazit na uzamčené obrazovce při navigaci</string>
     <string name="battery_history">Historie baterie - poslední %s</string>
     <string name="map_perspective_instructions">Načrtněte mapu</string>
     <string name="clinometer_measure_distance_title">Výška cíle</string>
@@ -700,7 +688,6 @@
     <string name="pref_flashlight_toggle_with_volume_title">Přepínání pomocí tlačítek hlasitosti</string>
     <string name="unit_yards">Yardy</string>
     <string name="base_elevation">Výchozí nadmořská výška</string>
-    <string name="base_temperature">Výchozí teplota</string>
     <string name="liter_format">%s l</string>
     <string name="milliliter_format">%s ml</string>
     <string name="quart_format">%s qt</string>
@@ -885,16 +872,13 @@
     <string name="tool_temperature_estimation_title">Odhad teploty</string>
     <string name="stride_length_walk">Jděte v přímé linii, až budete hotovi, stiskněte stop</string>
     <string name="simplifying">Zjednodušuji</string>
-    <string name="simplification_quality">Kvalita zjednodušení</string>
     <string name="tide_deleted">Příliv/odliv odstraněn</string>
     <string name="measure">Měřit</string>
     <string name="path_color">Barva cesty</string>
     <string name="temporary">Dočasná</string>
     <string name="importing">Importuji</string>
     <string name="sort_by">Seřadit: %s</string>
-    <string name="navigating_to_nearest_path_point">Navigace k nejbližšímu bodu cesty</string>
     <string name="pref_start_on_boot_title">Spustit při zapnutí</string>
-    <string name="pref_only_navigate_path_points_title">Navigace pouze k zaznamenaným bodům</string>
     <plurals name="waypoints_deleted">
         <item quantity="one">%d navigační bod odstraněn</item>
         <item quantity="few">%d navigační body odstraněny</item>
@@ -977,7 +961,6 @@
     <string name="peak_time">Špička</string>
     <string name="magnitude">Rozsah</string>
     <string name="weather_alert_hot_description">Připravte se na vysoké teploty. Dodržujte zvláštní opatření proti vyčerpání z horka a úpalu.</string>
-    <string name="calibrate_map_point">Kalibrovat se známými lokalitami (%1$d / %2$d)</string>
     <string name="source">Zdroj</string>
     <string name="now_value">Aktuálně: %s</string>
     <string name="for_historic_temperatures">Pro historické teploty</string>
@@ -1126,7 +1109,6 @@
     <string name="use_path_elevation">Používat převýšení cest</string>
     <string name="scanning_image">Skenování obrázku</string>
     <string name="no_qr_code_detected">Nebyl detekován žádný QR kód</string>
-    <string name="smooth_gps_readings">Jemné čtení GPS</string>
     <string name="select_from_gallery">Vybrat z galerie</string>
     <string name="magnetometer_gyro_custom">Magnetometr + gyroskop (vlastní)</string>
     <string name="pref_tiles_enabled_battery_log_summary">Každou hodinu zaznamená procento baterie pro odhad času do jejího vybití</string>
@@ -1146,7 +1128,6 @@
     <string name="visible">Viditelné</string>
     <string name="grid">Mřížka</string>
     <string name="ar_layer_override_message">Nastavení rozložení mohou být přepsány pokyny, například průvodcem astronomie.</string>
-    <string name="date">Datum</string>
     <string name="ar_calibration_disclaimer">Před každým použitím nástroje Rozšířená realita ověřte, že se ikony slunce nebo měsíce nacházejí ve správné pozici oproti reálnému světu. Pokud ne, klepněte na ikonu kompasu v levém horním rohu obrazovky a následujte pokyny pro kalibraci.</string>
     <string name="pref_enable_analog_title">Analogové hodiny</string>
     <string name="no_recorded_cell_signal_nearby">Poblíž nenalezen žádný zaznamenaný mobilní signál</string>
@@ -1173,7 +1154,6 @@
     <string name="quick_actions_are_unavailable">Rychlé akce jsou nedostupné</string>
     <string name="bottom_navigation_slot">Místo spodní navigace %d</string>
     <string name="tool_quick_action_summary">Dlouze stiskněte spodní navigaci nebo zobrazení na kartě nástrojů.</string>
-    <string name="forecast_algorithm">Algoritmus předpovědi</string>
     <string name="exported">Exportováno</string>
     <string name="no_items_found">Nenalezeny žádné položky</string>
     <string name="enter_the_current_pressure">Zadejte aktuální tlak</string>
@@ -1487,7 +1467,6 @@
     <string name="widget_theme_black_text">Černý text</string>
     <string name="widget_theme_white_text">Bílý text</string>
     <string name="default_widget_theme">Výchozí motiv widgetu</string>
-    <string name="cancel_navigation_question">Zrušit navigaci?</string>
     <string name="elevation_value">Stoupání: %s</string>
     <string name="show_pressure_forecast">Zobrazit předpověď tlaku na grafu</string>
     <string name="moa_amount">%s MOA</string>

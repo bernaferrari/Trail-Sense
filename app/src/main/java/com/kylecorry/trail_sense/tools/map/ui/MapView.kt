@@ -5,8 +5,8 @@ import android.content.res.ColorStateList
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
-import android.graphics.PointF
 import android.view.GestureDetector
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
@@ -88,9 +88,10 @@ class MapView(private val context: Context) : IMapView {
 
     private val lookupMatrix = Matrix()
     private var externalTouchListener: ((MapView, MotionEvent) -> Boolean)? = null
+    private var hostView: View? = null
 
     override val layerManager = MapViewLayerManager {
-        post { invalidate() }
+        invalidate()
     }
     private val hooks = Hooks()
 
@@ -193,7 +194,8 @@ class MapView(private val context: Context) : IMapView {
     override val mapBounds: CoordinateBounds
         get() = hooks.memo(
             "bounds",
-            this@MapView.resolutionPixels, mapCenter, width, height, mapAzimuth != 0f
+            resolutionPixels, mapCenter, width, height, mapAzimuth != 0f,
+            projection, metersPerProjectedUnit, latitudeScaleFactor
         ) {
             // Increase size to account for 45 degree rotation
             var rotated = Rectangle(
@@ -221,9 +223,9 @@ class MapView(private val context: Context) : IMapView {
         }
 
     override var resolution: Float
-        get() = this@MapView.resolutionPixels * density
+        get() = resolutionPixels * density
         set(value) {
-            this@MapView.resolutionPixels = value / density
+            resolutionPixels = value / density
         }
 
     override val zoom: Float
@@ -269,7 +271,7 @@ class MapView(private val context: Context) : IMapView {
         private set(value) {
             field = value
             isScaleExplicitlySet = true
-            onScaleChange?.invoke(this@MapView.resolutionPixels)
+            onScaleChange?.invoke(resolutionPixels)
             invalidate()
         }
     private var lastScale = 1f
@@ -277,7 +279,6 @@ class MapView(private val context: Context) : IMapView {
     var minScale = 0.0001f
         set(value) {
             field = value
-            maxScale = calculateMaxScale(value)
             if (scale < minScale) {
                 zoomTo(minScale)
             }
@@ -296,26 +297,28 @@ class MapView(private val context: Context) : IMapView {
     var projection: IMapProjection = MercatorProjection()
         set(value) {
             field = value
-            this@MapView.layerManager.invalidate()
+            layerManager.invalidate()
             invalidate()
         }
 
     var metersPerProjectedUnit: Double = TileMath.WEB_MERCATOR_RADIUS
         set(value) {
             field = value
-            this@MapView.layerManager.invalidate()
+            layerManager.invalidate()
             invalidate()
         }
 
     var latitudeScaleFactor: (Double) -> Float = { MercatorProjection.getScaleForLatitude(it) }
         set(value) {
             field = value
-            this@MapView.layerManager.invalidate()
+            layerManager.invalidate()
             invalidate()
         }
 
 
-    private var maxScale = calculateMaxScale(minScale)
+    private val maxScale: Float
+        get() = max(2 * minScale, getScale(MIN_RESOLUTION_PIXELS))
+
     private var isScaling = false
 
     private var fitToViewBounds: CoordinateBounds? = null
@@ -325,20 +328,18 @@ class MapView(private val context: Context) : IMapView {
         get() = hooks.memo(
             "mapProjection",
             mapCenter,
-            mapCenterPixels,
             projection,
-            equatorialResolutionPixels,
+            scale,
             width,
             height,
-            zoom,
-            resolution,
+            useDensityPixelsForZoom,
             metersPerProjectedUnit,
             latitudeScaleFactor
         ) {
             val mapCenter = mapCenter
             val center = mapCenterPixels
             val projection = projection
-            val equatorialResolutionPixels = this@MapView.equatorialResolutionPixels
+            val equatorialResolutionPixels = equatorialResolutionPixels
             val metersPerProjectedUnit = metersPerProjectedUnit
             val groundResolutionPixels =
                 equatorialResolutionPixels * latitudeScaleFactor(mapCenter.latitude)
@@ -404,6 +405,7 @@ class MapView(private val context: Context) : IMapView {
                 return@TrailSenseTheme
             }
             val view = LocalView.current
+            hostView = view
             DisposableEffect(view, keepScreenOn) {
                 val previousKeepScreenOn = view.keepScreenOn
                 view.keepScreenOn = keepScreenOn
@@ -469,7 +471,6 @@ class MapView(private val context: Context) : IMapView {
         clipPath?.let { drawer.clip(it) }
         backgroundColorOverride?.let { drawer.background(it) }
 
-        maxScale = calculateMaxScale(minScale)
         zoomTo(clampScale(scale))
 
         if (pendingScaleChangeCallback) {
@@ -477,18 +478,26 @@ class MapView(private val context: Context) : IMapView {
             onScaleChange?.invoke(resolutionPixels)
         }
 
+        drawRotatedLayers()
+        drawer.pop()
+        layerManager.drawOverlay(context, drawer, this)
+
+        if (isLayerDragging && layerManager.isMagnifierVisible) {
+            magnifier.draw(drawer, layerTouch, ::drawRotatedLayers)
+        }
+    }
+
+    private fun drawRotatedLayers() {
         drawer.push()
         drawer.rotate(-mapAzimuth)
         drawLayers()
         drawer.pop()
-        drawer.pop()
-        layerManager.drawOverlay(context, drawer, this)
     }
 
     private fun drawLayers() {
         if (scale != lastScale) {
             lastScale = scale
-            this@MapView.layerManager.invalidate()
+            layerManager.invalidate()
         }
         // TODO: If map bounds changed, invalidate layers
 
@@ -499,9 +508,9 @@ class MapView(private val context: Context) : IMapView {
         return 1f / resolutionPixels
     }
 
-    fun recenter(ignoreFitToViewBounds: Boolean = false) {
+    fun recenter() {
         val fitToViewBounds = fitToViewBounds
-        if (ignoreFitToViewBounds || fitToViewBounds == null) {
+        if (fitToViewBounds == null) {
             scale = 1f
         } else {
             fitIntoView(fitToViewBounds, fitToViewPadding)
@@ -526,16 +535,14 @@ class MapView(private val context: Context) : IMapView {
 
         Optimization.newtonRaphsonIteration(scale, 0.001f, 10) {
             mapCenter = bounds.center
-            val nePixel = toPixel(constrainToBounds(bounds.northEast))
-            val sePixel = toPixel(constrainToBounds(bounds.southEast))
-            val nwPixel = toPixel(constrainToBounds(bounds.northWest))
-            val swPixel = toPixel(constrainToBounds(bounds.southWest))
-            val minX = minOf(nePixel.x, sePixel.x, nwPixel.x, swPixel.x)
-            val maxX = maxOf(nePixel.x, sePixel.x, nwPixel.x, swPixel.x)
-            val minY = minOf(nePixel.y, sePixel.y, nwPixel.y, swPixel.y)
-            val maxY = maxOf(nePixel.y, sePixel.y, nwPixel.y, swPixel.y)
-            val boxWidth = (maxX - minX).absoluteValue * paddingFactor
-            val boxHeight = (maxY - minY).absoluteValue * paddingFactor
+            val corners = listOf(
+                bounds.northEast,
+                bounds.southEast,
+                bounds.northWest,
+                bounds.southWest
+            ).map { toPixel(constrainToBounds(it)) }
+            val boxWidth = (corners.maxOf { it.x } - corners.minOf { it.x }).absoluteValue * paddingFactor
+            val boxHeight = (corners.maxOf { it.y } - corners.minOf { it.y }).absoluteValue * paddingFactor
 
             if (boxWidth == 0f || boxHeight == 0f) {
                 return@newtonRaphsonIteration 0f
@@ -550,8 +557,7 @@ class MapView(private val context: Context) : IMapView {
         invalidate()
     }
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun zoomTo(newScale: Float) {
+    private fun zoomTo(newScale: Float) {
         if (newScale == scale) {
             return
         }
@@ -559,14 +565,20 @@ class MapView(private val context: Context) : IMapView {
     }
 
     fun zoom(factor: Float) {
-        val newScale = clampScale(scale * factor)
-        val newFactor = newScale / scale
-        scale *= newFactor
+        scale = clampScale(scale * factor)
         invalidate()
     }
 
     private fun clampScale(scale: Float): Float {
-        return scale.coerceIn(minScale, max(2 * minScale, maxScale))
+        return scale.coerceIn(minScale, maxScale)
+    }
+
+    private fun rotateByAzimuth(x: Float, y: Float): Vector2 {
+        val angle = mapAzimuth
+        return Vector2(
+            x * cosDegrees(angle) - y * sinDegrees(angle),
+            x * sinDegrees(angle) + y * cosDegrees(angle)
+        )
     }
 
     private fun translatePixels(distanceX: Float, distanceY: Float) {
@@ -574,7 +586,7 @@ class MapView(private val context: Context) : IMapView {
         mapCenter = toCoordinate(newPoint)
     }
 
-    private val mGestureListener = object : GestureDetector.SimpleOnGestureListener() {
+    private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
 
         override fun onScroll(
             e1: MotionEvent?,
@@ -582,11 +594,9 @@ class MapView(private val context: Context) : IMapView {
             distanceX: Float,
             distanceY: Float
         ): Boolean {
-            if (isPanEnabled) {
-                val angle = mapAzimuth
-                val dx = distanceX * cosDegrees(angle) - distanceY * sinDegrees(angle)
-                val dy = distanceX * sinDegrees(angle) + distanceY * cosDegrees(angle)
-                translatePixels(dx, dy)
+            if (isPanEnabled && !isLayerDragging) {
+                val delta = rotateByAzimuth(distanceX, distanceY)
+                translatePixels(delta.x, delta.y)
             }
             return true
         }
@@ -611,17 +621,15 @@ class MapView(private val context: Context) : IMapView {
             velocityX: Float,
             velocityY: Float
         ): Boolean {
-            if (isPanEnabled && isFlingEnabled) {
-                val angle = mapAzimuth
-                val vx = velocityX * cosDegrees(angle) - velocityY * sinDegrees(angle)
-                val vy = velocityX * sinDegrees(angle) + velocityY * cosDegrees(angle)
+            if (isPanEnabled && isFlingEnabled && !isLayerDragging) {
+                val velocity = rotateByAzimuth(velocityX, velocityY)
                 val startX = FLING_MULTIPLIER / 2
                 val startY = FLING_MULTIPLIER / 2
                 lastFlingX = startX
                 lastFlingY = startY
                 scroller.fling(
                     startX, startY,
-                    (vx * FLING_VELOCITY_SCALE).toInt(), (vy * FLING_VELOCITY_SCALE).toInt(),
+                    (velocity.x * FLING_VELOCITY_SCALE).toInt(), (velocity.y * FLING_VELOCITY_SCALE).toInt(),
                     0, FLING_MULTIPLIER,
                     0, FLING_MULTIPLIER
                 )
@@ -636,6 +644,10 @@ class MapView(private val context: Context) : IMapView {
             if (isScaling) return
 
             val pixel = unrotated(PixelCoordinate(e.x, e.y))
+            if (::drawer.isInitialized && layerManager.onLongPress(drawer, this@MapView, pixel)) {
+                hostView?.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                return
+            }
             val location = toCoordinate(pixel)
             onLongPressCallback?.invoke(location)
         }
@@ -677,50 +689,68 @@ class MapView(private val context: Context) : IMapView {
         }
     }
 
-    private val gestureDetector = GestureDetector(context, mGestureListener)
-    private val mScaleDetector = ScaleGestureDetector(context, scaleListener)
+    private val gestureDetector = GestureDetector(context, gestureListener)
+    private val scaleDetector = ScaleGestureDetector(context, scaleListener)
+
+    private val magnifier = MapMagnifier()
+    private var isLayerDragging = false
+    private var layerTouch = PixelCoordinate(0f, 0f)
+
+    /**
+     * Lets a layer capture a touch that starts on it, so the touch drags something in the layer
+     * rather than panning the map.
+     * @return true if the touch belongs to a layer
+     */
+    private fun handleLayerDrag(event: MotionEvent): Boolean {
+        if (!::drawer.isInitialized) {
+            return false
+        }
+        layerTouch = PixelCoordinate(event.x, event.y)
+        val pixel = unrotated(layerTouch)
+        val wasDragging = isLayerDragging
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> isLayerDragging =
+                layerManager.onDragStart(drawer, this, pixel)
+
+            MotionEvent.ACTION_MOVE -> if (isLayerDragging) {
+                layerManager.onDrag(drawer, this, pixel)
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> if (isLayerDragging) {
+                isLayerDragging = false
+                layerManager.onDragEnd(drawer, this, pixel)
+            }
+        }
+
+        val isLayerTouch = wasDragging || isLayerDragging
+        if (isLayerTouch) {
+            invalidate()
+        }
+        return isLayerTouch
+    }
 
     fun onTouchEvent(event: MotionEvent): Boolean {
         if (isInteractive) {
             if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                 scroller.forceFinished(true)
             }
-            mScaleDetector.onTouchEvent(event)
+            val isLayerTouch = handleLayerDrag(event)
+            if (!isLayerTouch) {
+                scaleDetector.onTouchEvent(event)
+            }
+            // Layers still get taps and long presses, but a layer drag doesn't pan the map
             gestureDetector.onTouchEvent(event)
         }
         return true
     }
 
     private fun unrotated(pixel: PixelCoordinate): PixelCoordinate {
-        val point = PointF(pixel.x, pixel.y)
-        return transform(point, invert = true, inPlace = true) {
-            postRotate(-mapAzimuth, width / 2f, height / 2f)
-        }.let { PixelCoordinate(it.x, it.y) }
-    }
-
-    private fun transform(
-        point: PointF,
-        invert: Boolean = false,
-        inPlace: Boolean = false,
-        actions: Matrix.() -> Unit
-    ): PointF {
+        val point = floatArrayOf(pixel.x, pixel.y)
         synchronized(lookupMatrix) {
-            lookupMatrix.reset()
-            actions(lookupMatrix)
-            if (invert) {
-                lookupMatrix.invert(lookupMatrix)
-            }
-            val pointArray = floatArrayOf(point.x, point.y)
-            lookupMatrix.mapPoints(pointArray)
-
-            if (inPlace) {
-                point.x = pointArray[0]
-                point.y = pointArray[1]
-                return point
-            }
-
-            return PointF(pointArray[0], pointArray[1])
+            lookupMatrix.setRotate(mapAzimuth, width / 2f, height / 2f)
+            lookupMatrix.mapPoints(point)
         }
+        return PixelCoordinate(point[0], point[1])
     }
 
     fun setOnScaleChangeListener(
@@ -737,10 +767,6 @@ class MapView(private val context: Context) : IMapView {
 
     override fun setOnGeoJsonFeatureClickListener(listener: ((GeoJsonFeature) -> Unit)?) {
         layerManager.setOnGeoJsonFeatureClickListener(listener)
-    }
-
-    private fun calculateMaxScale(minScale: Float): Float {
-        return max(2 * minScale, getScale(MIN_RESOLUTION_PIXELS))
     }
 
     private fun constrainToBounds(location: Coordinate): Coordinate {

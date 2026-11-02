@@ -1,48 +1,36 @@
 ---
 name: android-check-pr-translations
-description: Audit translation accuracy for strings changed in a GitHub PR. Use when asked to check, review, audit, or verify translations in a pull request. Identifies inaccurate translated strings by comparing PR changes against the English source.
+description: Audit changed Android translations in a GitHub PR.
+disable-model-invocation: true
 ---
 
 # Check PR Translations
 
-Audit the translation accuracy of Android string resources changed in a GitHub pull request.
+Audit the translation accuracy of Android string resources and localized guide files changed in a GitHub pull request.
 
 ## Workflow
 
-1. Run the extraction script from the skill's folder to get the changed strings from the PR:
+1. Run the extraction script from this skill's folder to get the changed translated content from the PR:
    ```
-   python scripts/extract_pr_strings.py <pr-number>
+   python3 scripts/extract_pr_strings.py <pr-number> --output /tmp/pr-strings.json
    ```
-   The output includes both the translated value and the English source for each changed key — no repo search needed.
+   Read the extracted JSON from `/tmp/pr-strings.json`.
+   This step is complete when the output includes:
+   - `locales`: changed translated `<string>` resources with the English source for each key.
+   - `files`: changed localized guide `.txt` files, including guide pages, field guides, and `tool_keywords.txt`, with the matching `guides/en-US/...` source text.
 
-2. For each entry in `added`, compare `value` (translation) against `english` (source) using the accuracy criteria below.
-
-3. Report findings as JSON (see Output Format).
-
-## Accuracy Criteria
-
-**Counts as inaccurate:**
-- The meaning is changed or distorted
-- Content is added that isn't in the source (extra phrases, opinions, embellishments)
-- Content is omitted that IS in the source
-- Tone is significantly altered (e.g., formal → casual or vice versa) in a way that changes user-facing meaning
-- Placeholders/variables (e.g., `%s`, `%1$d`, `%2$s`) are missing, reordered incorrectly, or altered
-- HTML tags or formatting present in source are removed or changed in a way that affects meaning
-- The translation introduces region-specific idioms or cultural spin not implied by the source
-
-**Does NOT count as inaccurate:**
-- Natural grammatical restructuring required by the target language
-- Pluralization differences due to language rules
-- Articles/pronouns added because the target language requires them
-- Word order changes due to target language syntax rules
+2. Use the /translation-review skill to review each of the locales and files translations. Include the string key and locale name in your finding so I can identify which language has the inaccurate translation.
+3. If the field guide contains a localized or changed Wikipedia link, check that the link is valid and points to the same topic as the English source.
 
 ## Extraction Script: `scripts/extract_pr_strings.py` (skill-local)
 
-The script parses the output of `gh pr diff` and extracts `<string>` elements from `res/values-*/strings.xml` patch hunks.
+The script parses the output of `gh pr diff` and extracts:
+- Added and removed `<string>` elements from `res/values-*/strings.xml` patch hunks.
+- Added and removed lines from localized guide text files under `guides/<locale>/*.txt`, excluding `guides/en-US`.
 
 **Usage:**
 ```
-python scripts/extract_pr_strings.py <pr-number>
+python3 scripts/extract_pr_strings.py <pr-number> --output /tmp/pr-strings.json
 ```
 
 **Output schema:**
@@ -54,38 +42,24 @@ python scripts/extract_pr_strings.py <pr-number>
       "added":   [{"key": "some_key", "value": "translated text", "english": "English source text"}],
       "removed": [{"key": "old_key",  "value": "old translated text", "english": "English source text"}]
     }
-  }
-}
-```
-
-- `added` — strings newly introduced or whose value was changed (new value)
-- `removed` — strings that were deleted or whose value was changed (old value)
-- `english` — the corresponding value from `app/src/main/res/values/strings.xml`; empty string if the key is not found
-- Only `res/values-*/strings.xml` files are included; the English `res/values/strings.xml` is excluded
-
-## Output Format
-
-Output ONLY a JSON blob:
-
-```json
-{
-  "pr_number": 1234,
-  "inaccurate_translations": [
+  },
+  "files": [
     {
-      "key": "key_name",
-      "locale": "values-xx",
-      "reason": "Why it is inaccurate"
+      "path": "guides/pl-rPL/tool_keywords.txt",
+      "locale": "pl-rPL",
+      "english_path": "guides/en-US/tool_keywords.txt",
+      "english": "English source text...",
+      "added": [{"hunk": "@@ ...", "lines": ["translated text"]}],
+      "removed": [{"hunk": "@@ ...", "lines": ["old translated text"]}]
     }
   ]
 }
 ```
 
-If all translations are accurate:
-```json
-{
-  "pr_number": 1234,
-  "inaccurate_translations": []
-}
-```
-
-Do not output any explanation, commentary, or text outside the JSON blob.
+- `locales.*.added` — strings newly introduced or whose value was changed (new value)
+- `locales.*.removed` — strings that were deleted or whose value was changed (old value)
+- `locales.*.english` — the corresponding value from `app/src/main/res/values/strings.xml`; empty string if the key is not found
+- Only `res/values-*/strings.xml` files are included; the English `res/values/strings.xml` is excluded
+- `files[].added` — added or changed translated guide lines grouped into contiguous diff blocks
+- `files[].removed` — removed translated guide lines grouped into contiguous diff blocks
+- `files[].english` — the complete matching English source guide file; empty string if the source file is not found

@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.text
 
 import android.content.Context
 import androidx.annotation.RawRes
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishContractionSplitter
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishStopWordRemover

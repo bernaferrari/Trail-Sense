@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.test_utils
 
 import androidx.annotation.StringRes
 import androidx.test.uiautomator.Direction
+import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
@@ -17,6 +18,7 @@ import com.kylecorry.trail_sense.test_utils.views.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.views.viewWithHint
 import com.kylecorry.trail_sense.test_utils.views.viewWithText
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
@@ -118,10 +120,11 @@ object AutomationLibrary {
         text: Regex,
         checkDescendants: Boolean = true,
         index: Int = 0,
+        childId: Int? = null,
         waitForTime: Long? = null
     ) {
         waitFor(resolveWaitForTime(waitForTime)) {
-            view(id, index = index, packageName = packageName).hasText(
+            view(id, childId = childId, index = index, packageName = packageName).hasText(
                 text,
                 checkDescendants = checkDescendants
             )
@@ -154,6 +157,38 @@ object AutomationLibrary {
         waitFor(resolveWaitForTime(waitForTime)) {
             viewWithText(r.toPattern(), index = index)
         }
+    }
+
+    /**
+     * Verifies the texts of all of the visible views with the given ID, from top to bottom.
+     */
+    fun hasTextsInOrder(id: Int, texts: List<String>, waitForTime: Long? = null) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            assertEquals(texts, getTexts(id))
+        }
+    }
+
+    /**
+     * Verifies a data point (ex. a stat tile) is visible with the given value and label.
+     */
+    fun hasDataPoint(value: String, label: String, waitForTime: Long? = null) {
+        hasDataPoint(Regex(Regex.escape(value)), label, waitForTime)
+    }
+
+    fun hasDataPoint(value: Regex, label: String, waitForTime: Long? = null) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            val values = getTexts(R.id.data_point_title)
+            val labels = getTexts(R.id.data_point_desc)
+            val dataPoints = values.zip(labels)
+            assertTrue(
+                "Expected data point $value / $label but was $dataPoints",
+                dataPoints.any { (v, l) -> value.matches(v.trim()) && l.trim() == label }
+            )
+        }
+    }
+
+    private fun getTexts(id: Int): List<String> {
+        return TestUtils.device.findObjects(byResId(id, packageName)).map { it.text ?: "" }
     }
 
     fun any(vararg actions: () -> Unit, waitForTime: Long? = null) {
@@ -233,12 +268,27 @@ object AutomationLibrary {
         return TestUtils.getString(id, *args)
     }
 
-    fun optional(block: () -> Unit) {
+    /**
+     * Runs the block, ignoring failures. Pass a [waitForTime] when the block is only a quick check
+     * for something that is usually absent, otherwise every miss costs the default timeout.
+     */
+    fun optional(waitForTime: Long? = null, block: () -> Unit) {
         try {
-            block()
+            if (waitForTime == null) {
+                block()
+            } else {
+                withWaitForTimeOverride(waitForTime, block)
+            }
         } catch (_: Throwable) {
             // Do nothing
         }
+    }
+
+    /**
+     * Dismisses a confirmation dialog which only appears in some states (ex. already navigating).
+     */
+    fun clickOkIfShown() {
+        optional(OPTIONAL_WAIT_FOR_TIMEOUT) { clickOk() }
     }
 
     fun not(waitForTime: Long? = null, block: () -> Unit) {
@@ -410,7 +460,7 @@ object AutomationLibrary {
             view(id, packageName = packageName).input(text, checkDescendants)
         }
         if (closeKeyboardOnCompletion) {
-            TestUtils.back(false)
+            TestUtils.closeKeyboard()
         }
     }
 
@@ -521,9 +571,11 @@ object AutomationLibrary {
     ) {
         var scrollsDone = 0
         var failedScrollCount = 0
+        // The content may still be loading on the first attempt, but scrolling waits for it to settle
+        var attemptTimeout = SCROLL_WAIT_FOR_TIMEOUT
         while (scrollsDone < maxScrolls) {
             try {
-                withWaitForTimeOverride(SCROLL_WAIT_FOR_TIMEOUT) {
+                withWaitForTimeOverride(attemptTimeout) {
                     action()
                 }
                 // Action succeeded, no need to scroll further
@@ -544,6 +596,7 @@ object AutomationLibrary {
                 } else {
                     failedScrollCount = 0
                     scrollsDone++
+                    attemptTimeout = SCROLLED_WAIT_FOR_TIMEOUT
                 }
             }
         }
@@ -601,6 +654,8 @@ object AutomationLibrary {
 
     const val BACK_WAIT_FOR_TIMEOUT = 1000L
     const val SCROLL_WAIT_FOR_TIMEOUT = 1000L
+    const val SCROLLED_WAIT_FOR_TIMEOUT = 300L
+    const val OPTIONAL_WAIT_FOR_TIMEOUT = 2000L
     const val DEFAULT_WAIT_FOR_TIMEOUT = 7000L
-    const val GPS_WAIT_FOR_TIMEOUT = 15000L
+    const val GPS_WAIT_FOR_TIMEOUT = 35000L
 }

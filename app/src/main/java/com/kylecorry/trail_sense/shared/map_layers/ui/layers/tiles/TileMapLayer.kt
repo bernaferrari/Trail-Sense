@@ -9,7 +9,6 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.setBlendMode
 import androidx.core.graphics.withMatrix
@@ -23,8 +22,11 @@ import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.errors.SafeMode
-import com.kylecorry.trail_sense.shared.getBounds
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.concurrency.CustomDispatchers
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
+import com.kylecorry.trail_sense.shared.map_layers.MapViewState
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ImageTile
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
@@ -38,6 +40,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -53,6 +56,7 @@ open class TileMapLayer<T : TileSource>(
     private val refreshBroadcasts: List<String> = emptyList(),
     private val cacheKeys: List<String>? = null
 ) : IAsyncLayer {
+    private val runtimeId = UUID.randomUUID().toString()
     private var _timeOverride: Instant? = null
     private var _renderTime: Instant = Instant.now()
     override var isLoaded: Boolean = false
@@ -84,6 +88,12 @@ open class TileMapLayer<T : TileSource>(
     private val clipPath = Path()
     protected var layerPreferences: Bundle = Bundle()
     private var featureId: String? = null
+    private var wasOverTileLimit = false
+    private val visibleTiles = VisibleTileCache(MAX_TILES)
+    private var lastDesiredTiles: List<Tile>? = null
+    private var renderedProjection: IMapViewProjection? = null
+    private val projectedTiles = mutableMapOf<Tile, Array<PixelCoordinate>>()
+    private var hasFadingTiles = false
 
     private val loadTimer = CoroutineTimer {
         queue.load(maxOf(4, Runtime.getRuntime().availableProcessors()))
@@ -144,14 +154,6 @@ open class TileMapLayer<T : TileSource>(
             return
         }
 
-        // Load tiles if needed
-        taskRunner.scheduleUpdate(
-            context,
-            drawer.getBounds(45f), // TODO: Cache this
-            map.mapBounds,
-            map.mapProjection
-        )
-
         // Render loaded tiles
         var shouldSaveLayer = false
         try {
@@ -165,6 +167,19 @@ open class TileMapLayer<T : TileSource>(
                 drawer.pop()
             }
         }
+    }
+
+    override fun onViewChanged(state: MapViewState) {
+        if (SafeMode.isEnabled()) {
+            return
+        }
+
+        taskRunner.scheduleUpdate(
+            state.context,
+            state.viewBounds,
+            state.bounds,
+            state.projection
+        )
     }
 
     override fun drawOverlay(context: Context, drawer: ICanvasDrawer, map: IMapView) {
@@ -186,12 +201,16 @@ open class TileMapLayer<T : TileSource>(
     private fun renderTiles(context: Context, canvas: Canvas, map: IMapView) {
         val bounds = map.mapBounds
         val projection = map.mapProjection
-        val desiredTiles = getTiles(
-            bounds,
-            projection
-        )
-
-        queue.setDesiredTiles(desiredTiles)
+        val desiredTiles = visibleTiles.get(bounds, projection.zoom.roundToInt(), zoomOffset)
+        if (projection !== renderedProjection || projectedTiles.size > MAX_TILES * 2) {
+            projectedTiles.clear()
+            renderedProjection = projection
+        }
+        hasFadingTiles = false
+        if (desiredTiles !== lastDesiredTiles) {
+            queue.setDesiredTiles(desiredTiles)
+            lastDesiredTiles = desiredTiles
+        }
         if (desiredTiles.size <= MAX_TILES &&
             (desiredTiles.firstOrNull()?.z ?: 0) >= (minZoomLevel ?: 0)
         ) {
@@ -201,12 +220,20 @@ open class TileMapLayer<T : TileSource>(
                 layerPreferences,
                 featureId,
                 map.isWidget,
-                map.isHighDetailMode,
-                context
+                isHighDetailMode = map.isHighDetailMode,
+                context = context
             )
-        } else if (desiredTiles.size > MAX_TILES) {
-            Log.d("TileLoader", "Too many tiles to load: ${desiredTiles.size}")
         }
+
+        // This runs every frame, so only log when the limit is first exceeded
+        val isOverTileLimit = desiredTiles.size > MAX_TILES
+        if (isOverTileLimit && !wasOverTileLimit) {
+            getAppService<Logger>().debug(
+                TAG,
+                "Too many tiles to load for $layerId: ${desiredTiles.size} > $MAX_TILES (z${desiredTiles.firstOrNull()?.z})"
+            )
+        }
+        wasOverTileLimit = isOverTileLimit
 
         getTilesToRender(desiredTiles).forEach { renderTile ->
             renderTile.imageTile.withImage { bitmap ->
@@ -226,6 +253,9 @@ open class TileMapLayer<T : TileSource>(
                     }
                 }
             }
+        }
+        if (hasFadingTiles) {
+            notifyListeners()
         }
     }
 
@@ -333,11 +363,11 @@ open class TileMapLayer<T : TileSource>(
         bitmap: Bitmap
     ) {
         val tile = imageTile.tile
-        val bounds = tile.getBounds()
-        val topLeftPixel = projection.toPixels(bounds.northWest)
-        val topRightPixel = projection.toPixels(bounds.northEast)
-        val bottomRightPixel = projection.toPixels(bounds.southEast)
-        val bottomLeftPixel = projection.toPixels(bounds.southWest)
+        val corners = getProjectedCorners(tile, projection)
+        val topLeftPixel = corners[0]
+        val topRightPixel = corners[1]
+        val bottomRightPixel = corners[2]
+        val bottomLeftPixel = corners[3]
 
         if (isTooSmall(topLeftPixel, topRightPixel, bottomLeftPixel, bottomRightPixel)) {
             return
@@ -411,7 +441,7 @@ open class TileMapLayer<T : TileSource>(
             tilePaint.alpha = imageTile.getAlpha()
             // There are still tiles being faded in, so keep re-rendering the map
             if (tilePaint.alpha != 255) {
-                notifyListeners()
+                hasFadingTiles = true
             }
 
             drawBitmap(bitmap, srcRect, destRect, tilePaint)
@@ -427,11 +457,11 @@ open class TileMapLayer<T : TileSource>(
         bitmap: Bitmap,
         clipTile: Tile
     ) {
-        val clipBounds = clipTile.getBounds()
-        val clipTopLeft = projection.toPixels(clipBounds.northWest)
-        val clipTopRight = projection.toPixels(clipBounds.northEast)
-        val clipBottomRight = projection.toPixels(clipBounds.southEast)
-        val clipBottomLeft = projection.toPixels(clipBounds.southWest)
+        val corners = getProjectedCorners(clipTile, projection)
+        val clipTopLeft = corners[0]
+        val clipTopRight = corners[1]
+        val clipBottomRight = corners[2]
+        val clipBottomLeft = corners[3]
 
         canvas.withSave {
             clipPath.rewind()
@@ -445,15 +475,17 @@ open class TileMapLayer<T : TileSource>(
         }
     }
 
-    private fun getTiles(bounds: CoordinateBounds, projection: IMapViewProjection): List<Tile> {
-        val zoom = projection.zoom.roundToInt()
-        var adjustedOffset = zoomOffset + 1
-        var tiles: List<Tile>
-        do {
-            adjustedOffset--
-            tiles = TileMath.getTiles(bounds, (zoom + adjustedOffset).coerceAtMost(20))
-        } while (tiles.size > MAX_TILES && (zoom + adjustedOffset) > 1)
-        return tiles
+    private fun getProjectedCorners(
+        tile: Tile,
+        projection: IMapViewProjection
+    ): Array<PixelCoordinate> = projectedTiles.getOrPut(tile) {
+        val bounds = tile.getBounds()
+        arrayOf(
+            projection.toPixels(bounds.northWest),
+            projection.toPixels(bounds.northEast),
+            projection.toPixels(bounds.southEast),
+            projection.toPixels(bounds.southWest)
+        )
     }
 
     override fun setHasUpdateListener(listener: (() -> Unit)?) {
@@ -466,7 +498,7 @@ open class TileMapLayer<T : TileSource>(
             source,
             queue,
             TILE_BORDER_PIXELS,
-            tag = layerId,
+            tag = "$layerId-$runtimeId",
             key = getCacheKey()
         ) {
             notifyListeners()
@@ -487,6 +519,8 @@ open class TileMapLayer<T : TileSource>(
         taskRunner.stop()
         loader?.clearCache()
         loader = null
+        projectedTiles.clear()
+        renderedProjection = null
         queue.clear()
         // TODO: This isn't the ideal place to do cleanup since garbage can build up. Likely need some sort of LRU cache for all intermediates.
         sourceCleanupTask.start()
@@ -494,11 +528,10 @@ open class TileMapLayer<T : TileSource>(
 
     fun refresh() {
         refreshTime()
+        source.invalidate()
         loadTimer.stop()
         queue.clear()
-        loader?.tileCache?.snapshot()?.forEach {
-            it.value.invalidate()
-        }
+        loader?.invalidateCache()
         isLoaded = false
         loadTimer.interval(100)
         invalidate()
@@ -556,6 +589,12 @@ open class TileMapLayer<T : TileSource>(
 
     companion object {
         const val MAX_TILES = 150
+        private const val TAG = "TileMapLayer"
         private const val TILE_BORDER_PIXELS = 2
+        private val maxConcurrentLoads = minOf(4, Runtime.getRuntime().availableProcessors())
+        private val tileLoadDispatcher = CustomDispatchers.newFixedThreadDispatcher(
+            threads = maxConcurrentLoads,
+            name = "TileMapLayer"
+        )
     }
 }

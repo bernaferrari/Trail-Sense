@@ -71,7 +71,9 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
+import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachedAltimeter
 import com.kylecorry.trail_sense.shared.sensors.altimeter.OverrideAltimeter
@@ -502,13 +504,11 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             return Resources.color(host.requireContext(), R.color.red)
         }
 
-        if (Duration.between(gps.time, Instant.now()) > Duration.ofMinutes(2)) {
+        if (getAppService<LocationSubsystem>().isLocationStale) {
             return Resources.color(host.requireContext(), R.color.yellow)
         }
 
-        if (!gps.hasValidReading || (prefs.requiresSatellites && (gps.satellites
-                ?: 0) < 4) || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)
-        ) {
+        if (!gps.hasValidReading || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)) {
             return Resources.color(host.requireContext(), R.color.yellow)
         }
 
@@ -556,13 +556,11 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             return host.getString(R.string.unavailable)
         }
 
-        if (Duration.between(gps.time, Instant.now()) > Duration.ofMinutes(2)) {
+        if (getAppService<LocationSubsystem>().isLocationStale) {
             return host.getString(R.string.gps_stale)
         }
 
-        if (!gps.hasValidReading || (prefs.requiresSatellites && (gps.satellites
-                ?: 0) < 4) || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)
-        ) {
+        if (!gps.hasValidReading || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)) {
             return host.getString(R.string.gps_searching)
         }
 

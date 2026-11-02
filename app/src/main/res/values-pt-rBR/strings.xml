@@ -138,7 +138,6 @@
     <string name="pref_elevation_override_sea_level_dialog_title">Digite a pressão ao nível do mar</string>
     <string name="pref_auto_declination_summary">Com base em sua localização atual</string>
     <string name="location">Localização</string>
-    <string name="pref_auto_location_title">Ajuste automático de localização</string>
     <string name="request_permission">Solicitar permissão</string>
     <string name="calibrate">Calibrar</string>
     <string name="calibrate_compass_dialog_title">Calibrar bússola</string>
@@ -234,8 +233,6 @@
     <string name="tool_solar_panel_title">Alinhador de Painel Solar</string>
     <string name="tool_solar_panel_summary">Posicione os painéis solares para otimizar a produção de energia</string>
     <string name="pref_privacy_policy_title">Política de privacidade</string>
-    <string name="guide_recommended_apps_description">Apps muito úteis para situações de sobrevivência</string>
-    <string name="guide_recommended_apps">Aplicativos recomendados</string>
     <string name="unit_nautical_miles">Milhas náuticas</string>
     <string name="unit_miles">Milhas</string>
     <string name="unit_feet">Pés</string>
@@ -323,7 +320,6 @@
     <string name="cumulus_desc">Nuvens baixas e fofas que parecem bolas de algodão. São espaçadas e normalmente são brancas com manchas mais escuras abaixo.</string>
     <string name="unavailable">Indisponível</string>
     <string name="gps_searching">Procurando</string>
-    <string name="gps_stale">Obsoleto</string>
     <string name="gps_user">Usuário</string>
     <string name="import_btn">Importar</string>
     <string name="export">Exportar</string>
@@ -347,8 +343,6 @@
     <string name="cirrostratus">Cirrostratus</string>
     <string name="cirrocumulus">Cirrocumulus</string>
     <string name="cirrus">Cirro</string>
-    <string name="pref_require_satellites_description">Requer pelo menos 4 satélites, melhora a precisão</string>
-    <string name="pref_require_satellites_title">Requer estabilização de sinais de satélites</string>
     <string name="clouds">Nuvens</string>
     <string name="how">Como</string>
     <string name="compass_calibrate_toast">Precisão da bússola %s, recomenda-se a calibração</string>
@@ -388,8 +382,6 @@
     <string name="map_scale_verbal">Verbal</string>
     <string name="unit_inches_abbreviation">in</string>
     <string name="unit_centimeters_abbreviation">cm</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="location_override_updated">Local simulado atualizado</string>
     <string name="update_gps_override">Atualizar GPS simulado</string>
     <string name="coordinate_format_mgrs">MGRS</string>
@@ -479,7 +471,6 @@
     <string name="sensor_gyroscope">Giroscópio</string>
     <string name="import_map">Importar mapa</string>
     <string name="pref_cell_signal_refresh_cache_title">Atualizar o cache do sinal da rede móvel</string>
-    <string name="pref_navigation_lock_screen_presence_title">Mostrar na tela de bloqueio durante a navegação</string>
     <string name="map_perspective_instructions">Descreva o mapa</string>
     <string name="preview">Pré-visualização</string>
     <string name="moved_to">Movido para %s</string>
@@ -488,8 +479,6 @@
     <string name="coordinates_tab">Coordenadas</string>
     <string name="distance">Distância</string>
     <string name="convert">Converter</string>
-    <string name="pref_nmea_elevation_summary">Utilizar NMEA (satélite) para corrigir altitudes, ao invés do modelo integrado</string>
-    <string name="pref_nmea_elevation_title">Correção de altitude NMEA</string>
     <string name="pref_barometer_info_summary">A pressão pode ser diferente da pressão das estações próximas</string>
     <string name="battery_history">Histórico da bateria - últimos %s</string>
     <string name="weather_monitor">Monitoramento do clima</string>
@@ -585,7 +574,6 @@
     <string name="pref_map_url_source_title">Mapa de compartilhamento da localização</string>
     <string name="clear_cache">Limpar o cache</string>
     <string name="destination_elevation">Altitude de destino</string>
-    <string name="base_temperature">Temperatura base</string>
     <string name="base_elevation">Altitude base</string>
     <string name="weight_per_item">Peso por item</string>
     <string name="pack_sort_weight_high_to_low">Peso (alto a baixo)</string>
@@ -771,7 +759,6 @@
     <string name="low_tide_letter">B</string>
     <string name="hard">Difícil</string>
     <string name="simplifying">Simplificando</string>
-    <string name="simplification_quality">Qualidade de simplificação</string>
     <string name="gps_unavailable">GPS indisponível</string>
     <string name="gps_timeouts">Intervalos no GPS</string>
     <string name="qr_code_scanner">Leitor de código QR</string>
@@ -819,11 +806,9 @@
     <string name="current_speed_gps">Velocidade atual (GPS)</string>
     <string name="average_speed_pedometer">Velocidade média (Pedômetro)</string>
     <string name="average_speed_backtrack">Velocidade média (Recuar)</string>
-    <string name="navigating_to_nearest_path_point">Navegando até o ponto mais próximo do percurso</string>
     <string name="beacons">Pontos de orientação</string>
     <string name="pref_start_on_boot_title">Executar ao iniciar</string>
     <string name="duration_second_format">%ds</string>
-    <string name="since_time">desde %s</string>
     <string name="pref_default_path_color_title">Cor padrão do percurso</string>
     <string name="humidity_history">Histórico de umidade - último %s</string>
     <string name="temperature_history">Histórico de temperatura - último %s</string>
@@ -838,7 +823,6 @@
     <string name="square">Quadrado</string>
     <string name="diamond">Diamante</string>
     <string name="cross">Cruz</string>
-    <string name="pref_only_navigate_path_points_title">Navegar somente até pontos registrados</string>
     <string name="bearing">Rumo</string>
     <plurals name="path_group_summary">
         <item quantity="one">%d percurso</item>
@@ -928,7 +912,6 @@
     <string name="i_agree">Eu concordo</string>
     <string name="samples">Amostras</string>
     <string name="sensor_summary">Bússola, GPS, altímetro, barômetro etc.</string>
-    <string name="calibrate_map_point">Calibrar com localizações conhecidas (%1$d / %2$d)</string>
     <string name="low_pressure_system_description">Associado a um clima ruim, céu nublado e temperaturas mais quentes.</string>
     <plurals name="map_group_summary">
         <item quantity="one">%d mapa</item>
@@ -1094,7 +1077,6 @@
     <string name="audio_error_messsage">Ocorreu um erro ao tentar reproduzir o áudio.</string>
     <string name="layers">Camadas</string>
     <string name="grid">Grade</string>
-    <string name="date">Data</string>
     <string name="tool_quick_action_name">Ferramenta: %s</string>
     <string name="pref_start_camera_in_3d_view_title">Use a câmera para visualização em 3D</string>
     <string name="pref_start_camera_in_3d_view_summary">Abre a câmera quando você tocar no botão \"Visualizar em 3D\"</string>
@@ -1117,7 +1099,6 @@
     <string name="visible">Visível</string>
     <string name="ar_layer_override_message">As configurações de camada podem ser substituídas por orientações, como o guia Astronomia.</string>
     <string name="ar_calibration_disclaimer">Antes de cada uso da ferramenta de Realidade Aumentada, verifique se os ícones de sol ou lua estão alinhados corretamente com o mundo real. Caso contrário, toque no ícone da bússola no canto superior esquerdo da tela e siga as instruções para calibrar.</string>
-    <string name="forecast_algorithm">Algoritmo de previsão</string>
     <string name="no_sensor_unable_to_fix">Não, infelizmente essa é uma função de hardware, portanto não há nada que possa ser feito para adicioná-lo.</string>
     <string name="true_north_description">Aponta para o \"Pólo Norte\" geográfico usando a declinação da sua localização. Isso se alinhará com a maioria dos mapas.</string>
     <string name="missing_sensor_explanation">Alguns fabricantes de telefones optam por não adicionar esse sensor, mesmo em dispositivos novos ou caros. Para obter mais informações, visite o site do fabricante do seu dispositivo ou entre em contato com ele.</string>
@@ -1130,7 +1111,6 @@
     <string name="use_gyroscope_after_calibration">Use o giroscópio após a calibração</string>
     <string name="use_gyroscope_after_calibration_description">Em vez da bússola (evita o desvio magnético)</string>
     <string name="reset_calibration_question">Redefinir a calibração?</string>
-    <string name="smooth_gps_readings">Leituras de GPS suaves</string>
     <string name="pref_flashlight_control_screen_with_volume_title">Controlar o brilho da tela com botões de volume</string>
     <string name="estimate_method">Método de estimativa</string>
     <string name="lunitidal_interval">Intervalo lunar</string>
@@ -1431,7 +1411,6 @@
     <string name="widget_theme_black_text">Texto preto</string>
     <string name="widget_theme_white_text">Texto branco</string>
     <string name="default_widget_theme">Tema de widget padrão</string>
-    <string name="cancel_navigation_question">Cancelar navegação?</string>
     <string name="elevation_value">Altitude: %s</string>
     <string name="show_pressure_forecast">Mostrar previsão de pressão no gráfico</string>
     <string name="moa_amount">%s MOA</string>

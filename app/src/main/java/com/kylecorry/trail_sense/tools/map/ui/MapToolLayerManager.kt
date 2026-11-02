@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.map.ui
 import android.content.Context
 import android.graphics.Color
 import android.view.View
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.sol.science.geography.Geography
@@ -24,13 +24,17 @@ import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
 import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceLayer
+import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
 import java.time.Instant
 
 class MapToolLayerManager {
     private val selectedPointLayer = ConfigurableGeoJsonLayer()
-    private val distanceLayer = MapDistanceLayer()
+    private val distanceLayer = MapDistanceLayer().apply { isEnabled = false }
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
-    private val repo = AppServiceRegistry.get<MapLayerPreferenceRepo>()
+    private var onDistanceEditStateChanged: ((PathEditState) -> Unit)? = null
+    private val elevationPrefetcher = PathElevationPrefetcher()
+    private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
 
     var key: Int = 0
 
@@ -51,7 +55,6 @@ class MapToolLayerManager {
                             CompassOverlayLayer.LAYER_ID,
                         ),
                 listOf(
-
                     selectedPointLayer,
                     distanceLayer
                 )
@@ -59,7 +62,8 @@ class MapToolLayerManager {
 
             // Hardcoded configuration
             distanceLayer.onPathChanged = { onDistancePathChange(it) }
-            distanceLayer.isEnabled = false
+            distanceLayer.onPathDragged = { updateDistance(it) }
+            distanceLayer.onEditStateChanged = { onDistanceEditStateChanged?.invoke(it) }
             (view.getLayerById(CompassOverlayLayer.LAYER_ID) as? CompassOverlayLayer)?.paddingTopDp =
                 48f
 
@@ -85,6 +89,7 @@ class MapToolLayerManager {
         synchronized(runningLock) {
             isRunning = false
             view.stop()
+            view.layerManager.setOnGeoJsonFeatureClickListener(null)
         }
     }
 
@@ -112,7 +117,11 @@ class MapToolLayerManager {
     // Distance measurement
 
     private fun onDistancePathChange(points: List<Coordinate>) {
-        // Display distance
+        elevationPrefetcher.update(points)
+        updateDistance(points)
+    }
+
+    private fun updateDistance(points: List<Coordinate>) {
         val distance = Geography.getPathDistance(points)
         onDistanceChangedCallback?.invoke(distance)
     }
@@ -130,11 +139,27 @@ class MapToolLayerManager {
         distanceLayer.undo()
     }
 
+    fun redoDistanceMeasurement() {
+        distanceLayer.redo()
+    }
+
+    fun getDistanceEditState(): PathEditState {
+        return distanceLayer.editState
+    }
+
+    fun setOnDistanceEditStateChangedCallback(callback: ((PathEditState) -> Unit)?) {
+        onDistanceEditStateChanged = callback
+    }
+
     fun getDistanceMeasurementPoints(): List<Coordinate> {
         return distanceLayer.getPoints()
     }
 
-    fun startDistanceMeasurement(initialPoints: Array<Coordinate>) {
+    fun getDistanceMeasurementElevations(): Map<Coordinate, Float> {
+        return elevationPrefetcher.getElevations()
+    }
+
+    fun startDistanceMeasurement(initialPoints: List<Coordinate>) {
         distanceLayer.isEnabled = true
         distanceLayer.clear()
         initialPoints.forEach { distanceLayer.add(it) }

@@ -9,15 +9,17 @@ import com.kylecorry.andromeda.background.TaskSchedulerFactory
 import com.kylecorry.andromeda.background.services.ForegroundInfo
 import com.kylecorry.andromeda.background.services.IntervalService
 import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
+import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
+import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.CurrentWeatherAlerter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import java.time.Duration
 
 class WeatherMonitorService :
-    IntervalService(wakelockDuration = Duration.ofSeconds(30), useOneTimeWorkers = true) {
+    IntervalService(wakelockDuration = Duration.ofSeconds(60), useOneTimeWorkers = true) {
 
     private val prefs by lazy { UserPreferences(applicationContext) }
 
@@ -26,7 +28,7 @@ class WeatherMonitorService :
         return ForegroundInfo(
             WEATHER_NOTIFICATION_ID,
             CurrentWeatherAlerter.getDefaultNotification(applicationContext),
-            if (!Permissions.canStartLocationForgroundService(applicationContext)) {
+            if (!Permissions.canStartLocationForegroundService(applicationContext)) {
                 listOf(ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
             } else {
                 // This shouldn't be needed, but I was seeing several crashes on Android 14 around security exceptions (might be a known bug in Android), so I'm adding it to experiment
@@ -49,17 +51,15 @@ class WeatherMonitorService :
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        getAppService<Logger>().info(TAG, "Started (period: $period, restarted by system: ${intent == null})")
         isRunning = true
-        try {
-            return super.onStartCommand(intent, flags, startId)
-        } catch (e: Exception) {
-            ServiceRestartAlerter(this).alert()
-            stopSelf()
-            return START_NOT_STICKY
+        return tryStartForegroundOrNotify {
+            super.onStartCommand(intent, flags, startId)
         }
     }
 
     override fun onDestroy() {
+        getAppService<Logger>().info(TAG, "Stopped")
         isRunning = false
         stopService(true)
         super.onDestroy()
@@ -68,6 +68,7 @@ class WeatherMonitorService :
     companion object {
 
         const val WEATHER_NOTIFICATION_ID = 1
+        private const val TAG = "WeatherMonitorService"
 
         var isRunning = false
             private set

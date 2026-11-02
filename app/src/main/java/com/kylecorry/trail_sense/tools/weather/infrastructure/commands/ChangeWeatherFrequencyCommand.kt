@@ -4,9 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
-import kotlinx.coroutines.runBlocking
+import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import java.time.Duration
 
 class ChangeWeatherFrequencyCommand(
@@ -22,10 +20,7 @@ class ChangeWeatherFrequencyCommand(
 
         prefs.weather.weatherUpdateFrequency = frequency
         onChange(frequency)
-        runBlocking {
-            Tools.getService(context, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)
-                ?.restart()
-        }
+        WeatherMonitorScheduler.restart(context)
         if (frequency < Duration.ofMinutes(15)) {
             Alerts.dialog(
                 context,

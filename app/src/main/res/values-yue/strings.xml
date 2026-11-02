@@ -140,7 +140,6 @@
     <string name="compass_accuracy_improved">羅經準繩有見進步，現為 %s</string>
     <string name="gps">GPS</string>
     <string name="location">定位</string>
-    <string name="pref_auto_location_title">自動調校定位</string>
     <string name="altimeter_mode_gps_barometer">GPS + 氣壓計</string>
     <string name="pref_display_multi_beacons_title">顯示就近嘅地標</string>
     <string name="pref_display_multi_beacons_summary">羅經上面顯示喺左近嘅地標</string>
@@ -247,7 +246,6 @@
     <string name="append_onto">追加落去</string>
     <string name="simplify">簡化</string>
     <string name="simplifying">簡化緊</string>
-    <string name="simplification_quality">簡化品質</string>
     <string name="pref_auto_simplify_paths_title">匯入時簡化路徑</string>
     <string name="pref_clinometer_lock_with_volume_buttons_title">用大細聲掣去鎖定</string>
     <string name="height">高度</string>
@@ -302,7 +300,6 @@
     <string name="pref_auto_low_power_summary">一旦電量出現安全缺口時</string>
     <string name="unit_yards">碼</string>
     <string name="base_elevation">基礎海拔</string>
-    <string name="base_temperature">基礎氣溫</string>
     <string name="destination_elevation">目標海拔</string>
     <string name="clear_cache">清除快取</string>
     <string name="pref_map_url_source_title">位置分享地圖</string>
@@ -333,7 +330,6 @@
     </plurals>
     <string name="import_btn">匯入</string>
     <string name="gps_user">使用者</string>
-    <string name="gps_stale">過氣</string>
     <string name="gps_searching">搜尋緊</string>
     <string name="unavailable">欠奉</string>
     <string name="quality_poor">不良</string>
@@ -397,7 +393,6 @@
     <plurals name="water_boil_timer_content">
         <item quantity="other">%d 秒後攞得嚟飲</item>
     </plurals>
-    <string name="guide_recommended_apps_description">求生用嘅有用 app</string>
     <string name="tool_boil_summary">啲水幾時攞得嚟飲</string>
     <string name="battery_health_dead">壽終正寢</string>
     <string name="one">一</string>
@@ -432,7 +427,6 @@
     <string name="unit_feet">呎</string>
     <string name="unit_miles">哩</string>
     <string name="unit_nautical_miles">海里</string>
-    <string name="guide_recommended_apps">推介嘅 app</string>
     <string name="pref_privacy_policy_title">私隱政策</string>
     <string name="water_boil_timer">水滾計時器</string>
     <string name="water_boil_timer_channel_description">煲緊水</string>
@@ -554,8 +548,6 @@
     <string name="charging_wireless">叉緊電 (%s)</string>
     <string name="low_power_mode_on_message">為維護電池安全，部份功能或已被完善。</string>
     <string name="clouds">雲</string>
-    <string name="pref_require_satellites_title">事必要衛星定位</string>
-    <string name="pref_require_satellites_description">事必要至少 4 枚衛星，好提昇準繩</string>
     <string name="cirrus">卷雲</string>
     <string name="altocumulus">高積雲</string>
     <string name="nimbostratus">雨層雲</string>
@@ -635,7 +627,6 @@
     <string name="open_beacon_in_maps">喺地圖度睇過</string>
     <string name="privacy_and_location">私隱與定位</string>
     <string name="always_on">幾時都用</string>
-    <string name="pref_nmea_elevation_summary">用 NMEA (衛星) 代替內置模型去修正海拔</string>
     <string name="compass_auto_declination">自動調整磁偏角</string>
     <string name="pref_show_pressure_in_notification_title">喺通知度顯示埋氣壓</string>
     <string name="pref_monitor_weather_title">監測氣象</string>
@@ -647,7 +638,6 @@
     <string name="waypoint_time_format">%1$s %2$s</string>
     <string name="unsaved_changes_message">您改動過嗰啲嘢，就唔會儲存個囉噃。</string>
     <string name="pref_daily_weather_time_title">每日氣象時間</string>
-    <string name="since_time">自 %s 起</string>
     <string name="speedometer">速度計</string>
     <string name="weather_exported">氣象已匯出</string>
     <string name="weather_monitoring_disabled">氣象監測已停用</string>
@@ -681,8 +671,6 @@
     <string name="weather_monitor">氣象監測</string>
     <string name="battery_history">電量紀錄：過去嗰 %s</string>
     <string name="tool_bubble_level_summary">睇下個面係咪平</string>
-    <string name="bubble_level_angles">橫：%1$s
-\n縱：%2$s</string>
     <string name="humidity">濕度</string>
     <string name="elevation_history">海拔紀錄</string>
     <string name="elevation_history_length">海拔紀錄幾耐</string>
@@ -697,7 +685,6 @@
     <string name="humidity_history">濕度紀錄：過去嗰 %s</string>
     <string name="temperature_history">溫度紀錄：過去嗰 %s</string>
     <string name="meteor_shower">流星雨</string>
-    <string name="pref_nmea_elevation_title">NMEA 海拔修正</string>
     <string name="pick_file">揀個檔案</string>
     <string name="coordinate_format_usng">USNG</string>
     <string name="coordinate_format_osgb">OSGB</string>
@@ -771,9 +758,6 @@
 \nOSGB (例如 TG 51409 13177)</string>
     <string name="pref_barometer_info_summary">氣壓同附近嘅監測站可能有所出入</string>
     <string name="sleep_timer">睡眠計時器</string>
-    <string name="pref_navigation_lock_screen_presence_title">定向時喺鎖定畫面擺出嚟</string>
-    <string name="navigating_to_nearest_path_point">定向緊去路徑最就近嗰點</string>
-    <string name="pref_only_navigate_path_points_title">淨係定向去紀錄咗嘅點</string>
     <string name="backtrack">踏雪留蹤</string>
     <string name="backtrack_notification_channel_description">踏雪留蹤定位更新</string>
     <string name="avalanche_risk">雪崩風險</string>
@@ -855,7 +839,6 @@
     <string name="map_auto_rotated">經校正，地圖轉向已調整</string>
     <string name="pin">置頂</string>
     <string name="no_sensor_message">您部機冇配備%s感應器</string>
-    <string name="calibrate_map_point">用已知位置校正 (%1$d / %2$d)</string>
     <string name="direction_not_set">方位未設定</string>
     <string name="augmented_reality">擴充實境</string>
     <string name="augmented_reality_description">用您個相機鏡頭做視野，一窺就近嘅地標同日月</string>
@@ -925,7 +908,6 @@
     <string name="points">點數</string>
     <string name="ar_calibration_instructions">將個%s擺正畫面正中央，然後撳一下「校正」</string>
     <string name="reset_calibration_question">係咪要重設校正？</string>
-    <string name="smooth_gps_readings">平滑化 GPS 讀數</string>
     <string name="use_path_elevation">用路徑海拔</string>
     <string name="duration">為時</string>
     <string name="elevation">海拔</string>
@@ -991,7 +973,6 @@
     <string name="obscuration">掩蓋面積比</string>
     <string name="astronomy_altitude">仰角</string>
     <string name="sighting_compass">觀摩羅經</string>
-    <string name="date">日子</string>
     <string name="precipitation_snow_grains">毛毛雪</string>
     <string name="temporary">臨時</string>
     <string name="ar_calibration_disclaimer">每次用「擴充實境」架生之前，請查驗個太陽或月亮公仔係咪已經同真實世界對齊。若果唔齊整，請撳一下畫面左上角嘅羅經公仔並跟指示校正。</string>
@@ -1040,7 +1021,6 @@
     <string name="reduce_photo_resolution">降低相片解像度</string>
     <string name="reduce_pdf_resolution">降低 PDF 解像度</string>
     <string name="bottom_navigation_slot">樓底分頁第 %d 格</string>
-    <string name="forecast_algorithm">預測演算法</string>
     <string name="quick_actions_are_unavailable">快速動作欠奉</string>
     <string name="compass_dynamic_colors">羅經融入調和色水大局</string>
     <string name="compass_dynamic_colors_summary">東南西北都要用返系統嘅調和色水</string>

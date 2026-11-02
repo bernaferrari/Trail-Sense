@@ -13,13 +13,13 @@ import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.getLongArray
 import com.kylecorry.andromeda.preferences.putIntArray
 import com.kylecorry.andromeda.preferences.putLongArray
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MAX_BOTTOM_NAVIGATION_ITEMS
+import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.settings.backup.BackupPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.AltimeterPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.AugmentedRealityPreferences
@@ -29,8 +29,10 @@ import com.kylecorry.trail_sense.settings.infrastructure.CellSignalPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ClinometerPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ClockPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.CompassPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.DebugPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.FlashlightPreferenceRepo
+import com.kylecorry.trail_sense.settings.infrastructure.GPSPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.IDeclinationPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.MetalDetectorPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.PackPreferences
@@ -46,9 +48,11 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyPrefere
 import com.kylecorry.trail_sense.tools.ballistics.infrastructure.BallisticsPreferences
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPreferences
 import com.kylecorry.trail_sense.tools.climate.infrastructure.ClimatePreferenceRepo
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuidePreferences
 import com.kylecorry.trail_sense.tools.map.infrastructure.MapPreferences
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.ruler.infrastructure.RulerPreferences
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType
@@ -91,18 +95,40 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
     val waterBoilTimer by lazy { WaterBoilTimerPreferences(context) }
     val turnBack by lazy { TurnBackPreferences(context) }
     val bubbleLevel by lazy { BubbleLevelPreferences(context) }
+    val fieldGuide by lazy { FieldGuidePreferences(context) }
+    val gps by lazy { GPSPreferences(context) }
+    val debug by lazy { DebugPreferences(context) }
+    val paths by lazy { PathsPreferences(context) }
 
     private val isMetricPreferred = Resources.isMetricPreferred(context)
 
-    val useFilteredGPS by BooleanPreference(
+    val useWidgetIconCompatibilityMode by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_filtered_gps),
+        context.getString(R.string.pref_widget_icon_compatibility),
+        false
+    )
+
+    val useLegacyFilePicker by BooleanPreference(
+        cache,
+        context.getString(R.string.pref_use_legacy_file_picker),
+        false
+    )
+
+    val useLargeTileCache by BooleanPreference(
+        cache,
+        context.getString(R.string.pref_large_tile_cache),
         false
     )
 
     var isCliffHeightEnabled by BooleanPreference(
         cache,
         context.getString(R.string.pref_cliff_height_enabled),
+        false
+    )
+
+    val arePluginsEnabled by BooleanPreference(
+        cache,
+        context.getString(R.string.pref_plugins_enabled),
         false
     )
 
@@ -159,6 +185,21 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         ),
         if (isMetricPreferred) TemperatureUnits.Celsius else TemperatureUnits.Fahrenheit,
         saveDefault = true
+    )
+
+    val coordinateFormat by StringEnumPreference(
+        cache,
+        getString(R.string.pref_coordinate_format),
+        mapOf(
+            "dd" to BuiltInCoordinateFormat.DecimalDegrees,
+            "ddm" to BuiltInCoordinateFormat.DegreesDecimalMinutes,
+            "dms" to BuiltInCoordinateFormat.DegreesMinutesSeconds,
+            "utm" to BuiltInCoordinateFormat.UTM,
+            "mgrs" to BuiltInCoordinateFormat.MGRS,
+            "usng" to BuiltInCoordinateFormat.USNG,
+            "osng" to BuiltInCoordinateFormat.OSGB
+        ),
+        BuiltInCoordinateFormat.DecimalDegrees
     )
 
     val use24HourTime by BooleanPreference(
@@ -266,32 +307,6 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             value.toString()
         )
 
-    var useAutoLocation: Boolean
-        get() = cache.getBoolean(getString(R.string.pref_auto_location)) ?: true
-        set(value) = cache.putBoolean(getString(R.string.pref_auto_location), value)
-
-    val requiresSatellites: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_require_satellites)) ?: true
-
-    var locationOverride: Coordinate
-        get() {
-            val latStr = cache.getString(getString(R.string.pref_latitude_override)) ?: "0.0"
-            val lngStr = cache.getString(getString(R.string.pref_longitude_override)) ?: "0.0"
-
-            val lat = latStr.toDoubleOrNull() ?: 0.0
-            val lng = lngStr.toDoubleOrNull() ?: 0.0
-
-            return Coordinate(lat, lng)
-        }
-        set(value) {
-            cache.putString(getString(R.string.pref_latitude_override), value.latitude.toString())
-            cache.putString(getString(R.string.pref_longitude_override), value.longitude.toString())
-        }
-
-    val hasLocationOverride: Boolean
-        get() = cache.contains(getString(R.string.pref_latitude_override)) &&
-                cache.contains(getString(R.string.pref_longitude_override))
-
     var altitudeOverride: Float
         get() {
             val raw = cache.getString(getString(R.string.pref_altitude_override)) ?: "0.0"
@@ -341,33 +356,8 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         get() = cache.getBoolean(getString(R.string.pref_auto_altitude)) ?: true
         set(value) = cache.putBoolean(getString(R.string.pref_auto_altitude), value)
 
-    val useNMEA: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_nmea_altitude)) ?: false
-
     val odometerDistanceThreshold: Distance
         get() = Distance.meters(15f)
-
-    var backtrackEnabled: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_backtrack_enabled)) ?: false
-        set(value) = cache.putBoolean(
-            context.getString(R.string.pref_backtrack_enabled),
-            value
-        )
-
-    var backtrackSaveCellHistory by BooleanPreference(
-        cache,
-        context.getString(R.string.pref_backtrack_save_cell),
-        true
-    )
-
-    var backtrackRecordFrequency: Duration
-        get() {
-            return cache.getDuration(getString(R.string.pref_backtrack_frequency))
-                ?: Duration.ofMinutes(15)
-        }
-        set(value) {
-            cache.putDuration(getString(R.string.pref_backtrack_frequency), value)
-        }
 
     var isLowPowerModeOn: Boolean
         get() = cache.getBoolean(context.getString(R.string.pref_low_power_mode)) ?: false

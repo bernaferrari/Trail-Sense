@@ -67,13 +67,13 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
             UserPreferences.AltimeterMode.DigitalElevationModelBarometer -> {
                 host.inBackground {
                     val sensorService = SensorService(host.requireContext())
-                    val altimeter = sensorService.getAltimeter()
+                    val altimeter = sensorService.getAltimeter(tag = "QuickActionRecalibrateAltimeter")
 
                     val job = launch {
                         FusedAltimeter.clearCachedCalibration(
                             getAppService<PreferencesSubsystem>().preferences
                         )
-                        readAll(listOf(altimeter))
+                        readAll(listOf(altimeter), SensorService.EXTENDED_GPS_READ_TIMEOUT)
                     }
 
                     Alerts.withCancelableLoading(

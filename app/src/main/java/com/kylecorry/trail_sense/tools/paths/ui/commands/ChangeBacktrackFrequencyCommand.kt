@@ -21,7 +21,7 @@ class ChangeBacktrackFrequencyCommand(
             return
         }
 
-        prefs.backtrackRecordFrequency = frequency
+        prefs.paths.backtrackRecordFrequency = frequency
         onChange(frequency)
         scope.launch {
             BacktrackScheduler.restart(context)

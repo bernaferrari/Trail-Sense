@@ -51,13 +51,8 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
         waypointDao.deleteOlderThan(time.toEpochMilli(), pathId)
     }
 
-    override suspend fun get(id: Long): PathPoint? {
-        return waypointDao.get(id)?.toPathPoint()
-    }
-
-    override suspend fun getAll(since: Instant?): List<PathPoint> {
-        return (if (since == null) waypointDao.getAllSync() else waypointDao.getAllSinceSync(since.toEpochMilli()))
-            .map { it.toPathPoint() }
+    override suspend fun getAll(): List<PathPoint> {
+        return waypointDao.getAllSync().map { it.toPathPoint() }
     }
 
     override fun getAllLive(since: Instant?): LiveData<List<PathPoint>> {
@@ -73,17 +68,29 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
     }
 
     override suspend fun getAllInPaths(pathIds: List<Long>): List<PathPoint> = onIO {
-        val points = mutableListOf<WaypointEntity>()
-        for (pathId in pathIds) {
-            points.addAll(waypointDao.getAllInPathSync(pathId))
-        }
-        points.map { it.toPathPoint() }
+        pathIds.flatMap { waypointDao.getAllInPathSync(it) }.map { it.toPathPoint() }
     }
 
     override fun getAllInPathLive(pathId: Long): LiveData<List<PathPoint>> {
         return waypointDao.getAllInPath(pathId).map {
             it.map { waypoint -> waypoint.toPathPoint() }
         }
+    }
+
+    override suspend fun getFirstInPath(pathId: Long): PathPoint? = onIO {
+        waypointDao.getFirstInPath(pathId)?.toPathPoint()
+    }
+
+    override suspend fun getLastInPath(pathId: Long): PathPoint? = onIO {
+        waypointDao.getLastInPath(pathId)?.toPathPoint()
+    }
+
+    override suspend fun getCountInPath(pathId: Long): Int = onIO {
+        waypointDao.getCountInPath(pathId)
+    }
+
+    override suspend fun getMostRecentPathIdWithElevationChange(minChange: Float): Long? = onIO {
+        waypointDao.getMostRecentPathIdWithElevationChange(minChange)
     }
 
     override suspend fun getAllWithCellSignal(): List<PathPoint> = onIO {

@@ -3,46 +3,50 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.core.time.ITimeProvider
-import com.kylecorry.andromeda.core.time.SystemTimeProvider
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.time.IZonedDateTimeProvider
+import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
 import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.math.filters.RDPFilter
 import com.kylecorry.sol.science.geography.Geography
-import com.kylecorry.sol.science.geology.Geology
+import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.grouping.count.GroupCounter
 import com.kylecorry.trail_sense.shared.grouping.persistence.GroupDeleter
 import com.kylecorry.trail_sense.shared.grouping.persistence.GroupLoader
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.PathSimplificationQuality
+import com.kylecorry.trail_sense.tools.paths.domain.PathSimplifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
-import java.util.stream.Collectors
-import kotlin.math.absoluteValue
 
 class PathService(
     private val pathRepo: PathRepo,
     private val waypointRepo: IWaypointRepo,
     private val pathPreferences: IPathPreferences,
     private val cache: IPreferences,
-    private val time: ITimeProvider = SystemTimeProvider()
+    private val time: IZonedDateTimeProvider = SystemZonedDateTimeProvider()
 ) : IPathService {
 
     private val backtrackLock = Mutex()
+    private val waypointLock = Mutex()
+
+    private val loaderWithoutCounts =
+        GroupLoader(this::getGroupWithoutCount, this::getChildrenWithoutCounts)
+    private val counter = GroupCounter(loaderWithoutCounts)
     private val loader = GroupLoader(this::getGroup, this::getChildren)
-    private val counter = GroupCounter(loader)
     val changeKey: Int
         get() = pathRepo.changeKey
     private val deleter = object : GroupDeleter<IPath>(loader) {
@@ -72,6 +76,12 @@ class PathService(
 
     override suspend fun endBacktrackPath() = onIO {
         backtrackLock.withLock {
+            if (pathPreferences.keepBacktrackPathOnStop) {
+                val path = cache.getLong(BACKTRACK_PATH_KEY)?.let { getPath(it) }
+                if (path?.temporary == true) {
+                    addPath(path.copy(temporary = false))
+                }
+            }
             cache.remove(BACKTRACK_PATH_KEY)
         }
     }
@@ -95,18 +105,22 @@ class PathService(
     }
 
     override suspend fun getGroup(id: Long?): PathGroup? {
-        id ?: return null
-        return pathRepo.getGroup(id)?.copy(count = counter.count(id))
+        return getGroupWithoutCount(id)?.copy(count = counter.count(id))
     }
 
-    private suspend fun getGroups(parent: Long?): List<PathGroup> {
-        return pathRepo.getGroupsWithParent(parent).map { it.copy(count = counter.count(it.id)) }
+    private suspend fun getGroupWithoutCount(id: Long?): PathGroup? {
+        id ?: return null
+        return pathRepo.getGroup(id)
     }
 
     private suspend fun getChildren(groupId: Long?): List<IPath> {
-        val paths = pathRepo.getPathsWithParent(groupId)
-        val groups = getGroups(groupId)
-        return paths + groups
+        return getChildrenWithoutCounts(groupId).map {
+            if (it is PathGroup) it.copy(count = counter.count(it.id)) else it
+        }
+    }
+
+    private suspend fun getChildrenWithoutCounts(groupId: Long?): List<IPath> {
+        return pathRepo.getPathsWithParent(groupId) + pathRepo.getGroupsWithParent(groupId)
     }
 
     override fun getLivePath(id: Long): LiveData<Path?> {
@@ -129,6 +143,7 @@ class PathService(
             }
         }
 
+        DependencyRegistry.get<Navigator>().cancelPathNavigation(path.id)
         waypointRepo.deleteInPath(path.id)
         pathRepo.delete(path)
     }
@@ -168,30 +183,15 @@ class PathService(
     }
 
     override suspend fun simplifyPath(path: Long, quality: PathSimplificationQuality): Int {
-        val epsilon = when (quality) {
-            PathSimplificationQuality.Low -> 8f
-            PathSimplificationQuality.Medium -> 4f
-            PathSimplificationQuality.High -> 2f
+        val points = getWaypoints(path).sortedBy { it.id }
+        val toKeep = PathSimplifier.simplify(points, quality).toSet()
+        val toDelete = points.filter { it !in toKeep }
+
+        waypointLock.withLock {
+            waypointRepo.deleteAll(toDelete)
+            updatePathMetadata(path)
         }
-        val filter = RDPFilter<PathPoint>(epsilon) { point, start, end ->
-            Geography.getCrossTrackDistance(
-                point.coordinate,
-                start.coordinate,
-                end.coordinate
-            ).value.absoluteValue
-        }
-
-        val points = getWaypoints(path).sortedBy { it.id }.toMutableList()
-        val toKeep = filter.filter(points).toSet()
-
-        val numDeleted = points.size - toKeep.size
-
-        points.removeAll(toKeep)
-
-        waypointRepo.deleteAll(points)
-
-        updatePathMetadata(path)
-        return numDeleted
+        return toDelete.size
     }
 
     override suspend fun getWaypoints(paths: List<Long>?): Map<Long, List<PathPoint>> {
@@ -211,6 +211,14 @@ class PathService(
         return waypointRepo.getAllInPaths(listOf(path))
     }
 
+    override suspend fun getLastWaypoint(path: Long): PathPoint? {
+        return waypointRepo.getLastInPath(path)
+    }
+
+    override suspend fun getMostRecentPathIdWithElevationChange(minChange: Float): Long? {
+        return waypointRepo.getMostRecentPathIdWithElevationChange(minChange)
+    }
+
     override fun getWaypointsLive(path: Long): LiveData<List<PathPoint>> {
         return waypointRepo.getAllInPathLive(path)
     }
@@ -220,28 +228,47 @@ class PathService(
     }
 
     override suspend fun addWaypointsToPath(points: List<PathPoint>, pathId: Long) {
-        waypointRepo.addAll(points.map { it.copy(pathId = pathId) })
-        updatePathMetadata(pathId)
+        waypointLock.withLock {
+            waypointRepo.addAll(points.map { it.copy(pathId = pathId) })
+            updatePathMetadata(pathId)
+        }
+    }
+
+    override suspend fun updateWaypointElevations(path: Long, elevations: Map<Long, Float>) {
+        waypointLock.withLock {
+            val updated = waypointRepo.getAllInPaths(listOf(path)).mapNotNull { point ->
+                elevations[point.id]?.let { point.copy(elevation = it) }
+            }
+            waypointRepo.addAll(updated)
+        }
     }
 
     override suspend fun addWaypoint(point: PathPoint): Long {
-        val ret = waypointRepo.add(point)
-        updatePathMetadata(point.pathId)
-        return ret
+        waypointLock.withLock {
+            if (point.id != 0L) {
+                val ret = waypointRepo.add(point)
+                updatePathMetadata(point.pathId)
+                return ret
+            }
+
+            val path = getPath(point.pathId)
+            val previous = path?.let { waypointRepo.getLastInPath(it.id) }
+            val canAppend =
+                path != null && waypointRepo.getCountInPath(path.id) == path.metadata.waypoints
+            val ret = waypointRepo.add(point)
+            if (path != null && canAppend) {
+                appendToPathMetadata(path, previous, point)
+            } else if (path != null) {
+                updatePathMetadata(path.id)
+            }
+            return ret
+        }
     }
 
     override suspend fun deleteWaypoint(point: PathPoint) {
-        waypointRepo.delete(point)
-        updatePathMetadata(point.pathId)
-    }
-
-    override suspend fun moveWaypointsToPath(points: List<PathPoint>, pathId: Long) {
-        val oldPaths =
-            points.filter { it.pathId != 0L && it.pathId != pathId }.map { it.pathId }.distinct()
-        waypointRepo.addAll(points.map { it.copy(pathId = pathId) })
-        updatePathMetadata(pathId)
-        for (path in oldPaths) {
-            updatePathMetadata(pathId)
+        waypointLock.withLock {
+            waypointRepo.delete(point)
+            updatePathMetadata(point.pathId)
         }
     }
 
@@ -253,13 +280,6 @@ class PathService(
         }
     }
 
-    override suspend fun getRecentAltitudes(since: Instant): List<Reading<Float>> = onIO {
-        waypointRepo.getAll(since).stream()
-            .filter { it.elevation != null && it.time != null }
-            .map { Reading(it.elevation!!, it.time!!) }
-            .collect(Collectors.toList())
-    }
-
     override suspend fun clean() {
         val paths = pathRepo.getAll().filter { it.temporary }
         for (path in paths) {
@@ -268,21 +288,25 @@ class PathService(
     }
 
     private suspend fun deleteOldWaypoints(pathId: Long) {
-        waypointRepo.deleteOlderInPath(
-            pathId,
-            time.getTime().toInstant().minus(pathPreferences.backtrackHistory)
-        )
-        updatePathMetadata(pathId, true)
+        val isEmpty = waypointLock.withLock {
+            waypointRepo.deleteOlderInPath(
+                pathId,
+                time.getTime().toInstant().minus(pathPreferences.backtrackHistory)
+            )
+            updatePathMetadata(pathId)
+            waypointRepo.getCountInPath(pathId) == 0
+        }
+
+        // Deleted outside the waypoint lock since deletePath takes the backtrack lock, and
+        // addBacktrackPoint takes the two locks in the opposite order
+        if (isEmpty) {
+            getPath(pathId)?.let { deletePath(it) }
+        }
     }
 
-    private suspend fun updatePathMetadata(pathId: Long, deleteIfEmpty: Boolean = false) {
+    private suspend fun updatePathMetadata(pathId: Long) {
         val path = getPath(pathId) ?: return
         val points = waypointRepo.getAllInPaths(listOf(pathId)).sortedBy { it.id }
-
-        if (deleteIfEmpty && points.isEmpty()) {
-            deletePath(path)
-            return
-        }
 
         val coords = points.map { it.coordinate }
         val start = points.firstOrNull()?.time
@@ -295,6 +319,48 @@ class PathService(
         )
 
         addPath(path.copy(metadata = metadata))
+    }
+
+    private suspend fun appendToPathMetadata(path: Path, previous: PathPoint?, point: PathPoint) {
+        val metadata = path.metadata
+        if (previous == null || metadata.waypoints == 0) {
+            updatePathMetadata(path.id)
+            return
+        }
+
+        if (metadata.duration == null && previous.time == null && point.time != null) {
+            updatePathMetadata(path.id)
+            return
+        }
+
+        val distance = metadata.distance.meters().value +
+                previous.coordinate.distanceTo(point.coordinate)
+        val duration = if (metadata.duration != null && point.time != null) {
+            Range(metadata.duration.start, point.time)
+        } else {
+            null
+        }
+        // Using the first point keeps the bounds calculation consistent when at the anti-meridian
+        val first = waypointRepo.getFirstInPath(path.id) ?: previous
+        val bounds = Geography.getBounds(
+            listOf(
+                first.coordinate,
+                metadata.bounds.northWest,
+                metadata.bounds.southEast,
+                point.coordinate
+            )
+        )
+
+        addPath(
+            path.copy(
+                metadata = PathMetadata(
+                    Distance.meters(distance),
+                    metadata.waypoints + 1,
+                    duration,
+                    bounds
+                )
+            )
+        )
     }
 
     private suspend fun createBacktrackPath(): Long {
@@ -323,7 +389,7 @@ class PathService(
                 instance = PathService(
                     PathRepo.getInstance(appContext),
                     WaypointRepo.getInstance(appContext),
-                    NavigationPreferences(appContext),
+                    PathsPreferences(appContext),
                     PreferencesSubsystem.getInstance(appContext).preferences
                 )
             }

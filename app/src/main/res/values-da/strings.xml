@@ -967,4 +967,9 @@
 \n
 \n- Når du har klikket på Fortsæt, bliver du bedt om at give tilladelser til placering og baggrundsplacering. Hvis du afviser disse tilladelser, kan Trail Sense ikke få adgang til din placering, så manuel placeringsindtastning anbefales.</string>
     <string name="backtrack_battery_warning">Små intervaller (under 15 min.) kan forårsage højt batteriforbrug</string>
+
+    <string name="step_length_walk">Gå i en lige linje, tryk på stop når du er færdig</string>
+    <string name="pref_step_length_title">Skridtlængde</string>
+    <string name="estimate_step_length">Anslå skridtlængde</string>
+    <string name="step_length_stand_still">Stå stille</string>
 </resources>

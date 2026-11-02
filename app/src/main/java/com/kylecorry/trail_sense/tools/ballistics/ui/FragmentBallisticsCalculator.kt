@@ -36,7 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.luna.text.toFloatCompat
@@ -64,8 +64,8 @@ import java.time.Duration
 fun BallisticsCalculatorPage(
     modifier: Modifier = Modifier
 ) {
-    val formatter = remember { AppServiceRegistry.get<FormatService>() }
-    val prefs = remember { AppServiceRegistry.get<UserPreferences>() }
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
+    val prefs = remember { DependencyRegistry.get<UserPreferences>() }
     val normalScopeHeight = remember { Distance.from(1.5f, DistanceUnits.Inches) }
     val (zeroDistance, setZeroDistance) = rememberDistancePreference("cache-ballistics-sight-in-range")
     val (storedScopeHeight, setScopeHeight) = rememberDistancePreference("cache-ballistics-scope-height")

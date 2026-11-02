@@ -30,7 +30,7 @@ class FlashlightToolWidgetView : SimpleToolWidgetView() {
 
         return ToolWidgetContent.Simple(
             title = null,
-            subtitle = if (isOn) context.getString(R.string.on) else context.getString(R.string.off),
+            subtitle = context.getString(if (isOn) R.string.on else R.string.off),
             icon = R.drawable.flashlight,
             showTitle = false,
             clickAction = if (isForegroundServiceWorkaroundNeeded(context)) {

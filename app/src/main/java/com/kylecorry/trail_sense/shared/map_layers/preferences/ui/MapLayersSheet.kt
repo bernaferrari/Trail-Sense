@@ -49,7 +49,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.luna.concurrency.onDefault
@@ -84,7 +84,7 @@ class MapLayersSheetState(
 ) {
 
     private var onDismissListener: (() -> Unit)? = null
-    private val repo by lazy { AppServiceRegistry.get<MapLayerPreferenceRepo>() }
+    private val repo by lazy { DependencyRegistry.get<MapLayerPreferenceRepo>() }
     private var isVisible by mutableStateOf(false)
 
     fun setOnDismissListener(listener: (() -> Unit)?) {
@@ -114,8 +114,8 @@ class MapLayersSheetState(
             return
         }
 
-        val markdown = remember { AppServiceRegistry.get<MarkdownService>() }
-        val loader = remember { AppServiceRegistry.get<MapLayerLoader>() }
+        val markdown = remember { DependencyRegistry.get<MarkdownService>() }
+        val loader = remember { DependencyRegistry.get<MapLayerLoader>() }
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
         var layers by remember { mutableStateOf<List<MapLayerDefinition>?>(null) }

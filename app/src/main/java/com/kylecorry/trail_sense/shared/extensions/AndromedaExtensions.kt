@@ -3,9 +3,12 @@ package com.kylecorry.trail_sense.shared.extensions
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Dialog
 import android.content.Context
+import android.app.Service
 import android.graphics.Path
 import android.os.Build
-import android.util.Log
+import android.widget.FrameLayout
+import android.widget.ProgressBar
+import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -15,8 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.units.PixelCoordinate
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
+import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
@@ -33,6 +39,69 @@ inline fun Alerts.withCancelableLoading(
         action()
     } finally {
         loadingAlert.dismiss()
+    }
+}
+
+inline fun Alerts.withCancelableProgress(
+    context: Context,
+    title: String,
+    cancelText: CharSequence = context.getString(android.R.string.cancel),
+    noinline onCancel: () -> Unit,
+    action: ((Float) -> Unit) -> Unit
+) {
+    val (progressAlert, setProgress) = cancelableProgress(
+        context,
+        title,
+        cancelText,
+        onCancel
+    )
+    try {
+        action(setProgress)
+    } finally {
+        progressAlert.dismiss()
+    }
+}
+
+fun Alerts.cancelableProgress(
+    context: Context,
+    title: String,
+    cancelText: CharSequence = context.getString(android.R.string.cancel),
+    onCanceled: (() -> Unit)? = null
+): Pair<AlertDialog, (Float) -> Unit> {
+    val progress = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
+        max = 100
+    }
+    val margin = Resources.dp(context, 24f).toInt()
+    val view = FrameLayout(context).apply {
+        addView(
+            progress,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = margin
+                marginEnd = margin
+                topMargin = margin
+                bottomMargin = margin
+            }
+        )
+    }
+    val dialog = dialog(
+        context,
+        title,
+        contentView = view,
+        okText = null,
+        cancelText = cancelText,
+        cancelOnOutsideTouch = false
+    ) { cancelled ->
+        if (cancelled) {
+            onCanceled?.invoke()
+        }
+    }
+    return dialog to { value ->
+        progress.post {
+            progress.progress = (value.coerceIn(0f, 1f) * progress.max).toInt()
+        }
     }
 }
 
@@ -125,9 +194,29 @@ inline fun tryStartForegroundOrNotify(context: Context, action: () -> Unit) {
     } catch (e: Exception) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && (e is ForegroundServiceStartNotAllowedException || e is SecurityException)) {
             ServiceRestartAlerter(context.applicationContext).alert()
-            Log.d("tryStartForegroundOrNotify", "Cannot start service")
+            getAppService<Logger>().warn("ForegroundService", "Cannot start foreground service", e)
         } else {
             throw e
         }
     }
+}
+
+@Suppress("TooGenericExceptionCaught")
+inline fun Service.tryStartForegroundOrNotify(action: () -> Int): Int {
+    return try {
+        action()
+    } catch (e: Exception) {
+        if (!isForegroundServiceStartError(e)) {
+            throw e
+        }
+        getAppService<Logger>().warn("ForegroundService", "Cannot start ${javaClass.simpleName} in the foreground", e)
+        ServiceRestartAlerter(this).alert()
+        stopSelf()
+        Service.START_NOT_STICKY
+    }
+}
+
+fun isForegroundServiceStartError(error: Exception): Boolean {
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            (error is ForegroundServiceStartNotAllowedException || error is SecurityException)
 }

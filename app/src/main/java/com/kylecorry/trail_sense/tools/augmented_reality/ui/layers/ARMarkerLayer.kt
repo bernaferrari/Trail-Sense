@@ -21,6 +21,8 @@ class ARMarkerLayer(
         synchronized(lock) {
             this.markers.clear()
             this.markers.addAll(markers)
+            renderedMarkers = emptyList()
+            potentialFocusPoints.clear()
         }
     }
 
@@ -33,6 +35,8 @@ class ARMarkerLayer(
     fun clearMarkers() {
         synchronized(lock) {
             markers.clear()
+            renderedMarkers = emptyList()
+            potentialFocusPoints.clear()
         }
     }
 
@@ -45,6 +49,9 @@ class ARMarkerLayer(
             markers.mapNotNull {
                 val circle = getCircle(it, view, minimumPixelSize, maximumPixelSize)
                     ?: return@mapNotNull null
+                if (!isOnScreen(circle, view)) {
+                    return@mapNotNull null
+                }
                 it to circle
             }
         }
@@ -88,6 +95,9 @@ class ARMarkerLayer(
         val points = markers.mapNotNull {
             val circle =
                 getCircle(it, view, minimumPixelSize, maximumPixelSize) ?: return@mapNotNull null
+            if (!isOnScreen(circle, view)) {
+                return@mapNotNull null
+            }
             it to circle
         }
 
@@ -109,12 +119,24 @@ class ARMarkerLayer(
         maximumPixelSize: Float
     ): PixelCircle? {
         val circle = marker.getViewLocation(view)
+        if (!circle.center.x.isFinite() || !circle.center.y.isFinite() ||
+            !circle.radius.isFinite()) {
+            return null
+        }
         if (!renderMarkersBelowMinSize && circle.radius < minimumPixelSize) {
             return null
         }
         return circle.copy(
             radius = circle.radius.coerceIn(minimumPixelSize / 2f, maximumPixelSize / 2f)
         )
+    }
+
+    private fun isOnScreen(circle: PixelCircle, view: AugmentedRealityView): Boolean {
+        val x = circle.center.x
+        val y = circle.center.y
+        val radius = circle.radius
+        return x + radius >= 0f && x - radius <= view.width &&
+            y + radius >= 0f && y - radius <= view.height
     }
 
     override fun onFocus(drawer: ICanvasDrawer, view: AugmentedRealityView): Boolean {

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools
 
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -66,7 +66,7 @@ class ToolsTest : ToolTestBase(0L) {
         }
 
         // Removing the field guide repo will break the DI for the field guide tool
-        AppServiceRegistry.services.remove(FieldGuideRepo::class.java.name)
+        DependencyRegistry.services.remove(FieldGuideRepo::class.java.name)
         scenario = TestUtils.startWithTool(Tools.FIELD_GUIDE)
 
         isTrue { calledOriginalHandler }
@@ -91,7 +91,7 @@ class ToolsTest : ToolTestBase(0L) {
         isVisible(R.id.restart_app)
 
         // Fix the issue and reopen tool
-        AppServiceRegistry.register(FieldGuideRepo.getInstance(TestUtils.context))
+        DependencyRegistry.register(FieldGuideRepo.getInstance(TestUtils.context))
         click(R.id.reopen_tool)
         hasText("Disclaimer")
     }

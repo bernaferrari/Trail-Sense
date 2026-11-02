@@ -352,7 +352,7 @@ class ViewPhotoMapController(
                 map?.let {
                     val id = CreatePathCommand(
                         pathService,
-                        prefs.navigation,
+                        prefs.paths,
                         it.name
                     ).execute(layerManager.getDistanceMeasurementPoints())
 
@@ -370,9 +370,17 @@ class ViewPhotoMapController(
         views.distanceSheet.undoListener = {
             layerManager.undoLastDistanceMeasurement()
         }
+        views.distanceSheet.redoListener = {
+            layerManager.redoDistanceMeasurement()
+        }
+        layerManager.setOnDistanceEditStateChangedCallback { state ->
+            views.distanceSheet.setEditState(state)
+        }
+        views.distanceSheet.setEditState(layerManager.getDistanceEditState())
     }
 
     private fun stopDistanceMeasurement() {
+        layerManager.setOnDistanceEditStateChangedCallback(null)
         layerManager.stopDistanceMeasurement()
         views.distanceSheet.hide()
     }

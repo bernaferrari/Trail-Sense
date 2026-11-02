@@ -456,7 +456,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
         }
 
         host.lifecycleScope.launch {
-            weather.weatherChanged.flow().collect {
+            weather.weatherChanged.flow.collect {
                 updateData()
             }
         }

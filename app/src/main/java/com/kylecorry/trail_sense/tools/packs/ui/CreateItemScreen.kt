@@ -48,7 +48,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Weight
@@ -109,7 +109,7 @@ private class CreateItemController(private val host: TrailSenseDestinationHost) 
 
     private val itemRepo by lazy { PackRepo.getInstance(host.requireContext()) }
     val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { AppServiceRegistry.get<PreferencesSubsystem>() }
+    private val prefs by lazy { DependencyRegistry.get<PreferencesSubsystem>() }
     private var backCallback: androidx.activity.OnBackPressedCallback? = null
     private var isInitialized = false
 

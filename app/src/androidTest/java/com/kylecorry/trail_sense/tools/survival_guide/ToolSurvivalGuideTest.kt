@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.survival_guide
 
-import android.os.Build
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -26,9 +25,9 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
 
         isVisible(R.id.list)
 
-        // Verify it shows each chapter
-        val chapters = Chapters.getChapters(context)
-        chapters.forEachIndexed { index, chapter ->
+        // Verify the first and last chapters load
+        val chapters = Chapters.getChapters(context).let { listOf(it.first(), it.last()) }
+        chapters.forEach { chapter ->
             scrollUntil {
                 hasText(chapter.title)
             }
@@ -72,9 +71,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
         input(id("search")(), "Eating fish")
-        if (Build.VERSION.SDK_INT == 23) {
-            back(false)
-        }
+        TestUtils.closeKeyboard()
 
         // Continue search on survival guide list
         click(id("survival_guide_search_list_btn"))

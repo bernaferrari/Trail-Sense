@@ -150,7 +150,6 @@ class LinearSightingCompassView(private val context: Context) : ICompassView {
             }
             isStarted = true
             setSightingCompass(showSightingCompass)
-            updateTimer.interval(20)
         }
     }
 
@@ -164,6 +163,7 @@ class LinearSightingCompassView(private val context: Context) : ICompassView {
             }
             isStarted = false
             sightingCompass.stop()
+            linearCompass.range = 180f
             sightingCompassButton.setState(false)
             updateTimer.stop()
         }
@@ -173,17 +173,25 @@ class LinearSightingCompassView(private val context: Context) : ICompassView {
         showSightingCompass = shouldShow
         if (!shouldShow) {
             sightingCompass.stop()
+            linearCompass.range = 180f
             sightingCompassButton.setState(false)
+            updateTimer.stop()
         } else if (!sightingCompass.isRunning()) {
             sightingCompassButton.setState(true)
             val permissionRequester = requestCameraPermission ?: { onResult: (Boolean) -> Unit ->
                 onResult(false)
             }
             permissionRequester { hasPermission ->
-                if (hasPermission) {
+                if (hasPermission && isStarted) {
                     sightingCompass.start()
+                    sightingCompass.update()
+                    if (sightingCompass.isRunning()) {
+                        updateTimer.interval(250)
+                    }
                 } else {
-                    onCameraPermissionDenied?.invoke()
+                    if (!hasPermission) {
+                        onCameraPermissionDenied?.invoke()
+                    }
                     setSightingCompass(false)
                 }
             }

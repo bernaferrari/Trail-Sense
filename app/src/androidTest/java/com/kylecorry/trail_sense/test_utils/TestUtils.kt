@@ -14,6 +14,8 @@ import androidx.core.content.getSystemService
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
@@ -30,6 +32,8 @@ import com.kylecorry.trail_sense.settings.migrations.PreferenceMigrator
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.packageName
 import com.kylecorry.trail_sense.test_utils.views.childWithIndex
@@ -96,11 +100,19 @@ object TestUtils {
         }
     }
 
+    fun closeKeyboard() {
+        val isKeyboardOpen = device.executeShellCommand("dumpsys input_method")
+            .contains("mInputShown=true")
+        if (isKeyboardOpen) {
+            back(false)
+        }
+    }
+
     fun getString(@StringRes id: Int, vararg args: Any): String {
         return context.getString(id, *args)
     }
 
-    fun setWaitForIdleTimeout(timeout: Long = 200) {
+    fun setWaitForIdleTimeout(timeout: Long = 10) {
         Configurator.getInstance().setWaitForIdleTimeout(timeout)
     }
 
@@ -150,8 +162,8 @@ object TestUtils {
 
     fun setLocationOverride(coordinate: Coordinate) {
         val prefs = UserPreferences(context)
-        prefs.useAutoLocation = false
-        prefs.locationOverride = coordinate
+        prefs.gps.locationSource = GPSLocationSource.Manual
+        prefs.gps.locationOverride = coordinate
     }
 
     fun runShellCommand(command: String) {
@@ -168,6 +180,16 @@ object TestUtils {
 
     fun closeApp(packageName: String) {
         runShellCommand("am force-stop $packageName")
+    }
+
+    fun finishCurrentActivity() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(Stage.RESUMED)
+                .filterIsInstance<MainActivity>()
+                .firstOrNull()
+                ?.finishAndRemoveTask()
+        }
     }
 
     fun launchApp(packageName: String) {
@@ -272,12 +294,11 @@ object TestUtils {
         prefs.putBoolean(context.getString(R.string.pref_use_24_hour), false)
         prefs.putBoolean(context.getString(R.string.pref_onboarding_completed), true)
         prefs.putBoolean(context.getString(R.string.pref_main_disclaimer_shown_key), true)
-        prefs.putBoolean(context.getString(R.string.pref_require_satellites), false)
         prefs.putBoolean(context.getString(R.string.pref_cliff_height_enabled), true)
         prefs.putString(context.getString(R.string.pref_altimeter_calibration_mode), "gps")
         prefs.putInt(context.getString(R.string.pref_altimeter_accuracy), 1)
-
         val userPrefs = UserPreferences(context)
+        userPrefs.gps.accuracyFilter = GPSAccuracyFilter.None
         // The settings tool is the fastest to get to idle, which allows the tests to run faster
         userPrefs.bottomNavigationTools = listOf(Tools.SETTINGS)
         userPrefs.useCompactMode = true

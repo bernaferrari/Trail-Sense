@@ -10,7 +10,7 @@ import android.os.Bundle
 import android.util.Size
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -30,8 +30,8 @@ import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 
 class FieldGuideSightingGeoJsonSource : GeoJsonSource {
 
-    private val repo = AppServiceRegistry.get<FieldGuideRepo>()
-    private val files = AppServiceRegistry.get<FileSubsystem>()
+    private val repo = DependencyRegistry.get<FieldGuideRepo>()
+    private val files = DependencyRegistry.get<FileSubsystem>()
     var nameFormat = ""
     private val size = 12f
     private val imageSize = size * 1.5f
@@ -72,7 +72,7 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
                     Pair(sighting, page)
                 }
             }
-            .filter { (sighting, _) -> sighting.location != null && sighting.showOnMap }
+            .filter { (sighting, _) -> sighting.location != null && sighting.showOnMap && bounds.contains(sighting.location) }
 
         // Cache pruning
         val currentPageIds = allSightings.map { it.second.id }.toSet()
@@ -128,6 +128,10 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         return circularBitmap
     }
 
+    override suspend fun cleanup() {
+        bitmapCache.clear()
+    }
+
     private fun cropToCircle(source: Bitmap, size: Int): Bitmap {
         val output = createBitmap(size, size)
         val canvas = Canvas(output)
@@ -139,7 +143,10 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         val scaledSource = source.scale(size, size)
         canvas.drawBitmap(scaledSource, 0f, 0f, paint)
-        scaledSource.recycle()
+        if (scaledSource !== source) {
+            scaledSource.recycle()
+        }
+        source.recycle()
 
         return output
     }

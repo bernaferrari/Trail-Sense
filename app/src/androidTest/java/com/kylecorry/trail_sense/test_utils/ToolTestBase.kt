@@ -18,16 +18,29 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.TestUtils.clearAppData
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
+import com.kylecorry.trail_sense.test_utils.TestUtils.finishCurrentActivity
 import com.kylecorry.trail_sense.test_utils.TestUtils.grantPermission
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
+import org.junit.rules.RuleChain
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 open class ToolTestBase(
     private val toolId: Long,
     private val locationOverride: Coordinate? = null
 ) {
+
+    private val timeoutRule: Timeout = Timeout(5, TimeUnit.MINUTES)
+
+    private val retryRule = RetryTestRule(maxRetryCount = 3)
+
+    @get:Rule
+    val retryWithTimeoutRule: RuleChain = RuleChain
+        .outerRule(retryRule)
+        .around(timeoutRule)
 
     @get:Rule
     val grantPermissionRule = TestUtils.allPermissionsGranted()
@@ -38,13 +51,32 @@ open class ToolTestBase(
     @get:Rule
     val screenshotRule = ScreenshotFailureRule()
 
-    @get:Rule
-    val retryRule = RetryTestRule(maxRetryCount = 3)
-
     protected lateinit var scenario: ActivityScenario<MainActivity>
     protected lateinit var navController: NavController
 
     private var volume: Int = 0
+
+    /**
+     * Seed the app's data (paths, beacons, readings, etc.) before the tool is opened. Only called
+     * when testing the in-process debug build, so it is not available for staging builds.
+     */
+    protected open fun seedData() {}
+
+    /**
+     * Reopen the tool with different data. The tool is closed while [beforeLaunch] runs so
+     * background updates can't race with the seeded data.
+     */
+    protected fun relaunchTool(beforeLaunch: () -> Unit = {}) {
+        finishCurrentActivity()
+        TestData.clear()
+        beforeLaunch()
+        scenario = TestUtils.startWithTool(toolId) {
+            navController = it.findNavController()!!
+        }
+    }
+
+    protected val isStagingBuild: Boolean
+        get() = AutomationLibrary.packageName != null
 
     private fun grantBasicPermissions(packageName: String) {
         val permissions = mutableListOf(
@@ -77,6 +109,8 @@ open class ToolTestBase(
             if (locationOverride != null) {
                 TestUtils.setLocationOverride(locationOverride)
             }
+
+            seedData()
         }
 
         TestUtils.listenForCameraUsage()
@@ -110,7 +144,7 @@ open class ToolTestBase(
         val tool = Tools.getTool(context, id) ?: return
         input("Search", tool.name)
         scrollUntil { click(tool.name, index = 1) }
-        delay(200)
+        delay(1000)
     }
 
     @After
@@ -122,6 +156,9 @@ open class ToolTestBase(
             if (TestUtils.isTorchOn) {
                 Torch(context).off()
             }
+        }
+        if (this::scenario.isInitialized) {
+            finishCurrentActivity()
         }
     }
 }

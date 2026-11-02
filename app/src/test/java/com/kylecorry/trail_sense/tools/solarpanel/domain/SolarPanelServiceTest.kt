@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.solarpanel.domain
 
-import com.kylecorry.andromeda.core.time.ITimeProvider
+import com.kylecorry.andromeda.core.time.IZonedDateTimeProvider
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -22,7 +22,7 @@ class SolarPanelServiceTest {
         // Northern hemisphere (Summer)
         "2024-07-01T00:00:00-05:00, PT24H, 42.0, -72.0, true, 7.0, 180.0",
         "2024-07-01T12:00:00-05:00, PT24H, 42.0, -72.0, true, 42.0, 263.0",
-        "2024-07-01T12:00:00-05:00, PT48H, 42.0, -72.0, false, 3.0, 115",
+        "2024-07-01T12:00:00-05:00, PT48H, 42.0, -72.0, false, 6.6, 153.6",
         // Northern hemisphere (night)
         "2024-02-11T20:00:00-05:00, PT24H, 42.0, -72.0, true, 79.0, 108.0",
         "2024-02-11T20:00:00-05:00, PT24H, 42.0, -72.0, false, 58.7, 180.1",
@@ -30,7 +30,7 @@ class SolarPanelServiceTest {
         // Southern hemisphere (Winter)
         "2024-07-01T00:00:00-05:00, PT24H, -42.0, 72.0, true, 68.0, 359.9",
         "2024-07-01T12:00:00-05:00, PT24H, -42.0, 72.0, true, 78.0, 41.9",
-        "2024-07-01T12:00:00-05:00, PT48H, -42.0, 72.0, false, 68.3, 0.0",
+        "2024-07-01T12:00:00-05:00, PT48H, -42.0, 72.0, false, 68.3, 359.9",
         // Southern hemisphere (Summer)
         "2024-02-11T00:00:00-05:00, PT24H, -42.0, 72.0, true, 21.0, 359.9",
         "2024-02-11T00:00:00-05:00, PT48H, -42.0, 72.0, true, 21.0, 359.9",
@@ -48,7 +48,7 @@ class SolarPanelServiceTest {
         expectedTilt: Float,
         expectedAzimuth: Float
     ) {
-        val timeProvider = mock<ITimeProvider>()
+        val timeProvider = mock<IZonedDateTimeProvider>()
         val service = SolarPanelService(timeProvider)
         val time = ZonedDateTime.parse(timeString)
         whenever(timeProvider.getTime()).thenReturn(time)
@@ -95,7 +95,7 @@ class SolarPanelServiceTest {
         azimuth: Float,
         expectedEnergy: Float
     ) {
-        val timeProvider = mock<ITimeProvider>()
+        val timeProvider = mock<IZonedDateTimeProvider>()
         val service = SolarPanelService(timeProvider)
         val time = ZonedDateTime.parse(timeString)
         whenever(timeProvider.getTime()).thenReturn(time)

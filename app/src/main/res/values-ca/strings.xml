@@ -142,7 +142,6 @@
     <string name="elevation_from_pressure">Utilitzar les dades del baròmetre per l\'altitud</string>
     <string name="pref_altimeter_calibration_title">Altímetre</string>
     <string name="request_permission">Sol·licitar permís</string>
-    <string name="pref_auto_location_title">Ajusta la ubicació automàticament</string>
     <string name="location">Ubicació</string>
     <string name="gps">GPS</string>
     <string name="compass_accuracy_improved">Precisió de brúixola millorada en %s</string>
@@ -224,7 +223,6 @@
     <string name="unit_meters">Metres</string>
     <string name="unit_feet">Peus</string>
     <string name="unit_miles">Milles</string>
-    <string name="guide_recommended_apps_description">Aplicacions útils per a situacions de supervivència</string>
     <string name="pref_privacy_policy_title">Política de privadesa</string>
     <string name="tool_solar_panel_title">Alineador de panells solars</string>
     <string name="tool_clock_title">Rellotge</string>
@@ -276,11 +274,8 @@
     <string name="metal_detector_disclaimer">Només detecta metalls magnètics (ex. ferro)</string>
     <string name="notes_empty_text">Sense notes</string>
     <string name="contents">Contingut</string>
-    <string name="bubble_level_angles">X: %1$s
-\nY: %2$s</string>
     <string name="distance_to">Fins a</string>
     <string name="unit_nautical_miles">Milles nàutiques</string>
-    <string name="guide_recommended_apps">Aplicacions recomanades</string>
     <string name="solar_panel_instructions">Col·loqueu el telèfon a la cara del panell solar per començar.</string>
     <string name="water_boil_timer_done_content">La vostra aigua ja és potable</string>
     <string name="thunder">Tro</string>
@@ -428,7 +423,6 @@
     <string name="current_speed_gps">Velocitat actual (GPS)</string>
     <string name="permission_alarms_and_reminders">Alarmes i recordatoris</string>
     <string name="map_export_error">No es pot exportar el mapa al fitxer escollit</string>
-    <string name="calibrate_map_point">Calibra amb ubicacions conegudes (%1$d/%2$d)</string>
     <string name="updating_weather">S’està actualitzant el temps</string>
     <string name="camera_unavailable">La càmera no està disponible</string>
     <string name="coordinate_input_invalid_location">La ubicació no és vàlida</string>

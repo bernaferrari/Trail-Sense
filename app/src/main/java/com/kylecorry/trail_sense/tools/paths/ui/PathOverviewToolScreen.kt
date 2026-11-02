@@ -57,6 +57,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.luna.concurrency.onDefault
@@ -106,6 +107,7 @@ import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.os.Bundle
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -119,10 +121,11 @@ import com.kylecorry.trail_sense.tools.paths.domain.beacon.IPathPointBeaconConve
 import com.kylecorry.trail_sense.tools.paths.domain.beacon.TemporaryPathPointBeaconConverter
 import com.kylecorry.trail_sense.tools.paths.domain.factories.IPointDisplayFactory
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingDifficulty
+import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.paths.domain.PathDirection
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import com.kylecorry.trail_sense.tools.paths.domain.point_finder.NearestPathLineNavigator
-import com.kylecorry.trail_sense.tools.paths.domain.point_finder.NearestPathPointNavigator
-import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.BacktrackCommand
+import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.AddPathPointCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathColorCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathLineStyleCommand
@@ -132,7 +135,6 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.DeletePointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ExportPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.KeepPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.MoveIPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.NavigateToPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.NavigateToPointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
@@ -193,7 +195,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         )
     }
     private var declination = 0f
-    private val hikingService = HikingService()
+    private val hikingService = HikingService
     private val pathService by lazy { PathService.getInstance(host.requireContext()) }
 
     private val chart: PathElevationChart
@@ -231,10 +233,13 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         )
     }
 
+    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
+
     private val beaconNavigator: IBeaconNavigator by lazy {
         BeaconNavigator(
             BeaconService(host.requireContext()),
-            NavControllerAppNavigation(host.findNavController())
+            NavControllerAppNavigation(host.findNavController()),
+            navigator
         )
     }
 
@@ -265,6 +270,10 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
                     },
                     onNavigate = {
                         navigateToWaypoint(it)
+                        showPathPointsSheet = false
+                    },
+                    onNavigateDirect = {
+                        navigateDirectlyToWaypoint(it)
                         showPathPointsSheet = false
                     },
                     onView = {
@@ -305,7 +314,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         }
         isCreated = true
         pathId = host.destinationArguments?.getLong("path_id") ?: error("Missing path id")
-        layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.navigation.useFastPathRendering)
+        layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.paths.useFastPathRendering)
         layer.setOnClickListener {
             if (selectedPointId != null) {
                 deselectPoint()
@@ -376,7 +385,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
             host.inBackground {
                 var wasSuccessful = false
                 val job = launch {
-                    BacktrackCommand(host.requireContext(), pathId).execute()
+                    AddPathPointCommand(host.requireContext(), pathId).execute()
                     wasSuccessful = true
                 }
 
@@ -392,8 +401,11 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
             }
         }
 
-        views.pathActions.onNavigateClick = {
-            navigateToNearestPathPoint()
+        views.pathActions.onFollowToStartClick = {
+            followPath(PathFollow.Direction(PathDirection.ToStart))
+        }
+        views.pathActions.onFollowToEndClick = {
+            followPath(PathFollow.Direction(PathDirection.ToEnd))
         }
 
         views.pathTitle.onMenuClick = {
@@ -508,7 +520,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
     private fun updateElevationPlot() {
         chart.plot(
             waypoints.reversed(),
-            path?.style?.color ?: prefs.navigation.defaultPathColor.color
+            path?.style?.color ?: prefs.paths.defaultPathColor.color
         )
     }
 
@@ -818,6 +830,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
             views.pathSelectedPoint.onCreateBeacon = { createBeacon(it) }
             views.pathSelectedPoint.onDelete = { deleteWaypoint(it) }
             views.pathSelectedPoint.onNavigate = { navigateToWaypoint(it) }
+            views.pathSelectedPoint.onNavigateDirect = { navigateDirectlyToWaypoint(it) }
             chart.highlight(point)
         } else {
             deselectPoint()
@@ -827,31 +840,33 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
     }
 
     private fun navigateToWaypoint(point: PathPoint) {
-        val path = path ?: return
+        followPath(PathFollow.ToPoint(point.id))
+    }
+
+    private fun followPath(follow: PathFollow) {
+        val selectedPath = path ?: return
+        host.lifecycleOwner.lifecycleScope.launch {
+            navigator.navigateAlongPath(selectedPath, follow)
+            onMain {
+                host.findNavController().navigate(
+                    R.id.action_navigation,
+                    Bundle().apply {
+                        putBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED, true)
+                    }
+                )
+            }
+        }
+    }
+
+    private fun navigateDirectlyToWaypoint(point: PathPoint) {
+        val selectedPath = path ?: return
         val command = NavigateToPointCommand(
             host.lifecycleOwner,
             converter,
             beaconNavigator
         )
         tryOrNothing {
-            command.execute(path, point)
-        }
-    }
-
-    private fun navigateToNearestPathPoint() {
-        val path = path ?: return
-        val points = waypoints
-        val command = NavigateToPathCommand(
-            if (prefs.navigation.onlyNavigateToPoints) NearestPathPointNavigator() else NearestPathLineNavigator(),
-            gps,
-            converter,
-            beaconNavigator
-        )
-
-        host.toast(host.getString(R.string.navigating_to_nearest_path_point))
-
-        host.inBackground {
-            command.execute(path, points)
+            command.execute(selectedPath, point)
         }
     }
 
@@ -1348,6 +1363,7 @@ private class PathSelectedPointView {
     var onCreateBeacon by mutableStateOf<(PathPoint) -> Unit>({})
     var onDelete by mutableStateOf<(PathPoint) -> Unit>({})
     var onNavigate by mutableStateOf<(PathPoint) -> Unit>({})
+    var onNavigateDirect by mutableStateOf<(PathPoint) -> Unit>({})
     private var pointVisible by mutableStateOf(true)
 
     var isVisible: Boolean
@@ -1373,6 +1389,7 @@ private class PathSelectedPointView {
                 onCreateBeacon = onCreateBeacon,
                 onDelete = onDelete,
                 onNavigate = onNavigate,
+                onNavigateDirect = onNavigateDirect,
                 onView = {}
             )
         }
@@ -1404,24 +1421,32 @@ private class PathTimingView {
 }
 
 private class PathActionsView(private val context: Context) {
-    var onNavigateClick by mutableStateOf({})
+    var onFollowToStartClick by mutableStateOf({})
+    var onFollowToEndClick by mutableStateOf({})
     var onAddPointClick by mutableStateOf({})
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        Row(
+        Column(
             modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            TrailSenseButton(
-                text = context.getString(R.string.navigate),
-                onClick = onNavigateClick,
-                modifier = Modifier.weight(1f)
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+                TrailSenseButton(
+                    text = context.getString(R.string.path_direction_to_start),
+                    onClick = onFollowToStartClick,
+                    modifier = Modifier.weight(1f)
+                )
+                TrailSenseButton(
+                    text = context.getString(R.string.path_direction_to_end),
+                    onClick = onFollowToEndClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             TrailSenseButton(
                 text = context.getString(R.string.point),
                 onClick = onAddPointClick,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

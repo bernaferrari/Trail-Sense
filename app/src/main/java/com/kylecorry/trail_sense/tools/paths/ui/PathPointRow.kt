@@ -34,6 +34,7 @@ fun PathPointRow(
     onCreateBeacon: (PathPoint) -> Unit,
     onDelete: (PathPoint) -> Unit,
     onNavigate: (PathPoint) -> Unit,
+    onNavigateDirect: (PathPoint) -> Unit,
     onView: (PathPoint) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -79,10 +80,17 @@ fun PathPointRow(
                 onDismissRequest = { menuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.navigate)) },
+                    text = { Text(stringResource(R.string.path_navigation_follow_to_point)) },
                     onClick = {
                         menuOpen = false
                         onNavigate(point)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.path_navigation_direct)) },
+                    onClick = {
+                        menuOpen = false
+                        onNavigateDirect(point)
                     }
                 )
                 DropdownMenuItem(

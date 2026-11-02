@@ -14,7 +14,6 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.LinearCameraAnglePixelMapper
-import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -134,19 +133,8 @@ object AugmentedRealityUtils {
         mapper: CameraAnglePixelMapper
     ): Vector3 {
         val world = mapper.getAngle(pixel.x, pixel.y, rect, fov)
-        // TODO: Get this working for all mappers
-//        val inversePerspective = Optics.inversePerspectiveProjection(
-////            Vector2(pixel.x, pixel.y),
-//            pixel.toVector2(rect.top),
-//            Vector2(
-//                Optics.getFocalLength(fov.width, rect.width()),
-//                Optics.getFocalLength(fov.height, rect.height())
-//            ),
-//            PixelCoordinate(rect.centerX(), rect.centerY()).toVector2(rect.top),
-//            100f
-//        )
-        val spherical = SphericalARPoint(world.x, world.y).coordinate.position
-        return arToEnu(spherical, rotationMatrix)
+        val cameraPoint = CameraAnglePixelMapper.toCartesian(world.x, world.y, 1f)
+        return arToEnu(cameraPoint, rotationMatrix)
     }
 
 
@@ -233,8 +221,9 @@ object AugmentedRealityUtils {
     fun arToEnu(ar: Vector3, rotationMatrix: FloatArray): Vector3 {
         return synchronized(worldVectorLock) {
             tempWorldVector[0] = ar.x
-            tempWorldVector[1] = ar.y
-            tempWorldVector[2] = ar.z
+            // Undo the y/z swap applied by enuToAr before inverting the rotation.
+            tempWorldVector[1] = ar.z
+            tempWorldVector[2] = ar.y
             tempWorldVector[3] = 1f
 
             // Invert the rotation matrix

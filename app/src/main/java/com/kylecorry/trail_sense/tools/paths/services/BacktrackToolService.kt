@@ -2,16 +2,19 @@ package com.kylecorry.trail_sense.tools.paths.services
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
-import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
+import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
+import com.kylecorry.trail_sense.shared.permissions.isAppForeground
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -40,7 +43,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
     }
 
     override fun getFrequency(): Duration {
-        return prefs.backtrackRecordFrequency
+        return prefs.paths.backtrackRecordFrequency
     }
 
     override fun isRunning(): Boolean {
@@ -48,7 +51,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
     }
 
     override fun isEnabled(): Boolean {
-        return prefs.backtrackEnabled
+        return prefs.paths.backtrackEnabled
     }
 
     override fun isBlocked(): Boolean {
@@ -56,13 +59,17 @@ class BacktrackToolService(private val context: Context) : ToolService {
     }
 
     override suspend fun enable() {
-        if (!Permissions.canStartLocationForgroundService(context)) {
+        if (!Permissions.canStartLocationForegroundService(context)) {
             ServiceRestartAlerter(context).alert()
-            Log.d("BacktrackSubsystem", "Cannot start backtrack")
+            getAppService<Logger>().warn(
+                TAG,
+                "Cannot start backtrack: missing location permission for foreground service " +
+                    "(app in foreground: ${isAppForeground()}, background location: ${Permissions.isBackgroundLocationEnabled(context)})"
+            )
             return
         }
 
-        prefs.backtrackEnabled = true
+        prefs.paths.backtrackEnabled = true
         Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED)
         if (!isBlocked()) {
             start(true)
@@ -70,9 +77,10 @@ class BacktrackToolService(private val context: Context) : ToolService {
     }
 
     override suspend fun disable() {
-        prefs.backtrackEnabled = false
+        prefs.paths.backtrackEnabled = false
         Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED)
         stop()
+        PathService.getInstance(context).endBacktrackPath()
     }
 
     override suspend fun restart() {
@@ -112,7 +120,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
             Tools.broadcast(
                 PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
                 Bundle().apply {
-                    putLong(PathsToolRegistration.BROADCAST_PARAM_BACKTRACK_FREQUENCY, prefs.backtrackRecordFrequency.toMillis())
+                    putLong(PathsToolRegistration.BROADCAST_PARAM_BACKTRACK_FREQUENCY, prefs.paths.backtrackRecordFrequency.toMillis())
                 }
             )
         }
@@ -122,5 +130,9 @@ class BacktrackToolService(private val context: Context) : ToolService {
 
     protected fun finalize() {
         sharedPreferences.onChange.unsubscribe(this::onPreferencesChanged)
+    }
+
+    companion object {
+        private const val TAG = "BacktrackToolService"
     }
 }

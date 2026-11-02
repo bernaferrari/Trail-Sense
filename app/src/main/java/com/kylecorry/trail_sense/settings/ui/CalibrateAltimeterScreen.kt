@@ -49,7 +49,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.CoroutineAlerts
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
@@ -62,6 +62,7 @@ import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.science.meteorology.Meteorology
@@ -649,7 +650,7 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
             val source = IntentUriPicker(
                 host.intentResultRetriever,
                 host.requireContext()
-            ).open(listOf("application/zip")) ?: return@inBackground
+            ).open(listOf("application/zip")).getOrNull() ?: return@inBackground
 
             val loader = DigitalElevationModelLoader()
             try {
@@ -791,7 +792,7 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
 
     private fun ensureDefaultMode() {
         val key = getString(R.string.pref_altimeter_calibration_mode)
-        if (AppServiceRegistry.get<PreferencesSubsystem>().preferences.getString(key) == null) {
+        if (DependencyRegistry.get<PreferencesSubsystem>().preferences.getString(key) == null) {
             cache.putString(key, if (prefs.weather.hasBarometer) "gps_barometer" else "gps")
         }
     }

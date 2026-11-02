@@ -1,20 +1,41 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
 import android.graphics.Bitmap
+import kotlinx.coroutines.CancellationException
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 class ImageTile(
     val key: String,
     val tile: Tile,
-    private var image: Bitmap? = null,
-    var state: TileState = TileState.Idle,
+    @Volatile private var image: Bitmap? = null,
+    state: TileState = TileState.Idle,
     private val shouldFadeIn: Boolean = true,
+    val owner: String = "",
+    private val errorRetryDelayMillis: Long = 10_000L,
     loadFunction: (suspend () -> Bitmap?)?
 ) {
 
-    private val lock = Any()
+    private val imageLock = ReentrantReadWriteLock()
+    private val stateLock = Any()
 
+    @Volatile
     private var _loadFunction: (suspend () -> Bitmap?)? = loadFunction
 
+    @Volatile
+    var state: TileState = state
+        private set
+
+    @Volatile
+    internal var retryAfterMillis = 0L
+        private set
+
+    fun isLoadable(): Boolean {
+        return state == TileState.Idle || state == TileState.Stale ||
+                (state == TileState.Error && System.currentTimeMillis() >= retryAfterMillis)
+    }
+
+    @Volatile
     var loadingStartTime: Long? = null
     fun getAlpha(): Int {
         if (!shouldFadeIn) {
@@ -36,49 +57,51 @@ class ImageTile(
     }
 
     fun hasImage(): Boolean {
-        synchronized(lock) {
-            return image != null
-        }
+        return image != null
     }
 
-    fun setLoader(loader: (suspend () -> Bitmap?)?) {
-        synchronized(lock) {
-            _loadFunction = loader
-        }
+    fun setLoader(loader: (suspend () -> Bitmap?)) {
+        _loadFunction = loader
     }
 
     fun invalidate() {
-        synchronized(lock) {
+        _loadFunction = null
+        synchronized(stateLock) {
             state = TileState.Stale
-            _loadFunction = null
         }
     }
 
     suspend fun load() {
         var wasIdle = false
-        val loader = synchronized(lock) {
-            if (_loadFunction == null) {
+        val loader = synchronized(stateLock) {
+            val loadFn = _loadFunction
+            if (loadFn == null) {
                 state = TileState.Stale
                 return
             }
             wasIdle = state == TileState.Idle
             state = TileState.Loading
-            _loadFunction
+            loadFn
         }
 
         var hasImage = false
         var wasSuccess = false
         try {
-            val newImage = loader?.invoke()
-            synchronized(lock) {
+            val newImage = loader.invoke()
+            imageLock.write {
                 image?.recycle()
                 image = newImage
                 hasImage = image != null
             }
             wasSuccess = true
+        } catch (e: CancellationException) {
+            synchronized(stateLock) {
+                state = TileState.Stale
+            }
+            throw e
         } catch (e: Throwable) {
             e.printStackTrace()
-            synchronized(lock) {
+            imageLock.write {
                 image?.recycle()
                 image = null
             }
@@ -87,9 +110,12 @@ class ImageTile(
             loadingStartTime = System.currentTimeMillis()
         }
 
-        synchronized(lock) {
+        synchronized(stateLock) {
             if (state == TileState.Stale) {
                 return
+            }
+            if (!wasSuccess) {
+                retryAfterMillis = System.currentTimeMillis() + errorRetryDelayMillis
             }
             state = when {
                 wasSuccess && hasImage -> TileState.Loaded
@@ -100,17 +126,33 @@ class ImageTile(
 
     }
 
+    /**
+     * Attempts to obtain a read lock on the image. If a write lock is active, this will call the block with null.
+     * Otherwise, the block will be called with the current image (if any) under a read lock.
+     *
+     * The contents of image bitmap may be modified in block, though it should be avoided if possible and done in a way
+     * that doesn't impact other readers. Changes may be overridden, so use with caution.
+     */
     fun withImage(block: (image: Bitmap?) -> Unit) {
-        synchronized(lock) {
+        val readLock = imageLock.readLock()
+        if (!readLock.tryLock()) {
+            block(null)
+            return
+        }
+        try {
             block(image)
+        } finally {
+            readLock.unlock()
         }
     }
 
     fun recycle() {
-        synchronized(lock) {
+        imageLock.write {
             image?.recycle()
             image = null
-            state = TileState.Idle
+            synchronized(stateLock) {
+                state = TileState.Idle
+            }
         }
     }
 }

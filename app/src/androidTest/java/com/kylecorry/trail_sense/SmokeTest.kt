@@ -133,12 +133,12 @@ class SmokeTest {
         // Wait for the path to be created
         hasText("Temporary", waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
-        // Stop backtrack
-        click({ viewWithResourceId("$packageName:id/play_btn") })
-
         // Open the path
         click("Temporary")
         back()
+
+        // Stop backtrack
+        click({ viewWithResourceId("$packageName:id/play_btn") })
     }
 
     private fun smokeTestPhotoMaps() {
@@ -199,7 +199,7 @@ class SmokeTest {
 
     private fun smokeTestUserGuide() {
         click("Flashlight")
-        hasText("The Flashlight tool")
+        hasText("Use the Flashlight tool")
         back()
     }
 
@@ -211,10 +211,9 @@ class SmokeTest {
         click({ viewWithResourceId("$packageName:id/toolbar_right_button") })
         click("Test beacon")
         click("Navigate")
-        clickOk()
+        optional { clickOk() }
         hasText("Test beacon")
-        click({ viewWithResourceId("$packageName:id/toolbar_right_button", index = 1) })
-        click("Yes")
+        click({ viewWithResourceId("$packageName:id/navigation_cancel") })
         back()
         back()
         back()

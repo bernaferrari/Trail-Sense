@@ -497,7 +497,7 @@
     <string name="tool_notes_title">Notes</string>
     <string name="note_title_hint">Title</string>
     <string name="contents">Contents</string>
-    <string name="bubble_level_angles">X: %1$s\nY: %2$s</string>
+    <string name="bubble_level_angles">X: %1$s\nY: %2$s\nAngle: %3$s</string>
     <string name="unit_centimeters">Centimeters</string>
     <string name="unit_centimeters_abbreviation">cm</string>
     <string name="unit_inches_abbreviation">in</string>
@@ -1972,4 +1972,151 @@
     <string name="map_external">External</string>
     <string name="map_file_missing">File missing</string>
     <string name="copy_to_trail_sense">Copy to Trail Sense</string>
+
+    <string name="replace_elevations">Replace elevations</string>
+    <string name="replace_elevations_confirmation">Replace all path elevations using the digital elevation model?</string>
+    <string name="scientific_name">Scientific name</string>
+    <string name="field_guide_name_display">Name display</string>
+    <string name="pref_field_guide_name_display" translatable="false">pref_field_guide_name_display</string>
+    <string name="built_in_pages">Built-in pages</string>
+    <string name="pref_field_guide_built_in_pages_holder" translatable="false">pref_field_guide_built_in_pages_holder</string>
+    <string name="pref_field_guide_hidden_pages" translatable="false">pref_field_guide_hidden_pages</string>
+    <string name="hide_field_guide_page_message">%1$s\n\nYou can unhide this page in the Field Guide settings.</string>
+    <string name="common_name">Common name</string>
+    <string name="both_names">Both names</string>
+    <string name="recording">Recording</string>
+    <string name="clock_device_time_accurate">Device clock is accurate</string>
+    <plurals name="clock_device_time_slow">
+        <item quantity="one">Device clock is %d second slow</item>
+        <item quantity="other">Device clock is %d seconds slow</item>
+    </plurals>
+    <plurals name="clock_device_time_fast">
+        <item quantity="one">Device clock is %d second fast</item>
+        <item quantity="other">Device clock is %d seconds fast</item>
+    </plurals>
+    <string name="battery_deep_sleep">Deep sleep: %1$s (last %2$s)</string>
+    <string name="pref_backtrack_min_distance" translatable="false">pref_backtrack_min_distance</string>
+    <string name="pref_backtrack_min_distance_holder" translatable="false">pref_backtrack_min_distance_holder</string>
+    <string name="pref_backtrack_min_distance_title">Minimum distance between points</string>
+    <string name="pref_backtrack_min_distance_summary">Points closer than this to the previous point are not recorded. Set to 0 to record every point.</string>
+    <string name="pref_gps_accuracy_requirement" translatable="false">pref_gps_accuracy_requirement</string>
+    <string name="pref_gps_accuracy_meters" translatable="false">pref_gps_accuracy_meters</string>
+    <string name="pref_gps_accuracy_wait_seconds" translatable="false">pref_gps_accuracy_wait_seconds</string>
+    <string name="pref_gps_accuracy_requirement_title">Accuracy filter</string>
+    <string name="gps_accuracy_filter_summary">%1$s accuracy, wait up to %2$s</string>
+    <string name="gps_accuracy_target">Accuracy: %1$s</string>
+    <string name="gps_accuracy_wait">Maximum wait: %1$s</string>
+    <string name="pref_backtrack_keep_awake" translatable="false">pref_backtrack_keep_awake</string>
+    <string name="pref_gps_power_usage" translatable="false">pref_gps_power_usage</string>
+    <string name="pref_backtrack_gps_power_usage" translatable="false">pref_backtrack_gps_power_usage</string>
+    <string name="pref_gps_power_usage_title">GPS power usage</string>
+    <string name="pref_backtrack_gps_power_usage_title">Backtrack GPS power usage</string>
+    <string name="gps_power_usage_low">Battery saving</string>
+    <string name="gps_power_usage_balanced">Balanced</string>
+    <string name="gps_power_usage_high">High accuracy</string>
+    <string name="gps_power_usage_inherit">Inherit from GPS settings</string>
+    <string name="pref_backtrack_keep_awake_summary">When below 15 minute frequency</string>
+    <string name="pref_backtrack_keep_awake_title">Keep device awake</string>
+    <string name="pref_step_length_title">Step length</string>
+    <string name="pref_step_length_holder" translatable="false">pref_step_length_holder</string>
+    <string name="pref_navigation_lock_screen_mode" translatable="false">pref_navigation_lock_screen_mode</string>
+    <string name="pref_navigation_lock_screen_title">Show on lock screen</string>
+    <string name="pref_navigation_lock_screen_while_navigating">While navigating</string>
+    <string name="pref_navigation_lock_screen_while_open">While open</string>
+    <string name="pref_backtrack_keep_on_stop" translatable="false">pref_backtrack_keep_on_stop</string>
+    <string name="pref_backtrack_keep_on_stop_title">Keep path when stopped</string>
+    <string name="pref_backtrack_keep_on_stop_summary">Otherwise, the path is deleted after the Backtrack history</string>
+    <string name="pref_large_tile_cache" translatable="false">pref_large_tile_cache</string>
+    <string name="pref_large_tile_cache_title">Use large map tile cache</string>
+    <string name="pref_plugins_enabled" translatable="false">pref_plugins_enabled</string>
+    <string name="delete_packing_list_item">Delete item?</string>
+    <string name="export_logs">Export logs</string>
+    <string name="external_storage">External storage</string>
+    <string name="external_storage_diagnostic_instructions">The system file picker does not have permission to access files on your device. This can prevent Trail Sense from opening or saving files you choose. Enable “Allow access to manage all files” for the system file picker (it might be called "External Storage").</string>
+    <string name="location_permission">Location permission</string>
+    <string name="parenthesized_pair" translatable="false">%1$s (%2$s)</string>
+    <string name="quality">Quality</string>
+    <string name="created">Created</string>
+    <string name="redo">Redo</string>
+    <string name="average_pace">Average pace</string>
+    <string name="pref_pedometer_history_days" translatable="false">pref_pedometer_history_days</string>
+    <string name="pref_pedometer_history_days_title">Step history</string>
+    <string name="pref_pedometer_average_pace_time" translatable="false">pref_pedometer_average_pace_time</string>
+    <string name="pref_pedometer_average_pace_time_title">Average pace time</string>
+    <string name="estimate_step_length">Estimate step length</string>
+    <string name="pref_estimate_step_length_holder" translatable="false">pref_estimate_step_length_holder</string>
+    <string name="step_length_stand_still">Stand still</string>
+    <string name="step_length_walk">Walk in a straight line, press stop when you are done</string>
+    <string name="current_pace">Current pace</string>
+    <string name="exporting">Exporting</string>
+    <string name="export_failed">Unable to export</string>
+    <string name="current_session">Current session</string>
+    <string name="active_time">Active time</string>
+    <string name="active_duration">Active: %s</string>
+    <string name="elapsed_time">Elapsed time</string>
+    <string name="history">History</string>
+    <string name="no_pedometer_sessions">No sessions</string>
+    <string name="alarm">Alarm</string>
+    <string name="save_draft">Save draft</string>
+    <string name="finish_calibration">Finish calibration</string>
+    <string name="calibrate_map_point_title">Point %1$d of %2$d</string>
+    <string name="calibrate_map_point_instructions">Tap this location on the map, then enter its real-world coordinates.</string>
+    <string name="create_path_on_map">Draw on map</string>
+    <string name="path_edit_hint">Tap to add a point. Drag a point to move it. Hold a point to select it.</string>
+    <string name="path_edit_hint_selected">Tap to add a point after the selected one. Drag to move it. Hold to deselect.</string>
+    <string name="draft">Draft</string>
+    <string name="skip_elevations">Skip elevations</string>
+    <string name="bottom_navigation">Bottom navigation</string>
+    <string name="pref_elevation_smoothing" translatable="false">pref_elevation_smoothing</string>
+    <string name="pref_holder_elevation_smoothing_chart" translatable="false">pref_holder_elevation_smoothing_chart</string>
+    <string name="elevation_smoothing">Elevation smoothing</string>
+    <string name="pref_use_legacy_file_picker" translatable="false">pref_use_legacy_file_picker</string>
+    <string name="use_legacy_file_picker">Use legacy file picker</string>
+    <string name="pref_widget_icon_compatibility" translatable="false">pref_widget_icon_compatibility</string>
+    <string name="widget_icon_compatibility_mode">Widget icon compatibility mode</string>
+    <string name="widget_icon_compatibility_mode_summary">Fixes missing widget icons on some devices</string>
+    <plurals name="step_count">
+        <item quantity="one">%d step</item>
+        <item quantity="other">%d steps</item>
+    </plurals>
+    <string name="references">References</string>
+    <string name="location_required_for_cell_signals">Location permission is required to view nearby cell signals</string>
+    <string name="navigation_cancelled">Navigation cancelled</string>
+    <string name="pref_bearing_distance_holder" translatable="false">pref_bearing_distance_holder</string>
+    <string name="pref_bearing_distance" translatable="false">pref_bearing_distance</string>
+    <string name="bearing_length">Bearing length</string>
+    <string name="bearing_length_description">The length of the bearing line when a bearing is active</string>
+    <string name="bearing_length_max">Max: %s</string>
+    <string name="map_layer_navigation_show_endpoints">Show start and end points</string>
+    <string name="invalid_trail_map">Invalid trail map</string>
+    <string name="invalid_trail_map_message">The trail map file is invalid or missing. You may want to delete this map and import a new one.</string>
+    <string name="recording_sighting_for_page">Recording \'%s\' sighting</string>
+    <string name="map_error_invalid_map_file">Invalid map file</string>
+    <string name="map_error_access_denied">Access to map file was denied</string>
+    <string name="map_error_unable_to_copy">Unable to copy map file</string>
+    <string name="color_by_classification">Color by classification</string>
+    <string name="set_as_default_photo">Set as default</string>
+    <string name="delete_image_prompt">Delete image?</string>
+    <string name="image_index">Image %1$d/%2$d</string>
+    <string name="last_updated">Last updated</string>
+    <string name="pref_gps_smoothing" translatable="false">pref_gps_smoothing</string>
+    <string name="path_direction_to_end">Follow to end</string>
+    <string name="path_direction_to_start">Follow to start</string>
+    <string name="path_navigation_follow_to_point">Follow to point</string>
+    <string name="path_navigation_direct">Navigate directly</string>
+    <string name="compass_update_frequency">Update frequency</string>
+    <string name="compass_update_frequency_normal">Normal</string>
+    <string name="compass_update_frequency_fast">Fast</string>
+    <string name="pref_compass_update_frequency" translatable="false">pref_compass_update_frequency</string>
+    <string name="pref_ar_path_appearance" translatable="false">pref_ar_path_appearance</string>
+    <string name="ar_path_appearance">Appearance</string>
+    <string name="ar_path_appearance_ribbon">Ribbon</string>
+    <string name="ar_path_appearance_line">Line</string>
+    <string name="navigation_elevation_format">(Ele. %s)</string>
+    <string name="navigation_remaining">Remaining</string>
+    <string name="navigation_traveled">Traveled</string>
+    <string name="navigation_facing">Facing</string>
+    <string name="navigation_remaining_gain">Remaining gain</string>
+    <string name="navigation_remaining_loss">Remaining loss</string>
+    <string name="navigation_arrive_format">Arrive %s</string>
 </resources>

@@ -7,12 +7,12 @@ import com.kylecorry.andromeda.bitmaps.operations.Convert
 import com.kylecorry.andromeda.bitmaps.operations.CropTile
 import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.andromeda.bitmaps.operations.set
-import com.kylecorry.andromeda.core.cache.AppServiceRegistry
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.cache.GeospatialCache
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.luna.cache.LRUCache
+import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.luna.concurrency.Parallel
 import com.kylecorry.sol.math.geometry.Geometry
 import com.kylecorry.sol.math.interpolation.Interpolation
@@ -43,8 +43,8 @@ object DEM {
     private const val CACHE_SIZE = 500
     private var cache =
         GeospatialCache<DEMElevation>(Distance.meters(CACHE_DISTANCE), size = CACHE_SIZE)
-    private var pixelCache = LRUCache<String, ElevationBitmap>(1)
-    private var tileCache = LRUCache<String, ElevationBitmap>(16)
+    private var pixelCache = MemoryLRUCache<String, ElevationBitmap>(1)
+    private var tileCache = MemoryLRUCache<String, ElevationBitmap>(16)
     private var cachedSources: List<GeographicImageSource>? = null
     private var cachedHasWaterMask: Boolean = false
     private var cachedIsExternal: Boolean? = null
@@ -54,11 +54,11 @@ object DEM {
         cache.getOrPut(location) {
             val allSources = getSources()
             val source = allSources.firstOrNull { it.contains(location) }
-                ?: return@getOrPut DEMElevation(0f, null)
+                ?: return@getOrPut DEMElevation(0f, null, hasData = false)
             val hasWaterMask = cachedHasWaterMask
             val neighbors = getNeighborSources(source, allSources)
             onIO {
-                tryOrDefault(DEMElevation(0f, null)) {
+                tryOrDefault(DEMElevation(0f, null, hasData = false)) {
                     val data = source.read(location, neighbors)
                     val elevation = data[0]
                     if (hasWaterMask) {
@@ -274,7 +274,7 @@ object DEM {
             }
 
             val tiles = if (isExternal) {
-                val database = AppServiceRegistry.get<AppDatabase>().digitalElevationModelDao()
+                val database = DependencyRegistry.get<AppDatabase>().digitalElevationModelDao()
                 database.getAll()
             } else {
                 BuiltInDem.getTiles()
@@ -335,13 +335,15 @@ object DEM {
 
     fun invalidateCache() {
         cache = GeospatialCache(Distance.meters(CACHE_DISTANCE), size = CACHE_SIZE)
+        pixelCache = MemoryLRUCache(1)
+        tileCache = MemoryLRUCache(16)
         cachedSources = null
         cachedHasWaterMask = false
         cachedIsExternal = null
     }
 
     fun isExternalModel(): Boolean {
-        val prefs = AppServiceRegistry.get<UserPreferences>()
+        val prefs = DependencyRegistry.get<UserPreferences>()
         return prefs.altimeter.isDigitalElevationModelLoaded
     }
 
