@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,6 +48,7 @@ fun TrailSenseListItem(
     iconRotation: Float = 0f,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     position: TrailSenseGroupPosition? = null,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     // Off by default: in a LazyColumn this would re-fire every time a row scrolls
@@ -71,7 +72,7 @@ fun TrailSenseListItem(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.98f else 1f,
+        targetValue = if (isPressed && onClick != null) 0.985f else 1f,
         animationSpec = TrailSenseAnimation.quickSpring,
         label = "listItemPress"
     )
@@ -93,10 +94,12 @@ fun TrailSenseListItem(
                 .heightIn(min = 72.dp)
                 .then(
                     if (onClick != null) {
-                        Modifier.clickable(
+                        Modifier.combinedClickable(
                             interactionSource = interactionSource,
+                            indication = androidx.compose.material3.ripple(),
                             role = Role.Button,
-                            onClick = onClick
+                            onClick = onClick,
+                            onLongClick = onLongClick
                         )
                     } else {
                         Modifier

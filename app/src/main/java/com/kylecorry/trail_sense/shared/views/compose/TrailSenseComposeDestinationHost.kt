@@ -868,6 +868,7 @@ class TrailSenseComposeDestinationHost(
     @Composable
     internal fun ToolsHome() {
         ToolsScreen(
+            pinnedToolIds = pinnedToolManager.pinnedIds.value,
             onToolClick = { tool ->
                 findNavController().navigateWithAnimation(tool.navAction)
             },

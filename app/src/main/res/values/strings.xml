@@ -2145,4 +2145,5 @@
     <string name="compass_wallpaper_colors_summary">Color the cardinal directions with your wallpaper colors</string>
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
+    <string name="search_tools">Search tools</string>
 </resources>
