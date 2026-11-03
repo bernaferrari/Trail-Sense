@@ -258,6 +258,20 @@ private fun TurnBackScreen(
         )
     }
     val isActive = returnTime != null
+    val instructionText = if (
+        formattedRemainingTime != null &&
+        formattedTurnBackTime != null &&
+        formattedReturnTime != null
+    ) {
+        stringResource(
+            R.string.turn_back_instructions,
+            formattedTurnBackTime,
+            formattedRemainingTime,
+            formattedReturnTime
+        )
+    } else {
+        stringResource(R.string.time_not_set)
+    }
 
     // Fraction of the run still remaining before the turn-back alert (0f..1f).
     // The turn-back point sits at 40% of the journey, so the full span is
@@ -316,15 +330,28 @@ private fun TurnBackScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = formattedRemainingTime ?: stringResource(R.string.time_not_set),
+                        text = instructionText,
                         modifier = Modifier.testTag("instructions"),
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.Bold,
+                        style = if (isActive) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.headlineSmall
+                        },
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         textAlign = TextAlign.Center
                     )
+                    if (formattedRemainingTime != null) {
+                        Text(
+                            text = formattedRemainingTime,
+                            style = MaterialTheme.typography.displayMedium.copy(
+                                fontFeatureSettings = "tnum"
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                     if (isActive) {
                         LinearProgressIndicator(
                             progress = { animatedProgress },

@@ -46,6 +46,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.ErrorBannerReason
+import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -142,6 +145,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     }
     private var lastTowerLocation: Coordinate? = null
     private var towerJob: Job? = null
+    private var locationPermission: Boolean? = null
 
     private val sensorListener = {
         refreshReadings()
@@ -155,6 +159,11 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     }
 
     fun onResume() {
+        val hasPermission = sensorService.hasLocationPermission()
+        if (locationPermission != hasPermission) {
+            locationPermission = hasPermission
+            updateLocationPermissionError(hasPermission)
+        }
         cellSignal.start(sensorListener)
         gps.start(sensorListener)
         refreshReadings()
@@ -174,6 +183,27 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
         cellSignal.stop(sensorListener)
         gps.stop(sensorListener)
         towerJob?.cancel()
+        host.mainActivity.errorBanner.dismiss(ErrorBannerReason.LocationPermissionDenied)
+    }
+
+    private fun updateLocationPermissionError(hasPermission: Boolean) {
+        val banner = host.mainActivity.errorBanner
+        if (hasPermission) {
+            banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
+            return
+        }
+
+        banner.report(
+            UserError(
+                ErrorBannerReason.LocationPermissionDenied,
+                host.getString(R.string.location_required_for_cell_signals),
+                R.drawable.signal_cellular_outline,
+                host.getString(R.string.settings)
+            ) {
+                banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
+                host.startActivity(Intents.appSettings(host.requireContext()))
+            }
+        )
     }
 
     private fun refreshReadings() {

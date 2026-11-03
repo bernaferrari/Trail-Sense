@@ -53,13 +53,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
+import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.qr.QR
+import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
+import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
+import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -100,7 +107,8 @@ fun ScanQRToolScreen(host: TrailSenseDestinationHost) {
         onOpenMap = controller::openMap,
         onCreateBeacon = controller::createBeacon,
         onOpenUrl = controller::openUrl,
-        onDelete = controller::deleteResult
+        onDelete = controller::deleteResult,
+        onScanFromGallery = controller::scanFromGallery
     )
 }
 
@@ -220,6 +228,34 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    fun scanFromGallery() {
+        host.inBackground(BackgroundMinimumState.Created) {
+            val uri = IntentUriPicker(host.intentResultRetriever, host.requireContext())
+                .open(listOf("image/*"))
+                .getOrNull() ?: return@inBackground
+
+            val indicator = AlertLoadingIndicator(
+                host.requireContext(),
+                host.getString(R.string.scanning_image)
+            )
+            try {
+                indicator.show()
+                val path = withContext(Dispatchers.IO) {
+                    FileSubsystem.getInstance(host.requireContext()).copyToTemp(uri)
+                }?.path ?: return@inBackground
+
+                val bitmap = withContext(Dispatchers.IO) {
+                    BitmapUtils.decodeBitmapScaled(path, mediaMaxWidth, mediaMaxHeight)
+                } ?: return@inBackground
+
+                DeleteTempFilesCommand(host.requireContext()).execute()
+                onCameraUpdate(bitmap, isFromGallery = true)
+            } finally {
+                indicator.hide()
+            }
+        }
+    }
+
     fun onResume() {
         updateHistoryList()
         host.requestCamera { hasPermission ->
@@ -327,6 +363,7 @@ private fun QrScannerScreen(
     onCreateBeacon: (String) -> Unit,
     onOpenUrl: (String) -> Unit,
     onDelete: (String) -> Unit,
+    onScanFromGallery: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -382,6 +419,17 @@ private fun QrScannerScreen(
                             .testTag("camera")
                             .semantics { contentDescription = scannerDescription }
                     )
+                }
+            }
+
+            item {
+                FilledTonalButton(
+                    onClick = onScanFromGallery,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("gallery")
+                ) {
+                    Text(stringResource(R.string.select_from_gallery))
                 }
             }
 

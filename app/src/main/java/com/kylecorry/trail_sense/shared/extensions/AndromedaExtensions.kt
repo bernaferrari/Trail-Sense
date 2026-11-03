@@ -42,6 +42,25 @@ inline fun Alerts.withCancelableLoading(
     }
 }
 
+/**
+ * Same dialog as [withCancelableLoading], but the action can suspend so elevation lookups
+ * can leave the main thread while the dialog stays up.
+ */
+suspend fun Alerts.withSuspendableCancelableLoading(
+    context: Context,
+    title: String,
+    cancelText: CharSequence = context.getString(android.R.string.cancel),
+    onCancel: () -> Unit,
+    action: suspend () -> Unit
+) {
+    val loadingAlert = cancelableLoading(context, title, cancelText, onCancel)
+    try {
+        action()
+    } finally {
+        loadingAlert.dismiss()
+    }
+}
+
 inline fun Alerts.withCancelableProgress(
     context: Context,
     title: String,

@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.battery.ui
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -120,7 +121,9 @@ fun BatteryToolScreen(
                     Instant.now(),
                     percent,
                     capacity,
-                    chargingStatus == BatteryChargingStatus.Charging
+                    chargingStatus == BatteryChargingStatus.Charging,
+                    Duration.ofMillis(SystemClock.uptimeMillis()),
+                    Duration.ofMillis(SystemClock.elapsedRealtime())
                 )
             } else {
                 null
@@ -349,6 +352,14 @@ private fun BatteryScreen(
         batteryService.getTimeUntilEmpty(battery, readings)
     }
     val currentText = formatCurrentText(current, isCharging, chargeMethod, formatter)
+    val deepSleep = batteryService.getDeepSleep(readings, Duration.ofHours(6))
+    val deepSleepText = deepSleep?.let { sleep ->
+        stringResource(
+            R.string.battery_deep_sleep,
+            formatter.formatPercentage(sleep.percent),
+            formatter.formatDuration(sleep.duration, true)
+        )
+    }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -378,7 +389,8 @@ private fun BatteryScreen(
                         percent = percent,
                         isCharging = isCharging,
                         isLow = isLow,
-                        formatter = formatter
+                        formatter = formatter,
+                        deepSleepText = deepSleepText
                     )
                 }
 
@@ -461,7 +473,8 @@ private fun BatteryHeroCard(
     percent: Float,
     isCharging: Boolean,
     isLow: Boolean,
-    formatter: FormatService
+    formatter: FormatService,
+    deepSleepText: String?
 ) {
     val accent = when {
         isCharging -> MaterialTheme.colorScheme.tertiary
@@ -547,6 +560,14 @@ private fun BatteryHeroCard(
                 color = animatedAccent,
                 trackColor = MaterialTheme.colorScheme.surface
             )
+            if (deepSleepText != null) {
+                Text(
+                    text = deepSleepText,
+                    modifier = Modifier.testTag("battery_deep_sleep"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     }
 }

@@ -3,13 +3,17 @@
 package com.kylecorry.trail_sense.main.theme
 
 import android.os.Build
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.kylecorry.trail_sense.shared.views.TrailSenseColorScheme
 import com.kylecorry.trail_sense.shared.views.TrailSenseExpressiveTypography
 import com.kylecorry.trail_sense.shared.views.rememberTrailSenseColorScheme
@@ -53,9 +57,16 @@ fun TrailSenseAppTheme(
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = TrailSenseExpressiveTypography,
-        content = content
-    )
+        typography = TrailSenseExpressiveTypography
+    ) {
+        // UiAutomator looks up Compose testTags as resource ids.
+        Box(
+            modifier = Modifier.semantics { testTagsAsResourceId = true },
+            propagateMinConstraints = true
+        ) {
+            content()
+        }
+    }
 }
 
 private fun ColorScheme.toAmoled(): ColorScheme = copy(

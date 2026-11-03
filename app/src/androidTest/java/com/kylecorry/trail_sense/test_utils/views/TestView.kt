@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiObject2
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.device
 import com.kylecorry.trail_sense.test_utils.byResId
@@ -31,6 +32,19 @@ fun viewWithResourceId(
     index: Int = 0
 ): TestView {
     return view(By.res(id), index)
+}
+
+/**
+ * Looks up a Compose testTag or view id by entry name, for example `id("play_btn")`.
+ * The returned lookup is what [com.kylecorry.trail_sense.test_utils.AutomationLibrary] waits on.
+ */
+fun id(resourceName: String): () -> TestView = {
+    view(
+        By.res(
+            AutomationLibrary.packageName ?: TestUtils.context.packageName,
+            resourceName
+        )
+    )
 }
 
 fun viewWithText(

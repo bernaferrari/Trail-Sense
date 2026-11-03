@@ -329,4 +329,14 @@
     <item name="create_menu" type="id" />
     <item name="create_btn" type="id" />
     <item name="backtrack_play_bar" type="id" />
+    <item name="photo_position" type="id" />
+    <item name="next_photo_button" type="id" />
+    <item name="previous_photo_button" type="id" />
+    <item name="battery_deep_sleep" type="id" />
+    <item name="clock_title" type="id" />
+    <item name="pip_button" type="id" />
+    <item name="toolbar_left_button" type="id" />
+    <item name="toolbar_right_button" type="id" />
+    <item name="gallery" type="id" />
+    <item name="download_logs" type="id" />
 </resources>

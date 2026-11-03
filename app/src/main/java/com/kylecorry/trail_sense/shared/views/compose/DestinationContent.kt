@@ -92,7 +92,9 @@ fun DestinationContent(
         when (destination) {
             // --- Simple / no-arg screens (tools and misc) ---
             DESTINATION_LEVEL -> LevelScreen()
-            DESTINATION_WHISTLE -> WhistleScreen()
+            DESTINATION_WHISTLE -> WhistleScreen(
+                onAudioUnavailable = { findNavController().navigateUp() }
+            )
             DESTINATION_LIGHT_METER -> LightMeterScreen()
             DESTINATION_CONVERT -> ConvertScreen()
             DESTINATION_BALLISTICS -> BallisticsScreen()

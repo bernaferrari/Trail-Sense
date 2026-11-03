@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -66,6 +67,7 @@ import kotlinx.coroutines.launch
 internal fun DiagnosticsScreen(
     onShowSensorDetails: () -> Unit,
     onShowDiagnostic: (DiagnosticItem) -> Unit,
+    onExportLogs: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -149,7 +151,7 @@ internal fun DiagnosticsScreen(
                         start = TrailSenseSpacing.screen,
                         end = TrailSenseSpacing.screen,
                         top = TrailSenseSpacing.md,
-                        bottom = TrailSenseSpacing.xxxl
+                        bottom = 96.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                 ) {
@@ -183,6 +185,16 @@ internal fun DiagnosticsScreen(
                         }
                     }
                 }
+            }
+
+            FilledTonalButton(
+                onClick = onExportLogs,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = TrailSenseSpacing.lg)
+                    .testTag("download_logs")
+            ) {
+                Text(stringResource(R.string.export_logs))
             }
         }
     }

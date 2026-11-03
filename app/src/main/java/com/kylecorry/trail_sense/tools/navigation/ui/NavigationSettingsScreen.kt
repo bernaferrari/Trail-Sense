@@ -57,6 +57,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
+import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
@@ -156,6 +157,22 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
 
             prefs.maxBeaconDistance = distance.meters().value
             onPicked(relative(Distance.meters(prefs.maxBeaconDistance)))
+        }
+    }
+
+    fun pickBearingLength(current: Distance, onPicked: (Distance) -> Unit) {
+        CustomUiUtils.pickDistance(
+            host.requireContext(),
+            distanceUnits,
+            current,
+            host.getString(R.string.bearing_length)
+        ) { distance, cancelled ->
+            if (cancelled || distance == null || distance.value <= 0) {
+                return@pickDistance
+            }
+
+            prefs.bearingDistance = distance
+            onPicked(relative(prefs.bearingDistance))
         }
     }
 
@@ -274,6 +291,14 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     }
                     var highDetailMode by remember {
                         mutableStateOf(prefs.highDetailMode)
+                    }
+                    var bearingLength by remember {
+                        mutableStateOf(controller.relative(prefs.bearingDistance))
+                    }
+                    val maxBearingLength = remember {
+                        controller.formatDistance(
+                            controller.relative(Destination.Bearing.maxBearingDistance)
+                        )
                     }
 
                     LaunchedEffect(hasCompass) {
@@ -418,6 +443,18 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                                                 if (it == "instant_pedometer") {
                                                     controller.onCurrentPaceSpeedometerSelected()
                                                 }
+                                            }
+                                        }
+                                    )
+                                    NavDivider()
+                                    NavActionRow(
+                                        label = stringResource(R.string.bearing_length),
+                                        summary = controller.formatDistance(bearingLength) + "\n" +
+                                            stringResource(R.string.bearing_length_description) + "\n" +
+                                            stringResource(R.string.bearing_length_max, maxBearingLength),
+                                        onClick = {
+                                            controller.pickBearingLength(bearingLength) {
+                                                bearingLength = it
                                             }
                                         }
                                     )

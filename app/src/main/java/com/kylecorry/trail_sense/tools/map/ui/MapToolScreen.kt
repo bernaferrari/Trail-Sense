@@ -33,8 +33,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
+import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.ReactiveComponent
@@ -322,13 +326,25 @@ private class MapController(
                 }
                 mapDistanceSheetView.createPathListener = {
                     host.inBackground {
-                        val id = CreatePathCommand(
-                            pathService,
-                            prefs.paths,
-                            null
-                        ).execute(manager.getDistanceMeasurementPoints())
+                        val skipElevations = AtomicBoolean(false)
+                        var id = 0L
+                        Alerts.withSuspendableCancelableLoading(
+                            host.requireContext(),
+                            host.getString(R.string.loading),
+                            cancelText = host.getString(R.string.skip_elevations),
+                            onCancel = { skipElevations.set(true) }
+                        ) {
+                            id = CreatePathCommand(
+                                pathService,
+                                prefs.paths,
+                                null,
+                                manager.getDistanceMeasurementElevations(),
+                                skipElevations::get
+                            ).execute(manager.getDistanceMeasurementPoints())
+                        }
 
                         onMain {
+                            stopDistanceMeasurement()
                             navController.navigateWithAnimation(
                                 R.id.pathDetailsFragment,
                                 Bundle().apply {
@@ -560,6 +576,14 @@ private class MapController(
             }
 
             MapLockMode.Trace -> {
+                CustomUiUtils.disclaimer(
+                    host.requireContext(),
+                    host.getString(R.string.trace),
+                    host.getString(R.string.map_trace_instructions),
+                    "disclaimer_shown_map_trace",
+                    cancelText = null
+                )
+
                 // Disable all interaction
                 map.isInteractive = false
                 map.isZoomEnabled = false

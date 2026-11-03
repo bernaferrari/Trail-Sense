@@ -455,12 +455,23 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 }
             )
 
-            is VectorMap -> host.findNavController().navigateWithAnimation(
-                R.id.offlineMapViewFragment,
-                Bundle().apply {
-                    putLong("offline_map_file_id", map.id)
+            is VectorMap -> {
+                if (!map.isAvailable) {
+                    Alerts.dialog(
+                        host.requireContext(),
+                        host.getString(R.string.invalid_trail_map),
+                        host.getString(R.string.invalid_trail_map_message),
+                        cancelText = null
+                    )
+                    return
                 }
-            )
+                host.findNavController().navigateWithAnimation(
+                    R.id.offlineMapViewFragment,
+                    Bundle().apply {
+                        putLong("offline_map_file_id", map.id)
+                    }
+                )
+            }
         }
     }
 
@@ -958,9 +969,13 @@ private fun VectorMapRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val formatter = getAppService<FormatService>()
+    val externalLabel = if (map.isExternal) stringResource(R.string.map_external) else null
+    val missingLabel = if (!map.isAvailable) stringResource(R.string.map_file_missing) else null
     val subtitle = formatter.join(
         formatter.formatDate(map.createdOn.toZonedDateTime(), includeWeekDay = false),
         formatter.formatFileSize(map.sizeBytes),
+        externalLabel,
+        missingLabel,
         separator = FormatService.Separator.Dot
     )
 
@@ -1013,6 +1028,14 @@ private fun VectorMapMenu(
             VectorMapMenuItem(R.string.rename, onMenuOpenChange, onAction, VectorMapAction.Rename)
             VectorMapMenuItem(R.string.attribution, onMenuOpenChange, onAction, VectorMapAction.EditAttribution)
             VectorMapMenuItem(R.string.move_to, onMenuOpenChange, onAction, VectorMapAction.Move)
+            if (map.isExternal && map.isAvailable) {
+                VectorMapMenuItem(
+                    R.string.copy_to_trail_sense,
+                    onMenuOpenChange,
+                    onAction,
+                    VectorMapAction.CopyToAppStorage
+                )
+            }
             VectorMapMenuItem(R.string.delete, onMenuOpenChange, onAction, VectorMapAction.Delete)
         }
     }

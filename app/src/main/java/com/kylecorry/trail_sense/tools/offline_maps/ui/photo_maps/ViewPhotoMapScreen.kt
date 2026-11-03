@@ -22,8 +22,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.observe
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.alerts.toast
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
+import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
+import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -350,13 +354,25 @@ class ViewPhotoMapController(
         views.distanceSheet.createPathListener = {
             host.inBackground {
                 map?.let {
-                    val id = CreatePathCommand(
-                        pathService,
-                        prefs.paths,
-                        it.name
-                    ).execute(layerManager.getDistanceMeasurementPoints())
+                    val skipElevations = AtomicBoolean(false)
+                    var id = 0L
+                    Alerts.withSuspendableCancelableLoading(
+                        host.requireContext(),
+                        host.getString(R.string.loading),
+                        cancelText = host.getString(R.string.skip_elevations),
+                        onCancel = { skipElevations.set(true) }
+                    ) {
+                        id = CreatePathCommand(
+                            pathService,
+                            prefs.paths,
+                            it.name,
+                            layerManager.getDistanceMeasurementElevations(),
+                            skipElevations::get
+                        ).execute(layerManager.getDistanceMeasurementPoints())
+                    }
 
                     onMain {
+                        stopDistanceMeasurement()
                         host.findNavController().navigate(
                             R.id.action_maps_to_path,
                             Bundle().apply {
@@ -532,6 +548,14 @@ class ViewPhotoMapController(
             }
 
             MapLockMode.Trace -> {
+                CustomUiUtils.disclaimer(
+                    host.requireContext(),
+                    host.getString(R.string.trace),
+                    host.getString(R.string.map_trace_instructions),
+                    "disclaimer_shown_map_trace",
+                    cancelText = null
+                )
+
                 // Disable pan
                 views.map.isInteractive = false
                 views.map.isZoomEnabled = false

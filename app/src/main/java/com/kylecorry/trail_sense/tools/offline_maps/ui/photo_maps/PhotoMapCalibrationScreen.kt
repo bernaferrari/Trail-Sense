@@ -360,15 +360,13 @@ class PhotoMapCalibrationController(
 
     private fun selectPoint(index: Int) {
         views.mapCalibrationBottomPanel.title =
-            getString(R.string.calibrate_map_point, index + 1, maxPoints)
+            getString(R.string.calibrate_map_point_title, index + 1, maxPoints)
         views.mapCalibrationBottomPanel.coordinate = if (manager.isCalibrated(index)) {
             manager.getCalibrationPoint(index).location
         } else {
             null
         }
         views.mapCalibrationBottomPanel.isVisible = true
-        views.mapCalibrationBottomPanel.nextText =
-            if (index == (maxPoints - 1)) getString(R.string.done) else getString(R.string.next)
         views.mapCalibrationBottomPanel.showPrevious = index == 1
 
         updateCompletionState()
@@ -381,6 +379,11 @@ class PhotoMapCalibrationController(
 
         val isValid = validation == MapCalibrationValidationResult.Valid
         views.previewButton.isEnabled = isValid
+        views.mapCalibrationBottomPanel.nextText = when {
+            calibrationIndex != maxPoints - 1 -> getString(R.string.next)
+            isValid -> getString(R.string.finish_calibration)
+            else -> getString(R.string.save_draft)
+        }
 
         views.mapCalibrationBottomPanel.notice = notice
         views.mapCalibrationBottomPanel.icon = when {
@@ -457,7 +460,7 @@ class PhotoMapCalibrationController(
 
     private fun updateCalibrationTitle(notice: String) {
         views.mapCalibrationBottomPanel.title =
-            getString(R.string.calibrate_map_point, calibrationIndex + 1, maxPoints)
+            getString(R.string.calibrate_map_point_title, calibrationIndex + 1, maxPoints)
         views.mapCalibrationBottomPanel.notice = notice
     }
 
@@ -669,6 +672,11 @@ private class PhotoMapCalibrationPanelState(
                         text = title,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.calibrate_map_point_instructions),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (notice.isNotBlank()) {
                         Text(

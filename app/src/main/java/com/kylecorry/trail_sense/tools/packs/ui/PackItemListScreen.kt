@@ -254,9 +254,17 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 
     fun deleteItem(item: PackItem) {
-        host.inBackground {
-            withContext(Dispatchers.IO) {
-                itemRepo.deleteItem(item)
+        Alerts.dialog(
+            host.requireContext(),
+            host.getString(R.string.delete_packing_list_item),
+            item.name
+        ) { cancelled ->
+            if (!cancelled) {
+                host.inBackground {
+                    withContext(Dispatchers.IO) {
+                        itemRepo.deleteItem(item)
+                    }
+                }
             }
         }
     }

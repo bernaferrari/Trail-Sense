@@ -2,9 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,9 +34,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -310,27 +315,14 @@ private fun HeroCard(
     files: FileSubsystem,
     formatter: FieldGuideFormatService
 ) {
-    val image = page.images.firstOrNull()
-    val bitmap = remember(image, files) {
-        image?.let { files.bitmap(it, 1000, 500) }
-    }
-
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Column {
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(260.dp)
-                        .testTag("image")
-                )
+            if (page.images.isNotEmpty()) {
+                FieldGuideImagePager(images = page.images, files = files)
             }
             Column(
                 modifier = Modifier
@@ -353,6 +345,109 @@ private fun HeroCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FieldGuideImagePager(
+    images: List<String>,
+    files: FileSubsystem
+) {
+    val pagerState = rememberPagerState(pageCount = { images.size })
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(images) {
+        if (pagerState.currentPage != 0) {
+            pagerState.scrollToPage(0)
+        }
+    }
+
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+    ) { index ->
+        FieldGuidePageImage(
+            path = images[index],
+            files = files,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+
+    if (images.size > 1) {
+        val page = pagerState.currentPage
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        pagerState.scrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
+                    }
+                },
+                enabled = page > 0,
+                modifier = Modifier.testTag("previous_photo_button")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_prev),
+                    contentDescription = stringResource(R.string.previous),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        pagerState.scrollToPage(
+                            (pagerState.currentPage + 1).coerceAtMost(images.lastIndex)
+                        )
+                    }
+                },
+                enabled = page < images.lastIndex,
+                modifier = Modifier.testTag("next_photo_button")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                    contentDescription = stringResource(R.string.next),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Text(
+                text = stringResource(R.string.image_index, page + 1, images.size),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("photo_position"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
+}
+
+@Composable
+private fun FieldGuidePageImage(
+    path: String,
+    files: FileSubsystem,
+    modifier: Modifier = Modifier
+) {
+    var bitmap by remember(path) { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(path, files) {
+        bitmap = withContext(Dispatchers.IO) {
+            files.bitmap(path, 1000, 500)
+        }
+    }
+
+    bitmap?.let { image ->
+        Image(
+            bitmap = image.asImageBitmap(),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier.testTag("image")
+        )
     }
 }
 

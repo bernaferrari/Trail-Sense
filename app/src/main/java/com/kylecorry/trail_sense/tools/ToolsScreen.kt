@@ -37,6 +37,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -77,6 +79,15 @@ fun ToolsScreen(
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     var filter by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        CustomUiUtils.oneTimeToast(
+            context,
+            context.getString(R.string.tool_long_press_hint_toast),
+            "tools_long_press_notice_shown",
+            short = false
+        )
+    }
 
     DisposableEffect(onSearchFocusRequestChanged, keyboard) {
         onSearchFocusRequestChanged?.invoke {

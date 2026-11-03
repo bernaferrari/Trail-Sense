@@ -195,6 +195,7 @@ import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuidePageToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListToolScreen
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticAlerter
 import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsScreen
+import com.kylecorry.trail_sense.tools.diagnostics.ui.DownloadDiagnosticsLogsCommand
 import com.kylecorry.trail_sense.tools.declination.ui.DeclinationScreen
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
@@ -225,7 +226,8 @@ import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathOverviewToolScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathsToolScreen
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerScreen
@@ -834,7 +836,7 @@ class TrailSenseComposeDestinationHost(
             pedometer = pedometer,
             prefs = prefs,
             formatService = formatter,
-            onReset = ::resetPedometerCounter,
+            onReset = ::resetPedometer,
             onTogglePedometer = { togglePedometer(pedometer) },
             onToggleDistanceAlert = { togglePedometerDistanceAlert(prefs, formatter) }
         )
@@ -1982,6 +1984,9 @@ class TrailSenseComposeDestinationHost(
                 DiagnosticAlerter(requireContext()).alert(it) { action ->
                     action.action(requireContext(), findNavController())
                 }
+            },
+            onExportLogs = {
+                DownloadDiagnosticsLogsCommand(this).execute()
             }
         )
     }
@@ -3555,10 +3560,12 @@ class TrailSenseComposeDestinationHost(
         )
     }
 
-    private fun resetPedometerCounter(counter: StepCounter) {
+    private fun resetPedometer() {
         Alerts.dialog(requireContext(), getString(R.string.reset_distance_title)) {
             if (!it) {
-                counter.reset()
+                lifecycleOwner.lifecycleScope.launch {
+                    getAppService<StepTrackerService>().startNewStepTrackingPeriod()
+                }
             }
         }
     }

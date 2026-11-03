@@ -47,6 +47,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -178,13 +180,21 @@ private fun ClockScreen(
                     .padding(TrailSenseSpacing.screen),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            // Top bar: refresh
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .testTag("clock_title"),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+            // Top bar: refresh. The instrumented test treats this as the toolbar's right button.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 FilledIconButton(
                     onClick = { startGpsUpdate() },
+                    modifier = Modifier.testTag("toolbar_right_button"),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -255,8 +265,18 @@ private fun ClockScreen(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                if (isGpsTime) {
+                    Spacer(Modifier.height(TrailSenseSpacing.sm))
+                    Text(
+                        text = clockOffsetLabel(systemTime, gpsTime),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
                 Spacer(Modifier.height(TrailSenseSpacing.md))
                 ClockSourceChip(isGpsTime = isGpsTime)
+            }
             }
 
             // Bottom action
@@ -294,6 +314,7 @@ private fun ClockScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
+                        .testTag("pip_button")
                 ) {
                     Text(
                         stringResource(R.string.pip_button),
@@ -449,4 +470,41 @@ private fun sendNextMinuteNotification(
             host.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
     }
+}
+
+@Composable
+private fun clockOffsetLabel(systemTime: Instant, gpsTime: Instant): String {
+    val offset = getClockOffset(Duration.between(systemTime, gpsTime))
+    val seconds = offset.seconds.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    return when (offset.direction) {
+        ClockOffsetDirection.Accurate -> stringResource(R.string.clock_device_time_accurate)
+        ClockOffsetDirection.Slow -> pluralStringResource(
+            R.plurals.clock_device_time_slow,
+            seconds,
+            seconds
+        )
+        ClockOffsetDirection.Fast -> pluralStringResource(
+            R.plurals.clock_device_time_fast,
+            seconds,
+            seconds
+        )
+    }
+}
+
+internal data class ClockOffset(val seconds: Long, val direction: ClockOffsetDirection)
+
+internal enum class ClockOffsetDirection {
+    Accurate,
+    Slow,
+    Fast
+}
+
+private fun getClockOffset(duration: Duration): ClockOffset {
+    val seconds = kotlin.math.abs(duration.seconds)
+    val direction = when {
+        seconds == 0L -> ClockOffsetDirection.Accurate
+        duration.isNegative -> ClockOffsetDirection.Fast
+        else -> ClockOffsetDirection.Slow
+    }
+    return ClockOffset(seconds, direction)
 }

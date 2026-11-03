@@ -27,8 +27,12 @@ class ExportPackingListCommand(private val host: TrailSenseDestinationHost) : Co
             Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
                 items = repo.getItemsFromPackAsync(value.id)
             }
-            exportService.export(items, "${value.name.slugify()}.csv")
-            host.toast(host.getString(R.string.exported))
+            val exported = exportService.export(items, "${value.name.slugify()}.csv")
+            if (exported) {
+                host.toast(host.getString(R.string.exported))
+            } else {
+                host.toast(host.getString(R.string.export_failed))
+            }
         }
     }
 }

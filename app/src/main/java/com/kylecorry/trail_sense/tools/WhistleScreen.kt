@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.R
@@ -68,7 +69,10 @@ import java.time.Duration
  * Replaces the old BoundFragment + XML implementation with modern Material 3 expressive UI.
  */
 @Composable
-fun WhistleScreen(modifier: Modifier = Modifier) {
+fun WhistleScreen(
+    modifier: Modifier = Modifier,
+    onAudioUnavailable: () -> Unit = {}
+) {
     val context = LocalContext.current
 
     var isPlaying by remember { mutableStateOf(false) }
@@ -89,7 +93,20 @@ fun WhistleScreen(modifier: Modifier = Modifier) {
                     signalPlayer = s
                 }
             } catch (e: Exception) {
-                // Audio unavailable — handled gracefully in UI
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Alerts.dialog(
+                        context,
+                        context.getString(
+                            R.string.feature_unavailable,
+                            context.getString(R.string.tool_whistle_title)
+                        ),
+                        context.getString(R.string.audio_error_messsage),
+                        cancelText = null
+                    ) {
+                        onAudioUnavailable()
+                    }
+                }
             }
         }
 

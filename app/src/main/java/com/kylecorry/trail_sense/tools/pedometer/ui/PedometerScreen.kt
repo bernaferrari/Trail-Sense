@@ -22,6 +22,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,10 +48,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import android.os.Bundle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
+import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.core.sensors.ISpeedometer
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.andromeda.views.chart.Chart
@@ -61,21 +68,24 @@ import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
+import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
@@ -84,74 +94,99 @@ internal fun PedometerScreen(
     pedometer: PedometerSubsystem,
     prefs: UserPreferences,
     formatService: FormatService,
-    onReset: (StepCounter) -> Unit,
+    onReset: () -> Unit,
     onTogglePedometer: () -> Unit,
     onToggleDistanceAlert: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val counter = remember { StepCounter(PreferencesSubsystem.getInstance(context).preferences) }
+    val scope = rememberCoroutineScope()
+    val stepTracker = remember { getAppService<StepTrackerService>() }
     val paceCalculator = remember(prefs.pedometer.strideLength) {
         StrideLengthPaceCalculator(prefs.pedometer.strideLength)
     }
-    val averageSpeedometer = remember(counter, paceCalculator, prefs.pedometer.averagePaceTimeMode) {
-        AveragePaceSpeedometer(counter, paceCalculator, prefs.pedometer)
+    val sessionFormatter = remember(paceCalculator, prefs) {
+        PedometerSessionFormatter(context, paceCalculator, formatService, prefs)
+    }
+    val averageSpeedometer = remember(stepTracker, paceCalculator, prefs.pedometer.averagePaceTimeMode) {
+        AveragePaceSpeedometer(stepTracker, paceCalculator, prefs.pedometer)
     }
     val instantSpeedometer = remember(paceCalculator) {
         CurrentPaceSpeedometer(Pedometer(context), paceCalculator)
     }
     var refreshKey by remember { mutableIntStateOf(0) }
+    var openPeriod by remember { mutableStateOf<StepTrackingPeriod?>(null) }
+    var showSessions by remember { mutableStateOf(false) }
+    var sessions by remember { mutableStateOf<List<StepTrackingPeriod>>(emptyList()) }
 
-    DisposableEffect(averageSpeedometer, instantSpeedometer) {
+    suspend fun reloadOpenPeriod() {
+        openPeriod = withContext(Dispatchers.IO) {
+            stepTracker.getOpenStepTrackingPeriod()
+        }
+    }
+
+    DisposableEffect(averageSpeedometer, instantSpeedometer, stepTracker) {
         val listener = {
             refreshKey++
             true
         }
+        val stepsListener: (Bundle) -> Unit = {
+            scope.launch { reloadOpenPeriod() }
+        }
         averageSpeedometer.start(listener)
         instantSpeedometer.start(listener)
+        Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
         onDispose {
             averageSpeedometer.stop(listener)
             instantSpeedometer.stop(listener)
+            Tools.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
         }
     }
 
     LaunchedEffect(Unit) {
+        reloadOpenPeriod()
         while (isActive) {
             refreshKey++
             delay(500)
+            reloadOpenPeriod()
         }
     }
 
     // Force state reads to refresh on the timer.
     refreshKey.hashCode()
 
-    val distance = getDistance(counter.steps, paceCalculator, prefs)
-    val lastReset = counter.startTime?.toZonedDateTime()
+    val steps = openPeriod?.steps ?: 0L
+    val distance = getDistance(steps, paceCalculator, prefs)
+    val lastReset = openPeriod?.startTime?.toZonedDateTime()
     val state = pedometer.state.getOrNull() ?: FeatureState.Off
     val title = formatService.formatDistance(
         distance,
         Units.getDecimalPlaces(distance.units),
         false
     )
-    val subtitle = lastReset?.let {
-        val dateString = if (it.toLocalDate() == LocalDate.now()) {
-            formatService.formatTime(it.toLocalTime(), false)
+    val resetLabel = lastReset?.let { reset ->
+        val dateString = if (reset.toLocalDate() == LocalDate.now()) {
+            formatService.formatTime(reset.toLocalTime(), false)
         } else {
-            formatService.formatRelativeDate(it.toLocalDate())
+            formatService.formatRelativeDate(reset.toLocalDate())
         }
-        stringResource(R.string.since_time, dateString)
+        dateString
     }
-    val averageSpeed = if (averageSpeedometer.hasValidReading) {
-        formatService.formatSpeed(averageSpeedometer.speed.value)
-    } else {
-        stringResource(R.string.dash)
+    val subtitle = resetLabel?.let { stringResource(R.string.since_time, it) }
+    val sessionTime = resetLabel?.let { dateString ->
+        val span = stringResource(R.string.dash_separated_pair, dateString, stringResource(R.string.now))
+        val active = formatService.formatDuration(openPeriod?.activeTime ?: Duration.ZERO)
+        stringResource(
+            R.string.parenthesized_pair,
+            span,
+            stringResource(R.string.active_duration, active)
+        )
     }
-    val currentSpeed = if (averageSpeedometer.hasValidReading) {
-        formatService.formatSpeed(instantSpeedometer.speed.value)
-    } else {
-        stringResource(R.string.dash)
-    }
-    val data = listOf(
+    val currentSpeed = speedText(instantSpeedometer, formatService)
+    val averageSpeed = speedText(averageSpeedometer, formatService)
+    val currentPace = paceText(instantSpeedometer, formatService)
+    val averagePace = paceText(averageSpeedometer, formatService)
+    val speedData = listOf(
         PedometerDataPoint(
             tag = "pedometer_speed",
             title = currentSpeed,
@@ -163,6 +198,20 @@ internal fun PedometerScreen(
             title = averageSpeed,
             label = stringResource(R.string.average_speed),
             icon = R.drawable.ic_speed
+        )
+    )
+    val paceData = listOf(
+        PedometerDataPoint(
+            tag = "pedometer_pace",
+            title = currentPace,
+            label = stringResource(R.string.current_pace),
+            icon = R.drawable.ic_tool_clock
+        ),
+        PedometerDataPoint(
+            tag = "pedometer_average_pace",
+            title = averagePace,
+            label = stringResource(R.string.average_pace),
+            icon = R.drawable.ic_tool_clock
         )
     )
 
@@ -184,9 +233,10 @@ internal fun PedometerScreen(
             ) {
             // Hero step count + distance
             PedometerHeroCard(
-                steps = counter.steps,
+                steps = steps,
                 distance = title,
                 subtitle = subtitle,
+                sessionTime = sessionTime,
                 modifier = Modifier.testTag("pedometer_title")
             )
 
@@ -198,19 +248,8 @@ internal fun PedometerScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = TrailSenseSpacing.xs)
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("beacon_grid"),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                data.forEach { point ->
-                    PedometerDataPointCard(
-                        point = point,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+            PedometerMetricRow(speedData, modifier = Modifier.testTag("beacon_grid"))
+            PedometerMetricRow(paceData)
 
             // Options group
             Surface(
@@ -240,7 +279,7 @@ internal fun PedometerScreen(
                             modifier = Modifier.weight(1f)
                         )
                         TextButton(
-                            onClick = { onReset(counter) },
+                            onClick = onReset,
                             modifier = Modifier.testTag("reset_btn")
                         ) {
                             Text(stringResource(R.string.reset))
@@ -253,8 +292,45 @@ internal fun PedometerScreen(
                 prefs = prefs,
                 formatService = formatService,
                 paceCalculator = paceCalculator,
-                refreshKey = refreshKey
+                refreshKey = refreshKey,
+                onShowSessions = {
+                    scope.launch {
+                        sessions = withContext(Dispatchers.IO) {
+                            stepTracker.getAllStepTrackingPeriods()
+                                .sortedByDescending { it.startTime }
+                        }
+                        showSessions = true
+                    }
+                }
             )
+
+            if (showSessions) {
+                PedometerSessionsDialog(
+                    sessions = sessions,
+                    formatter = sessionFormatter,
+                    onDismiss = { showSessions = false },
+                    onDelete = { period, title ->
+                        Alerts.dialog(
+                            context,
+                            context.getString(R.string.delete),
+                            title
+                        ) { cancelled ->
+                            if (!cancelled) {
+                                scope.launch {
+                                    withContext(Dispatchers.IO) {
+                                        stepTracker.deleteStepTrackingPeriod(period)
+                                    }
+                                    sessions = withContext(Dispatchers.IO) {
+                                        stepTracker.getAllStepTrackingPeriods()
+                                            .sortedByDescending { it.startTime }
+                                    }
+                                    reloadOpenPeriod()
+                                }
+                            }
+                        }
+                    }
+                )
+            }
 
             // Primary start / stop control
             PedometerStartStopButton(
@@ -274,7 +350,8 @@ private fun HourlyStepsHistory(
     prefs: UserPreferences,
     formatService: FormatService,
     paceCalculator: StrideLengthPaceCalculator,
-    refreshKey: Int
+    refreshKey: Int,
+    onShowSessions: () -> Unit
 ) {
     val context = LocalContext.current
     val stepTracker = remember { getAppService<StepTrackerService>() }
@@ -315,13 +392,30 @@ private fun HourlyStepsHistory(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-        Text(
-            text = stringResource(R.string.history),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = TrailSenseSpacing.xs)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.history),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = TrailSenseSpacing.xs)
+            )
+            IconButton(
+                onClick = onShowSessions,
+                modifier = Modifier.testTag("pedometer_sessions_btn")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_tool_clock),
+                    contentDescription = stringResource(R.string.history),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -469,6 +563,7 @@ private fun PedometerHeroCard(
     steps: Long,
     distance: String,
     subtitle: String?,
+    sessionTime: String?,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -525,7 +620,138 @@ private fun PedometerHeroCard(
                     textAlign = TextAlign.Center
                 )
             }
+            if (sessionTime != null) {
+                Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
+                Text(
+                    text = sessionTime,
+                    modifier = Modifier.testTag("pedometer_session_time"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun PedometerMetricRow(
+    points: List<PedometerDataPoint>,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    ) {
+        points.forEach { point ->
+            PedometerDataPointCard(
+                point = point,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PedometerSessionsDialog(
+    sessions: List<StepTrackingPeriod>,
+    formatter: PedometerSessionFormatter,
+    onDismiss: () -> Unit,
+    onDelete: (StepTrackingPeriod, String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.history)) },
+        text = {
+            if (sessions.isEmpty()) {
+                Text(stringResource(R.string.no_pedometer_sessions))
+            } else {
+                Column(
+                    modifier = Modifier
+                        .height(360.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                ) {
+                    sessions.forEach { period ->
+                        PedometerSessionRow(
+                            period = period,
+                            formatter = formatter,
+                            onDelete = onDelete
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.ok))
+            }
+        }
+    )
+}
+
+@Composable
+private fun PedometerSessionRow(
+    period: StepTrackingPeriod,
+    formatter: PedometerSessionFormatter,
+    onDelete: (StepTrackingPeriod, String) -> Unit
+) {
+    val title = formatter.title(period)
+    var menuOpen by remember(period.id) { mutableStateOf(false) }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = formatter.subtitle(period),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Box {
+            IconButton(onClick = { menuOpen = true }) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = stringResource(R.string.delete)
+                )
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete)) },
+                    onClick = {
+                        menuOpen = false
+                        onDelete(period, title)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun speedText(speedometer: ISpeedometer, formatService: FormatService): String {
+    return if (speedometer.hasValidReading) {
+        formatService.formatSpeed(speedometer.speed.value)
+    } else {
+        stringResource(R.string.dash)
+    }
+}
+
+@Composable
+private fun paceText(speedometer: ISpeedometer, formatService: FormatService): String {
+    return if (speedometer.hasValidReading) {
+        formatService.formatPace(speedometer.speed.value)
+    } else {
+        stringResource(R.string.dash)
     }
 }
 
