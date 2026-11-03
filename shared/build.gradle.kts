@@ -31,7 +31,7 @@ kotlin {
             implementation(compose.materialIconsExtended)
 
             // Portable expressive theming
-            implementation("com.materialkolor:material-kolor:4.1.1")
+            implementation("com.materialkolor:material-kolor-material3:6.0.0")
         }
 
         androidMain.dependencies {

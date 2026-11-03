@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import androidx.compose.material3.toShape
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.dp
 /**
  * Expressive empty state — Material 3 Expressive style.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TrailSenseEmptyState(
     icon: ImageVector,
@@ -42,16 +45,17 @@ fun TrailSenseEmptyState(
             modifier = Modifier.widthIn(max = 360.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // The family's empty-state mark: the icon in a soft cookie-shaped well.
             Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.size(72.dp)
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+                modifier = Modifier.size(88.dp)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.padding(18.dp)
+                    modifier = Modifier.padding(24.dp)
                 )
             }
 
@@ -59,7 +63,7 @@ fun TrailSenseEmptyState(
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )

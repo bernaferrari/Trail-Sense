@@ -17,7 +17,6 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
-import com.kylecorry.trail_sense.shared.views.TrailSenseColorScheme
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 
 class OnboardingActivity : ComponentActivity() {
@@ -36,9 +35,7 @@ class OnboardingActivity : ComponentActivity() {
         setContent {
             TrailSenseAppTheme(
                 darkTheme = isSystemInDarkTheme(),
-                isAmoled = false,
-                useDynamicColors = false,
-                fallbackColorScheme = TrailSenseColorScheme.Teal
+                isAmoled = false
             ) {
                 if (pageIdx == 0) {
                     UnitSystemOnboardingScreen(

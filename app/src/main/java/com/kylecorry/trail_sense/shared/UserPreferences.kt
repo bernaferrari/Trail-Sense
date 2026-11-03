@@ -20,6 +20,8 @@ import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MAX_BOTTOM_NAVIGATION_ITEMS
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
+import com.kylecorry.trail_sense.shared.views.TrailSenseColorStyle
+import com.kylecorry.trail_sense.shared.views.TrailSensePalette
 import com.kylecorry.trail_sense.settings.backup.BackupPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.AltimeterPreferences
 import com.kylecorry.trail_sense.settings.infrastructure.AugmentedRealityPreferences
@@ -257,14 +259,42 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             _theme = value
         }
 
-    private val _useDynamicColors by BooleanPreference(
+    private var _useDynamicColors by BooleanPreference(
         cache,
         context.getString(R.string.pref_use_dynamic_colors),
         true
     )
 
+    /**
+     * The app's colors: the wallpaper's (where Android has them; the default) or one of the family's seeds. Installs
+     * that turned dynamic colors off before the palette existed keep Trail Sense's own orange.
+     */
+    var palette: TrailSensePalette
+        get() {
+            val stored = cache.getString(context.getString(R.string.pref_theme_palette))
+            val palette = when {
+                stored != null -> TrailSensePalette.from(stored)
+                _useDynamicColors -> TrailSensePalette.Wallpaper
+                else -> TrailSensePalette.Default
+            }
+            return if (palette == TrailSensePalette.Wallpaper && !DynamicColors.isDynamicColorAvailable()) {
+                TrailSensePalette.Default
+            } else {
+                palette
+            }
+        }
+        set(value) {
+            cache.putString(context.getString(R.string.pref_theme_palette), value.id)
+            _useDynamicColors = value == TrailSensePalette.Wallpaper
+        }
+
+    /** How the app's own colors become a palette; wallpaper colors are used as Android gives them. */
+    var colorStyle: TrailSenseColorStyle
+        get() = TrailSenseColorStyle.from(cache.getString(context.getString(R.string.pref_color_style)))
+        set(value) = cache.putString(context.getString(R.string.pref_color_style), value.id)
+
     val useDynamicColors: Boolean
-        get() = DynamicColors.isDynamicColorAvailable() && _useDynamicColors
+        get() = palette == TrailSensePalette.Wallpaper
 
     private val _useDynamicColorsOnCompass by BooleanPreference(
         cache,

@@ -72,39 +72,29 @@ fun MainAdaptiveNavigation(
                     selected = selected,
                     enabled = state.isEnabled,
                     onClick = { onItemClick(item.id) },
-                    modifier = Modifier.semantics {
-                        onLongClick(label = item.title) {
-                            onItemLongClick(item.id)
-                            true
-                        }
-                    },
+                    // Long press opens the quick actions. It lives on the item itself, so the icon stays a plain
+                    // 24 dp icon and the selection pill keeps Material's size.
+                    modifier = Modifier
+                        .combinedClickable(
+                            interactionSource = null,
+                            indication = null,
+                            onClick = { onItemClick(item.id) },
+                            onLongClick = { onItemLongClick(item.id) },
+                            onLongClickLabel = item.title
+                        )
+                        .semantics {
+                            onLongClick(label = item.title) {
+                                onItemLongClick(item.id)
+                                true
+                            }
+                        },
                     alwaysShowLabel = state.showAllLabels || !state.useCompactMode,
                     icon = {
                         val vector = if (selected) item.selectedIcon else item.unselectedIcon
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .combinedClickable(
-                                    onClick = { onItemClick(item.id) },
-                                    onLongClick = { onItemLongClick(item.id) },
-                                    onLongClickLabel = item.title
-                                )
-                                .clearAndSetSemantics {},
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (vector != null) {
-                                Icon(
-                                    imageVector = vector,
-                                    contentDescription = item.title,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(item.icon),
-                                    contentDescription = item.title,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                        if (vector != null) {
+                            Icon(imageVector = vector, contentDescription = null)
+                        } else {
+                            Icon(painter = painterResource(item.icon), contentDescription = null)
                         }
                     },
                     label = {

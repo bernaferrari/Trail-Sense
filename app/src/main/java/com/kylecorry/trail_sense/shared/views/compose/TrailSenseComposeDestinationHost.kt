@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.settings.ui.ThemeSettingsScreen
+import com.kylecorry.trail_sense.main.theme.ThemeChoices
 import android.content.Context
 import android.content.Intent
 import android.Manifest
@@ -1270,130 +1272,38 @@ class TrailSenseComposeDestinationHost(
     internal fun ThemeSettings() {
         val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
         val prefs = remember { UserPreferences(requireContext()) }
-        val dynamicColorsAvailable = remember { DynamicColors.isDynamicColorAvailable() }
-        val themeOptions = remember { settingsOptions(R.array.theme_entries, R.array.theme_values) }
         val widgetThemeOptions = remember { widgetThemeOptions() }
-
-        var theme by remember {
-            mutableStateOf(getStringPreference(cache, R.string.pref_theme, "system"))
-        }
-        var useDynamicColors by remember {
-            mutableStateOf(getBoolean(cache, R.string.pref_use_dynamic_colors, true))
-        }
-        var useDynamicCompassColors by remember {
-            mutableStateOf(getBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, false))
-        }
         var widgetTheme by remember { mutableStateOf(getDefaultWidgetTheme(cache)) }
-        var useCompactMode by remember { mutableStateOf(prefs.useCompactMode) }
-        var showAllBottomNavigationLabels by remember {
-            mutableStateOf(prefs.useShowAllBottomNavigationLabels)
-        }
-        var nightModeFullscreen by remember {
-            mutableStateOf(getBoolean(cache, R.string.pref_night_mode_fullscreen, false))
-        }
 
-        SettingsList(title = stringResource(R.string.pref_theme_title)) {
-            item("theme") {
-                SettingsPickerRow(
-                    label = stringResource(R.string.pref_theme_title),
-                    selected = optionLabel(themeOptions, theme),
-                    onClick = {
-                        pickOption(getString(R.string.pref_theme_title), themeOptions, theme) {
-                            theme = it
-                            putString(cache, R.string.pref_theme, it)
-                            requireMainActivity().reloadTheme()
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            if (dynamicColorsAvailable) {
-                item("dynamic_colors") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.dynamic_colors),
-                        checked = useDynamicColors,
-                        onCheckedChange = {
-                            useDynamicColors = it
-                            putBoolean(cache, R.string.pref_use_dynamic_colors, it)
-                            requireMainActivity().reloadTheme()
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
+        ThemeSettingsScreen(
+            prefs = prefs,
+            wallpaperAvailable = remember { DynamicColors.isDynamicColorAvailable() },
+            widgetTheme = optionLabel(widgetThemeOptions, widgetTheme),
+            nightFullscreen = getBoolean(cache, R.string.pref_night_mode_fullscreen, false),
+            compassWallpaperColors = getBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, false),
+            onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
+            onThemeChanged = {
+                prefs.theme = it
+                requireMainActivity().reloadTheme()
+            },
+            onPaletteChanged = { ThemeChoices.changed() },
+            onCompassWallpaperColorsChanged = {
+                putBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, it)
+            },
+            onPickWidgetTheme = {
+                pickOption(getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
+                    widgetTheme = it
+                    putString(cache, R.string.pref_default_widget_theme, it)
+                    Tools.triggerWidgetUpdate(requireContext(), null)
                 }
-                item("dynamic_compass_colors") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.compass_dynamic_colors),
-                        summary = stringResource(R.string.compass_dynamic_colors_summary),
-                        checked = useDynamicCompassColors,
-                        onCheckedChange = {
-                            useDynamicCompassColors = it
-                            putBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, it)
-                        },
-                        enabled = useDynamicColors,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
+            },
+            onCompactModeChanged = { requireMainActivity().changeBottomNavLabelsVisibility(it) },
+            onShowAllLabelsChanged = { requireMainActivity().showAllBottomNavLabels(it) },
+            onNightFullscreenChanged = {
+                putBoolean(cache, R.string.pref_night_mode_fullscreen, it)
+                requireMainActivity().reloadTheme()
             }
-            item("widget_theme") {
-                SettingsPickerRow(
-                    label = stringResource(R.string.default_widget_theme),
-                    selected = optionLabel(widgetThemeOptions, widgetTheme),
-                    onClick = {
-                        pickOption(
-                            getString(R.string.default_widget_theme),
-                            widgetThemeOptions,
-                            widgetTheme
-                        ) {
-                            widgetTheme = it
-                            putString(cache, R.string.pref_default_widget_theme, it)
-                            Tools.triggerWidgetUpdate(requireContext(), null)
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("compact_mode") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.compact_mode),
-                    checked = useCompactMode,
-                    onCheckedChange = {
-                        useCompactMode = it
-                        requireMainActivity().changeBottomNavLabelsVisibility(it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("nav_labels") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_show_all_bottom_navigation_labels),
-                    checked = showAllBottomNavigationLabels,
-                    onCheckedChange = {
-                        showAllBottomNavigationLabels = it
-                        requireMainActivity().showAllBottomNavLabels(it)
-                    },
-                    enabled = !useCompactMode,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("night_fullscreen") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_night_mode_fullscreen_title),
-                    summary = stringResource(R.string.pref_night_mode_fullscreen_summary),
-                    checked = nightModeFullscreen,
-                    onCheckedChange = {
-                        nightModeFullscreen = it
-                        putBoolean(cache, R.string.pref_night_mode_fullscreen, it)
-                        requireMainActivity().reloadTheme()
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-        }
+        )
     }
 
     @Composable

@@ -4,60 +4,62 @@ package com.kylecorry.trail_sense.main.theme
 
 import android.os.Build
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import com.kylecorry.trail_sense.shared.views.TrailSenseColorScheme
-import com.kylecorry.trail_sense.shared.views.TrailSenseExpressiveTypography
-import com.kylecorry.trail_sense.shared.views.rememberTrailSenseColorScheme
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.TrailSenseColorStyle
+import com.kylecorry.trail_sense.shared.views.TrailSensePalette
+import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+
+/** Bumped when the palette or color style changes, so every themed surface picks up the new colors at once. */
+object ThemeChoices {
+    val revision = mutableIntStateOf(0)
+
+    fun changed() {
+        revision.intValue++
+    }
+}
 
 /**
- * Android entry point for the Trail Sense theme.
- *
- * Bridges the user's real preferences — dark mode, AMOLED/black theme, and wallpaper-based
- * dynamic color — into the Material 3 color scheme. When dynamic color is enabled on Android
- * 12+, the system wallpaper palette is used; otherwise the app's warm Orange brand seed drives
- * the scheme (via Material Kolor in :shared). Public Material 3 APIs provide the expressive
- * typography, shapes, color, and component behavior on the current Compose version.
+ * Android entry point for the Trail Sense theme: the user's palette and color style (Settings › Theme), with the
+ * wallpaper's own scheme when that palette is chosen, and true black for the black and night themes. Every screen,
+ * onboarding included, goes through here so the app never changes color between screens.
  */
 @Composable
 fun TrailSenseAppTheme(
     darkTheme: Boolean,
     isAmoled: Boolean,
-    useDynamicColors: Boolean,
-    fallbackColorScheme: TrailSenseColorScheme = TrailSenseColorScheme.Orange,
+    palette: TrailSensePalette? = null,
+    style: TrailSenseColorStyle? = null,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-
-    val colorScheme: ColorScheme = if (
-        useDynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val prefs = remember { UserPreferences(context) }
+    // Read so a new palette or style (Settings › Theme) recolors the app in place, without restarting it.
+    ThemeChoices.revision.intValue
+    val chosenPalette = palette ?: prefs.palette
+    val chosenStyle = style ?: prefs.colorStyle
+    val wallpaperScheme = if (
+        chosenPalette == TrailSensePalette.Wallpaper && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     ) {
-        val base = if (darkTheme) {
-            dynamicDarkColorScheme(context)
-        } else {
-            dynamicLightColorScheme(context)
-        }
-        // For AMOLED / pure-black dark theme, collapse the dark surfaces to true black.
-        if (isAmoled && darkTheme) base.toAmoled() else base
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     } else {
-        rememberTrailSenseColorScheme(
-            colorScheme = fallbackColorScheme,
-            darkTheme = darkTheme,
-            isAmoled = isAmoled
-        )
+        null
     }
 
-    MaterialExpressiveTheme(
-        colorScheme = colorScheme,
-        typography = TrailSenseExpressiveTypography
+    TrailSenseTheme(
+        palette = chosenPalette,
+        style = chosenStyle,
+        darkTheme = darkTheme,
+        black = isAmoled,
+        wallpaperScheme = wallpaperScheme
     ) {
         // UiAutomator looks up Compose testTags as resource ids.
         Box(
@@ -68,13 +70,3 @@ fun TrailSenseAppTheme(
         }
     }
 }
-
-private fun ColorScheme.toAmoled(): ColorScheme = copy(
-    background = Color.Black,
-    surface = Color.Black,
-    surfaceContainerLowest = Color.Black,
-    surfaceContainerLow = Color(0xFF0A0A0A),
-    surfaceContainer = Color(0xFF121212),
-    surfaceContainerHigh = Color(0xFF1A1A1A),
-    surfaceContainerHighest = Color(0xFF222222)
-)

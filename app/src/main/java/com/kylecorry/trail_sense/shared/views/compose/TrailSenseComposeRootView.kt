@@ -32,8 +32,7 @@ fun TrailSenseComposeRootView(
             )
             TrailSenseAppTheme(
                 darkTheme = darkTheme,
-                isAmoled = isAmoled,
-                useDynamicColors = preferences.useDynamicColors
+                isAmoled = isAmoled
             ) {
                 content()
             }

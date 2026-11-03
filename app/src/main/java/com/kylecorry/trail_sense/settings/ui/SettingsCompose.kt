@@ -101,15 +101,8 @@ fun SettingsSwitchRow(
     enabled: Boolean = true,
     position: TrailSenseGroupPosition = SettingsInnerPosition
 ) {
-    val baseColor = MaterialTheme.colorScheme.surfaceContainerLow
-    val containerColor by animateColorAsState(
-        targetValue = if (checked && enabled) {
-            lerp(baseColor, MaterialTheme.colorScheme.primaryContainer, 0.35f)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
-        label = "settingsSwitchContainer"
-    )
+    // A checked switch says so itself: the row keeps the group's tone so a group reads as one object.
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     Surface(
         modifier = modifier
             .fillMaxWidth()

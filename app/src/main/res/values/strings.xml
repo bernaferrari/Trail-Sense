@@ -1419,6 +1419,8 @@
     <!--    %s is the interval, ex. 1 h-->
     <string name="fused_altimeter_force_calibration_summary">Forces a GPS calibration every %s</string>
     <string name="pref_use_dynamic_colors" translatable="false">pref_use_dynamic_colors</string>
+    <string name="pref_theme_palette" translatable="false">pref_theme_palette</string>
+    <string name="pref_color_style" translatable="false">pref_color_style</string>
     <string name="dynamic_colors">Dynamic colors</string>
     <string name="compact_mode">Compact mode</string>
     <string name="pref_show_all_bottom_navigation_labels">Show all bottom navigation labels</string>
@@ -2116,4 +2118,31 @@
     <string name="navigation_remaining_gain">Remaining gain</string>
     <string name="navigation_remaining_loss">Remaining loss</string>
     <string name="navigation_arrive_format">Arrive %s</string>
+    <string name="theme_mode_sun">Sun</string>
+    <string name="theme_mode_sun_summary">Light from sunrise to sunset, dark at night</string>
+    <string name="theme_black_background">Black background</string>
+    <string name="theme_black_background_summary">Pure black in dark mode, easier on OLED screens and the battery</string>
+    <string name="theme_night_vision">Night vision</string>
+    <string name="theme_night_vision_summary">A dim red screen that keeps your eyes adjusted to the dark</string>
+    <string name="theme_palette_wallpaper">Wallpaper colors</string>
+    <string name="theme_palette_orange">Orange</string>
+    <string name="theme_palette_amber">Amber</string>
+    <string name="theme_palette_lime">Lime</string>
+    <string name="theme_palette_green">Green</string>
+    <string name="theme_palette_teal">Teal</string>
+    <string name="theme_palette_cyan">Cyan</string>
+    <string name="theme_palette_blue">Blue</string>
+    <string name="theme_palette_indigo">Indigo</string>
+    <string name="theme_palette_purple">Purple</string>
+    <string name="theme_palette_pink">Pink</string>
+    <string name="color_style">Color style</string>
+    <string name="color_style_expressive">Expressive</string>
+    <string name="color_style_vibrant">Vibrant</string>
+    <string name="color_style_tonal">Tonal</string>
+    <string name="color_style_muted">Muted</string>
+    <string name="navigation_bar">Navigation bar</string>
+    <string name="compass_wallpaper_colors">Wallpaper colors on the compass</string>
+    <string name="compass_wallpaper_colors_summary">Color the cardinal directions with your wallpaper colors</string>
+    <string name="back">Back</string>
+    <string name="theme_mode_auto">Auto</string>
 </resources>

@@ -45,6 +45,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.DynamicColorsOptions
+import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
@@ -174,8 +176,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             }
             TrailSenseAppTheme(
                 darkTheme = darkTheme,
-                isAmoled = isBlackTheme,
-                useDynamicColors = userPrefs.useDynamicColors
+                isAmoled = isBlackTheme
             ) {
                 MainActivityContent(
                     errorBanner = errorBanner,
@@ -291,10 +292,10 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     private fun updateTheme() {
         val mode = themeProvider.getThemeMode()
-        applyThemeMode(mode, userPrefs.useDynamicColors)
+        applyThemeMode(mode, true)
     }
 
-    private fun applyThemeMode(mode: AppThemeMode, useDynamicColors: Boolean) {
+    private fun applyThemeMode(mode: AppThemeMode, applyPalette: Boolean) {
         AppCompatDelegate.setDefaultNightMode(
             when (mode) {
                 AppThemeMode.Light -> AppCompatDelegate.MODE_NIGHT_NO
@@ -302,8 +303,18 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 AppThemeMode.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             }
         )
-        if (useDynamicColors) {
-            DynamicColors.applyToActivityIfAvailable(this)
+        // The few remaining View-based surfaces (some pickers and dialogs) take the same colors as Compose: the
+        // wallpaper's, or a scheme built from the chosen seed.
+        if (applyPalette) {
+            val seed = userPrefs.palette.seed
+            if (seed == null) {
+                DynamicColors.applyToActivityIfAvailable(this)
+            } else {
+                DynamicColors.applyToActivityIfAvailable(
+                    this,
+                    DynamicColorsOptions.Builder().setContentBasedSource(seed.toArgb()).build()
+                )
+            }
         }
     }
 

@@ -30,14 +30,8 @@ fun TrailSenseSwitchRow(
     enabled: Boolean = true,
     position: TrailSenseGroupPosition? = null
 ) {
-    val containerColor by animateColorAsState(
-        targetValue = if (checked && enabled) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
-        label = "switchRowContainer"
-    )
+    // A checked switch says so itself: the row keeps the group's tone so a group reads as one object.
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     androidx.compose.material3.Surface(
         modifier = modifier
             .fillMaxWidth()
