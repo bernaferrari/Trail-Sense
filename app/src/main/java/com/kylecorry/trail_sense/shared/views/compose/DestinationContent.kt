@@ -33,6 +33,7 @@ import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuidePageToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuideSightingToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuidePageToolScreen
+import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideSettingsToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListToolScreen
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
@@ -235,6 +236,7 @@ fun DestinationContent(
             DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
             DESTINATION_FIELD_GUIDE -> FieldGuideToolScreen(this)
             DESTINATION_FIELD_GUIDE_PAGE -> FieldGuidePageToolScreen(this)
+            DESTINATION_FIELD_GUIDE_SETTINGS -> FieldGuideSettingsToolScreen(this)
             DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
             DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)

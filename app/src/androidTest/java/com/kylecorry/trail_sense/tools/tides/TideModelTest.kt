@@ -5,6 +5,7 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.oceanography.Oceanography
+import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.waterlevel.HarmonicWaterLevelCalculator
@@ -27,9 +28,20 @@ import kotlin.math.roundToInt
 class TideModelTest {
 
     @Test
+    fun loadsLargeAmplitudeTide() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
+
+        val harmonics = TideModel.getHarmonics(context, Coordinate(-0.5, -51.5))!!.harmonics
+
+        assertEquals(34.8f, harmonics.first { it.constituent == TideConstituent.S1 }.amplitude, 0.001f)
+        assertEquals(29.11f, harmonics.first { it.constituent == TideConstituent.S2 }.amplitude, 0.001f)
+    }
+
+    @Test
     fun testTideModel() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.register(FileSubsystem.getInstance(context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
 
         val tests = listOf(
             // Semi-diurnal tides
@@ -257,17 +269,20 @@ class TideModelTest {
 
         val absoluteErrors = errors.map { it.absoluteValue }
 
-        println("50%: ${Statistics.quantile(absoluteErrors, 0.5f).roundToInt()} m")
-        println("90%: ${Statistics.quantile(absoluteErrors, 0.9f).roundToInt()} m")
+        println("Average: ${Statistics.mean(absoluteErrors)} m")
+        println("50%: ${Statistics.quantile(absoluteErrors, 0.5f)} m")
+        println("90%: ${Statistics.quantile(absoluteErrors, 0.9f)} m")
         println("Min: ${absoluteErrors.minOrNull()?.roundToInt()} m")
         println("Max: ${absoluteErrors.maxOrNull()?.roundToInt()} m")
 
         // Check the average error and standard deviation
         val absAverageError = Statistics.mean(absoluteErrors)
+        val abs50QuantileError = Statistics.quantile(absoluteErrors, 0.5f)
         val abs90QuantileError = Statistics.quantile(absoluteErrors, 0.9f)
 
-        assertEquals("Average", 0f, absAverageError, 20f)
-        assertEquals("90% Quantile", 0f, abs90QuantileError, 45f)
+        assertEquals("Average", 0f, absAverageError, 16f)
+        assertEquals("50% Quantile", 0f, abs50QuantileError, 10f)
+        assertEquals("90% Quantile", 0f, abs90QuantileError, 34f)
     }
 
     private val rhodeIsland = Coordinate(41.49008, -71.312796)
@@ -364,7 +379,7 @@ class TideModelTest {
     ): Float {
         assertEquals(index.toString(), expected.isHigh, actual.isHigh)
         val delta = Duration.between(actual.time, expected.time).seconds / 60f
-        assertEquals(index.toString(), 0f, delta, 90f)
+        assertEquals(index.toString(), 0f, delta, 65f)
         return delta
     }
 

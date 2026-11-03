@@ -11,6 +11,7 @@ import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
 import com.kylecorry.sol.science.meteorology.Meteorology
+import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -302,7 +303,17 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
         val lookupLocation = resolved.first
         val lookupElevation = resolved.second
         val temperatureService = getTemperatureService(lookupLocation, lookupElevation, true)
-        return WeatherForecaster(temperatureService, prefs.weather)
+        return WeatherForecaster(temperatureService, prefs.weather, ::forecastSource)
+    }
+
+    private fun forecastSource(): ForecastSource {
+        val raw = PreferencesSubsystem.getInstance(context).preferences.getString(
+            context.getString(R.string.pref_weather_forecast_source)
+        )
+        return when (raw) {
+            "2" -> ForecastSource.Zambretti
+            else -> ForecastSource.Sol
+        }
     }
 
     private fun invalidate() {

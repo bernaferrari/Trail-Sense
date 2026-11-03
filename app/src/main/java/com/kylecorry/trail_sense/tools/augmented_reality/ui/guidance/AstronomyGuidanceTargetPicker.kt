@@ -84,7 +84,7 @@ class AstronomyGuidanceTargetPicker(
                         view.context.getString(R.string.moon),
                         if (moonAltitude > 0f) null else notVisible,
                         moonPhaseMapper.getPhaseImage(phase.phase),
-                        iconRotation = astronomyService.getMoonTilt(location, time),
+                        iconRotation = astronomyService.getMoonTilt(location, time).parallacticAngle,
                         sortOrder = if (moonAltitude > 0f) 1 else 3
                     )
                 )

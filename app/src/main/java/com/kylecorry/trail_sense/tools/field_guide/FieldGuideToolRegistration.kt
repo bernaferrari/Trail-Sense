@@ -23,8 +23,10 @@ object FieldGuideToolRegistration : ToolRegistration {
             R.drawable.field_guide,
             R.id.fieldGuideFragment,
             ToolCategory.Books,
+            settingsNavAction = R.id.fieldGuideSettingsFragment,
             additionalNavigationIds = listOf(
                 R.id.fieldGuidePageFragment,
+                R.id.fieldGuideSettingsFragment,
                 R.id.sightingListFragment,
                 R.id.createFieldGuideSightingFragment,
                 R.id.createFieldGuidePageFragment

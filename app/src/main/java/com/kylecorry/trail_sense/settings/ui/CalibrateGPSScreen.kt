@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider as ComposeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -36,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,6 +78,7 @@ import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
+import com.kylecorry.trail_sense.shared.sensors.gps.GPSPowerMode
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.shared.views.Slider
 import java.time.Duration
@@ -418,6 +421,20 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         var overrideEnabled by remember {
             mutableStateOf(controller.isLocationOverrideEnabled())
         }
+        val context = LocalContext.current
+        val cache = remember(context) {
+            PreferencesSubsystem.getInstance(context).preferences
+        }
+        var powerMode by remember { mutableStateOf(prefs.gps.powerMode) }
+        var smoothing by remember { mutableIntStateOf(prefs.gps.smoothing) }
+        val gpsSettingsEnabled = autoLocationEnabled && autoLocation
+        val powerModes = listOf(
+            GPSPowerMode.Low to stringResource(R.string.gps_power_usage_low),
+            GPSPowerMode.Balanced to stringResource(R.string.gps_power_usage_balanced),
+            GPSPowerMode.High to stringResource(R.string.gps_power_usage_high)
+        )
+        val powerSummary = powerModes.firstOrNull { it.first == powerMode }?.second
+            ?: stringResource(R.string.gps_power_usage_inherit)
 
         controller.setLocationSummary { locationSummary = it }
         controller.setAccuracySummary { accuracySummary = it }
@@ -476,6 +493,46 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                                 controller.onAutoLocationChanged()
                             }
                         )
+                        if (gpsSettingsEnabled) {
+                            TrailSenseDivider()
+                            GPSChipActionRow(
+                                icon = painterResource(R.drawable.ic_power),
+                                label = stringResource(R.string.pref_gps_power_usage_title),
+                                summary = powerSummary,
+                                onClick = {
+                                    val selectedIndex = powerModes
+                                        .indexOfFirst { it.first == powerMode }
+                                        .coerceAtLeast(0)
+                                    Pickers.item(
+                                        context,
+                                        context.getString(R.string.pref_gps_power_usage_title),
+                                        powerModes.map { it.second },
+                                        selectedIndex
+                                    ) { index ->
+                                        val selected = index?.let { powerModes[it].first }
+                                        if (selected != null && selected != powerMode) {
+                                            cache.putString(
+                                                context.getString(R.string.pref_gps_power_usage),
+                                                selected.id.toString()
+                                            )
+                                            powerMode = selected
+                                            controller.onAutoLocationChanged()
+                                        }
+                                    }
+                                }
+                            )
+                            TrailSenseDivider()
+                            GPSSmoothingRow(
+                                smoothing = smoothing,
+                                onSmoothingChange = { updated ->
+                                    smoothing = updated
+                                    cache.putInt(
+                                        context.getString(R.string.pref_gps_smoothing),
+                                        updated
+                                    )
+                                }
+                            )
+                        }
                         TrailSenseDivider()
                         GPSChipActionRow(
                             icon = painterResource(R.drawable.satellite),
@@ -735,6 +792,45 @@ private fun GPSChipActionRow(
             )
         }
     }
+    }
+}
+
+@Composable
+private fun GPSSmoothingRow(
+    smoothing: Int,
+    onSmoothingChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupInner),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = TrailSenseSpacing.lg,
+                vertical = TrailSenseSpacing.md
+            )
+        ) {
+            Text(
+                text = stringResource(R.string.smoothing),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${stringResource(R.string.smoothing_summary)} ($smoothing)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            ComposeSlider(
+                value = smoothing.toFloat(),
+                onValueChange = {
+                    onSmoothingChange(it.roundToInt().coerceIn(0, 100))
+                },
+                valueRange = 0f..100f,
+                steps = 99
+            )
+        }
     }
 }
 

@@ -258,6 +258,16 @@ object TrailSenseNavGraph {
         }
 
         composeNavigator.createDestination().apply {
+            id = R.id.fieldGuideSettingsFragment
+            label = "FieldGuideSettingsScreen"
+            addArgument(ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(DESTINATION_FIELD_GUIDE_SETTINGS)
+                .build())
+            graph.addDestination(this)
+        }
+
+        composeNavigator.createDestination().apply {
             id = R.id.createFieldGuideSightingFragment
             label = "CreateFieldGuideSightingScreen"
             addArgument(ARG_DESTINATION, NavArgument.Builder()

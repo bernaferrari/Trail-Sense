@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import android.graphics.Bitmap
 import com.kylecorry.sol.units.Coordinate
 import java.time.LocalDate
 
@@ -21,9 +22,10 @@ data class AstronomyListItem(
 )
 
 data class AstronomyListIcon(
-    val resource: Int,
+    val resource: Int = 0,
     val tint: Int? = null,
-    val rotation: Float = 0f
+    val rotation: Float = 0f,
+    val bitmap: Bitmap? = null
 )
 
 data class AstronomyListItemData(

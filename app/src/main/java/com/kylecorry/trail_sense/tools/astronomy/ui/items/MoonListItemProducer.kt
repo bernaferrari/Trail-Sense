@@ -48,7 +48,14 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
             2,
             context.getString(R.string.moon),
             percent(formatter.formatMoonPhase(phase.phase), phase.illumination),
-            icon(MoonPhaseImageMapper().getPhaseImage(phase.phase), rotation = tilt),
+            icon(
+                MoonPhaseImageMapper(context).getPhaseImage(
+                    phase.phaseAngle,
+                    imageSize,
+                    imageSize,
+                    tilt
+                )
+            ),
             data = riseSetTransit(times)
         ) {
             val advancedData = listOf(

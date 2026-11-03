@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
@@ -54,6 +55,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
@@ -86,10 +88,14 @@ fun FieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
+    val formatter = remember(host) {
+        FieldGuideFormatService(UserPreferences(host.requireContext()))
+    }
     FieldGuidePageScreen(
         page = controller.page,
         files = controller.files,
         tagNameMapper = controller.tagNameMapper,
+        formatter = formatter,
         onEdit = controller::editPage,
         onSightings = controller::openSightings
     )
@@ -141,6 +147,7 @@ private fun FieldGuidePageScreen(
     page: FieldGuidePage?,
     files: FileSubsystem,
     tagNameMapper: FieldGuideTagNameMapper,
+    formatter: FieldGuideFormatService,
     onEdit: () -> Unit,
     onSightings: () -> Unit
 ) {
@@ -154,7 +161,7 @@ private fun FieldGuidePageScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 FieldGuidePageTopBar(
-                    title = stringResource(R.string.loading),
+                    title = AnnotatedString(stringResource(R.string.loading)),
                     canEdit = false,
                     onEdit = onEdit
                 )
@@ -170,6 +177,7 @@ private fun FieldGuidePageScreen(
                 page = page,
                 files = files,
                 tagNameMapper = tagNameMapper,
+                formatter = formatter,
                 onEdit = onEdit,
                 onSightings = onSightings
             )
@@ -183,7 +191,7 @@ private fun FieldGuidePageScreen(
  */
 @Composable
 private fun FieldGuidePageTopBar(
-    title: String,
+    title: AnnotatedString,
     canEdit: Boolean,
     onEdit: () -> Unit
 ) {
@@ -224,6 +232,7 @@ private fun FieldGuidePageContent(
     page: FieldGuidePage,
     files: FileSubsystem,
     tagNameMapper: FieldGuideTagNameMapper,
+    formatter: FieldGuideFormatService,
     onEdit: () -> Unit,
     onSightings: () -> Unit
 ) {
@@ -234,7 +243,7 @@ private fun FieldGuidePageContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         FieldGuidePageTopBar(
-            title = page.name,
+            title = formatter.formatTitle(page),
             canEdit = !page.isReadOnly,
             onEdit = onEdit
         )
@@ -252,7 +261,7 @@ private fun FieldGuidePageContent(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             // Hero card: photo + entry name in a tonal primaryContainer surface
-            HeroCard(page = page, files = files)
+            HeroCard(page = page, files = files, formatter = formatter)
 
             SightingsCard(
                 count = page.sightings.size,
@@ -298,7 +307,8 @@ private fun TonalIconChip(
 @Composable
 private fun HeroCard(
     page: FieldGuidePage,
-    files: FileSubsystem
+    files: FileSubsystem,
+    formatter: FieldGuideFormatService
 ) {
     val image = page.images.firstOrNull()
     val bitmap = remember(image, files) {
@@ -322,15 +332,26 @@ private fun HeroCard(
                         .testTag("image")
                 )
             }
-            Text(
-                text = page.name,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(TrailSenseSpacing.lg),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                Text(
+                    text = formatter.formatTitle(page),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                formatter.formatSubtitle(page)?.let { subtitle ->
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
         }
     }
 }

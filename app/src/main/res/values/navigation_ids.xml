@@ -67,6 +67,7 @@
     <item name="experimentationFragment" type="id" />
     <item name="fieldGuideFragment" type="id" />
     <item name="fieldGuidePageFragment" type="id" />
+    <item name="fieldGuideSettingsFragment" type="id" />
     <item name="flashlightSettingsFragment" type="id" />
     <item name="fragmentBacktrack" type="id" />
     <item name="fragmentLocalMessaging" type="id" />

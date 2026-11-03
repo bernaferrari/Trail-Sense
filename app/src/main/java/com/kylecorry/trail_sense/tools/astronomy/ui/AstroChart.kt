@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Paint
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
@@ -52,6 +53,7 @@ class AstroChart(
     private var sunPosition: Vector2? = null
     private var moonPosition: Vector2? = null
     private var moonTilt = 0f
+    private var moonBitmap: Bitmap? = null
     private var moonImage = bitmapLoader.load(R.drawable.ic_moon, imageSize)
     private val sunImage = bitmapLoader.load(R.drawable.ic_sun, imageSize)
 
@@ -77,11 +79,18 @@ class AstroChart(
     }
 
     fun setMoonImage(@DrawableRes icon: Int) {
+        moonBitmap = null
         moonImage = bitmapLoader.load(icon, imageSize)
         if (icon != previousMoonImage) {
             bitmapLoader.unload(previousMoonImage)
         }
         previousMoonImage = icon
+        renderVersion++
+    }
+
+    fun setMoonImage(bitmap: Bitmap) {
+        moonBitmap = bitmap
+        moonTilt = 0f
         renderVersion++
     }
 
@@ -172,12 +181,13 @@ class AstroChart(
             moonPosition?.let {
                 val point = toScreen(it, left, right, top, bottom)
                 val canvas = drawContext.canvas.nativeCanvas
+                val image = moonBitmap ?: moonImage
                 canvas.save()
                 canvas.rotate(moonTilt, point.x, point.y)
                 canvas.drawBitmap(
-                    moonImage,
-                    point.x - imageSize / 2f,
-                    point.y - imageSize / 2f,
+                    image,
+                    point.x - image.width / 2f,
+                    point.y - image.height / 2f,
                     null
                 )
                 canvas.restore()

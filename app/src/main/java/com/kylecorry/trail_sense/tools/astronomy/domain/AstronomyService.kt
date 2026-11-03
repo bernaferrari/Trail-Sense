@@ -7,6 +7,7 @@ import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseType
+import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShowerPeak
@@ -131,7 +132,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         location: Coordinate,
         time: ZonedDateTime = ZonedDateTime.now(),
         useNearestTransit: Boolean = false
-    ): Float {
+    ): MoonTilt {
         val timeToUse = if (useNearestTransit) {
             getMoonTimes(location, time.toLocalDate()).transit ?: getMoonTimes(
                 location,
@@ -141,8 +142,9 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             time
         }
 
-
-        return Astronomy.getMoonParallacticAngle(timeToUse, location)
+        val parallacticAngle = Astronomy.getMoonParallacticAngle(timeToUse, location)
+        val brightLimbAngleFromNorth = Astronomy.getMoonPositionAngleOfBrightLimb(timeToUse)
+        return MoonTilt(parallacticAngle, brightLimbAngleFromNorth)
     }
 
     // PUBLIC SUN METHODS
@@ -289,6 +291,18 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         return getEclipse(location, date, EclipseType.PartialLunar) {
             getMoonPosition(location, it).altitude
         }
+    }
+
+    fun getLunarEclipseShadow(
+        location: Coordinate,
+        time: ZonedDateTime = ZonedDateTime.now()
+    ): LunarEclipseShadow {
+        return Astronomy.getLunarEclipseShadow(
+            time,
+            location,
+            withRefraction = true,
+            withParallax = true
+        )
     }
 
     fun getSolarEclipse(

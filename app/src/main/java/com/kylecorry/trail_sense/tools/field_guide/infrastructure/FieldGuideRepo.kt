@@ -13,13 +13,20 @@ class FieldGuideRepo private constructor(private val context: Context) {
 
     private val pageDao = AppDatabase.getInstance(context).fieldGuidePageDao()
     private val sightingDao = AppDatabase.getInstance(context).fieldGuideSightingDao()
+    private val preferences = FieldGuidePreferences(context)
     private val files = FileSubsystem.getInstance(context)
 
     suspend fun getAllPages(): List<FieldGuidePage> = onIO {
         val saved = pageDao.getAllPages().map { it.toFieldGuidePage() }
         val sightings = sightingDao.getAllSightings().map { it.toSighting() }
         val all = BuiltInFieldGuide.getFieldGuide(context) + saved
-        all.map { it.copy(sightings = sightings.filter { s -> s.fieldGuidePageId == it.id }) }
+        val hidden = preferences.hiddenPageIds.toSet()
+        all.map {
+            it.copy(
+                sightings = sightings.filter { s -> s.fieldGuidePageId == it.id },
+                isHidden = hidden.contains(it.id)
+            )
+        }
     }
 
     suspend fun getPage(id: Long): FieldGuidePage? = onIO {
@@ -30,7 +37,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
         }
 
         val sightings = sightingDao.getSightingsForPage(id).map { it.toSighting() }
-        page?.copy(sightings = sightings)
+        page?.copy(sightings = sightings, isHidden = preferences.hiddenPageIds.contains(id))
     }
 
     suspend fun delete(page: FieldGuidePage) = onIO {
@@ -66,6 +73,23 @@ class FieldGuideRepo private constructor(private val context: Context) {
 
     suspend fun deleteSighting(sighting: Sighting) = onIO {
         sightingDao.delete(FieldGuideSightingEntity.fromSighting(sighting))
+    }
+
+    /**
+     * Only built-in pages (negative ids) can be hidden. Returns false otherwise.
+     */
+    suspend fun setPageHidden(pageId: Long, isHidden: Boolean): Boolean = onIO {
+        if (pageId >= 0) {
+            return@onIO false
+        }
+        val hiddenPageIds = preferences.hiddenPageIds.toMutableSet()
+        if (isHidden) {
+            hiddenPageIds.add(pageId)
+        } else {
+            hiddenPageIds.remove(pageId)
+        }
+        preferences.hiddenPageIds = hiddenPageIds.toList()
+        true
     }
 
     companion object {

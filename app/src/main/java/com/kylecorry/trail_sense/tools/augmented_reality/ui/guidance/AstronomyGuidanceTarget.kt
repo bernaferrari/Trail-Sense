@@ -50,7 +50,7 @@ class AstronomyGuidanceTarget(
                     ARGuidanceDisplayState(
                         request.context.getString(R.string.moon),
                         MoonPhaseImageMapper().getPhaseImage(phase.phase),
-                        iconRotation = astronomyService.getMoonTilt(location, time)
+                        iconRotation = astronomyService.getMoonTilt(location, time).parallacticAngle
                     ),
                     SphericalARPoint(
                         astronomyService.getMoonAzimuth(location, time).value,

@@ -96,6 +96,9 @@ fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
         tagNames = controller.tags.associateWith { controller.getTagName(it) },
         tags = controller.tags,
         onNameChange = { controller.updatePage(controller.page.copy(name = it)) },
+        onScientificNameChange = {
+            controller.updatePage(controller.page.copy(scientificName = it.ifBlank { null }))
+        },
         onNotesChange = { controller.updatePage(controller.page.copy(notes = it)) },
         onTagsChange = controller::updateTags,
         onTakePhoto = controller::takePhoto,
@@ -292,6 +295,7 @@ private fun CreateFieldGuidePageContent(
     tagNames: Map<FieldGuidePageTag, String>,
     tags: List<FieldGuidePageTag>,
     onNameChange: (String) -> Unit,
+    onScientificNameChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
     onTagsChange: (FieldGuidePageTagType, List<FieldGuidePageTag>) -> Unit,
     onTakePhoto: () -> Unit,
@@ -338,6 +342,15 @@ private fun CreateFieldGuidePageContent(
                             .fillMaxWidth()
                             .testTag("name"),
                         label = { Text(stringResource(R.string.name)) },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = page.scientificName.orEmpty(),
+                        onValueChange = onScientificNameChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("scientific_name"),
+                        label = { Text(stringResource(R.string.scientific_name)) },
                         singleLine = true
                     )
                     TagSelector(
@@ -689,6 +702,7 @@ private fun CreateFieldGuidePageContentPreview() {
             tagNames = tagNames,
             tags = FieldGuidePageTag.entries,
             onNameChange = {},
+            onScientificNameChange = {},
             onNotesChange = {},
             onTagsChange = { _, _ -> },
             onTakePhoto = {},

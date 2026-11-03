@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
@@ -44,15 +44,20 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
         onMain {
             val userPrefs = UserPreferences(context)
             val astroChart = AstroChart(context) {}
-            astroChart.setMoonImage(R.drawable.ic_moon)
             astroChart.setBands(userPrefs.astronomy.showAstronomyBands)
             astroChart.plot(sunAltitudes, moonAltitudes)
 
-            val moonImage = MoonPhaseImageMapper().getPhaseImage(moon.phase)
+            val size = Resources.dp(context, 24f).toInt()
+            val moonImage = MoonPhaseImageMapper(context).getPhaseImage(
+                moon.phaseAngle,
+                size,
+                size,
+                moon.tilt
+            )
 
             astroChart.setMoonImage(moonImage)
             astroChart.moveSun(currentSun)
-            astroChart.moveMoon(currentMoon, moon.tilt)
+            astroChart.moveMoon(currentMoon)
 
             bitmap = renderChart(
                 context,

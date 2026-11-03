@@ -52,6 +52,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.kylecorry.andromeda.alerts.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
@@ -60,7 +61,6 @@ import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.time.Time.atEndOfDay
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -105,6 +105,7 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 @Composable
@@ -173,7 +174,6 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     private var location = Coordinate.zero
     private var currentSeekChartTime = ZonedDateTime.now()
     private var isSeeking = false
-    private var currentMoonTilt = 0f
     private var isCreated = false
 
     private val astroChartDataProvider by lazy {
@@ -458,19 +458,30 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
 
         val displayDate = views.displayDate.date
-
-        val moonPhase = withContext(Dispatchers.Default) {
-            if (displayDate == LocalDate.now()) {
-                astronomyService.getCurrentMoonPhase()
-            } else {
-                astronomyService.getMoonPhase(displayDate)
-            }
+        val time = if (isSeeking) {
+            currentSeekChartTime
+        } else if (displayDate == LocalDate.now()) {
+            ZonedDateTime.now()
+        } else {
+            displayDate.atTime(12, 0).atZone(ZoneId.systemDefault())
         }
 
-        currentMoonTilt = onDefault { astronomyService.getMoonTilt(location) }
+        val phase = onDefault { astronomyService.getMoonPhase(time) }
+        val tilt = onDefault { astronomyService.getMoonTilt(location, time) }
 
         withContext(Dispatchers.Main) {
-            chart.setMoonImage(getMoonImage(moonPhase.phase))
+            if (!isViewReady) {
+                return@withContext
+            }
+            val size = Resources.dp(host.requireContext(), 24f).toInt()
+            chart.setMoonImage(
+                MoonPhaseImageMapper(host.requireContext()).getPhaseImage(
+                    phase.phaseAngle,
+                    size,
+                    size,
+                    tilt
+                )
+            )
         }
     }
 
@@ -512,14 +523,13 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
 
     private fun plotMoonImage(
         altitudes: List<Reading<Float>>,
-        time: ZonedDateTime = ZonedDateTime.now(),
-        tilt: Float? = null
+        time: ZonedDateTime = ZonedDateTime.now()
     ) {
         val instant = time.toInstant()
         val current = altitudes.minByOrNull {
             Duration.between(instant, it.time).abs()
         }
-        chart.moveMoon(current, tilt ?: currentMoonTilt)
+        chart.moveMoon(current)
     }
 
     private suspend fun updateAstronomyDetails() {
@@ -541,10 +551,6 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
     }
 
-
-    private fun getMoonImage(phase: MoonTruePhase): Int {
-        return MoonPhaseImageMapper().getPhaseImage(phase)
-    }
 
     private suspend fun displayTimeUntilNextSunEvent() {
         val currentTime = LocalDateTime.now()
@@ -613,8 +619,18 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             includeSeconds = false
         )
         if (data.moon.isNotEmpty() && data.sun.isNotEmpty()) {
+            val phase = astronomyService.getMoonPhase(currentSeekChartTime)
             val tilt = astronomyService.getMoonTilt(location, currentSeekChartTime)
-            plotMoonImage(data.moon, currentSeekChartTime, tilt)
+            val size = Resources.dp(host.requireContext(), 24f).toInt()
+            chart.setMoonImage(
+                MoonPhaseImageMapper(host.requireContext()).getPhaseImage(
+                    phase.phaseAngle,
+                    size,
+                    size,
+                    tilt
+                )
+            )
+            plotMoonImage(data.moon, currentSeekChartTime)
             plotSunImage(data.sun, currentSeekChartTime)
         }
     }
@@ -819,7 +835,7 @@ private fun AstronomyDetailRow(item: AstronomyListItem) {
     ) {
         item.icon?.let { icon ->
             AstronomyIconChip(
-                icon = rememberAndroidDrawablePainter(icon.resource),
+                icon = rememberAstronomyIconPainter(icon),
                 tint = icon.tint?.let { Color(it) }
                     ?: Color.Unspecified,
                 rotation = icon.rotation
@@ -851,11 +867,12 @@ private fun AstronomyDetailRow(item: AstronomyListItem) {
 }
 
 @Composable
-private fun rememberAndroidDrawablePainter(resource: Int): Painter {
+private fun rememberAstronomyIconPainter(icon: com.kylecorry.trail_sense.tools.astronomy.ui.items.AstronomyListIcon): Painter {
     val context = LocalContext.current
-    return remember(context, resource) {
-        val drawable = requireNotNull(ContextCompat.getDrawable(context, resource))
-        BitmapPainter(drawable.toBitmap().asImageBitmap())
+    val bitmap = icon.bitmap
+    return remember(context, icon.resource, bitmap) {
+        val image = bitmap ?: requireNotNull(ContextCompat.getDrawable(context, icon.resource)).toBitmap()
+        BitmapPainter(image.asImageBitmap())
     }
 }
 

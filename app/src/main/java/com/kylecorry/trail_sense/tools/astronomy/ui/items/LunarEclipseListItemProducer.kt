@@ -5,6 +5,7 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
+import com.kylecorry.trail_sense.tools.astronomy.ui.LunarEclipseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
 import java.time.LocalDate
 
@@ -18,11 +19,13 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
         val eclipse = astronomyService.getLunarEclipse(location, date) ?: return@onDefault null
 
         // Advanced
-        val peakAltitude = astronomyService.getMoonAltitude(location, eclipse.peak)
+        val moon = astronomyService.getMoonPosition(location, eclipse.peak)
         val peakAzimuth = DeclinationUtils.fromTrueNorthBearing(
-            astronomyService.getMoonAzimuth(location, eclipse.peak),
+            moon.azimuth,
             declination
         )
+        val shadow = astronomyService.getLunarEclipseShadow(location, eclipse.peak)
+        val moonTilt = astronomyService.getMoonTilt(location, eclipse.peak)
 
         val times = times(eclipse.start, eclipse.peak, eclipse.end, date)
 
@@ -31,11 +34,13 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
             context.getString(R.string.lunar_eclipse),
             EclipseFormatter.type(context, eclipse),
             icon(
-                if (eclipse.isTotal) {
-                    R.drawable.ic_moon_total_eclipse
-                } else {
-                    R.drawable.ic_moon_partial_eclipse
-                }
+                LunarEclipseImageMapper(context).getEclipseImage(
+                    moon,
+                    shadow,
+                    imageSize,
+                    imageSize,
+                    moonTilt
+                )
             ),
             data = times
         ) {
@@ -46,7 +51,7 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
                     EclipseFormatter.type(context, eclipse)
                 ),
                 context.getString(R.string.magnitude) to decimal(eclipse.magnitude, 2),
-                context.getString(R.string.astronomy_altitude_peak) to degrees(peakAltitude),
+                context.getString(R.string.astronomy_altitude_peak) to degrees(moon.altitude),
                 context.getString(R.string.astronomy_direction_peak) to direction(peakAzimuth)
             )
 

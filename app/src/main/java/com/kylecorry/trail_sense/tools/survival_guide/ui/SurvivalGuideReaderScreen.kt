@@ -109,7 +109,7 @@ private fun SurvivalGuideHeader(
                     modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_share),
+                        painter = painterResource(R.drawable.ic_printer),
                         contentDescription = stringResource(R.string.print),
                         modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )

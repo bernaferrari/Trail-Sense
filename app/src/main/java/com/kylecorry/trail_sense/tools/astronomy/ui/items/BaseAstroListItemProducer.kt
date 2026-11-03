@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import com.kylecorry.andromeda.alerts.Alerts
@@ -67,6 +68,10 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
 
     protected fun icon(resource: Int, tint: Int? = null, rotation: Float = 0f): AstronomyListIcon {
         return AstronomyListIcon(resource, tint, rotation)
+    }
+
+    protected fun icon(bitmap: Bitmap): AstronomyListIcon {
+        return AstronomyListIcon(bitmap = bitmap)
     }
 
     protected fun showAdvancedData(

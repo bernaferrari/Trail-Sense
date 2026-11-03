@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -63,6 +64,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
@@ -105,6 +107,7 @@ fun FieldGuideToolScreen(host: TrailSenseDestinationHost) {
         onViewPage = controller::viewPage,
         onEditPage = controller::editPage,
         onDeletePage = controller::deletePage,
+        onHidePage = controller::hidePage,
         loadThumbnail = controller::loadThumbnail,
         onCreate = { controller.createPage(controller.tagFilter) }
     )
@@ -114,6 +117,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
 
     private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
     private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
+    private val formatter by lazy { FieldGuideFormatService(UserPreferences(host.requireContext())) }
     private var pages by mutableStateOf(emptyList<FieldGuidePage>())
     var filter by mutableStateOf("")
     var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
@@ -189,7 +193,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
         host.lifecycleScope.launch {
             pages = withContext(Dispatchers.IO) {
                 FieldGuideCleanupCommand(host.requireContext()).execute()
-                repo.getAllPages().sortedBy { it.name }
+                repo.getAllPages().sortedBy { formatter.formatName(it).lowercase() }
             }
         }
     }
@@ -218,6 +222,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                 filteredPages.map {
                     FieldGuideListItem.PageItem(
                         page = it,
+                        title = formatter.formatNameAnnotated(it),
                         subtitle = it.notes?.substringBefore(".")
                             ?.plus(if (it.notes.contains(".")) "." else "")
                             ?.take(200)
@@ -230,9 +235,10 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
 
     private fun getFilteredPages(): List<FieldGuidePage> {
         val mapper = FieldGuideTagNameMapper(host.requireContext())
-        return TextUtils.search(filter, pages) { page ->
+        return TextUtils.search(filter, pages.filter { !it.isHidden }) { page ->
             listOf(
                 page.name,
+                page.scientificName ?: "",
                 page.notes ?: "",
                 page.tags.joinToString { mapper.getName(it) }
             )
@@ -268,8 +274,31 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
         )
     }
 
+    fun hidePage(page: FieldGuidePage) {
+        Alerts.dialog(
+            host.requireContext(),
+            host.getString(R.string.hide),
+            host.getString(R.string.hide_field_guide_page_message, formatter.formatName(page))
+        ) { cancelled ->
+            if (!cancelled) {
+                host.lifecycleScope.launch {
+                    val hidden = withContext(Dispatchers.IO) {
+                        repo.setPageHidden(page.id, true)
+                    }
+                    if (hidden) {
+                        reloadPages()
+                    }
+                }
+            }
+        }
+    }
+
     fun deletePage(page: FieldGuidePage) {
-        Alerts.dialog(host.requireContext(), host.getString(R.string.delete), page.name) { cancelled ->
+        Alerts.dialog(
+            host.requireContext(),
+            host.getString(R.string.delete),
+            formatter.formatName(page)
+        ) { cancelled ->
             if (!cancelled) {
                 host.lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
@@ -304,6 +333,7 @@ private fun FieldGuideScreen(
     onViewPage: (FieldGuidePage) -> Unit,
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
+    onHidePage: (FieldGuidePage) -> Unit,
     loadThumbnail: suspend (FieldGuidePage) -> Bitmap,
     onCreate: () -> Unit
 ) {
@@ -363,6 +393,7 @@ private fun FieldGuideScreen(
                     onViewPage = onViewPage,
                     onEditPage = onEditPage,
                     onDeletePage = onDeletePage,
+                    onHidePage = onHidePage,
                     loadThumbnail = loadThumbnail,
                     modifier = Modifier
                         .widthIn(max = TrailSenseSize.maximumContentWidth)
@@ -381,6 +412,7 @@ private fun FieldGuideList(
     onViewPage: (FieldGuidePage) -> Unit,
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
+    onHidePage: (FieldGuidePage) -> Unit,
     loadThumbnail: suspend (FieldGuidePage) -> Bitmap,
     modifier: Modifier = Modifier
 ) {
@@ -424,6 +456,7 @@ private fun FieldGuideList(
                             onViewPage = onViewPage,
                             onEditPage = onEditPage,
                             onDeletePage = onDeletePage,
+                            onHidePage = onHidePage,
                             loadThumbnail = loadThumbnail
                         )
                     }
@@ -487,6 +520,7 @@ private fun FieldGuidePageRow(
     onViewPage: (FieldGuidePage) -> Unit,
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
+    onHidePage: (FieldGuidePage) -> Unit,
     loadThumbnail: suspend (FieldGuidePage) -> Bitmap
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -539,7 +573,7 @@ private fun FieldGuidePageRow(
                     .padding(start = TrailSenseSpacing.lg)
             ) {
                 Text(
-                    text = item.page.name,
+                    text = item.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -558,22 +592,32 @@ private fun FieldGuidePageRow(
                 }
             }
 
-            if (!item.page.isReadOnly) {
-                Box {
-                    IconButton(
-                        onClick = { menuOpen = true },
-                        modifier = Modifier.testTag("field_guide_page_menu")
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_menu_dots),
-                            contentDescription = stringResource(R.string.edit),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            Box {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier.testTag("field_guide_page_menu")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu_dots),
+                        contentDescription = stringResource(
+                            if (item.page.isReadOnly) R.string.hide else R.string.edit
+                        ),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    if (item.page.isReadOnly) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.hide)) },
+                            onClick = {
+                                menuOpen = false
+                                onHidePage(item.page)
+                            }
                         )
-                    }
-                    DropdownMenu(
-                        expanded = menuOpen,
-                        onDismissRequest = { menuOpen = false }
-                    ) {
+                    } else {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.edit)) },
                             onClick = {
@@ -614,6 +658,7 @@ private sealed interface FieldGuideListItem {
 
     data class PageItem(
         val page: FieldGuidePage,
+        val title: AnnotatedString,
         val subtitle: String
     ) : FieldGuideListItem {
         override val id: Long = page.id

@@ -18,6 +18,7 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
@@ -27,6 +28,7 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
+import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideFormatService
 
 class FieldGuideSightingGeoJsonSource : GeoJsonSource {
 
@@ -64,7 +66,8 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         if (nameFormat.isEmpty()) {
             nameFormat = context.getString(R.string.sighting_label)
         }
-        val pages = repo.getAllPages()
+        val formatter = FieldGuideFormatService(UserPreferences(context))
+        val pages = repo.getAllPages().filter { !it.isHidden }
 
         val allSightings = pages
             .flatMap { page ->
@@ -86,7 +89,7 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
                 val point = GeoJsonFeature.point(
                     sighting.location!!,
                     sighting.id,
-                    nameFormat.format(page.name),
+                    nameFormat.format(formatter.formatName(page)),
                     color = Color.BLACK,
                     icon = if (bitmap == null) icon.id else null,
                     iconSize = if (bitmap == null) size * 0.75f else imageSize,

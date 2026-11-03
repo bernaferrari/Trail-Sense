@@ -15,7 +15,7 @@ class NavAstronomyService(private val astronomy: AstronomyService = AstronomySer
             astronomy.isSunUp(location),
             astronomy.isMoonUp(location),
             astronomy.getMoonPhase(LocalDate.now()).phase,
-            astronomy.getMoonTilt(location)
+            astronomy.getMoonTilt(location).parallacticAngle
         )
     }
 }

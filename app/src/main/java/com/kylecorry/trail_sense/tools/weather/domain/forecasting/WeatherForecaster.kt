@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.Meteorology
+import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.WeatherForecast
@@ -28,7 +29,8 @@ import kotlin.math.absoluteValue
 
 internal class WeatherForecaster(
     private val temperatureService: ITemperatureService,
-    prefs: IWeatherPreferences
+    prefs: IWeatherPreferences,
+    private val forecastSource: () -> ForecastSource = { ForecastSource.Sol }
 ) : IWeatherForecaster {
 
     private val stormThreshold = prefs.stormAlertThreshold
@@ -128,7 +130,8 @@ internal class WeatherForecaster(
             hourlyForecastChangeThreshold.absoluteValue / 3f,
             stormThreshold.absoluteValue / 3f,
             Instant.now(),
-            location ?: Coordinate.zero
+            location ?: Coordinate.zero,
+            forecastSource()
         )
     }
 

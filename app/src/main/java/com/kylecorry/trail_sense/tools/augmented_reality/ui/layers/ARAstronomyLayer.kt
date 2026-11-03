@@ -287,7 +287,7 @@ class ARAstronomyLayer(
                     canvasObject = moonBitmap?.let {
                         CanvasBitmap(
                             moonBitmap,
-                            rotation = moonTilt,
+                            rotation = moonTilt.parallacticAngle,
                             opacity = moonOpacity
                         )
                     }

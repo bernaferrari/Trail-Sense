@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,10 +33,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,12 +46,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.pickers.Pickers
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
+import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -55,13 +65,18 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
+import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.time.LocalDate
 
 @Composable
@@ -234,7 +249,12 @@ internal fun PedometerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
+            HourlyStepsHistory(
+                prefs = prefs,
+                formatService = formatService,
+                paceCalculator = paceCalculator,
+                refreshKey = refreshKey
+            )
 
             // Primary start / stop control
             PedometerStartStopButton(
@@ -245,6 +265,201 @@ internal fun PedometerScreen(
                     .testTag("pedometer_play_bar")
             )
         }
+        }
+    }
+}
+
+@Composable
+private fun HourlyStepsHistory(
+    prefs: UserPreferences,
+    formatService: FormatService,
+    paceCalculator: StrideLengthPaceCalculator,
+    refreshKey: Int
+) {
+    val context = LocalContext.current
+    val stepTracker = remember { getAppService<StepTrackerService>() }
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var hourlySteps by remember { mutableStateOf<List<HourlyStepCount>>(emptyList()) }
+    val selectedStart = remember { mutableStateOf<Instant?>(null) }
+    val today = LocalDate.now()
+    val historyTick = if (selectedDate == today) refreshKey / 4 else 0
+
+    LaunchedEffect(selectedDate, historyTick) {
+        val date = selectedDate
+        val updated = withContext(Dispatchers.IO) {
+            stepTracker.getHourlyStepCounts(date)
+        }
+        if (date == selectedDate) {
+            hourlySteps = updated
+        }
+    }
+
+    fun selectDate(date: LocalDate) {
+        val clamped = if (date.isAfter(today)) today else date
+        if (clamped == selectedDate) {
+            return
+        }
+        selectedDate = clamped
+        selectedStart.value = null
+    }
+
+    val selectedHour = hourlySteps.firstOrNull { it.startTime == selectedStart.value }
+    val totalSteps = hourlySteps.sumOf { it.steps }
+    fun formatStepsDistance(steps: Long): String {
+        val distance = getDistance(steps, paceCalculator, prefs)
+        return formatService.formatDistance(
+            distance,
+            Units.getDecimalPlaces(distance.units),
+            false
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
+        Text(
+            text = stringResource(R.string.history),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = TrailSenseSpacing.xs)
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("hourly_steps_date"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { selectDate(selectedDate.minusDays(1)) },
+                    modifier = Modifier.testTag("hourly_steps_previous")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = stringResource(R.string.previous)
+                    )
+                }
+                Text(
+                    text = formatService.formatRelativeDate(selectedDate),
+                    modifier = Modifier
+                        .weight(1f)
+                        .combinedClickable(
+                            onClick = {
+                                Pickers.date(context, selectedDate) { picked ->
+                                    if (picked != null) {
+                                        selectDate(picked)
+                                    }
+                                }
+                            },
+                            onLongClick = { selectDate(LocalDate.now()) }
+                        )
+                        .padding(vertical = TrailSenseSpacing.md),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(
+                    onClick = { selectDate(selectedDate.plusDays(1)) },
+                    enabled = selectedDate.isBefore(today),
+                    modifier = Modifier.testTag("hourly_steps_next")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.next)
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            PedometerDataPointCard(
+                point = PedometerDataPoint(
+                    tag = "hourly_steps_total_steps",
+                    title = DecimalFormatter.format(totalSteps, 0),
+                    label = stringResource(R.string.steps),
+                    icon = R.drawable.steps
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            PedometerDataPointCard(
+                point = PedometerDataPoint(
+                    tag = "hourly_steps_total_distance",
+                    title = formatStepsDistance(totalSteps),
+                    label = stringResource(R.string.distance),
+                    icon = R.drawable.ruler
+                ),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+                    .padding(TrailSenseSpacing.sm)
+                    .testTag("hourly_steps_chart"),
+                factory = { viewContext ->
+                    Chart(viewContext).apply {
+                        tag = HourlyStepsChart(this) { hour ->
+                            selectedStart.value = hour.startTime
+                        }
+                    }
+                },
+                update = { chart ->
+                    val hourlyChart = chart.tag as? HourlyStepsChart ?: return@AndroidView
+                    hourlyChart.plot(hourlySteps)
+                    hourlyChart.highlight(selectedHour)
+                }
+            )
+        }
+        if (selectedHour != null) {
+            Text(
+                text = stringResource(
+                    R.string.dash_separated_pair,
+                    formatService.formatTime(selectedHour.startTime, false),
+                    formatService.formatTime(selectedHour.endTime, false)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("hourly_steps_details"),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("hourly_steps_details_grid"),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                PedometerDataPointCard(
+                    point = PedometerDataPoint(
+                        tag = "hourly_steps_details_steps",
+                        title = DecimalFormatter.format(selectedHour.steps, 0),
+                        label = stringResource(R.string.steps),
+                        icon = R.drawable.steps
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                PedometerDataPointCard(
+                    point = PedometerDataPoint(
+                        tag = "hourly_steps_details_distance",
+                        title = formatStepsDistance(selectedHour.steps),
+                        label = stringResource(R.string.distance),
+                        icon = R.drawable.ruler
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
