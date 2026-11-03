@@ -131,7 +131,7 @@ class RadarCompassView(
             addCircle(centerPixel.x, centerPixel.y, compassSize / 2f, Path.Direction.CW)
         }
         distanceSize = sp(10f)
-        cardinalSize = sp(20f)
+        cardinalSize = sp(18f)
         dialTickRadius = if (drawDialBezel) {
             compassSize / 2f + iconSize / 2f + dp(2f)
         } else {
@@ -243,11 +243,13 @@ class RadarCompassView(
         paint.color = color
         paint.textSize = cardinalSize
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.DEFAULT_BOLD
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
 
         nativeCanvas.save()
         nativeCanvas.rotate(degrees, centerPixel.x, centerPixel.y)
-        nativeCanvas.drawText(text, centerPixel.x, centerPixel.y - dialTickRadius + dp(1f), paint)
+        // Inside the ring: clear of the longest tick, vertically centered on its radius.
+        val letterRadius = dialTickRadius - dp(10f) - cardinalSize * 0.5f
+        nativeCanvas.drawText(text, centerPixel.x, centerPixel.y - letterRadius + cardinalSize * 0.36f, paint)
         nativeCanvas.restore()
         paint.typeface = Typeface.DEFAULT
     }
@@ -276,8 +278,14 @@ class RadarCompassView(
             return
         }
 
-        drawTicks(nativeCanvas, 15, dp(6f), dp(2f), textColor)
-        drawTicks(nativeCanvas, 45, dp(10f), dp(3f), textColor)
+        // Fine graduations every 5°, stronger every 15° and 45°, and north in the accent color: a dial that reads
+        // like an instrument without crowding the letters, which sit inside the ring.
+        drawTicks(nativeCanvas, 5, dp(4f), dp(1f), textColor.withAlpha(90))
+        drawTicks(nativeCanvas, 15, dp(8f), dp(1.5f), textColor.withAlpha(170))
+        drawTicks(nativeCanvas, 45, dp(12f), dp(2.5f), textColor)
+        paint.color = primaryColor
+        paint.strokeWidth = dp(3f)
+        drawTick(nativeCanvas, 0f, dp(14f), paint)
     }
 
     private fun drawTicks(

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontWeight
 import android.content.Context
 import android.os.Bundle
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -850,13 +853,9 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
         // Azimuth
         if (hasCompass) {
-            val azimuthText =
-                formatService.formatDegrees(bearing, replace360 = true)
-                    .padStart(4, ' ')
-            val directionText = formatService.formatDirection(CompassDirection.nearest(bearing))
-                .padStart(2, ' ')
-            val titleText = "$azimuthText   $directionText"
-            views.navigationTitle.title = titleText
+            views.navigationTitle.title = formatService.formatDegrees(bearing, replace360 = true)
+            views.navigationTitle.direction =
+                formatService.formatDirection(CompassDirection.nearest(bearing))
         }
 
         // Compass
@@ -1035,6 +1034,7 @@ private class NavigationTitleState {
     val leftButton = ComposeQuickActionButtonView()
     val rightButton = ComposeQuickActionButtonView()
     var title by mutableStateOf("")
+    var direction by mutableStateOf("")
     var subtitle by mutableStateOf("")
     var isTitleVisible by mutableStateOf(true)
     var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
@@ -1048,26 +1048,32 @@ private class NavigatorDataPointState(
     var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        Row(
-            modifier = modifier
-                .clickable(enabled = onClick != null) { onClick?.invoke() }
-                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    fun Content(modifier: Modifier = Modifier, shape: Shape = MaterialTheme.shapes.large) {
+        Surface(
+            modifier = modifier,
+            shape = shape,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            onClick = { onClick?.invoke() },
+            enabled = onClick != null
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -1093,12 +1099,24 @@ private fun NavigationTitle(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
         ) {
             if (state.isTitleVisible) {
-                Text(
-                    text = state.title,
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
+                // The heading in tabular figures (so it doesn't jitter as it changes), its direction beside it in
+                // the accent color.
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = state.title,
+                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (state.direction.isNotEmpty()) {
+                        Text(
+                            text = state.direction,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xs)
+                        )
+                    }
+                }
             }
             Text(
                 text = state.subtitle,
@@ -1132,15 +1150,19 @@ private fun NavigatorHost(
                 .padding(horizontal = TrailSenseSpacing.lg)
         ) {
             NavigationTitle(views.navigationTitle)
+            // Altitude and speed as one connected pair, like the family's grids.
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 views.altitude.Content(
-                    Modifier.weight(1f)
+                    Modifier.weight(1f),
+                    shape = trailSenseGridCellShape(0, 2, 0, 1)
                 )
-                views.speed.Content(Modifier.weight(1f))
+                views.speed.Content(Modifier.weight(1f), shape = trailSenseGridCellShape(1, 2, 0, 1))
             }
             BoxWithConstraints(
                 modifier = Modifier
