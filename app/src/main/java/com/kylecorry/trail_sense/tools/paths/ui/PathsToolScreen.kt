@@ -48,12 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.R

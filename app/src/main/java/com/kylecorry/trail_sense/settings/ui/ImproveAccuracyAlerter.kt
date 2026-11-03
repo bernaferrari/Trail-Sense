@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.sense.compass.ICompass

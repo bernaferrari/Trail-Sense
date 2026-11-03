@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup

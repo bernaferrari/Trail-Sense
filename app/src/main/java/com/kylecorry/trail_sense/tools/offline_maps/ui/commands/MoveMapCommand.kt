@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand

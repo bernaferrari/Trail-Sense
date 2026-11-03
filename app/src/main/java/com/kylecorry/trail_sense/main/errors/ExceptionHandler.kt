@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.main.errors
 
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.exceptions.BugReportEmailMessage
 import com.kylecorry.trail_sense.R

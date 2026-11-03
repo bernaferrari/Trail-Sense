@@ -46,14 +46,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner

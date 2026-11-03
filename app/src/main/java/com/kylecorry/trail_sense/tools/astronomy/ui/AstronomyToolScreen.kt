@@ -50,7 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.capitalizeWords
@@ -58,7 +58,7 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.time.Time.atEndOfDay

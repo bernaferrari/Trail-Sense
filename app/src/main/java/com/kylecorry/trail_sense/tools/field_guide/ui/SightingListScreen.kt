@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate

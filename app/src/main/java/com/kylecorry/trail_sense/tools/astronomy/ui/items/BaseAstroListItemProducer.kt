@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes

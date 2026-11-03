@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle

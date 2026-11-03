@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.toBitmap
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.camera.ICamera

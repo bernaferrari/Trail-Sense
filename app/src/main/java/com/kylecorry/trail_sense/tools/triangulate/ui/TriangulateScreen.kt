@@ -61,12 +61,12 @@ import androidx.core.text.scale
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
 import com.kylecorry.luna.time.CoroutineTimer

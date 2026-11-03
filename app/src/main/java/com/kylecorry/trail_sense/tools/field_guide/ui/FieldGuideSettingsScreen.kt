@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow

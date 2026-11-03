@@ -45,10 +45,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.observe
 import androidx.annotation.StringRes
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry

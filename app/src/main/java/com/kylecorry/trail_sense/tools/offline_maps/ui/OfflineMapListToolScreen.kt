@@ -46,7 +46,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -54,7 +54,7 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R

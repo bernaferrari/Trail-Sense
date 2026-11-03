@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.sol.science.astronomy.Astronomy

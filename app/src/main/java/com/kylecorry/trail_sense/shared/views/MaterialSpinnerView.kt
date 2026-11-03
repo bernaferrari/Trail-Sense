@@ -8,7 +8,7 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 
 class MaterialSpinnerView(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {

@@ -40,7 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin

@@ -56,7 +56,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences

@@ -56,7 +56,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate

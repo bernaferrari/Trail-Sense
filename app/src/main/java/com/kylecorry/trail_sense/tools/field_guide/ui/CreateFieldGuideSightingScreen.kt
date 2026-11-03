@@ -54,10 +54,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.time.Time.toZonedDateTime

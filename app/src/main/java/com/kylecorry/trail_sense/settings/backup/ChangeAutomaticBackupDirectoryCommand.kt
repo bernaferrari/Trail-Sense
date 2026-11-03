@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.settings.backup
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.UriAccess

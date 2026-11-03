@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.alerts
 
 import android.content.Context
 import android.app.Dialog
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 
 class AlertLoadingIndicator(private val context: Context, private val title: String) :
     ILoadingIndicator {

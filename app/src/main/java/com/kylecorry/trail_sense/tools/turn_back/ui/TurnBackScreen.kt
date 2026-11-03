@@ -45,7 +45,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.google.android.material.snackbar.Snackbar
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService

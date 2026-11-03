@@ -58,7 +58,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
@@ -71,7 +71,7 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.statistics.Statistics

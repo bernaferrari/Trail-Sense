@@ -52,7 +52,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences

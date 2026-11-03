@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
 import android.content.Context
-import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand

@@ -32,11 +32,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.trail_sense.R

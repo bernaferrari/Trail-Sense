@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.alerts
 
 import android.content.Context
 import android.os.Build
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Android
 import com.kylecorry.andromeda.markdown.MarkdownService

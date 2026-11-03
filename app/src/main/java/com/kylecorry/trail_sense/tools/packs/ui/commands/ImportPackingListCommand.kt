@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
 import android.os.Bundle
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.shared.navigateWithAnimation

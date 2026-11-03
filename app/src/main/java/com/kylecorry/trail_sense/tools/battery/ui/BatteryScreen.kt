@@ -54,7 +54,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.andromeda.battery.BatteryChargingStatus

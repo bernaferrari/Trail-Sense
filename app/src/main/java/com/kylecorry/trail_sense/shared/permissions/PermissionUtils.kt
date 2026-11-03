@@ -6,7 +6,7 @@ import android.os.Build
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.cache.DependencyRegistry

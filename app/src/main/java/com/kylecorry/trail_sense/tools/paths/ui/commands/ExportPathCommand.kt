@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.io.IOService
 import com.kylecorry.trail_sense.tools.paths.domain.FullPath

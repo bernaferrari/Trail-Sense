@@ -15,7 +15,7 @@ import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.fragments.AndromedaFragment
 import com.kylecorry.andromeda.fragments.inBackground
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.views.list.ListMenuItem
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain

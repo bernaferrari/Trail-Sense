@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.CoroutineAlerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R

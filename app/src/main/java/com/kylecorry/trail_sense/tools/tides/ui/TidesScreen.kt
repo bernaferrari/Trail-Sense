@@ -54,8 +54,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
-import com.kylecorry.andromeda.alerts.CoroutineAlerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R

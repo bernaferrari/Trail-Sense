@@ -57,7 +57,7 @@ import com.kylecorry.andromeda.sense.altitude.BarometricAltimeter
 import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.mock.MockBarometer
 import com.kylecorry.andromeda.sense.mock.MockSensor
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits

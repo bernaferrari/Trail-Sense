@@ -39,12 +39,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.android.material.snackbar.Snackbar
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces

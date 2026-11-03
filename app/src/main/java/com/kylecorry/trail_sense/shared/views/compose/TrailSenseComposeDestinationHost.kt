@@ -68,7 +68,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.snackbar.Snackbar
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.clipboard.Clipboard
@@ -84,7 +84,7 @@ import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.andromeda.pdf.PdfConvert
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.print.ColorMode
 import com.kylecorry.andromeda.print.Orientation

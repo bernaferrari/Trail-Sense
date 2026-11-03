@@ -48,10 +48,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow

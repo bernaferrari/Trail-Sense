@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import androidx.camera.view.PreviewView
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R

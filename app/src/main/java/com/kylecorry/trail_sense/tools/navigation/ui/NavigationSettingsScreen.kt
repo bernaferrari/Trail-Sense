@@ -39,7 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow

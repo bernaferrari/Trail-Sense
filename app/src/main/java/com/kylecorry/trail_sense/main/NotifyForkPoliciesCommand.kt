@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.main
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command

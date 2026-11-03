@@ -52,10 +52,10 @@ import android.os.Bundle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.topics.generic.getOrNull

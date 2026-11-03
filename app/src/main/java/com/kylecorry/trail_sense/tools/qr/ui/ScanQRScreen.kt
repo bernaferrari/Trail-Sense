@@ -52,7 +52,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState

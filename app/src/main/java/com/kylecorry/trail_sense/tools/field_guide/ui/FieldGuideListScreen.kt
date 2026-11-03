@@ -59,7 +59,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R

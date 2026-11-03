@@ -57,7 +57,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import androidx.navigation.NavController
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
@@ -66,7 +66,7 @@ import com.kylecorry.luna.extensions.filterIndices
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils

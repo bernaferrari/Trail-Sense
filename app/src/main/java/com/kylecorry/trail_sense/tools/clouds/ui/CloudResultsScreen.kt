@@ -67,7 +67,7 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.pickers.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus

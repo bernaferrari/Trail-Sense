@@ -62,9 +62,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import android.view.View
 import android.widget.TextView
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.luna.time.Throttle

@@ -49,9 +49,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.luna.time.CoroutineTimer

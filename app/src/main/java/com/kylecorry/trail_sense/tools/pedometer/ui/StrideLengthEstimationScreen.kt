@@ -30,7 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

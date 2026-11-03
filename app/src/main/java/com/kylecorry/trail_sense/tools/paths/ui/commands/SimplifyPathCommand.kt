@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.inBackground

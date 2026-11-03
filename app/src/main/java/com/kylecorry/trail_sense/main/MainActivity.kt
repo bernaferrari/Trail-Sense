@@ -47,7 +47,7 @@ import androidx.navigation.NavOptions
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import androidx.compose.ui.graphics.toArgb
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.system.IntentResultRetriever

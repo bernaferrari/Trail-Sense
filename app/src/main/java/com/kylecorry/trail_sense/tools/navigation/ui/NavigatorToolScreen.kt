@@ -49,10 +49,10 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.observe
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.pickers.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.system.GeoUri

@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
 import androidx.preference.Preference
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.fragments.AndromedaPreferenceFragment
 import com.kylecorry.andromeda.fragments.inBackground

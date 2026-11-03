@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.text.slugify

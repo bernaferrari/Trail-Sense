@@ -3,7 +3,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.graphics.Color
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

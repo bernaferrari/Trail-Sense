@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.observe
-import com.kylecorry.andromeda.alerts.CoroutineAlerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull

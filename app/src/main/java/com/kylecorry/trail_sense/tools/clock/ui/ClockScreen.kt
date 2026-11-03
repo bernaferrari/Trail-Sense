@@ -54,7 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.background.AlarmTaskScheduler
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.sol.time.Time.toZonedDateTime

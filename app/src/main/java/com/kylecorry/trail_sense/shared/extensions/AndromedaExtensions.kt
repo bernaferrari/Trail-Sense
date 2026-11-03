@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.main.getAppService

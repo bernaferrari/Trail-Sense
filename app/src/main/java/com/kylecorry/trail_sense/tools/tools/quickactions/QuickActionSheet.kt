@@ -38,7 +38,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView

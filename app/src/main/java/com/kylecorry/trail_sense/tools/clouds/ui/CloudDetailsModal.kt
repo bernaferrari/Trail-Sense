@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.clouds.ui
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.science.meteorology.Precipitation
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.trail_sense.R

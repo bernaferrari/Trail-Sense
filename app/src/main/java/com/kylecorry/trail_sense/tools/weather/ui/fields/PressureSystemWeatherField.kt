@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import android.content.Context
-import com.kylecorry.andromeda.alerts.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.weather.domain.isHigh
