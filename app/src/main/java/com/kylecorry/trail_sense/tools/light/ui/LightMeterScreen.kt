@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -204,48 +205,40 @@ fun LightMeterScreen(
             }
         }
 
-        trailSenseSection("preview", title = previewLabel) {
+        // The preview is a plain group, not a card: the distance field, then the scene it drives as its own row,
+        // and the hint as the group's footer.
+        trailSenseSection(
+            "preview",
+            title = previewLabel,
+            footer = context.getString(R.string.light_meter_preview_hint)
+        ) {
             row { position ->
-                // The input and the scene it drives, as one card.
+                TrailSenseInputField(
+                    value = beamDistanceAmount,
+                    onValueChange = {
+                        beamDistanceAmount = it
+                        maxLux = 0f
+                    },
+                    label = stringResource(R.string.distance_from_flashlight),
+                    modifier = Modifier.testTag("beam_distance"),
+                    position = position,
+                    unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
+                    onUnitClick = { showUnitPicker = true }
+                )
+            }
+            row { position ->
                 Surface(
                     shape = trailSenseGroupShape(position),
                     color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Column(
-                        modifier = Modifier.padding(TrailSenseSpacing.sm),
-                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                    ) {
-                        TrailSenseInputField(
-                            value = beamDistanceAmount,
-                            onValueChange = {
-                                beamDistanceAmount = it
-                                maxLux = 0f
-                            },
-                            label = stringResource(R.string.distance_from_flashlight),
-                            modifier = Modifier.testTag("beam_distance"),
-                            position = TrailSenseGroupPosition.Single,
-                            unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
-                            onUnitClick = { showUnitPicker = true }
-                        )
-                        LightBeamChart(
-                            candela = candela,
-                            units = beamDistanceUnit,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .testTag("light_chart")
-                        )
-                        Text(
-                            text = stringResource(R.string.light_meter_preview_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(
-                                start = TrailSenseSpacing.md,
-                                end = TrailSenseSpacing.md,
-                                bottom = TrailSenseSpacing.sm
-                            )
-                        )
-                    }
+                    LightBeamChart(
+                        candela = candela,
+                        units = beamDistanceUnit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(152.dp)
+                            .testTag("light_chart")
+                    )
                 }
             }
         }
@@ -307,8 +300,9 @@ private fun LightHero(
     // "Pitch dark · your eyes need..." reads as a headline and its explanation.
     val headline = verdict.substringBefore(" · ")
     val detail = verdict.substringAfter(" · ", "").replaceFirstChar { it.uppercase() }
-    val track = scheme.surfaceContainerHigh
+    val track = scheme.surfaceContainerHighest
     val fill = scheme.primary
+    val tick = scheme.onSurfaceVariant
 
     Column(
         modifier = modifier
@@ -317,11 +311,18 @@ private fun LightHero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
+        // The arc is open at the bottom, so its box is shorter than the circle: the verdict sits right under it.
         Box(
             modifier = Modifier
-                .size(260.dp),
-            contentAlignment = Alignment.Center
+                .width(260.dp)
+                .height(228.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
+          Box(
+            modifier = Modifier
+                .requiredSize(260.dp),
+            contentAlignment = Alignment.Center
+          ) {
             Canvas(Modifier.fillMaxSize()) {
                 val stroke = 22.dp.toPx()
                 val inset = stroke / 2f
@@ -335,10 +336,27 @@ private fun LightHero(
                     size = arcSize,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
                 )
+                // Where the worded bands meet (dark | dim | indoor | daylight): short ticks just inside the track.
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val outer = size.minDimension / 2f - stroke - 6.dp.toPx()
+                val inner = outer - 8.dp.toPx()
+                listOf(0.25f, 0.5f, 0.75f).forEach { fraction ->
+                    val angle = Math.toRadians((135f + 270f * fraction).toDouble())
+                    val cos = kotlin.math.cos(angle).toFloat()
+                    val sin = kotlin.math.sin(angle).toFloat()
+                    drawLine(
+                        color = tick,
+                        start = Offset(center.x + cos * inner, center.y + sin * inner),
+                        end = Offset(center.x + cos * outer, center.y + sin * outer),
+                        strokeWidth = 2.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                }
+                // At rest the fill is a short primary stub, so the instrument never reads as empty.
                 drawArc(
                     color = fill,
                     startAngle = 135f,
-                    sweepAngle = (270f * animatedPosition).coerceAtLeast(0.5f),
+                    sweepAngle = (270f * animatedPosition).coerceAtLeast(10f),
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
@@ -351,6 +369,7 @@ private fun LightHero(
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1
             )
+          }
         }
         Text(
             text = headline,
@@ -361,7 +380,7 @@ private fun LightHero(
         if (detail.isNotEmpty()) {
             Text(
                 text = detail,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
@@ -401,21 +420,15 @@ private fun LightBeamChart(
     units: DistanceUnits,
     modifier: Modifier = Modifier
 ) {
-    // A dusk scene in the app's own colours: the flashlight shines from the left edge across a row of trees, each
-    // lit by the light that actually reaches it. The cone grows smoothly as the distance changes.
+    // A thin strip in the app's own colours, on the group row itself (no panel of its own): the flashlight shines
+    // from the left edge across a row of trees, each lit by the light that actually reaches it.
     val scheme = MaterialTheme.colorScheme
     val animatedCandela by animateFloatAsState(candela, MaterialTheme.motionScheme.slowSpatialSpec(), label = "beam")
-    val sky = scheme.surfaceContainerLowest
-    val horizon = scheme.primaryContainer.copy(alpha = 0.55f)
     val glow = scheme.tertiary
     val treeDark = scheme.primary.copy(alpha = 0.35f)
     val treeLit = scheme.tertiary
     val labelColor = scheme.onSurfaceVariant
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(TrailSenseShape.groupOuter - TrailSenseSpacing.sm))
-            .background(Brush.verticalGradient(listOf(sky, horizon)))
-    ) {
+    Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val step = if (units == DistanceUnits.Feet) 3 else 1
             val fullMoon = android.hardware.SensorManager.LIGHT_FULLMOON
