@@ -5,6 +5,9 @@
     <string name="places_beacon_direction">%1$s · %2$s</string>
     <string name="places_beacon_empty_action">Place a beacon</string>
     <string name="places_beacon_form_hint">Add a location below</string>
+    <string name="places_beacon_add_another">Place another beacon</string>
+    <string name="places_beacon_add_another_hint">Save a camp, car or trailhead to find it again</string>
+    <string name="places_beacon_verdict">%1$s is %2$s from here</string>
     <string name="places_hidden">Hidden</string>
     <!-- Paths -->
     <string name="places_paths_empty_action">Start Backtrack</string>

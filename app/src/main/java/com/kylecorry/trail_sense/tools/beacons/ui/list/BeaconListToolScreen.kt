@@ -2,6 +2,29 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.drawBehind
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.PathEffect
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -865,6 +888,9 @@ private fun BeaconListScreen(
                         actionLabel = if (isSearching) null else stringResource(R.string.places_beacon_empty_action),
                         actionIcon = TrailIcons.Location,
                         onAction = { onCreateAction(BeaconCreateAction.CreateBeacon) },
+                        // Places worth finding again: a camp, the car, a flag on a summit.
+                        tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Tertiary,
+                        accents = if (isSearching) emptyList() else listOf(TrailIcons.Cabin, TrailIcons.Car, TrailIcons.Flag),
                         modifier = Modifier.testTag("beacon_empty_text")
                     )
                 }
@@ -897,6 +923,15 @@ private fun BeaconListScreen(
                         )
                     }
                 }
+                // A short list leaves room to invite the next place rather than a blank page.
+                if (searchText.isBlank() && items.size <= 2) {
+                    item(key = "add_another") {
+                        AddAnotherBeaconTile(
+                            modifier = Modifier.padding(top = TrailSenseSpacing.lg),
+                            onClick = { onCreateAction(BeaconCreateAction.CreateBeacon) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -922,33 +957,132 @@ private fun NearestBeaconSpotlight(
     val directionText = "${formatService.formatDirection(bearing.direction)} ${
         formatService.formatDegrees(bearing.value, replace360 = true)
     }"
+    // The arrow springs to each new bearing with a little overshoot, like a compass needle settling.
+    var target by remember { mutableFloatStateOf(bearing.value) }
+    LaunchedEffect(bearing.value) {
+        val delta = ((bearing.value - target) % 360f + 540f) % 360f - 180f
+        target += delta
+    }
+    val arrow by animateFloatAsState(
+        target,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "nearest_arrow"
+    )
+    val colors = trailSenseToneColors(TrailSenseTone.Primary)
+    val scheme = MaterialTheme.colorScheme
+    // One star number, then a plain sentence saying where it is; Navigate is the screen's one warm action.
     TrailSenseSpotlight(
         eyebrow = stringResource(R.string.places_nearest_beacon),
         title = distanceText,
-        titleStyle = MaterialTheme.typography.displaySmall,
-        supportingText = stringResource(R.string.places_beacon_direction, beacon.name, directionText),
+        titleStyle = MaterialTheme.typography.displayMedium,
         tone = TrailSenseTone.Primary,
         badge = {
             TrailSenseShapeBadge(
                 icon = TrailIcons.NavigationArrow,
                 shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 72.dp,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                iconRotation = bearing.value
+                size = 80.dp,
+                containerColor = colors.accent,
+                contentColor = colors.onAccent,
+                iconRotation = arrow
             )
-        },
-        actions = listOf(
-            TrailSenseSpotlightAction(
-                stringResource(R.string.navigate),
-                TrailIcons.NavigationArrow
-            ) { onAction(BeaconAction.Navigate) },
-            TrailSenseSpotlightAction(stringResource(R.string.details), TrailIcons.Info) {
-                onAction(BeaconAction.View)
+        }
+    ) {
+        Text(
+            stringResource(R.string.places_beacon_verdict, beacon.name, directionText),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.content
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+            Button(
+                onClick = { onAction(BeaconAction.Navigate) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp, topEnd = 6.dp, bottomEnd = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = scheme.tertiaryContainer,
+                    contentColor = scheme.onTertiaryContainer
+                )
+            ) {
+                Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(stringResource(R.string.navigate), maxLines = 1)
             }
+            FilledTonalButton(
+                onClick = { onAction(BeaconAction.View) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 28.dp, bottomEnd = 28.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                    contentColor = colors.content
+                )
+            ) {
+                Icon(TrailIcons.Info, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(stringResource(R.string.details), maxLines = 1)
+            }
+        }
+    }
+}
+
+/** An inviting dashed tile under a short list: one more place to find again. */
+@Composable
+private fun AddAnotherBeaconTile(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .dashedOutline(scheme.outlineVariant, 24.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = scheme.surface
+    ) {
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TrailSenseShapeBadge(
+                icon = TrailIcons.Add,
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 48.dp,
+                containerColor = scheme.surfaceContainerHigh,
+                contentColor = scheme.onSurface
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.places_beacon_add_another),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onSurface
+                )
+                Text(
+                    stringResource(R.string.places_beacon_add_another_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/** A dashed rounded outline: the "not yet" look for invitations and ghost placeholders. */
+internal fun Modifier.placesDashedOutline(color: Color, radius: Dp): Modifier = drawBehind {
+    val stroke = 2.dp.toPx()
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(stroke / 2, stroke / 2),
+        size = Size(size.width - stroke, size.height - stroke),
+        cornerRadius = CornerRadius(radius.toPx()),
+        style = Stroke(
+            width = stroke,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 8.dp.toPx()))
         )
     )
 }
+
+private fun Modifier.dashedOutline(color: Color, radius: Dp): Modifier = placesDashedOutline(color, radius)
 
 @Composable
 private fun BeaconListMenu(
@@ -1081,7 +1215,14 @@ private fun BeaconRow(
     val badgeColor = Color(getBeaconBadgeColor(beacon, formatService))
     val badgeContent = if (badgeColor.luminance() > 0.5f) Color.Black else Color.White
     val subtitle = listOfNotNull(
-        if (hasLocation) formatService.formatDirection(bearing.direction) else null,
+        // "SE 131°", not a lone "SE", so the line under the name says which way to walk.
+        if (hasLocation) {
+            "${formatService.formatDirection(bearing.direction)} ${
+                formatService.formatDegrees(bearing.value, replace360 = true)
+            }"
+        } else {
+            null
+        },
         beacon.elevation?.let {
             formatService.formatElevation(Distance.meters(it).convertTo(baseDistanceUnits))
         },
