@@ -231,16 +231,12 @@ private fun WarpMapScreen(
                     .padding(top = TrailSenseSpacing.md),
                 contentAlignment = Alignment.Center
             ) {
-                FilledTonalButton(
+                TrailSenseButton(
+                    text = stringResource(if (isPreview) R.string.edit else R.string.preview),
                     onClick = onTogglePreview,
+                    style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
                     modifier = Modifier.testTag("perspective_toggle_btn")
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (isPreview) R.string.edit else R.string.preview
-                        )
-                    )
-                }
+                )
             }
 
             PerspectiveCorrection(

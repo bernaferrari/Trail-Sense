@@ -183,16 +183,16 @@ internal fun WaterPurificationScreen(
                 )
             }
 
-            // Holds its place while the duration is worked out, so nothing jumps when it appears.
-            val scheme = MaterialTheme.colorScheme
-            // The one action on the screen is primary; cancelling is a quiet secondary. A standard 56 dp button.
-            val container by animateColorAsState(
-                if (isRunning) scheme.secondaryContainer else scheme.primary,
-                MaterialTheme.motionScheme.defaultEffectsSpec(),
-                label = "action"
-            )
-            Button(
+            // The one action on the screen is primary; cancelling is a quiet tonal secondary.
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = stringResource(if (isRunning) android.R.string.cancel else R.string.start),
                 enabled = displayed != null,
+                icon = if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
+                style = if (isRunning) {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal
+                } else {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Filled
+                },
                 onClick = {
                     if (isRunning) {
                         stop()
@@ -208,27 +208,8 @@ internal fun WaterPurificationScreen(
                         )
                     }
                 },
-                shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = container,
-                    contentColor = if (isRunning) scheme.onSecondaryContainer else scheme.onPrimary
-                ),
-                contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = ButtonDefaults.MediumContainerHeight)
-            ) {
-                Icon(
-                    if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.MediumIconSize)
-                )
-                Spacer(Modifier.width(ButtonDefaults.MediumIconSpacing))
-                Text(
-                    stringResource(if (isRunning) android.R.string.cancel else R.string.start),
-                    style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight)
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
           }
         }
 

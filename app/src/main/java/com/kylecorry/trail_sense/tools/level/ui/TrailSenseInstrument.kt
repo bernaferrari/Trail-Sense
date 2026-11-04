@@ -313,8 +313,8 @@ fun BoxScope.TrailSenseInstrumentMessage(content: @Composable () -> Unit) {
 }
 
 /**
- * What a camera instrument shows instead of the preview when it can't use the camera: a big expressive mark inside
- * viewfinder corners in the upper half, the reason, one calm sentence, and a filled way to the app's settings.
+ * What a camera instrument shows instead of the preview when it can't use the camera: the kit's empty state, with
+ * one way to the app's settings.
  */
 @Composable
 fun TrailSenseCameraUnavailable(
@@ -322,81 +322,16 @@ fun TrailSenseCameraUnavailable(
     description: String = stringResource(R.string.camera_unavailable_description)
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val scheme = MaterialTheme.colorScheme
-    val bracket = scheme.primary
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.weight(0.5f))
-        androidx.compose.foundation.layout.Box(
-            modifier = Modifier.size(232.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-                val arm = size.minDimension * 0.18f
-                val stroke = 5.dp.toPx()
-                val inset = stroke / 2f
-                val corners = listOf(
-                    androidx.compose.ui.geometry.Offset(inset, inset) to (1f to 1f),
-                    androidx.compose.ui.geometry.Offset(size.width - inset, inset) to (-1f to 1f),
-                    androidx.compose.ui.geometry.Offset(inset, size.height - inset) to (1f to -1f),
-                    androidx.compose.ui.geometry.Offset(size.width - inset, size.height - inset) to (-1f to -1f)
-                )
-                corners.forEach { (corner, dir) ->
-                    drawLine(
-                        bracket,
-                        corner,
-                        corner + androidx.compose.ui.geometry.Offset(arm * dir.first, 0f),
-                        stroke,
-                        androidx.compose.ui.graphics.StrokeCap.Round
-                    )
-                    drawLine(
-                        bracket,
-                        corner,
-                        corner + androidx.compose.ui.geometry.Offset(0f, arm * dir.second),
-                        stroke,
-                        androidx.compose.ui.graphics.StrokeCap.Round
-                    )
-                }
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState(
+        icon = Icons.Rounded.NoPhotography,
+        title = stringResource(R.string.no_camera_access),
+        description = description,
+        actionLabel = stringResource(R.string.open_settings),
+        onAction = {
+            com.kylecorry.andromeda.core.tryOrNothing {
+                context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
             }
-            TrailSenseShapeBadge(
-                icon = Icons.Rounded.NoPhotography,
-                shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
-                size = 172.dp,
-                containerColor = scheme.primaryContainer,
-                contentColor = scheme.onPrimaryContainer
-            )
-        }
-        Spacer(Modifier.size(TrailSenseSpacing.xl))
-        Text(
-            text = stringResource(R.string.no_camera_access),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.size(TrailSenseSpacing.sm))
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyLarge,
-            color = scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.size(TrailSenseSpacing.xl))
-        androidx.compose.material3.Button(
-            onClick = {
-                com.kylecorry.andromeda.core.tryOrNothing {
-                    context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-        ) {
-            Text(stringResource(R.string.open_settings), style = MaterialTheme.typography.titleMedium)
-        }
-        Spacer(Modifier.weight(1f))
-    }
+        },
+        modifier = modifier
+    )
 }

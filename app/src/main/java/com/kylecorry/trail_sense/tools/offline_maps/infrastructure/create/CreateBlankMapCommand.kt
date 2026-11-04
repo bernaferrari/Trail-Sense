@@ -396,14 +396,12 @@ private fun BlankMapDistanceInput(
         )
         Spacer(modifier = Modifier.size(8.dp))
         Box(modifier = Modifier.weight(1f)) {
-            OutlinedButton(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = formatter.getDistanceUnitName(unit),
                 onClick = { isUnitOpen = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-            ) {
-                Text(formatter.getDistanceUnitName(unit))
-            }
+                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Outlined,
+                modifier = Modifier.fillMaxWidth()
+            )
             DropdownMenu(
                 expanded = isUnitOpen,
                 onDismissRequest = { isUnitOpen = false }

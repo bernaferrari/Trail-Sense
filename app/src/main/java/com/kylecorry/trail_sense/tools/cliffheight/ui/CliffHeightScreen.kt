@@ -206,55 +206,23 @@ private fun DropTimerButton(
     running: Boolean,
     onPress: suspend androidx.compose.foundation.gestures.PressGestureScope.(androidx.compose.ui.geometry.Offset) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val containerColor by animateColorAsState(
-        targetValue = if (running) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.primary
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "dropButtonContainer"
-    )
-    val contentColor = if (running) {
-        MaterialTheme.colorScheme.onError
-    } else {
-        MaterialTheme.colorScheme.onPrimary
-    }
-    val height = ButtonDefaults.LargeContainerHeight
-
-    Button(
+    // Timed from the press itself (not the release), so the drop starts the instant the stone is let go.
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+        text = stringResource(if (running) R.string.reset else R.string.start),
         onClick = {},
+        icon = if (running) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
+        style = if (running) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal
+        } else {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Filled
+        },
         modifier = Modifier
             .fillMaxWidth()
-            .height(height)
-            .trailSensePressScale(interactionSource, 0.97f)
             .pointerInput(running) {
                 detectTapGestures(onPress = onPress)
             }
-            .testTag("start_btn"),
-        shapes = ButtonDefaults.shapesFor(height),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        contentPadding = ButtonDefaults.contentPaddingFor(height),
-        interactionSource = interactionSource
-    ) {
-        Icon(
-            if (running) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
-            contentDescription = null,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(Modifier.width(TrailSenseSpacing.sm))
-        Text(
-            text = stringResource(
-                if (running) R.string.reset else R.string.start
-            ),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
+            .testTag("start_btn")
+    )
 }
 
 /**

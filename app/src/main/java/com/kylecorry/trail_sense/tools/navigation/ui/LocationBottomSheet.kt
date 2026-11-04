@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -152,28 +154,22 @@ private fun LocationSheetContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (onCopy != null) {
-                androidx.compose.material3.FilledTonalButton(
+                TrailSenseButton(
+                    text = stringResource(android.R.string.copy),
                     onClick = onCopy,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 56.dp)
-                ) {
-                    Icon(androidx.compose.material.icons.Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(android.R.string.copy), style = MaterialTheme.typography.titleSmall)
-                }
+                    icon = Icons.Rounded.ContentCopy,
+                    style = TrailSenseButtonStyle.Tonal,
+                    modifier = Modifier.weight(1f)
+                )
             }
-            androidx.compose.material3.Button(
+            TrailSenseButton(
+                text = stringResource(R.string.share_ellipsis).removeSuffix("…").removeSuffix("..."),
                 onClick = onShare,
+                icon = Icons.Default.Share,
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 56.dp)
                     .testTag("location_share")
-            ) {
-                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.share_ellipsis).removeSuffix("…").removeSuffix("..."), style = MaterialTheme.typography.titleSmall)
-            }
+            )
         }
     }
 }

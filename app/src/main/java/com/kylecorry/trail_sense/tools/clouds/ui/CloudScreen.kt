@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.tools.weather.ui.SkyButton
-import com.kylecorry.trail_sense.tools.weather.ui.SkyConnectedButtons
-import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
@@ -347,22 +344,12 @@ private fun CloudScreen(
                         .testTag("cloud_empty_text"),
                     action = {
                         Box {
-                            // The kit's empty-state button: 48 dp, a leading plus, labelLarge.
-                            androidx.compose.material3.Button(
+                            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                                text = stringResource(R.string.sky_clouds_log),
                                 onClick = { isCreateMenuOpen = true },
-                                modifier = Modifier
-                                    .heightIn(min = 48.dp)
-                                    .testTag("add_btn"),
-                                contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(48.dp)
-                            ) {
-                                Icon(
-                                    TrailIcons.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(48.dp))
-                                )
-                                Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.iconSpacingFor(48.dp)))
-                                Text(stringResource(R.string.sky_clouds_log), style = MaterialTheme.typography.labelLarge)
-                            }
+                                icon = TrailIcons.Add,
+                                modifier = Modifier.testTag("add_btn")
+                            )
                             CloudCreateMenu(
                                 expanded = isCreateMenuOpen,
                                 onDismiss = { isCreateMenuOpen = false },

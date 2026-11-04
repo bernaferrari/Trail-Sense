@@ -609,10 +609,7 @@ private fun RunningServiceRow(
     ) {
         TextButton(
             onClick = onDisable,
-            modifier = Modifier
-                .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                .testTag("battery_service_stop_btn"),
-            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
+            modifier = Modifier.testTag("battery_service_stop_btn")
         ) {
             Text(stringResource(R.string.stop))
         }

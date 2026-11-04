@@ -372,26 +372,12 @@ private fun StrikeButton(
     waitingForThunder: Boolean,
     onClick: () -> Unit
 ) {
-    val height = androidx.compose.material3.ButtonDefaults.MediumContainerHeight
-    androidx.compose.material3.Button(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+        text = stringResource(if (waitingForThunder) R.string.thunder else R.string.lightning),
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = height),
-        shapes = androidx.compose.material3.ButtonDefaults.shapesFor(height),
-        contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height)
-    ) {
-        Icon(
-            imageVector = if (waitingForThunder) TrailIcons.Thunder else androidx.compose.material.icons.Icons.Rounded.Bolt,
-            contentDescription = null,
-            modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(height))
-        )
-        Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.iconSpacingFor(height)))
-        Text(
-            text = stringResource(if (waitingForThunder) R.string.thunder else R.string.lightning),
-            style = androidx.compose.material3.ButtonDefaults.textStyleFor(height)
-        )
-    }
+        icon = if (waitingForThunder) TrailIcons.Thunder else androidx.compose.material.icons.Icons.Rounded.Bolt,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 private fun getDistance(lightning: Instant, thunder: Instant): Distance {

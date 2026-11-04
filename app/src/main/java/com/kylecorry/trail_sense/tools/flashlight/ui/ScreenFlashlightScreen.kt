@@ -134,31 +134,14 @@ fun ScreenFlashlightScreen(
                     label = stringResource(R.string.color),
                     modifier = Modifier.testTag("red_white_switcher")
                 )
-                val interactionSource = remember { MutableInteractionSource() }
-                Button(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.turn_off),
                     onClick = onTurnOff,
-                    interactionSource = interactionSource,
+                    icon = Icons.Rounded.PowerSettingsNew,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                        .trailSensePressScale(interactionSource, 0.985f)
-                        .testTag("off_btn"),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.PowerSettingsNew,
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(
-                        text = stringResource(R.string.turn_off),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                        .testTag("off_btn")
+                )
             }
         }
     }

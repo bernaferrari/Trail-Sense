@@ -96,17 +96,15 @@ internal fun ErrorHandlerScreen(
                 .widthIn(max = 480.dp)
         )
         Spacer(Modifier.height(TrailSenseSpacing.sm))
-        FilledTonalButton(
+        TrailSenseButton(
+            text = stringResource(R.string.restart_app),
             onClick = onRestartApp,
+            icon = Icons.Default.Refresh,
+            style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp)
                 .widthIn(max = 480.dp)
-        ) {
-            Icon(Icons.Default.Refresh, contentDescription = null)
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(stringResource(R.string.restart_app))
-        }
+        )
         Spacer(Modifier.height(TrailSenseSpacing.md))
         Row(
             modifier = Modifier
@@ -130,11 +128,12 @@ internal fun ErrorHandlerScreen(
                 onClick = onEmail
             )
         }
-        TextButton(onClick = onOpenSettings) {
-            Icon(Icons.Default.Settings, contentDescription = null)
-            Spacer(Modifier.width(TrailSenseSpacing.xs))
-            Text(stringResource(R.string.settings))
-        }
+        TrailSenseButton(
+            text = stringResource(R.string.settings),
+            onClick = onOpenSettings,
+            icon = Icons.Default.Settings,
+            style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Text
+        )
     }
 }
 

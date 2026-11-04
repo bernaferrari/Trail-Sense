@@ -929,26 +929,12 @@ private fun TriangulateAnswer(
                 color = scheme.onSurfaceVariant
             )
             Spacer(Modifier.height(TrailSenseSpacing.md))
-            val height = ButtonDefaults.MediumContainerHeight
-            Button(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = stringResource(if (navigateVisible) R.string.navigate else R.string.create_beacon),
                 onClick = if (navigateVisible) onNavigate else onCreateBeacon,
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = height)
-            ) {
-                Icon(
-                    imageVector = if (navigateVisible) TrailIcons.NavigationArrow else TrailIcons.Beacon,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-                )
-                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-                Text(
-                    text = stringResource(if (navigateVisible) R.string.navigate else R.string.create_beacon),
-                    style = ButtonDefaults.textStyleFor(height)
-                )
-            }
+                icon = if (navigateVisible) TrailIcons.NavigationArrow else TrailIcons.Beacon,
+                modifier = Modifier.fillMaxWidth()
+            )
         } else {
             Text(
                 text = stringResource(
@@ -1159,63 +1145,36 @@ private fun TriangulateBearingButtons(
     onCompassClick: () -> Unit,
     onCameraClick: () -> Unit
 ) {
-    val height = ButtonDefaults.MediumContainerHeight
+    val compassLabel = stringResource(R.string.places_triangulate_compass)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
-        val compassModifier = Modifier
-            .weight(1f)
-            .heightIn(min = height)
-            .testTag("compass_btn")
-        val compassContent: @Composable RowScope.() -> Unit = {
-            Icon(
-                TrailIcons.CompassIcon,
-                contentDescription = stringResource(R.string.places_triangulate_compass),
-                modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-            )
-            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-            Text(
-                compassBearingText,
-                modifier = Modifier.testTag("compass_bearing"),
-                style = ButtonDefaults.textStyleFor(height).copy(fontFeatureSettings = "tnum"),
-                maxLines = 1
+        Box(Modifier.weight(1f).testTag("compass_btn")) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = compassBearingText,
+                onClick = onCompassClick,
+                icon = TrailIcons.CompassIcon,
+                style = if (isActive) {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Filled
+                } else {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = "$compassLabel $compassBearingText" }
+                    .testTag("compass_bearing")
             )
         }
-        if (isActive) {
-            Button(
-                onClick = onCompassClick,
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height),
-                modifier = compassModifier,
-                content = compassContent
-            )
-        } else {
-            FilledTonalButton(
-                onClick = onCompassClick,
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height),
-                modifier = compassModifier,
-                content = compassContent
-            )
-        }
-        FilledTonalButton(
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+            text = stringResource(R.string.camera),
             onClick = onCameraClick,
-            shapes = ButtonDefaults.shapesFor(height),
-            contentPadding = ButtonDefaults.contentPaddingFor(height),
+            icon = TrailIcons.Camera,
+            style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
             modifier = Modifier
                 .weight(1f)
-                .heightIn(min = height)
                 .testTag("camera_btn")
-        ) {
-            Icon(
-                TrailIcons.Camera,
-                contentDescription = null,
-                modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-            )
-            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-            Text(stringResource(R.string.camera), style = ButtonDefaults.textStyleFor(height), maxLines = 1)
-        }
+        )
     }
 }
 

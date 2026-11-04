@@ -185,18 +185,15 @@ private fun StrideLengthScreen(
                     exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
                         fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
                 ) {
-                    FilledTonalButton(
+                    TrailSenseButton(
+                        text = stringResource(R.string.reset),
                         onClick = {
                             estimator.reset()
                             refreshState()
                         },
-                        shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(ButtonDefaults.MediumContainerHeight)
-                    ) {
-                        Text(stringResource(R.string.reset))
-                    }
+                        style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

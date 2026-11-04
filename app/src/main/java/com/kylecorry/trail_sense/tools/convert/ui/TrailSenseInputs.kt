@@ -121,8 +121,7 @@ fun TrailSenseInputField(
 }
 
 /**
- * The unit pill at the end of a [TrailSenseInputField]: the unit's short name and a drop-down mark, on a raised
- * surface like Convert's unit pills.
+ * The unit button at the end of a [TrailSenseInputField]: the unit's short name and a drop-down mark.
  */
 @Composable
 fun TrailSenseUnitButton(
@@ -131,20 +130,13 @@ fun TrailSenseUnitButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
+    // Text then a drop-down mark, so not a kit button: a plain tonal Material button with its own padding.
     FilledTonalButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = 40.dp),
-        colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            start = TrailSenseSpacing.md,
-            end = TrailSenseSpacing.sm
-        )
+        modifier = modifier
     ) {
-        Text(unit, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(unit, maxLines = 1)
         Icon(Icons.Rounded.ArrowDropDown, contentDescription = null, modifier = Modifier.size(20.dp))
     }
 }

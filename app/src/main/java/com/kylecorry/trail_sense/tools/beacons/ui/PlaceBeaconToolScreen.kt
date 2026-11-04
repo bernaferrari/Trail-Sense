@@ -703,7 +703,6 @@ private fun UnitChooser(
         TextButton(
             onClick = { isOpen = true },
             modifier = Modifier
-                .heightIn(min = TrailSenseSize.minimumTouchTarget)
                 .padding(end = TrailSenseSpacing.xs)
                 .testTag(tag)
         ) {

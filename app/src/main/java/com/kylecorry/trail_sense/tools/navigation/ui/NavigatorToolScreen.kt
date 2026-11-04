@@ -1281,36 +1281,19 @@ private fun NavigatorHost(
                     .padding(top = TrailSenseSpacing.xs, bottom = TrailSenseSpacing.lg),
                 horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
-                androidx.compose.material3.FilledTonalButton(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.navigation_places),
                     onClick = { views.onBeaconClick?.invoke() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 56.dp)
-                ) {
-                    Icon(TrailSenseIcons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(24.dp))
-                    Text(
-                        stringResource(R.string.navigation_places),
-                        modifier = Modifier.padding(start = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
-                androidx.compose.material3.Button(
+                    icon = TrailSenseIcons.Filled.LocationOn,
+                    style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
+                    modifier = Modifier.weight(1f)
+                )
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.navigation_save_spot),
                     onClick = { views.onBeaconLongClick?.invoke() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 56.dp)
-                ) {
-                    Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp))
-                    Text(
-                        stringResource(R.string.navigation_save_spot),
-                        modifier = Modifier.padding(start = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
+                    icon = TrailSenseIcons.Filled.Add,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }

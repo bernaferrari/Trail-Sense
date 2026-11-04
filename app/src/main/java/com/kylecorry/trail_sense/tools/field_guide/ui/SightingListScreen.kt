@@ -218,7 +218,8 @@ private fun SightingListScreen(
         backLabel = stringResource(R.string.back),
         modifier = Modifier.testTag("list"),
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            // An empty list offers its one action in the empty state instead.
+            if (loaded && items.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onCreate,
                 modifier = Modifier.testTag("create_btn"),
                 icon = {
@@ -241,11 +242,10 @@ private fun SightingListScreen(
                     icon = Icons.Outlined.Pets,
                     title = stringResource(R.string.no_sightings),
                     description = stringResource(R.string.field_guide_no_sightings_description),
-                    action = {
-                        FilledTonalButton(onClick = onCreate) {
-                            Text(stringResource(R.string.record_sighting))
-                        }
-                    }
+                    actionLabel = stringResource(R.string.record_sighting),
+                    onAction = onCreate,
+                    actionModifier = Modifier.testTag("create_btn"),
+                    modifier = Modifier.fillParentMaxHeight(0.9f)
                 )
             }
             return@TrailSensePage

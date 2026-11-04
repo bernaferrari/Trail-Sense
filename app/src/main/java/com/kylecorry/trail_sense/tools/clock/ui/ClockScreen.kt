@@ -293,19 +293,18 @@ private fun ClockScreen(
                         onScheduleNextMinute(gpsTime, systemTime)
                     }
                 }
-                val buttonModifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = ButtonDefaults.MediumContainerHeight)
-                    .testTag("pip_button")
-                if (isGpsTime && drift <= TRIVIAL_OFFSET_SECONDS) {
-                    androidx.compose.material3.FilledTonalButton(onClick = onClick, modifier = buttonModifier) {
-                        Text(stringResource(R.string.pip_button), style = MaterialTheme.typography.titleMedium)
-                    }
-                } else {
-                    Button(onClick = onClick, modifier = buttonModifier) {
-                        Text(stringResource(R.string.pip_button), style = MaterialTheme.typography.titleMedium)
-                    }
-                }
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.pip_button),
+                    onClick = onClick,
+                    style = if (isGpsTime && drift <= TRIVIAL_OFFSET_SECONDS) {
+                        com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal
+                    } else {
+                        com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Filled
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("pip_button")
+                )
             }
         }
     }

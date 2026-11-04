@@ -353,15 +353,13 @@ private fun CreateItemScreen(
         }
 
         item(key = "save") {
-            Button(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = stringResource(R.string.save),
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp)
                     .testTag("create_btn")
-            ) {
-                Text(stringResource(R.string.save))
-            }
+            )
         }
     }
 }
@@ -538,15 +536,14 @@ private fun WeightInput(
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         Box(modifier = Modifier.weight(1f)) {
             var isOpen by remember { mutableStateOf(false) }
-            FilledTonalButton(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = unit?.let { formatService.getWeightUnitName(it) }.orEmpty(),
                 onClick = { isOpen = true },
+                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp)
                     .testTag("item_weight_unit")
-            ) {
-                Text(unit?.let { formatService.getWeightUnitName(it) }.orEmpty())
-            }
+            )
             DropdownMenu(
                 expanded = isOpen,
                 onDismissRequest = { isOpen = false }

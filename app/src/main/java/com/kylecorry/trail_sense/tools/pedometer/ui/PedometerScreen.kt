@@ -628,46 +628,23 @@ private fun PedometerHero(
                 .testTag("pedometer_play_bar"),
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            val height = ButtonDefaults.MediumContainerHeight
-            Button(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = stringResource(if (isOn) R.string.stop else R.string.start),
                 onClick = onToggle,
+                icon = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = height)
-                    .testTag("play_btn"),
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height)
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(
-                        if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-                )
-                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-                Text(
-                    stringResource(if (isOn) R.string.stop else R.string.start),
-                    style = ButtonDefaults.textStyleFor(height)
-                )
-            }
-            FilledTonalButton(
+                    .testTag("play_btn")
+            )
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = stringResource(R.string.reset),
                 onClick = onReset,
+                icon = TrailIcons.BaselineRefresh24,
+                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = height)
-                    .testTag("reset_btn"),
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height)
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.BaselineRefresh24),
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-                )
-                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-                Text(stringResource(R.string.reset), style = ButtonDefaults.textStyleFor(height))
-            }
+                    .testTag("reset_btn")
+            )
         }
     }
 }

@@ -605,16 +605,14 @@ private fun CreateTideScreen(
             }
 
             item(key = "save") {
-                Button(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.save),
                     onClick = onSave,
                     enabled = canSave,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 56.dp)
                         .testTag("create_tide_save_btn")
-                ) {
-                    Text(stringResource(R.string.save))
-                }
+                )
             }
         }
     }

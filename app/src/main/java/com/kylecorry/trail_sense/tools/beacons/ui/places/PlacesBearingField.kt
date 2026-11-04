@@ -3,6 +3,10 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.places
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -51,6 +55,8 @@ import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
 import com.kylecorry.trail_sense.shared.icons.trail.Edit
 import com.kylecorry.trail_sense.shared.icons.trail.NavigationArrow
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -159,85 +165,52 @@ fun PlacesBearingField(
                 }
             }
 
+            // Taking the bearing from the compass is the field's one main action (filled); the camera and typing it
+            // in are quieter icon buttons beside it. Without a compass, typing it in is the one button.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val buttons = buildList {
-                    if (hasCompass) add(0)
-                    if (hasCompass) add(1)
-                    add(2)
-                }
-                buttons.forEachIndexed { index, kind ->
-                    val outer = 24.dp
-                    val inner = 6.dp
-                    val first = index == 0
-                    val last = index == buttons.lastIndex
-                    val shape = RoundedCornerShape(
-                        topStart = if (first) outer else inner,
-                        bottomStart = if (first) outer else inner,
-                        topEnd = if (last) outer else inner,
-                        bottomEnd = if (last) outer else inner
-                    )
-                    val weight = if (kind == 0) 2f else 1f
-                    when (kind) {
-                        // Taking the bearing from the compass is the field's one main action, so it is the one
-                        // primary fill; tertiary stays the screen's single accent, not a button colour.
-                        0 -> Button(
+                if (hasCompass) {
+                    val compassLabel = stringResource(R.string.places_triangulate_compass)
+                    Box(Modifier.weight(1f).testTag("compass_btn")) {
+                        TrailSenseButton(
+                            text = compassBearingText,
                             onClick = onCompassClick,
-                            shape = shape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = scheme.primary,
-                                contentColor = scheme.onPrimary
-                            ),
+                            icon = TrailIcons.CompassIcon,
                             modifier = Modifier
-                                .weight(weight)
-                                .heightIn(min = 48.dp)
-                                .testTag("compass_btn"),
-                            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
-                        ) {
-                            Icon(TrailIcons.CompassIcon, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(TrailSenseSpacing.sm))
-                            Text(
-                                compassBearingText,
-                                modifier = Modifier.testTag("compass_bearing"),
-                                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                                maxLines = 1
-                            )
-                        }
-
-                        1 -> FilledTonalButton(
-                            onClick = onCameraClick,
-                            shape = shape,
-                            modifier = Modifier
-                                .weight(weight)
-                                .heightIn(min = 48.dp)
-                                .testTag("camera_btn"),
-                            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm)
-                        ) {
-                            Icon(
-                                TrailIcons.Camera,
-                                contentDescription = stringResource(R.string.camera),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        else -> FilledTonalButton(
-                            onClick = { showManualEntry = true },
-                            shape = shape,
-                            modifier = Modifier
-                                .weight(weight)
-                                .heightIn(min = 48.dp)
-                                .testTag("manual_bearing"),
-                            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm)
-                        ) {
-                            Icon(
-                                TrailIcons.Edit,
-                                contentDescription = stringResource(R.string.enter_manually),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                                .fillMaxWidth()
+                                .semantics { contentDescription = "$compassLabel $compassBearingText" }
+                                .testTag("compass_bearing")
+                        )
                     }
+                    FilledTonalIconButton(
+                        onClick = onCameraClick,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .testTag("camera_btn")
+                    ) {
+                        Icon(TrailIcons.Camera, contentDescription = stringResource(R.string.camera))
+                    }
+                    FilledTonalIconButton(
+                        onClick = { showManualEntry = true },
+                        modifier = Modifier
+                            .size(56.dp)
+                            .testTag("manual_bearing")
+                    ) {
+                        Icon(TrailIcons.Edit, contentDescription = stringResource(R.string.enter_manually))
+                    }
+                } else {
+                    TrailSenseButton(
+                        text = stringResource(R.string.enter_manually),
+                        onClick = { showManualEntry = true },
+                        icon = TrailIcons.Edit,
+                        style = TrailSenseButtonStyle.Tonal,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("manual_bearing")
+                    )
                 }
             }
         }

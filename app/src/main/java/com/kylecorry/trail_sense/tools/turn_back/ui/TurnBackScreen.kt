@@ -69,6 +69,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
@@ -334,22 +336,17 @@ private fun TurnBackScreen(
                     onAction = { onPickReturnTime(returnTime) },
                     actionModifier = Modifier.testTag("edittext"),
                     action = {
-                        TextButton(
+                        // The one shortcut kept beside the action: a quiet text link, not a second button.
+                        TrailSenseButton(
+                            text = if (formattedSunset != null) {
+                                stringResource(R.string.places_turn_back_before_dark_at, formattedSunset)
+                            } else {
+                                stringResource(R.string.return_before_dark)
+                            },
                             onClick = onUseSunset,
-                            shapes = ButtonDefaults.shapes(),
-                            modifier = Modifier
-                                .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                                .testTag("sunset_button")
-                        ) {
-                            Text(
-                                if (formattedSunset != null) {
-                                    stringResource(R.string.places_turn_back_before_dark_at, formattedSunset)
-                                } else {
-                                    stringResource(R.string.return_before_dark)
-                                },
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                        }
+                            style = TrailSenseButtonStyle.Text,
+                            modifier = Modifier.testTag("sunset_button")
+                        )
                     }
                 )
             }
@@ -410,24 +407,15 @@ private fun TurnBackScreen(
         }
 
         item("cancel") {
-            val height = ButtonDefaults.MediumContainerHeight
-            FilledTonalButton(
+            TrailSenseButton(
+                text = stringResource(R.string.turn_back_cancel),
                 onClick = onCancel,
+                icon = TrailIcons.Cancel,
+                style = TrailSenseButtonStyle.Tonal,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = height)
-                    .testTag("cancel_button"),
-                shapes = ButtonDefaults.shapesFor(height),
-                contentPadding = ButtonDefaults.contentPaddingFor(height)
-            ) {
-                Icon(
-                    TrailIcons.Cancel,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
-                )
-                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
-                Text(stringResource(R.string.turn_back_cancel), style = ButtonDefaults.textStyleFor(height))
-            }
+                    .testTag("cancel_button")
+            )
         }
     }
 }

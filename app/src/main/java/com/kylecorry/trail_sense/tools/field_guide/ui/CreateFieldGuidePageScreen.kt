@@ -565,30 +565,22 @@ private fun PhotoSourceButtons(
     onTakePhoto: () -> Unit,
     onSelectPhoto: () -> Unit
 ) {
-    Button(
+    TrailSenseButton(
+        text = stringResource(R.string.take_photo),
         onClick = onTakePhoto,
+        icon = TrailIcons.Camera,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag("take_photo_button")
-    ) {
-        Icon(
-            painter = rememberVectorPainter(TrailIcons.Camera),
-            contentDescription = null,
-            modifier = Modifier.size(ButtonDefaults.IconSize)
-        )
-        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-        Text(stringResource(R.string.take_photo))
-    }
-    FilledTonalButton(
+    )
+    TrailSenseButton(
+        text = stringResource(R.string.select_from_gallery),
         onClick = onSelectPhoto,
+        style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag("select_photo_button")
-    ) {
-        Text(stringResource(R.string.select_from_gallery))
-    }
+    )
 }
 
 @Composable

@@ -29,7 +29,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
-import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import android.graphics.Bitmap

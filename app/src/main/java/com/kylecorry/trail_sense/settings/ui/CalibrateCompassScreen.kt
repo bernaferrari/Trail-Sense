@@ -351,14 +351,11 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                     tone = quality.toCalibrationTone(),
                     supportingText = calibrateFooter
                 ) {
-                    Button(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                        text = stringResource(R.string.calibrate),
                         onClick = { showCalibrationDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                    ) {
-                        Text(stringResource(R.string.calibrate))
-                    }
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 

@@ -190,14 +190,11 @@ private fun MapDistanceSheetContent(
                         contentDescription = stringResource(R.string.redo)
                     )
                 }
-                Button(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                    text = stringResource(R.string.create_path),
                     onClick = onCreatePath,
-                    modifier = Modifier
-                        .padding(start = TrailSenseSpacing.lg)
-                        .heightIn(min = 48.dp)
-                ) {
-                    Text(text = stringResource(R.string.create_path))
-                }
+                    modifier = Modifier.padding(start = TrailSenseSpacing.lg)
+                )
             }
             Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
         }

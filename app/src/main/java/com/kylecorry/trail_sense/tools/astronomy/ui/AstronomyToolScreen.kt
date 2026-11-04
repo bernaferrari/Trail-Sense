@@ -1168,24 +1168,15 @@ private class AstronomyTextButtonState(
     @Composable
     fun Content() {
         // A way in, not the point of the page: tonal, with the AR icon. The page has no primary fill.
-        val height = androidx.compose.material3.ButtonDefaults.MediumContainerHeight
-        androidx.compose.material3.FilledTonalButton(
+        TrailSenseButton(
+            text = text,
             onClick = onClick,
-            shapes = androidx.compose.material3.ButtonDefaults.shapes(),
-            contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height),
+            icon = TrailIcons.Camera,
+            style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = height)
                 .testTag("button_3d")
-        ) {
-            Icon(
-                imageVector = TrailIcons.Camera,
-                contentDescription = null,
-                modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(height))
-            )
-            Spacer(Modifier.size(androidx.compose.material3.ButtonDefaults.iconSpacingFor(height)))
-            Text(text, style = androidx.compose.material3.ButtonDefaults.textStyleFor(height))
-        }
+        )
     }
 }
 

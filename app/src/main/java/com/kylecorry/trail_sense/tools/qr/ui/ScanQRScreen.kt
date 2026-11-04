@@ -99,6 +99,8 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -484,14 +486,8 @@ private fun QrScannerScreen(
                                     icon = Icons.Rounded.NoPhotography,
                                     title = stringResource(R.string.no_camera_access),
                                     description = stringResource(R.string.qr_camera_denied_description),
-                                    action = {
-                                        androidx.compose.material3.Button(
-                                            onClick = onOpenAppSettings,
-                                            modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget)
-                                        ) {
-                                            Text(stringResource(R.string.open_settings))
-                                        }
-                                    }
+                                    actionLabel = stringResource(R.string.open_settings),
+                                    onAction = onOpenAppSettings
                                 )
                             }
                         }
@@ -499,22 +495,16 @@ private fun QrScannerScreen(
                 }
 
                 item(key = "gallery") {
-                    FilledTonalButton(
+                    TrailSenseButton(
+                        text = stringResource(R.string.select_from_gallery),
                         onClick = onScanFromGallery,
+                        icon = Icons.Rounded.PhotoLibrary,
+                        style = TrailSenseButtonStyle.Tonal,
                         modifier = Modifier
                             .padding(top = TrailSenseSpacing.lg)
                             .fillMaxWidth()
-                            .heightIn(min = 56.dp)
                             .testTag("gallery")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.PhotoLibrary,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(stringResource(R.string.select_from_gallery))
-                    }
+                    )
                 }
 
                 item(key = "results_header") {
@@ -673,32 +663,13 @@ private fun QrActionChip(
     modifier: Modifier = Modifier,
     primary: Boolean = false
 ) {
-    FilledTonalButton(
+    TrailSenseButton(
+        text = text,
         onClick = onClick,
-        modifier = modifier
-            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-            .testTag(tag),
-        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg),
-        colors = if (primary) {
-            androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        } else {
-            androidx.compose.material3.ButtonDefaults.filledTonalButtonColors()
-        }
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge
-        )
-    }
+        icon = icon,
+        style = if (primary) TrailSenseButtonStyle.Filled else TrailSenseButtonStyle.Tonal,
+        modifier = modifier.testTag(tag)
+    )
 }
 
 private enum class ScanType {

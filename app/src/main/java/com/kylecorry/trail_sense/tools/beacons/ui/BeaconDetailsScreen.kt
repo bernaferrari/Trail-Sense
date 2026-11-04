@@ -392,15 +392,11 @@ private fun BeaconDetailsScreen(
                         }
                     }
                     Spacer(Modifier.height(TrailSenseSpacing.sm))
-                    Button(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                        text = stringResource(R.string.navigate),
                         onClick = onNavigate,
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier.heightIn(min = 48.dp)
-                    ) {
-                        Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(stringResource(R.string.navigate))
-                    }
+                        icon = TrailIcons.NavigationArrow
+                    )
                 }
             )
             }

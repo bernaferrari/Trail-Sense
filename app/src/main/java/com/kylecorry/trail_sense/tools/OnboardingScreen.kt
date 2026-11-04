@@ -212,18 +212,16 @@ private fun OnboardingFrame(
                     .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
                 content = content
             )
-            Button(
+            TrailSenseButton(
+                text = nextText,
                 onClick = onNext,
                 modifier = Modifier
                     .widthIn(max = 560.dp)
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.lg)
                     .padding(bottom = TrailSenseSpacing.lg)
-                    .height(56.dp)
                     .testTag("next_button")
-            ) {
-                Text(nextText, style = MaterialTheme.typography.titleMedium)
-            }
+            )
         }
     }
 }
