@@ -4,32 +4,9 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.os.Bundle
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -38,16 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -63,9 +33,9 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
@@ -140,6 +110,10 @@ private class PathsSettingsController(private val host: TrailSenseDestinationHos
     fun onDestroy() {
         setBacktrackEnabledState = null
         refreshNotificationState = null
+    }
+
+    fun goBack() {
+        host.goBack()
     }
 
     fun isBacktrackBlocked(): Boolean {
@@ -291,39 +265,20 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
     val pathStyleOptions = remember {
         controller.options(R.array.line_style_entries, R.array.line_style_values)
     }
-    val isBacktrackBlocked = remember {
-        controller.isBacktrackBlocked()
-    }
+    val isBacktrackBlocked = remember { controller.isBacktrackBlocked() }
 
-    var backtrackEnabled by remember {
-        mutableStateOf(prefs.paths.backtrackEnabled)
-    }
-    var backtrackIntervalSummary by remember {
-        mutableStateOf(controller.formatBacktrackInterval())
-    }
-    var backtrackHistorySummary by remember {
-        mutableStateOf(controller.formatBacktrackHistory())
-    }
-    var backtrackNotificationsSummary by remember {
-        mutableStateOf(controller.notificationSummary())
-    }
-    var saveCellSignal by remember {
-        mutableStateOf(prefs.paths.backtrackSaveCellHistory)
-    }
+    var backtrackEnabled by remember { mutableStateOf(prefs.paths.backtrackEnabled) }
+    var backtrackIntervalSummary by remember { mutableStateOf(controller.formatBacktrackInterval()) }
+    var backtrackHistorySummary by remember { mutableStateOf(controller.formatBacktrackHistory()) }
+    var backtrackNotificationsSummary by remember { mutableStateOf(controller.notificationSummary()) }
+    var saveCellSignal by remember { mutableStateOf(prefs.paths.backtrackSaveCellHistory) }
     var showLastSignalBeacon by remember {
         mutableStateOf(controller.getBoolean(R.string.pref_show_last_signal_beacon, true))
     }
     var pathStyle by remember {
-        mutableStateOf(
-            controller.getStringPreference(
-                R.string.pref_backtrack_path_style,
-                "dotted"
-            )
-        )
+        mutableStateOf(controller.getStringPreference(R.string.pref_backtrack_path_style, "dotted"))
     }
-    var pathColor by remember {
-        mutableStateOf(prefs.paths.defaultPathColor)
-    }
+    var pathColor by remember { mutableStateOf(prefs.paths.defaultPathColor) }
     var simplifyPaths by remember {
         mutableStateOf(controller.getBoolean(R.string.pref_auto_simplify_paths, true))
     }
@@ -335,162 +290,146 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
     val pathStyleTitle = stringResource(R.string.pref_default_path_style_title)
     val pathColorTitle = stringResource(R.string.pref_default_path_color_title)
     val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
+    val backtrackTitle = stringResource(R.string.backtrack)
+    val appearanceTitle = stringResource(R.string.appearance)
 
-    controller.setBacktrackEnabledState {
-        backtrackEnabled = it
-    }
+    controller.setBacktrackEnabledState { backtrackEnabled = it }
     controller.setRefreshNotificationState {
         backtrackNotificationsSummary = controller.notificationSummary()
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    TrailSensePage(
+        title = stringResource(R.string.paths),
+        onBack = controller::goBack,
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = TrailSenseSize.maximumContentWidth),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-            item("title") {
-                Text(
-                    text = stringResource(R.string.paths),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(
-                        top = TrailSenseSpacing.sm,
-                        bottom = TrailSenseSpacing.xs
-                    )
-                )
-            }
-
-            item("backtrack_section") {
-                PathSettingsSection(title = stringResource(R.string.backtrack)) {
-                    PathSettingsSwitchRow(
-                        label = stringResource(R.string.backtrack),
+        trailSenseSection("backtrack", title = backtrackTitle) {
+            if (!isBacktrackBlocked) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = backtrackTitle,
                         summary = stringResource(R.string.pref_backtrack_enabled_summary),
-                        icon = painterResource(R.drawable.ic_tool_backtrack),
                         checked = backtrackEnabled,
-                        enabled = !isBacktrackBlocked,
                         onCheckedChange = {
                             backtrackEnabled = it
-                            controller.toggleBacktrack {
-                                backtrackEnabled = false
-                            }
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsClickRow(
-                        title = backtrackFrequencyTitle,
-                        subtitle = backtrackIntervalSummary,
-                        onClick = {
-                            showBacktrackFrequencyPicker = true
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsClickRow(
-                        title = stringResource(R.string.pref_backtrack_history_days_title),
-                        subtitle = backtrackHistorySummary,
-                        onClick = {
-                            controller.pickBacktrackHistory {
-                                backtrackHistorySummary =
-                                    formatService.formatDays(
-                                        if (it > 0) it else 1
-                                    )
-                            }
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsClickRow(
-                        title = controller.notificationsTitle(),
-                        subtitle = backtrackNotificationsSummary,
-                        onClick = controller::openNotificationSettings
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsSwitchRow(
-                        label = stringResource(R.string.pref_backtrack_save_cell_title),
-                        summary = stringResource(R.string.pref_backtrack_save_cell_summary),
-                        checked = saveCellSignal,
-                        onCheckedChange = {
-                            saveCellSignal = it
-                            prefs.paths.backtrackSaveCellHistory = it
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsSwitchRow(
-                        label = stringResource(R.string.pref_show_last_signal_beacon_title),
-                        summary = stringResource(R.string.pref_show_last_signal_beacon_summary),
-                        checked = showLastSignalBeacon,
-                        enabled = saveCellSignal,
-                        onCheckedChange = {
-                            showLastSignalBeacon = it
-                            controller.putBoolean(R.string.pref_show_last_signal_beacon, it)
-                        }
+                            controller.toggleBacktrack { backtrackEnabled = false }
+                        },
+                        position = position
                     )
                 }
             }
-
-            item("appearance_section") {
-                PathSettingsSection(title = stringResource(R.string.appearance)) {
-                    PathSettingsClickRow(
-                        title = pathStyleTitle,
-                        subtitle = controller.optionLabel(pathStyleOptions, pathStyle),
-                        icon = painterResource(R.drawable.ic_path_group),
-                        onClick = {
-                            controller.pickOption(
-                                pathStyleTitle,
-                                pathStyleOptions,
-                                pathStyle
-                            ) {
-                                pathStyle = it
-                                controller.putString(R.string.pref_backtrack_path_style, it)
-                            }
+            row { position ->
+                SettingsPickerRow(
+                    label = backtrackFrequencyTitle,
+                    selected = backtrackIntervalSummary,
+                    onClick = { showBacktrackFrequencyPicker = true },
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsPickerRow(
+                    label = stringResource(R.string.pref_backtrack_history_days_title),
+                    selected = backtrackHistorySummary,
+                    onClick = {
+                        controller.pickBacktrackHistory {
+                            backtrackHistorySummary = formatService.formatDays(if (it > 0) it else 1)
                         }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsClickRow(
-                        title = pathColorTitle,
-                        onClick = {
-                            showPathColorPicker = true
+                    },
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsPickerRow(
+                    label = controller.notificationsTitle(),
+                    selected = backtrackNotificationsSummary,
+                    onClick = controller::openNotificationSettings,
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_backtrack_save_cell_title),
+                    summary = stringResource(R.string.pref_backtrack_save_cell_summary),
+                    checked = saveCellSignal,
+                    onCheckedChange = {
+                        saveCellSignal = it
+                        prefs.paths.backtrackSaveCellHistory = it
+                    },
+                    position = position
+                )
+            }
+            if (saveCellSignal) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_show_last_signal_beacon_title),
+                        summary = stringResource(R.string.pref_show_last_signal_beacon_summary),
+                        checked = showLastSignalBeacon,
+                        onCheckedChange = {
+                            showLastSignalBeacon = it
+                            controller.putBoolean(R.string.pref_show_last_signal_beacon, it)
                         },
-                        trailing = {
+                        position = position
+                    )
+                }
+            }
+        }
+
+        trailSenseSection("appearance", title = appearanceTitle) {
+            row { position ->
+                SettingsPickerRow(
+                    label = pathStyleTitle,
+                    selected = controller.optionLabel(pathStyleOptions, pathStyle),
+                    onClick = {
+                        controller.pickOption(pathStyleTitle, pathStyleOptions, pathStyle) {
+                            pathStyle = it
+                            controller.putString(R.string.pref_backtrack_path_style, it)
+                        }
+                    },
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsActionRow(
+                    label = pathColorTitle,
+                    onClick = { showPathColorPicker = true },
+                    trailing = {
+                        Box(
+                            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Box(
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(28.dp)
                                     .clip(CircleShape)
                                     .background(Color(pathColor.color))
                             )
                         }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsSwitchRow(
-                        label = stringResource(R.string.pref_auto_simplify_paths_title),
-                        checked = simplifyPaths,
-                        onCheckedChange = {
-                            simplifyPaths = it
-                            controller.putBoolean(R.string.pref_auto_simplify_paths, it)
-                        }
-                    )
-                    PathSettingsCardDivider()
-                    PathSettingsSwitchRow(
-                        label = stringResource(R.string.fast_path_rendering),
-                        summary = stringResource(R.string.fast_path_rendering_summary),
-                        checked = fastPathRendering,
-                        onCheckedChange = {
-                            fastPathRendering = it
-                            controller.putBoolean(R.string.pref_fast_path_rendering, it)
-                        }
-                    )
-                }
+                    },
+                    position = position
+                )
             }
+            row { position ->
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_auto_simplify_paths_title),
+                    checked = simplifyPaths,
+                    onCheckedChange = {
+                        simplifyPaths = it
+                        controller.putBoolean(R.string.pref_auto_simplify_paths, it)
+                    },
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsSwitchRow(
+                    label = stringResource(R.string.fast_path_rendering),
+                    summary = stringResource(R.string.fast_path_rendering_summary),
+                    checked = fastPathRendering,
+                    onCheckedChange = {
+                        fastPathRendering = it
+                        controller.putBoolean(R.string.pref_fast_path_rendering, it)
+                    },
+                    position = position
+                )
             }
         }
     }
@@ -506,9 +445,7 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
                 }
                 showPathColorPicker = false
             },
-            onDismiss = {
-                showPathColorPicker = false
-            }
+            onDismiss = { showPathColorPicker = false }
         )
     }
 
@@ -522,207 +459,12 @@ private fun PathsSettingsContent(controller: PathsSettingsController) {
             onDurationPicked = {
                 if (it != null) {
                     controller.changeBacktrackFrequency(it) { frequency ->
-                        backtrackIntervalSummary =
-                            formatService.formatDuration(
-                                frequency,
-                                includeSeconds = true
-                            )
+                        backtrackIntervalSummary = formatService.formatDuration(frequency, includeSeconds = true)
                     }
                 }
                 showBacktrackFrequencyPicker = false
             },
-            onDismiss = {
-                showBacktrackFrequencyPicker = false
-            }
+            onDismiss = { showBacktrackFrequencyPicker = false }
         )
-    }
-}
-
-@Composable
-private fun PathSettingsSection(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.md,
-                bottom = TrailSenseSpacing.sm
-            )
-        )
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = Color.Transparent
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun PathSettingsCardDivider() {
-    Spacer(modifier = Modifier.height(0.dp))
-}
-
-@Composable
-private fun PathSettingsIconChip(icon: Painter) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(TrailSenseSize.leadingIcon)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PathSettingsClickRow(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    subtitle: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true,
-    trailing: (@Composable () -> Unit)? = null
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupInner),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .alpha(if (enabled) 1f else 0.5f)
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (icon != null) {
-            PathSettingsIconChip(icon)
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-        Spacer(Modifier.width(TrailSenseSpacing.md))
-        if (trailing != null) {
-            Box(
-                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                contentAlignment = Alignment.Center
-            ) { trailing() }
-        } else {
-            Box(
-                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = title,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        }
-    }
-}
-
-@Composable
-private fun PathSettingsSwitchRow(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    summary: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true
-) {
-    val containerColor = if (checked && enabled) {
-        lerp(
-            MaterialTheme.colorScheme.surfaceContainerLow,
-            MaterialTheme.colorScheme.primaryContainer,
-            0.35f
-        )
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupInner),
-        color = containerColor
-    ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .alpha(if (enabled) 1f else 0.5f)
-            .toggleable(
-                value = checked,
-                enabled = enabled,
-                role = Role.Switch,
-                onValueChange = onCheckedChange
-            )
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (icon != null) {
-            PathSettingsIconChip(icon)
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (summary != null) {
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        Spacer(Modifier.width(TrailSenseSpacing.md))
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            enabled = enabled
-        )
-        }
     }
 }
