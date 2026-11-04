@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -600,7 +602,6 @@ private fun ClimateScreen(
                     TrailSenseStat(
                         label = stringResource(R.string.high),
                         value = highLow?.first ?: "--",
-                        supportingText = subtitle,
                         tone = TrailSenseTone.Caution,
                         icon = TrailIcons.TemperatureRange
                     )
@@ -608,7 +609,7 @@ private fun ClimateScreen(
             )
             TrailSenseStatGrid(
                 columns = 2,
-                valueStyle = MaterialTheme.typography.headlineSmall,
+                valueStyle = MaterialTheme.typography.displaySmall,
                 stats = listOf(
                     TrailSenseStat(
                         label = stringResource(R.string.low),
@@ -627,36 +628,8 @@ private fun ClimateScreen(
             }
         }
 
-        trailSenseSection(key = "inputs", title = locationLabel) {
-            row { position ->
-                TrailSenseGroupCard(
-                    position = position,
-                    contentPadding = PaddingValues(TrailSenseSpacing.xs)
-                ) {
-                    DatePickerInput(date = date, onDateChange = onDateChange)
-                }
-            }
-            row { position ->
-                CoordinateInput(
-                    location = location,
-                    onLocationChange = onLocationChange,
-                    autoFillRequest = locationAutofillRequest,
-                    onAutoLocationClick = onAutoLocationClick,
-                    onBeaconSelected = onLocationBeaconSelected,
-                    position = position
-                )
-            }
-            row { position ->
-                ElevationInput(
-                    elevation = elevation,
-                    onElevationChange = onElevationChange,
-                    autoFillRequest = elevationAutofillRequest,
-                    onAutoElevationClick = onAutoElevationClick,
-                    position = position
-                )
-            }
-        }
-
+        // The year comes right after the day: the chosen date heads the temperature chart on its own surface, so
+        // stepping the date and scrubbing the year are one gesture family.
         trailSenseSection(
             key = "temperature",
             title = temperatureLabel,
@@ -664,6 +637,11 @@ private fun ClimateScreen(
         ) {
             row { position ->
                 TrailSenseGroupCard(position = position) {
+                    DatePickerInput(
+                        date = date,
+                        onDateChange = onDateChange,
+                        modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
+                    )
                     if (highLow != null && temperatures?.isNotEmpty() == true) {
                         val maxDay = if (date.isLeapYear) 366f else 365f
                         SkyChartCallout(
@@ -707,6 +685,29 @@ private fun ClimateScreen(
                     )
                     ClimateMonthAxis(selectedMonth = date.month)
                 }
+            }
+        }
+
+        // Where the climate is for: quiet inputs after the content they change.
+        trailSenseSection(key = "inputs", title = locationLabel) {
+            row { position ->
+                CoordinateInput(
+                    location = location,
+                    onLocationChange = onLocationChange,
+                    autoFillRequest = locationAutofillRequest,
+                    onAutoLocationClick = onAutoLocationClick,
+                    onBeaconSelected = onLocationBeaconSelected,
+                    position = position
+                )
+            }
+            row { position ->
+                ElevationInput(
+                    elevation = elevation,
+                    onElevationChange = onElevationChange,
+                    autoFillRequest = elevationAutofillRequest,
+                    onAutoElevationClick = onAutoElevationClick,
+                    position = position
+                )
             }
         }
 
@@ -861,19 +862,12 @@ private fun DatePickerInput(
                 modifier = Modifier.rotate(180f)
             )
         }
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = formatter.formatRelativeDate(date),
-            modifier = Modifier.testTag("display_date"),
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontFeatureSettings = "tnum"
-            ),
-            color = MaterialTheme.colorScheme.onSurface
-        )
         Box(
             modifier = Modifier
-                .padding(start = TrailSenseSpacing.lg)
-                .size(48.dp)
+                .weight(1f)
+                .height(40.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.secondaryContainer)
                 .combinedClickable(
                     onClickLabel = dateLabel,
                     onLongClickLabel = todayLabel,
@@ -890,14 +884,25 @@ private fun DatePickerInput(
                 .testTag("date_btn"),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = TrailIcons.Date,
-                contentDescription = dateLabel,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = TrailIcons.Date,
+                    contentDescription = dateLabel,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(
+                    text = formatter.formatRelativeDate(date),
+                    modifier = Modifier.testTag("display_date"),
+                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
         }
-        Spacer(Modifier.weight(1f))
         IconButton(
+
             onClick = { onDateChange(date.plusDays(1)) },
             modifier = Modifier.testTag("next_date")
         ) {

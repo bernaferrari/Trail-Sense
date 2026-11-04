@@ -372,10 +372,11 @@ internal fun SkyChartCallout(fraction: Float, text: String, modifier: Modifier =
             SkyPill(
                 text = text,
                 icon = icon,
-                containerColor = MaterialTheme.colorScheme.inverseSurface,
-                contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         },
+
         modifier = modifier.fillMaxWidth()
     ) { measurables, constraints ->
         val pill = measurables.first().measure(constraints.copy(minWidth = 0))
