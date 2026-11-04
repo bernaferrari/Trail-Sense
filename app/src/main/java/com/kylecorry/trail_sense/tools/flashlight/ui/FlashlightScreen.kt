@@ -107,6 +107,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.graphics.shapes.Morph
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.boundsInRoot
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Row
 import androidx.graphics.shapes.toPath
 import com.kylecorry.trail_sense.shared.icons.trail.TorchOff
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
@@ -579,20 +584,138 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
     }
 }
 
-/** No torch on this phone: the screen is the light. The kit's big layered mark, warm copy, one clear action. */
+/**
+ * No torch on this phone: the screen is the light. A one-line banner says why, and the screen light itself is the
+ * hero, a big warm scalloped button. Tapping it blooms a warm-white glow out of the button until it fills the
+ * screen, then hands over to the screen light.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
-    // Centred in the whole instrument area, so the mark and its action sit in the middle of the screen.
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    TrailSenseEmptyState(
-        icon = TrailIcons.ScreenFlashlight,
-        title = stringResource(R.string.flashlight_unavailable_title),
-        description = stringResource(R.string.flashlight_unavailable_description),
-        actionLabel = stringResource(R.string.flashlight_use_screen),
-        actionIcon = TrailIcons.Power,
-        onAction = onOpenScreenFlashlight,
-        actionModifier = Modifier.testTag("screen_flashlight_btn")
+    val scheme = MaterialTheme.colorScheme
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val bloom = remember { androidx.compose.animation.core.Animatable(0f) }
+    var origin by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    var buttonCenter by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val spin by rememberInfiniteTransition(label = "screenLight").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(30_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "screenLightSpin"
     )
+    val warm = scheme.tertiary
+    val glowStart = scheme.tertiaryContainer
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { origin = it.positionInRoot() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = scheme.secondaryContainer,
+                contentColor = scheme.onSecondaryContainer
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.TorchOff),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    Text(
+                        text = stringResource(R.string.flashlight_unavailable_title),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(Modifier.weight(0.8f))
+            Box(
+                modifier = Modifier
+                    .size(280.dp)
+                    .trailSensePressScale(interactionSource),
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(Modifier.fillMaxSize()) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(warm.copy(alpha = 0.30f), warm.copy(alpha = 0f)),
+                            center = center,
+                            radius = size.minDimension / 2f
+                        )
+                    )
+                }
+                Surface(
+                    onClick = {
+                        scope.launch {
+                            bloom.animateTo(1f, tween(520, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+                            onOpenScreenFlashlight()
+                            bloom.snapTo(0f)
+                        }
+                    },
+                    modifier = Modifier
+                        .size(208.dp)
+                        .graphicsLayer { rotationZ = spin }
+                        .onGloballyPositioned { buttonCenter = it.boundsInRoot().center }
+                        .testTag("screen_flashlight_btn"),
+                    shape = MaterialShapes.Cookie12Sided.toShape(),
+                    color = scheme.tertiary,
+                    contentColor = scheme.onTertiary,
+                    interactionSource = interactionSource
+                ) {}
+                Icon(
+                    painter = rememberVectorPainter(TrailIcons.ScreenFlashlight),
+                    contentDescription = stringResource(R.string.flashlight_use_screen),
+                    modifier = Modifier.size(84.dp),
+                    tint = scheme.onTertiary
+                )
+            }
+            Spacer(Modifier.height(TrailSenseSpacing.xl))
+            Text(
+                text = stringResource(R.string.flashlight_use_screen),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(TrailSenseSpacing.sm))
+            Text(
+                text = stringResource(R.string.flashlight_unavailable_description),
+                style = MaterialTheme.typography.bodyLarge,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.weight(1.2f))
+        }
+        // The bloom: warm light spreading from the button to the screen's edges.
+        Canvas(Modifier.fillMaxSize()) {
+            val p = bloom.value
+            if (p > 0f) {
+                val c = buttonCenter - origin
+                val reach = size.maxDimension * 1.25f * p + 1f
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        0f to Color.White,
+                        0.7f to Color.White.copy(alpha = 0.96f),
+                        1f to glowStart.copy(alpha = 0f),
+                        center = c,
+                        radius = reach
+                    ),
+                    radius = reach,
+                    center = c
+                )
+            }
+        }
     }
 }
 
