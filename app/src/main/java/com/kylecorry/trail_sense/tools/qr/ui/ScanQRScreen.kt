@@ -3,6 +3,20 @@
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import com.kylecorry.trail_sense.shared.icons.trail.QrCode
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -446,8 +460,8 @@ private fun QrScannerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
-                            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                            .clip(RoundedCornerShape(TrailSenseShape.hero))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         // Keep the camera view attached so it can start the moment permission arrives.
@@ -458,6 +472,9 @@ private fun QrScannerScreen(
                                 .testTag("camera")
                                 .semantics { contentDescription = scannerDescription }
                         )
+                        if (!isCameraDenied) {
+                            ScanFrame(Modifier.fillMaxSize())
+                        }
                         if (isCameraDenied) {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
@@ -468,7 +485,7 @@ private fun QrScannerScreen(
                                     title = stringResource(R.string.no_camera_access),
                                     description = stringResource(R.string.qr_camera_denied_description),
                                     action = {
-                                        FilledTonalButton(
+                                        androidx.compose.material3.Button(
                                             onClick = onOpenAppSettings,
                                             modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget)
                                         ) {
@@ -552,37 +569,29 @@ private fun QrResultCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Surface(
-                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                color = if (isEmpty) {
+            TrailSenseShapeBadge(
+                icon = if (isEmpty) TrailIcons.QrCode else type.icon,
+                shape = type.shape.toShape(),
+                size = 48.dp,
+                containerColor = if (isEmpty) {
                     MaterialTheme.colorScheme.surfaceContainerHighest
                 } else {
-                    MaterialTheme.colorScheme.secondaryContainer
+                    type.container()
                 },
                 contentColor = if (isEmpty) {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
-                    MaterialTheme.colorScheme.primary
+                    type.content()
                 },
-                modifier = Modifier.size(TrailSenseSize.compactIconContainer)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = type.icon,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(TrailSenseSize.compactIcon)
-                            .testTag("qr_message_type")
-                    )
-                }
-            }
+                modifier = Modifier.testTag("qr_message_type")
+            )
             Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
             Text(
                 text = text.ifEmpty { stringResource(R.string.no_qr_code_detected) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("qr_text"),
-                style = MaterialTheme.typography.bodyLarge,
+                style = if (isEmpty) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
                 maxLines = 6,
                 overflow = TextOverflow.Ellipsis,
                 color = if (isEmpty) {
@@ -607,6 +616,7 @@ private fun QrResultCard(
                         text = stringResource(R.string.open),
                         icon = TrailIcons.Link,
                         tag = "qr_web",
+                        primary = true,
                         onClick = { onOpenUrl(text) }
                     )
                 }
@@ -616,6 +626,7 @@ private fun QrResultCard(
                         text = stringResource(R.string.beacon),
                         icon = TrailIcons.Location,
                         tag = "qr_beacon",
+                        primary = true,
                         onClick = { onCreateBeacon(text) }
                     )
                     QrActionChip(
@@ -631,6 +642,7 @@ private fun QrResultCard(
                         text = stringResource(R.string.note),
                         icon = TrailIcons.ToolNotes,
                         tag = "qr_save_note",
+                        primary = true,
                         onClick = { onCreateNote(text) }
                     )
                 }
@@ -658,14 +670,23 @@ private fun QrActionChip(
     icon: ImageVector,
     tag: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    primary: Boolean = false
 ) {
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier
             .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag(tag),
-        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg),
+        colors = if (primary) {
+            androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            androidx.compose.material3.ButtonDefaults.filledTonalButtonColors()
+        }
     ) {
         Icon(
             imageVector = icon,
@@ -684,6 +705,71 @@ private enum class ScanType {
     Text,
     Url,
     Geo
+}
+
+/** Each kind of code gets its own shape and tone, so links, places and notes tell apart at a glance. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+private val ScanType.shape: androidx.graphics.shapes.RoundedPolygon
+    get() = when (this) {
+        ScanType.Text -> MaterialShapes.Cookie6Sided
+        ScanType.Url -> MaterialShapes.Clover4Leaf
+        ScanType.Geo -> MaterialShapes.Cookie9Sided
+    }
+
+@Composable
+private fun ScanType.container(): Color = when (this) {
+    ScanType.Text -> MaterialTheme.colorScheme.secondaryContainer
+    ScanType.Url -> MaterialTheme.colorScheme.tertiaryContainer
+    ScanType.Geo -> MaterialTheme.colorScheme.primaryContainer
+}
+
+@Composable
+private fun ScanType.content(): Color = when (this) {
+    ScanType.Text -> MaterialTheme.colorScheme.onSecondaryContainer
+    ScanType.Url -> MaterialTheme.colorScheme.onTertiaryContainer
+    ScanType.Geo -> MaterialTheme.colorScheme.onPrimaryContainer
+}
+
+/** Viewfinder corners in primary and a soft scan line sweeping down, over the live camera. */
+@Composable
+private fun ScanFrame(modifier: Modifier = Modifier) {
+    val color = MaterialTheme.colorScheme.primary
+    val sweep by rememberInfiniteTransition(label = "scan").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(2400), RepeatMode.Reverse),
+        label = "scanLine"
+    )
+    Canvas(modifier = modifier) {
+        val inset = size.minDimension * 0.16f
+        val arm = size.minDimension * 0.14f
+        val stroke = 7.dp.toPx()
+        val left = inset
+        val top = inset
+        val right = size.width - inset
+        val bottom = size.height - inset
+        listOf(
+            Offset(left, top) to Offset(1f, 1f),
+            Offset(right, top) to Offset(-1f, 1f),
+            Offset(left, bottom) to Offset(1f, -1f),
+            Offset(right, bottom) to Offset(-1f, -1f)
+        ).forEach { (corner, dir) ->
+            drawLine(color, corner, corner + Offset(arm * dir.x, 0f), stroke, StrokeCap.Round)
+            drawLine(color, corner, corner + Offset(0f, arm * dir.y), stroke, StrokeCap.Round)
+        }
+        val y = top + (bottom - top) * sweep
+        drawLine(
+            Brush.horizontalGradient(
+                listOf(color.copy(alpha = 0f), color.copy(alpha = 0.8f), color.copy(alpha = 0f)),
+                startX = left,
+                endX = right
+            ),
+            Offset(left + stroke, y),
+            Offset(right - stroke, y),
+            3.dp.toPx(),
+            StrokeCap.Round
+        )
+    }
 }
 
 private val ScanType.icon: ImageVector
