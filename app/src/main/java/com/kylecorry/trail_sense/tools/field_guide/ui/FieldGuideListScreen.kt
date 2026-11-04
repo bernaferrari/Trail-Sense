@@ -463,18 +463,14 @@ private fun FieldGuideScreen(
             }
         } else if (pages.isEmpty()) {
             item(key = "empty") {
-                SkyEmptyState(
+                TrailSenseEmptyState(
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     title = stringResource(R.string.no_pages),
                     description = noPagesDescription,
                     modifier = Modifier.testTag("empty_text"),
-                    action = {
-                        androidx.compose.material3.Button(onClick = onCreate) {
-                            Icon(Icons.Rounded.Add, contentDescription = null)
-                            Spacer(Modifier.width(TrailSenseSpacing.sm))
-                            Text(stringResource(R.string.create_page))
-                        }
-                    }
+                    actionLabel = stringResource(R.string.create_page),
+                    actionIcon = Icons.Rounded.Add,
+                    onAction = onCreate
                 )
             }
         } else {
@@ -562,9 +558,14 @@ private fun FieldGuideTagFilters(
                 },
                 shape = CircleShape,
                 border = null,
+                // The family's choice colours: the chosen one solid primary, the rest a quiet raised surface.
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }

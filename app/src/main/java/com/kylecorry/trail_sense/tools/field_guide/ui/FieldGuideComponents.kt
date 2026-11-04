@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -81,7 +82,7 @@ internal fun FieldGuideRow(
                 scaleX = scale
                 scaleY = scale
             },
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         shape = trailSenseGroupShape(position)
     ) {
         Row(
@@ -111,7 +112,7 @@ internal fun FieldGuideRow(
         ) {
             if (leading != null) {
                 leading()
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Spacer(Modifier.width(TrailSenseSpacing.md))
             }
             Column(
                 modifier = Modifier.weight(1f),
@@ -119,7 +120,7 @@ internal fun FieldGuideRow(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -143,23 +144,24 @@ internal fun FieldGuideRow(
     }
 }
 
-/** The family's tonal icon well (48 dp, 16 dp corners). */
+/** The family's icon well: a 40 dp cookie in 12% primary. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun FieldGuideIconWell(
     icon: Painter,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        modifier = modifier.size(TrailSenseSize.leadingIconContainer)
+        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        contentColor = MaterialTheme.colorScheme.primary,
+        modifier = modifier.size(TrailSenseSize.compactIconContainer)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = icon,
                 contentDescription = null,
-                modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                modifier = Modifier.size(22.dp)
             )
         }
     }
@@ -182,8 +184,8 @@ internal fun FieldGuideThumbnail(
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = modifier
-            .size(TrailSenseSize.leadingIconContainer)
-            .clip(RoundedCornerShape(TrailSenseShape.iconContainer))
+            .size(TrailSenseSize.compactIconContainer)
+            .clip(RoundedCornerShape(12.dp))
     )
 }
 
@@ -226,10 +228,10 @@ internal fun FieldGuideTextField(
         trailingIcon = trailingIcon,
         shape = trailSenseGroupShape(position),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            errorContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+            errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
         )
