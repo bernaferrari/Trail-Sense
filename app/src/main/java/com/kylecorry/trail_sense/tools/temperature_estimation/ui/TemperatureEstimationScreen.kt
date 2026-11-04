@@ -438,31 +438,17 @@ private fun TemperatureEstimateHero(
                     )
                 }
             }
-            // The estimate at display size; before there is one, a placeholder of the same size with its unit.
-            Text(
-                text = if (celsius == null) {
-                    androidx.compose.ui.text.buildAnnotatedString {
-                        withStyle(androidx.compose.ui.text.SpanStyle(color = colors.content.copy(alpha = 0.5f))) {
-                            append("— ")
-                        }
-                        append(unitSymbol)
-                    }
-                } else {
-                    androidx.compose.ui.text.AnnotatedString(title)
-                },
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 88.sp,
-                    lineHeight = 92.sp,
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.SemiBold,
-                color = colors.content,
-                maxLines = 1,
-                autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = if (celsius == null) 64.sp else 88.sp),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
+            // The estimate at display size with a verdict in words; before there is one, the instruction is the
+            // headline (no dash), and the thermometer waits without a marker.
             if (celsius == null) {
+                Text(
+                    text = stringResource(R.string.sky_temperature_idle),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.content,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
                 Text(
                     text = stringResource(R.string.sky_temperature_hint),
                     style = MaterialTheme.typography.bodyLarge,
@@ -470,8 +456,56 @@ private fun TemperatureEstimateHero(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+            } else {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 88.sp,
+                        lineHeight = 92.sp,
+                        fontFeatureSettings = "tnum"
+                    ),
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.content,
+                    maxLines = 1,
+                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = 88.sp),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Text(
+                    text = stringResource(
+                        when {
+                            celsius < 0f -> R.string.sky_temperature_verdict_freezing
+                            celsius < 10f -> R.string.sky_temperature_verdict_cold
+                            celsius < 18f -> R.string.sky_temperature_verdict_cool
+                            celsius < 30f -> R.string.sky_temperature_verdict_warm
+                            else -> R.string.sky_temperature_verdict_hot
+                        }
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.content.copy(alpha = 0.86f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             ThermometerBar(celsius = celsius, markerColor = MaterialTheme.colorScheme.primary)
+            // Word ticks under the bar, at freezing, mild, warm and hot.
+            Box(Modifier.fillMaxWidth()) {
+                listOf(
+                    0.4f to R.string.sky_axis_freezing,
+                    0.6f to R.string.sky_axis_mild,
+                    0.8f to R.string.sky_axis_warm,
+                    1f to R.string.sky_axis_hot
+                ).forEach { (fraction, label) ->
+                    Text(
+                        stringResource(label),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.content.copy(alpha = 0.72f),
+                        modifier = Modifier.align(androidx.compose.ui.BiasAlignment(fraction * 2f - 1f, 0f))
+                    )
+                }
+            }
+
         }
     }
 }

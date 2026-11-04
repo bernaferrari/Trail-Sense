@@ -45,7 +45,18 @@
     <string name="sky_axis_normal">Normal</string>
     <string name="sky_axis_low">Low</string>
     <string name="sky_tides_loading">Reading the tides</string>
+    <string name="sky_temperature_idle">How cold will it be there?</string>
+    <string name="sky_temperature_verdict_freezing">Below freezing · pack for ice</string>
+    <string name="sky_temperature_verdict_cold">Cold · bring a warm layer</string>
+    <string name="sky_temperature_verdict_cool">Cool · a light layer will do</string>
+    <string name="sky_temperature_verdict_warm">Warm · comfortable for most</string>
+    <string name="sky_temperature_verdict_hot">Hot · carry extra water</string>
+    <string name="sky_axis_freezing">0°</string>
+    <string name="sky_axis_mild">Mild</string>
+    <string name="sky_axis_warm">Warm</string>
+    <string name="sky_axis_hot">Hot</string>
 </resources>
+
 
 
 

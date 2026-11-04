@@ -298,11 +298,21 @@ private fun StrikeHero(
             ) {
                 val center = Offset(size.width / 2f, size.height * 0.45f)
                 val maxRadius = size.maxDimension * 0.75f
+                // A deep well under the reading, so the rings feel like a target rather than lines on a card.
+                drawCircle(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        listOf(accent.copy(alpha = 0.22f), accent.copy(alpha = 0f)),
+                        center = center,
+                        radius = maxRadius * 0.7f
+                    ),
+                    radius = maxRadius * 0.7f,
+                    center = center
+                )
                 repeat(4) { index ->
                     val t = ((if (counting) phase else 0.55f) + index / 4f) % 1f
                     drawCircle(
                         color = accent.copy(alpha = (1f - t) * 0.5f * waveAlpha),
-                        radius = 80.dp.toPx() + t * maxRadius,
+                        radius = 124.dp.toPx() + t * maxRadius,
                         center = center,
                         style = Stroke(width = (12.dp.toPx() * (1f - t)).coerceAtLeast(1f))
                     )
@@ -348,7 +358,25 @@ private fun StrikeHero(
                 }
                 Spacer(Modifier.weight(1f))
                 val placeholder = value == "—"
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Idle: no dash. A big turning bolt and the instruction as the headline.
+                if (placeholder) {
+                    SkyFocalShape(
+                        icon = androidx.compose.material.icons.Icons.Rounded.Bolt,
+                        shape = MaterialShapes.Burst.toShape(),
+                        size = 128.dp,
+                        containerColor = accent,
+                        contentColor = colors.onAccent,
+                        spin = true
+                    )
+                    Spacer(Modifier.height(TrailSenseSpacing.xl))
+                    Text(
+                        hint,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                } else Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         value,
                         style = MaterialTheme.typography.displayLarge.copy(
@@ -369,13 +397,15 @@ private fun StrikeHero(
                             .then(if (placeholder) Modifier else Modifier.alignByBaseline())
                     )
                 }
-                Text(
-                    hint,
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                    color = colors.content.copy(alpha = 0.86f),
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+                if (!placeholder) {
+                    Text(
+                        hint,
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                        color = colors.content.copy(alpha = 0.86f),
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
                 Spacer(Modifier.weight(1f))
                 action()
             }
@@ -391,19 +421,21 @@ private fun StrikeButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val container by animateColorAsState(
+        // The flash is the screen's main action, in the warm action role; the thunder tap that follows is primary.
         targetValue = if (waitingForThunder) {
-            MaterialTheme.colorScheme.tertiary
-        } else {
             MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.tertiary
         },
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "strikeButtonColor"
     )
     val content = if (waitingForThunder) {
-        MaterialTheme.colorScheme.onTertiary
-    } else {
         MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onTertiary
     }
+
     val height = androidx.compose.material3.ButtonDefaults.LargeContainerHeight
     androidx.compose.material3.Button(
         onClick = onClick,
