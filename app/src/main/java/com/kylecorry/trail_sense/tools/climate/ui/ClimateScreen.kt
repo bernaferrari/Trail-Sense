@@ -597,7 +597,7 @@ private fun ClimateScreen(
                     TrailSenseStat(
                         label = stringResource(R.string.high),
                         value = highLow?.first ?: "--",
-                        tone = TrailSenseTone.Tertiary,
+                        tone = TrailSenseTone.Caution,
                         icon = TrailIcons.TemperatureRange
                     ),
                     TrailSenseStat(
@@ -610,7 +610,7 @@ private fun ClimateScreen(
                         label = precipitationLabel,
                         value = precipitationValue ?: "--",
                         supportingText = stringResource(R.string.climate_monthly_total),
-                        tone = TrailSenseTone.Secondary,
+                        tone = TrailSenseTone.Tertiary,
                         icon = TrailIcons.LightRain
                     )
                 )
@@ -1193,7 +1193,8 @@ private fun TemperatureChart(
     // Theme colours, not fixed red and blue: the warm tertiary for highs, the primary for lows, and the band between
     // them filled so the year reads as one shape.
     val lowColor = MaterialTheme.colorScheme.primary
-    val highColor = MaterialTheme.colorScheme.tertiary
+    // Warm amber for highs, matching the High tile; primary for lows, matching the Low tile.
+    val highColor = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors().caution
     val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     val highlightColor = MaterialTheme.colorScheme.surfaceContainerLow
     val guideColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
@@ -1333,7 +1334,8 @@ private fun PrecipitationChart(
     modifier: Modifier = Modifier
 ) {
     val data = precipitation.orEmpty()
-    val barColor = MaterialTheme.colorScheme.primary
+    // Rain in the tertiary, matching the Precipitation tile.
+    val barColor = MaterialTheme.colorScheme.tertiary
     val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
