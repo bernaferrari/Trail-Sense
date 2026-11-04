@@ -6,6 +6,8 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.NoPhotography
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -279,4 +282,34 @@ fun Modifier.trailSensePressScale(interactionSource: InteractionSource, pressedS
 @Composable
 fun BoxScope.TrailSenseInstrumentMessage(content: @Composable () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
+}
+
+/**
+ * What a camera instrument shows instead of the preview when it can't use the camera: the reason, one calm
+ * sentence, and a way to the app's settings to allow it.
+ */
+@Composable
+fun TrailSenseCameraUnavailable(
+    modifier: Modifier = Modifier,
+    description: String = stringResource(R.string.camera_unavailable_description)
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    TrailSenseEmptyState(
+        icon = Icons.Rounded.NoPhotography,
+        title = stringResource(R.string.no_camera_access),
+        description = description,
+        modifier = modifier,
+        action = {
+            androidx.compose.material3.FilledTonalButton(
+                onClick = {
+                    com.kylecorry.andromeda.core.tryOrNothing {
+                        context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
+                    }
+                },
+                modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget)
+            ) {
+                Text(stringResource(R.string.open_settings))
+            }
+        }
+    )
 }
