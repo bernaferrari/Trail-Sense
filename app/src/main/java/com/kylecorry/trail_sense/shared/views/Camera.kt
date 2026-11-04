@@ -52,6 +52,9 @@ class CameraState(val context: Context) {
 
     internal val preview = PreviewView(context).apply {
         id = R.id.camera_preview
+        // A TextureView, not a SurfaceView: it composites with Compose, so the preview shows inside rounded,
+        // clipped windows (a SurfaceView drew behind the window's background and the picture stayed blank).
+        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
     }
 
     var camera: ICamera? = null
@@ -422,14 +425,15 @@ fun CameraPreview(
         }
     ) {
         state.applyViewAttributes()
-        state.previewBitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        // The real CameraX preview, on screen: without its surface in the window the camera opens but never
+        // delivers a frame (the preview stayed blank). A TextureView, so it clips to rounded windows.
+        androidx.compose.ui.viewinterop.AndroidView(
+            factory = {
+                (state.preview.parent as? android.view.ViewGroup)?.removeView(state.preview)
+                state.preview
+            },
+            modifier = Modifier.fillMaxSize()
+        )
         if (state.flipEnabledState) {
             IconButton(
                 onClick = state::flipCamera,
