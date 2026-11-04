@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -263,7 +264,7 @@ fun WhistleScreen(
                         playingSignal != null -> playingSignal.label
                         else -> stringResource(R.string.whistle_hold)
                     },
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
@@ -311,8 +312,8 @@ private fun WhistleSignalRow(
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val badgeColor = if (playing) scheme.primary else scheme.secondaryContainer
-    val badgeContent = if (playing) scheme.onPrimary else scheme.onSecondaryContainer
+    val badgeColor = if (playing) scheme.primary else scheme.primary.copy(alpha = 0.12f)
+    val badgeContent = if (playing) scheme.onPrimary else scheme.primary
     val playingLabel = stringResource(R.string.whistle_playing)
     Surface(
         onClick = onClick,
@@ -321,20 +322,22 @@ private fun WhistleSignalRow(
             .fillMaxWidth()
             .semantics { if (playing) stateDescription = playingLabel },
         shape = trailSenseGroupShape(position),
-        color = scheme.surfaceContainerLow
+        color = scheme.surfaceContainer
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            modifier = Modifier
+                .heightIn(min = 72.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TrailSenseShapeBadge(
                 icon = if (playing) TrailIcons.BaselineStop24 else signal.icon,
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 48.dp,
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
                 containerColor = badgeColor,
                 contentColor = badgeContent
             )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
                 Text(
                     signal.label,
