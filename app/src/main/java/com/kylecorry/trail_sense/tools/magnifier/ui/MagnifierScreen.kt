@@ -113,13 +113,14 @@ internal fun MagnifierScreen(
         }
     }
 
+    // One question: what does this look like up close?
     // Full-bleed camera under a small top bar; the two controls float in one tonal panel at the bottom.
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_magnifier_title),
         modifier = modifier
     ) {
         if (hasPermissionAnswer && !isCameraEnabled) {
-            MagnifierCameraUnavailable(onNotNow = com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack())
+            MagnifierCameraUnavailable()
             return@TrailSenseInstrumentScaffold
         }
 
