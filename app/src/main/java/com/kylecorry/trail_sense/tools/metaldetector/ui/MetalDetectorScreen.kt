@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -560,38 +563,14 @@ private fun MetalDetectorScreen(
                     TrailSenseGroupCard(
                         position = TrailSenseGroupPosition(isFirst = true, isLast = false)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.threshold),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            ) {
-                                Text(
-                                    text = thresholdText,
-                                    modifier = Modifier
-                                        .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-                                        .testTag("threshold_amount"),
-                                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-                        Slider(
+                        Text(
+                            text = stringResource(R.string.threshold),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        ThresholdSlider(
                             value = thresholdSliderValue.coerceIn(0f, 100f),
-                            onValueChange = onThresholdChange,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = TrailSenseSpacing.xs)
-                                .testTag("threshold"),
-                            valueRange = 0f..100f
+                            label = thresholdText,
+                            onValueChange = onThresholdChange
                         )
                         FilledTonalButton(
                             onClick = onCalibrate,
@@ -689,19 +668,22 @@ private fun MetalHero(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TrailSenseReading(
+                    value = fieldValue,
+                    unit = fieldUnit,
+                    color = content,
+                    unitColor = content.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.displayLarge,
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("metal_detector_title")
+                        .semantics { contentDescription = title }
+                )
                 AccuracyBadge(magnetometer = magnetometer, onClick = onAccuracyClick)
             }
-            TrailSenseReading(
-                value = fieldValue,
-                unit = fieldUnit,
-                color = content,
-                unitColor = content.copy(alpha = 0.72f),
-                style = MaterialTheme.typography.displayLarge,
-                horizontalAlignment = Alignment.Start,
-                modifier = Modifier
-                    .testTag("metal_detector_title")
-                    .semantics { contentDescription = title }
-            )
             MetalChart(
                 data = chartReadings,
                 lowerThreshold = lowerThreshold,
@@ -745,6 +727,62 @@ private fun MetalBadge(metalDetected: Boolean, accent: Color, onAccent: Color) {
     }
 }
 
+/**
+ * The threshold as one thick rounded track that fills to the value, with the value itself riding in the thumb, so
+ * the control reads as one object rather than two bars and a dot.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun ThresholdSlider(value: Float, label: String, onValueChange: (Float) -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        valueRange = 0f..100f,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TrailSenseSpacing.sm)
+            .testTag("threshold"),
+        thumb = {
+            Surface(
+                shape = CircleShape,
+                color = scheme.primary,
+                contentColor = scheme.onPrimary,
+                shadowElevation = 2.dp
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier
+                        .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
+                        .testTag("threshold_amount"),
+                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+            }
+        },
+        track = { state ->
+            val fraction = ((state.value - state.valueRange.start) /
+                (state.valueRange.endInclusive - state.valueRange.start)).coerceIn(0f, 1f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(14.dp)
+                    .clip(CircleShape)
+                    .background(scheme.surfaceContainerHighest)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction)
+                        .fillMaxHeight()
+                        .clip(CircleShape)
+                        .background(scheme.primary)
+                )
+            }
+        }
+    )
+}
+
 /** A top-bar toggle: filled tonal while on, plain while off, always labelled. */
 @Composable
 private fun ToolToggle(
@@ -760,7 +798,9 @@ private fun ToolToggle(
         modifier = modifier,
         colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     ) {
         Icon(icon, contentDescription = label)

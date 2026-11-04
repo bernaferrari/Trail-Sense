@@ -32,6 +32,7 @@
     <string name="solar_turn_left">Turn left %1$s</string>
     <string name="solar_turn_right">Turn right %1$s</string>
     <string name="solar_now">Now %1$s</string>
+    <string name="solar_target">Target %1$s</string>
 
     <!-- Cliff height -->
     <string name="cliff_ready">Drop a stone, tap Start</string>
@@ -51,6 +52,7 @@
     <string name="battery_charging">Charging</string>
     <string name="battery_low">Battery low</string>
     <string name="battery_on_battery">On battery</string>
+    <string name="battery_use_short">%1$s use</string>
 
     <!-- Signal finder -->
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
@@ -63,4 +65,8 @@
     <string name="ballistics_up">Up</string>
     <string name="ballistics_down">Down</string>
     <string name="ballistics_enter_distance">Enter the distance to target</string>
+    <string name="ballistics_waiting">Waiting for distance</string>
+    <string name="ballistics_waiting_hint">Enter how far the target is, then where the shot hit.</string>
+    <string name="ballistics_on_target">On target</string>
+    <string name="ballistics_where_hit">Where the shot hit</string>
 </resources>
