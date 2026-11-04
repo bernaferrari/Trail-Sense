@@ -894,7 +894,8 @@ private fun TriangulateResultCard(
                 verdict = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination)
             )
         } else {
-            // Until there's an answer the headline says what to do next; a failure is the line under it.
+            // Until there's an answer the headline says what to do next; a failure is the line under it. No
+            // "n of 2" count: the headline and the steps' own number badges already say how far along it is.
             PlacesKeyValue(
                 value = when (completed) {
                     0 -> stringResource(R.string.places_triangulate_take_first)
@@ -902,7 +903,7 @@ private fun TriangulateResultCard(
                     else -> stringResource(R.string.places_triangulate_check)
                 },
                 valueStyle = MaterialTheme.typography.headlineSmall,
-                verdict = if (completed == 2) title else stringResource(R.string.places_triangulate_sightings, completed)
+                verdict = if (completed == 2) title else null
             )
         }
         if (actionsVisible) {
