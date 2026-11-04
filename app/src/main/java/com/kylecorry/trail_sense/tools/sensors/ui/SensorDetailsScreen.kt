@@ -124,7 +124,7 @@ fun SensorDetailsToolScreen(host: TrailSenseDestinationHost) {
     }
 
     SensorDetailsScreen(
-        sensors = controller.sensorDetails,
+        reported = controller.sensorDetails,
         onShowSensorList = controller::showSensorList
     )
 }
@@ -371,8 +371,9 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     private fun updateGPS() {
         sensorDetailsMap["gps"] = SensorDetails(
             host.getString(R.string.gps),
-            "${formatService.formatLocation(gps.location)}\n${gps.satellites ?: 0} ${host.getString(R.string.satellites)}",
-            getGPSStatus(),
+            // The coordinates take the two lines a row has; the satellite count goes with the status it explains.
+            formatService.formatLocation(gps.location),
+            getGPSStatus() + (gps.satellites?.let { "\n$it ${host.getString(R.string.satellites)}" } ?: ""),
             getGPSColor(),
             TrailIcons.Satellite
         )
@@ -448,15 +449,12 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateCellSignal() {
         val signal = cellSignal.signals.maxByOrNull { it.strength }
+        // A dBm of 0 is the radio not reporting one, not a perfect signal; leave it out rather than show it.
+        val dbm = signal?.dbm?.takeIf { it != 0 }?.let { " (${formatService.formatDbm(it)})" } ?: ""
         sensorDetailsMap["cell"] = SensorDetails(
             host.getString(R.string.cell_signal),
-            "${
-                formatService.formatCellNetwork(signal?.network)
-            } · ${formatService.formatPercentage(signal?.strength ?: 0f)} (${
-                formatService.formatDbm(
-                    signal?.dbm ?: 0
-                )
-            })",
+            "${formatService.formatCellNetwork(signal?.network)} · " +
+                "${formatService.formatPercentage(signal?.strength ?: 0f)}$dbm",
             formatService.formatQuality(signal?.quality ?: Quality.Unknown),
             CustomUiUtils.getQualityColor(signal?.quality ?: Quality.Unknown),
             getCellQualityIcon(signal?.quality)
@@ -627,18 +625,32 @@ private fun sensorTone(@ColorInt color: Int): TrailSenseTone = when (color) {
  */
 @Composable
 private fun SensorDetailsScreen(
-    sensors: List<SensorDetails>,
+    reported: List<SensorDetails>,
     onShowSensorList: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // One question: are my sensors working? The count of good sensors and the verdict answer it.
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    // A sensor that gives a reading but doesn't report its accuracy is working: "Unknown" next to a real value read
+    // as a fault, so it says Working and sits with the good ones instead of under Needs attention.
+    val unknownText = stringResource(R.string.unknown)
+    val workingText = stringResource(R.string.sensor_status_working)
+    val sensors = remember(reported, unknownText, workingText) {
+        reported.map {
+            if (it.statusMessage == unknownText && it.description.isNotBlank() && it.description != "-") {
+                it.copy(statusMessage = workingText, statusColor = AppColor.Green.color)
+            } else {
+                it
+            }
+        }
+    }
     val tones = sensors.map { sensorTone(it.statusColor) }
     val good = tones.count { it == TrailSenseTone.Good }
     val moderate = tones.count { it == TrailSenseTone.Caution }
     val poor = tones.count { it == TrailSenseTone.Error }
     TrailSensePage(
-        title = stringResource(R.string.pref_sensor_details_title),
+        // The same name as its tile in Tools.
+        title = stringResource(R.string.sensors),
         onBack = { dispatcher?.onBackPressed() },
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("sensor_details_title"),
@@ -714,16 +726,15 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Text(
-            if (poor + moderate == 0) {
-                stringResource(R.string.sky_sensors_all_good)
-            } else {
-                stringResource(R.string.sky_sensors_attention, poor + moderate)
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
-        )
+        // The Needs attention group right below already counts the rest, so the line only speaks when all is well.
+        if (poor + moderate == 0) {
+            Text(
+                stringResource(R.string.sky_sensors_all_good),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+            )
+        }
     }
 }
 

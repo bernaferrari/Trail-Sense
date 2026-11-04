@@ -267,6 +267,54 @@ private class TurnBackController(private val host: TrailSenseDestinationHost) {
 }
 
 /**
+ * The object: the sun on its arc over a horizon. Its height is the share of the time before you're due back that you
+ * can still spend going on, so it touches the horizon exactly when it's time to turn around, and then warms.
+ */
+@Composable
+private fun TurnBackSun(height: Float, isDue: Boolean, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val h by animateFloatAsState(height, MaterialTheme.motionScheme.slowSpatialSpec(), label = "sunHeight")
+    val sunColor by androidx.compose.animation.animateColorAsState(
+        if (isDue) scheme.error else scheme.tertiary,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "sunColor"
+    )
+    val track = scheme.outlineVariant
+    Canvas(modifier) {
+        val horizon = size.height - 6.dp.toPx()
+        val radius = (size.height - 24.dp.toPx()).coerceAtMost(size.width / 2f - 24.dp.toPx())
+        val center = Offset(size.width / 2f, horizon)
+        // The day's arc, dashed, and the horizon under it.
+        drawArc(
+            color = track,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2f, radius * 2f),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 2.dp.toPx(),
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(4.dp.toPx(), 8.dp.toPx())
+                )
+            )
+        )
+        // From high noon (1) down the right of the arc to the horizon (0).
+        val theta = (1f - h) * (Math.PI.toFloat() / 2f)
+        val sun = Offset(center.x + radius * kotlin.math.sin(theta), center.y - radius * kotlin.math.cos(theta))
+        drawCircle(sunColor.copy(alpha = 0.22f), 26.dp.toPx(), sun)
+        drawCircle(sunColor, 16.dp.toPx(), sun)
+        // The ground hides the sun's lower half as it sets.
+        drawRect(
+            scheme.surface,
+            topLeft = Offset(0f, horizon),
+            size = androidx.compose.ui.geometry.Size(size.width, size.height - horizon)
+        )
+        drawLine(track, Offset(0f, horizon), Offset(size.width, horizon), 3.dp.toPx(), StrokeCap.Round)
+    }
+}
+
+/**
  * Turn back. Until there is a return time, the page is the family's empty state: the question, one medium button to
  * pick a time and a quiet "before dark" choice. Once set, the countdown to the turn-around is the display value with
  * when to turn as the verdict; changing either choice and cancelling sit below it.
@@ -337,9 +385,15 @@ private fun TurnBackScreen(
                     actionModifier = Modifier.testTag("edittext"),
                     action = {
                         // The one shortcut kept beside the action: a quiet text link, not a second button.
+                        // How long until sunset, not its clock time: a time alone read like "now" when the next
+                        // sunset was tomorrow's, or minutes away.
+                        val untilSunset = sunset?.let { Duration.between(now, it) }?.takeIf { !it.isNegative }
                         TrailSenseButton(
-                            text = if (formattedSunset != null) {
-                                stringResource(R.string.places_turn_back_before_dark_at, formattedSunset)
+                            text = if (untilSunset != null) {
+                                stringResource(
+                                    R.string.places_turn_back_before_dark_in,
+                                    formatter.formatDuration(untilSunset, short = true)
+                                )
                             } else {
                                 stringResource(R.string.return_before_dark)
                             },
@@ -360,8 +414,23 @@ private fun TurnBackScreen(
                     .testTag("instructions")
                     .semantics(mergeDescendants = true) {}
                     .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
+                // Time left to go on, out of that plus the walk back: the sun's height above the horizon.
+                val walkBack = if (turnBackTime != null && returnTime != null) {
+                    Duration.between(turnBackTime, returnTime).toMillis().coerceAtLeast(1)
+                } else {
+                    1L
+                }
+                val left = remaining?.toMillis() ?: 0L
+                TurnBackSun(
+                    height = (left.toFloat() / (left + walkBack)).coerceIn(0f, 1f),
+                    isDue = isDue,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                )
                 Text(
                     formattedRemainingTime.orEmpty(),
                     style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),

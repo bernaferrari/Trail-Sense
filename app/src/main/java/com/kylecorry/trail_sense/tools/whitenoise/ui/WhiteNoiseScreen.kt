@@ -212,20 +212,13 @@ fun WhiteNoiseScreen(
                     }
                 )
 
-                Text(
-                    text = soundName,
-                    modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-                // Idle, the line invites the one action instead of just saying "Off".
+                // The sound's name is the checked row below, so the object only carries one line: what a tap does.
                 Text(
                     text = stringResource(
                         if (isRunning) R.string.white_noise_tap_to_stop else R.string.white_noise_tap_to_play
                     ),
-                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.xs),
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
@@ -345,14 +338,15 @@ fun WhiteNoiseScreen(
 }
 
 /**
- * The main action: a large primary cookie that plays and stops the sound. It rounds a little while sound plays, so
- * the shape says the state; there is no idle motion.
+ * The main action: a primary cookie that plays and stops the sound. While it plays it rounds a little and breathes
+ * at the sound's own pace (white noise quick and shallow, pink calmer, brown slow deep swells) as it turns slowly,
+ * so the motion is the sound; idle, it lies still.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayControl(
     isRunning: Boolean,
-    @Suppress("UNUSED_PARAMETER") sound: SleepSound,
+    sound: SleepSound,
     @Suppress("UNUSED_PARAMETER") soundName: String,
     contentDescription: String,
     stateDescription: String,
@@ -368,9 +362,39 @@ private fun PlayControl(
     )
     val morph = remember { androidx.graphics.shapes.Morph(MaterialShapes.Cookie12Sided, MaterialShapes.Cookie9Sided) }
     val blobShape = remember(round) { NoiseMorphShape(morph, round) }
+    val (pace, depth) = when (sound) {
+        SleepSound.WhiteNoise -> 520 to 0.025f
+        SleepSound.PinkNoise -> 1300 to 0.045f
+        SleepSound.BrownNoise -> 2600 to 0.07f
+        else -> 1800 to 0.05f
+    }
+    var breath = 0f
+    var turn = 0f
+    if (isRunning) {
+        val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "breathe")
+        val b by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                androidx.compose.animation.core.tween(pace, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                androidx.compose.animation.core.RepeatMode.Reverse
+            ),
+            label = "breath"
+        )
+        val t by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                androidx.compose.animation.core.tween(pace * 24, easing = androidx.compose.animation.core.LinearEasing)
+            ),
+            label = "turn"
+        )
+        breath = b
+        turn = t
+    }
 
     Box(
-        modifier = modifier.size(232.dp),
+        modifier = modifier.size(184.dp),
         contentAlignment = Alignment.Center
     ) {
         Surface(
@@ -380,7 +404,13 @@ private fun PlayControl(
             color = scheme.primary,
             contentColor = scheme.onPrimary,
             modifier = Modifier
-                .size(208.dp)
+                .size(160.dp)
+                .graphicsLayer {
+                    val scale = 1f + depth * breath
+                    scaleX = scale
+                    scaleY = scale
+                    rotationZ = turn
+                }
                 .trailSensePressScale(interactionSource)
                 .semantics {
                     this.contentDescription = contentDescription
@@ -393,7 +423,7 @@ private fun PlayControl(
             ),
             contentDescription = null,
             tint = scheme.onPrimary,
-            modifier = Modifier.size(72.dp)
+            modifier = Modifier.size(56.dp)
         )
     }
 }

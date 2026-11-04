@@ -334,6 +334,13 @@
     <string name="pref_app_version_title">Version</string>
     <string name="pref_github_title">GitHub</string>
     <string name="pref_email_title">Email developer</string>
+    <string name="about_app_title">About Trail Sense</string>
+    <string name="about_version">Version %s</string>
+    <string name="about_tagline">Outdoor tools that work offline</string>
+    <string name="about_open_source">Open source · MIT</string>
+    <string name="about_feedback_title">Feedback</string>
+    <string name="about_feedback_body">Ideas and bug reports</string>
+    <string name="about_privacy_summary">Trail Sense can\'t reach the internet, so what you record stays on your device.</string>
     <string name="continue_button">CONTINUE</string>
     <!--Preference Keys (DO NOT TRANSLATE)-->
     <string name="pref_use_true_north" translatable="false">use_true_north</string>

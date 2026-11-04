@@ -20,6 +20,7 @@
     <string name="sky_sensors_attention">%d need attention</string>
     <string name="sky_sensors_needs_attention">Needs attention</string>
     <string name="sky_sensors_good_label">Good</string>
+    <string name="sensor_status_working">Working</string>
     <string name="sky_sensors_moderate_label">Moderate</string>
     <string name="sky_sensors_poor_label">Poor</string>
     <string name="sky_sensors_orientation">Motion and orientation</string>
@@ -45,9 +46,12 @@
     <string name="sky_pressure_rising">Rising</string>
     <string name="sky_pressure_falling">Falling</string>
     <string name="sky_pressure_waiting">Waiting for a reading</string>
-    <string name="sky_pressure_verdict_steady">Pressure steady · no change expected</string>
-    <string name="sky_pressure_verdict_rising">Pressure rising · weather may improve</string>
-    <string name="sky_pressure_verdict_falling">Pressure falling · weather may worsen</string>
+    <string name="sky_pressure_rate_rising">Rising %s</string>
+    <string name="sky_pressure_rate_falling">Falling %s</string>
+    <string name="sky_pressure_rate_steady">Steady %s</string>
+    <string name="sky_pressure_outlook_rising">weather may improve</string>
+    <string name="sky_pressure_outlook_falling">weather may worsen</string>
+    <string name="sky_pressure_outlook_steady">no change expected</string>
     <string name="sky_axis_high">High</string>
     <string name="sky_axis_normal">Normal</string>
     <string name="sky_axis_low">Low</string>

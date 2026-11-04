@@ -14,7 +14,6 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
-import android.content.Intent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,12 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Description
-import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MonitorHeart
-import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +53,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -132,20 +126,7 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
             )
         },
         onCompactModeChanged = { host.mainActivity.changeBottomNavLabelsVisibility(it) },
-        onShowAllLabelsChanged = { host.mainActivity.showAllBottomNavLabels(it) },
-        onOpenUrl = { host.startActivity(Intents.url(it)) },
-        onEmailDeveloper = {
-            val intent = Intents.email(
-                host.getString(R.string.email),
-                host.getString(R.string.app_name)
-            )
-            host.startActivity(
-                Intent.createChooser(
-                    intent,
-                    host.getString(R.string.pref_email_title)
-                )
-            )
-        }
+        onShowAllLabelsChanged = { host.mainActivity.showAllBottomNavLabels(it) }
     )
 }
 
@@ -159,8 +140,6 @@ private fun SettingsScreen(
     pluginsEnabled: Boolean,
     onBack: () -> Unit,
     onNavigate: (Int) -> Unit,
-    onOpenUrl: (String) -> Unit,
-    onEmailDeveloper: () -> Unit,
     appearance: @Composable () -> Unit = {},
     onCompactModeChanged: (Boolean) -> Unit = {},
     onShowAllLabelsChanged: (Boolean) -> Unit = {}
@@ -286,46 +265,15 @@ private fun SettingsScreen(
             }
         }
 
+        // About is one row, like WiFi Weakspot's: its page holds the version, the code, feedback and privacy once each.
         trailSenseSection("about", title = aboutTitle) {
             row { position ->
                 SettingsNavRow(
-                    title = stringResource(R.string.pref_app_version_title),
+                    title = stringResource(R.string.about_app_title),
+                    subtitle = stringResource(R.string.about_version, version),
                     icon = rememberVectorPainter(Icons.Rounded.Info),
                     position = position,
-                    value = version,
-                    onClick = null
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.pref_privacy_policy_title),
-                    icon = rememberVectorPainter(Icons.Rounded.Policy),
-                    position = position,
-                    onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.pref_email_title),
-                    icon = rememberVectorPainter(Icons.Rounded.Email),
-                    position = position,
-                    onClick = onEmailDeveloper
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.pref_github_title),
-                    icon = rememberVectorPainter(Icons.Rounded.Code),
-                    position = position,
-                    onClick = { onOpenUrl(GITHUB_URL) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.pref_open_source_licenses_title),
-                    icon = rememberVectorPainter(Icons.Rounded.Description),
-                    position = position,
-                    onClick = { go(R.string.pref_open_source_licenses) }
+                    onClick = { onNavigate(R.id.action_settings_to_about) }
                 )
             }
         }
@@ -426,8 +374,6 @@ private fun SettingsNavRow(
         }
     }
 }
-
-private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
 
 private data class QuickSettings(val units: String, val compact: Boolean, val allLabels: Boolean)
 

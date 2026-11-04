@@ -64,6 +64,7 @@
     <string name="places_turn_back_turn_around_at">Turn around at %1$s</string>
     <string name="places_turn_back_turn_around_now">Turn around now</string>
     <string name="places_turn_back_before_dark_at">Return before dark (%1$s)</string>
+    <string name="places_turn_back_before_dark_in">Return before dark · sunset in %1$s</string>
     <!-- Declination -->
     <string name="places_declination_here">At your location</string>
     <string name="places_declination_with_true_north">with true north</string>

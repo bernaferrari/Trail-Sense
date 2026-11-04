@@ -252,6 +252,8 @@ fun WhistleScreen(
             ) {
                 HoldToWhistlePad(
                     active = currentSignal == WHISTLE,
+                    // A playing call sounds from the same whistle, so the rings spread for it too.
+                    sounding = currentSignal != null,
                     onPress = ::playContinuous,
                     onRelease = ::stopContinuous
                 )
@@ -410,6 +412,7 @@ private fun SignalRhythm(
 @Composable
 private fun HoldToWhistlePad(
     active: Boolean,
+    sounding: Boolean,
     onPress: () -> Unit,
     onRelease: () -> Unit
 ) {
@@ -456,10 +459,13 @@ private fun HoldToWhistlePad(
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
     ) {
-        if (active) {
-            Canvas(Modifier.fillMaxSize()) {
-                val base = size.minDimension * 0.36f
-                val reach = size.minDimension * 0.5f
+        Canvas(Modifier.fillMaxSize()) {
+            val base = size.minDimension * 0.36f
+            val reach = size.minDimension * 0.5f
+            if (!sounding) {
+                // Still, one faint ring around the pad marks it as the thing to press.
+                drawCircle(color = ring.copy(alpha = 0.22f), radius = reach - 3.dp.toPx(), style = Stroke(2.dp.toPx()))
+            } else {
                 repeat(3) { i ->
                     val t = (wave + i / 3f) % 1f
                     drawCircle(

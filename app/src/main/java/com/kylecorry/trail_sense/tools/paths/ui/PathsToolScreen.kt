@@ -698,8 +698,9 @@ private fun PathsScreen(
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
                         // No button here: Backtrack's switch above and the add FAB are the actions.
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
+                        // Centred in the room between Backtrack and the add button, so its copy never sits under it.
                         modifier = Modifier
-                            .fillParentMaxHeight(0.9f)
+                            .fillParentMaxHeight(0.6f)
                             .testTag("waypoints_empty_text")
                     )
                 }
@@ -864,7 +865,7 @@ private fun PathsCreateMenu(
     }
 }
 
-/** Backtrack, the recorder that fills this list, as a quiet group: an on/off switch and its recording interval. */
+/** Backtrack, the recorder that fills this list, as a quiet group: an on/off switch, and its interval while on. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BacktrackRow(
@@ -898,7 +899,8 @@ private fun BacktrackRow(
                 )
             }
         }
-        row { position ->
+        // How often it records only matters while it records.
+        if (isOn) row { position ->
             TrailSenseListItem(
                 title = stringResource(R.string.frequency),
                 position = position,

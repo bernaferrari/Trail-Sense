@@ -15,7 +15,7 @@ class ToolSensorsTest : ToolTestBase(Tools.SENSORS) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(string(R.string.pref_sensor_details_title))
+        hasText(string(R.string.sensors))
 
         // Verify it displays some sensors (Accelerometer and Battery are available on all test devices)
         hasText(string(R.string.accelerometer))

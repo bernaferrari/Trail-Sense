@@ -66,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
+import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.toPath
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -90,7 +91,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
@@ -139,15 +139,6 @@ fun SolarPanelScreen(
     var frame by remember { mutableIntStateOf(0) }
     var isResumed by remember {
         mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
-    }
-
-    LaunchedEffect(Unit) {
-        Alerts.dialog(
-            context,
-            context.getString(R.string.tool_solar_panel_title),
-            context.getString(R.string.solar_panel_instructions),
-            cancelText = null
-        )
     }
 
     DisposableEffect(lifecycleOwner, compass, orientation, gps, view) {
@@ -397,6 +388,13 @@ private fun SolarHero(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
+        // The one instruction, on the page instead of in a dialog that hid the panel on every visit.
+        Text(
+            text = stringResource(R.string.solar_panel_instructions),
+            style = MaterialTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
         PanelSideView(
             currentTilt = orientation.y,
             targetTilt = position.first,
@@ -439,7 +437,13 @@ private fun PanelSideView(
 ) {
     val tilt by animateFloatAsState(currentTilt.coerceIn(-10f, 100f), TrailSenseAnimation.standardSpring, label = "tilt")
     val target = targetTilt.coerceIn(0f, 90f)
-    val sunShape = remember { MaterialShapes.Sunny.toPath() }
+    // The sun's rays settle into a round disc as the panel lines up with it (shape is the state).
+    val sunMorph = remember { Morph(MaterialShapes.Sunny, MaterialShapes.Circle) }
+    val roundness by animateFloatAsState(
+        if (aligned) 1f else 0f,
+        MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "sunRound"
+    )
     val sunColor = MaterialTheme.colorScheme.tertiary
     Canvas(modifier = modifier.clipToBounds()) {
         val ground = size.height - 10.dp.toPx()
@@ -474,7 +478,7 @@ private fun PanelSideView(
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 8.dp.toPx()))
         )
         val sunSize = 44.dp.toPx()
-        val path = android.graphics.Path(sunShape).apply {
+        val path = sunMorph.toPath(roundness).apply {
             transform(android.graphics.Matrix().apply {
                 setScale(sunSize, sunSize)
                 postTranslate(sun.x - sunSize / 2f, sun.y - sunSize / 2f)
@@ -498,6 +502,10 @@ private fun PanelSideView(
         }
         drawLine(ink.copy(alpha = 0.7f), pivot, Offset(pivot.x, ground), 5.dp.toPx(), StrokeCap.Round)
         val (cs, ce) = ends(tilt)
+        // Aligned, the panel's face catches the light: a soft warm glow around it.
+        if (roundness > 0f) {
+            drawLine(sunColor.copy(alpha = 0.35f * roundness), cs, ce, thickness * 2.4f, StrokeCap.Round)
+        }
         drawLine(color, cs, ce, thickness, StrokeCap.Round)
         drawCircle(ink, 6.dp.toPx(), pivot)
     }

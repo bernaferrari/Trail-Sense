@@ -72,6 +72,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.withStyle
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -663,20 +666,6 @@ private fun WeatherHost(
                 }
             }
 
-            // Once it is on (or once there is a forecast), the monitor is one row: its state and how often it reads.
-            if (!isEmpty || monitorState == FeatureState.On) {
-                item(key = "weather_monitor") {
-                    WeatherMonitorRow(
-                        state = monitorState,
-                        frequency = monitorFrequency,
-                        formatService = formatService,
-                        onSubtitleClick = onChangeMonitorFrequency,
-                        onPlayClick = onToggleMonitor,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
             item(key = "weather_chart") {
                 WeatherPressureSection(
                     pressure = pressure,
@@ -688,6 +677,20 @@ private fun WeatherHost(
                     onMarkerSelected = onPressureMarkerSelected,
                     showChart = !isEmpty
                 )
+            }
+
+            // The monitor is a setting, not weather: one row after the pressure it records, not above it.
+            if (!isEmpty || monitorState == FeatureState.On) {
+                item(key = "weather_monitor") {
+                    WeatherMonitorRow(
+                        state = monitorState,
+                        frequency = monitorFrequency,
+                        formatService = formatService,
+                        onSubtitleClick = onChangeMonitorFrequency,
+                        onPlayClick = onToggleMonitor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             // The other readings as one headerless group: the page title already says "Weather".
@@ -766,24 +769,38 @@ private fun WeatherPressureSection(
             }
         }
         if (tendency?.trailingText != null) {
-            Text(
-                stringResource(
-                    when {
-                        tendencyDirection > 0 -> R.string.sky_pressure_verdict_rising
-                        tendencyDirection < 0 -> R.string.sky_pressure_verdict_falling
-                        else -> R.string.sky_pressure_verdict_steady
-                    }
-                ),
-                style = MaterialTheme.typography.bodyLarge,
-                color = scheme.onSurface,
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.xxs)
+            // One line: the change that matters, in emphasis, then what it means. (It used to say "rising" in
+            // words, then the rate in the smallest type under it.)
+            val rate = stringResource(
+                when {
+                    tendencyDirection > 0 -> R.string.sky_pressure_rate_rising
+                    tendencyDirection < 0 -> R.string.sky_pressure_rate_falling
+                    else -> R.string.sky_pressure_rate_steady
+                },
+                tendency.trailingText
+            )
+            val outlook = stringResource(
+                when {
+                    tendencyDirection > 0 -> R.string.sky_pressure_outlook_rising
+                    tendencyDirection < 0 -> R.string.sky_pressure_outlook_falling
+                    else -> R.string.sky_pressure_outlook_steady
+                }
             )
             Text(
-                tendency.trailingText,
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                androidx.compose.ui.text.buildAnnotatedString {
+                    withStyle(
+                        androidx.compose.ui.text.SpanStyle(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                            color = scheme.onSurface
+                        )
+                    ) { append(rate) }
+                    append(" · ")
+                    append(outlook)
+                },
+                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
                 color = scheme.onSurfaceVariant,
                 modifier = Modifier
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.xxs)
                     .testTag("weather_item_2")
             )
         }
@@ -1092,7 +1109,25 @@ private fun WeatherHeroCard(
                 .padding(TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // While the forecast updates, the shape turns slowly (its glyph stays upright) instead of a status line.
+            val spin = if (isUpdating) {
+                val turn by androidx.compose.animation.core.rememberInfiniteTransition(label = "updating").animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                        androidx.compose.animation.core.tween(6000, easing = androidx.compose.animation.core.LinearEasing)
+                    ),
+                    label = "turn"
+                )
+                turn
+            } else {
+                0f
+            }
             SkyFocalShape(
+                modifier = Modifier
+                    .graphicsLayer { rotationZ = spin }
+                    .then(if (isUpdating) Modifier.testTag("weather_updating") else Modifier),
+                iconRotation = -spin,
                 // The clear-sky glyph is a bare disc; a sun with rays reads as the sun inside the shape.
                 icon = if (state.condition == WeatherCondition.Clear) {
                     androidx.compose.material.icons.Icons.Rounded.WbSunny
@@ -1113,31 +1148,12 @@ private fun WeatherHeroCard(
             )
             if (state.subtitle.isNotEmpty()) {
                 Text(
-                    text = state.subtitle,
+                    text = state.subtitle.replaceFirstChar { it.uppercase() },
                     modifier = Modifier.padding(top = TrailSenseSpacing.xs),
                     style = MaterialTheme.typography.bodyLarge,
                     color = secondaryContent,
                     textAlign = TextAlign.Center
                 )
-            }
-            AnimatedVisibility(visible = isUpdating) {
-                Row(
-                    modifier = Modifier
-                        .padding(top = TrailSenseSpacing.md)
-                        .testTag("weather_updating"),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    androidx.compose.material3.CircularWavyProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = content
-                    )
-                    Text(
-                        text = stringResource(R.string.updating_weather),
-                        modifier = Modifier.padding(start = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = secondaryContent
-                    )
-                }
             }
         }
     }

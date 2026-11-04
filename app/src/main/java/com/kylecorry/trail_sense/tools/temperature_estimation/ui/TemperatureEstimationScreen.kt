@@ -152,7 +152,12 @@ private fun TemperatureEstimationScreen(
     val roundedElevation = initialElevation.value.roundPlaces(
         Units.getDecimalPlaces(initialElevation.units)
     )
-    var baseElevationText by remember { mutableStateOf(roundedElevation.toString()) }
+    // 877, not 877.0: a whole number reads without its trailing zero.
+    var baseElevationText by remember {
+        mutableStateOf(
+            if (roundedElevation % 1f == 0f) roundedElevation.toInt().toString() else roundedElevation.toString()
+        )
+    }
     var baseElevationUnit by remember { mutableStateOf(initialElevation.units) }
     var destElevationText by remember { mutableStateOf("") }
     var destElevationUnit by remember { mutableStateOf(initialElevation.units) }
@@ -232,12 +237,21 @@ private fun TemperatureEstimationScreen(
                 Temperature.from(it, baseTemperatureUnit).convertTo(temperatureUnits).value
             }
             val delta = estimated?.takeIf { !it.value.isNaN() }?.value?.let { e -> baseInOutput?.let { e - it } }
-            TemperatureEstimateHero(
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                TemperatureHill(
+                    here = baseElevationText.toFloatOrNull()?.let { Distance.from(it, baseElevationUnit).meters().value },
+                    there = destElevationText.toFloatOrNull()?.let { Distance.from(it, destElevationUnit).meters().value },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(168.dp)
+                )
+                TemperatureEstimateHero(
                 title = title,
                 celsius = estimateCelsius,
                 delta = delta?.takeIf { kotlin.math.abs(it) >= 0.05f },
                 unitSymbol = formatService.getTemperatureUnitName(temperatureUnits, true)
-            )
+                )
+            }
         }
 
         trailSenseSection(key = "here", title = hereTitle) {
@@ -388,6 +402,7 @@ private fun TemperatureEstimateHero(
             .fillMaxWidth()
             .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
             .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         if (celsius == null) {
@@ -433,6 +448,96 @@ private fun TemperatureEstimateHero(
                 )
             }
         }
+    }
+}
+
+/**
+ * The object: one hill with you on its slope (a ring) and where you're going (a filled dot), joined by a dashed trail.
+ * The dots climb or drop with springs as the elevations change, so the gap between them is the climb the estimate
+ * is about. With no destination yet, only you are on the hill.
+ */
+@Composable
+private fun TemperatureHill(here: Float?, there: Float?, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val low = 0.2f
+    // A 1500 m climb spans most of the hill; smaller ones climb less of it.
+    val span = if (here != null && there != null) {
+        (kotlin.math.abs(there - here) / 1500f).coerceIn(0f, 1f) * 0.66f
+    } else {
+        0f
+    }
+    val hereTarget = if (here != null && there != null && here > there) low + span else low
+    val thereTarget = if (here != null && there != null && there > here) low + span else low
+    val spec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
+    val hereF by androidx.compose.animation.core.animateFloatAsState(hereTarget, spec, label = "here")
+    val thereF by androidx.compose.animation.core.animateFloatAsState(thereTarget, spec, label = "there")
+    val showThere = there != null && here != null
+    val thereAlpha by androidx.compose.animation.core.animateFloatAsState(
+        if (showThere) 1f else 0f,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "thereAlpha"
+    )
+    androidx.compose.foundation.Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val top = 8.dp.toPx()
+        val peakX = w * 0.62f
+        // The left slope rises as a quarter sine, so a height maps back to one point on it.
+        fun leftPoint(f: Float): androidx.compose.ui.geometry.Offset {
+            val t = (2f / Math.PI.toFloat()) * kotlin.math.asin(f.coerceIn(0f, 1f))
+            return androidx.compose.ui.geometry.Offset(peakX * t, h - (h - top) * f)
+        }
+        val hill = androidx.compose.ui.graphics.Path().apply {
+            moveTo(0f, h)
+            var t = 0f
+            while (t <= 1f) {
+                val f = kotlin.math.sin(t * Math.PI.toFloat() / 2f)
+                lineTo(peakX * t, h - (h - top) * f)
+                t += 0.02f
+            }
+            var u = 0f
+            while (u <= 1f) {
+                val f = 1f - (1f - kotlin.math.cos(u * Math.PI.toFloat() / 2f)) * 0.55f
+                lineTo(peakX + (w - peakX) * u, h - (h - top) * f)
+                u += 0.02f
+            }
+            lineTo(w, h)
+            close()
+        }
+        drawPath(hill, scheme.surfaceContainerHighest)
+
+        val lift = 10.dp.toPx()
+        val youAt = leftPoint(hereF).let { it.copy(y = it.y - lift) }
+        val thereAt = leftPoint(thereF).let { it.copy(y = it.y - lift) }
+        if (thereAlpha > 0f) {
+            // The trail between them, along the slope.
+            val trail = androidx.compose.ui.graphics.Path()
+            val steps = 24
+            for (i in 0..steps) {
+                val f = hereF + (thereF - hereF) * i / steps
+                val p = leftPoint(f)
+                if (i == 0) trail.moveTo(p.x, p.y - lift) else trail.lineTo(p.x, p.y - lift)
+            }
+            drawPath(
+                trail,
+                scheme.primary.copy(alpha = 0.6f * thereAlpha),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 3.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                        floatArrayOf(2.dp.toPx(), 7.dp.toPx())
+                    )
+                )
+            )
+            drawCircle(scheme.primary.copy(alpha = thereAlpha), 9.dp.toPx(), thereAt)
+        }
+        drawCircle(scheme.surface, 9.dp.toPx(), youAt)
+        drawCircle(
+            scheme.primary,
+            8.dp.toPx(),
+            youAt,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
+        )
     }
 }
 
