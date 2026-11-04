@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -479,17 +480,6 @@ private fun BatteryScreen(
             }
         }
 
-        trailSenseSection(key = "low_power") {
-            row { position ->
-                TrailSenseSwitchRow(
-                    label = stringResource(R.string.pref_low_power_mode_title),
-                    checked = isLowPowerEnabled,
-                    onCheckedChange = { onToggleLowPower() },
-                    position = position,
-                    modifier = Modifier.testTag("low_power_mode_switch")
-                )
-            }
-        }
 
         trailSenseSection(
             key = "running_services",
@@ -513,6 +503,15 @@ private fun BatteryScreen(
             title = systemTitle,
             footer = systemFooter
         ) {
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.pref_low_power_mode_title),
+                    checked = isLowPowerEnabled,
+                    onCheckedChange = { onToggleLowPower() },
+                    position = position,
+                    modifier = Modifier.testTag("low_power_mode_switch")
+                )
+            }
             tips.forEach { tip ->
                 row { position ->
                     SystemTipRow(
@@ -522,6 +521,11 @@ private fun BatteryScreen(
                     )
                 }
             }
+        }
+
+        // Clear of the gesture bar.
+        item("bottom_inset") {
+            Spacer(Modifier.navigationBarsPadding())
         }
     }
 }
@@ -726,6 +730,7 @@ private fun SystemTipRow(
         title = tip.name,
         subtitle = tip.description,
         usage = tip.batteryUsage,
+        calm = true,
         position = position,
         onClick = if (tip.manage != null) onOpen else null
     ) {
@@ -747,9 +752,11 @@ private fun UsageRow(
     usage: BatteryUsage,
     position: TrailSenseGroupPosition,
     onClick: (() -> Unit)?,
+    calm: Boolean = false,
     trailing: @Composable () -> Unit
 ) {
-    val colors = trailSenseToneColors(getUsageTone(usage))
+    // A tip is advice, not an alarm: it stays tonal whatever its cost.
+    val colors = trailSenseToneColors(if (calm) TrailSenseTone.Secondary else getUsageTone(usage))
     val body: @Composable () -> Unit = {
         Row(
             modifier = Modifier
@@ -760,7 +767,7 @@ private fun UsageRow(
         ) {
             TrailSenseShapeBadge(
                 icon = getUsageIcon(usage),
-                shape = getUsageShape(usage).toShape(),
+                shape = (if (calm) MaterialShapes.Cookie6Sided else getUsageShape(usage)).toShape(),
                 size = 44.dp,
                 containerColor = colors.container,
                 contentColor = colors.content

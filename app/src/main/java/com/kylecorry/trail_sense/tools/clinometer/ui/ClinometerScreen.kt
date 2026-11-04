@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.navigationBarsPadding
 import android.annotation.SuppressLint
 import android.content.Context
@@ -827,6 +828,7 @@ private fun ClinometerHost(
                     }
                 }
                 if (views.clinometerInstructions.isVisible) {
+                    views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.35f))
                     ClinometerInstruction(icon = TrailIcons.RotateFlatToPortrait)
                 }
                 if (views.cameraClinometerInstructions.isVisible) {
@@ -856,7 +858,7 @@ private fun ClinometerHost(
                     TrailSenseStat(
                         label = measurement.description,
                         value = if (measurement.isSet) measurement.title else stringResource(R.string.measure),
-                        supportingText = if (measurement.isSet) null else measurement.title,
+                        supportingText = null,
                         tone = if (measurement.isSet) TrailSenseTone.Primary else TrailSenseTone.Secondary,
                         icon = TrailIcons.Ruler,
                         onClick = { views.clinometerTitle.onRightButtonClick?.invoke() }
@@ -903,28 +905,34 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     )
 }
 
-/** Shown while the phone is held the wrong way: the rotation hint large in a cookie, one line under it. */
+/** Shown while the phone is held the wrong way: a solid pill over the dimmed dial, the rotation hint inside it. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ClinometerInstruction(icon: ImageVector) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shadowElevation = 3.dp
     ) {
-        TrailSenseShapeBadge(
-            icon = icon,
-            shape = MaterialShapes.Cookie12Sided.toShape(),
-            size = 132.dp,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-        Text(
-            text = stringResource(R.string.clinometer_rotate_device),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
+        Row(
+            modifier = Modifier.padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.xl, top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TrailSenseShapeBadge(
+                icon = icon,
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 52.dp,
+                containerColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Text(
+                text = stringResource(R.string.clinometer_rotate_device),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     }
 }
 

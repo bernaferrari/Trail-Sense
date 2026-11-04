@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools
 
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBarsPadding
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import androidx.compose.animation.animateColorAsState
@@ -236,6 +241,7 @@ fun WhistleScreen(
                 .widthIn(max = TrailSenseSize.maximumContentWidth)
                 .align(Alignment.TopCenter)
                 .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
                 .padding(
                     start = TrailSenseSpacing.lg,
                     end = TrailSenseSpacing.lg,
@@ -251,10 +257,30 @@ fun WhistleScreen(
                 onRelease = ::stopContinuous
             )
 
-            // Emergency calls first, then the conversational ones; each row draws its own rhythm.
+            // Emergency calls first, as a pair of big tiles; then the conversational ones, each drawing its rhythm.
             val (emergency, calls) = signals.partition { it.loop }
+            Column(Modifier.fillMaxWidth()) {
+                TrailSenseGroupHeader(stringResource(R.string.whistle_emergency))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                ) {
+                    emergency.forEachIndexed { index, signal ->
+                        EmergencyTile(
+                            signal = signal,
+                            playing = currentSignal == signal.key,
+                            shape = trailSenseGridCellShape(index, emergency.size, 0, 1),
+                            onClick = { toggleSignal(signal) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        )
+                    }
+                }
+            }
             listOf(
-                stringResource(R.string.whistle_emergency) to emergency,
                 stringResource(R.string.whistle_signals) to calls
             ).forEach { (title, group) ->
                 TrailSenseRowGroup(
@@ -366,6 +392,46 @@ private fun WhistleSignalRow(
     }
 }
 
+/** An emergency call as a tall error-toned tile: solid starburst, name, its rhythm, and whether it repeats. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun EmergencyTile(
+    signal: WhistleSignal,
+    playing: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val container by animateColorAsState(
+        if (playing) scheme.error else scheme.errorContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "emergencyTile"
+    )
+    val content = if (playing) scheme.onError else scheme.onErrorContainer
+    Surface(onClick = onClick, modifier = modifier, shape = shape, color = container, contentColor = content) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            TrailSenseShapeBadge(
+                icon = if (playing) TrailIcons.BaselineStop24 else signal.icon,
+                shape = signal.shape.toShape(),
+                size = 56.dp,
+                containerColor = if (playing) scheme.onError else scheme.error,
+                contentColor = if (playing) scheme.error else scheme.onError
+            )
+            Text(signal.label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            SignalRhythm(signal = signal.signal, color = if (playing) scheme.onError else scheme.error, playing = playing)
+            Text(
+                stringResource(if (playing) R.string.whistle_playing else R.string.whistle_repeats_short),
+                style = MaterialTheme.typography.labelLarge,
+                color = content.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
 /** The pattern as blasts: each "on" is a rounded bar as long as it sounds, gaps as long as the silence (capped). */
 @Composable
 private fun SignalRhythm(signal: List<Signal>, color: androidx.compose.ui.graphics.Color, playing: Boolean) {
@@ -451,7 +517,7 @@ private fun HoldToWhistlePad(
 
     Box(
         modifier = Modifier
-            .widthIn(max = 340.dp)
+            .widthIn(max = 260.dp)
             .fillMaxWidth()
             .aspectRatio(1f),
         contentAlignment = Alignment.Center

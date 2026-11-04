@@ -64,6 +64,16 @@ class ClinometerView : IClinometerView {
             displayStartAngle = value?.plus(90f)
         }
 
+    /** The dial even while the phone is held the wrong way, so the screen's centre is never empty. */
+    @Composable
+    fun Preview(modifier: Modifier = Modifier) {
+        ClinometerContent(
+            angle = displayAngle,
+            startAngle = null,
+            modifier = modifier.fillMaxSize()
+        )
+    }
+
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         if (viewInvisible) {
