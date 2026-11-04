@@ -12,6 +12,11 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
@@ -324,6 +329,7 @@ fun SolarPanelScreen(
                     frame = frame,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = TrailSenseSpacing.sm)
                         .testTag("solar_content")
                 )
             }
@@ -419,7 +425,7 @@ private fun SolarHero(
 }
 
 /**
- * The side view: a ground line, the target as a ghost panel, the live panel as a solid rounded bar on its post,
+ * The side view: a ground line, the target as a dashed outline of the panel, the live panel as a solid rounded bar on its post,
  * and the sun as a scalloped badge out along the target panel's face with a dashed ray down to it.
  */
 @Composable
@@ -435,10 +441,12 @@ private fun PanelSideView(
     val target = targetTilt.coerceIn(0f, 90f)
     val sunShape = remember { MaterialShapes.Sunny.toPath() }
     val sunColor = MaterialTheme.colorScheme.tertiary
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.clipToBounds()) {
         val ground = size.height - 10.dp.toPx()
-        val pivot = Offset(size.width * 0.34f, ground - 22.dp.toPx())
-        val length = (size.width * 0.42f).coerceAtMost(size.height * 1.1f)
+        // Half a panel, sized so a panel stood on end still clears the ground below and the top above.
+        val half = (size.width * 0.21f).coerceAtMost((ground - 28.dp.toPx()) / 2f)
+        val length = half * 2f
+        val pivot = Offset(size.width * 0.34f, ground - half - 14.dp.toPx())
         // Ground.
         drawLine(ink.copy(alpha = 0.3f), Offset(0f, ground), Offset(size.width, ground), 3.dp.toPx(), StrokeCap.Round)
 
@@ -474,12 +482,23 @@ private fun PanelSideView(
         }
         drawPath(path.asComposePath(), sunColor)
 
-        // The ghost of where the panel should be, then the post and the live panel.
-        val (gs, ge) = ends(target)
-        drawLine(ink.copy(alpha = 0.28f), gs, ge, 14.dp.toPx(), StrokeCap.Round)
+        // The target as a dashed outline of the panel, then the post and the live panel.
+        val thickness = 14.dp.toPx()
+        rotate(target, pivot) {
+            drawRoundRect(
+                color = ink.copy(alpha = 0.6f),
+                topLeft = Offset(pivot.x - half, pivot.y - thickness / 2f),
+                size = Size(length, thickness),
+                cornerRadius = CornerRadius(thickness / 2f),
+                style = Stroke(
+                    width = 2.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+                )
+            )
+        }
         drawLine(ink.copy(alpha = 0.7f), pivot, Offset(pivot.x, ground), 5.dp.toPx(), StrokeCap.Round)
         val (cs, ce) = ends(tilt)
-        drawLine(color, cs, ce, 14.dp.toPx(), StrokeCap.Round)
+        drawLine(color, cs, ce, thickness, StrokeCap.Round)
         drawCircle(ink, 6.dp.toPx(), pivot)
     }
 }
@@ -535,10 +554,6 @@ private fun SolarPanelReadout(
                 else -> null
             },
             arrowTag = if (altitudeDiff > 0) "arrow_up" else "arrow_down",
-            move = stringResource(
-                if (altitudeDiff > 0) R.string.solar_tilt_up else R.string.solar_tilt_down,
-                formatter.formatDegrees(altitudeDiff.absoluteValue)
-            ),
             closeness = 1f - (altitudeDiff.absoluteValue / 90f),
             shape = MaterialShapes.Cookie9Sided,
             position = TrailSenseGroupPosition(isFirst = true, isLast = false)
@@ -558,10 +573,6 @@ private fun SolarPanelReadout(
                 else -> null
             },
             arrowTag = if (azimuthDiff < 0) "arrow_left" else "arrow_right",
-            move = stringResource(
-                if (azimuthDiff < 0) R.string.solar_turn_left else R.string.solar_turn_right,
-                formatter.formatDegrees(azimuthDiff.absoluteValue)
-            ),
             closeness = 1f - (azimuthDiff.absoluteValue / 180f),
             shape = MaterialShapes.Cookie6Sided,
             position = TrailSenseGroupPosition(isFirst = false, isLast = true)
@@ -570,8 +581,8 @@ private fun SolarPanelReadout(
 }
 
 /**
- * One axis as a quiet row: its name, what to do ("Tilt up 65°", or "Aligned"), the target and where the phone is
- * now, and a small arrow pointing the way (a check once aligned).
+ * One axis as a quiet row: its name, the target and where the phone is now, and a small arrow pointing the way
+ * (a check once aligned). What to do is said once, in the headline above.
  */
 @Composable
 private fun SolarReadoutCard(
@@ -585,7 +596,6 @@ private fun SolarReadoutCard(
     completeTag: String,
     arrowRotation: Float?,
     arrowTag: String,
-    move: String,
     @Suppress("UNUSED_PARAMETER") closeness: Float,
     shape: androidx.graphics.shapes.RoundedPolygon,
     position: TrailSenseGroupPosition
@@ -606,17 +616,12 @@ private fun SolarReadoutCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
+                // The move itself is the headline above; the row only names the axis and its two angles.
                 Text(
                     text = label,
                     modifier = Modifier.testTag(labelTag),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (isComplete) stringResource(R.string.solar_aligned) else move,
-                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onSurface
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                     Text(
