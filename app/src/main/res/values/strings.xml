@@ -2199,5 +2199,8 @@
     <string name="whistle_signal_repeats">Repeats until you stop it</string>
     <string name="light_meter_intensity">Intensity</string>
     <string name="light_meter_reach">Beam distance</string>
+    <string name="clinometer_mode_phone">Phone</string>
+    <string name="clinometer_locked">Reading locked</string>
+    <string name="ruler_tap_hint">Tap the ruler at the end of what you\'re measuring</string>
     <string name="camera_unavailable_description">Allow camera access in settings to use this tool.</string>
 </resources>

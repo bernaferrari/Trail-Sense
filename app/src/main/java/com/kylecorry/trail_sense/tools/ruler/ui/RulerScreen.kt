@@ -60,16 +60,28 @@ import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RulerScreen(
     modifier: Modifier = Modifier
@@ -123,9 +135,16 @@ fun RulerScreen(
         }.orEmpty()
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val cmLabel = getUnitText(DistanceUnits.Centimeters)
+    val inLabel = getUnitText(DistanceUnits.Inches)
+    val ratioLabel = stringResource(R.string.map_scale_ratio)
+    val verbalLabel = stringResource(R.string.map_scale_verbal)
+
+    // The ruler runs down the screen's edge; the measurement is the hero beside it, then the units, then the map
+    // scale that turns the measurement into a distance on the ground.
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_ruler_title),
+        modifier = modifier
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
             RulerCanvas(
@@ -149,112 +168,96 @@ fun RulerScreen(
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
                     .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
+                    .padding(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.xxxl
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                // Unit toggle
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        TrailSenseSpacing.xs,
-                        Alignment.CenterHorizontally
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
                 ) {
-                    TrailSenseChip(
-                        text = getUnitText(DistanceUnits.Centimeters),
-                        selected = rulerUnits == DistanceUnits.Centimeters,
-                        onClick = { rulerUnits = DistanceUnits.Centimeters },
-                        modifier = Modifier.testTag("ruler_unit_btn")
+                    TrailSenseReading(
+                        value = measurement.ifEmpty { "--" },
+                        style = MaterialTheme.typography.displayMedium,
+                        modifier = Modifier.testTag("measurement")
                     )
-                    TrailSenseChip(
-                        text = getUnitText(DistanceUnits.Inches),
-                        selected = rulerUnits == DistanceUnits.Inches,
-                        onClick = { rulerUnits = DistanceUnits.Inches }
-                    )
-                }
-
-                // Hero readout
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Column(
-                        modifier = Modifier.padding(TrailSenseSpacing.xl),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                    ) {
+                    if (mapDistance.isNotEmpty()) {
                         Text(
-                            text = measurement,
-                            modifier = Modifier.testTag("measurement"),
-                            style = MaterialTheme.typography.displaySmall.copy(
-                                fontFeatureSettings = "tnum"
-                            ),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            text = mapDistance,
+                            modifier = Modifier.testTag("map_distance"),
+                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                            color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
                         )
-                        if (mapDistance.isNotEmpty()) {
-                            Text(
-                                text = mapDistance,
-                                modifier = Modifier.testTag("map_distance"),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                    } else if (measurement.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.ruler_tap_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
 
-                // Map scale controls
-                TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.map_scale_title),
-                        modifier = Modifier.testTag("map_scale_title"),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
+                TrailSenseConnectedChoice(
+                    options = listOf(
+                        TrailSenseChoice(DistanceUnits.Centimeters, cmLabel),
+                        TrailSenseChoice(DistanceUnits.Inches, inLabel)
+                    ),
+                    selected = rulerUnits,
+                    onSelect = { rulerUnits = it },
+                    modifier = Modifier.testTag("ruler_unit_btn")
+                )
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TrailSenseGroupHeader(
+                        stringResource(R.string.map_scale_title),
+                        modifier = Modifier.testTag("map_scale_title")
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-                    Row(
+                    TrailSenseConnectedChoice(
+                        options = listOf(
+                            TrailSenseChoice(MapScaleMode.Fractional, ratioLabel),
+                            TrailSenseChoice(MapScaleMode.Relational, verbalLabel)
+                        ),
+                        selected = scaleMode,
+                        onSelect = { scaleMode = it },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("linearLayout3"),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            TrailSenseSpacing.xs,
-                            Alignment.CenterHorizontally
-                        )
-                    ) {
-                        TrailSenseChip(
-                            text = stringResource(R.string.map_scale_ratio),
-                            selected = scaleMode == MapScaleMode.Fractional,
-                            onClick = { scaleMode = MapScaleMode.Fractional },
-                            modifier = Modifier.testTag("map_ratio_btn")
-                        )
-                        TrailSenseChip(
-                            text = stringResource(R.string.map_scale_verbal),
-                            selected = scaleMode == MapScaleMode.Relational,
-                            onClick = { scaleMode = MapScaleMode.Relational },
-                            modifier = Modifier.testTag("map_verbal_btn")
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    if (scaleMode == MapScaleMode.Fractional) {
-                        FractionalScaleInput(
-                            from = fractionalFrom,
-                            to = fractionalTo,
-                            onFromChanged = { fractionalFrom = it },
-                            onToChanged = { fractionalTo = it },
-                            modifier = Modifier.testTag("fractional_map_scale")
-                        )
-                    } else {
-                        VerbalScaleInput(
-                            from = verbalFrom,
-                            to = verbalTo,
-                            onFromChanged = { verbalFrom = it },
-                            onToChanged = { verbalTo = it },
-                            formatService = formatService,
-                            modifier = Modifier.testTag("verbal_map_scale")
-                        )
+                            .padding(bottom = TrailSenseSpacing.md)
+                            .testTag(if (scaleMode == MapScaleMode.Fractional) "map_ratio_btn" else "map_verbal_btn")
+                    )
+                    val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+                    val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+                    AnimatedContent(
+                        targetState = scaleMode,
+                        transitionSpec = { fadeIn(enterSpec) togetherWith fadeOut(exitSpec) },
+                        label = "mapScaleMode"
+                    ) { mode ->
+                        if (mode == MapScaleMode.Fractional) {
+                            FractionalScaleInput(
+                                from = fractionalFrom,
+                                to = fractionalTo,
+                                onFromChanged = { fractionalFrom = it },
+                                onToChanged = { fractionalTo = it },
+                                modifier = Modifier.testTag("fractional_map_scale")
+                            )
+                        } else {
+                            VerbalScaleInput(
+                                from = verbalFrom,
+                                to = verbalTo,
+                                onFromChanged = { verbalFrom = it },
+                                onToChanged = { verbalTo = it },
+                                formatService = formatService,
+                                modifier = Modifier.testTag("verbal_map_scale")
+                            )
+                        }
                     }
                 }
             }
@@ -456,6 +459,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
     }
 }
 
+/** "1 : 24000" as one group: the two numbers of the ratio, the separator between them in the label. */
 @Composable
 private fun FractionalScaleInput(
     from: String,
@@ -464,38 +468,36 @@ private fun FractionalScaleInput(
     onToChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
-        OutlinedTextField(
+        TrailSenseInputField(
             value = from,
             onValueChange = onFromChanged,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("fractional_map_from"),
-            label = { Text(stringResource(R.string.distance_from)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
+            label = stringResource(R.string.distance_from),
+            position = TrailSenseGroupPosition(isFirst = true, isLast = false),
+            modifier = Modifier.testTag("fractional_map_from")
         )
-        Text(
-            text = stringResource(R.string.map_fractional_separator),
-            modifier = Modifier.testTag("textView12")
-        )
-        OutlinedTextField(
+        TrailSenseInputField(
             value = to,
             onValueChange = onToChanged,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("fractional_map_to"),
-            label = { Text(stringResource(R.string.distance_to)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
+            label = stringResource(R.string.distance_to),
+            position = TrailSenseGroupPosition(isFirst = false, isLast = true),
+            leadingIcon = {
+                Text(
+                    text = stringResource(R.string.map_fractional_separator),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("textView12")
+                )
+            },
+            modifier = Modifier.testTag("fractional_map_to")
         )
     }
 }
 
+/** "1 cm = 1 km" as one group: each side a number with its unit picked from the field. */
 @Composable
 private fun VerbalScaleInput(
     from: Distance?,
@@ -505,22 +507,18 @@ private fun VerbalScaleInput(
     formatService: FormatService,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+    ) {
         DistanceAmountInput(
             label = stringResource(R.string.distance_from),
             value = from,
             units = formatService.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
             defaultUnit = DistanceUnits.Centimeters,
             onValueChange = onFromChanged,
+            position = TrailSenseGroupPosition(isFirst = true, isLast = false),
             modifier = Modifier.testTag("verbal_map_scale_from")
-        )
-        Text(
-            text = stringResource(R.string.distance_to),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(top = 8.dp, bottom = 8.dp)
-                .testTag("verbal_map_scale_to_label"),
-            style = MaterialTheme.typography.bodyMedium
         )
         DistanceAmountInput(
             label = stringResource(R.string.distance_to),
@@ -528,6 +526,7 @@ private fun VerbalScaleInput(
             units = formatService.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
             defaultUnit = DistanceUnits.Meters,
             onValueChange = onToChanged,
+            position = TrailSenseGroupPosition(isFirst = false, isLast = true),
             modifier = Modifier.testTag("verbal_map_scale_to")
         )
     }
@@ -540,6 +539,7 @@ private fun DistanceAmountInput(
     units: List<DistanceUnits>,
     defaultUnit: DistanceUnits,
     onValueChange: (Distance?) -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val formatService = FormatService.getInstance(LocalContext.current)
@@ -547,73 +547,32 @@ private fun DistanceAmountInput(
         mutableStateOf(value?.let { DecimalFormatter.format(it.value, 5, false) }.orEmpty())
     }
     var unit by remember { mutableStateOf(value?.units ?: defaultUnit) }
+    var isPickingUnit by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = amount,
-            onValueChange = {
-                amount = it
-                onValueChange(it.toFloatOrNull()?.let { amountValue -> Distance.from(amountValue, unit) })
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(label) },
-            suffix = { Text(formatService.getDistanceUnitName(unit, true)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
-        )
-        UnitPicker(
-            label = stringResource(R.string.units),
-            selected = unit,
+    TrailSenseInputField(
+        value = amount,
+        onValueChange = {
+            amount = it
+            onValueChange(it.toFloatOrNull()?.let { amountValue -> Distance.from(amountValue, unit) })
+        },
+        label = label,
+        position = position,
+        unit = formatService.getDistanceUnitName(unit, true),
+        onUnitClick = { isPickingUnit = true },
+        modifier = modifier
+    )
+
+    if (isPickingUnit) {
+        TrailSenseOptionsDialog(
+            title = stringResource(R.string.units),
             options = units.map { formatService.getDistanceUnitName(it) to it },
-            onSelected = {
+            selected = unit,
+            onSelect = {
                 unit = it
+                isPickingUnit = false
                 onValueChange(amount.toFloatOrNull()?.let { amountValue -> Distance.from(amountValue, it) })
             },
-            modifier = Modifier.padding(top = 8.dp)
-        )
-    }
-}
-
-@Composable
-private fun <T> UnitPicker(
-    label: String,
-    selected: T,
-    options: List<Pair<String, T>>,
-    onSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isOpen by remember { mutableStateOf(false) }
-    val selectedName = options.firstOrNull { it.second == selected }?.first.orEmpty()
-    OutlinedButton(
-        onClick = { isOpen = true },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(if (selectedName.isBlank()) label else "$label: $selectedName")
-    }
-    if (isOpen) {
-        AlertDialog(
-            onDismissRequest = { isOpen = false },
-            title = { Text(label) },
-            text = {
-                Column {
-                    options.forEach { option ->
-                        TextButton(
-                            onClick = {
-                                onSelected(option.second)
-                                isOpen = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(option.first)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { isOpen = false }) {
-                    Text(stringResource(R.string.done))
-                }
-            }
+            onDismiss = { isPickingUnit = false }
         )
     }
 }
