@@ -30,4 +30,5 @@
     <string name="sky_survival_chapters">%d chapters · works offline</string>
     <string name="sky_diagnostics_checks">Checks</string>
     <string name="sky_diagnostics_tools">Tools</string>
+    <string name="sky_field_guide_kinds">Plants, animals and fungi across %d kinds</string>
 </resources>
