@@ -23,7 +23,7 @@ class ToolDiagnosticsTest : ToolTestBase(Tools.DIAGNOSTICS) {
         click(string(android.R.string.cancel))
 
         click(toolbarButton(R.id.diagnostics_title, Side.Right))
-        hasText(string(R.string.pref_sensor_details_title))
+        hasText(string(R.string.sensors))
     }
 
 }

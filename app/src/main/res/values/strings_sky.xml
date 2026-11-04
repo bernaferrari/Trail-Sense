@@ -20,6 +20,7 @@
     <string name="sky_sensors_attention">%d need attention</string>
     <string name="sky_sensors_needs_attention">Needs attention</string>
     <string name="sky_sensors_good_label">Good</string>
+    <string name="sensor_status_working">Working</string>
     <string name="sky_sensors_moderate_label">Moderate</string>
     <string name="sky_sensors_poor_label">Poor</string>
     <string name="sky_sensors_orientation">Motion and orientation</string>
