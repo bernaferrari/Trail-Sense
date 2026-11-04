@@ -21,7 +21,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
@@ -87,7 +86,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
@@ -101,7 +99,7 @@ import java.time.Instant
 
 /**
  * Lightning distance, an instrument: one ring holds the distance, with sound waves rolling out of it while you wait
- * for the thunder. Under it, one filled button names the event to tap for next (the flash, then the thunder). The
+ * for the thunder. Under it, one standard filled button names the event to tap for next (the flash, then the thunder). The
  * previous strike sits below as a quiet list.
  */
 @Composable
@@ -366,21 +364,20 @@ private fun StrikeHero(
     }
 }
 
-/** The one action: a tall filled primary button that names the event to tap for next. */
+/**
+ * The one action: the family's standard filled button (56 dp, full width) that names the event to tap for next.
+ */
 @Composable
 private fun StrikeButton(
     waitingForThunder: Boolean,
     onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val height = androidx.compose.material3.ButtonDefaults.LargeContainerHeight
+    val height = androidx.compose.material3.ButtonDefaults.MediumContainerHeight
     androidx.compose.material3.Button(
         onClick = onClick,
-        interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .height(height)
-            .trailSensePressScale(interactionSource, 0.97f),
+            .heightIn(min = height),
         shapes = androidx.compose.material3.ButtonDefaults.shapesFor(height),
         contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height)
     ) {
@@ -392,8 +389,7 @@ private fun StrikeButton(
         Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.iconSpacingFor(height)))
         Text(
             text = stringResource(if (waitingForThunder) R.string.thunder else R.string.lightning),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
+            style = androidx.compose.material3.ButtonDefaults.textStyleFor(height)
         )
     }
 }
