@@ -2,76 +2,85 @@ package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
+import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
@@ -176,10 +185,12 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
     private var showBacktrackFrequencyPicker by mutableStateOf(false)
     private var backPressedCallback: OnBackPressedCallback? = null
     private var isInitialized = false
+    private var isLoaded by mutableStateOf(false)
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
+        val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
         PathsScreen(
             title = title.ifBlank { stringResource(R.string.paths) },
             sortMenuText = sortMenuText.ifBlank {
@@ -187,12 +198,13 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             },
             searchText = searchText,
             items = pathItems,
-            isEmpty = pathItems.isEmpty(),
+            isLoaded = isLoaded,
             resetKey = pathListResetKey,
             backtrackState = backtrackState,
             backtrackFrequency = backtrackFrequency,
             formatService = FormatService.getInstance(host.requireContext()),
             baseDistanceUnits = prefs.baseDistanceUnits,
+            onBack = { dispatcher?.onBackPressed() },
             onSearchChange = {
                 searchText = it
                 manager.search(it)
@@ -244,6 +256,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
         manager.onChange = { root, items, rootChanged ->
             pathItems = items
+            isLoaded = true
             if (rootChanged) {
                 pathListResetKey++
             }
@@ -567,18 +580,20 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PathsScreen(
     title: String,
     sortMenuText: String,
     searchText: String,
     items: List<IPath>,
-    isEmpty: Boolean,
+    isLoaded: Boolean,
     resetKey: Int,
     backtrackState: FeatureState,
     backtrackFrequency: Duration?,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
+    onBack: (() -> Unit)?,
     onSearchChange: (String) -> Unit,
     onMenuAction: (PathsToolbarAction) -> Unit,
     onPathAction: (Path, PathAction) -> Unit,
@@ -590,192 +605,228 @@ private fun PathsScreen(
     onBacktrackToggleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            PathsHeader(
-                title = title,
-                sortMenuText = sortMenuText,
-                onMenuAction = onMenuAction,
-                modifier = Modifier.fillMaxWidth()
-            )
-            TrailSenseSearchBar(
-                value = searchText,
-                onValueChange = onSearchChange,
-                placeholder = stringResource(R.string.search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .testTag("searchbox")
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = TrailSenseSpacing.lg)
-            ) {
-                if (isEmpty) {
-                    TrailSenseEmptyState(
-                        icon = Icons.Default.Place,
-                        title = stringResource(R.string.no_paths),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("waypoints_empty_text")
-                    )
-                } else {
-                    PathsList(
-                        items = items,
-                        resetKey = resetKey,
-                        formatService = formatService,
-                        baseDistanceUnits = baseDistanceUnits,
-                        onPathAction = onPathAction,
-                        onGroupAction = onGroupAction,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                PathsCreateButton(
+    val listState = rememberLazyListState()
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+
+    // Folders first: groups read as places to go, paths as things to look at.
+    val groups = remember(items) { items.filterIsInstance<PathGroup>() }
+    val paths = remember(items) { items.filterIsInstance<Path>() }
+
+    Box(modifier = modifier.testTag("paths_list")) {
+        TrailSensePage(
+            title = title,
+            onBack = onBack,
+            backLabel = stringResource(R.string.back),
+            state = listState,
+            modifier = Modifier.testTag("paths_title"),
+            actions = {
+                PathsOverflowMenu(sortMenuText = sortMenuText, onMenuAction = onMenuAction)
+            },
+            floatingActionButton = {
+                PathsCreateMenu(
                     onImportPath = onImportPath,
                     onCreateGroup = onCreateGroup,
-                    onCreatePath = onCreatePath,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(TrailSenseSpacing.screen)
+                    onCreatePath = onCreatePath
                 )
             }
-            BacktrackPlayBar(
-                state = backtrackState,
-                frequency = backtrackFrequency,
-                formatService = formatService,
-                onSubtitleClick = onBacktrackFrequencyClick,
-                onPlayClick = onBacktrackToggleClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(TrailSenseSpacing.screen)
-            )
+        ) {
+            item(key = "backtrack") {
+                BacktrackRow(
+                    state = backtrackState,
+                    frequency = backtrackFrequency,
+                    formatService = formatService,
+                    onFrequencyClick = onBacktrackFrequencyClick,
+                    onToggleClick = onBacktrackToggleClick
+                )
+            }
+
+            item(key = "search") {
+                TrailSenseSearchBar(
+                    value = searchText,
+                    onValueChange = onSearchChange,
+                    placeholder = stringResource(R.string.search),
+                    clearContentDescription = stringResource(R.string.paths_clear_search),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("searchbox")
+                )
+            }
+
+            if (isLoaded && items.isEmpty()) {
+                item(key = "empty") {
+                    val isSearching = searchText.isNotBlank()
+                    TrailSenseEmptyState(
+                        icon = if (isSearching) Icons.Rounded.Search else Icons.Rounded.Place,
+                        title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
+                        description = if (isSearching) null else stringResource(R.string.paths_empty_description),
+                        modifier = Modifier
+                            .heightIn(max = 420.dp)
+                            .testTag("waypoints_empty_text")
+                    )
+                }
+            }
+
+            groupedRows(
+                rows = groups,
+                key = { "group_${it.id}" }
+            ) { group, position ->
+                PathGroupRow(
+                    group = group,
+                    position = position,
+                    onAction = { onGroupAction(group, it) }
+                )
+            }
+
+            groupedRows(
+                rows = paths,
+                key = { "path_${it.id}" }
+            ) { path, position ->
+                PathRow(
+                    path = path,
+                    position = position,
+                    formatService = formatService,
+                    baseDistanceUnits = baseDistanceUnits,
+                    onAction = { onPathAction(path, it) }
+                )
+            }
+
+            // Room for the floating button over the last row.
+            item(key = "fab_spacer") { Spacer(Modifier.height(56.dp)) }
+        }
+    }
+}
+
+/** Adds [rows] as one lazy item each, drawn as a single family group (24/6 silhouette, 2 dp gaps). */
+private fun <T> LazyListScope.groupedRows(
+    rows: List<T>,
+    key: (T) -> Any,
+    content: @Composable (T, TrailSenseGroupPosition) -> Unit
+) {
+    itemsIndexed(rows, key = { _, row -> key(row) }) { index, row ->
+        Box(
+            modifier = Modifier
+                .animateItem()
+                .pathsGroupedRowGap(isFirst = index == 0)
+        ) {
+            content(row, TrailSenseGroupPosition.at(index, rows.size))
         }
     }
 }
 
 @Composable
-private fun PathsHeader(
-    title: String,
+private fun PathsOverflowMenu(
     sortMenuText: String,
-    onMenuAction: (PathsToolbarAction) -> Unit,
-    modifier: Modifier = Modifier
+    onMenuAction: (PathsToolbarAction) -> Unit
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
-            .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("paths_title"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("paths_menu_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = stringResource(R.string.sort)
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(sortMenuText) },
-                    onClick = {
-                        isMenuOpen = false
-                        onMenuAction(PathsToolbarAction.Sort)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.export)) },
-                    onClick = {
-                        isMenuOpen = false
-                        onMenuAction(PathsToolbarAction.Export)
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PathsCreateButton(
-    onImportPath: () -> Unit,
-    onCreateGroup: () -> Unit,
-    onCreatePath: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isOpen by remember { mutableStateOf(false) }
-    Box(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 72.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            DropdownMenu(
-                expanded = isOpen,
-                onDismissRequest = { isOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.import_gpx)) },
-                    onClick = {
-                        isOpen = false
-                        onImportPath()
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.group)) },
-                    onClick = {
-                        isOpen = false
-                        onCreateGroup()
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.path)) },
-                    onClick = {
-                        isOpen = false
-                        onCreatePath()
-                    }
-                )
-            }
-        }
-        FloatingActionButton(
-            onClick = { isOpen = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .testTag("add_btn")
+    Box {
+        IconButton(
+            onClick = { isMenuOpen = true },
+            modifier = Modifier.testTag("paths_menu_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_add),
-                contentDescription = stringResource(R.string.add)
+                painter = painterResource(R.drawable.ic_menu_dots),
+                contentDescription = stringResource(R.string.sort)
+            )
+        }
+        DropdownMenu(
+            expanded = isMenuOpen,
+            onDismissRequest = { isMenuOpen = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(sortMenuText) },
+                leadingIcon = { Icon(painterResource(R.drawable.sort_ascending), contentDescription = null) },
+                onClick = {
+                    isMenuOpen = false
+                    onMenuAction(PathsToolbarAction.Sort)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.export)) },
+                leadingIcon = { Icon(painterResource(R.drawable.ic_import_export), contentDescription = null) },
+                onClick = {
+                    isMenuOpen = false
+                    onMenuAction(PathsToolbarAction.Export)
+                }
             )
         }
     }
 }
 
+/** The add button opens the family's floating action menu: import a GPX file, a group, or an empty path. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun BacktrackPlayBar(
+private fun PathsCreateMenu(
+    onImportPath: () -> Unit,
+    onCreateGroup: () -> Unit,
+    onCreatePath: () -> Unit
+) {
+    var isOpen by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = isOpen) { isOpen = false }
+    val addLabel = stringResource(R.string.add)
+
+    FloatingActionButtonMenu(
+        expanded = isOpen,
+        button = {
+            ToggleFloatingActionButton(
+                checked = isOpen,
+                onCheckedChange = { isOpen = !isOpen },
+                modifier = Modifier
+                    .testTag("add_btn")
+                    .semantics {
+                        traversalIndex = -1f
+                        contentDescription = addLabel
+                    }
+            ) {
+                val icon = if (checkedProgress > 0.5f) Icons.Rounded.Close else Icons.Rounded.Add
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.animateIcon({ checkedProgress })
+                )
+            }
+        }
+    ) {
+        FloatingActionButtonMenuItem(
+            onClick = {
+                isOpen = false
+                onImportPath()
+            },
+            icon = { Icon(painterResource(R.drawable.ic_file), contentDescription = null) },
+            text = { Text(stringResource(R.string.import_gpx)) }
+        )
+        FloatingActionButtonMenuItem(
+            onClick = {
+                isOpen = false
+                onCreateGroup()
+            },
+            icon = { Icon(painterResource(R.drawable.ic_path_group), contentDescription = null) },
+            text = { Text(stringResource(R.string.group)) }
+        )
+        FloatingActionButtonMenuItem(
+            onClick = {
+                isOpen = false
+                onCreatePath()
+            },
+            icon = { Icon(painterResource(R.drawable.path_solid), contentDescription = null) },
+            text = { Text(stringResource(R.string.path)) }
+        )
+    }
+}
+
+/**
+ * Backtrack, the recorder that fills this list: one row at the top, tinted when it is recording. Tapping the row
+ * changes how often it records; the round button starts or stops it.
+ */
+@Composable
+private fun BacktrackRow(
     state: FeatureState,
     frequency: Duration?,
     formatService: FormatService,
-    onSubtitleClick: () -> Unit,
-    onPlayClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onFrequencyClick: () -> Unit,
+    onToggleClick: () -> Unit
 ) {
     val isOn = state == FeatureState.On
     val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
@@ -787,176 +838,55 @@ private fun BacktrackPlayBar(
             )
         }"
     } ?: "")
+    val container by animateColorAsState(
+        targetValue = if (isOn) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "backtrackContainer"
+    )
 
-    TrailSenseCard(
-        modifier = modifier.testTag("backtrack_play_bar")
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TonalIconChip(
-                icon = painterResource(R.drawable.ic_tool_backtrack)
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = TrailSenseSpacing.md)
-                    .testTag("play_bar_title")
-            ) {
-                Text(
-                    text = stringResource(R.string.backtrack),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    modifier = Modifier.clickable(onClick = onSubtitleClick),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(
-                onClick = onPlayClick,
-                modifier = Modifier.testTag("play_btn")
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
-                    ),
-                    contentDescription = stringResource(
-                        if (isOn) R.string.stop else R.string.start
-                    ),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-/**
- * Circular tonal icon chip used as a leading element on cards/rows.
- */
-@Composable
-private fun TonalIconChip(
-    icon: Painter,
-    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
-    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer
-) {
-    Surface(
-        shape = CircleShape,
-        color = containerColor,
-        modifier = Modifier.size(40.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PathsList(
-    items: List<IPath>,
-    resetKey: Int,
-    formatService: FormatService,
-    baseDistanceUnits: DistanceUnits,
-    onPathAction: (Path, PathAction) -> Unit,
-    onGroupAction: (PathGroup, PathGroupAction) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val listState = rememberLazyListState()
-
-    LaunchedEffect(resetKey) {
-        listState.scrollToItem(0)
-    }
-
-    LazyColumn(
-        state = listState,
-        modifier = modifier.testTag("paths_list"),
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            bottom = TrailSenseSpacing.xxxl
-        ),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-    ) {
-        items(items, key = { item ->
-            if (item is PathGroup) {
-                -item.id
-            } else {
-                item.id
-            }
-        }) { item ->
-            when (item) {
-                is Path -> PathRow(
-                    path = item,
-                    formatService = formatService,
-                    baseDistanceUnits = baseDistanceUnits,
-                    onAction = { onPathAction(item, it) }
-                )
-
-                is PathGroup -> PathGroupRow(
-                    group = item,
-                    onAction = { onGroupAction(item, it) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PathCardRow(
-    title: String,
-    subtitle: String,
-    icon: Painter,
-    iconTint: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit,
-    trailing: @Composable () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseCard(onClick = onClick, modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TonalIconChip(
-                icon = icon,
-                tint = iconTint,
-                containerColor = iconTint.copy(alpha = 0.15f)
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = TrailSenseSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            trailing()
-        }
+    Box(modifier = Modifier.testTag("backtrack_play_bar")) {
+        TrailSenseListItem(
+            title = stringResource(R.string.backtrack),
+            subtitle = subtitle,
+            icon = painterResource(R.drawable.ic_tool_backtrack),
+            position = TrailSenseGroupPosition.Single,
+            containerColor = container,
+            onClick = onFrequencyClick,
+            trailing = {
+                FilledIconButton(
+                    onClick = onToggleClick,
+                    modifier = Modifier
+                        .size(TrailSenseSize.minimumTouchTarget)
+                        .testTag("play_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
+                        ),
+                        contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
+                    )
+                }
+            },
+            modifier = Modifier.testTag("play_bar_title")
+        )
     }
 }
 
 @Composable
 private fun PathRow(
     path: Path,
+    position: TrailSenseGroupPosition,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
     onAction: (PathAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val nameFactory = PathNameFactory(LocalContext.current)
+    val context = LocalContext.current
+    val nameFactory = remember(context) { PathNameFactory(context) }
     val title = nameFactory.getName(path)
     val distance = path.metadata.distance.convertTo(baseDistanceUnits).toRelativeDistance()
     val distanceString = formatService.formatDistance(
@@ -965,17 +895,19 @@ private fun PathRow(
         false
     )
     val subtitle = if (path.temporary) {
-        "${stringResource(R.string.temporary)}    $distanceString"
+        "${stringResource(R.string.temporary)} · $distanceString"
     } else {
         distanceString
     }
 
-    PathCardRow(
+    TrailSenseListItem(
         title = title,
         subtitle = subtitle,
         icon = painterResource(getPathIcon(path)),
         iconTint = androidx.compose.ui.graphics.Color(path.style.color),
+        position = position,
         onClick = { onAction(PathAction.Show) },
+        onLongClick = { menuOpen = true },
         trailing = {
             PathRowActions(
                 path = path,
@@ -996,51 +928,45 @@ private fun PathRowActions(
     onMenuOpenChange: (Boolean) -> Unit,
     onAction: (PathAction) -> Unit
 ) {
-    Box {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(
             onClick = { onAction(PathAction.ToggleVisibility) },
             modifier = Modifier.testTag("path_visibility_toggle_$title")
         ) {
             Icon(
                 painter = painterResource(
-                    if (path.style.visible) {
-                        R.drawable.ic_visible
-                    } else {
-                        R.drawable.ic_not_visible
-                    }
+                    if (path.style.visible) R.drawable.ic_visible else R.drawable.ic_not_visible
                 ),
-                contentDescription = stringResource(
-                    if (path.style.visible) R.string.hide else R.string.show
-                ),
+                contentDescription = stringResource(if (path.style.visible) R.string.hide else R.string.show),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    }
 
-    Box {
-        IconButton(
-            onClick = { onMenuOpenChange(true) },
-            modifier = Modifier.testTag("path_item_menu_$title")
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_menu_dots),
-                contentDescription = stringResource(R.string.details),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        DropdownMenu(
-            expanded = menuOpen,
-            onDismissRequest = { onMenuOpenChange(false) }
-        ) {
-            PathMenuItem(R.string.rename, onMenuOpenChange, onAction, PathAction.Rename)
-            if (path.temporary) {
-                PathMenuItem(R.string.keep_forever, onMenuOpenChange, onAction, PathAction.Keep)
+        Box {
+            IconButton(
+                onClick = { onMenuOpenChange(true) },
+                modifier = Modifier.testTag("path_item_menu_$title")
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu_dots),
+                    contentDescription = stringResource(R.string.details),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            PathMenuItem(R.string.export, onMenuOpenChange, onAction, PathAction.Export)
-            PathMenuItem(R.string.merge, onMenuOpenChange, onAction, PathAction.Merge)
-            PathMenuItem(R.string.delete, onMenuOpenChange, onAction, PathAction.Delete)
-            PathMenuItem(R.string.simplify, onMenuOpenChange, onAction, PathAction.Simplify)
-            PathMenuItem(R.string.move_to, onMenuOpenChange, onAction, PathAction.Move)
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { onMenuOpenChange(false) }
+            ) {
+                PathMenuItem(R.string.rename, onMenuOpenChange, onAction, PathAction.Rename)
+                if (path.temporary) {
+                    PathMenuItem(R.string.keep_forever, onMenuOpenChange, onAction, PathAction.Keep)
+                }
+                PathMenuItem(R.string.export, onMenuOpenChange, onAction, PathAction.Export)
+                PathMenuItem(R.string.merge, onMenuOpenChange, onAction, PathAction.Merge)
+                PathMenuItem(R.string.delete, onMenuOpenChange, onAction, PathAction.Delete)
+                PathMenuItem(R.string.simplify, onMenuOpenChange, onAction, PathAction.Simplify)
+                PathMenuItem(R.string.move_to, onMenuOpenChange, onAction, PathAction.Move)
+            }
         }
     }
 }
@@ -1064,17 +990,20 @@ private fun PathMenuItem(
 @Composable
 private fun PathGroupRow(
     group: PathGroup,
+    position: TrailSenseGroupPosition,
     onAction: (PathGroupAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val count = group.count ?: 0
 
-    PathCardRow(
+    TrailSenseListItem(
         title = group.name,
-        subtitle = stringResource(R.plurals.path_group_summary, count, count),
+        subtitle = pluralStringResource(R.plurals.path_group_summary, count, count),
         icon = painterResource(R.drawable.ic_path_group),
-        iconTint = androidx.compose.ui.graphics.Color(AppColor.Gray.color),
+        iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+        position = position,
         onClick = { onAction(PathGroupAction.Open) },
+        onLongClick = { menuOpen = true },
         trailing = {
             Box {
                 IconButton(
@@ -1146,15 +1075,16 @@ private fun PathsScreenPreview() {
     TrailSenseTheme {
         PathsScreen(
             title = "Paths",
-            sortMenuText = "Sort by Most recent",
+            sortMenuText = "Sort: Most recent",
             searchText = "",
             items = emptyList(),
-            isEmpty = true,
+            isLoaded = true,
             resetKey = 0,
             backtrackState = FeatureState.Off,
             backtrackFrequency = Duration.ofMinutes(15),
             formatService = FormatService.getInstance(LocalContext.current),
             baseDistanceUnits = DistanceUnits.Meters,
+            onBack = {},
             onSearchChange = {},
             onMenuAction = {},
             onPathAction = { _, _ -> },

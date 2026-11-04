@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.system.Resources
@@ -87,10 +89,12 @@ class PathElevationChart(private val context: Context) {
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        val textColor = Color(Resources.androidTextColorSecondary(context))
-        val gridColor = textColor.copy(alpha = 0.25f)
+        // Theme colors so the chart sits calmly in its group card: quiet grid, muted labels, solid highlight ring.
+        val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+        val gridColor = MaterialTheme.colorScheme.outlineVariant
+        val highlightColor = MaterialTheme.colorScheme.onSurface
         val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Resources.androidTextColorSecondary(context)
+            color = textColor.toArgb()
             textSize = Resources.sp(context, 10f)
             textAlign = Paint.Align.RIGHT
         }
@@ -109,7 +113,7 @@ class PathElevationChart(private val context: Context) {
             val chartPoints = elevations
             if (chartPoints.isEmpty()) {
                 val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = Resources.androidTextColorSecondary(context)
+                    color = textColor.toArgb()
                     textSize = Resources.sp(context, 14f)
                     textAlign = Paint.Align.CENTER
                 }
@@ -179,7 +183,7 @@ class PathElevationChart(private val context: Context) {
             highlight?.let {
                 val point = toScreen(it, xRange, left, right, top, bottom)
                 drawCircle(
-                    color = Color(Resources.androidTextColorPrimary(context)),
+                    color = highlightColor,
                     radius = 5.dp.toPx(),
                     center = point,
                     style = Stroke(width = 2.dp.toPx())

@@ -2154,4 +2154,11 @@
     <string name="beacon_create_menu_close">Close menu</string>
     <string name="beacon_list_empty_description">Save a place to find your way back to it.</string>
     <string name="beacon_direction_value" translatable="false">%1$s %2$s</string>
+    <!-- Family redesign: paths, comms, experimentation -->
+    <string name="paths_clear_search">Clear search</string>
+    <string name="paths_empty_description">Start Backtrack to record where you walk, or tap add to make a path.</string>
+    <plurals name="path_points_count">
+        <item quantity="one">%d point</item>
+        <item quantity="other">%d points</item>
+    </plurals>
 </resources>
