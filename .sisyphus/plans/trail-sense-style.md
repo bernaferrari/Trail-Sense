@@ -59,3 +59,15 @@ all shout, nothing is emphasised.
 - **Navigation:** beacons are ringed waypoint dots, there's no pin before the name, the arc's caps sit on the wedge,
   and the moon is a quiet badge.
 - **Weather and Metal Detector charts** use the frame.
+
+## The boiler principle (the user's favourite: Water Boil Timer)
+The best screens make the tool's object a literal, living metaphor of what it measures. The water boiler is a pot of
+water that fills, ripples and counts down. It has one instruction line, one choice row and one button, with no chrome,
+stats or charts. Apply it wherever a tool has a physical thing behind it:
+- **Lightning:** sound rings that spread out from the flash at the speed of sound.
+- **Metal detector:** a field well.
+- **Level:** a real bubble.
+- **Tides:** a water well.
+- **Pedometer:** footsteps filling a path.
+- **Light meter:** a sun that brightens.
+The object is drawn with M3 shapes in the scheme's colours and moves with springs. Everything else is calm and minimal.
