@@ -35,4 +35,17 @@
     <string name="cliff_ready">Drop a stone, tap Start</string>
     <string name="cliff_falling">Falling · %1$s</string>
     <string name="cliff_fell_for">Fell for %1$s</string>
+
+    <!-- Magnifier -->
+    <string name="magnifier_close_up">Close-up</string>
+    <string name="magnifier_freeze">Freeze</string>
+    <string name="magnifier_live">Live</string>
+
+    <!-- White noise -->
+    <string name="white_noise_tap_to_play">Tap to play</string>
+
+    <!-- Battery -->
+    <string name="battery_charging">Charging</string>
+    <string name="battery_low">Battery low</string>
+    <string name="battery_on_battery">On battery</string>
 </resources>

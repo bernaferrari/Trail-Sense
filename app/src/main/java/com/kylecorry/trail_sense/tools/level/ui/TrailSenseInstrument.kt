@@ -5,6 +5,9 @@
 
 package com.kylecorry.trail_sense.shared.views.compose
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.toShape
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.NoPhotography
@@ -286,8 +289,8 @@ fun BoxScope.TrailSenseInstrumentMessage(content: @Composable () -> Unit) {
 }
 
 /**
- * What a camera instrument shows instead of the preview when it can't use the camera: the reason, one calm
- * sentence, and a way to the app's settings to allow it.
+ * What a camera instrument shows instead of the preview when it can't use the camera: a big expressive mark inside
+ * viewfinder corners in the upper half, the reason, one calm sentence, and a filled way to the app's settings.
  */
 @Composable
 fun TrailSenseCameraUnavailable(
@@ -295,22 +298,79 @@ fun TrailSenseCameraUnavailable(
     description: String = stringResource(R.string.camera_unavailable_description)
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    TrailSenseEmptyState(
-        icon = Icons.Rounded.NoPhotography,
-        title = stringResource(R.string.no_camera_access),
-        description = description,
-        modifier = modifier,
-        action = {
-            androidx.compose.material3.FilledTonalButton(
-                onClick = {
-                    com.kylecorry.andromeda.core.tryOrNothing {
-                        context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
-                    }
-                },
-                modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget)
-            ) {
-                Text(stringResource(R.string.open_settings))
+    val scheme = MaterialTheme.colorScheme
+    val bracket = scheme.primary.copy(alpha = 0.55f)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.weight(0.5f))
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.size(232.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val arm = size.minDimension * 0.18f
+                val stroke = 5.dp.toPx()
+                val inset = stroke / 2f
+                val corners = listOf(
+                    androidx.compose.ui.geometry.Offset(inset, inset) to (1f to 1f),
+                    androidx.compose.ui.geometry.Offset(size.width - inset, inset) to (-1f to 1f),
+                    androidx.compose.ui.geometry.Offset(inset, size.height - inset) to (1f to -1f),
+                    androidx.compose.ui.geometry.Offset(size.width - inset, size.height - inset) to (-1f to -1f)
+                )
+                corners.forEach { (corner, dir) ->
+                    drawLine(
+                        bracket,
+                        corner,
+                        corner + androidx.compose.ui.geometry.Offset(arm * dir.first, 0f),
+                        stroke,
+                        androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                    drawLine(
+                        bracket,
+                        corner,
+                        corner + androidx.compose.ui.geometry.Offset(0f, arm * dir.second),
+                        stroke,
+                        androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                }
             }
+            TrailSenseShapeBadge(
+                icon = Icons.Rounded.NoPhotography,
+                shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
+                size = 150.dp,
+                containerColor = scheme.secondaryContainer,
+                contentColor = scheme.onSecondaryContainer
+            )
         }
-    )
+        Spacer(Modifier.size(TrailSenseSpacing.xl))
+        Text(
+            text = stringResource(R.string.no_camera_access),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.size(TrailSenseSpacing.sm))
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.size(TrailSenseSpacing.xl))
+        androidx.compose.material3.Button(
+            onClick = {
+                com.kylecorry.andromeda.core.tryOrNothing {
+                    context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
+                }
+            },
+            modifier = Modifier.heightIn(min = 56.dp)
+        ) {
+            Text(stringResource(R.string.open_settings), style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(Modifier.weight(1f))
+    }
 }

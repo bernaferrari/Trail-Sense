@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.mirror.ui
 
+import androidx.compose.ui.unit.dp
 import android.graphics.Color
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -112,7 +113,8 @@ internal fun MirrorCameraScreen(
         }
     }
 
-    // The white page is the mirror's light: it stays white around a rounded preview, top bar included.
+    // The white page is the mirror's light; the preview is a deeply rounded glass, like a compact mirror.
+    // It stays white around the preview, top bar included.
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.mirror_camera),
         modifier = modifier,
@@ -133,7 +135,7 @@ internal fun MirrorCameraScreen(
                 // On the theme's own surface so the message stays legible on the white light in dark mode.
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+                    shape = RoundedCornerShape(MirrorCorner),
                     color = MaterialTheme.colorScheme.surface
                 ) {
                     TrailSenseCameraUnavailable()
@@ -144,7 +146,7 @@ internal fun MirrorCameraScreen(
                     modifier = Modifier
                         .widthIn(max = TrailSenseSize.maximumContentWidth)
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                        .clip(RoundedCornerShape(MirrorCorner))
                         .testTag("camera")
                         .semantics { contentDescription = cameraDescription }
                 )
@@ -152,3 +154,7 @@ internal fun MirrorCameraScreen(
         }
     }
 }
+
+
+/** The mirror glass: rounder than a card so it reads as an object, not a panel. */
+private val MirrorCorner = 56.dp
