@@ -4,30 +4,33 @@ package com.kylecorry.trail_sense.tools.metaldetector.ui
 
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +38,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -47,16 +49,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.sound.ISoundPlayer
 import com.kylecorry.andromeda.sound.SoundPlayer
@@ -71,16 +69,24 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.Duration
 import kotlin.math.absoluteValue
 import kotlin.math.max
@@ -162,6 +168,10 @@ private class MetalDetectorController(
     private val audioLock = Any()
 
     private var title by mutableStateOf("")
+    private var fieldValue by mutableStateOf("--")
+    private val fieldUnit by lazy {
+        context.getString(R.string.magnetic_field_format_precise, "").trim()
+    }
     private var thresholdText by mutableStateOf("")
     private var audioEnabled by mutableStateOf(false)
     private var vibrationEnabled by mutableStateOf(true)
@@ -186,6 +196,8 @@ private class MetalDetectorController(
     fun Content(modifier: Modifier = Modifier) {
         MetalDetectorScreen(
             title = title,
+            fieldValue = fieldValue,
+            fieldUnit = fieldUnit,
             thresholdText = thresholdText,
             isHighSensitivity = isHighSensitivity,
             audioEnabled = audioEnabled,
@@ -317,6 +329,7 @@ private class MetalDetectorController(
         updateThreshold()
 
         title = formatService.formatMagneticField(magneticField)
+        fieldValue = DecimalFormatter.format(magneticField.toDouble(), 0)
 
         metalDetected = isMetalDetected(magneticField)
         maybeVibrate(metalDetected)
@@ -428,9 +441,17 @@ private class MetalDetectorController(
     }
 }
 
+
+/**
+ * Metal detector: the field strength is the hero on a card that turns to the error tone while metal is near, with
+ * the live chart under it; the direction dial (when enabled) follows, then the threshold and sensitivity controls
+ * as one group. Sound and vibration are toggles in the top bar.
+ */
 @Composable
 private fun MetalDetectorScreen(
     title: String,
+    fieldValue: String,
+    fieldUnit: String,
     thresholdText: String,
     isHighSensitivity: Boolean,
     audioEnabled: Boolean,
@@ -455,213 +476,211 @@ private fun MetalDetectorScreen(
     onAccuracyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_metal_detector_title),
+        modifier = modifier,
+        actions = {
+            ToolToggle(
+                checked = vibrationEnabled,
+                onToggle = onVibrationToggle,
+                icon = R.drawable.vibrate,
+                label = stringResource(R.string.tool_vibration),
+                modifier = Modifier.testTag("metal_vibration_btn")
+            )
+            if (showAudioButton) {
+                ToolToggle(
+                    checked = audioEnabled,
+                    onToggle = onAudioToggle,
+                    icon = R.drawable.volume_up,
+                    label = stringResource(R.string.tool_sound),
+                    modifier = Modifier.testTag("metal_audio_btn")
+                )
+            }
+        }
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .padding(TrailSenseSpacing.screen),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-            // Compact action bar: vibration and audio toggles
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onVibrationToggle,
-                    modifier = Modifier
-                        .alpha(if (vibrationEnabled) 1f else 0.38f)
-                        .testTag("metal_vibration_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.vibrate),
-                        contentDescription = "Vibration"
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                if (showAudioButton) {
-                    IconButton(
-                        onClick = onAudioToggle,
-                        modifier = Modifier
-                            .alpha(if (audioEnabled) 1f else 0.38f)
-                            .testTag("metal_audio_btn")
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.volume_up),
-                            contentDescription = "Audio"
-                        )
-                    }
-                }
-            }
-
-            // Hero readout: current magnetic field magnitude. The container shifts
-            // to the error tone while a target is detected so the state reads at a glance.
-            val heroColor by animateColorAsState(
-                targetValue = if (metalDetected) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
-                animationSpec = tween(durationMillis = 250),
-                label = "metalHeroColor"
-            )
-            val heroContentColor = if (metalDetected) {
-                MaterialTheme.colorScheme.onErrorContainer
-            } else {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            }
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                color = heroColor
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(TrailSenseSpacing.xl),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        TrailSenseSpacing.md,
-                        Alignment.CenterHorizontally
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (metalDetected) {
-                        Icon(
-                            painter = painterResource(R.drawable.metal),
-                            contentDescription = null,
-                            tint = heroContentColor
-                        )
-                    }
-                    Text(
-                        text = title,
-                        modifier = Modifier.testTag("metal_detector_title"),
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        color = heroContentColor,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            // Threshold + calibration controls
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.threshold),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = thresholdText,
-                            modifier = Modifier.testTag("threshold_amount"),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFeatureSettings = "tnum"
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    ThresholdSlider(
-                        value = thresholdSliderValue,
-                        onValueChange = onThresholdChange
-                    )
-                    TrailSenseButton(
-                        text = stringResource(R.string.calibrate),
-                        onClick = onCalibrate,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            HighSensitivitySwitch(
-                checked = isHighSensitivity,
-                onCheckedChange = onHighSensitivityChange
-            )
-            AccuracyBadge(
-                magnetometer = magnetometer,
-                onClick = onAccuracyClick
-            )
-            if (showMetalDirection) {
-                MagnetometerDirection(
-                    fieldStrength = metalDirectionFieldStrength,
-                    direction = metalDirection,
-                    singlePole = showSinglePoleDirection,
-                    sensitivity = metalDirectionSensitivity,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                val heroColor by animateColorAsState(
+                    targetValue = if (metalDetected) {
+                        MaterialTheme.colorScheme.errorContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    },
+                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "metalHeroColor"
                 )
-            } else {
-                Box(modifier = Modifier.weight(1f))
+                val heroContentColor by animateColorAsState(
+                    targetValue = if (metalDetected) {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "metalHeroContentColor"
+                )
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(TrailSenseShape.hero),
+                    color = heroColor,
+                    contentColor = heroContentColor
+                ) {
+                    Column(
+                        modifier = Modifier.padding(
+                            top = TrailSenseSpacing.xl,
+                            bottom = TrailSenseSpacing.lg,
+                            start = TrailSenseSpacing.lg,
+                            end = TrailSenseSpacing.lg
+                        ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                    ) {
+                        TrailSenseReading(
+                            value = fieldValue,
+                            unit = fieldUnit,
+                            color = heroContentColor,
+                            unitColor = heroContentColor.copy(alpha = 0.72f),
+                            modifier = Modifier
+                                .testTag("metal_detector_title")
+                                .semantics { contentDescription = title }
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                        ) {
+                            if (metalDetected) {
+                                Icon(
+                                    painter = painterResource(R.drawable.metal),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Text(
+                                text = stringResource(
+                                    if (metalDetected) R.string.metal_detected else R.string.metal_not_detected
+                                ),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = heroContentColor.copy(alpha = if (metalDetected) 1f else 0.72f)
+                            )
+                        }
+                        AccuracyBadge(
+                            magnetometer = magnetometer,
+                            onClick = onAccuracyClick
+                        )
+                        MetalChart(
+                            data = chartReadings,
+                            lowerThreshold = lowerThreshold,
+                            upperThreshold = upperThreshold,
+                            lineColor = if (metalDetected) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                        )
+                    }
+                }
+
+                if (showMetalDirection) {
+                    MagnetometerDirection(
+                        fieldStrength = metalDirectionFieldStrength,
+                        direction = metalDirection,
+                        singlePole = showSinglePoleDirection,
+                        sensitivity = metalDirectionSensitivity,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                    TrailSenseGroupCard(
+                        position = TrailSenseGroupPosition(isFirst = true, isLast = false)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.threshold),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = thresholdText,
+                                modifier = Modifier.testTag("threshold_amount"),
+                                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Slider(
+                            value = thresholdSliderValue.coerceIn(0f, 100f),
+                            onValueChange = onThresholdChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("threshold"),
+                            valueRange = 0f..100f
+                        )
+                        FilledTonalButton(
+                            onClick = onCalibrate,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                        ) {
+                            Text(stringResource(R.string.calibrate))
+                        }
+                    }
+                    TrailSenseSwitchRow(
+                        label = stringResource(R.string.high_sensitivity),
+                        checked = isHighSensitivity,
+                        onCheckedChange = onHighSensitivityChange,
+                        position = TrailSenseGroupPosition(isFirst = false, isLast = true),
+                        modifier = Modifier.testTag("high_sensitivity_toggle")
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.metal_detector_disclaimer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TrailSenseSpacing.lg),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            MetalChart(
-                data = chartReadings,
-                lowerThreshold = lowerThreshold,
-                upperThreshold = upperThreshold
-            )
-            Text(
-                text = stringResource(R.string.metal_detector_disclaimer),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
         }
     }
 }
 
+/** A top-bar toggle: filled tonal while on, plain while off, always labelled. */
 @Composable
-private fun ThresholdSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit
-) {
-    Slider(
-        value = value.coerceIn(0f, 100f),
-        onValueChange = onValueChange,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("threshold"),
-        valueRange = 0f..100f
-    )
-}
-
-@Composable
-private fun HighSensitivitySwitch(
+private fun ToolToggle(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onToggle: () -> Unit,
+    icon: Int,
+    label: String,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    IconToggleButton(
+        checked = checked,
+        onCheckedChange = { onToggle() },
+        modifier = modifier,
+        colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     ) {
-        Text(
-            text = stringResource(R.string.high_sensitivity),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.testTag("high_sensitivity_toggle")
-        )
+        Icon(painter = painterResource(icon), contentDescription = label)
     }
 }
 
@@ -671,52 +690,52 @@ private fun AccuracyBadge(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val hasCompass = androidx.compose.runtime.remember {
-        SensorService(context).hasCompass()
-    }
+    val hasCompass = remember { SensorService(context).hasCompass() }
     if (!hasCompass) {
         return
     }
 
-    val provider = androidx.compose.runtime.remember(magnetometer, context) {
+    val provider = remember(magnetometer, context) {
         SensorStatusBadgeProvider(magnetometer, context, R.drawable.ic_compass_icon)
     }
-    var badge by androidx.compose.runtime.remember {
-        mutableStateOf(provider.getBadge())
-    }
+    var badge by remember { mutableStateOf(provider.getBadge()) }
 
-    androidx.compose.runtime.LaunchedEffect(provider) {
+    LaunchedEffect(provider) {
         while (true) {
             badge = provider.getBadge()
             delay(1000)
         }
     }
 
+    // A quiet pill: the status color is a dot, the text stays in the card's tone.
     Surface(
+        onClick = onClick,
         modifier = Modifier
-            .padding(start = 16.dp, top = 8.dp)
-            .alpha(0.6f)
-            .clickable(onClick = onClick)
+            .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag("accuracy_view"),
-        shape = RoundedCornerShape(4.dp),
-        color = Color(badge.color),
-        contentColor = Color.Black
+        shape = CircleShape,
+        color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .padding(0.dp)
+            ) {
+                Surface(shape = CircleShape, color = Color(badge.color), modifier = Modifier.fillMaxSize()) {}
+            }
             Icon(
                 painter = painterResource(badge.icon),
                 contentDescription = null,
-                modifier = Modifier.height(16.dp),
-                tint = Color.Black
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = badge.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.Black
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
@@ -804,26 +823,20 @@ private fun MagnetometerDirection(
 private fun MetalChart(
     data: List<Float>,
     lowerThreshold: Float,
-    upperThreshold: Float
+    upperThreshold: Float,
+    lineColor: Color
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-    val grid = MaterialTheme.colorScheme.outlineVariant
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+    val band = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
 
+    // Holds its height while the first readings arrive, so nothing jumps.
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .padding(horizontal = 16.dp)
-            .testTag("metal_chart"),
-        contentAlignment = Alignment.Center
+            .testTag("metal_chart")
     ) {
         if (data.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
             return@Box
         }
 
@@ -855,7 +868,7 @@ private fun MetalChart(
             }
 
             drawRect(
-                color = Color(AppColor.Gray.color).copy(alpha = 0.2f),
+                color = band,
                 topLeft = androidx.compose.ui.geometry.Offset(0f, y(upperThreshold)),
                 size = androidx.compose.ui.geometry.Size(
                     size.width,
@@ -865,10 +878,11 @@ private fun MetalChart(
 
             data.zipWithNext().forEachIndexed { index, (start, end) ->
                 drawLine(
-                    color = primary,
+                    color = lineColor,
                     start = androidx.compose.ui.geometry.Offset(x(index), y(start)),
                     end = androidx.compose.ui.geometry.Offset(x(index + 1), y(end)),
-                    strokeWidth = 2.dp.toPx()
+                    strokeWidth = 2.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
             }
         }
