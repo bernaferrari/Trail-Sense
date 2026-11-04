@@ -36,6 +36,9 @@
     <string name="places_convert_hint">Type an amount above</string>
     <string name="places_convert_coordinate_hint">Type or paste a location above</string>
     <!-- Turn back -->
+    <string name="places_turn_back_pick_hint">When you need to be back</string>
+    <string name="places_turn_back_sunset_hint">Back by tonight\'s sunset</string>
+    <string name="places_turn_back_set">Set</string>
     <string name="places_turn_back_in">Turn back in</string>
     <string name="places_turn_back_back_by">Back by</string>
     <!-- Declination -->
