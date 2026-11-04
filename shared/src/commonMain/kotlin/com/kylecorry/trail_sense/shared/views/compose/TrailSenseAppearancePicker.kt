@@ -89,12 +89,14 @@ fun <M> TrailSenseAppearancePicker(
     onStyleSelected: (TrailSenseColorStyle) -> Unit,
     styleLabel: (TrailSenseColorStyle) -> String,
     styleTitle: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** More rows follow in the same group (e.g. night vision): the last card keeps tight bottom corners. */
+    continues: Boolean = false
 ) {
     val card = MaterialTheme.colorScheme.surfaceContainer
     val seed = selectedPalette.seed
     val colorsBottom by animateDpAsState(
-        if (seed != null) TrailSenseShape.groupInner else TrailSenseShape.groupOuter,
+        if (seed != null || continues) TrailSenseShape.groupInner else TrailSenseShape.groupOuter,
         MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "colorsBottomCorner"
     )
@@ -157,7 +159,7 @@ fun <M> TrailSenseAppearancePicker(
                 onSelect = onStyleSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(card, trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = true)))
+                    .background(card, trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = !continues)))
                     .padding(TrailSenseSpacing.md)
             )
         }

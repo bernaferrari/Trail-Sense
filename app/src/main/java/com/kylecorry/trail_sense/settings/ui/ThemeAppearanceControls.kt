@@ -119,8 +119,10 @@ fun ThemeAppearanceControls(
         TrailSenseColorStyle.Muted to stringResource(R.string.color_style_muted)
     )
     val sunSummary = stringResource(R.string.theme_mode_sun_summary)
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+    // One group: modes, colours (and style), then night vision, 2 dp apart like any group's rows.
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
     TrailSenseAppearancePicker(
+        continues = true,
         modes = modes,
         selectedMode = choice.mode,
         onModeSelected = { update(choice.copy(mode = it, night = false)) },
@@ -149,7 +151,8 @@ fun ThemeAppearanceControls(
                 summary = stringResource(R.string.theme_night_vision_summary),
                 checked = choice.night,
                 onCheckedChange = { update(choice.copy(night = it)) },
-                position = position
+                // It continues the appearance cards above, so its top corners stay tight.
+                position = position.copy(isFirst = false)
             )
         }
         if (choice.night) {
@@ -162,7 +165,7 @@ fun ThemeAppearanceControls(
                         fullscreen = it
                         onNightFullscreenChanged(it)
                     },
-                    position = position
+                    position = position.copy(isFirst = false)
                 )
             }
         }

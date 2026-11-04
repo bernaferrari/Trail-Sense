@@ -60,8 +60,8 @@
     <string name="sky_pressure_rate_falling">Falling %s</string>
     <string name="sky_pressure_rate_steady">Steady %s</string>
     <string name="sky_pressure_outlook_rising">weather may improve</string>
-    <string name="sky_pressure_outlook_falling">weather may worsen</string>
-    <string name="sky_pressure_outlook_steady">no change expected</string>
+    <string name="sky_pressure_outlook_falling">weather may get worse</string>
+    <string name="sky_pressure_outlook_steady">weather should stay the same</string>
     <string name="sky_axis_high">High</string>
     <string name="sky_axis_normal">Normal</string>
     <string name="sky_axis_low">Low</string>

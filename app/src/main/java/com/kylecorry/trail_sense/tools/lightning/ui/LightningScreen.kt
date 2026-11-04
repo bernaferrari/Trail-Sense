@@ -434,7 +434,9 @@ private fun StormSky(
             }
 
             // The sound: a soft filled disc out to the front, rings rolling out inside it while you wait.
-            if (stage != StrikeStage.Ready && front > 0f) {
+            // A front only a few pixels wide (a strike a few hundred metres off, on a 10 km scale) would collapse
+            // into a stray dot under the number, so it is drawn only once it is a real ring.
+            if (stage != StrikeStage.Ready && front > 0f && front * perMeter > 14.dp.toPx()) {
                 val r = (front * perMeter).coerceAtMost(radius)
                 drawCircle(accent.copy(alpha = 0.14f), r)
                 if (stage == StrikeStage.Counting) {
