@@ -19,6 +19,7 @@ import android.text.util.Linkify.WEB_URLS
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -165,6 +166,7 @@ private fun FieldGuidePageScreen(
     val dates = remember(context) { FormatService.getInstance(context) }
     val editLabel = stringResource(R.string.edit)
 
+    // One question: what is this, and have I seen it? The photo and its names answer it; sightings and details follow.
     TrailSensePage(
         title = page?.let { formatter.formatTitle(it).text }.orEmpty(),
         onBack = onBack,
@@ -225,8 +227,6 @@ private fun FieldGuidePageScreen(
                     title = stringResource(R.string.sightings),
                     subtitle = subtitle,
                     icon = TrailIcons.Binoculars,
-                    accent = TrailSenseAccents.Leaf,
-                    badgeShape = MaterialShapes.Clover4Leaf.toShape(),
                     value = page.sightings.size.toString(),
                     position = position,
                     onClick = onSightings,
@@ -283,18 +283,6 @@ private fun FieldGuidePageScreen(
                                 FieldGuidePageTagType.ActivityPattern -> TrailIcons.Sun
                                 else -> TrailIcons.Paw
                             },
-                            accent = when (type) {
-                                FieldGuidePageTagType.Location -> TrailSenseAccents.Sky
-                                FieldGuidePageTagType.Habitat -> TrailSenseAccents.Leaf
-                                FieldGuidePageTagType.ActivityPattern -> TrailSenseAccents.Sun
-                                else -> TrailSenseAccents.Apricot
-                            },
-                            badgeShape = when (type) {
-                                FieldGuidePageTagType.Location -> MaterialShapes.Cookie6Sided.toShape()
-                                FieldGuidePageTagType.Habitat -> MaterialShapes.Clover4Leaf.toShape()
-                                FieldGuidePageTagType.ActivityPattern -> MaterialShapes.Sunny.toShape()
-                                else -> MaterialShapes.Puffy.toShape()
-                            },
                             position = position
                         )
                     }
@@ -315,50 +303,37 @@ private fun FieldGuidePageHero(
     otherName: AnnotatedString?,
     classification: String
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.hero),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-    ) {
-        Column {
-            if (images.isNotEmpty()) {
+    // The photo on the page, then the other name in emphasised type and its classification as one quiet line.
+    Column(Modifier.fillMaxWidth()) {
+        if (images.isNotEmpty()) {
+            Box(Modifier.clip(RoundedCornerShape(TrailSenseShape.hero))) {
                 FieldGuideImagePager(images = images, files = files)
             }
-            val hasFacts = otherName != null || classification.isNotBlank()
-            if (hasFacts) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("field_guide_page_title")
-                        .semantics(mergeDescendants = true) {}
-                        .padding(
-                            horizontal = TrailSenseSpacing.xl,
-                            vertical = TrailSenseSpacing.lg
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                ) {
-                    if (otherName != null) {
-                        Text(
-                            text = otherName,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    if (classification.isNotBlank()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
-                            modifier = Modifier.padding(top = TrailSenseSpacing.xs)
-                        ) {
-                            classification.split(" · ").forEachIndexed { index, name ->
-                                SkyPill(
-                                    name,
-                                    containerColor = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
-                                    contentColor = if (index == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
+        }
+        val hasFacts = otherName != null || classification.isNotBlank()
+        if (hasFacts) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("field_guide_page_title")
+                    .semantics(mergeDescendants = true) {}
+                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                if (otherName != null) {
+                    Text(
+                        text = otherName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                if (classification.isNotBlank()) {
+                    Text(
+                        text = classification,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

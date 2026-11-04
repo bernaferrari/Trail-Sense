@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -86,6 +87,7 @@ internal fun SurvivalGuidePressableSurface(
  * article summaries keep the list calm.
  */
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 internal fun SurvivalGuideGroupRow(
     title: String,
     position: TrailSenseGroupPosition,
@@ -93,8 +95,6 @@ internal fun SurvivalGuideGroupRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: Painter? = null,
-    iconShape: Shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-    accent: Color = Color.Unspecified,
     titleModifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null
 ) {
@@ -112,11 +112,11 @@ internal fun SurvivalGuideGroupRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
-                val wells = com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors(accent)
+                // One quiet shape for every chapter: the icon names it, colour adds nothing.
                 Surface(
-                    shape = iconShape,
-                    color = wells.container,
-                    contentColor = wells.content,
+                    shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
                 ) {
                     Box(contentAlignment = Alignment.Center) {

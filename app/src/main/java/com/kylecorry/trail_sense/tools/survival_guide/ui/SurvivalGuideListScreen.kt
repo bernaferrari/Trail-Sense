@@ -80,6 +80,7 @@ fun SurvivalGuideListScreen(
     onQueryChange: (String) -> Unit,
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit
 ) {
+    // One question: what do I do now? Search answers it (with the best passage up front); the chapters follow.
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     TrailSensePage(
         title = stringResource(R.string.survival_guide),
@@ -111,14 +112,22 @@ fun SurvivalGuideListScreen(
         // The chapters load in the background; until then nothing is shown rather than an empty list.
         if (listItems.isNotEmpty()) {
             if (query.isBlank()) {
-                // Browsing: the first chapter (the overview) as the hero, the rest as a grid of shaped tiles.
+                // Browsing: every chapter in one quiet list, the overview first with how many chapters there are.
                 item(key = "list") {
-                    Column(
-                        modifier = Modifier.testTag("list"),
-                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                    ) {
-                        SurvivalGuideHero(listItems.first(), chapters = listItems.size)
-                        SurvivalGuideTileGrid(listItems.drop(1))
+                    TrailSenseRowGroup(modifier = Modifier.testTag("list")) {
+                        listItems.forEachIndexed { index, item ->
+                            row { position ->
+                                SurvivalGuideRow(
+                                    item = if (index == 0) {
+                                        item.copy(subtitle = stringResource(R.string.sky_survival_chapters, listItems.size))
+                                    } else {
+                                        item
+                                    },
+                                    position = position,
+                                    index = index
+                                )
+                            }
+                        }
                     }
                 }
             } else {
@@ -126,199 +135,6 @@ fun SurvivalGuideListScreen(
                     TrailSenseRowGroup(modifier = Modifier.testTag("list")) {
                         listItems.forEachIndexed { index, item ->
                             row { position -> SurvivalGuideRow(item, position, index) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** One hue and one shape per chapter, so each topic is recognisable at a glance. */
-private val chapterAccents = listOf(
-    TrailSenseAccents.Coral,
-    TrailSenseAccents.Sky,
-    TrailSenseAccents.Leaf,
-    TrailSenseAccents.Sun,
-    TrailSenseAccents.Lavender,
-    TrailSenseAccents.Seafoam,
-    TrailSenseAccents.Apricot,
-    TrailSenseAccents.Rose,
-    TrailSenseAccents.Periwinkle,
-    TrailSenseAccents.Mint
-)
-
-@Composable
-private fun chapterShape(index: Int): androidx.compose.ui.graphics.Shape = when (index % 9) {
-    0 -> MaterialShapes.Cookie9Sided
-    1 -> MaterialShapes.Sunny
-    2 -> MaterialShapes.Clover4Leaf
-    3 -> MaterialShapes.Pentagon
-    4 -> MaterialShapes.Flower
-    5 -> MaterialShapes.Cookie6Sided
-    6 -> MaterialShapes.Gem
-    7 -> MaterialShapes.Puffy
-    else -> MaterialShapes.SoftBurst
-}.toShape()
-
-@Composable
-private fun SurvivalGuideHero(item: SurvivalGuideListItem, chapters: Int) {
-    SurvivalGuidePressableSurface(
-        onClick = item.onClick,
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        modifier = Modifier.testTag("guide_item")
-    ) {
-        // One compact row, so four chapters show on the first screen: badge, "Overview", the chapter count.
-        Row(
-            Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SkyFocalShape(
-                icon = item.icon,
-                shape = MaterialShapes.Cookie12Sided.toShape(),
-                size = 56.dp,
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    item.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.testTag("guide_item_title")
-                )
-                Text(
-                    stringResource(R.string.sky_survival_chapters, chapters),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null)
-        }
-    }
-}
-
-/** Chapters as connected tiles, two to a row: a shaped icon badge in the chapter's hue, its name and one line. */
-@Composable
-private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
-    if (allItems.isEmpty()) return
-    // First aid is the chapter you may need in a hurry: it gets a full-width tile in the error container.
-    val medical = allItems.firstOrNull { it.icon == TrailIcons.CategoryMedical }
-    val items = allItems - listOfNotNull(medical).toSet()
-    val rows = items.chunked(2)
-    // The caller's column spaces the feature tile and the grid apart.
-    if (medical != null) {
-        SurvivalGuidePressableSurface(
-            onClick = medical.onClick,
-            shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-            color = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.testTag("guide_item")
-        ) {
-            Row(Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md), verticalAlignment = Alignment.CenterVertically) {
-                // The one urgent door pulses once as the screen opens.
-                val pulse = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(1f) }
-                val pulseSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
-                androidx.compose.runtime.LaunchedEffect(Unit) {
-                    pulse.animateTo(1.18f, pulseSpec)
-                    pulse.animateTo(1f, pulseSpec)
-                }
-                TrailSenseShapeBadge(
-                    icon = medical.icon,
-                    shape = MaterialShapes.SoftBurst.toShape(),
-                    size = 48.dp,
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = pulse.value
-                        scaleY = pulse.value
-                    }
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        medical.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.testTag("guide_item_title")
-                    )
-                    medical.subtitle?.takeIf { it.isNotBlank() }?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-                SurvivalChevron(MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.onError)
-            }
-        }
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-        rows.forEachIndexed { rowIndex, row ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
-                modifier = Modifier.height(IntrinsicSize.Max)
-            ) {
-                row.forEachIndexed { columnIndex, item ->
-                    val index = rowIndex * 2 + columnIndex
-                    val wells = trailSenseWellColors(chapterAccents[index % chapterAccents.size])
-                    SurvivalGuidePressableSurface(
-                        onClick = item.onClick,
-                        shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                        color = androidx.compose.ui.graphics.lerp(
-                            MaterialTheme.colorScheme.surfaceContainerLow,
-                            wells.container,
-                            0.4f
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .testTag("guide_item")
-                    ) {
-                        Column(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 128.dp)
-                                .padding(TrailSenseSpacing.lg),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                        ) {
-                            Row(verticalAlignment = Alignment.Top) {
-                                TrailSenseShapeBadge(
-                                    icon = item.icon,
-                                    shape = chapterShape(index),
-                                    size = 52.dp,
-                                    containerColor = wells.content,
-                                    contentColor = wells.container
-                                )
-
-                            }
-                            Spacer(Modifier.height(TrailSenseSpacing.sm))
-                            Text(
-                                item.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.testTag("guide_item_title")
-                            )
-                            item.subtitle?.takeIf { it.isNotBlank() }?.let {
-                                Text(
-                                    it,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2,
-
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
                         }
                     }
                 }
@@ -338,9 +154,9 @@ private fun SurvivalGuideSummary(
     val title = getSummaryTitle(result)
     SurvivalGuidePressableSurface(
         onClick = { onSummaryClick(result) },
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = modifier.testTag("summary_holder")
     ) {
         Column(
@@ -353,22 +169,14 @@ private fun SurvivalGuideSummary(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TrailSenseShapeBadge(
-                    icon = TrailIcons.Search,
-                    shape = MaterialShapes.Sunny.toShape(),
-                    size = 48.dp,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.md))
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
                 ) {
                     Text(
                         text = result.chapter.title,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.testTag("summary_chapter_title")
                     )
                     Text(
@@ -418,8 +226,6 @@ private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGr
         title = item.title,
         subtitle = subtitle,
         icon = rememberVectorPainter(item.icon),
-        iconShape = chapterShape(index),
-        accent = chapterAccents[index % chapterAccents.size],
         position = position,
         onClick = item.onClick,
         modifier = Modifier.testTag("guide_item"),
@@ -443,19 +249,4 @@ private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
             null
         }
     ).joinToString(" › ")
-}
-
-/** A small circular arrow: the tile opens a chapter. */
-@Composable
-private fun SurvivalChevron(container: androidx.compose.ui.graphics.Color, content: androidx.compose.ui.graphics.Color) {
-    androidx.compose.material3.Surface(
-        shape = androidx.compose.foundation.shape.CircleShape,
-        color = container,
-        contentColor = content,
-        modifier = Modifier.size(32.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
-        }
-    }
 }
