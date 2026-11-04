@@ -23,13 +23,14 @@ fun TrailSenseSearchBar(
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
-    clearContentDescription: String? = null
+    clearContentDescription: String? = null,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
 ) {
     TextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         trailingIcon = if (value.isNotEmpty() && clearContentDescription != null) {
             {
                 IconButton(onClick = { onValueChange("") }) {
@@ -48,9 +49,9 @@ fun TrailSenseSearchBar(
             .height(56.dp),
         shape = CircleShape,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            focusedContainerColor = containerColor,
+            unfocusedContainerColor = containerColor,
+            disabledContainerColor = containerColor,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent

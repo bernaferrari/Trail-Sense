@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,7 +46,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * The family's empty state: a layered expressive mark (a slowly turning cookie, the icon on a primary badge, small
- * shapes drifting round it), a headline, one line of warm copy, and at most one filled primary action. Screens with
+ * shapes drifting round it, which can carry [accents] icons that tell the feature's story) in the feature's [tone], a headline, one line of warm copy, and at most one filled primary action. Screens with
  * an empty state show no second "add" button (no FAB) beside it. Sits in the upper half rather than floating in the
  * middle of a tall screen.
  */
@@ -59,9 +60,14 @@ fun TrailSenseEmptyState(
     actionLabel: String? = null,
     actionIcon: ImageVector? = null,
     onAction: (() -> Unit)? = null,
-    actionModifier: Modifier = Modifier
+    actionModifier: Modifier = Modifier,
+    tone: TrailSenseTone = TrailSenseTone.Primary,
+    accents: List<ImageVector> = emptyList(),
+    secondaryActionLabel: String? = null,
+    onSecondaryAction: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
+    val colors = trailSenseToneColors(tone)
     val transition = rememberInfiniteTransition(label = "empty")
     val turn by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(36_000, easing = LinearEasing)), label = "turn")
     val bob by transition.animateFloat(-4f, 4f, infiniteRepeatable(tween(2_600), RepeatMode.Reverse), label = "bob")
@@ -79,21 +85,34 @@ fun TrailSenseEmptyState(
                     .size(176.dp)
                     .rotate(turn),
                 shape = MaterialShapes.Cookie12Sided.toShape(),
-                color = scheme.primaryContainer
+                color = colors.container
             ) {}
             Surface(
                 modifier = Modifier.size(104.dp),
                 shape = MaterialShapes.Cookie9Sided.toShape(),
-                color = scheme.primary,
-                contentColor = scheme.onPrimary
+                color = colors.accent,
+                contentColor = colors.onAccent
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(icon, contentDescription = null, modifier = Modifier.size(48.dp))
                 }
             }
-            Satellite(MaterialShapes.Sunny.toShape(), scheme.tertiaryContainer, 36.dp, (-78).dp, (-70 + bob).dp)
-            Satellite(MaterialShapes.Flower.toShape(), scheme.secondaryContainer, 28.dp, 82.dp, (60 - bob).dp)
-            Satellite(MaterialShapes.Pill.toShape(), scheme.tertiary, 16.dp, 86.dp, (-58 - bob).dp)
+            // The satellites tell the feature's story: each accent icon rides a small shape round the mark.
+            val first = accents.getOrNull(0)
+            val second = accents.getOrNull(1)
+            val third = accents.getOrNull(2)
+            Satellite(
+                MaterialShapes.Sunny.toShape(), scheme.tertiaryContainer, if (first != null) 48.dp else 36.dp,
+                (-80).dp, (-70 + bob).dp, first, scheme.onTertiaryContainer, -12f
+            )
+            Satellite(
+                MaterialShapes.Flower.toShape(), scheme.secondaryContainer, if (second != null) 44.dp else 28.dp,
+                84.dp, (62 - bob).dp, second, scheme.onSecondaryContainer, 10f
+            )
+            Satellite(
+                MaterialShapes.Pill.toShape(), scheme.tertiary, if (third != null) 36.dp else 16.dp,
+                88.dp, (-60 - bob).dp, third, scheme.onTertiary, 0f
+            )
         }
         Spacer(Modifier.height(TrailSenseSpacing.xl))
         Column(
@@ -132,6 +151,12 @@ fun TrailSenseEmptyState(
                 Text(actionLabel, style = MaterialTheme.typography.titleMedium)
             }
         }
+        if (secondaryActionLabel != null && onSecondaryAction != null) {
+            Spacer(Modifier.height(TrailSenseSpacing.xs))
+            TextButton(onClick = onSecondaryAction, shapes = ButtonDefaults.shapes()) {
+                Text(secondaryActionLabel, style = MaterialTheme.typography.titleSmall)
+            }
+        }
         if (action != null) {
             Spacer(Modifier.height(TrailSenseSpacing.xl))
             action()
@@ -140,13 +165,30 @@ fun TrailSenseEmptyState(
 }
 
 @Composable
-private fun BoxScope.Satellite(shape: Shape, color: Color, size: Dp, x: Dp, y: Dp) {
+private fun BoxScope.Satellite(
+    shape: Shape,
+    color: Color,
+    size: Dp,
+    x: Dp,
+    y: Dp,
+    icon: ImageVector? = null,
+    iconColor: Color = Color.Unspecified,
+    tilt: Float = 0f
+) {
     Surface(
         modifier = Modifier
             .align(Alignment.Center)
             .offset(x = x, y = y)
-            .size(size),
+            .size(size)
+            .rotate(tilt),
         shape = shape,
-        color = color
-    ) {}
+        color = color,
+        contentColor = iconColor
+    ) {
+        if (icon != null) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(size * 0.5f))
+            }
+        }
+    }
 }

@@ -137,7 +137,7 @@ fun trailSenseGridCellShape(column: Int, columns: Int, row: Int, rows: Int): Rou
 
 /**
  * Tiles in a connected grid: two columns on a phone, more on wide screens. A short last row stretches its tiles
- * across the column width only, so the grid keeps one rhythm. Tiles in a row share one height, and every title on the grid uses one
+ * across the full width, so the grid never shows a hole. Tiles in a row share one height, and every title on the grid uses one
  * size, the largest that keeps the longest title on one line beside its icon.
  */
 @Composable
@@ -156,33 +156,18 @@ fun TrailSenseTileGrid(tiles: List<TrailSenseTile>, modifier: Modifier = Modifie
                     horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                 ) {
                     row.forEachIndexed { column, tile ->
-                        // A lone last tile keeps its column's width (the grid's rhythm holds), and rounds the corner
-                        // the empty cell leaves open.
-                        val short = row.size < columns && column == row.lastIndex
-                        val base = trailSenseGridCellShape(column, columns, rowIndex, rows.size)
+                        // A short last row stretches across the width, so the grid never shows a hole.
+                        val last = rowIndex == rows.lastIndex
+                        val cellColumns = if (last) row.size else columns
                         Tile(
                             tile = tile,
-                            shape = if (short) {
-                                base.copy(
-                                    bottomEnd = androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter),
-                                    topEnd = if (rows.size == 1) {
-                                        androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter)
-                                    } else {
-                                        base.topEnd
-                                    }
-                                )
-                            } else if (rowIndex == rows.size - 2 && column >= rows.last().size && column == columns - 1) {
-                                base.copy(bottomEnd = androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter))
-                            } else {
-                                base
-                            },
+                            shape = trailSenseGridCellShape(column, cellColumns, rowIndex, rows.size),
                             titleSize = size,
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
                         )
                     }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
