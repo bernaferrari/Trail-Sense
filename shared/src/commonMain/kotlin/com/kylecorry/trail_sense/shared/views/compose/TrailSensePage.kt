@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -283,8 +284,11 @@ fun TrailSenseGroupHeader(title: String, modifier: Modifier = Modifier) {
 data class TrailSenseChoice<T>(val value: T, val label: String, val icon: ImageVector? = null)
 
 /**
- * The family's segmented control: connected buttons, the chosen one solid primary with its icon traded for a check,
- * the others raised off the card. Read out as a radio group.
+ * The family's one selection control, used for every "pick one of a few" choice (tabs inside a screen, units,
+ * directions, modes): connected buttons 40 dp tall, the chosen one in secondaryContainer with a check. The label never
+ * moves: every button keeps a leading slot (the option's icon, or the check when chosen), so choosing only swaps what
+ * is in the slot. Buttons share the width equally; with [scrollable] (more options than fit, like Convert's six) they
+ * take their natural width in a row that scrolls sideways. Read out as a radio group.
  */
 @Composable
 fun <T> TrailSenseConnectedChoice(
@@ -292,11 +296,19 @@ fun <T> TrailSenseConnectedChoice(
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    label: String? = null
+    label: String? = null,
+    scrollable: Boolean = false
 ) {
     androidx.compose.foundation.layout.Row(
         modifier = modifier
             .fillMaxWidth()
+            .then(
+                if (scrollable) {
+                    Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState())
+                } else {
+                    Modifier
+                }
+            )
             .selectableGroup()
             .then(if (label != null) Modifier.semantics { contentDescription = label } else Modifier),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
@@ -307,36 +319,59 @@ fun <T> TrailSenseConnectedChoice(
                 checked = checked,
                 onCheckedChange = { if (it && !checked) onSelect(option.value) },
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                    .then(if (scrollable) Modifier else Modifier.weight(1f))
+                    .heightIn(min = TrailSenseChoiceDefaults.height)
                     .semantics { role = Role.RadioButton },
-                shapes = when (index) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                shapes = when {
+                    options.size == 1 -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    index == options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = ToggleButtonDefaults.toggleButtonColors(
-                    checkedContainerColor = MaterialTheme.colorScheme.primary,
-                    checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                ),
+                colors = trailSenseChoiceColors(),
                 contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm)
             ) {
-                val icon = if (checked) Icons.Rounded.Check else option.icon
-                if (icon != null) {
-                    Icon(icon, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                }
-                Text(
-                    option.label,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                TrailSenseChoiceContent(label = option.label, icon = option.icon, checked = checked)
             }
         }
     }
+}
+
+object TrailSenseChoiceDefaults {
+    /** Every selection control in the family is this tall (the touch target still grows to 48 dp). */
+    val height = 40.dp
+}
+
+/** The selection colours: chosen = secondaryContainer, the rest a quiet raised surface. */
+@Composable
+fun trailSenseChoiceColors() = ToggleButtonDefaults.toggleButtonColors(
+    checkedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    checkedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+)
+
+/**
+ * A choice button's content with a fixed label position: the leading slot (icon, or check when chosen) is always
+ * there, so the label sits in the same place whether or not it is chosen.
+ */
+@Composable
+fun RowScope.TrailSenseChoiceContent(label: String, icon: ImageVector?, checked: Boolean) {
+    val slot = ToggleButtonDefaults.IconSize
+    val shown = if (checked) Icons.Rounded.Check else icon
+    Box(Modifier.size(slot), contentAlignment = Alignment.Center) {
+        if (shown != null) {
+            Icon(shown, contentDescription = null, modifier = Modifier.size(slot))
+        }
+    }
+    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+    Text(
+        label,
+        modifier = Modifier.padding(end = TrailSenseSpacing.xs),
+        style = MaterialTheme.typography.labelLarge,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 /** A group card holding anything (a chart, a choice, a preview) with the group's shape and tone. */
