@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,11 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,11 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSectionHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
+/**
+ * The AR layers sheet: one group with a switch per layer, each named by its layer rather than a header over a
+ * "Visible" switch, and the note about modes that override these choices as the group's footer.
+ */
 @Composable
 fun ARLayersContent(
     showBeaconLayer: Boolean,
@@ -37,96 +41,71 @@ fun ARLayersContent(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    val overrideMessage = stringResource(R.string.ar_layer_override_message)
+    LazyColumn(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            bottom = TrailSenseSpacing.xxxl
+        ),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                bottom = TrailSenseSpacing.xxxl
-            )
-        ) {
-            item("title") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = TrailSenseSpacing.screen,
-                            end = TrailSenseSpacing.md,
-                            top = TrailSenseSpacing.sm,
-                            bottom = TrailSenseSpacing.sm
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.layers),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
+        item("title") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = TrailSenseSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.layers),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(android.R.string.cancel)
                     )
-                    IconButton(onClick = onClose) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(android.R.string.cancel)
-                        )
-                    }
                 }
             }
-            item("override_reason") {
-                Text(
-                    text = stringResource(R.string.ar_layer_override_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        bottom = TrailSenseSpacing.md
-                    )
-                )
-            }
-            item("beacons_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.beacons))
-            }
-            item("beacons") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+        }
+        trailSenseSection(
+            key = "layers",
+            footer = overrideMessage
+        ) {
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.beacons),
                     checked = showBeaconLayer,
                     onCheckedChange = onShowBeaconLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+                    position = position
                 )
             }
-            item("paths_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.paths))
-            }
-            item("paths") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.paths),
                     checked = showPathLayer,
                     onCheckedChange = onShowPathLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+                    position = position
                 )
             }
-            item("astronomy_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.astronomy))
-            }
-            item("astronomy") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.astronomy),
                     checked = showAstronomyLayer,
                     onCheckedChange = onShowAstronomyLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+                    position = position
                 )
             }
-            item("grid_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.grid))
-            }
-            item("grid") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.grid),
                     checked = showGridLayer,
                     onCheckedChange = onShowGridLayerChange,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+                    position = position
                 )
             }
         }
