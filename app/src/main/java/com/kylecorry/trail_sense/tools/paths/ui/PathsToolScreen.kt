@@ -2,6 +2,13 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.width
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -665,7 +672,8 @@ private fun PathsScreen(
                 )
             }
 
-            item(key = "search") {
+            // Nothing to search until there is a path: the bar only appears once the list has something in it.
+            if (searchText.isNotBlank() || !isLoaded || items.isNotEmpty()) item(key = "search") {
                 TrailSenseSearchBar(
                     value = searchText,
                     onValueChange = onSearchChange,
@@ -684,6 +692,9 @@ private fun PathsScreen(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
+                        // A trail being walked: dotted steps, a pin where it started and a flag where it ends.
+                        tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Tertiary,
+                        accents = if (isSearching) emptyList() else listOf(TrailIcons.PathDotted, TrailIcons.Location, TrailIcons.Flag),
                         modifier = Modifier.testTag("waypoints_empty_text")
                     )
                 }
@@ -865,14 +876,22 @@ private fun BacktrackRow(
     onToggleClick: () -> Unit
 ) {
     val isOn = state == FeatureState.On
-    val tone = if (isOn) TrailSenseTone.Good else TrailSenseTone.Primary
+    // Off is calm and secondary; recording is the one loud, green state with a pulse round its mark.
+    val tone = if (isOn) TrailSenseTone.Good else TrailSenseTone.Secondary
     val colors = trailSenseToneColors(tone)
     val frequencyText = frequency?.let { formatService.formatDuration(it, short = true, includeSeconds = true) }
-    val turn by rememberInfiniteTransition(label = "backtrack").animateFloat(
+    val transition = rememberInfiniteTransition(label = "backtrack")
+    val turn by transition.animateFloat(
         0f,
         360f,
         infiniteRepeatable(tween(12_000, easing = LinearEasing)),
         label = "turn"
+    )
+    val pulse by transition.animateFloat(
+        0f,
+        1f,
+        infiniteRepeatable(tween(2_200, easing = LinearEasing)),
+        label = "pulse"
     )
 
     Box(modifier = Modifier.testTag("backtrack_play_bar")) {
@@ -885,15 +904,31 @@ private fun BacktrackRow(
             ),
             tone = tone,
             badge = {
-                Box(Modifier.rotate(if (isOn) turn else 0f)) {
-                    TrailSenseShapeBadge(
-                        icon = TrailIcons.ToolBacktrack,
-                        shape = MaterialShapes.Cookie9Sided.toShape(),
-                        size = 64.dp,
-                        containerColor = colors.accent,
-                        contentColor = colors.onAccent,
-                        iconRotation = if (isOn) -turn else 0f
-                    )
+                Box(contentAlignment = Alignment.Center) {
+                    if (isOn) {
+                        // A soft ring breathes out from the mark while the trail is being saved.
+                        Box(
+                            Modifier
+                                .size(64.dp)
+                                .graphicsLayer {
+                                    val scale = 1f + 0.35f * pulse
+                                    scaleX = scale
+                                    scaleY = scale
+                                    alpha = (1f - pulse) * 0.6f
+                                }
+                                .background(colors.accent, CircleShape)
+                        )
+                    }
+                    Box(Modifier.rotate(if (isOn) turn else 0f)) {
+                        TrailSenseShapeBadge(
+                            icon = TrailIcons.ToolBacktrack,
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            size = 64.dp,
+                            containerColor = colors.accent,
+                            contentColor = colors.onAccent,
+                            iconRotation = if (isOn) -turn else 0f
+                        )
+                    }
                 }
             },
             trailing = {
@@ -917,14 +952,30 @@ private fun BacktrackRow(
                     )
                 }
             },
-            actions = listOf(
-                TrailSenseSpotlightAction(
-                    label = frequencyText?.let { stringResource(R.string.places_backtrack_every, it) }
-                        ?: stringResource(R.string.frequency),
-                    icon = TrailIcons.ToolClock,
-                    onClick = onFrequencyClick
-                )
-            )
+            content = {
+                // The interval reads as a picker: clock, value, and a drop-down arrow at the end.
+                FilledTonalButton(
+                    onClick = onFrequencyClick,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                        contentColor = colors.content
+                    )
+                ) {
+                    Icon(TrailIcons.ToolClock, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    Text(
+                        frequencyText?.let { stringResource(R.string.places_backtrack_every, it) }
+                            ?: stringResource(R.string.frequency),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1
+                    )
+                    Icon(TrailIcons.DropDown, contentDescription = null, modifier = Modifier.size(20.dp))
+                }
+            }
         )
     }
 }
