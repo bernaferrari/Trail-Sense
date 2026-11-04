@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/screenshot-studio/studio/schemas/studio.schema.json",
+  "app": "Trail Sense",
+  "package": "com.kylecorry.trail_sense",
+  "locales": [
+    "en-US"
+  ],
+  "defaultLocale": "en-US",
+  "supersample": 2,
+  "capture": {
+    "build": "./gradlew :app:assembleDebug -q",
+    "install": [
+      {
+        "apk": "app/build/outputs/apk/debug/app-debug.apk",
+        "package": "com.kylecorry.trail_sense"
+      }
+    ],
+    "runs": [
+      {
+        "locales": "default"
+      }
+    ]
+  }
+}
