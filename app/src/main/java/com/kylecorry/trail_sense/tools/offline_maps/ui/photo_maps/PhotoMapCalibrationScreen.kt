@@ -25,7 +25,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesFilledField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -737,7 +737,7 @@ private class PhotoMapCalibrationPanelState(
 
             Spacer(modifier = Modifier.size(TrailSenseSpacing.sm))
 
-            OutlinedTextField(
+            PlacesFilledField(
                 value = coordinateText,
                 onValueChange = ::updateCoordinate,
                 modifier = Modifier.weight(1f),

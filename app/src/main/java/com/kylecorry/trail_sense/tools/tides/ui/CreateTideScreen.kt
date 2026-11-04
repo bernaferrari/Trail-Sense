@@ -32,7 +32,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesFilledField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -628,7 +628,7 @@ private fun TideTextInput(
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
+    PlacesFilledField(
         value = text,
         onValueChange = onTextChange,
         modifier = modifier
@@ -722,7 +722,7 @@ private fun TideLocationInput(
             }
         }
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        OutlinedTextField(
+        PlacesFilledField(
             value = locationText,
             onValueChange = {
                 locationText = it
@@ -903,7 +903,7 @@ private fun LunitidalIntervalInput(
                 )
             )
         }
-        OutlinedTextField(
+        PlacesFilledField(
             value = hoursText,
             onValueChange = {
                 hoursText = it.filter(Char::isDigit).take(2)
@@ -919,7 +919,7 @@ private fun LunitidalIntervalInput(
             )
         )
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        OutlinedTextField(
+        PlacesFilledField(
             value = minutesText,
             onValueChange = {
                 minutesText = it.filter(Char::isDigit).take(2)

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
 import android.text.InputType
@@ -21,8 +22,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesFilledField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -382,7 +382,7 @@ private fun PackTextInput(
 
         else -> androidx.compose.ui.text.input.KeyboardType.Text
     }
-    OutlinedTextField(
+    PlacesFilledField(
         value = text,
         onValueChange = onTextChange,
         modifier = modifier
@@ -492,7 +492,7 @@ private fun WeightInput(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        OutlinedTextField(
+        PlacesFilledField(
             value = amountText,
             onValueChange = {
                 amountText = it
@@ -518,7 +518,7 @@ private fun WeightInput(
 
         if (unit == WeightUnits.Pounds) {
             Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-            OutlinedTextField(
+            PlacesFilledField(
                 value = ouncesText,
                 onValueChange = {
                     ouncesText = it
@@ -538,7 +538,7 @@ private fun WeightInput(
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         Box(modifier = Modifier.weight(1f)) {
             var isOpen by remember { mutableStateOf(false) }
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = { isOpen = true },
                 modifier = Modifier
                     .fillMaxWidth()
