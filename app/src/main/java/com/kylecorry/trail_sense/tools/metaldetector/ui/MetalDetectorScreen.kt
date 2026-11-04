@@ -982,12 +982,23 @@ private fun MetalChart(
             val minimum = min(30f, data.minOrNull() ?: 30f)
             val maximum = max(70f, data.maxOrNull() ?: 70f)
             val range = (maximum - minimum).takeIf { it > 0f } ?: 1f
-
+            // The family chart: words in a gutter at the left, the trace in a rounded panel beside them.
+            val gutter = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter.toPx()
+            val inset = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset.toPx()
+            val plotLeft = gutter
+            val plotWidth = size.width - gutter
+            drawRoundRect(
+                Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.10f), metalColor.copy(alpha = 0.04f))),
+                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, 0f),
+                size = androidx.compose.ui.geometry.Size(plotWidth, size.height),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx())
+            )
             fun x(index: Int): Float {
+                val span = plotWidth - inset * 2
                 return if (data.size <= 1) {
-                    size.width
+                    plotLeft + inset + span
                 } else {
-                    index.toFloat() / (data.size - 1).toFloat() * size.width
+                    plotLeft + inset + index.toFloat() / (data.size - 1).toFloat() * span
                 }
             }
 
@@ -1000,18 +1011,19 @@ private fun MetalChart(
             val bottom = y(lowerThreshold)
             drawRect(
                 Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.22f), metalColor.copy(alpha = 0.04f)), endY = top),
-                size = androidx.compose.ui.geometry.Size(size.width, top.coerceAtLeast(0f))
+                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, 0f),
+                size = androidx.compose.ui.geometry.Size(plotWidth, top.coerceAtLeast(0f))
             )
             drawRect(
                 Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.04f), metalColor.copy(alpha = 0.22f)), startY = bottom, endY = size.height),
-                topLeft = androidx.compose.ui.geometry.Offset(0f, bottom),
-                size = androidx.compose.ui.geometry.Size(size.width, (size.height - bottom).coerceAtLeast(0f))
+                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, bottom),
+                size = androidx.compose.ui.geometry.Size(plotWidth, (size.height - bottom).coerceAtLeast(0f))
             )
             val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
             listOf(top, bottom).forEach { yLine ->
                 drawLine(
                     color = inkColor.copy(alpha = 0.45f),
-                    start = androidx.compose.ui.geometry.Offset(0f, yLine),
+                    start = androidx.compose.ui.geometry.Offset(plotLeft, yLine),
                     end = androidx.compose.ui.geometry.Offset(size.width, yLine),
                     strokeWidth = 1.5.dp.toPx(),
                     pathEffect = dash
@@ -1020,9 +1032,9 @@ private fun MetalChart(
 
             drawRoundRect(
                 color = band,
-                topLeft = androidx.compose.ui.geometry.Offset(0f, y(upperThreshold)),
+                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, y(upperThreshold)),
                 size = androidx.compose.ui.geometry.Size(
-                    size.width,
+                    plotWidth,
                     (y(lowerThreshold) - y(upperThreshold)).coerceAtLeast(0f)
                 ),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx())
@@ -1054,15 +1066,16 @@ private fun MetalChart(
             )
             val last = data.last()
             val now = androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last))
-            drawCircle(lineColor.copy(alpha = 0.25f), 11.dp.toPx(), now)
-            drawCircle(lineColor, 5.dp.toPx(), now)
+            drawCircle(lineColor.copy(alpha = 0.18f), 14.dp.toPx(), now)
+            drawCircle(lineColor, 6.dp.toPx(), now)
 
-            // Word labels for the bands, at the left so they never sit under the "now" dot.
+            // Word labels for the bands, in the gutter, right-aligned against the panel: no trace can cross them.
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 textSize = labelSize
+                textAlign = android.graphics.Paint.Align.RIGHT
                 typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
             }
-            val pad = 8.dp.toPx()
+            val pad = gutter - 8.dp.toPx()
             drawIntoCanvas { canvas ->
                 paint.color = inkColor.copy(alpha = 0.8f).toArgb()
                 if (bottom - top > labelSize * 1.4f) {

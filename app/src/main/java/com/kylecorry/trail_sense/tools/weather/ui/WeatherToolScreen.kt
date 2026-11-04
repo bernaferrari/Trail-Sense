@@ -945,7 +945,7 @@ private fun WeatherChartAxis(data: WeatherPressureChartData, formatService: Form
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = TrailSenseSpacing.sm, start = 44.dp)
+            .padding(top = TrailSenseSpacing.sm, start = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter)
     ) {
         Text(
             stringResource(R.string.time_ago, formatService.formatDuration(span, short = true)),
@@ -994,11 +994,19 @@ private fun WeatherPressureChart(
         }
 
         val chartPoints = weatherPressureChartPoints(data, raw, forecast)
+        // Word axes (High, Normal, Low for this window) live in the frame's gutter, so no line ever crosses them.
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame(
+            yLabels = listOf(
+                stringResource(R.string.sky_axis_high),
+                stringResource(R.string.sky_axis_normal),
+                stringResource(R.string.sky_axis_low)
+            ),
+            modifier = Modifier.fillMaxSize()
+        ) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                // The value labels get their own column at the left; the plot keeps room for the now dot's halo.
-                .padding(start = 44.dp, end = 12.dp)
+                .padding(horizontal = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset)
                 .onSizeChanged { chartSize = it }
                 .pointerInput(data, chartSize) {
                     detectTapGestures { tap ->
@@ -1071,7 +1079,7 @@ private fun WeatherPressureChart(
             }
             // The recorded pressure: a deep wash under the line, then the line itself.
             if (chartPoints.data.size >= 2) {
-                val line = pathOf(chartPoints.data)
+                val line = com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath(chartPoints.data.map(::at))
                 val area = Path().apply {
                     addPath(line)
                     lineTo(at(chartPoints.data.last()).x, size.height)
@@ -1112,37 +1120,6 @@ private fun WeatherPressureChart(
                 drawCircle(primary, radius = 6.dp.toPx(), center = o)
             }
         }
-
-        // The values of the grid lines, so a steady pressure reads as steady rather than as a broken flat line.
-        val decimals = when {
-            chartPoints.yRange < 2f -> 2
-            chartPoints.yRange < 30f -> 0
-            else -> 0
-        }
-        Column(
-            Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxHeight()
-                .width(60.dp)
-                .padding(vertical = 4.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.End
-        ) {
-            // Word axes: High, Normal and Low for this window, so the shape reads before the numbers do.
-            listOf(
-                R.string.sky_axis_high,
-                R.string.sky_axis_normal,
-                R.string.sky_axis_low
-            ).forEach { label ->
-                Text(
-                    stringResource(label),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    color = textColor,
-                    maxLines = 1,
-                    softWrap = false
-                )
-            }
 
         }
     }
