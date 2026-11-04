@@ -95,14 +95,24 @@ internal fun ExperimentationContent() {
             loaded.isEmpty() -> {
                 item(key = "empty") {
                     // The kit's layered mark: one clear message, no placeholder rows pretending to be plugins.
+                    // The satellites name what a plugin brings: weather sources and map layers.
                     TrailSenseEmptyState(
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
                         description = stringResource(R.string.sky_experimentation_empty),
-                        modifier = Modifier.heightIn(min = 400.dp)
+                        tone = TrailSenseTone.Tertiary,
+                        accents = listOf(TrailIcons.Weather, TrailIcons.Layers, TrailIcons.Experimental),
+                        modifier = Modifier.heightIn(min = 340.dp)
                     )
                 }
                 // Dashed outlines where installed plugins will sit, so the page previews what it is for.
+                item(key = "slots") {
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                        ExperimentationDashedSlot()
+                        ExperimentationDashedSlot()
+                    }
+                }
+
             }
 
             else -> {
