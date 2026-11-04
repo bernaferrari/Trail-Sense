@@ -25,4 +25,6 @@
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
     </plurals>
+    <!-- Notes -->
+    <string name="places_notes_latest">Latest note</string>
 </resources>
