@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
@@ -65,11 +65,13 @@ fun TrailSenseEmptyState(
     val transition = rememberInfiniteTransition(label = "empty")
     val turn by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(36_000, easing = LinearEasing)), label = "turn")
     val bob by transition.animateFloat(-4f, 4f, infiniteRepeatable(tween(2_600), RepeatMode.Reverse), label = "bob")
+    // Fills the space it is given and centres in it (in a list it simply wraps its content).
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Box(Modifier.size(208.dp), contentAlignment = Alignment.Center) {
             Surface(
