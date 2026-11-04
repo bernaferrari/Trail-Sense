@@ -312,7 +312,8 @@ private fun SignalFinderScreen(
     onCreateBeacon: (ApproximateCoordinate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Presentation-only: the strongest registered/available signal is surfaced as the hero.
+    // One question: how good is my signal here, and which way is the nearest tower?
+    // Presentation-only: the strongest registered/available signal is the reading.
     val bestSignal = signals.maxByOrNull { it.strength }
     val signalsTitle = stringResource(R.string.cell_signal)
     val towersTitle = stringResource(R.string.cell_towers)
@@ -337,10 +338,7 @@ private fun SignalFinderScreen(
                     TrailSenseEmptyState(
                         icon = TrailIcons.CellTower,
                         title = stringResource(R.string.no_cell_towers_found),
-                        description = stringResource(R.string.signal_finder_empty_hint),
-                        // A quiet sky: an empty signal, a pin for where you stand, a mountain to climb for line of sight.
-                        tone = TrailSenseTone.Secondary,
-                        accents = listOf(TrailIcons.SignalCellularOutline, TrailIcons.Location, TrailIcons.Altitude)
+                        description = stringResource(R.string.signal_finder_empty_hint)
                     )
                 }
                 SignalDisclaimer(disclaimer)
@@ -362,13 +360,41 @@ private fun SignalFinderScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-                if (bestSignal != null) {
-                    item("hero") {
-                        SignalHero(signal = bestSignal, formatter = formatter)
+                // Nearest first, so the numbers read as a ranking and the first row is the one to head for.
+                val sortedTowers = towers.sortedBy { location.distanceTo(it.coordinate) }
+
+                // The live object: the towers around you on a radar (or the signal bars when there are none), with the
+                // reading right under it.
+                item("instrument") {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                    ) {
+                        if (sortedTowers.isNotEmpty()) {
+                            TowerRadar(
+                                towers = sortedTowers,
+                                location = location,
+                                formatter = formatter,
+                                prefs = prefs
+                            )
+                        } else if (bestSignal != null) {
+                            SignalBars(
+                                strength = bestSignal.strength,
+                                color = MaterialTheme.colorScheme.primary,
+                                track = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                modifier = Modifier
+                                    .padding(vertical = TrailSenseSpacing.xl)
+                                    .size(width = 140.dp, height = 120.dp)
+                            )
+                        }
+                        if (bestSignal != null) {
+                            SignalReading(signal = bestSignal, formatter = formatter)
+                        }
                     }
                 }
 
-                // A single signal is already the hero; the list only earns its place with two or more.
+                // A single signal is already the reading; the list only earns its place with two or more.
                 if (signals.size > 1) {
                     trailSenseSection(key = "signals", title = signalsTitle) {
                         signals.forEach { signal ->
@@ -379,19 +405,8 @@ private fun SignalFinderScreen(
                     }
                 }
 
-                if (towers.isNotEmpty()) {
-                    // Nearest first, so the numbers read as a ranking and the first row is the one to head for.
-                    val sortedTowers = towers.sortedBy { location.distanceTo(it.coordinate) }
+                if (sortedTowers.isNotEmpty()) {
                     trailSenseSection(key = "towers", title = towersTitle) {
-                        row { position ->
-                            TowerRadar(
-                                towers = sortedTowers,
-                                location = location,
-                                formatter = formatter,
-                                prefs = prefs,
-                                position = position
-                            )
-                        }
                         sortedTowers.forEachIndexed { index, tower ->
                             row { position ->
                                 CellTowerRow(
@@ -417,54 +432,49 @@ private fun SignalFinderScreen(
     }
 }
 
-/**
- * The hero: the strongest signal as a Spotlight toned by its quality (good, caution, error), its network and
- * service under it, and four rounded bars that fill with the strength.
- */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/** The reading: the strongest signal's strength, the service it gives as the verdict, and its network. */
 @Composable
-private fun SignalHero(
+private fun SignalReading(
     signal: CellSignal,
     formatter: FormatService,
     modifier: Modifier = Modifier
 ) {
-    val tone = strengthTone(signal.strength)
-    val colors = trailSenseToneColors(tone)
-    TrailSenseSpotlight(
-        title = formatter.formatPercentage(signal.strength),
-        titleStyle = MaterialTheme.typography.displayLarge,
-        supportingText = formatter.join(
-            if (signal.isRegistered) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+    ) {
+        Text(
+            text = formatter.formatPercentage(signal.strength),
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
+        )
+        Text(
+            text = if (signal.isRegistered) {
                 stringResource(R.string.full_service)
             } else {
                 stringResource(R.string.emergency_calls_only)
             },
-            formatter.formatCellNetwork(signal.network),
-            separator = FormatService.Separator.Dot
-        ),
-        tone = tone,
-        modifier = modifier,
-        badge = {
-            TrailSenseShapeBadge(
-                icon = cellQualityIcon(signal.quality),
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 64.dp,
-                containerColor = colors.accent,
-                contentColor = colors.onAccent
-            )
-        },
-        trailing = {
-            SignalBars(strength = signal.strength, color = colors.content, track = colors.content.copy(alpha = 0.22f))
-        }
-    )
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (signal.isRegistered) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = formatter.formatCellNetwork(signal.network),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 @Composable
-private fun SignalBars(strength: Float, color: Color, track: Color) {
+private fun SignalBars(strength: Float, color: Color, track: Color, modifier: Modifier = Modifier) {
     val level by animateFloatAsState((strength / 100f).coerceIn(0f, 1f), MaterialTheme.motionScheme.slowSpatialSpec(), label = "bars")
-    Canvas(Modifier.size(width = 56.dp, height = 48.dp)) {
+    Canvas(modifier) {
         val count = 4
-        val gap = 4.dp.toPx()
+        val gap = 8.dp.toPx()
         val w = (size.width - gap * (count - 1)) / count
         repeat(count) { i ->
             val h = size.height * (i + 1) / count
@@ -519,71 +529,40 @@ private fun CellSignalRow(
         },
         separator = FormatService.Separator.Dot
     )
-    val colors = trailSenseToneColors(strengthTone(signal.strength))
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TrailSenseShapeBadge(
-                icon = cellQualityIcon(signal.quality),
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                size = 44.dp,
-                containerColor = colors.container,
-                contentColor = colors.content
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    formatter.formatCellNetwork(signal.network),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
+    TrailSenseListItem(
+        title = formatter.formatCellNetwork(signal.network),
+        subtitle = description,
+        icon = rememberVectorPainter(cellQualityIcon(signal.quality)),
+        position = position,
+        trailing = {
             Text(
                 formatter.formatPercentage(signal.strength),
-                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                color = colors.accent
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
             )
         }
-    }
+    )
 }
 
 /**
- * The nearby towers on a live radar, north up: you in the middle, filled distance bands with their ranges named,
- * and a soft sweep turning over them. Each tower is a numbered dot at its bearing, pushed out by distance (20 km at
- * the rim); a dot flares as the sweep passes it. The nearest tower is warm, matching its highlighted row.
+ * The nearby towers on a radar, north up: you in the middle, distance rings with their ranges named, and each tower
+ * as a numbered dot at its bearing, pushed out by distance (20 km at the rim). The nearest tower is the one accent.
  */
 @Composable
 private fun TowerRadar(
     towers: List<ApproximateCoordinate>,
     location: Coordinate,
     formatter: FormatService,
-    prefs: UserPreferences,
-    position: TrailSenseGroupPosition
+    prefs: UserPreferences
 ) {
     val scheme = MaterialTheme.colorScheme
-    val bandOuter = scheme.primaryContainer.copy(alpha = 0.55f)
-    val bandMiddle = scheme.surfaceContainerHighest
-    val bandInner = scheme.primaryContainer
-    val ringLine = scheme.primary.copy(alpha = 0.35f)
+    val disc = scheme.surfaceContainerLow
+    val ringLine = scheme.outlineVariant
     val dot = scheme.primary
     val onDot = scheme.onPrimary
     val nearest = scheme.tertiary
     val onNearest = scheme.onTertiary
     val you = scheme.onSurface
-    val sweepColor = scheme.primary
     val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
     val ink = scheme.onSurface
     val rangeLabels = listOf(20_000f, 13_200f, 6_600f).map {
@@ -592,49 +571,15 @@ private fun TowerRadar(
             0
         )
     }
-    val sweep by androidx.compose.animation.core.rememberInfiniteTransition(label = "radar").animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            tween(4200, easing = androidx.compose.animation.core.LinearEasing)
-        ),
-        label = "sweep"
-    )
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = trailSenseGroupShape(position),
-        color = scheme.surfaceContainerLow
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .height(300.dp)
     ) {
-        Canvas(
-            Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(vertical = TrailSenseSpacing.md)
-        ) {
             val radius = size.minDimension / 2f - 10.dp.toPx()
-            drawCircle(bandOuter, radius, center)
-            drawCircle(bandMiddle, radius * 0.66f, center)
-            drawCircle(bandInner, radius * 0.33f, center)
+            drawCircle(disc, radius, center)
             listOf(1f, 0.66f, 0.33f).forEach {
                 drawCircle(ringLine, radius * it, center, style = Stroke(width = 1.5.dp.toPx()))
-            }
-            // The sweep: a fading wedge trailing a bright edge.
-            val sweepAngle = sweep - 90f
-            rotate(sweepAngle, center) {
-            drawArc(
-                brush = androidx.compose.ui.graphics.Brush.sweepGradient(
-                    0f to Color.Transparent,
-                    0.85f to Color.Transparent,
-                    1f to sweepColor.copy(alpha = 0.28f),
-                    center = center
-                ),
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = true,
-                topLeft = Offset(center.x - radius, center.y - radius),
-                size = Size(radius * 2, radius * 2),
-                alpha = 1f
-            )
             }
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 textAlign = android.graphics.Paint.Align.CENTER
@@ -681,25 +626,18 @@ private fun TowerRadar(
                     tries++
                 }
                 placed += p
-                // How recently the sweep crossed this tower: 1 right at the edge, fading over 60 degrees.
-                val behind = ((sweep - bearingDegrees) % 360f + 360f) % 360f
-                val flare = (1f - behind / 60f).coerceIn(0f, 1f)
                 val isNearest = index == 0
                 val fill = if (isNearest) nearest else dot
-                if (flare > 0f) {
-                    drawCircle(fill.copy(alpha = 0.35f * flare), 12.dp.toPx() + 10.dp.toPx() * flare, p)
-                }
                 drawCircle(fill, 13.dp.toPx(), p)
                 paint.color = (if (isNearest) onNearest else onDot).toArgb()
                 drawContext.canvas.nativeCanvas.drawText((index + 1).toString(), p.x, p.y + labelSize / 3f, paint)
             }
-        }
     }
 }
 
 /**
- * A tower as one compact 72 dp row: its number in a scallop, the distance large, the bearing as a chip, and two
- * labelled circular actions. The nearest tower's row is tinted like its warm dot on the radar.
+ * A tower as one compact 72 dp row: its number in a scallop (the nearest in the radar's accent), the distance, the
+ * bearing, and two labelled actions.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -719,8 +657,8 @@ private fun CellTowerRow(
     val direction = location.bearingTo(tower.coordinate)
     val scheme = MaterialTheme.colorScheme
     val isNearest = index == 0
-    val container = if (isNearest) scheme.tertiaryContainer else scheme.surfaceContainerLow
-    val content = if (isNearest) scheme.onTertiaryContainer else scheme.onSurface
+    val container = scheme.surfaceContainerLow
+    val content = scheme.onSurface
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -738,14 +676,14 @@ private fun CellTowerRow(
                 text = (index + 1).toString(),
                 shape = MaterialShapes.Cookie9Sided.toShape(),
                 size = 44.dp,
-                containerColor = if (isNearest) scheme.tertiary else scheme.primary,
-                contentColor = if (isNearest) scheme.onTertiary else scheme.onPrimary
+                containerColor = if (isNearest) scheme.tertiary else scheme.secondaryContainer,
+                contentColor = if (isNearest) scheme.onTertiary else scheme.onSecondaryContainer
             )
             Spacer(Modifier.width(TrailSenseSpacing.lg))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
-                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
@@ -773,8 +711,8 @@ private fun CellTowerRow(
             androidx.compose.material3.FilledIconButton(
                 onClick = onNavigate,
                 colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                    containerColor = if (isNearest) scheme.tertiary else scheme.secondaryContainer,
-                    contentColor = if (isNearest) scheme.onTertiary else scheme.onSecondaryContainer
+                    containerColor = scheme.secondaryContainer,
+                    contentColor = scheme.onSecondaryContainer
                 )
             ) {
                 Icon(
@@ -784,23 +722,6 @@ private fun CellTowerRow(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TowerChip(text: String, primary: Boolean) {
-    val scheme = MaterialTheme.colorScheme
-    Surface(
-        shape = CircleShape,
-        color = if (primary) scheme.primaryContainer else scheme.secondaryContainer,
-        contentColor = if (primary) scheme.onPrimaryContainer else scheme.onSecondaryContainer
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-        )
     }
 }
 
