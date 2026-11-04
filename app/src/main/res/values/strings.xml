@@ -2313,7 +2313,8 @@
     <string name="light_level_overcast">Overcast daylight</string>
     <string name="light_level_daylight">Daylight</string>
     <string name="light_level_sun">Direct sun</string>
-    <string name="light_meter_preview_hint">Enter the distance, then shine the flashlight at the phone to see how far it reaches.</string>
+    <string name="light_meter_flashlight_title">Test a flashlight</string>
+    <string name="light_meter_preview_hint">Set the distance, then shine the flashlight at the top of the screen. The brightest reading counts.</string>
     <string name="climate_monthly_total">Monthly total</string>
     <string name="ruler_length">Length</string>
 </resources>

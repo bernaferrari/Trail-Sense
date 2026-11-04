@@ -157,11 +157,10 @@ fun LightMeterScreen(
 
     var showUnitPicker by remember { mutableStateOf(false) }
     val luxText = formatter.formatLux(illuminance)
-    val previewLabel = stringResource(R.string.preview)
-
     // One question: how bright is it here?
-    // One live object, a ring that fills with the light, the reading inside it and the verdict under it. Peak and
-    // the beam's strength follow as one quiet list, then the beam preview where the distance input lives.
+    // One live object, a ring that fills with the light, the reading inside it and the verdict under it. Testing a
+    // flashlight is its own section under it, in the order you do it: the distance, the brightest reading, then what
+    // that means (intensity, reach) and the scene it lights.
     TrailSensePage(
         title = stringResource(R.string.tool_light_meter_title),
         modifier = modifier
@@ -174,7 +173,25 @@ fun LightMeterScreen(
             )
         }
 
-        trailSenseSection("metrics") {
+        trailSenseSection(
+            "flashlight",
+            title = context.getString(R.string.light_meter_flashlight_title),
+            footer = context.getString(R.string.light_meter_preview_hint)
+        ) {
+            row { position ->
+                TrailSenseInputField(
+                    value = beamDistanceAmount,
+                    onValueChange = {
+                        beamDistanceAmount = it
+                        maxLux = 0f
+                    },
+                    label = stringResource(R.string.distance),
+                    modifier = Modifier.testTag("beam_distance"),
+                    position = position,
+                    unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
+                    onUnitClick = { showUnitPicker = true }
+                )
+            }
             if (maxLux > 0f) {
                 row { position ->
                     LightValueRow(
@@ -202,43 +219,20 @@ fun LightMeterScreen(
                         position = position
                     )
                 }
-            }
-        }
-
-        // The preview is a plain group, not a card: the distance field, then the scene it drives as its own row,
-        // and the hint as the group's footer.
-        trailSenseSection(
-            "preview",
-            title = previewLabel,
-            footer = context.getString(R.string.light_meter_preview_hint)
-        ) {
-            row { position ->
-                TrailSenseInputField(
-                    value = beamDistanceAmount,
-                    onValueChange = {
-                        beamDistanceAmount = it
-                        maxLux = 0f
-                    },
-                    label = stringResource(R.string.distance_from_flashlight),
-                    modifier = Modifier.testTag("beam_distance"),
-                    position = position,
-                    unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
-                    onUnitClick = { showUnitPicker = true }
-                )
-            }
-            row { position ->
-                Surface(
-                    shape = trailSenseGroupShape(position),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
-                ) {
-                    LightBeamChart(
-                        candela = candela,
-                        units = beamDistanceUnit,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(152.dp)
-                            .testTag("light_chart")
-                    )
+                row { position ->
+                    Surface(
+                        shape = trailSenseGroupShape(position),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                    ) {
+                        LightBeamChart(
+                            candela = candela,
+                            units = beamDistanceUnit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(152.dp)
+                                .testTag("light_chart")
+                        )
+                    }
                 }
             }
         }
@@ -302,7 +296,6 @@ private fun LightHero(
     val detail = verdict.substringAfter(" · ", "").replaceFirstChar { it.uppercase() }
     val track = scheme.surfaceContainerHighest
     val fill = scheme.primary
-    val tick = scheme.onSurfaceVariant
 
     Column(
         modifier = modifier
@@ -336,22 +329,6 @@ private fun LightHero(
                     size = arcSize,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
                 )
-                // Where the worded bands meet (dark | dim | indoor | daylight): short ticks just inside the track.
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val outer = size.minDimension / 2f - stroke - 6.dp.toPx()
-                val inner = outer - 8.dp.toPx()
-                listOf(0.25f, 0.5f, 0.75f).forEach { fraction ->
-                    val angle = Math.toRadians((135f + 270f * fraction).toDouble())
-                    val cos = kotlin.math.cos(angle).toFloat()
-                    val sin = kotlin.math.sin(angle).toFloat()
-                    drawLine(
-                        color = tick,
-                        start = Offset(center.x + cos * inner, center.y + sin * inner),
-                        end = Offset(center.x + cos * outer, center.y + sin * outer),
-                        strokeWidth = 2.dp.toPx(),
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round
-                    )
-                }
                 // At rest the fill is a short primary stub, so the instrument never reads as empty.
                 drawArc(
                     color = fill,
