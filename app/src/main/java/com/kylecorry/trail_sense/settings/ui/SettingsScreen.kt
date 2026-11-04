@@ -7,12 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.toShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 
 import androidx.compose.ui.graphics.Color
-import com.kylecorry.trail_sense.tools.tools.ui.accent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
@@ -128,8 +124,8 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
 }
 
 /**
- * Settings: the app's own pages, then every tool that has settings, then the experiments and plugins, then about.
- * One line per row wherever the title says enough; an icon well leads every row so the groups line up.
+ * Settings, a calm list: the app's own pages (units and theme first, with their values), then every tool that has
+ * settings, then the experiments and plugins, then about. One quiet icon well leads every row so the groups line up.
  */
 @Composable
 private fun SettingsScreen(
@@ -165,31 +161,27 @@ private fun SettingsScreen(
         onBack = onBack,
         backLabel = stringResource(R.string.back)
     ) {
-        // Quick controls: the two settings people change most, with their live state, as two tiles.
-        item("quick") {
-            TrailSenseStatGrid(
-                columns = 2,
-                stats = listOf(
-                    TrailSenseStat(
-                        label = stringResource(R.string.units),
-                        value = quick.units,
-                        tone = TrailSenseTone.Primary,
-                        icon = TrailIcons.Ruler,
-                        onClick = { go(R.string.pref_unit_settings) }
-                    ),
-                    TrailSenseStat(
-                        label = stringResource(R.string.pref_theme_title),
-                        value = quick.theme,
-                        tone = TrailSenseTone.Secondary,
-                        icon = TrailIcons.Theme,
-                        onClick = { go(R.string.pref_theme_settings) }
-                    )
-                )
-            )
-        }
-
-        // The rest of the app's own pages as one segmented list, each with a line on what lives inside.
+        // One question: where do I change this? The list answers it; the two settings people change most lead it,
+        // with their live values.
         trailSenseSection("general", title = generalTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.units),
+                    icon = rememberVectorPainter(TrailIcons.Ruler),
+                    value = quick.units,
+                    position = position,
+                    onClick = { go(R.string.pref_unit_settings) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_theme_title),
+                    icon = rememberVectorPainter(TrailIcons.Theme),
+                    value = quick.theme,
+                    position = position,
+                    onClick = { go(R.string.pref_theme_settings) }
+                )
+            }
             listOf(
                 Triple(R.string.pref_sensor_settings, R.string.sensors, R.string.sky_settings_sensors_summary) to TrailIcons.Sensors,
                 Triple(R.string.pref_privacy_settings, R.string.privacy, R.string.sky_settings_privacy_summary) to TrailIcons.Visible,
@@ -201,7 +193,6 @@ private fun SettingsScreen(
                         title = stringResource(keys.second),
                         subtitle = stringResource(keys.third),
                         icon = rememberVectorPainter(icon),
-                        accent = TrailSenseAccents.Seafoam,
                         position = position,
                         onClick = { go(keys.first) }
                     )
@@ -209,12 +200,16 @@ private fun SettingsScreen(
             }
         }
 
-        // Tools: the shared tool settings as the section's lead card, then each tool's own page grouped by its
-        // family, in the family's colour, one row each so long names never wrap.
-        item("tools_lead") {
-            Column {
-                TrailSenseGroupHeader(toolsTitle)
-                SettingsToolsLead(onClick = { go(R.string.pref_tool_settings_header_key) })
+        // Tools: the shared tool settings first, then each tool's own page grouped by its family, one row each.
+        trailSenseSection("tools_lead", title = toolsTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.tools),
+                    subtitle = stringResource(R.string.sky_settings_tools_summary),
+                    icon = rememberVectorPainter(TrailIcons.Apps),
+                    position = position,
+                    onClick = { go(R.string.pref_tool_settings_header_key) }
+                )
             }
         }
         toolGroups.forEachIndexed { index, group ->
@@ -224,7 +219,6 @@ private fun SettingsScreen(
                         SettingsNavRow(
                             title = tool.name,
                             icon = rememberVectorPainter(tool.icon),
-                            accent = tool.category.accent(),
                             position = position,
                             onClick = { tool.settingsNavAction?.let(onNavigate) }
                         )
@@ -238,7 +232,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.experimental),
                     icon = rememberVectorPainter(TrailIcons.Experimental),
-                    accent = TrailSenseAccents.Violet,
                     position = position,
                     onClick = { go(R.string.pref_experimental_settings) }
                 )
@@ -260,7 +253,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.diagnostics),
                     icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { go(R.string.pref_diagnostics) }
                 )
@@ -269,7 +261,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_app_version_title),
                     icon = rememberVectorPainter(Icons.Rounded.Info),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     value = version,
                     onClick = null
@@ -279,7 +270,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_privacy_policy_title),
                     icon = rememberVectorPainter(Icons.Rounded.Policy),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
                 )
@@ -288,7 +278,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_email_title),
                     icon = rememberVectorPainter(Icons.Rounded.Email),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = onEmailDeveloper
                 )
@@ -297,7 +286,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_github_title),
                     icon = rememberVectorPainter(Icons.Rounded.Code),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { onOpenUrl(GITHUB_URL) }
                 )
@@ -306,7 +294,6 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_open_source_licenses_title),
                     icon = rememberVectorPainter(Icons.Rounded.Description),
-                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { go(R.string.pref_open_source_licenses) }
                 )
@@ -326,10 +313,8 @@ private fun SettingsNavRow(
     position: TrailSenseGroupPosition,
     onClick: (() -> Unit)?,
     subtitle: String? = null,
-    value: String? = null,
-    accent: Color = Color.Unspecified
+    value: String? = null
 ) {
-    val wells = trailSenseWellColors(accent)
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -373,8 +358,8 @@ private fun SettingsNavRow(
         ) {
             Surface(
                 shape = RoundedCornerShape(TrailSenseSpacing.md),
-                color = wells.container,
-                contentColor = wells.content,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(TrailSenseSize.compactIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -461,59 +446,3 @@ private fun readQuickSettings(context: android.content.Context): QuickSettings {
     )
     return QuickSettings(units, theme)
 }
-
-/** The shared tool settings as a toned lead card: a big shaped badge, a short title and one line. */
-@Composable
-private fun SettingsToolsLead(onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    // The badge turns a petal-step while pressed.
-    val turn by animateFloatAsState(if (pressed) 30f else 0f, TrailSenseAnimation.quickSpring, label = "toolsLeadTurn")
-    Surface(
-        shape = RoundedCornerShape(com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape.groupOuter))
-            .clickable(interactionSource = interaction, indication = ripple(), role = Role.Button, onClick = onClick)
-    ) {
-        Row(Modifier.padding(TrailSenseSpacing.lg), verticalAlignment = Alignment.CenterVertically) {
-            com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
-                icon = TrailIcons.Apps,
-                shape = androidx.compose.material3.MaterialShapes.Cookie9Sided.toShape(),
-                size = 56.dp,
-                modifier = Modifier.graphicsLayer { rotationZ = turn }
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    stringResource(R.string.tools),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                )
-                Text(
-                    stringResource(R.string.sky_settings_tools_summary),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-        }
-    }
-}
-
-
-private fun settingsTile(
-    key: Int,
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    accent: Color,
-    go: (Int) -> Unit
-) = TrailSenseTile(
-    key = key,
-    title = title,
-    accent = accent,
-    icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
-    onClick = { go(key) }
-)
