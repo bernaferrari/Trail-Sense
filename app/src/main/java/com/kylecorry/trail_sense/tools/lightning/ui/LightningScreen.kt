@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -152,7 +153,7 @@ fun LightningScreen(
     val waitingForThunder = lightningTime != null
     val distanceValue = relativeDistance?.let {
         DecimalFormatter.format(it.value, Units.getDecimalPlaces(it.units), false)
-    } ?: "--"
+    } ?: "—"
     val distanceUnit = formatService.getDistanceUnitName(relativeDistance?.units ?: units, true)
     val elapsed = lightningTime?.let { Duration.between(it, now).toMillis() / 1000f }
 
@@ -289,7 +290,7 @@ private fun StrikeHero(
                 label = "wavePhase"
             )
             val counting = elapsedSeconds != null
-            val waveAlpha by animateFloatAsState(if (counting) 1f else 0.3f, label = "waveAlpha")
+            val waveAlpha by animateFloatAsState(if (counting) 1f else 0.55f, label = "waveAlpha")
             Canvas(
                 Modifier
                     .matchParentSize()
@@ -300,7 +301,7 @@ private fun StrikeHero(
                 repeat(4) { index ->
                     val t = ((if (counting) phase else 0.55f) + index / 4f) % 1f
                     drawCircle(
-                        color = accent.copy(alpha = (1f - t) * 0.26f * waveAlpha),
+                        color = accent.copy(alpha = (1f - t) * 0.5f * waveAlpha),
                         radius = 80.dp.toPx() + t * maxRadius,
                         center = center,
                         style = Stroke(width = (12.dp.toPx() * (1f - t)).coerceAtLeast(1f))
@@ -320,7 +321,7 @@ private fun StrikeHero(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     SkyFocalShape(
-                        icon = TrailIcons.Thunder,
+                        icon = androidx.compose.material.icons.Icons.Rounded.Bolt,
                         shape = MaterialShapes.Cookie12Sided.toShape(),
                         size = 44.dp,
                         containerColor = colors.accent,

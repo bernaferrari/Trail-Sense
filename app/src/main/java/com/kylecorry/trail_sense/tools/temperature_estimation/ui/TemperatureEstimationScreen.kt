@@ -12,6 +12,7 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.withStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
@@ -431,14 +432,23 @@ private fun TemperatureEstimateHero(
             }
             // The estimate at display size; before there is one, a placeholder of the same size with its unit.
             Text(
-                text = if (celsius == null) "-- $unitSymbol" else title,
+                text = if (celsius == null) {
+                    androidx.compose.ui.text.buildAnnotatedString {
+                        withStyle(androidx.compose.ui.text.SpanStyle(color = colors.content.copy(alpha = 0.5f))) {
+                            append("— ")
+                        }
+                        append(unitSymbol)
+                    }
+                } else {
+                    androidx.compose.ui.text.AnnotatedString(title)
+                },
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontSize = 88.sp,
                     lineHeight = 92.sp,
                     fontFeatureSettings = "tnum"
                 ),
                 fontWeight = FontWeight.SemiBold,
-                color = if (celsius == null) colors.content.copy(alpha = 0.45f) else colors.content,
+                color = colors.content,
                 maxLines = 1,
                 autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = 88.sp),
                 modifier = Modifier.fillMaxWidth(),

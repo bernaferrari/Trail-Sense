@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.experimentation
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.toShape
@@ -97,8 +99,14 @@ internal fun ExperimentationContent() {
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
                         description = stringResource(R.string.sky_experimentation_empty),
-                        modifier = Modifier.heightIn(min = 480.dp)
+                        modifier = Modifier.heightIn(min = 400.dp)
                     )
+                }
+                // Dashed outlines where installed plugins will sit, so the page previews what it is for.
+                item(key = "slots") {
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                        repeat(2) { ExperimentationDashedSlot() }
+                    }
                 }
             }
 
@@ -202,5 +210,42 @@ private fun ExperimentationEmptySlot(position: TrailSenseGroupPosition, alpha: F
                 ) {}
             }
         }
+    }
+}
+
+/** An empty plugin slot: a dashed outline in the tertiary with a puzzle-piece badge. */
+@Composable
+private fun ExperimentationDashedSlot() {
+    val outline = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .drawBehind {
+                drawRoundRect(
+                    color = outline,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx()),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
+                    )
+                )
+            }
+            .padding(TrailSenseSpacing.lg),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
+            icon = Icons.Rounded.Extension,
+            shape = MaterialShapes.Clover4Leaf.toShape(),
+            size = 40.dp,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+        )
+        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.lg))
+        Text(
+            stringResource(R.string.sky_experimentation_slot),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

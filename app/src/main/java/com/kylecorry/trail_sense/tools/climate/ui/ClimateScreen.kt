@@ -589,17 +589,27 @@ private fun ClimateScreen(
         // The one thing the screen is for: what the chosen day is typically like here.
         // The one thing the screen is for: what the chosen day is typically like here, as three coloured tiles.
         item(key = "hero") {
-            TrailSenseStatGrid(
+            Column(
                 modifier = Modifier.testTag("climate_title"),
-                columns = 2,
-                valueStyle = MaterialTheme.typography.headlineMedium,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+            TrailSenseStatGrid(
+                columns = 1,
+                valueStyle = MaterialTheme.typography.displayMedium,
                 stats = listOf(
                     TrailSenseStat(
                         label = stringResource(R.string.high),
                         value = highLow?.first ?: "--",
+                        supportingText = subtitle,
                         tone = TrailSenseTone.Caution,
                         icon = TrailIcons.TemperatureRange
-                    ),
+                    )
+                )
+            )
+            TrailSenseStatGrid(
+                columns = 2,
+                valueStyle = MaterialTheme.typography.headlineSmall,
+                stats = listOf(
                     TrailSenseStat(
                         label = stringResource(R.string.low),
                         value = highLow?.second ?: "--",
@@ -615,6 +625,7 @@ private fun ClimateScreen(
                     )
                 )
             )
+            }
         }
 
         trailSenseSection(key = "inputs", title = locationLabel) {
