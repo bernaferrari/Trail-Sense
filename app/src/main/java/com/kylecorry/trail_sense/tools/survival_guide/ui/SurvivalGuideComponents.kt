@@ -96,6 +96,7 @@ internal fun SurvivalGuideGroupRow(
     subtitle: String? = null,
     icon: Painter? = null,
     titleModifier: Modifier = Modifier,
+    subtitleMaxLines: Int = 2,
     trailing: (@Composable () -> Unit)? = null
 ) {
     SurvivalGuidePressableSurface(
@@ -146,7 +147,7 @@ internal fun SurvivalGuideGroupRow(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        maxLines = subtitleMaxLines,
                         overflow = TextOverflow.Ellipsis
                     )
                 }

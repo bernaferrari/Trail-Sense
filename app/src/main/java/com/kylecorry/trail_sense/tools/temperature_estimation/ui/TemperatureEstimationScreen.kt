@@ -206,7 +206,37 @@ private fun TemperatureEstimationScreen(
     TrailSensePage(
         title = stringResource(R.string.tool_temperature_estimation_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back)
+        backLabel = stringResource(R.string.back),
+        // Reading the phone's thermometer is a page action, so the temperature field holds only its value and unit.
+        actions = {
+            Box(
+                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                isLoading = true
+                                readThermometer()
+                                setThermometerFieldFromSensor()
+                                isLoading = false
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painter = rememberVectorPainter(TrailIcons.Thermometer),
+                            contentDescription = autofillLabel
+                        )
+                    }
+                }
+            }
+        }
     ) {
         // One question: how warm will it be there? The estimate answers it; the inputs that drive it sit below.
         item("estimate") {
@@ -232,36 +262,7 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     enabled = !isLoading,
                     unit = formatService.getTemperatureUnitName(baseTemperatureUnit, true),
-                    onUnitClick = { picker = Picker.Temperature },
-                    trailingIcon = {
-                        Box(
-                            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            isLoading = true
-                                            readThermometer()
-                                            setThermometerFieldFromSensor()
-                                            isLoading = false
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        painter = rememberVectorPainter(TrailIcons.Thermometer),
-                                        contentDescription = autofillLabel
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    onUnitClick = { picker = Picker.Temperature }
                 )
             }
             row { position ->

@@ -159,12 +159,15 @@ internal fun WaterPurificationScreen(
                     ),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.lg)
                 )
             }
         }
 
-        item("duration") {
+        // The controls as one block: the duration choice and the action, close together under the verdict.
+        item("controls") {
+          Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
             AnimatedVisibility(
                 visible = !isRunning,
                 enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
@@ -179,9 +182,7 @@ internal fun WaterPurificationScreen(
                     label = stringResource(R.string.duration)
                 )
             }
-        }
 
-        item("action") {
             // Holds its place while the duration is worked out, so nothing jumps when it appears.
             val scheme = MaterialTheme.colorScheme
             // The one action on the screen is primary; cancelling is a quiet secondary.
@@ -229,6 +230,7 @@ internal fun WaterPurificationScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+          }
         }
 
         trailSenseSection(key = "steps", title = context.getString(R.string.steps)) {
@@ -350,6 +352,18 @@ private fun BoilPot(
                     close()
                 }
                 drawPath(front, waterColor)
+                // A thin line along the surface so the water reads as liquid, not a flat disc.
+                val surface = Path().apply {
+                    var x = 0f
+                    moveTo(0f, level + amplitude * 1.6f + amplitude * sin((0.35f - phase) * 2 * PI).toFloat())
+                    while (x <= size.width) {
+                        val y = level + amplitude * 1.6f +
+                            amplitude * sin((x / wavelength - phase + 0.35f) * 2 * PI).toFloat()
+                        lineTo(x, y)
+                        x += 4f
+                    }
+                }
+                drawPath(surface, ringColor.copy(alpha = 0.5f), style = Stroke(width = 2.dp.toPx()))
                 if (isRunning && (seconds ?: Long.MAX_VALUE) <= 10L) {
                     // The last ten seconds: bubbles rise through the water.
                     listOf(0.16f, 0.3f, 0.44f, 0.58f, 0.72f, 0.86f).forEachIndexed { i, fx ->
@@ -391,7 +405,6 @@ private fun WaterStep(
     index: Int = 0
 ) {
     val scheme = MaterialTheme.colorScheme
-    val status = trailSenseStatusColors()
     val rowColor by animateColorAsState(
         when (state) {
             StepState.Next -> scheme.surfaceContainerLow
@@ -426,8 +439,8 @@ private fun WaterStep(
                     icon = TrailIcons.Check,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
                     size = 44.dp,
-                    containerColor = status.goodContainer,
-                    contentColor = status.onGoodContainer
+                    containerColor = scheme.secondaryContainer,
+                    contentColor = scheme.onSecondaryContainer
                 )
 
                 StepState.Next -> TrailSenseShapeBadge(

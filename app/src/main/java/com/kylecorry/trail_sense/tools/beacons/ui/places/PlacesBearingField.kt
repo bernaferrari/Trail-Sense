@@ -181,13 +181,14 @@ fun PlacesBearingField(
                     )
                     val weight = if (kind == 0) 2f else 1f
                     when (kind) {
-                        // Taking the bearing from the compass is the field's one main action: the warm role.
+                        // Taking the bearing from the compass is the field's one main action, so it is the one
+                        // primary fill; tertiary stays the screen's single accent, not a button colour.
                         0 -> Button(
                             onClick = onCompassClick,
                             shape = shape,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = scheme.tertiary,
-                                contentColor = scheme.onTertiary
+                                containerColor = scheme.primary,
+                                contentColor = scheme.onPrimary
                             ),
                             modifier = Modifier
                                 .weight(weight)

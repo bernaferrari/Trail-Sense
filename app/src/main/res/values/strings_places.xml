@@ -51,6 +51,7 @@
     <string name="places_turn_back_pick_hint">When you need to be back</string>
     <string name="places_turn_back_sunset_hint">Back by tonight\'s sunset</string>
     <string name="places_turn_back_set">Set</string>
+    <string name="places_turn_back_set_return_time">Set return time</string>
     <string name="places_turn_back_now">Now</string>
     <string name="places_turn_back_home">Back</string>
     <string name="places_turn_back_in">Turn back in</string>

@@ -89,7 +89,10 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -178,20 +181,15 @@ fun WhiteNoiseScreen(
     val soundName = soundTypes.first { it.first == selectedSound }.second
 
     // One question: is the sound playing, and which one?
-    TrailSenseInstrumentScaffold(
+    TrailSensePage(
         title = stringResource(R.string.tool_white_noise_title),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
         modifier = modifier
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
+        item(key = "player") {
             Column(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
@@ -223,18 +221,21 @@ fun WhiteNoiseScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
+                // Idle, the line invites the one action instead of just saying "Off".
                 Text(
-                    text = stringResource(if (isRunning) R.string.on else R.string.off),
+                    text = stringResource(
+                        if (isRunning) R.string.white_noise_tap_to_stop else R.string.white_noise_tap_to_play
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
+        }
 
+        item(key = "controls") {
             Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 TrailSenseGroupHeader(stringResource(R.string.tool_sound))
@@ -246,7 +247,6 @@ fun WhiteNoiseScreen(
                     soundTypes.forEachIndexed { index, sound ->
                         SoundTile(
                             label = sound.second,
-                            icon = soundIcon(sound.first),
                             selected = sound.first == selectedSound,
                             shape = trailSenseGroupShape(TrailSenseGroupPosition.at(index, soundTypes.size)),
                             onClick = {
@@ -281,27 +281,26 @@ fun WhiteNoiseScreen(
                         shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = false)),
                         color = MaterialTheme.colorScheme.surfaceContainerLow
                     ) {
-                        Row(
-                            modifier = Modifier.padding(TrailSenseSpacing.md),
-                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                        ) {
-                            listOf(15L, 30L, 60L, 120L).forEach { mins ->
-                                val duration = Duration.ofMinutes(mins)
-                                SoundChip(
+                        // The family's one selection look; a typed duration that matches none leaves all unchecked.
+                        TrailSenseConnectedChoice(
+                            options = listOf(15L, 30L, 60L, 120L).map { mins ->
+                                TrailSenseChoice(
+                                    value = Duration.ofMinutes(mins),
                                     label = if (mins < 60) {
                                         stringResource(R.string.white_noise_minutes_short, mins.toInt())
                                     } else {
                                         stringResource(R.string.white_noise_hours_short, (mins / 60).toInt())
-                                    },
-                                    selected = currentDuration() == duration,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        setDuration(duration)
-                                        stopWhiteNoise()
                                     }
                                 )
-                            }
-                        }
+                            },
+                            selected = currentDuration(),
+                            onSelect = {
+                                setDuration(it)
+                                stopWhiteNoise()
+                            },
+                            label = stringResource(R.string.sleep_timer),
+                            modifier = Modifier.padding(TrailSenseSpacing.md)
+                        )
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -400,11 +399,13 @@ private fun PlayControl(
     }
 }
 
-/** A sound as a quiet list row: its icon and name, the chosen one checked. */
+/**
+ * A sound as a quiet list row: just its name (the icons said nothing the names don't), the chosen one in the
+ * selection fill with a check.
+ */
 @Composable
 private fun SoundTile(
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     selected: Boolean,
     shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier,
@@ -417,26 +418,23 @@ private fun SoundTile(
             .heightIn(min = 56.dp)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         shape = shape,
-        color = scheme.surfaceContainerLow,
-        contentColor = scheme.onSurface
+        color = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        contentColor = if (selected) scheme.onSecondaryContainer else scheme.onSurface
     ) {
         Row(
             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                rememberVectorPainter(icon),
-                contentDescription = null,
-                tint = scheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.size(TrailSenseSpacing.lg))
-            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             if (selected) {
                 Icon(
                     rememberVectorPainter(TrailIcons.Check),
                     contentDescription = null,
-                    tint = scheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -456,57 +454,6 @@ private class NoiseMorphShape(
         val path = morph.toPath(progress)
         path.transform(android.graphics.Matrix().apply { setScale(size.width, size.height) })
         return androidx.compose.ui.graphics.Outline.Generic(path.asComposePath())
-    }
-}
-
-private fun soundIcon(sound: SleepSound): androidx.compose.ui.graphics.vector.ImageVector = when (sound) {
-    SleepSound.Crickets, SleepSound.CricketsNoChirp -> TrailIcons.Grass
-    SleepSound.OceanWaves -> TrailIcons.Beach
-    SleepSound.Fan -> TrailIcons.Wind
-    else -> TrailIcons.ToolWhiteNoise
-}
-
-@Composable
-private fun SoundChip(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val scheme = MaterialTheme.colorScheme
-    val container by animateColorAsState(
-        if (selected) scheme.secondary else scheme.secondaryContainer,
-        MaterialTheme.motionScheme.fastEffectsSpec(),
-        label = "soundChip"
-    )
-    val content by animateColorAsState(
-        if (selected) scheme.onSecondary else scheme.onSecondaryContainer,
-        MaterialTheme.motionScheme.fastEffectsSpec(),
-        label = "soundChipContent"
-    )
-    Surface(
-        modifier = modifier
-            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
-        shape = if (selected) MaterialTheme.shapes.medium else CircleShape,
-        color = container,
-        contentColor = content
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (selected) {
-                Icon(
-                    rememberVectorPainter(TrailIcons.Check),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.size(TrailSenseSpacing.xs))
-            }
-            Text(label, style = MaterialTheme.typography.labelLarge)
-        }
     }
 }
 
