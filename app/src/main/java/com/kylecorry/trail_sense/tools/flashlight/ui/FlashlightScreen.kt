@@ -282,8 +282,10 @@ fun FlashlightScreen(
     val isOn = flashlightMode != FlashlightMode.Off
 
     // One question: is the light on?
+    // The same medium title as the family's other tools.
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.flashlight_title),
+        largeTitle = true,
         modifier = modifier
     ) {
         if (!hasFlashlight) {
@@ -303,7 +305,7 @@ fun FlashlightScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.xxl, bottom = TrailSenseSpacing.xl)
+                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.xl)
                     .testTag("flashlight_btn_holder"),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
@@ -423,7 +425,7 @@ private fun FlashlightControls(
                 ) {
                     Text(
                         text = stringResource(R.string.flashlight_strobe_rate),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(
                             horizontal = TrailSenseSpacing.lg,
                             vertical = TrailSenseSpacing.xs
@@ -450,7 +452,7 @@ private fun FlashlightControls(
                 ) {
                     Text(
                         text = stringResource(R.string.brightness),
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
                     BrightnessSlider(
                         value = brightnessValue,
