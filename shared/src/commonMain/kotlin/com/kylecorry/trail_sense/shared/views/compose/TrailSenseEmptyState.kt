@@ -67,7 +67,12 @@ fun TrailSenseEmptyState(
     /** Ignored: the calm empty state has no satellites. Kept so callers compile; remove when passing it. */
     @Suppress("UNUSED_PARAMETER") accents: List<ImageVector> = emptyList(),
     secondaryActionLabel: String? = null,
-    onSecondaryAction: (() -> Unit)? = null
+    onSecondaryAction: (() -> Unit)? = null,
+    /**
+     * The boiler principle for empty screens: a living object in place of the static cookie (a page being written,
+     * a map unfolding). Drawn in a 160 dp box; [icon] still names the screen for accessibility tooling.
+     */
+    illustration: (@Composable () -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val colors = trailSenseToneColors(tone)
@@ -79,14 +84,18 @@ fun TrailSenseEmptyState(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Surface(
-                    modifier = Modifier.size(120.dp),
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    color = colors.container,
-                    contentColor = colors.content
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(48.dp))
+                if (illustration != null) {
+                    Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) { illustration() }
+                } else {
+                    Surface(
+                        modifier = Modifier.size(120.dp),
+                        shape = MaterialShapes.Cookie9Sided.toShape(),
+                        color = colors.container,
+                        contentColor = colors.content
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(icon, contentDescription = null, modifier = Modifier.size(48.dp))
+                        }
                     }
                 }
                 Spacer(Modifier.height(TrailSenseSpacing.xl))
