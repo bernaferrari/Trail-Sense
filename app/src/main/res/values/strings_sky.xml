@@ -12,6 +12,16 @@
     <string name="sky_temperature_there">Where you\'re going</string>
     <string name="sky_temperature_conditions">Conditions</string>
     <string name="sky_temperature_conditions_footer">Humidity makes heat feel hotter; wind makes cold feel colder.</string>
+    <string name="sky_temperature_here_short">Here</string>
+    <string name="sky_temperature_there_short">There</string>
+    <string name="sky_temperature_higher">%s higher</string>
+    <string name="sky_temperature_lower">%s lower</string>
+    <string name="sky_temperature_same_elevation">Same elevation</string>
+    <string name="sky_temperature_colder">%s colder</string>
+    <string name="sky_temperature_warmer">%s warmer</string>
+    <string name="sky_temperature_link">%1$s · %2$s</string>
+    <string name="sky_temperature_add_destination">Add where you\'re going</string>
+    <string name="sky_temperature_add_base_elevation">Add the elevation where you are, too.</string>
     <string name="sky_temperature_read_thermometer">Read the phone\'s thermometer</string>
     <string name="sky_experimentation_empty">Install a Trail Sense plugin and it will show up here, with the features it adds.</string>
     <string name="sky_experimentation_features">Features</string>

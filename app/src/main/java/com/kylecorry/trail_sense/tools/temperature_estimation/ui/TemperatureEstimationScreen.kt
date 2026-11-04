@@ -3,7 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.zIndex
+import com.kylecorry.trail_sense.shared.icons.trail.ElevationGain
+import com.kylecorry.trail_sense.shared.icons.trail.ElevationLoss
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -168,6 +175,7 @@ private fun TemperatureEstimationScreen(
     var windSpeedUnit by remember { mutableStateOf(speedUnits.first()) }
     var isLoading by remember { mutableStateOf(false) }
     var picker by remember { mutableStateOf<Picker?>(null) }
+    val destinationFocus = remember { FocusRequester() }
 
     fun setThermometerFieldFromSensor() {
         val sensorTemp = sensorTemperature()
@@ -195,7 +203,7 @@ private fun TemperatureEstimationScreen(
         outputUnits = temperatureUnits
     )
     val title = estimated?.takeIf { !it.value.isNaN() }?.let {
-        formatService.formatTemperature(it, 4, false)
+        formatService.formatTemperature(it, 0, false)
     } ?: stringResource(R.string.dash)
     val humidity = humidityText.toFloatOrNull()
     val humidityError = humidityText.isNotEmpty() && (humidity == null || humidity !in 0f..100f)
@@ -229,29 +237,40 @@ private fun TemperatureEstimationScreen(
         onBack = rememberTrailSenseBack(),
         backLabel = stringResource(R.string.back)
     ) {
-        // How warm will it feel there? The estimate answers it; the inputs sit below in the order you think of
-        // them: here, where you're going, then what the air is doing.
+        // How warm will it be where I'm going? Here and there, each with its temperature, joined by the climb
+        // between them; the inputs sit below in the order you think of them.
         item("estimate") {
-            val estimateCelsius = estimated?.takeIf { !it.value.isNaN() }?.celsius()?.value
-            val baseInOutput = baseTemperatureText.toFloatOrNull()?.let {
-                Temperature.from(it, baseTemperatureUnit).convertTo(temperatureUnits).value
+            val valid = estimated?.takeIf { !it.value.isNaN() }
+            val base = baseTemperatureText.toFloatOrNull()?.let {
+                Temperature.from(it, baseTemperatureUnit).convertTo(temperatureUnits)
             }
-            val delta = estimated?.takeIf { !it.value.isNaN() }?.value?.let { e -> baseInOutput?.let { e - it } }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TemperatureHill(
-                    here = baseElevationText.toFloatOrNull()?.let { Distance.from(it, baseElevationUnit).meters().value },
-                    there = destElevationText.toFloatOrNull()?.let { Distance.from(it, destElevationUnit).meters().value },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(168.dp)
-                )
-                TemperatureEstimateHero(
-                title = title,
-                celsius = estimateCelsius,
-                delta = delta?.takeIf { kotlin.math.abs(it) >= 0.05f },
-                unitSymbol = formatService.getTemperatureUnitName(temperatureUnits, true)
-                )
+            val baseElevation = baseElevationText.toFloatOrNull()?.let { Distance.from(it, baseElevationUnit) }
+            val destElevation = destElevationText.toFloatOrNull()?.let { Distance.from(it, destElevationUnit) }
+            val climb = if (baseElevation != null && destElevation != null) {
+                Distance.from(destElevation.meters().value - baseElevation.meters().value, DistanceUnits.Meters)
+                    .convertTo(baseElevation.units)
+            } else {
+                null
             }
+            TemperatureTrip(
+                hereTemperature = base?.let { formatService.formatTemperature(it, 0, false) },
+                hereElevation = baseElevation?.let { formatService.formatDistance(it, Units.getDecimalPlaces(it.units), false) },
+                thereTemperature = valid?.let { title },
+                thereElevation = destElevation?.let { formatService.formatDistance(it, Units.getDecimalPlaces(it.units), false) },
+                climb = climb,
+                formatClimb = {
+                    formatService.formatDistance(
+                        Distance.from(kotlin.math.abs(it.value), it.units),
+                        Units.getDecimalPlaces(it.units),
+                        false
+                    )
+                },
+                change = if (valid != null && base != null) valid.value - base.value else null,
+                formatChange = { formatService.formatDegrees(kotlin.math.abs(it)) },
+                estimateCelsius = valid?.celsius()?.value,
+                hasBase = base != null,
+                onAddDestination = { runCatching { destinationFocus.requestFocus() } }
+            )
         }
 
         trailSenseSection(key = "here", title = hereTitle) {
@@ -300,7 +319,9 @@ private fun TemperatureEstimationScreen(
                     enabled = !isLoading,
                     unit = formatService.getDistanceUnitName(destElevationUnit, true),
                     onUnitClick = { picker = Picker.DestinationElevation },
-                    modifier = Modifier.testTag("temp_est_dest_elevation")
+                    modifier = Modifier
+                        .focusRequester(destinationFocus)
+                        .testTag("temp_est_dest_elevation")
                 )
             }
         }
@@ -387,64 +408,169 @@ private fun TemperatureEstimationScreen(
 }
 
 /**
- * The estimate on the plain page: the value as the display number, what to pack as the headlineSmall verdict, and how
- * far it is from where you are. Before there is an estimate, the question and the one thing to do first.
+ * The object: a before and after. "Here" on top with the temperature where you are, "There" under it with the
+ * estimate, and between them, sitting on the seam, the link: how much higher or lower you're going and how much
+ * colder or warmer that makes it. The "There" card is the answer, in primary container, with one verdict line. Before
+ * there is a temperature or a destination, the link and the verdict line say the one thing to do next.
  */
 @Composable
-private fun TemperatureEstimateHero(
-    title: String,
-    celsius: Float?,
-    delta: Float?,
-    unitSymbol: String
+private fun TemperatureTrip(
+    hereTemperature: String?,
+    hereElevation: String?,
+    thereTemperature: String?,
+    thereElevation: String?,
+    climb: Distance?,
+    formatClimb: (Distance) -> String,
+    change: Float?,
+    formatChange: (Float) -> String,
+    estimateCelsius: Float?,
+    hasBase: Boolean,
+    onAddDestination: () -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val dash = stringResource(R.string.dash)
+    val verdict = when {
+        !hasBase -> stringResource(R.string.sky_temperature_start)
+        estimateCelsius == null -> stringResource(R.string.sky_temperature_add_base_elevation)
+        else -> stringResource(
+            when {
+                estimateCelsius < 0f -> R.string.sky_temperature_verdict_freezing
+                estimateCelsius < 10f -> R.string.sky_temperature_verdict_cold
+                estimateCelsius < 18f -> R.string.sky_temperature_verdict_cool
+                estimateCelsius < 30f -> R.string.sky_temperature_verdict_warm
+                else -> R.string.sky_temperature_verdict_hot
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
-            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            .padding(top = TrailSenseSpacing.sm)
     ) {
-        if (celsius == null) {
-            Text(
-                text = stringResource(R.string.sky_temperature_idle),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
+        TripCard(
+            label = stringResource(R.string.sky_temperature_here_short),
+            elevation = hereElevation ?: dash,
+            temperature = hereTemperature ?: dash,
+            container = scheme.surfaceContainerHigh,
+            content = scheme.onSurface,
+            quiet = scheme.onSurfaceVariant,
+            shape = RoundedCornerShape(
+                topStart = TrailSenseShape.hero,
+                topEnd = TrailSenseShape.hero,
+                bottomStart = TrailSenseShape.groupInner,
+                bottomEnd = TrailSenseShape.groupInner
+            ),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = TrailSenseSpacing.xl,
+                end = TrailSenseSpacing.xl,
+                top = TrailSenseSpacing.xl,
+                bottom = TrailSenseSpacing.xxl
             )
-            Text(
-                text = stringResource(R.string.sky_temperature_start),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        // The link sits on the seam between the two cards, drawn over both.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TrailSenseSpacing.xxs)
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            TripLink(
+                climb = climb,
+                formatClimb = formatClimb,
+                change = change,
+                formatChange = formatChange,
+                onAddDestination = onAddDestination,
+                modifier = Modifier.wrapContentHeight(unbounded = true)
             )
-        } else {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
-            Text(
-                text = stringResource(
-                    when {
-                        celsius < 0f -> R.string.sky_temperature_verdict_freezing
-                        celsius < 10f -> R.string.sky_temperature_verdict_cold
-                        celsius < 18f -> R.string.sky_temperature_verdict_cool
-                        celsius < 30f -> R.string.sky_temperature_verdict_warm
-                        else -> R.string.sky_temperature_verdict_hot
-                    }
-                ),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (delta != null) {
+        }
+        TripCard(
+            label = stringResource(R.string.sky_temperature_there_short),
+            elevation = thereElevation ?: dash,
+            temperature = thereTemperature ?: dash,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer,
+            quiet = scheme.onPrimaryContainer.copy(alpha = 0.72f),
+            shape = RoundedCornerShape(
+                topStart = TrailSenseShape.groupInner,
+                topEnd = TrailSenseShape.groupInner,
+                bottomStart = TrailSenseShape.hero,
+                bottomEnd = TrailSenseShape.hero
+            ),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = TrailSenseSpacing.xl,
+                end = TrailSenseSpacing.xl,
+                top = TrailSenseSpacing.xxl,
+                bottom = TrailSenseSpacing.xl
+            ),
+            verdict = verdict
+        )
+    }
+}
+
+/** One end of the trip: where it is (a label and its elevation) on the left, its temperature as the display value. */
+@Composable
+private fun TripCard(
+    label: String,
+    elevation: String,
+    temperature: String,
+    container: androidx.compose.ui.graphics.Color,
+    content: androidx.compose.ui.graphics.Color,
+    quiet: androidx.compose.ui.graphics.Color,
+    shape: androidx.compose.ui.graphics.Shape,
+    contentPadding: androidx.compose.foundation.layout.PaddingValues,
+    verdict: String? = null
+) {
+    val description = listOfNotNull(label, elevation, temperature, verdict).joinToString(", ")
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) { contentDescription = description },
+        shape = shape,
+        color = container,
+        contentColor = content
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(contentPadding)
+                .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = content
+                    )
+                    Text(
+                        text = elevation,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                        color = quiet,
+                        maxLines = 1
+                    )
+                }
                 Text(
-                    text = stringResource(
-                        R.string.sky_temperature_change,
-                        String.format(java.util.Locale.getDefault(), "%+.1f", delta) + " " + unitSymbol
-                    ),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = temperature,
+                    style = (
+                        if (temperature.length > 6) {
+                            MaterialTheme.typography.displaySmall
+                        } else {
+                            MaterialTheme.typography.displayMedium
+                        }
+                        ).copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = content,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = TrailSenseSpacing.md)
+                )
+            }
+            if (verdict != null) {
+                Text(
+                    text = verdict,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = content,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.md)
                 )
             }
         }
@@ -452,92 +578,81 @@ private fun TemperatureEstimateHero(
 }
 
 /**
- * The object: one hill with you on its slope (a ring) and where you're going (a filled dot), joined by a dashed trail.
- * The dots climb or drop with springs as the elevations change, so the gap between them is the climb the estimate
- * is about. With no destination yet, only you are on the hill.
+ * The link between here and there: the climb ("1,200 m higher") and what it does to the temperature ("8° colder"),
+ * in a small surface-coloured pill with a hill arrow. With no destination yet it asks for one, and tapping it goes
+ * to that field.
  */
 @Composable
-private fun TemperatureHill(here: Float?, there: Float?, modifier: Modifier = Modifier) {
+private fun TripLink(
+    climb: Distance?,
+    formatClimb: (Distance) -> String,
+    change: Float?,
+    formatChange: (Float) -> String,
+    onAddDestination: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val scheme = MaterialTheme.colorScheme
-    val low = 0.2f
-    // A 1500 m climb spans most of the hill; smaller ones climb less of it.
-    val span = if (here != null && there != null) {
-        (kotlin.math.abs(there - here) / 1500f).coerceIn(0f, 1f) * 0.66f
-    } else {
-        0f
+    val climbText = when {
+        climb == null -> null
+        kotlin.math.abs(climb.meters().value) < 1f -> stringResource(R.string.sky_temperature_same_elevation)
+        climb.value > 0f -> stringResource(R.string.sky_temperature_higher, formatClimb(climb))
+        else -> stringResource(R.string.sky_temperature_lower, formatClimb(climb))
     }
-    val hereTarget = if (here != null && there != null && here > there) low + span else low
-    val thereTarget = if (here != null && there != null && there > here) low + span else low
-    val spec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
-    val hereF by androidx.compose.animation.core.animateFloatAsState(hereTarget, spec, label = "here")
-    val thereF by androidx.compose.animation.core.animateFloatAsState(thereTarget, spec, label = "there")
-    val showThere = there != null && here != null
-    val thereAlpha by androidx.compose.animation.core.animateFloatAsState(
-        if (showThere) 1f else 0f,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "thereAlpha"
-    )
-    androidx.compose.foundation.Canvas(modifier) {
-        val w = size.width
-        val h = size.height
-        val top = 8.dp.toPx()
-        val peakX = w * 0.62f
-        // The left slope rises as a quarter sine, so a height maps back to one point on it.
-        fun leftPoint(f: Float): androidx.compose.ui.geometry.Offset {
-            val t = (2f / Math.PI.toFloat()) * kotlin.math.asin(f.coerceIn(0f, 1f))
-            return androidx.compose.ui.geometry.Offset(peakX * t, h - (h - top) * f)
-        }
-        val hill = androidx.compose.ui.graphics.Path().apply {
-            moveTo(0f, h)
-            var t = 0f
-            while (t <= 1f) {
-                val f = kotlin.math.sin(t * Math.PI.toFloat() / 2f)
-                lineTo(peakX * t, h - (h - top) * f)
-                t += 0.02f
-            }
-            var u = 0f
-            while (u <= 1f) {
-                val f = 1f - (1f - kotlin.math.cos(u * Math.PI.toFloat() / 2f)) * 0.55f
-                lineTo(peakX + (w - peakX) * u, h - (h - top) * f)
-                u += 0.02f
-            }
-            lineTo(w, h)
-            close()
-        }
-        drawPath(hill, scheme.surfaceContainerHighest)
-
-        val lift = 10.dp.toPx()
-        val youAt = leftPoint(hereF).let { it.copy(y = it.y - lift) }
-        val thereAt = leftPoint(thereF).let { it.copy(y = it.y - lift) }
-        if (thereAlpha > 0f) {
-            // The trail between them, along the slope.
-            val trail = androidx.compose.ui.graphics.Path()
-            val steps = 24
-            for (i in 0..steps) {
-                val f = hereF + (thereF - hereF) * i / steps
-                val p = leftPoint(f)
-                if (i == 0) trail.moveTo(p.x, p.y - lift) else trail.lineTo(p.x, p.y - lift)
-            }
-            drawPath(
-                trail,
-                scheme.primary.copy(alpha = 0.6f * thereAlpha),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = 3.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
-                        floatArrayOf(2.dp.toPx(), 7.dp.toPx())
-                    )
-                )
+    val changeText = when {
+        change == null || climb == null -> null
+        kotlin.math.abs(change) < 0.5f -> null
+        change < 0f -> stringResource(R.string.sky_temperature_colder, formatChange(change))
+        else -> stringResource(R.string.sky_temperature_warmer, formatChange(change))
+    }
+    val text = when {
+        climbText == null -> stringResource(R.string.sky_temperature_add_destination)
+        changeText == null -> climbText
+        else -> stringResource(R.string.sky_temperature_link, climbText, changeText)
+    }
+    val icon = when {
+        climb == null -> TrailIcons.ElevationGain
+        climb.value < 0f -> TrailIcons.ElevationLoss
+        else -> TrailIcons.ElevationGain
+    }
+    Surface(
+        onClick = onAddDestination,
+        enabled = climb == null,
+        modifier = modifier.heightIn(min = 40.dp),
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = scheme.surface,
+        contentColor = scheme.onSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, scheme.outlineVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .heightIn(min = 40.dp)
+                .padding(horizontal = TrailSenseSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            Icon(
+                painter = rememberVectorPainter(icon),
+                contentDescription = null,
+                tint = scheme.primary,
+                modifier = Modifier.size(18.dp)
             )
-            drawCircle(scheme.primary.copy(alpha = thereAlpha), 9.dp.toPx(), thereAt)
+            val enter = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val exit = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+            androidx.compose.animation.AnimatedContent(
+                targetState = text,
+                transitionSpec = {
+                    androidx.compose.animation.fadeIn(enter) togetherWith androidx.compose.animation.fadeOut(exit)
+                },
+                label = "trip_link"
+            ) { line ->
+                Text(
+                    text = line,
+                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                    color = scheme.onSurface,
+                    maxLines = 1
+                )
+            }
         }
-        drawCircle(scheme.surface, 9.dp.toPx(), youAt)
-        drawCircle(
-            scheme.primary,
-            8.dp.toPx(),
-            youAt,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
-        )
     }
 }
 
