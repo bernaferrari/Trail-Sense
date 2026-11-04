@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -146,7 +148,7 @@ private fun SurvivalGuideSummary(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                        painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                         contentDescription = null
                     )
                 }
@@ -187,7 +189,7 @@ private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGr
         titleModifier = Modifier.testTag("guide_item_title"),
         trailing = {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

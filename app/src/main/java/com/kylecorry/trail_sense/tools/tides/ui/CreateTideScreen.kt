@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
@@ -479,7 +481,7 @@ private fun CreateTideScreen(
             actions = {
                 IconButton(onClick = onHelp, modifier = Modifier.testTag("create_tide_help_btn")) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_help),
+                        painter = rememberVectorPainter(TrailIcons.Help),
                         contentDescription = stringResource(R.string.help)
                     )
                 }
@@ -590,7 +592,7 @@ private fun CreateTideScreen(
                             position = position,
                             modifier = Modifier.testTag("add_tide_entry"),
                             onClick = onAddTideEntry,
-                            leading = { TidesIconWell(painterResource(R.drawable.ic_add)) }
+                            leading = { TidesIconWell(rememberVectorPainter(TrailIcons.Add)) }
                         ) {
                             Text(
                                 text = stringResource(R.string.add),
@@ -714,7 +716,7 @@ private fun TideLocationInput(
                     .testTag("gps_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
+                    painter = rememberVectorPainter(TrailIcons.Location),
                     contentDescription = stringResource(R.string.gps)
                 )
             }
@@ -755,7 +757,7 @@ private fun TideLocationInput(
                 .testTag("coordinate_input_help_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_help),
+                painter = rememberVectorPainter(TrailIcons.Help),
                 contentDescription = stringResource(R.string.location_input_help_title)
             )
         }
@@ -895,7 +897,7 @@ private fun LunitidalIntervalInput(
                 .testTag("negate_btn")
         ) {
             Icon(
-                painter = painterResource(if (isNegative) R.drawable.ic_minus else R.drawable.ic_add),
+                painter = rememberVectorPainter(if (isNegative) TrailIcons.Minus else TrailIcons.Add),
                 contentDescription = stringResource(
                     if (isNegative) R.string.add else R.string.subtract
                 )
@@ -1039,7 +1041,7 @@ private fun TideEntryCard(
                 onClick = { onEntryDelete(entry) }
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_cancel),
+                    painter = rememberVectorPainter(TrailIcons.Cancel),
                     contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

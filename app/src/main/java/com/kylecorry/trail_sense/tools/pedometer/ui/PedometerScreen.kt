@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.DrawableRes
@@ -258,7 +260,7 @@ internal fun PedometerScreen(
                 modifier = Modifier.testTag("pedometer_sessions_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_tool_clock),
+                    painter = rememberVectorPainter(TrailIcons.ToolClock),
                     contentDescription = stringResource(R.string.history)
                 )
             }
@@ -296,7 +298,7 @@ internal fun PedometerScreen(
             row { position ->
                 TrailSenseListItem(
                     title = stringResource(R.string.pedometer_reset_steps),
-                    icon = painterResource(R.drawable.ic_baseline_refresh_24),
+                    icon = rememberVectorPainter(TrailIcons.BaselineRefresh24),
                     position = position,
                     onClick = onReset,
                     modifier = Modifier.testTag("reset_btn")
@@ -717,7 +719,7 @@ private fun PedometerStartStopRow(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(R.drawable.steps),
+                        painter = rememberVectorPainter(TrailIcons.Steps),
                         contentDescription = null,
                         modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
@@ -824,7 +826,7 @@ private fun PedometerSessionRow(
         Box {
             IconButton(onClick = { menuOpen = true }) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
+                    painter = rememberVectorPainter(TrailIcons.MenuDots),
                     contentDescription = stringResource(R.string.delete)
                 )
             }

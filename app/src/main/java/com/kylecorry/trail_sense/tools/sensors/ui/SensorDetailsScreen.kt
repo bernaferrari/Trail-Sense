@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.sensors.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
@@ -599,7 +601,7 @@ private fun SensorDetailsScreen(
                 modifier = Modifier.testTag("sensor_details_button")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_sensors),
+                    painter = rememberVectorPainter(TrailIcons.Sensors),
                     contentDescription = stringResource(R.string.sensors)
                 )
             }

@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
@@ -303,7 +305,7 @@ private fun SightingRow(
         position = position,
         leading = {
             FieldGuideIconWell(
-                painterResource(if (item.hasLocation) R.drawable.ic_location else R.drawable.ic_date)
+                rememberVectorPainter(if (item.hasLocation) TrailIcons.Location else TrailIcons.Date)
             )
         },
         onClick = item.onEdit,

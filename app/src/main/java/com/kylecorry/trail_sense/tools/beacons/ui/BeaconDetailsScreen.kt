@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.DrawableRes
@@ -369,7 +371,7 @@ private fun BeaconDetailsScreen(
                         .padding(top = TrailSenseSpacing.xs)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_navigation_arrow),
+                        painter = rememberVectorPainter(TrailIcons.NavigationArrow),
                         contentDescription = null,
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
@@ -472,7 +474,7 @@ private fun BeaconDetailsActions(
             modifier = Modifier.testTag("edit_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_edit),
+                painter = rememberVectorPainter(TrailIcons.Edit),
                 contentDescription = stringResource(R.string.edit)
             )
         }
@@ -493,7 +495,7 @@ private fun BeaconDetailsActions(
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.share_ellipsis)) },
-                leadingIcon = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Share), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false
                     onShare()
@@ -501,7 +503,7 @@ private fun BeaconDetailsActions(
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.delete)) },
-                leadingIcon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false
                     onDelete()

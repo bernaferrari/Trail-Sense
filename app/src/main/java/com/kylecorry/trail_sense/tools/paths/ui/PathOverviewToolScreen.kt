@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -1027,7 +1029,7 @@ private fun PathOverviewHost(
                 modifier = Modifier.testTag("path_menu_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
+                    painter = rememberVectorPainter(TrailIcons.MenuDots),
                     contentDescription = stringResource(R.string.details)
                 )
             }
@@ -1035,7 +1037,7 @@ private fun PathOverviewHost(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = views.pathActions.onAddPointClick,
-                icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
+                icon = { Icon(rememberVectorPainter(TrailIcons.Add), contentDescription = null) },
                 text = { Text(stringResource(R.string.point)) },
                 modifier = Modifier.testTag("add_point_btn")
             )
@@ -1098,7 +1100,7 @@ private fun PathOverviewHost(
             row { position ->
                 TrailSenseListItem(
                     title = context.getString(R.string.path_direction_to_start),
-                    icon = painterResource(R.drawable.ic_navigation_arrow),
+                    icon = rememberVectorPainter(TrailIcons.NavigationArrow),
                     iconRotation = 180f,
                     position = position,
                     onClick = views.pathActions.onFollowToStartClick
@@ -1107,7 +1109,7 @@ private fun PathOverviewHost(
             row { position ->
                 TrailSenseListItem(
                     title = context.getString(R.string.path_direction_to_end),
-                    icon = painterResource(R.drawable.ic_navigation_arrow),
+                    icon = rememberVectorPainter(TrailIcons.NavigationArrow),
                     position = position,
                     onClick = views.pathActions.onFollowToEndClick
                 )
@@ -1305,7 +1307,7 @@ private fun PathStatRow(state: PathDataPointState, position: TrailSenseGroupPosi
 @Composable
 private fun PathChevron() {
     Icon(
-        painter = painterResource(R.drawable.ic_drop_down),
+        painter = rememberVectorPainter(TrailIcons.DropDown),
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier

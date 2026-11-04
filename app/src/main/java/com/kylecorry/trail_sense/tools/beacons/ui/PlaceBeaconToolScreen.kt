@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -519,7 +521,7 @@ private fun PlaceBeaconScreen(
                     TrailSenseListItem(
                         title = groupName,
                         subtitle = stringResource(R.string.group),
-                        icon = painterResource(R.drawable.ic_beacon_group),
+                        icon = rememberVectorPainter(TrailIcons.BeaconGroup),
                         position = position,
                         onClick = onGroupClick,
                         modifier = Modifier.testTag("beacon_group_picker")
@@ -528,7 +530,7 @@ private fun PlaceBeaconScreen(
                 row { position ->
                     TrailSenseListItem(
                         title = stringResource(R.string.color),
-                        icon = painterResource(R.drawable.bubble),
+                        icon = rememberVectorPainter(TrailIcons.Bubble),
                         iconTint = Color(data.color.color),
                         position = position,
                         onClick = onColorClick,
@@ -809,7 +811,7 @@ private fun CoordinateInput(
                     modifier = Modifier.testTag("gps_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_location),
+                        painter = rememberVectorPainter(TrailIcons.Location),
                         contentDescription = stringResource(R.string.gps),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -822,7 +824,7 @@ private fun CoordinateInput(
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_help),
+                    painter = rememberVectorPainter(TrailIcons.Help),
                     contentDescription = stringResource(R.string.location_input_help_title)
                 )
             }
@@ -942,7 +944,7 @@ private fun ElevationInput(
                     modifier = Modifier.testTag("elevation_gps_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_altitude),
+                        painter = rememberVectorPainter(TrailIcons.Altitude),
                         contentDescription = stringResource(R.string.elevation),
                         tint = MaterialTheme.colorScheme.primary
                     )

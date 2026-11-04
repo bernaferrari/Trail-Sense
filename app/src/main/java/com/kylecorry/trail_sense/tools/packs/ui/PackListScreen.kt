@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.fillMaxSize
@@ -309,7 +311,7 @@ private fun PackListItem(
         position = position,
         modifier = Modifier.testTag("pack_list_item"),
         onClick = { onOpenPack(pack) },
-        leading = { PacksIconWell(painterResource(R.drawable.ic_tool_pack)) },
+        leading = { PacksIconWell(rememberVectorPainter(TrailIcons.ToolPack)) },
         trailing = {
             PacksOverflowMenu(
                 contentDescription = stringResource(R.string.packs_more_options),

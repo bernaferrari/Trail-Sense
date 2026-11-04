@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
@@ -727,7 +729,7 @@ private fun PathsOverflowMenu(
             modifier = Modifier.testTag("paths_menu_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_menu_dots),
+                painter = rememberVectorPainter(TrailIcons.MenuDots),
                 contentDescription = stringResource(R.string.sort)
             )
         }
@@ -737,7 +739,7 @@ private fun PathsOverflowMenu(
         ) {
             DropdownMenuItem(
                 text = { Text(sortMenuText) },
-                leadingIcon = { Icon(painterResource(R.drawable.sort_ascending), contentDescription = null) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.SortAscending), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false
                     onMenuAction(PathsToolbarAction.Sort)
@@ -745,7 +747,7 @@ private fun PathsOverflowMenu(
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.export)) },
-                leadingIcon = { Icon(painterResource(R.drawable.ic_import_export), contentDescription = null) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.ImportExport), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false
                     onMenuAction(PathsToolbarAction.Export)
@@ -794,7 +796,7 @@ private fun PathsCreateMenu(
                 isOpen = false
                 onImportPath()
             },
-            icon = { Icon(painterResource(R.drawable.ic_file), contentDescription = null) },
+            icon = { Icon(rememberVectorPainter(TrailIcons.File), contentDescription = null) },
             text = { Text(stringResource(R.string.import_gpx)) }
         )
         FloatingActionButtonMenuItem(
@@ -802,7 +804,7 @@ private fun PathsCreateMenu(
                 isOpen = false
                 onCreateGroup()
             },
-            icon = { Icon(painterResource(R.drawable.ic_path_group), contentDescription = null) },
+            icon = { Icon(rememberVectorPainter(TrailIcons.PathGroup), contentDescription = null) },
             text = { Text(stringResource(R.string.group)) }
         )
         FloatingActionButtonMenuItem(
@@ -810,7 +812,7 @@ private fun PathsCreateMenu(
                 isOpen = false
                 onCreatePath()
             },
-            icon = { Icon(painterResource(R.drawable.path_solid), contentDescription = null) },
+            icon = { Icon(rememberVectorPainter(TrailIcons.PathSolid), contentDescription = null) },
             text = { Text(stringResource(R.string.path)) }
         )
     }
@@ -852,7 +854,7 @@ private fun BacktrackRow(
         TrailSenseListItem(
             title = stringResource(R.string.backtrack),
             subtitle = subtitle,
-            icon = painterResource(R.drawable.ic_tool_backtrack),
+            icon = rememberVectorPainter(TrailIcons.ToolBacktrack),
             position = TrailSenseGroupPosition.Single,
             containerColor = container,
             onClick = onFrequencyClick,
@@ -948,7 +950,7 @@ private fun PathRowActions(
                 modifier = Modifier.testTag("path_item_menu_$title")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
+                    painter = rememberVectorPainter(TrailIcons.MenuDots),
                     contentDescription = stringResource(R.string.details),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -999,7 +1001,7 @@ private fun PathGroupRow(
     TrailSenseListItem(
         title = group.name,
         subtitle = pluralStringResource(R.plurals.path_group_summary, count, count),
-        icon = painterResource(R.drawable.ic_path_group),
+        icon = rememberVectorPainter(TrailIcons.PathGroup),
         iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
         position = position,
         onClick = { onAction(PathGroupAction.Open) },
@@ -1011,7 +1013,7 @@ private fun PathGroupRow(
                     modifier = Modifier.testTag("path_group_menu_${group.name}")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_menu_dots),
+                        painter = rememberVectorPainter(TrailIcons.MenuDots),
                         contentDescription = stringResource(R.string.details),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

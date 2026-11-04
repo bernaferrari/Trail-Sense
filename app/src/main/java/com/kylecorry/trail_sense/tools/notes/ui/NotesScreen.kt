@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.combinedClickable
@@ -209,7 +211,7 @@ private fun NoteRow(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_tool_notes),
+                        painter = rememberVectorPainter(TrailIcons.ToolNotes),
                         contentDescription = null,
                         modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
@@ -252,7 +254,7 @@ private fun NoteRow(
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.qr_code)) },
                         leadingIcon = {
-                            Icon(painterResource(R.drawable.ic_qr_code), contentDescription = null)
+                            Icon(rememberVectorPainter(TrailIcons.QrCode), contentDescription = null)
                         },
                         onClick = {
                             isMenuOpen = false
@@ -262,7 +264,7 @@ private fun NoteRow(
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.delete)) },
                         leadingIcon = {
-                            Icon(painterResource(R.drawable.ic_delete), contentDescription = null)
+                            Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null)
                         },
                         onClick = {
                             isMenuOpen = false

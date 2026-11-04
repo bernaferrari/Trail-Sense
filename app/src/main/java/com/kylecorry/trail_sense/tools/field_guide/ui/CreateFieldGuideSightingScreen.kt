@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
@@ -271,7 +273,7 @@ private fun CreateFieldGuideSightingScreen(
                     modifier = Modifier.testTag("field_guide_sighting_save_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_check),
+                        painter = rememberVectorPainter(TrailIcons.Check),
                         contentDescription = saveLabel
                     )
                 }
@@ -369,7 +371,7 @@ private fun DateTimeInput(
     TrailSenseListItem(
         title = stringResource(R.string.time),
         subtitle = text,
-        icon = painterResource(R.drawable.ic_date),
+        icon = rememberVectorPainter(TrailIcons.Date),
         position = position,
         onClick = {
             CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
@@ -483,7 +485,7 @@ private fun CoordinateInput(
         leadingIcon = {
             SightingAutofillButton(
                 isLoading = isLoadingLocation,
-                icon = painterResource(R.drawable.ic_location),
+                icon = rememberVectorPainter(TrailIcons.Location),
                 contentDescription = stringResource(R.string.gps),
                 buttonTag = "gps_btn",
                 loadingTag = "gps_loading",
@@ -519,7 +521,7 @@ private fun CoordinateInput(
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_help),
+                    painter = rememberVectorPainter(TrailIcons.Help),
                     contentDescription = stringResource(R.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -617,7 +619,7 @@ private fun ElevationInput(
         leadingIcon = {
             SightingAutofillButton(
                 isLoading = isLoadingElevation,
-                icon = painterResource(R.drawable.ic_altitude),
+                icon = rememberVectorPainter(TrailIcons.Altitude),
                 contentDescription = stringResource(R.string.elevation),
                 buttonTag = "elevation_gps_btn",
                 loadingTag = "elevation_loading",

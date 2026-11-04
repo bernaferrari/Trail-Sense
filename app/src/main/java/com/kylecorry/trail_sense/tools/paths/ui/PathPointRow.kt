@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -74,7 +76,7 @@ fun PathPointRow(
                 modifier = Modifier.testTag("waypoint_menu_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
+                    painter = rememberVectorPainter(TrailIcons.MenuDots),
                     contentDescription = stringResource(R.string.details),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

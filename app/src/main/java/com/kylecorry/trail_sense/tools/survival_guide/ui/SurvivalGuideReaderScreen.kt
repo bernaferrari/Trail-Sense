@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -117,7 +119,7 @@ fun SurvivalGuideReaderScreen(
             if (canPrint) {
                 IconButton(onClick = { onPrint(chapter) }) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_printer),
+                        painter = rememberVectorPainter(TrailIcons.Printer),
                         contentDescription = stringResource(R.string.print)
                     )
                 }

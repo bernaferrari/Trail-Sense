@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.annotation.SuppressLint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.DrawableRes
@@ -339,7 +341,7 @@ private fun TidesScreen(
         actions = {
             IconButton(onClick = onOpenTideList, modifier = Modifier.testTag("tide_table_btn")) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_tide_table),
+                    painter = rememberVectorPainter(TrailIcons.TideTable),
                     contentDescription = stringResource(R.string.tide_table)
                 )
             }
@@ -447,7 +449,7 @@ private fun DatePickerInput(
             modifier = Modifier.testTag("prev_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                 contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
@@ -476,7 +478,7 @@ private fun DatePickerInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_date),
+                painter = rememberVectorPainter(TrailIcons.Date),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
@@ -494,7 +496,7 @@ private fun DatePickerInput(
             modifier = Modifier.testTag("next_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                 contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -663,7 +665,7 @@ private fun TideRow(tide: Tide, position: TrailSenseGroupPosition) {
         },
         leading = {
             TidesIconWell(
-                painterResource(if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low)
+                rememberVectorPainter(if (tide.isHigh) TrailIcons.TideHigh else TrailIcons.TideLow)
             )
         },
         trailing = {

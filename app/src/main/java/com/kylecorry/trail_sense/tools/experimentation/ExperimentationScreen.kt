@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.experimentation
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -100,7 +102,7 @@ private fun ExperimentationPluginRow(
         TrailSenseListItem(
             title = plugin.name,
             subtitle = listOfNotNull(plugin.packageId, plugin.version).joinToString(" · "),
-            icon = painterResource(R.drawable.ic_experimental),
+            icon = rememberVectorPainter(TrailIcons.Experimental),
             position = if (expanded) position.copy(isLast = false) else position,
             onClick = { expanded = !expanded }
         )

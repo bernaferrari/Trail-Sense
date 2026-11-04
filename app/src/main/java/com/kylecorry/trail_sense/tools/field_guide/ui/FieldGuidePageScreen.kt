@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
@@ -165,7 +167,7 @@ private fun FieldGuidePageScreen(
                     modifier = Modifier.testTag("field_guide_page_edit_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_edit),
+                        painter = rememberVectorPainter(TrailIcons.Edit),
                         contentDescription = editLabel
                     )
                 }
@@ -213,12 +215,12 @@ private fun FieldGuidePageScreen(
                 TrailSenseListItem(
                     title = stringResource(R.string.sightings),
                     subtitle = subtitle,
-                    icon = painterResource(R.drawable.ic_binoculars),
+                    icon = rememberVectorPainter(TrailIcons.Binoculars),
                     position = position,
                     onClick = onSightings,
                     trailing = {
                         Icon(
-                            painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                            painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -379,7 +381,7 @@ private fun FieldGuideImagePager(
                 modifier = Modifier.testTag("previous_photo_button")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_prev),
+                    painter = rememberVectorPainter(TrailIcons.Prev),
                     contentDescription = stringResource(R.string.previous)
                 )
             }
@@ -395,7 +397,7 @@ private fun FieldGuideImagePager(
                 modifier = Modifier.testTag("next_photo_button")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                    painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                     contentDescription = stringResource(R.string.next)
                 )
             }

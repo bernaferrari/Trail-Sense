@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
@@ -1073,7 +1075,7 @@ private fun BeaconGroupRow(
     TrailSenseListItem(
         title = group.name,
         subtitle = pluralStringResource(R.plurals.beacon_group_summary, group.count, group.count),
-        icon = painterResource(R.drawable.ic_beacon_group),
+        icon = rememberVectorPainter(TrailIcons.BeaconGroup),
         position = position,
         onClick = { onAction(BeaconGroupAction.Open) },
         trailing = {

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
@@ -354,7 +356,7 @@ private fun CreateFieldGuidePageContent(
                     modifier = Modifier.testTag("toolbar_right_button")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_check),
+                        painter = rememberVectorPainter(TrailIcons.Check),
                         contentDescription = saveLabel,
                         modifier = Modifier.testTag("create_field_guide_page_save_btn")
                     )
@@ -533,7 +535,7 @@ private fun FieldGuidePhotos(
                     modifier = Modifier.testTag("previous_photo_button")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_prev),
+                        painter = rememberVectorPainter(TrailIcons.Prev),
                         contentDescription = stringResource(R.string.previous)
                     )
                 }
@@ -549,7 +551,7 @@ private fun FieldGuidePhotos(
                     modifier = Modifier.testTag("next_photo_button")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                        painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                         contentDescription = stringResource(R.string.next)
                     )
                 }
@@ -571,7 +573,7 @@ private fun PhotoSourceButtons(
             .testTag("take_photo_button")
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_camera),
+            painter = rememberVectorPainter(TrailIcons.Camera),
             contentDescription = null,
             modifier = Modifier.size(ButtonDefaults.IconSize)
         )
@@ -680,7 +682,7 @@ private fun TagSelector(
         modifier = modifier,
         trailing = {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
