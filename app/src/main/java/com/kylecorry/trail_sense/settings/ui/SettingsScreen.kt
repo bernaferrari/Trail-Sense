@@ -3,36 +3,47 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Intent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.MonitorHeart
+import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.system.Intents
@@ -41,11 +52,14 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
@@ -70,6 +84,7 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
     SettingsScreen(
         version = Package.getVersionName(host.requireContext()),
         pluginsEnabled = plugins.arePluginsEnabled(),
+        onBack = { host.mainActivity.onBackPressedDispatcher.onBackPressed() },
         onNavigate = { host.findNavController().navigateWithAnimation(it) },
         onOpenUrl = { host.startActivity(Intents.url(it)) },
         onEmailDeveloper = {
@@ -87,70 +102,20 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
     )
 }
 
+/**
+ * Settings: the app's own pages, then every tool that has settings, then the experiments and plugins, then about.
+ * One line per row wherever the title says enough; an icon well leads every row so the groups line up.
+ */
 @Composable
 private fun SettingsScreen(
     version: String,
     pluginsEnabled: Boolean,
+    onBack: () -> Unit,
     onNavigate: (Int) -> Unit,
     onOpenUrl: (String) -> Unit,
     onEmailDeveloper: () -> Unit
 ) {
     val context = LocalContext.current
-    val generalItems = listOfNotNull(
-        SettingsItem(
-            title = stringResource(R.string.units),
-            subtitle = null,
-            icon = R.drawable.ruler,
-            navId = navigationMap.getValue(R.string.pref_unit_settings)
-        ),
-        SettingsItem(
-            title = stringResource(R.string.sensors),
-            subtitle = stringResource(R.string.sensor_summary),
-            icon = R.drawable.ic_sensors,
-            navId = navigationMap.getValue(R.string.pref_sensor_settings)
-        ),
-        SettingsItem(
-            title = stringResource(R.string.pref_theme_title),
-            subtitle = null,
-            icon = R.drawable.ic_theme,
-            navId = navigationMap.getValue(R.string.pref_theme_settings)
-        ),
-        SettingsItem(
-            title = stringResource(R.string.privacy),
-            subtitle = null,
-            icon = R.drawable.ic_visible,
-            navId = navigationMap.getValue(R.string.pref_privacy_settings)
-        ),
-        SettingsItem(
-            title = stringResource(R.string.errors),
-            subtitle = null,
-            icon = R.drawable.ic_alert,
-            navId = navigationMap.getValue(R.string.pref_error_settings)
-        ),
-        SettingsItem(
-            title = stringResource(R.string.experimental),
-            subtitle = null,
-            icon = R.drawable.ic_experimental,
-            navId = navigationMap.getValue(R.string.pref_experimental_settings)
-        ),
-        if (pluginsEnabled) {
-            SettingsItem(
-                title = stringResource(R.string.plugins),
-                subtitle = null,
-                icon = R.drawable.apps,
-                navId = navigationMap.getValue(R.string.pref_plugins_settings)
-            )
-        } else {
-            null
-        },
-        SettingsItem(
-            title = stringResource(R.string.backup_restore),
-            subtitle = null,
-            icon = R.drawable.backup_restore,
-            navId = navigationMap.getValue(R.string.pref_backup_settings)
-        )
-    )
-
     val toolItems = remember {
         AlphabeticalToolSort()
             .sort(Tools.getTools(context))
@@ -159,173 +124,206 @@ private fun SettingsScreen(
             .filter { it.settingsNavAction != null }
     }
 
-    val allToolsItem = SettingsItem(
-        title = stringResource(R.string.tools),
-        subtitle = null,
-        icon = R.drawable.apps,
-        navId = navigationMap.getValue(R.string.pref_tool_settings_header_key)
-    )
+    val generalTitle = stringResource(R.string.general)
+    val toolsTitle = stringResource(R.string.tools)
+    val advancedTitle = stringResource(R.string.advanced)
+    val aboutTitle = stringResource(R.string.pref_category_about)
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    fun go(key: Int) = onNavigate(navigationMap.getValue(key))
+
+    TrailSensePage(
+        title = stringResource(R.string.settings),
+        onBack = onBack,
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-            item("title") {
-                Text(
-                    text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(
-                        top = TrailSenseSpacing.sm,
-                        bottom = TrailSenseSpacing.xs
-                    )
+        trailSenseSection("general", title = generalTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.units),
+                    icon = painterResource(R.drawable.ruler),
+                    position = position,
+                    onClick = { go(R.string.pref_unit_settings) }
                 )
             }
-
-            item("general_section") {
-                SettingsSection(title = stringResource(R.string.general)) {
-                    generalItems.forEachIndexed { index, item ->
-                        SettingsCardRow(
-                            title = item.title,
-                            subtitle = item.subtitle,
-                            icon = item.icon?.let { painterResource(it) },
-                            position = TrailSenseGroupPosition.at(index, generalItems.size),
-                            onClick = { onNavigate(item.navId) }
-                        )
-                    }
-                }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_theme_title),
+                    icon = painterResource(R.drawable.ic_theme),
+                    position = position,
+                    onClick = { go(R.string.pref_theme_settings) }
+                )
             }
-
-            item("tools_section") {
-                SettingsSection(title = stringResource(R.string.tools)) {
-                    SettingsCardRow(
-                        title = allToolsItem.title,
-                        subtitle = allToolsItem.subtitle,
-                        icon = allToolsItem.icon?.let { painterResource(it) },
-                        position = TrailSenseGroupPosition.at(0, toolItems.size + 1),
-                        onClick = { onNavigate(allToolsItem.navId) }
-                    )
-                    toolItems.forEachIndexed { index, tool ->
-                        SettingsCardRow(
-                            title = tool.name,
-                            subtitle = null,
-                            icon = painterResource(tool.icon),
-                            position = TrailSenseGroupPosition.at(index + 1, toolItems.size + 1),
-                            onClick = { tool.settingsNavAction?.let(onNavigate) }
-                        )
-                    }
-                }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.sensors),
+                    subtitle = stringResource(R.string.sensor_summary),
+                    icon = painterResource(R.drawable.ic_sensors),
+                    position = position,
+                    onClick = { go(R.string.pref_sensor_settings) }
+                )
             }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.privacy),
+                    icon = painterResource(R.drawable.ic_visible),
+                    position = position,
+                    onClick = { go(R.string.pref_privacy_settings) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.errors),
+                    icon = painterResource(R.drawable.ic_alert),
+                    position = position,
+                    onClick = { go(R.string.pref_error_settings) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.backup_restore),
+                    icon = painterResource(R.drawable.backup_restore),
+                    position = position,
+                    onClick = { go(R.string.pref_backup_settings) }
+                )
+            }
+        }
 
-            item("about_section") {
-                SettingsSection(title = stringResource(R.string.pref_category_about)) {
-                    SettingsCardRow(
-                        title = stringResource(R.string.diagnostics),
-                        subtitle = null,
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(0, 6),
-                        onClick = { onNavigate(navigationMap.getValue(R.string.pref_diagnostics)) }
-                    )
-                    SettingsCardRow(
-                        title = stringResource(R.string.pref_app_version_title),
-                        subtitle = version,
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(1, 6),
-                        onClick = null
-                    )
-                    SettingsCardRow(
-                        title = stringResource(R.string.pref_privacy_policy_title),
-                        subtitle = stringResource(R.string.privacy_policy_url),
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(2, 6),
-                        onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
-                    )
-                    SettingsCardRow(
-                        title = stringResource(R.string.pref_email_title),
-                        subtitle = stringResource(R.string.email),
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(3, 6),
-                        onClick = onEmailDeveloper
-                    )
-                    SettingsCardRow(
-                        title = stringResource(R.string.pref_github_title),
-                        subtitle = GITHUB_URL,
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(4, 6),
-                        onClick = { onOpenUrl(GITHUB_URL) }
-                    )
-                    SettingsCardRow(
-                        title = stringResource(R.string.pref_open_source_licenses_title),
-                        subtitle = null,
-                        icon = null,
-                        position = TrailSenseGroupPosition.at(5, 6),
-                        onClick = {
-                            onNavigate(navigationMap.getValue(R.string.pref_open_source_licenses))
-                        }
+        trailSenseSection("tools", title = toolsTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.tools),
+                    subtitle = stringResource(R.string.settings_tools_summary),
+                    icon = painterResource(R.drawable.apps),
+                    position = position,
+                    onClick = { go(R.string.pref_tool_settings_header_key) }
+                )
+            }
+            toolItems.forEach { tool ->
+                row { position ->
+                    SettingsNavRow(
+                        title = tool.name,
+                        icon = painterResource(tool.icon),
+                        position = position,
+                        onClick = { tool.settingsNavAction?.let(onNavigate) }
                     )
                 }
             }
+        }
+
+        trailSenseSection("advanced", title = advancedTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.experimental),
+                    icon = painterResource(R.drawable.ic_experimental),
+                    position = position,
+                    onClick = { go(R.string.pref_experimental_settings) }
+                )
+            }
+            if (pluginsEnabled) {
+                row { position ->
+                    SettingsNavRow(
+                        title = stringResource(R.string.plugins),
+                        icon = painterResource(R.drawable.apps),
+                        position = position,
+                        onClick = { go(R.string.pref_plugins_settings) }
+                    )
+                }
+            }
+        }
+
+        trailSenseSection("about", title = aboutTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.diagnostics),
+                    icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
+                    position = position,
+                    onClick = { go(R.string.pref_diagnostics) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_app_version_title),
+                    icon = rememberVectorPainter(Icons.Rounded.Info),
+                    position = position,
+                    value = version,
+                    onClick = null
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_privacy_policy_title),
+                    icon = rememberVectorPainter(Icons.Rounded.Policy),
+                    position = position,
+                    onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_email_title),
+                    icon = rememberVectorPainter(Icons.Rounded.Email),
+                    position = position,
+                    onClick = onEmailDeveloper
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_github_title),
+                    icon = rememberVectorPainter(Icons.Rounded.Code),
+                    position = position,
+                    onClick = { onOpenUrl(GITHUB_URL) }
+                )
+            }
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.pref_open_source_licenses_title),
+                    icon = rememberVectorPainter(Icons.Rounded.Description),
+                    position = position,
+                    onClick = { go(R.string.pref_open_source_licenses) }
+                )
             }
         }
     }
 }
 
+/**
+ * One row of the Settings list: a 40 dp icon well, the title (and a summary only when it adds something), and a
+ * chevron when it opens something, or a quiet [value] when it only reports one. 64 dp tall on one line.
+ */
 @Composable
-private fun SettingsSection(
+private fun SettingsNavRow(
     title: String,
-    content: @Composable () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.lg
-            )
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun SettingsCardRow(
-    title: String,
-    subtitle: String?,
-    icon: Painter?,
+    icon: Painter,
     position: TrailSenseGroupPosition,
-    onClick: (() -> Unit)?
+    onClick: (() -> Unit)?,
+    subtitle: String? = null,
+    value: String? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && onClick != null) 0.985f else 1f,
+        animationSpec = TrailSenseAnimation.quickSpring,
+        label = "settingsRowPress"
+    )
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
         shape = trailSenseGroupShape(position),
         color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp)
+                .heightIn(min = 64.dp)
                 .then(
                     if (onClick != null) {
                         Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = ripple(),
                             role = Role.Button,
                             onClick = onClick
                         )
@@ -341,23 +339,21 @@ private fun SettingsCardRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (icon != null) {
-                Surface(
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                        )
-                    }
+            Surface(
+                shape = RoundedCornerShape(TrailSenseSpacing.md),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(TrailSenseSize.compactIconContainer)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(TrailSenseSize.compactIcon)
+                    )
                 }
-                Spacer(Modifier.width(TrailSenseSpacing.md))
             }
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
 
             Column(
                 modifier = Modifier.weight(1f),
@@ -366,7 +362,9 @@ private fun SettingsCardRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (subtitle != null) {
                     Text(
@@ -379,8 +377,18 @@ private fun SettingsCardRow(
                 }
             }
 
-            if (onClick != null) {
+            if (value != null) {
                 Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.merge(TextStyle(fontFeatureSettings = "tnum")),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.padding(end = TrailSenseSpacing.sm)
+                )
+            }
+            if (onClick != null) {
+                Spacer(Modifier.width(TrailSenseSpacing.xs))
                 Box(
                     modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
                     contentAlignment = Alignment.Center
@@ -395,12 +403,5 @@ private fun SettingsCardRow(
         }
     }
 }
-
-private data class SettingsItem(
-    val title: String,
-    val subtitle: String?,
-    val icon: Int?,
-    val navId: Int
-)
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"

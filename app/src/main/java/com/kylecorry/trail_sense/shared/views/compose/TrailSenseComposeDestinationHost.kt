@@ -16,6 +16,16 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.input.KeyboardType
+import com.kylecorry.trail_sense.settings.ui.SettingsChoiceRow
+import com.kylecorry.trail_sense.settings.ui.SettingsInfoRow
+import com.kylecorry.trail_sense.settings.ui.SettingsSliderRow
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,8 +33,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -931,98 +939,116 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(userPrefs.addLeadingZeroToTime)
         }
 
+        val measurementsTitle = stringResource(R.string.settings_section_measurements)
+        val locationTitle = stringResource(R.string.location)
+        val timeTitle = stringResource(R.string.time)
+        val timeExample = stringResource(
+            R.string.settings_time_format_example,
+            exampleTime(use24HourTime, includeLeadingZero)
+        )
+
         SettingsList(title = stringResource(R.string.units)) {
-            item("distance") {
-                UnitPickerRow(
-                    label = stringResource(R.string.distance),
-                    options = distanceOptions,
-                    selected = distanceUnits,
-                    onSelected = {
-                        distanceUnits = it
-                        putString(cache, R.string.pref_distance_units, it)
-                    }
-                )
-            }
-            if (hasBarometer) {
-                item("pressure") {
-                    UnitPickerRow(
-                        label = stringResource(R.string.pressure),
-                        options = pressureOptions,
-                        selected = pressureUnits,
+            trailSenseSection("measurements", title = measurementsTitle) {
+                row { position ->
+                    UnitChoiceRow(
+                        label = stringResource(R.string.distance),
+                        options = distanceOptions,
+                        selected = distanceUnits,
                         onSelected = {
-                            pressureUnits = it
-                            putString(cache, R.string.pref_pressure_units, it)
-                        }
+                            distanceUnits = it
+                            putString(cache, R.string.pref_distance_units, it)
+                        },
+                        position = position
+                    )
+                }
+                if (hasBarometer) {
+                    row { position ->
+                        UnitPickerRow(
+                            label = stringResource(R.string.pressure),
+                            options = pressureOptions,
+                            selected = pressureUnits,
+                            onSelected = {
+                                pressureUnits = it
+                                putString(cache, R.string.pref_pressure_units, it)
+                            },
+                            position = position
+                        )
+                    }
+                }
+                row { position ->
+                    UnitChoiceRow(
+                        label = stringResource(R.string.temperature),
+                        options = temperatureOptions,
+                        selected = temperatureUnits,
+                        onSelected = {
+                            temperatureUnits = it
+                            putString(cache, R.string.pref_temperature_units, it)
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    UnitChoiceRow(
+                        label = stringResource(R.string.weight),
+                        options = weightOptions,
+                        selected = weightUnits,
+                        onSelected = {
+                            weightUnits = it
+                            putString(cache, R.string.pref_weight_units, it)
+                        },
+                        position = position
                     )
                 }
             }
-            item("temperature") {
-                UnitPickerRow(
-                    label = stringResource(R.string.temperature),
-                    options = temperatureOptions,
-                    selected = temperatureUnits,
-                    onSelected = {
-                        temperatureUnits = it
-                        putString(cache, R.string.pref_temperature_units, it)
-                    }
-                )
+            trailSenseSection("location", title = locationTitle) {
+                row { position ->
+                    UnitPickerRow(
+                        label = stringResource(R.string.pref_coordinate_format_title),
+                        options = coordinateOptions,
+                        selected = coordinateFormat,
+                        onSelected = {
+                            coordinateFormat = it
+                            putString(cache, R.string.pref_coordinate_format, it)
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    UnitPickerRow(
+                        label = stringResource(R.string.pref_map_url_source_title),
+                        options = mapOptions,
+                        selected = mapSite,
+                        onSelected = {
+                            mapSite = it
+                            putString(cache, R.string.pref_map_url_source, it)
+                        },
+                        position = position
+                    )
+                }
             }
-            item("weight") {
-                UnitPickerRow(
-                    label = stringResource(R.string.weight),
-                    options = weightOptions,
-                    selected = weightUnits,
-                    onSelected = {
-                        weightUnits = it
-                        putString(cache, R.string.pref_weight_units, it)
-                    }
-                )
-            }
-            item("coordinate") {
-                UnitPickerRow(
-                    label = stringResource(R.string.pref_coordinate_format_title),
-                    options = coordinateOptions,
-                    selected = coordinateFormat,
-                    onSelected = {
-                        coordinateFormat = it
-                        putString(cache, R.string.pref_coordinate_format, it)
-                    }
-                )
-            }
-            item("map_url") {
-                UnitPickerRow(
-                    label = stringResource(R.string.pref_map_url_source_title),
-                    options = mapOptions,
-                    selected = mapSite,
-                    onSelected = {
-                        mapSite = it
-                        putString(cache, R.string.pref_map_url_source, it)
-                    }
-                )
-            }
-            item("use_24_hour") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_use_24_hour_title),
-                    checked = use24HourTime,
-                    onCheckedChange = {
-                        use24HourTime = it
-                        putBoolean(cache, R.string.pref_use_24_hour, it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("leading_zero") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_include_leading_zero_title),
-                    checked = includeLeadingZero,
-                    onCheckedChange = {
-                        includeLeadingZero = it
-                        putBoolean(cache, R.string.pref_include_leading_zero, it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("time", title = timeTitle, footer = timeExample) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_use_24_hour_title),
+                        checked = use24HourTime,
+                        onCheckedChange = {
+                            use24HourTime = it
+                            putBoolean(cache, R.string.pref_use_24_hour, it)
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_include_leading_zero_title),
+                        checked = includeLeadingZero,
+                        onCheckedChange = {
+                            includeLeadingZero = it
+                            putBoolean(cache, R.string.pref_include_leading_zero, it)
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -1076,195 +1102,190 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(relativeDistance(userPrefs, Distance.meters(arPrefs.pathViewDistance)))
         }
 
+        val beaconsTitle = stringResource(R.string.beacons)
+        val pathsTitle = stringResource(R.string.paths)
+        val astronomyTitle = stringResource(R.string.astronomy)
+        val gridTitle = stringResource(R.string.grid)
+        val advancedTitle = stringResource(R.string.advanced)
+
+        // Each layer's own options only show while the layer does.
         SettingsList(title = stringResource(R.string.augmented_reality)) {
-            item("beacons_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.beacons))
-            }
-            item("beacons_visible") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
-                    checked = showBeaconLayer,
-                    onCheckedChange = {
-                        showBeaconLayer = it
-                        arPrefs.showBeaconLayer = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("beacon_view_distance") {
-                SettingsActionRow(
-                    label = stringResource(R.string.view_distance),
-                    summary = formatDistance(formatter, beaconViewDistance),
-                    onClick = {
-                        pickDistance(
-                            distanceUnits,
-                            title = getString(R.string.view_distance),
-                            current = beaconViewDistance
-                        ) {
-                            beaconViewDistance = it
-                            arPrefs.beaconViewDistance = it.meters().value
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("paths_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.paths))
-            }
-            item("paths_visible") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
-                    checked = showPathLayer,
-                    onCheckedChange = {
-                        showPathLayer = it
-                        arPrefs.showPathLayer = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("path_view_distance") {
-                SettingsActionRow(
-                    label = stringResource(R.string.view_distance),
-                    summary = formatDistance(formatter, pathViewDistance),
-                    onClick = {
-                        pickDistance(
-                            distanceUnits,
-                            title = getString(R.string.view_distance),
-                            current = pathViewDistance,
-                            description = pathDistanceDescription
-                        ) {
-                            pathViewDistance = it
-                            arPrefs.pathViewDistance = it.meters().value
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("path_elevation") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.use_path_elevation),
-                    checked = adjustForPathElevation,
-                    onCheckedChange = {
-                        adjustForPathElevation = it
-                        arPrefs.adjustForPathElevation = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("astronomy_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.astronomy))
-            }
-            item("astronomy_visible") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
-                    checked = showAstronomyLayer,
-                    onCheckedChange = {
-                        showAstronomyLayer = it
-                        arPrefs.showAstronomyLayer = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("stars") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.show_stars),
-                    checked = showStars,
-                    onCheckedChange = {
-                        showStars = it
-                        arPrefs.showStars = it
-                    },
-                    enabled = showAstronomyLayer,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("low_brightness") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.show_low_brightness_objects),
-                    checked = showLowBrightnessObjects,
-                    onCheckedChange = {
-                        showLowBrightnessObjects = it
-                        arPrefs.showLowBrightnessObjects = it
-                    },
-                    enabled = showAstronomyLayer && showStars,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("constellations") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.show_constellations),
-                    checked = showConstellations,
-                    onCheckedChange = {
-                        showConstellations = it
-                        arPrefs.showConstellations = it
-                    },
-                    enabled = showAstronomyLayer,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("below_horizon") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.show_below_horizon),
-                    checked = showAstronomyBelowHorizon,
-                    onCheckedChange = {
-                        showAstronomyBelowHorizon = it
-                        arPrefs.showAstronomyBelowHorizon = it
-                    },
-                    enabled = showAstronomyLayer,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("grid_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.grid))
-            }
-            item("grid_visible") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
-                    checked = showGridLayer,
-                    onCheckedChange = {
-                        showGridLayer = it
-                        arPrefs.showGridLayer = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("advanced_header") {
-                TrailSenseSectionHeader(title = stringResource(R.string.advanced))
-            }
-            if (hasGyro) {
-                item("gyro_after_calibration") {
+            trailSenseSection("beacons", title = beaconsTitle) {
+                row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.use_gyroscope_after_calibration),
-                        summary = stringResource(R.string.use_gyroscope_after_calibration_description),
-                        checked = useGyroOnlyAfterCalibration,
+                        label = stringResource(R.string.visible),
+                        checked = showBeaconLayer,
                         onCheckedChange = {
-                            useGyroOnlyAfterCalibration = it
-                            arPrefs.useGyroOnlyAfterCalibration = it
+                            showBeaconLayer = it
+                            arPrefs.showBeaconLayer = it
                         },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        position = position
                     )
-                    TrailSenseDivider()
+                }
+                if (showBeaconLayer) {
+                    row { position ->
+                        SettingsActionRow(
+                            label = stringResource(R.string.view_distance),
+                            summary = formatDistance(formatter, beaconViewDistance),
+                            onClick = {
+                                pickDistance(
+                                    distanceUnits,
+                                    title = getString(R.string.view_distance),
+                                    current = beaconViewDistance
+                                ) {
+                                    beaconViewDistance = it
+                                    arPrefs.beaconViewDistance = it.meters().value
+                                }
+                            },
+                            position = position
+                        )
+                    }
                 }
             }
-            item("increase_exposure") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.increase_exposure_at_night),
-                    checked = increaseExposureAtNight,
-                    onCheckedChange = {
-                        increaseExposureAtNight = it
-                        arPrefs.increaseExposureAtNight = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("paths", title = pathsTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.visible),
+                        checked = showPathLayer,
+                        onCheckedChange = {
+                            showPathLayer = it
+                            arPrefs.showPathLayer = it
+                        },
+                        position = position
+                    )
+                }
+                if (showPathLayer) {
+                    row { position ->
+                        SettingsActionRow(
+                            label = stringResource(R.string.view_distance),
+                            summary = formatDistance(formatter, pathViewDistance),
+                            onClick = {
+                                pickDistance(
+                                    distanceUnits,
+                                    title = getString(R.string.view_distance),
+                                    current = pathViewDistance,
+                                    description = pathDistanceDescription
+                                ) {
+                                    pathViewDistance = it
+                                    arPrefs.pathViewDistance = it.meters().value
+                                }
+                            },
+                            position = position
+                        )
+                    }
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.use_path_elevation),
+                            checked = adjustForPathElevation,
+                            onCheckedChange = {
+                                adjustForPathElevation = it
+                                arPrefs.adjustForPathElevation = it
+                            },
+                            position = position
+                        )
+                    }
+                }
+            }
+            trailSenseSection("astronomy", title = astronomyTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.visible),
+                        checked = showAstronomyLayer,
+                        onCheckedChange = {
+                            showAstronomyLayer = it
+                            arPrefs.showAstronomyLayer = it
+                        },
+                        position = position
+                    )
+                }
+                if (showAstronomyLayer) {
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.show_stars),
+                            checked = showStars,
+                            onCheckedChange = {
+                                showStars = it
+                                arPrefs.showStars = it
+                            },
+                            position = position
+                        )
+                    }
+                    if (showStars) {
+                        row { position ->
+                            SettingsSwitchRow(
+                                label = stringResource(R.string.show_low_brightness_objects),
+                                checked = showLowBrightnessObjects,
+                                onCheckedChange = {
+                                    showLowBrightnessObjects = it
+                                    arPrefs.showLowBrightnessObjects = it
+                                },
+                                position = position
+                            )
+                        }
+                    }
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.show_constellations),
+                            checked = showConstellations,
+                            onCheckedChange = {
+                                showConstellations = it
+                                arPrefs.showConstellations = it
+                            },
+                            position = position
+                        )
+                    }
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.show_below_horizon),
+                            checked = showAstronomyBelowHorizon,
+                            onCheckedChange = {
+                                showAstronomyBelowHorizon = it
+                                arPrefs.showAstronomyBelowHorizon = it
+                            },
+                            position = position
+                        )
+                    }
+                }
+            }
+            trailSenseSection("grid", title = gridTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.visible),
+                        checked = showGridLayer,
+                        onCheckedChange = {
+                            showGridLayer = it
+                            arPrefs.showGridLayer = it
+                        },
+                        position = position
+                    )
+                }
+            }
+            trailSenseSection("advanced", title = advancedTitle) {
+                if (hasGyro) {
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.use_gyroscope_after_calibration),
+                            summary = stringResource(R.string.use_gyroscope_after_calibration_description),
+                            checked = useGyroOnlyAfterCalibration,
+                            onCheckedChange = {
+                                useGyroOnlyAfterCalibration = it
+                                arPrefs.useGyroOnlyAfterCalibration = it
+                            },
+                            position = position
+                        )
+                    }
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.increase_exposure_at_night),
+                        checked = increaseExposureAtNight,
+                        onCheckedChange = {
+                            increaseExposureAtNight = it
+                            arPrefs.increaseExposureAtNight = it
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -1351,110 +1372,110 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(notificationGroupingValue(userPrefs.notificationGroupingBehavior))
         }
 
+        val toolsTitle = stringResource(R.string.tools)
+        val cameraTitle = stringResource(R.string.camera)
+        val gpsTitle = stringResource(R.string.gps)
+        val weatherTitle = stringResource(R.string.weather)
+        val notificationsTitle = stringResource(R.string.settings_section_notifications)
+
+        // Each experiment sits under the part of the app it changes, so no row needs to say where it applies.
         SettingsList(title = stringResource(R.string.experimental)) {
-            if (hasMetalDirectionSupport) {
-                item("metal_direction") {
+            trailSenseSection("tools", title = toolsTitle) {
+                row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.pref_experimental_metal_direction_title),
-                        summary = stringResource(R.string.tool_metal_detector_title),
-                        checked = showMetalDirection,
+                        label = stringResource(R.string.tool_cliff_height_title),
+                        summary = stringResource(R.string.tool_cliff_height_description),
+                        checked = isCliffHeightEnabled,
                         onCheckedChange = {
-                            showMetalDirection = it
-                            putBoolean(cache, R.string.pref_experimental_metal_direction, it)
+                            isCliffHeightEnabled = it
+                            userPrefs.isCliffHeightEnabled = it
+                            requireMainActivity().updateBottomNavigation()
                         },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        position = position
                     )
-                    TrailSenseDivider()
+                }
+                if (hasMetalDirectionSupport) {
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.pref_experimental_metal_direction_title),
+                            summary = stringResource(R.string.tool_metal_detector_title),
+                            checked = showMetalDirection,
+                            onCheckedChange = {
+                                showMetalDirection = it
+                                putBoolean(cache, R.string.pref_experimental_metal_direction, it)
+                            },
+                            position = position
+                        )
+                    }
                 }
             }
-            item("zero_shutter_lag") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.zero_shutter_lag),
-                    summary = stringResource(R.string.camera),
-                    checked = useZeroShutterLag,
-                    onCheckedChange = {
-                        useZeroShutterLag = it
-                        putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("camera", title = cameraTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.zero_shutter_lag),
+                        checked = useZeroShutterLag,
+                        onCheckedChange = {
+                            useZeroShutterLag = it
+                            putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
+                        },
+                        position = position
+                    )
+                }
             }
-            item("cliff_height") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.tool_cliff_height_title),
-                    summary = stringResource(R.string.tool_cliff_height_description),
-                    checked = isCliffHeightEnabled,
-                    onCheckedChange = {
-                        isCliffHeightEnabled = it
-                        userPrefs.isCliffHeightEnabled = it
-                        requireMainActivity().updateBottomNavigation()
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("gps", title = gpsTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.smooth_gps_readings),
+                        checked = useFilteredGps,
+                        onCheckedChange = {
+                            useFilteredGps = it
+                            cache.putInt(getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
+                        },
+                        position = position
+                    )
+                }
             }
-            item("filtered_gps") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.smooth_gps_readings),
-                    checked = useFilteredGps,
-                    onCheckedChange = {
-                        useFilteredGps = it
-                        cache.putInt(getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            if (showForecastSource) {
-                item("forecast_source") {
-                    SettingsPickerRow(
-                        label = stringResource(R.string.forecast_algorithm),
-                        selected = optionLabel(forecastOptions, forecastSource),
-                        onClick = {
-                            pickOption(
-                                getString(R.string.forecast_algorithm),
-                                forecastOptions,
-                                forecastSource
-                            ) {
+            trailSenseSection("weather", title = weatherTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.show_pressure_forecast),
+                        checked = showPressureForecast,
+                        onCheckedChange = {
+                            showPressureForecast = it
+                            putBoolean(cache, R.string.pref_show_pressure_forecast, it)
+                        },
+                        position = position
+                    )
+                }
+                if (showForecastSource) {
+                    row { position ->
+                        UnitChoiceRow(
+                            label = stringResource(R.string.forecast_algorithm),
+                            options = forecastOptions,
+                            selected = forecastSource,
+                            onSelected = {
                                 forecastSource = it
                                 putString(cache, R.string.pref_weather_forecast_source, it)
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+                            },
+                            position = position
+                        )
+                    }
                 }
             }
-            item("pressure_forecast") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.show_pressure_forecast),
-                    summary = stringResource(R.string.weather),
-                    checked = showPressureForecast,
-                    onCheckedChange = {
-                        showPressureForecast = it
-                        putBoolean(cache, R.string.pref_show_pressure_forecast, it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
             if (showNotificationGrouping) {
-                item("notification_grouping") {
-                    SettingsPickerRow(
-                        label = stringResource(R.string.notification_grouping),
-                        selected = optionLabel(notificationGroupingOptions, notificationGrouping),
-                        onClick = {
-                            pickOption(
-                                getString(R.string.notification_grouping),
-                                notificationGroupingOptions,
-                                notificationGrouping
-                            ) {
+                trailSenseSection("notifications", title = notificationsTitle) {
+                    row { position ->
+                        UnitPickerRow(
+                            label = stringResource(R.string.notification_grouping),
+                            options = notificationGroupingOptions,
+                            selected = notificationGrouping,
+                            onSelected = {
                                 notificationGrouping = it
                                 putString(cache, R.string.pref_notification_group_behavior, it)
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+                            },
+                            position = position
+                        )
+                    }
                 }
             }
         }
@@ -1474,53 +1495,55 @@ class TrailSenseComposeDestinationHost(
         }
 
         SettingsList(title = stringResource(R.string.backup_restore)) {
-            item("backup") {
-                SettingsActionRow(
-                    label = stringResource(R.string.backup),
-                    onClick = ::backup,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("manual") {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.backup),
+                        onClick = ::backup,
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.restore),
+                        onClick = ::restore,
+                        position = position
+                    )
+                }
             }
-            item("restore") {
-                SettingsActionRow(
-                    label = stringResource(R.string.restore),
-                    onClick = ::restore,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("auto_backup") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.automatic_backup),
-                    summary = autoBackupSummary,
-                    checked = autoBackupEnabled,
-                    onCheckedChange = {
-                        autoBackupEnabled = it
-                        prefs.backup.isAutoBackupEnabled = it
-                        if (it) {
-                            changeAutoBackupDirectory(prefs) { isEnabled ->
-                                autoBackupEnabled = isEnabled
-                                autoBackupSummary = getAutoBackupSummary(prefs, isEnabled)
+            trailSenseSection("options") {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.automatic_backup),
+                        summary = autoBackupSummary,
+                        checked = autoBackupEnabled,
+                        onCheckedChange = {
+                            autoBackupEnabled = it
+                            prefs.backup.isAutoBackupEnabled = it
+                            if (it) {
+                                changeAutoBackupDirectory(prefs) { isEnabled ->
+                                    autoBackupEnabled = isEnabled
+                                    autoBackupSummary = getAutoBackupSummary(prefs, isEnabled)
+                                }
+                            } else {
+                                autoBackupSummary = null
                             }
-                        } else {
-                            autoBackupSummary = null
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("mapsforge") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.include_mapsforge_backups),
-                    summary = stringResource(R.string.include_mapsforge_backups_summary),
-                    checked = includeMapsforge,
-                    onCheckedChange = {
-                        includeMapsforge = it
-                        prefs.backup.includeMapsforgeMaps = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.include_mapsforge_backups),
+                        summary = stringResource(R.string.include_mapsforge_backups_summary),
+                        checked = includeMapsforge,
+                        onCheckedChange = {
+                            includeMapsforge = it
+                            prefs.backup.includeMapsforgeMaps = it
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -1574,92 +1597,91 @@ class TrailSenseComposeDestinationHost(
             mutableStateOf(prefs.keepScreenUnlockedWhileOpen)
         }
         var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
+        val importTitle = stringResource(R.string.on_import)
 
         SettingsList(title = stringResource(R.string.photo_maps)) {
-            item("reduce_photo") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.reduce_photo_resolution),
-                    summary = stringResource(R.string.on_import),
-                    checked = reducePhotoResolution,
-                    onCheckedChange = {
-                        reducePhotoResolution = it
-                        prefs.autoReducePhotoMaps = it
-                        onReduceMapResolutionChange(reducePdfResolution)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("import", title = importTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.reduce_photo_resolution),
+                        checked = reducePhotoResolution,
+                        onCheckedChange = {
+                            reducePhotoResolution = it
+                            prefs.autoReducePhotoMaps = it
+                            onReduceMapResolutionChange(reducePdfResolution)
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.reduce_pdf_resolution),
+                        checked = reducePdfResolution,
+                        onCheckedChange = {
+                            reducePdfResolution = it
+                            prefs.autoReducePdfMaps = it
+                            onReduceMapResolutionChange(reducePhotoResolution)
+                        },
+                        position = position
+                    )
+                }
             }
-            item("reduce_pdf") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.reduce_pdf_resolution),
-                    summary = stringResource(R.string.on_import),
-                    checked = reducePdfResolution,
-                    onCheckedChange = {
-                        reducePdfResolution = it
-                        prefs.autoReducePdfMaps = it
-                        onReduceMapResolutionChange(reducePhotoResolution)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("display") {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_show_map_previews_title),
+                        checked = showMapPreviews,
+                        onCheckedChange = {
+                            showMapPreviews = it
+                            prefs.showMapPreviews = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_keep_map_facing_up_title),
+                        summary = stringResource(R.string.pref_keep_map_facing_up_summary),
+                        checked = keepMapFacingUp,
+                        onCheckedChange = {
+                            keepMapFacingUp = it
+                            prefs.keepMapFacingUp = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
+                        checked = keepUnlocked,
+                        onCheckedChange = {
+                            keepUnlocked = it
+                            prefs.keepScreenUnlockedWhileOpen = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_high_detail_mode_title),
+                        summary = stringResource(R.string.pref_high_detail_mode_summary),
+                        checked = highDetailMode,
+                        onCheckedChange = {
+                            highDetailMode = it
+                            prefs.highDetailMode = it
+                        },
+                        position = position
+                    )
+                }
             }
-            item("previews") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_show_map_previews_title),
-                    checked = showMapPreviews,
-                    onCheckedChange = {
-                        showMapPreviews = it
-                        prefs.showMapPreviews = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("facing_up") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_keep_map_facing_up_title),
-                    summary = stringResource(R.string.pref_keep_map_facing_up_summary),
-                    checked = keepMapFacingUp,
-                    onCheckedChange = {
-                        keepMapFacingUp = it
-                        prefs.keepMapFacingUp = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("keep_unlocked") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
-                    checked = keepUnlocked,
-                    onCheckedChange = {
-                        keepUnlocked = it
-                        prefs.keepScreenUnlockedWhileOpen = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("high_detail") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_high_detail_mode_title),
-                    summary = stringResource(R.string.pref_high_detail_mode_summary),
-                    checked = highDetailMode,
-                    onCheckedChange = {
-                        highDetailMode = it
-                        prefs.highDetailMode = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("layers") {
-                SettingsActionRow(
-                    label = stringResource(R.string.layers),
-                    onClick = ::showPhotoMapLayerSheet,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("layers") {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.layers),
+                        onClick = ::showPhotoMapLayerSheet,
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -1684,49 +1706,50 @@ class TrailSenseComposeDestinationHost(
         var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
 
         SettingsList(title = stringResource(R.string.maps)) {
-            item("keep_unlocked") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
-                    checked = keepUnlocked,
-                    onCheckedChange = {
-                        keepUnlocked = it
-                        prefs.keepScreenUnlockedWhileOpen = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("display") {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
+                        checked = keepUnlocked,
+                        onCheckedChange = {
+                            keepUnlocked = it
+                            prefs.keepScreenUnlockedWhileOpen = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.remember_map_state),
+                        checked = saveMapState,
+                        onCheckedChange = {
+                            saveMapState = it
+                            prefs.saveMapState = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_high_detail_mode_title),
+                        summary = stringResource(R.string.pref_high_detail_mode_summary),
+                        checked = highDetailMode,
+                        onCheckedChange = {
+                            highDetailMode = it
+                            prefs.highDetailMode = it
+                        },
+                        position = position
+                    )
+                }
             }
-            item("save_state") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.remember_map_state),
-                    checked = saveMapState,
-                    onCheckedChange = {
-                        saveMapState = it
-                        prefs.saveMapState = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("high_detail") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_high_detail_mode_title),
-                    summary = stringResource(R.string.pref_high_detail_mode_summary),
-                    checked = highDetailMode,
-                    onCheckedChange = {
-                        highDetailMode = it
-                        prefs.highDetailMode = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("layers") {
-                SettingsActionRow(
-                    label = stringResource(R.string.layers),
-                    onClick = ::showMapLayerSheet,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("layers") {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.layers),
+                        onClick = ::showMapLayerSheet,
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -1760,54 +1783,44 @@ class TrailSenseComposeDestinationHost(
             }
         }
 
-        SettingsList(title = stringResource(R.string.connected_plugins)) {
-            val connected = plugins?.connected.orEmpty()
-            if (connected.isEmpty()) {
-                item("connected_none") {
-                    SettingsActionRow(
-                        label = stringResource(R.string.none),
-                        enabled = false,
-                        onClick = {},
-                        trailing = {},
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-            } else {
-                items(connected, key = { "connected_${it.packageId}" }) { plugin ->
-                    SettingsActionRow(
-                        label = plugin.name,
-                        summary = plugin.packageId,
-                        onClick = { openPluginDetails(plugin) },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-            }
+        val connectedTitle = stringResource(R.string.connected_plugins)
+        val availableTitle = stringResource(R.string.available_plugins)
 
-            item("available_header") {
-                TrailSenseSectionHeader(
-                    title = stringResource(R.string.available_plugins),
-                    modifier = Modifier.padding(top = TrailSenseSpacing.md)
-                )
-            }
-            val available = plugins?.available.orEmpty()
-            if (available.isEmpty()) {
-                item("available_none") {
-                    SettingsActionRow(
-                        label = stringResource(R.string.none),
-                        enabled = false,
-                        onClick = {},
-                        trailing = {},
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+        SettingsList(title = stringResource(R.string.plugins)) {
+            // Nothing until the first load finishes, so "None" never flashes over plugins that are there.
+            val loaded = plugins ?: return@SettingsList
+            trailSenseSection("connected", title = connectedTitle) {
+                if (loaded.connected.isEmpty()) {
+                    row { position ->
+                        SettingsInfoRow(label = stringResource(R.string.none), position = position)
+                    }
                 }
-            } else {
-                items(available, key = { "available_${it.packageId}" }) { plugin ->
-                    SettingsActionRow(
-                        label = plugin.name,
-                        summary = plugin.packageId,
-                        onClick = { confirmConnect(pluginSubsystem, plugin, ::refresh) },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+                loaded.connected.forEach { plugin ->
+                    row { position ->
+                        SettingsActionRow(
+                            label = plugin.name,
+                            summary = plugin.packageId,
+                            onClick = { openPluginDetails(plugin) },
+                            position = position
+                        )
+                    }
+                }
+            }
+            trailSenseSection("available", title = availableTitle) {
+                if (loaded.available.isEmpty()) {
+                    row { position ->
+                        SettingsInfoRow(label = stringResource(R.string.none), position = position)
+                    }
+                }
+                loaded.available.forEach { plugin ->
+                    row { position ->
+                        SettingsActionRow(
+                            label = plugin.name,
+                            summary = plugin.packageId,
+                            onClick = { confirmConnect(pluginSubsystem, plugin, ::refresh) },
+                            position = position
+                        )
+                    }
                 }
             }
         }
@@ -1822,47 +1835,52 @@ class TrailSenseComposeDestinationHost(
         var bottomNavSelection by remember {
             mutableStateOf(prefs.bottomNavigationTools)
         }
+        val bottomNavigationTitle = stringResource(R.string.bottom_navigation)
+        // The last slot can't be changed, so it is said once below the slots instead of drawn as a dead row.
+        val toolsSlotFooter = stringResource(
+            R.string.settings_bottom_navigation_tools_slot,
+            bottomNavSelection.size + 1
+        )
+
         SettingsList(title = stringResource(R.string.tools)) {
-            item("quick_actions") {
-                SettingsActionRow(
-                    label = stringResource(R.string.quick_actions),
-                    summary = stringResource(R.string.tool_quick_action_summary),
-                    onClick = { pickQuickActions(prefs) },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("shortcuts") {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.quick_actions),
+                        summary = stringResource(R.string.tool_quick_action_summary),
+                        onClick = { pickQuickActions(prefs) },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.widget_pref_title),
+                        summary = stringResource(R.string.widget_bottom_sheet_instructions),
+                        onClick = { pickWidgets(prefs) },
+                        position = position
+                    )
+                }
             }
-            item("widgets") {
-                SettingsActionRow(
-                    label = stringResource(R.string.widget_pref_title),
-                    summary = stringResource(R.string.widget_bottom_sheet_instructions),
-                    onClick = { pickWidgets(prefs) },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            items(bottomNavSelection.size) { index ->
-                val title = stringResource(R.string.bottom_navigation_slot, index + 1)
-                SettingsActionRow(
-                    label = title,
-                    summary = getBottomNavToolName(tools, bottomNavSelection.getOrNull(index)),
-                    onClick = {
-                        pickBottomNavTool(title, index, tools, bottomNavSelection, prefs) {
-                            bottomNavSelection = it
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("tools_fixed_slot") {
-                SettingsActionRow(
-                    label = stringResource(
-                        R.string.bottom_navigation_slot,
-                        bottomNavSelection.size + 1
-                    ),
-                    summary = stringResource(R.string.tools),
-                    enabled = false,
-                    onClick = {},
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection(
+                "bottom_navigation",
+                title = bottomNavigationTitle,
+                footer = toolsSlotFooter
+            ) {
+                bottomNavSelection.indices.forEach { index ->
+                    row { position ->
+                        val pickerTitle = stringResource(R.string.bottom_navigation_slot, index + 1)
+                        SettingsActionRow(
+                            label = stringResource(R.string.settings_bottom_navigation_slot, index + 1),
+                            summary = getBottomNavToolName(tools, bottomNavSelection.getOrNull(index)),
+                            onClick = {
+                                pickBottomNavTool(pickerTitle, index, tools, bottomNavSelection, prefs) {
+                                    bottomNavSelection = it
+                                }
+                            },
+                            position = position
+                        )
+                    }
+                }
             }
         }
     }
@@ -1950,32 +1968,25 @@ class TrailSenseComposeDestinationHost(
         val prefs = remember { DependencyRegistry.get<UserPreferences>().bubbleLevel }
         val formatter = remember { DependencyRegistry.get<FormatService>() }
         var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
-        var showThresholdDialog by remember { mutableStateOf(false) }
-        val title = stringResource(R.string.pref_bubble_level_threshold_title)
         SettingsList(title = stringResource(R.string.tool_bubble_level_title)) {
-            item("threshold") {
-                SettingsActionRow(
-                    label = title,
-                    summary = formatter.formatDegrees(threshold.toFloat()),
-                    onClick = {
-                        showThresholdDialog = true
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-        }
-        if (showThresholdDialog) {
-            BubbleLevelThresholdDialog(
-                title = title,
-                current = threshold,
-                formatter = formatter,
-                onDismiss = { showThresholdDialog = false },
-                onConfirm = {
-                    prefs.threshold = it.toFloat()
-                    threshold = it
-                    showThresholdDialog = false
+            trailSenseSection("threshold") {
+                row { position ->
+                    // Chosen in place: a whole-degree slider with its value beside the label, no dialog.
+                    SettingsSliderRow(
+                        label = stringResource(R.string.pref_bubble_level_threshold_title),
+                        value = threshold.toFloat(),
+                        valueRange = 0f..10f,
+                        steps = 9,
+                        formatValue = { formatter.formatDegrees(it.roundToInt().toFloat()) },
+                        onValueChange = {
+                            val degrees = it.roundToInt()
+                            prefs.threshold = degrees.toFloat()
+                            threshold = degrees
+                        },
+                        position = position
+                    )
                 }
-            )
+            }
         }
     }
 
@@ -1988,24 +1999,31 @@ class TrailSenseComposeDestinationHost(
         var showDefaultColorPicker by remember { mutableStateOf(false) }
         val defaultColorTitle = stringResource(R.string.pref_default_beacon_color_title)
         SettingsList(title = stringResource(R.string.beacons)) {
-            item("default_color") {
-                SettingsActionRow(
-                    label = defaultColorTitle,
-                    onClick = {
-                        showDefaultColorPicker = true
-                    },
-                    trailing = {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(
-                                    Color(defaultColor.color),
-                                    CircleShape
+            trailSenseSection("color") {
+                row { position ->
+                    SettingsActionRow(
+                        label = defaultColorTitle,
+                        onClick = {
+                            showDefaultColorPicker = true
+                        },
+                        trailing = {
+                            Box(
+                                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(
+                                            Color(defaultColor.color),
+                                            CircleShape
+                                        )
                                 )
-                        )
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+                            }
+                        },
+                        position = position
+                    )
+                }
             }
         }
 
@@ -2035,25 +2053,27 @@ class TrailSenseComposeDestinationHost(
         var projectionType by remember { mutableStateOf(prefs.projectionType) }
         val title = stringResource(R.string.projection_type)
         SettingsList(title = stringResource(R.string.camera)) {
-            item("projection") {
-                SettingsActionRow(
-                    label = title,
-                    summary = projectionNames.getValue(projectionType),
-                    onClick = {
-                        Pickers.item(
-                            requireContext(),
-                            title,
-                            projectionNames.values.toList(),
-                            projectionTypes.indexOf(projectionType)
-                        ) {
-                            if (it != null) {
-                                projectionType = projectionTypes[it]
-                                prefs.projectionType = projectionTypes[it]
+            trailSenseSection("projection") {
+                row { position ->
+                    SettingsPickerRow(
+                        label = title,
+                        selected = projectionNames.getValue(projectionType),
+                        onClick = {
+                            Pickers.item(
+                                requireContext(),
+                                title,
+                                projectionNames.values.toList(),
+                                projectionTypes.indexOf(projectionType)
+                            ) {
+                                if (it != null) {
+                                    projectionType = projectionTypes[it]
+                                    prefs.projectionType = projectionTypes[it]
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -2065,19 +2085,23 @@ class TrailSenseComposeDestinationHost(
         var values by remember {
             mutableStateOf(errors.associateWith { prefs.canShowError(it) })
         }
+        val footer = stringResource(R.string.settings_error_banners_footer)
 
         SettingsList(title = stringResource(R.string.error_banners)) {
-            items(errors, key = { it.id }) { error ->
-                TrailSenseSwitchRow(
-                    label = getErrorDisplayName(error),
-                    checked = values[error] ?: true,
-                    onCheckedChange = { canShow ->
-                        prefs.setCanShowError(error, canShow)
-                        values = values + (error to canShow)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("errors", footer = footer) {
+                errors.forEach { error ->
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = getErrorDisplayName(error),
+                            checked = values[error] ?: true,
+                            onCheckedChange = { canShow ->
+                                prefs.setCanShowError(error, canShow)
+                                values = values + (error to canShow)
+                            },
+                            position = position
+                        )
+                    }
+                }
             }
         }
     }
@@ -2095,29 +2119,30 @@ class TrailSenseComposeDestinationHost(
         val baselineTitle = stringResource(R.string.pref_clinometer_baseline_distance_title)
 
         SettingsList(title = stringResource(R.string.clinometer_title)) {
-            item("volume_lock") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_clinometer_lock_with_volume_buttons_title),
-                    checked = lockWithVolume,
-                    onCheckedChange = {
-                        lockWithVolume = it
-                        prefs.clinometer.lockWithVolumeButtons = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("baseline_distance") {
-                SettingsActionRow(
-                    label = baselineTitle,
-                    summary = formatDistance(formatter, baselineDistance),
-                    onClick = {
-                        pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
-                            baselineDistance = it
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("clinometer") {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_clinometer_lock_with_volume_buttons_title),
+                        checked = lockWithVolume,
+                        onCheckedChange = {
+                            lockWithVolume = it
+                            prefs.clinometer.lockWithVolumeButtons = it
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsActionRow(
+                        label = baselineTitle,
+                        summary = formatDistance(formatter, baselineDistance),
+                        onClick = {
+                            pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
+                                baselineDistance = it
+                            }
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -2145,42 +2170,35 @@ class TrailSenseComposeDestinationHost(
         }
 
         SettingsList(title = stringResource(R.string.privacy)) {
-            item("location") {
-                TrailSenseListItem(
-                    title = stringResource(R.string.location),
-                    subtitle = if (isLocationMocked) {
-                        stringResource(R.string.location_mocked)
-                    } else {
-                        stringResource(R.string.location_not_mocked)
-                    },
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    onClick = {
-                        findNavController().navigateWithAnimation(
-                            R.id.action_privacy_settings_to_gps_calibration
-                        )
-                    },
-                    animateEntrance = false
-                )
-                TrailSenseDivider()
-            }
-            item("screenshot_protection") {
-                TrailSenseSwitchRow(
-                    label = stringResource(R.string.pref_privacy_screenshot_protection_title),
-                    checked = isScreenshotProtectionOn,
-                    onCheckedChange = {
-                        isScreenshotProtectionOn = it
-                        prefs.privacy.isScreenshotProtectionOn = it
-                        Screen.setAllowScreenshots(requireActivity().window, !it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("privacy") {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.location),
+                        summary = if (isLocationMocked) {
+                            stringResource(R.string.location_mocked)
+                        } else {
+                            stringResource(R.string.location_not_mocked)
+                        },
+                        onClick = {
+                            findNavController().navigateWithAnimation(
+                                R.id.action_privacy_settings_to_gps_calibration
+                            )
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_privacy_screenshot_protection_title),
+                        checked = isScreenshotProtectionOn,
+                        onCheckedChange = {
+                            isScreenshotProtectionOn = it
+                            prefs.privacy.isScreenshotProtectionOn = it
+                            Screen.setAllowScreenshots(requireActivity().window, !it)
+                        },
+                        position = position
+                    )
+                }
             }
         }
     }
@@ -2191,20 +2209,32 @@ class TrailSenseComposeDestinationHost(
         val items = remember(hasBarometer) {
             sensorSettingsItems(hasBarometer)
         }
+        // The sensors to calibrate, then the raw readings of every sensor on their own.
+        val (details, sensors) = items.partition { it.key == "details" }
 
         SettingsList(title = stringResource(R.string.sensors)) {
-            items.forEach { item ->
-                item(item.key) {
-                    TrailSenseListItem(
-                        title = stringResource(item.title),
-                        icon = painterResource(item.icon),
-                        onClick = {
-                            findNavController().navigate(item.destination)
-                        },
-                        animateEntrance = false,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
+            listOf("sensors" to sensors, "details" to details).forEach { (key, group) ->
+                trailSenseSection(key) {
+                    group.forEach { item ->
+                        row { position ->
+                            TrailSenseListItem(
+                                title = stringResource(item.title),
+                                icon = painterResource(item.icon),
+                                trailing = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                onClick = {
+                                    findNavController().navigate(item.destination)
+                                },
+                                position = position,
+                                animateEntrance = false
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -2219,27 +2249,28 @@ class TrailSenseComposeDestinationHost(
         val calibrationTitle = stringResource(R.string.pref_ruler_calibration_title)
 
         SettingsList(title = stringResource(R.string.tool_ruler_title)) {
-            item("calibration") {
-                SettingsActionRow(
-                    label = calibrationTitle,
-                    summary = formatScale(scale),
-                    onClick = {
-                        showCalibrationDialog = true
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-            }
-            item("flip") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_ruler_flip_direction_title),
-                    checked = flipped,
-                    onCheckedChange = {
-                        flipped = it
-                        prefs.rulerFlipped = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("ruler") {
+                row { position ->
+                    SettingsActionRow(
+                        label = calibrationTitle,
+                        summary = formatScale(scale),
+                        onClick = {
+                            showCalibrationDialog = true
+                        },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_ruler_flip_direction_title),
+                        checked = flipped,
+                        onCheckedChange = {
+                            flipped = it
+                            prefs.rulerFlipped = it
+                        },
+                        position = position
+                    )
+                }
             }
         }
 
@@ -2274,61 +2305,65 @@ class TrailSenseComposeDestinationHost(
         }
         var showTimeoutPicker by remember { mutableStateOf(false) }
         val timeoutTitle = stringResource(R.string.pref_flashlight_timeout_title)
+        val screenTitle = stringResource(R.string.screen_flashlight)
 
         SettingsList(title = stringResource(R.string.flashlight_title)) {
+            // Without a torch only the screen flashlight is left, so its header would have nothing to set it apart.
             if (hasFlashlight) {
-                item("toggle_volume") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.pref_flashlight_toggle_with_volume_title),
-                        summary = stringResource(R.string.pref_flashlight_toggle_with_volume_summary),
-                        checked = toggleWithVolume,
-                        onCheckedChange = {
-                            toggleWithVolume = it
-                            prefs.toggleWithVolumeButtons = it
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                item("should_timeout") {
-                    SettingsSwitchRow(
-                        label = stringResource(R.string.pref_flashlight_should_timeout_title),
-                        checked = shouldTimeout,
-                        onCheckedChange = {
-                            shouldTimeout = it
-                            prefs.shouldTimeout = it
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                    TrailSenseDivider()
-                }
-                item("timeout") {
-                    SettingsActionRow(
-                        label = timeoutTitle,
-                        summary = formatter.formatDuration(
-                            timeout,
-                            short = false,
-                            includeSeconds = true
-                        ),
-                        enabled = shouldTimeout,
-                        onClick = {
-                            showTimeoutPicker = true
-                        },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
+                trailSenseSection("torch") {
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.pref_flashlight_toggle_with_volume_title),
+                            summary = stringResource(R.string.pref_flashlight_toggle_with_volume_summary),
+                            checked = toggleWithVolume,
+                            onCheckedChange = {
+                                toggleWithVolume = it
+                                prefs.toggleWithVolumeButtons = it
+                            },
+                            position = position
+                        )
+                    }
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.pref_flashlight_should_timeout_title),
+                            checked = shouldTimeout,
+                            onCheckedChange = {
+                                shouldTimeout = it
+                                prefs.shouldTimeout = it
+                            },
+                            position = position
+                        )
+                    }
+                    if (shouldTimeout) {
+                        row { position ->
+                            SettingsActionRow(
+                                label = timeoutTitle,
+                                summary = formatter.formatDuration(
+                                    timeout,
+                                    short = false,
+                                    includeSeconds = true
+                                ),
+                                onClick = {
+                                    showTimeoutPicker = true
+                                },
+                                position = position
+                            )
+                        }
+                    }
                 }
             }
-            item("screen_volume") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_flashlight_control_screen_with_volume_title),
-                    checked = controlScreenWithVolume,
-                    onCheckedChange = {
-                        controlScreenWithVolume = it
-                        prefs.controlScreenFlashlightWithVolumeButtons = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("screen", title = screenTitle.takeIf { hasFlashlight }) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_flashlight_control_screen_with_volume_title),
+                        checked = controlScreenWithVolume,
+                        onCheckedChange = {
+                            controlScreenWithVolume = it
+                            prefs.controlScreenFlashlightWithVolumeButtons = it
+                        },
+                        position = position
+                    )
+                }
             }
         }
 
@@ -2359,120 +2394,78 @@ class TrailSenseComposeDestinationHost(
         var startOnBoot by remember { mutableStateOf(prefs.power.startOnBoot) }
         var tilesEnabled by remember { mutableStateOf(prefs.power.areTilesEnabled) }
         var batteryLogEnabled by remember { mutableStateOf(prefs.power.enableBatteryLog) }
+        val backgroundTitle = stringResource(R.string.background)
 
         SettingsList(title = stringResource(R.string.tool_battery_title)) {
-            item("low_power") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_low_power_mode_title),
-                    summary = stringResource(R.string.pref_low_power_mode_summary),
-                    checked = lowPowerMode,
-                    onCheckedChange = {
-                        lowPowerMode = it
-                        setLowPowerMode(prefs, it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("auto_low_power") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_auto_low_power_title),
-                    summary = stringResource(R.string.pref_auto_low_power_summary),
-                    checked = autoLowPower,
-                    onCheckedChange = {
-                        autoLowPower = it
-                        prefs.power.autoLowPower = it
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            item("start_on_boot") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_start_on_boot_title),
-                    checked = startOnBoot,
-                    onCheckedChange = {
-                        startOnBoot = it
-                        prefs.power.startOnBoot = it
-                        setStartOnBoot(it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                item("tiles") {
+            trailSenseSection("power_saving") {
+                row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.pref_tiles_enabled_title),
-                        summary = stringResource(R.string.pref_tiles_enabled_summary),
-                        checked = tilesEnabled,
+                        label = stringResource(R.string.pref_low_power_mode_title),
+                        summary = stringResource(R.string.pref_low_power_mode_summary),
+                        checked = lowPowerMode,
                         onCheckedChange = {
-                            tilesEnabled = it
-                            prefs.power.areTilesEnabled = it
-                            TileManager().setTilesEnabled(requireContext(), it)
+                            lowPowerMode = it
+                            setLowPowerMode(prefs, it)
                         },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        position = position
                     )
-                    TrailSenseDivider()
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_auto_low_power_title),
+                        summary = stringResource(R.string.pref_auto_low_power_summary),
+                        checked = autoLowPower,
+                        onCheckedChange = {
+                            autoLowPower = it
+                            prefs.power.autoLowPower = it
+                        },
+                        position = position
+                    )
                 }
             }
-            item("battery_log") {
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_tiles_battery_log),
-                    summary = stringResource(R.string.pref_tiles_enabled_battery_log_summary),
-                    checked = batteryLogEnabled,
-                    onCheckedChange = {
-                        batteryLogEnabled = it
-                        prefs.power.enableBatteryLog = it
-                        BatteryLogWorker.enableBatteryLog(requireContext(), it)
-                    },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
-                TrailSenseDivider()
+            trailSenseSection("background", title = backgroundTitle) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_start_on_boot_title),
+                        checked = startOnBoot,
+                        onCheckedChange = {
+                            startOnBoot = it
+                            prefs.power.startOnBoot = it
+                            setStartOnBoot(it)
+                        },
+                        position = position
+                    )
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    row { position ->
+                        SettingsSwitchRow(
+                            label = stringResource(R.string.pref_tiles_enabled_title),
+                            summary = stringResource(R.string.pref_tiles_enabled_summary),
+                            checked = tilesEnabled,
+                            onCheckedChange = {
+                                tilesEnabled = it
+                                prefs.power.areTilesEnabled = it
+                                TileManager().setTilesEnabled(requireContext(), it)
+                            },
+                            position = position
+                        )
+                    }
+                }
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_tiles_battery_log),
+                        summary = stringResource(R.string.pref_tiles_enabled_battery_log_summary),
+                        checked = batteryLogEnabled,
+                        onCheckedChange = {
+                            batteryLogEnabled = it
+                            prefs.power.enableBatteryLog = it
+                            BatteryLogWorker.enableBatteryLog(requireContext(), it)
+                        },
+                        position = position
+                    )
+                }
             }
         }
-    }
-
-    @Composable
-    internal fun BubbleLevelThresholdDialog(
-        title: String,
-        current: Int,
-        formatter: FormatService,
-        onDismiss: () -> Unit,
-        onConfirm: (Int) -> Unit
-    ) {
-        var value by remember(current) { mutableFloatStateOf(current.toFloat()) }
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = {
-                Text(text = title)
-            },
-            text = {
-                androidx.compose.foundation.layout.Column {
-                    Text(text = formatter.formatDegrees(value))
-                    Slider(
-                        value = value,
-                        onValueChange = { value = it },
-                        valueRange = 0f..10f,
-                        steps = 9
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirm(value.roundToInt())
-                    }
-                ) {
-                    Text(text = stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(android.R.string.cancel))
-                }
-            }
-        )
     }
 
     @Composable
@@ -2485,16 +2478,29 @@ class TrailSenseComposeDestinationHost(
         var value by remember(current) { mutableStateOf(formatScale(current)) }
         AlertDialog(
             onDismissRequest = onDismiss,
+            shape = RoundedCornerShape(28.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             title = {
                 Text(text = title)
             },
             text = {
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { value = it },
-                    label = { Text(text = stringResource(R.string.pref_ruler_calibration_summary)) },
-                    singleLine = true
-                )
+                androidx.compose.foundation.layout.Column(
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                    Text(
+                        text = stringResource(R.string.pref_ruler_calibration_summary),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { value = it },
+                        label = { Text(text = title) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             },
             confirmButton = {
                 TextButton(
@@ -2513,42 +2519,46 @@ class TrailSenseComposeDestinationHost(
         )
     }
 
+    /** Every settings page of the host: the family's page with its large title and a way back. */
     @Composable
     internal fun SettingsList(
         title: String,
         content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
-                )
-            ) {
-                item("header") {
-                    TrailSenseSectionHeader(title = title)
-                }
-                content()
-            }
-        }
+        TrailSensePage(
+            title = title,
+            onBack = ::navigateBack,
+            backLabel = stringResource(R.string.back),
+            content = content
+        )
+    }
+
+    private fun navigateBack() {
+        requireActivity().onBackPressedDispatcher.onBackPressed()
+    }
+
+    /** How a time reads with these choices, shown under them so the switches explain themselves. */
+    private fun exampleTime(use24HourTime: Boolean, includeLeadingZero: Boolean): String {
+        val hour = if (use24HourTime) "H" else "h"
+        val pattern = (if (includeLeadingZero) hour + hour else hour) +
+                ":mm" + if (use24HourTime) "" else " a"
+        return LocalTime.of(9, 5).format(DateTimeFormatter.ofPattern(pattern))
     }
 
     @Composable
     internal fun LicensesScreen() {
         SettingsList(title = stringResource(R.string.pref_open_source_licenses_title)) {
-            items(Licenses.libraries, key = { it.name }) { library ->
-                SettingsActionRow(
-                    label = library.name,
-                    summary = library.url,
-                    onClick = { showLicense(library) },
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                )
+            trailSenseSection("libraries") {
+                Licenses.libraries.forEach { library ->
+                    row { position ->
+                        SettingsActionRow(
+                            label = library.name,
+                            summary = library.url,
+                            onClick = { showLicense(library) },
+                            position = position
+                        )
+                    }
+                }
             }
         }
     }
@@ -2565,7 +2575,8 @@ class TrailSenseComposeDestinationHost(
             onCheckedChange = {
                 populateCache = it
                 prefs.populateCache = it
-            }
+            },
+            onBack = ::navigateBack
         )
     }
 
@@ -2580,7 +2591,8 @@ class TrailSenseComposeDestinationHost(
             onCheckedChange = {
                 showAnalogClock = it
                 prefs.showAnalogClock = it
-            }
+            },
+            onBack = ::navigateBack
         )
     }
 
@@ -2595,7 +2607,8 @@ class TrailSenseComposeDestinationHost(
             onCheckedChange = {
                 showNearestTide = it
                 prefs.showNearestTide = it
-            }
+            },
+            onBack = ::navigateBack
         )
     }
 
@@ -2606,12 +2619,13 @@ class TrailSenseComposeDestinationHost(
         SingleSwitchSettingsScreen(
             title = stringResource(R.string.tool_turn_back),
             label = stringResource(R.string.use_alarm_for_turn_back_alert),
-            summary = stringResource(R.string.alarm_description),
+            footer = stringResource(R.string.alarm_description),
             checked = useAlarm,
             onCheckedChange = {
                 useAlarm = it
                 prefs.useAlarm = it
-            }
+            },
+            onBack = ::navigateBack
         )
     }
 
@@ -2622,12 +2636,13 @@ class TrailSenseComposeDestinationHost(
         SingleSwitchSettingsScreen(
             title = stringResource(R.string.water_boil_timer),
             label = stringResource(R.string.use_alarm_for_water_boil_timer),
-            summary = stringResource(R.string.alarm_description),
+            footer = stringResource(R.string.alarm_description),
             checked = useAlarm,
             onCheckedChange = {
                 useAlarm = it
                 prefs.useAlarm = it
-            }
+            },
+            onBack = ::navigateBack
         )
     }
 
@@ -3003,7 +3018,8 @@ class TrailSenseComposeDestinationHost(
         label: String,
         options: List<SettingsOption>,
         selected: String,
-        onSelected: (String) -> Unit
+        onSelected: (String) -> Unit,
+        position: TrailSenseGroupPosition
     ) {
         SettingsPickerRow(
             label = label,
@@ -3011,7 +3027,25 @@ class TrailSenseComposeDestinationHost(
             onClick = {
                 pickOption(label, options, selected, onSelected)
             },
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+            position = position
+        )
+    }
+
+    /** A unit with two to four short options, all on view at once. */
+    @Composable
+    internal fun UnitChoiceRow(
+        label: String,
+        options: List<SettingsOption>,
+        selected: String,
+        onSelected: (String) -> Unit,
+        position: TrailSenseGroupPosition
+    ) {
+        SettingsChoiceRow(
+            label = label,
+            options = remember(options) { options.map { TrailSenseChoice(it.value, it.label) } },
+            selected = selected,
+            onSelect = onSelected,
+            position = position
         )
     }
 

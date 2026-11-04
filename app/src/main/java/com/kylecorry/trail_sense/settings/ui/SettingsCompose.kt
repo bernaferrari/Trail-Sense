@@ -1,43 +1,51 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 private val SettingsInnerPosition = TrailSenseGroupPosition(isFirst = false, isLast = false)
 
+/** A settings page holding one switch: the page's title, the switch as a single group, an optional footer. */
 @Composable
 fun SingleSwitchSettingsScreen(
     title: String,
@@ -45,47 +53,25 @@ fun SingleSwitchSettingsScreen(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    summary: String? = null
+    summary: String? = null,
+    footer: String? = null,
+    onBack: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    TrailSensePage(
+        title = title,
+        modifier = modifier,
+        onBack = onBack,
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
+        trailSenseSection("switch", footer = footer) {
+            row { position ->
+                SettingsSwitchRow(
+                    label = label,
+                    summary = summary,
+                    checked = checked,
+                    onCheckedChange = onCheckedChange,
+                    position = position
                 )
-            ) {
-                item("header") {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(
-                            top = TrailSenseSpacing.sm,
-                            bottom = TrailSenseSpacing.md
-                        )
-                    )
-                }
-                item("switch") {
-                    SettingsSwitchRow(
-                        label = label,
-                        summary = summary,
-                        checked = checked,
-                        onCheckedChange = onCheckedChange,
-                        position = TrailSenseGroupPosition.Single
-                    )
-                }
             }
         }
     }
@@ -165,9 +151,10 @@ fun SettingsActionRow(
                 modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
                 contentAlignment = Alignment.Center
             ) {
+                // The row is the button and already reads its label; the chevron is decoration.
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = label,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -214,4 +201,96 @@ fun SettingsPickerRow(
         enabled = enabled,
         position = position
     )
+}
+
+/**
+ * A setting with two to four short answers, all visible at once: the label over the family's connected choice.
+ * Use it instead of a picker row when every option fits on one line.
+ */
+@Composable
+fun <T> SettingsChoiceRow(
+    label: String,
+    options: List<TrailSenseChoice<T>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = SettingsInnerPosition
+) {
+    TrailSenseGroupCard(
+        position = position,
+        modifier = modifier,
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.md,
+            bottom = TrailSenseSpacing.lg
+        )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
+        )
+        TrailSenseConnectedChoice(
+            options = options,
+            selected = selected,
+            onSelect = onSelect,
+            label = label
+        )
+    }
+}
+
+/**
+ * A number chosen on a slider in place, its current value beside the label in tabular figures. [onValueChange]
+ * fires once the finger lifts, so a drag stores one value rather than every step on the way.
+ */
+@Composable
+fun SettingsSliderRow(
+    label: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit,
+    formatValue: (Float) -> String,
+    modifier: Modifier = Modifier,
+    steps: Int = 0,
+    position: TrailSenseGroupPosition = SettingsInnerPosition
+) {
+    var current by remember(value) { mutableFloatStateOf(value) }
+    TrailSenseGroupCard(
+        position = position,
+        modifier = modifier,
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.md,
+            bottom = TrailSenseSpacing.sm
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Text(
+                text = formatValue(current),
+                style = MaterialTheme.typography.titleMedium.merge(TextStyle(fontFeatureSettings = "tnum")),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Slider(
+            value = current,
+            onValueChange = { current = it },
+            onValueChangeFinished = { onValueChange(current) },
+            valueRange = valueRange,
+            steps = steps,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }

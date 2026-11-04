@@ -2146,4 +2146,12 @@
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
     <string name="search_tools">Search tools</string>
+    <!-- Settings pages: section headers, footers and rows -->
+    <string name="settings_section_measurements">Measurements</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_time_format_example">Times look like %s</string>
+    <string name="settings_bottom_navigation_slot">Slot %d</string>
+    <string name="settings_bottom_navigation_tools_slot">Slot %d always opens Tools</string>
+    <string name="settings_error_banners_footer">Choose which problems can show a banner at the top of a tool.</string>
+    <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
 </resources>
