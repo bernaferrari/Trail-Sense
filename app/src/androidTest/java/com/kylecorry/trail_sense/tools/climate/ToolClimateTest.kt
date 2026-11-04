@@ -20,9 +20,11 @@ class ToolClimateTest : ToolTestBase(Tools.CLIMATE) {
         input(id("elevation_input")(), "1000")
         click(id("climate_location_done"))
 
-        // Pick a month from the list; the hero answers for it
-        click(id("climate_month_8"))
-        hasText("August")
+        // Pick a month next to this one (the year card opens centred on it); the hero answers for it
+        val current = java.time.LocalDate.now().month
+        val neighbor = if (current == java.time.Month.DECEMBER) current.minus(1) else current.plus(1)
+        click(id("climate_month_${neighbor.value}"))
+        hasText(neighbor.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, java.util.Locale.getDefault()))
 
         // The climate zone names the page
         hasText(string(R.string.climate_zone_subtitle, string(R.string.climate_continental)))

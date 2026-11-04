@@ -809,15 +809,16 @@ private fun AstronomyTitle(
     ) {
         Text(
             text = state.title,
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
         )
         if (state.subtitle.isNotEmpty()) {
             Text(
                 text = state.subtitle,
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
             )
         }
