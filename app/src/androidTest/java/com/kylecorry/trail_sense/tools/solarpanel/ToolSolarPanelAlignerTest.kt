@@ -20,8 +20,6 @@ class ToolSolarPanelAlignerTest : ToolTestBase(Tools.SOLAR_PANEL_ALIGNER) {
             return
         }
 
-        clickOk()
-
         // It should show the solar panel details for today
         hasText(string(R.string.tilt), waitForTime = GPS_WAIT_FOR_TIMEOUT)
         hasText(Regex("-?\\d+°"))
