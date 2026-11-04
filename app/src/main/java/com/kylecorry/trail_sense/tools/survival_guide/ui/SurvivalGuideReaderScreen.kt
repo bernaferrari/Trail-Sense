@@ -234,18 +234,19 @@ private fun ReaderSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 68.dp)
+                .heightIn(min = 72.dp)
                 .clickable(role = Role.Button) { onExpandedChange(!expanded) }
                 .semantics { stateDescription = expandedLabel }
-                .padding(start = TrailSenseSpacing.md, end = TrailSenseSpacing.md),
+                .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // The family's 40 dp well; it fills in while its section is open.
             TrailSenseShapeBadge(
                 text = number.toString(),
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 36.dp,
-                containerColor = if (expanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = if (expanded) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                containerColor = if (expanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                contentColor = if (expanded) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(

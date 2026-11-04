@@ -52,9 +52,12 @@ class VolumeConverterPage(private val context: Context) :
         }
     }
 
-    override fun convert(amount: Float, from: VolumeUnits, to: VolumeUnits): String {
-        val converted = Volume.from(amount.absoluteValue, from).convertTo(to)
-        return formatService.formatVolume(converted, 4, false)
+    override fun convertValue(amount: Float, from: VolumeUnits, to: VolumeUnits): Float {
+        return Volume.from(amount.absoluteValue, from).convertTo(to).value
+    }
+
+    override fun format(amount: Float, unit: VolumeUnits): String {
+        return formatService.formatVolume(Volume.from(amount, unit), 4, false)
     }
 
 }

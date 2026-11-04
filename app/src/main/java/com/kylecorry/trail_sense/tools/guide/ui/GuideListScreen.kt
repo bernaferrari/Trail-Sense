@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import com.kylecorry.trail_sense.shared.icons.trail.OpenBook
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -37,7 +38,6 @@ import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
-import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 
 
 /**
@@ -106,12 +106,11 @@ private fun GuideRow(
     position: com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition,
     onClick: () -> Unit
 ) {
-    SkyValueRow(
-        // One line per guide: a uniform shelf reads better than rows that are sometimes one line and sometimes two.
+    // The family's row: the guide's icon in the 40 dp well, its name, a chevron. One line per guide: a uniform shelf
+    // reads better than rows that are sometimes one line and sometimes two.
+    TrailSenseListItem(
         title = guide.name,
-        subtitle = null,
-
-        icon = guide.icon ?: TrailIcons.OpenBook,
+        icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(guide.icon ?: TrailIcons.OpenBook),
         position = position,
         onClick = onClick,
         trailing = {

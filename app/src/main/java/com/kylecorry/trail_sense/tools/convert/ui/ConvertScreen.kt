@@ -3,51 +3,50 @@
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoiceDefaults
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseChoiceColors
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 
 @Composable
 fun ConvertScreen(
@@ -80,8 +79,8 @@ fun ConvertScreen(
 }
 
 /**
- * Convert as a standard page: what you're converting is the kit's selection control, and the chosen converter fades
- * in beneath it.
+ * Convert as Calcula does it: the categories in a sideways row, then the converter card, and the system keyboard (or
+ * the units, while you pick one) underneath. Nothing else on the page, so the answer stays above the keyboard.
  */
 @Composable
 fun ConverterTabs(
@@ -93,31 +92,69 @@ fun ConverterTabs(
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    // Each converter keeps what you typed and the units you chose while you look at another one.
+    val saved = rememberSaveableStateHolder()
 
-    TrailSensePage(
+    TrailSenseInstrumentScaffold(
         title = stringResource(R.string.convert),
-        onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        largeTitle = true,
         modifier = modifier
     ) {
-        item("categories") {
-            // Six categories in the kit's one selection control; they don't fit side by side, so the row scrolls.
-            TrailSenseConnectedChoice(
-                options = names.mapIndexed { index, name -> TrailSenseChoice(index, name) },
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(bottom = TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        ) {
+            ConvertCategories(
+                names = names,
                 selected = selectedIndex,
-                onSelect = { selectedIndex = it },
-                scrollable = true
+                onSelect = { selectedIndex = it }
             )
-        }
-        item("converter") {
             AnimatedContent(
                 targetState = selectedIndex,
-                transitionSpec = {
-                    fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec)
-                },
-                label = "converter"
+                transitionSpec = { fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec) },
+                label = "converter",
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
             ) { index ->
-                pages[index].Content()
+                saved.SaveableStateProvider(index) {
+                    pages[index].Content()
+                }
+            }
+        }
+    }
+}
+
+/** The categories as Calcula's sideways row of toggle buttons, scrolled so the chosen one stays in view. */
+@Composable
+private fun ConvertCategories(names: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    val state = rememberLazyListState()
+    LaunchedEffect(selected) { state.animateScrollToItem(selected, scrollOffset = -120) }
+    LazyRow(
+        state = state,
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectableGroup()
+    ) {
+        itemsIndexed(names) { index, name ->
+            ToggleButton(
+                checked = index == selected,
+                onCheckedChange = { if (it) onSelect(index) },
+                colors = trailSenseChoiceColors(),
+                modifier = Modifier
+                    .heightIn(min = TrailSenseChoiceDefaults.height)
+                    .semantics { role = Role.RadioButton }
+            ) {
+                Text(name, style = MaterialTheme.typography.labelLarge, maxLines = 1)
             }
         }
     }

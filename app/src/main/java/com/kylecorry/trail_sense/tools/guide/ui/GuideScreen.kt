@@ -161,7 +161,7 @@ private fun GuideContents(titles: List<String>, onSelect: (Int) -> Unit) {
                 Surface(
                     onClick = { onSelect(index) },
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     Row(

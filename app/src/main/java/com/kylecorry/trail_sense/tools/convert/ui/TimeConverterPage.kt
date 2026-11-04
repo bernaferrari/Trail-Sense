@@ -27,10 +27,13 @@ class TimeConverterPage(private val context: Context) :
         }
     }
 
-    override fun convert(amount: Float, from: TimeUnits, to: TimeUnits): String {
+    override fun convertValue(amount: Float, from: TimeUnits, to: TimeUnits): Float {
         val seconds = amount * from.seconds
-        val converted = seconds / to.seconds
-        return formatService.formatTime(converted.toFloat(), to, 4, false)
+        return (seconds / to.seconds).toFloat()
+    }
+
+    override fun format(amount: Float, unit: TimeUnits): String {
+        return formatService.formatTime(amount, unit, 4, false)
     }
 
 }

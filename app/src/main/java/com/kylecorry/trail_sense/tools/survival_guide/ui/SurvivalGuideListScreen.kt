@@ -163,7 +163,7 @@ private fun SurvivalGuideSummary(
     SurvivalGuidePressableSurface(
         onClick = { onSummaryClick(result) },
         shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = modifier.testTag("summary_holder")
     ) {

@@ -1,34 +1,29 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.KeyboardType
+import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import java.io.Serializable
+import java.math.BigDecimal
+import java.math.RoundingMode
 
-abstract class SimpleConverterPage<T>(private val defaultFrom: T, private val defaultTo: T) :
+abstract class SimpleConverterPage<T : Serializable>(private val defaultFrom: T, private val defaultTo: T) :
     ConverterPage {
 
     abstract val units: List<T>
@@ -40,103 +35,157 @@ abstract class SimpleConverterPage<T>(private val defaultFrom: T, private val de
             defaultFrom = defaultFrom,
             defaultTo = defaultTo,
             getUnitName = ::getUnitName,
-            convert = ::convert
+            convert = ::convertValue,
+            format = ::format
         )
     }
 
-    abstract fun convert(amount: Float, from: T, to: T): String
+    /** [amount] in [from], expressed in [to]. */
+    abstract fun convertValue(amount: Float, from: T, to: T): Float
+
+    /** [amount] of [unit], formatted with its symbol (e.g. "3.2808 ft"). */
+    abstract fun format(amount: Float, unit: T): String
+
+    fun convert(amount: Float, from: T, to: T): String = format(convertValue(amount, from, to), to)
 
     abstract fun getUnitName(unit: T): String
 }
 
-/** One converter, drawn as a plain column: the page around it owns scrolling and gutters. */
+/** One converter, drawn as a plain column: the screen around it owns scrolling and gutters. */
 interface ConverterPage {
     @Composable
     fun Content()
 }
 
 /**
- * The result leads, so it stays in view above the keyboard while you type; the amount and its unit are one field,
- * and the target unit sits right under it with the swap button between the two.
+ * Calcula's converter on the system keyboard: what is this amount in the other unit? The top row starts as the
+ * input with 1 in it, so there's an answer from the start; tapping the answer makes it the input.
  */
 @Composable
-fun <T> SimpleConvertScreen(
+fun <T : Serializable> SimpleConvertScreen(
     units: List<T>,
     defaultFrom: T,
     defaultTo: T,
     getUnitName: (T) -> String,
-    convert: (Float, T, T) -> String
+    convert: (Float, T, T) -> Float,
+    format: (Float, T) -> String
 ) {
-    var amountText by remember { mutableStateOf("") }
-    var from by remember { mutableStateOf(defaultFrom) }
-    var to by remember { mutableStateOf(defaultTo) }
-    var picker by remember { mutableStateOf<UnitPicker?>(null) }
+    var input by rememberSaveable { mutableStateOf("1") }
+    var top by rememberSaveable { mutableStateOf(defaultFrom) }
+    var bottom by rememberSaveable { mutableStateOf(defaultTo) }
+    var topActive by rememberSaveable { mutableStateOf(true) }
+    // Which row's units are showing in place of the keyboard: true = top, false = bottom.
+    var picking by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
 
-    val amount = amountText.toFloatOrNull() ?: 0f
-    val result = remember(amount, from, to) {
-        convert(amount, from, to)
+    val amount = parseAmount(input)
+    val from = if (topActive) top else bottom
+    val to = if (topActive) bottom else top
+    val converted = amount?.let { convert(it, from, to) }
+    val output = converted?.let { DecimalFormatter.format(it, 4, false) }.orEmpty()
+
+    fun symbolOf(unit: T): String = symbol(format(1f, unit), DecimalFormatter.format(1f, 4, false))
+
+    LaunchedEffect(picking, topActive) {
+        if (picking == null) {
+            focusRequester.requestFocus()
+        } else {
+            focusManager.clearFocus()
+            keyboard?.hide()
+        }
     }
+    BackHandler(enabled = picking != null) { picking = null }
 
-    ConvertPair(
-        value = amountText,
-        onValueChange = { amountText = it },
-        fromLabel = stringResource(R.string.distance_from),
-        fromUnit = getUnitName(from),
-        onFromUnitClick = { picker = UnitPicker.From },
-        result = if (amountText.isBlank()) "" else result,
-        toLabel = stringResource(R.string.distance_to),
-        toUnit = getUnitName(to),
-        onToUnitClick = { picker = UnitPicker.To },
-        placeholder = stringResource(R.string.places_convert_hint),
-        onSwap = {
-            val previousFrom = from
-            from = to
-            to = previousFrom
-        },
-        swapLabel = stringResource(R.string.convert_swap_units)
-    )
-
-    picker?.let { unitPicker ->
-        TrailSenseOptionsDialog(
-            title = stringResource(
-                if (unitPicker == UnitPicker.From) R.string.distance_from else R.string.distance_to
-            ),
-            options = units.map { getUnitName(it) to it },
-            selected = if (unitPicker == UnitPicker.From) from else to,
-            onSelect = { unit ->
-                if (unitPicker == UnitPicker.From) {
-                    from = unit
-                } else {
-                    to = unit
-                }
-                picker = null
-            },
-            onDismiss = { picker = null }
-        )
-    }
-}
-
-/** The converted value: the one thing that matters on a converter, as emphasised type on a quiet surface. */
-@Composable
-internal fun ConvertResult(text: String, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.onSurface
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
     ) {
-        Text(
-            text = text.ifBlank { stringResource(R.string.dash) },
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl)
-        )
+        ConvertCard(
+            onSwap = {
+                val previous = top
+                top = bottom
+                bottom = previous
+            },
+            swapLabel = convertSwapLabel()
+        ) {
+            listOf(true, false).forEach { isTop ->
+                val unit = if (isTop) top else bottom
+                val isActive = topActive == isTop
+                ConvertRow(
+                    active = isActive,
+                    picking = picking == isTop,
+                    dimmed = picking != null && picking != isTop,
+                    unit = getUnitName(unit),
+                    onPickUnit = { picking = if (picking == isTop) null else isTop },
+                    onActivate = {
+                        picking = null
+                        if (!isActive) {
+                            // The answer becomes the input, carrying its value over.
+                            input = converted?.let(::plain).orEmpty()
+                            topActive = isTop
+                        }
+                    },
+                    copyText = (if (isActive) input else output).ifEmpty { null }
+                ) {
+                    if (isActive) {
+                        ConvertInput(
+                            value = input,
+                            onValueChange = { text ->
+                                input = text.filter { it.isDigit() || it == '.' || it == ',' || it == '-' }
+                            },
+                            focusRequester = focusRequester,
+                            keyboardType = KeyboardType.Decimal,
+                            placeholder = "0",
+                            onDone = { keyboard?.hide() }
+                        )
+                    } else {
+                        ConvertValue(output)
+                    }
+                    ConvertSymbol(symbolOf(unit))
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = picking != null) {
+            val target = picking ?: true
+            ConvertUnitGrid(
+                options = units.map { ConvertUnitOption(it, getUnitName(it), symbolOf(it).ifBlank { null }) },
+                selected = if (target) top else bottom,
+                onPick = { unit ->
+                    val other = if (target) bottom else top
+                    if (unit == other) {
+                        // Picking the unit the other row shows just swaps them.
+                        val previous = top
+                        top = bottom
+                        bottom = previous
+                    } else if (target) {
+                        top = unit
+                    } else {
+                        bottom = unit
+                    }
+                    picking = null
+                }
+            )
+        }
     }
 }
 
-private enum class UnitPicker {
-    From,
-    To
+/** Reads what was typed, accepting either decimal separator. Null while there's nothing to convert. */
+internal fun parseAmount(text: String): Float? {
+    val normalized = text.replace(',', '.')
+    if (normalized.isBlank() || normalized == "-" || normalized == ".") return null
+    return normalized.toFloatOrNull()
+}
+
+/** A value as plain, editable digits: at most 4 decimals, no grouping, '.' as the separator. */
+private fun plain(value: Float): String {
+    if (!value.isFinite()) return ""
+    return BigDecimal(value.toDouble()).setScale(4, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+}
+
+/** The unit's symbol, from a formatted amount: what's left once the number is taken out ("1 ft" -> "ft"). */
+internal fun symbol(formatted: String, number: String): String {
+    return if (formatted.contains(number)) formatted.replaceFirst(number, "").trim() else ""
 }

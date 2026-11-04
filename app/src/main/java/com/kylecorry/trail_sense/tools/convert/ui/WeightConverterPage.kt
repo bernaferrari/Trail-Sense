@@ -17,9 +17,12 @@ class WeightConverterPage(context: Context) :
         return formatService.getWeightUnitName(unit)
     }
 
-    override fun convert(amount: Float, from: WeightUnits, to: WeightUnits): String {
-        val converted = Weight.from(amount.absoluteValue, from).convertTo(to)
-        return formatService.formatWeight(converted, 4, false)
+    override fun convertValue(amount: Float, from: WeightUnits, to: WeightUnits): Float {
+        return Weight.from(amount.absoluteValue, from).convertTo(to).value
+    }
+
+    override fun format(amount: Float, unit: WeightUnits): String {
+        return formatService.formatWeight(Weight.from(amount, unit), 4, false)
     }
 
 }

@@ -17,7 +17,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
-import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -711,7 +710,8 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
     ) {
         Text(
             stringResource(R.string.sky_sensors_good, good, total),
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            // A verdict, like Diagnostics': smaller than the title bar above it.
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -721,8 +721,8 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
             } else {
                 stringResource(R.string.sky_sensors_attention, poor + moderate)
             },
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
         )
     }
@@ -733,10 +733,10 @@ private fun SensorDetailsRow(
     sensor: SensorDetails,
     position: TrailSenseGroupPosition
 ) {
-    SkyValueRow(
+    TrailSenseListItem(
         title = sensor.name,
         subtitle = sensor.description.takeIf { it.isNotBlank() },
-        icon = sensor.statusIcon,
+        icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(sensor.statusIcon),
         position = position,
         trailing = { SensorStatus(sensor) }
     )

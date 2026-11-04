@@ -84,7 +84,7 @@ const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
 
 /**
  * The boil timer: a pot of water is the hero. A thick wavy ring and the water inside it drain together as the
- * countdown runs, bubbles rise while it boils, the duration choice and one tall action sit under it, and the three
+ * countdown runs, bubbles rise while it boils, the duration choice and one action sit under it, and the three
  * steps follow with the next one highlighted (all ticked once the timer runs).
  */
 @Composable
@@ -157,7 +157,7 @@ internal fun WaterPurificationScreen(
                     text = stringResource(
                         if (isRunning) R.string.water_boil_verdict_running else R.string.water_boil_verdict_idle
                     ),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(top = TrailSenseSpacing.lg)
@@ -185,7 +185,7 @@ internal fun WaterPurificationScreen(
 
             // Holds its place while the duration is worked out, so nothing jumps when it appears.
             val scheme = MaterialTheme.colorScheme
-            // The one action on the screen is primary; cancelling is a quiet secondary.
+            // The one action on the screen is primary; cancelling is a quiet secondary. A standard 56 dp button.
             val container by animateColorAsState(
                 if (isRunning) scheme.secondaryContainer else scheme.primary,
                 MaterialTheme.motionScheme.defaultEffectsSpec(),
@@ -208,7 +208,7 @@ internal fun WaterPurificationScreen(
                         )
                     }
                 },
-                shapes = ButtonDefaults.shapesFor(ButtonDefaults.LargeContainerHeight),
+                shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = container,
                     contentColor = if (isRunning) scheme.onSecondaryContainer else scheme.onPrimary
@@ -216,18 +216,17 @@ internal fun WaterPurificationScreen(
                 contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 72.dp)
+                    .heightIn(min = ButtonDefaults.MediumContainerHeight)
             ) {
                 Icon(
                     if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(ButtonDefaults.MediumIconSize)
                 )
-                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Spacer(Modifier.width(ButtonDefaults.MediumIconSpacing))
                 Text(
                     stringResource(if (isRunning) android.R.string.cancel else R.string.start),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight)
                 )
             }
           }
@@ -405,18 +404,8 @@ private fun WaterStep(
     index: Int = 0
 ) {
     val scheme = MaterialTheme.colorScheme
-    val rowColor by animateColorAsState(
-        when (state) {
-            StepState.Next -> scheme.surfaceContainerLow
-            StepState.Done -> scheme.surfaceContainerLow
-            StepState.Todo -> scheme.surfaceContainerLow
-        },
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "stepRow"
-    )
     TrailSenseGroupCard(
         position = position,
-        color = rowColor,
         contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = 0.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

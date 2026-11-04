@@ -133,7 +133,7 @@ private fun NoteField(
     singleLine: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val container = MaterialTheme.colorScheme.surfaceContainerLow
+    val container = MaterialTheme.colorScheme.surfaceContainer
     TextField(
         value = value,
         onValueChange = onValueChange,

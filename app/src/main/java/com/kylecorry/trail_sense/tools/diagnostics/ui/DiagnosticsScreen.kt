@@ -233,12 +233,12 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         else -> stringResource(R.string.diagnostics_checking)
     }
     // One quiet line under the count: the split by severity, or why "no issues" is good news.
-    val errorsLabel = stringResource(R.string.errors)
-    val warningsLabel = stringResource(R.string.diagnostics_warnings)
+    val errorsLabel = pluralStringResource(R.plurals.diagnostics_error_count, errorCount, errorCount)
+    val warningsLabel = pluralStringResource(R.plurals.diagnostics_warning_count, warningCount, warningCount)
     val supporting = when {
         issueCount > 0 -> listOfNotNull(
-            errorCount.takeIf { it > 0 }?.let { "$it $errorsLabel" },
-            warningCount.takeIf { it > 0 }?.let { "$it $warningsLabel" }
+            errorsLabel.takeIf { errorCount > 0 },
+            warningsLabel.takeIf { warningCount > 0 }
         ).joinToString(" · ")
         loaded -> stringResource(R.string.diagnostics_no_issues_summary)
         else -> null
@@ -258,7 +258,8 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
     ) {
         Text(
             title,
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            // A verdict, not a hero: smaller than the title bar above it.
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )

@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -75,7 +76,7 @@ internal fun PacksGroupRow(
                 scaleY = scale
             },
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier
@@ -97,8 +98,8 @@ internal fun PacksGroupRow(
                 .padding(
                     start = if (leading != null) TrailSenseSpacing.sm else TrailSenseSpacing.lg,
                     end = if (trailing != null) TrailSenseSpacing.xs else TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.sm,
-                    bottom = TrailSenseSpacing.sm
+                    top = TrailSenseSpacing.md,
+                    bottom = TrailSenseSpacing.md
                 ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
@@ -114,17 +115,18 @@ internal fun PacksGroupRow(
     }
 }
 
-/** The family's leading icon well: a soft rounded square in the secondary container. */
+/** The family's leading icon well: a 40 dp cookie in 12% primary. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PacksIconWell(painter: Painter, modifier: Modifier = Modifier) {
     Surface(
-        shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
         contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.size(TrailSenseSize.leadingIconContainer)
+        modifier = modifier.size(TrailSenseSize.compactIconContainer)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(painter, contentDescription = null, modifier = Modifier.size(TrailSenseSize.leadingIcon))
+            Icon(painter, contentDescription = null, modifier = Modifier.size(22.dp))
         }
     }
 }

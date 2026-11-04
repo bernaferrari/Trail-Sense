@@ -293,7 +293,9 @@ private fun PackListScreen(
             start = TrailSenseSpacing.lg,
             end = TrailSenseSpacing.lg,
             top = TrailSenseSpacing.sm,
-            bottom = 112.dp
+            // Room for the FAB under the last list; an empty screen needs none, and the extra padding squeezed the
+            // empty state until its button's label was cut off.
+            bottom = if (loaded && packs.isEmpty()) TrailSenseSpacing.xxxl else 112.dp
         ),
         actions = {
             PacksOverflowMenu(
@@ -402,11 +404,14 @@ private fun PackListItem(
         modifier = modifier.testTag("pack_list_item"),
         onClick = { onOpenPack(pack) },
         leading = {
+            // The family's 40 dp well; a packed list turns it to the good colour with a check.
             PlacesBadge(
-                containerColor = if (done) status.goodContainer else scheme.secondaryContainer,
-                contentColor = if (done) status.onGoodContainer else scheme.onSecondaryContainer,
+                containerColor = if (done) status.goodContainer else scheme.primary.copy(alpha = 0.12f),
+                contentColor = if (done) status.onGoodContainer else scheme.primary,
                 icon = if (done) TrailIcons.Check else TrailIcons.ToolPack,
-                shape = MaterialShapes.Cookie9Sided.toShape(),
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                iconScale = 0.55f,
                 modifier = Modifier.padding(start = TrailSenseSpacing.sm)
             )
         },
