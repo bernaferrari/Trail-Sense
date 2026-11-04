@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.units.Pressure
@@ -12,15 +13,15 @@ class PressureSystemWeatherField(private val pressure: Pressure?) : WeatherField
         pressure ?: return null
         val name: String
         val description: String
-        val icon: Int
+        val icon: androidx.compose.ui.graphics.vector.ImageVector
         if (pressure.isHigh()) {
             name = context.getString(R.string.high_pressure)
             description = context.getString(R.string.high_pressure_system_description)
-            icon = R.drawable.ic_high_pressure_system
+            icon = TrailIcons.HighPressureSystem
         } else if (pressure.isLow()) {
             name = context.getString(R.string.low_pressure)
             description = context.getString(R.string.low_pressure_system_description)
-            icon = R.drawable.ic_low_pressure_system
+            icon = TrailIcons.LowPressureSystem
         } else {
             return null
         }

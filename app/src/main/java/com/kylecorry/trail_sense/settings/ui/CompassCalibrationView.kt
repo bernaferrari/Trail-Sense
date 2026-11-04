@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.interpolation.Interpolation
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -58,10 +57,17 @@ fun CompassCalibrationContent(modifier: Modifier = Modifier) {
         ),
         label = "compass_calibration_progress"
     )
-    val primary = androidx.compose.material3.MaterialTheme.colorScheme.primary
+    // Drawn in the theme's tones: a quiet well, the figure 8 as a soft track, the phone in the content color and its
+    // heading in the accent, so it sits in a light or dark sheet without a hard blue block.
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val primary = scheme.primary
+    val background = scheme.surfaceContainerHighest
+    val track = scheme.onSurfaceVariant.copy(alpha = 0.35f)
+    val phone = scheme.onSurface
+    val screen = scheme.surface
 
     Canvas(modifier = modifier.fillMaxSize()) {
-        drawRect(Color(AppColor.Blue.color))
+        drawRect(background)
 
         val figure8Width = size.width * 0.8f / 2f
         val figure8Height = size.height * 0.8f / 2f
@@ -85,7 +91,14 @@ fun CompassCalibrationContent(modifier: Modifier = Modifier) {
             }
             pathT += 0.01f
         }
-        drawPath(path, Color.Black, style = androidx.compose.ui.graphics.drawscope.Stroke(5.dp.toPx()))
+        drawPath(
+            path,
+            track,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                4.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        )
 
         val pos = figure8(t).let {
             Vector2(it.x * figure8Width, it.y * figure8Height)
@@ -102,12 +115,12 @@ fun CompassCalibrationContent(modifier: Modifier = Modifier) {
         translate(size.width / 2f + pos.x, size.height / 2f + pos.y) {
             rotate(heading + 90f) {
                 drawRect(
-                    Color.Black,
+                    phone,
                     topLeft = Offset(-phoneWidth / 2f, -phoneHeight / 2f),
                     size = androidx.compose.ui.geometry.Size(phoneWidth, phoneHeight)
                 )
                 drawRect(
-                    Color.White,
+                    screen,
                     topLeft = Offset(-screenWidth / 2f, -screenHeight / 2f),
                     size = androidx.compose.ui.geometry.Size(screenWidth, screenHeight)
                 )

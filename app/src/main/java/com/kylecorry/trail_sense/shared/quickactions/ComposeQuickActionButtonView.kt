@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.animateColorAsState
 import android.view.MotionEvent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -61,16 +64,26 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
             return
         }
 
-        val container = if (isOn) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        }
-        val tint = if (isOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        // On: the circle rounds into a square and fills with the accent container, the expressive toggle shape.
+        val container by animateColorAsState(
+            if (isOn) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            MaterialTheme.motionScheme.defaultEffectsSpec(),
+            label = "quickActionContainer"
+        )
+        val tint by animateColorAsState(
+            if (isOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+            MaterialTheme.motionScheme.defaultEffectsSpec(),
+            label = "quickActionTint"
+        )
+        val corner by animateIntAsState(
+            if (isOn) 30 else 50,
+            MaterialTheme.motionScheme.fastSpatialSpec(),
+            label = "quickActionCorner"
+        )
 
         Surface(
-            modifier = modifier.size(48.dp),
-            shape = CircleShape,
+            modifier = modifier.size(52.dp),
+            shape = RoundedCornerShape(percent = corner),
             color = container
         ) {
             Box(

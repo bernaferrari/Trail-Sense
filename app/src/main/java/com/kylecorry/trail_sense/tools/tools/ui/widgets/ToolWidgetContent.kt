@@ -23,6 +23,8 @@ sealed interface ToolWidgetContent {
     data class Chart(
         val bitmap: Bitmap?,
         val title: CharSequence? = null,
+        /** Drawn live in the app (the bitmap is for home screen widgets). */
+        val chart: (@androidx.compose.runtime.Composable () -> Unit)? = null,
         override val clickAction: WidgetClickAction? = null
     ) : ToolWidgetContent
 

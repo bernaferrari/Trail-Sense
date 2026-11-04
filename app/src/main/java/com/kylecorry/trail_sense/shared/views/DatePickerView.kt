@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -56,7 +57,7 @@ fun DatePickerContent(
                 .testTag("prev_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
@@ -81,7 +82,7 @@ fun DatePickerContent(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_date),
+                imageVector = TrailIcons.Date,
                 contentDescription = stringResource(R.string.date),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -95,7 +96,7 @@ fun DatePickerContent(
                     .testTag("search_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_search),
+                    imageVector = TrailIcons.Search,
                     contentDescription = stringResource(R.string.search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -109,7 +110,7 @@ fun DatePickerContent(
                 .testTag("next_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

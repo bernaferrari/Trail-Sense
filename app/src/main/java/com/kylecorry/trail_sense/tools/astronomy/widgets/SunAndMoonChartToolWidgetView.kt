@@ -40,7 +40,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             Duration.between(instant, it.time).abs()
         }
 
-        var bitmap: android.graphics.Bitmap? = null
+        var content: ToolWidgetContent.Chart? = null
         onMain {
             val userPrefs = UserPreferences(context)
             val astroChart = AstroChart(context) {}
@@ -59,22 +59,14 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
             astroChart.moveSun(currentSun)
             astroChart.moveMoon(currentMoon)
 
-            bitmap = renderChart(
+            content = chartContent(
                 context,
-                TrailSenseComposeRootView(
-                    context,
-                    ViewCompositionStrategy.DisposeOnDetachedFromWindow
-                ) {
-                    astroChart.Content(Modifier.fillMaxSize())
-                }
-            )
+                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.ASTRONOMY))
+            ) {
+                astroChart.Content(Modifier.fillMaxSize())
+            }
         }
 
-        return ToolWidgetContent.Chart(
-            bitmap = bitmap,
-            clickAction = WidgetClickAction.StartActivity(
-                NavigationUtils.toolIntent(context, Tools.ASTRONOMY)
-            )
-        )
+        return content!!
     }
 }

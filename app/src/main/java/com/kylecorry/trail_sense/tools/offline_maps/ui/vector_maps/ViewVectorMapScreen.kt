@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -235,7 +236,7 @@ private fun VectorMapScreen(
                             )
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_menu_dots),
+                                imageVector = TrailIcons.MenuDots,
                                 contentDescription = stringResource(R.string.map_options)
                             )
                         }
@@ -310,7 +311,7 @@ private fun VectorMapScreen(
                             )
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_add),
+                                imageVector = TrailIcons.Add,
                                 contentDescription = stringResource(R.string.zoom_in)
                             )
                         }
@@ -326,7 +327,7 @@ private fun VectorMapScreen(
                             )
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_zoom_out),
+                                imageVector = TrailIcons.ZoomOut,
                                 contentDescription = stringResource(R.string.zoom_out)
                             )
                         }

@@ -2,6 +2,18 @@
 
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.BottomSheetDefaults
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetComposeContent
 import android.content.Context
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
@@ -127,10 +139,8 @@ class QuickActionSheetState(private val context: Context) {
         Surface(
             modifier = modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.surfaceContainerLow,
-            shape = RoundedCornerShape(
-                topStart = 32.dp,
-                topEnd = 32.dp
-            )
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            shadowElevation = 8.dp
         ) {
             QuickActionSheetContent(
                 selectedTab = selectedTab,
@@ -147,6 +157,7 @@ class QuickActionSheetState(private val context: Context) {
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickActionSheetContent(
     selectedTab: Int,
@@ -158,65 +169,61 @@ private fun QuickActionSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(start = 16.dp, end = 8.dp, bottom = 16.dp)
     ) {
+        BottomSheetDefaults.DragHandle(modifier = Modifier.align(Alignment.CenterHorizontally))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PrimaryTabRow(
-                selectedTabIndex = selectedTab,
+            TrailSenseConnectedChoice(
+                options = listOf(
+                    TrailSenseChoice(0, stringResource(R.string.quick_actions)),
+                    TrailSenseChoice(1, stringResource(R.string.widgets))
+                ),
+                selected = selectedTab,
+                onSelect = onTabSelected,
                 modifier = Modifier.weight(1f)
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { onTabSelected(0) },
-                    text = { Text(stringResource(R.string.quick_actions)) }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { onTabSelected(1) },
-                    text = { Text(stringResource(R.string.widgets)) }
-                )
-            }
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(48.dp)
-            ) {
+            )
+            IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_cancel),
+                    imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(android.R.string.cancel),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        if (selectedTab == 0) {
-            QuickActionsContent(state)
-        } else {
-            widgetsContent()
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "quickActionTab",
+            modifier = Modifier.padding(end = 8.dp)
+        ) { tab ->
+            if (tab == 0) QuickActionsContent(state) else widgetsContent()
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/** This tab's own quick actions, then the ones you chose: two connected cards of round toggles. */
 @Composable
 private fun QuickActionsContent(state: MainActivityQuickActionState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp)
+            .padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        QuickActionButtonRow(state.recommended)
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.outlineVariant
-        ) {
-            Box(modifier = Modifier.padding(top = 1.dp))
+        val groups = listOf(state.recommended, state.selected).filter { it.isNotEmpty() }
+        groups.forEachIndexed { index, buttons ->
+            // Inside a sheet, groups lift one tone above it (the family rule).
+            TrailSenseGroupCard(
+                TrailSenseGroupPosition.at(index, groups.size),
+                color = MaterialTheme.colorScheme.surfaceContainer
+            ) {
+                QuickActionButtonRow(buttons)
+            }
         }
-        QuickActionButtonRow(state.selected)
     }
 }
 
@@ -243,11 +250,7 @@ private fun WidgetsContent(widgets: List<ToolWidgetSnapshot>) {
                     .fillMaxWidth()
                     .aspectRatio(352f / 306f)
             }
-            Image(
-                bitmap = widget.bitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = modifier.padding(4.dp)
-            )
+            ToolWidgetComposeContent(widget.content, modifier.padding(4.dp))
         }
     }
 }
@@ -257,17 +260,9 @@ private fun WidgetsContent(widgets: List<ToolWidgetSnapshot>) {
 private fun QuickActionButtonRow(buttons: List<ComposeQuickActionButtonView>) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        buttons.forEach { button ->
-            Surface(
-                modifier = Modifier.padding(8.dp),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainer
-            ) {
-                button.Content()
-            }
-        }
+        buttons.forEach { button -> button.Content() }
     }
 }

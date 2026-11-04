@@ -56,22 +56,17 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             .map { it.copy(value = it.value.convertTo(units)) }
 
 
-        var bitmap: android.graphics.Bitmap? = null
-        onMain {
-            bitmap = renderChart(context, createPressureChartView(context, displayReadings))
+        return onMain {
+            chartContent(
+                context,
+                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
+            ) { PressureChart(context, displayReadings) }
         }
-
-        return ToolWidgetContent.Chart(
-            bitmap = bitmap,
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
-        )
     }
 
-    private fun createPressureChartView(context: Context, readings: List<Reading<Pressure>>): View {
-        return TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+    @Composable
+    private fun PressureChart(context: Context, readings: List<Reading<Pressure>>) {
+        run {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
