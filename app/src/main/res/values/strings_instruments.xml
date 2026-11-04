@@ -29,6 +29,9 @@
 
     <!-- Metal detector -->
     <string name="metal_detector_field">Magnetic field</string>
+    <string name="metal_detector_calibrate_hint">Hold the phone away from metal first</string>
+    <string name="metal_detector_normal">Normal</string>
+    <string name="metal_detector_metal">Metal</string>
 
     <!-- Solar panel aligner -->
     <string name="solar_aligned">Aligned</string>
