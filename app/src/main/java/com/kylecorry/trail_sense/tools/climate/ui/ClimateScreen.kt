@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -26,7 +24,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,7 +44,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +51,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -100,6 +109,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.Month
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -158,7 +168,7 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
             date = date,
             location = location,
             elevation = this@ClimateController.elevation,
-            temperatureTitle = getTemperatureTitle(),
+            temperatureRange = getTemperatureRangeText(),
             precipitationTitle = getPrecipitationTitle(),
             climateZoneTitle = climateClassification?.first.orEmpty(),
             climateZoneDescription = climateClassification?.second.orEmpty(),
@@ -272,19 +282,15 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
         }
     }
 
-    private fun getTemperatureTitle(): String {
-        val range = temperatures?.firstOrNull { it.first == date }?.second
-            ?: return getString(R.string.temperature)
+    private fun getTemperatureRangeText(): String? {
+        val range = temperatures?.firstOrNull { it.first == date }?.second ?: return null
         val lowValue = formatter.formatTemperature(
             range.start.convertTo(temperatureUnits)
         )
         val highValue = formatter.formatTemperature(
             range.end.convertTo(temperatureUnits)
         )
-        return getString(
-            R.string.climate_temperature_amount,
-            getString(R.string.slash_separated_pair, highValue, lowValue)
-        )
+        return getString(R.string.slash_separated_pair, highValue, lowValue)
     }
 
     private fun getPrecipitationTitle(): String {
@@ -509,7 +515,7 @@ private fun ClimateScreen(
     date: LocalDate,
     location: Coordinate?,
     elevation: Distance?,
-    temperatureTitle: String,
+    temperatureRange: String?,
     precipitationTitle: String,
     climateZoneTitle: String,
     climateZoneDescription: String,
@@ -532,39 +538,49 @@ private fun ClimateScreen(
     onEcologyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val inputPadding = PaddingValues(
+        start = TrailSenseSpacing.sm,
+        end = TrailSenseSpacing.sm,
+        top = TrailSenseSpacing.md,
+        bottom = TrailSenseSpacing.xs
+    )
+
+    val locationLabel = stringResource(R.string.location)
+    val temperatureLabel = stringResource(R.string.temperature)
+    val precipitationLabel = stringResource(R.string.weather_precipitation)
+    val temperatureSource = stringResource(R.string.source_merra_2)
+    val precipitationSource = stringResource(R.string.source_era5)
+
+    TrailSensePage(
+        title = title,
+        subtitle = subtitle,
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("climate_scroll")
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            ClimateHeader(title = title, subtitle = subtitle)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .testTag("climate_scroll")
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(bottom = dimensionResource(R.dimen.default_bottom_margin)),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
+        // The one thing the screen is for: what the chosen day is typically like here.
+        item(key = "hero") {
+            TrailSenseHeroCard(
+                modifier = Modifier.testTag("climate_title"),
+                eyebrow = stringResource(R.string.temperature),
+                title = temperatureRange ?: "--",
+                supportingText = precipitationTitle,
+                icon = rememberVectorPainter(TrailIcons.TemperatureRange),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
 
-                // Hero readout
-                ClimateHeroCard(
-                    temperatureTitle = temperatureTitle,
-                    precipitationTitle = precipitationTitle
-                )
-
-                // Location & date selectors
-                TrailSenseCard {
-                    SectionLabel(text = stringResource(R.string.location))
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
-                    DatePickerInput(
-                        date = date,
-                        onDateChange = onDateChange
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+        trailSenseSection(key = "inputs", title = locationLabel) {
+            row { position ->
+                TrailSenseGroupCard(
+                    position = position,
+                    contentPadding = PaddingValues(TrailSenseSpacing.xs)
+                ) {
+                    DatePickerInput(date = date, onDateChange = onDateChange)
+                }
+            }
+            row { position ->
+                TrailSenseGroupCard(position = position, contentPadding = inputPadding) {
                     CoordinateInput(
                         location = location,
                         onLocationChange = onLocationChange,
@@ -572,7 +588,10 @@ private fun ClimateScreen(
                         onAutoLocationClick = onAutoLocationClick,
                         onBeaconSelected = onLocationBeaconSelected
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                }
+            }
+            row { position ->
+                TrailSenseGroupCard(position = position, contentPadding = inputPadding) {
                     ElevationInput(
                         elevation = elevation,
                         onElevationChange = onElevationChange,
@@ -580,54 +599,77 @@ private fun ClimateScreen(
                         onAutoElevationClick = onAutoElevationClick
                     )
                 }
+            }
+        }
 
-                // Temperature chart
-                TrailSenseCard {
-                    SectionLabel(text = temperatureTitle)
-                    SourceLabel(text = stringResource(R.string.source_merra_2))
+        trailSenseSection(
+            key = "temperature",
+            title = temperatureLabel,
+            footer = temperatureSource
+        ) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
                     TemperatureChart(
                         temperatures = temperatures,
                         selectedDate = date,
                         units = temperatureUnits,
                         onDateSelected = onTemperatureDateSelected
                     )
+                    ClimateMonthAxis(selectedMonth = date.month)
                 }
+            }
+        }
 
-                // Precipitation chart
-                TrailSenseCard {
-                    SectionLabel(text = precipitationTitle)
-                    SourceLabel(text = stringResource(R.string.source_era5))
+        trailSenseSection(
+            key = "precipitation",
+            title = precipitationLabel,
+            footer = precipitationSource
+        ) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
                     PrecipitationChart(
                         precipitation = precipitation,
                         selectedMonth = date.month,
                         units = precipitationDistanceUnits,
                         onMonthSelected = onPrecipitationMonthSelected
                     )
+                    ClimateMonthAxis(selectedMonth = date.month)
                 }
+            }
+        }
 
-                if (climateZoneTitle.isNotBlank()) {
-                    TrailSenseCard {
-                        SectionLabel(text = climateZoneTitle)
-                        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-                        Text(
-                            text = climateZoneDescription,
-                            modifier = Modifier.fillMaxWidth(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+        if (climateZoneTitle.isNotBlank()) {
+            item(key = "zone") {
+                TrailSenseRowGroup(modifier = Modifier.animateItem()) {
+                    row { position ->
+                        TrailSenseGroupCard(position = position) {
+                            Text(
+                                text = climateZoneTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.height(TrailSenseSpacing.xs))
+                            Text(
+                                text = climateZoneDescription,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
+            }
+        }
 
-                if (showEcology) {
-                    TrailSenseCard(onClick = onEcologyClick) {
-                        SectionLabel(text = stringResource(R.string.ecology))
-                        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-                        Text(
-                            text = ecologyDescription,
-                            modifier = Modifier.fillMaxWidth(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+        if (showEcology) {
+            item(key = "ecology") {
+                TrailSenseRowGroup(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(R.string.ecology)
+                ) {
+                    ecologyDescription.lines().filter { it.isNotBlank() }.forEach { line ->
+                        row { position ->
+                            ClimateEcologyRow(text = line, position = position, onClick = onEcologyClick)
+                        }
                     }
                 }
             }
@@ -635,98 +677,71 @@ private fun ClimateScreen(
     }
 }
 
+/**
+ * One insect-activity line. The whole line stays one text node ("Ticks: Active from March to November") so it reads
+ * as a sentence; tapping opens the detailed timing.
+ */
 @Composable
-private fun ClimateHeroCard(
-    temperatureTitle: String,
-    precipitationTitle: String
-) {
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        contentPadding = PaddingValues(
-            horizontal = TrailSenseSpacing.xl,
-            vertical = TrailSenseSpacing.xl
-        )
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            Text(
-                text = temperatureTitle,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = precipitationTitle,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.fillMaxWidth(),
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun ClimateHeader(
-    title: String,
-    subtitle: String
+private fun ClimateEcologyRow(
+    text: String,
+    position: TrailSenseGroupPosition,
+    onClick: () -> Unit
 ) {
     Surface(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.screen,
-                    vertical = TrailSenseSpacing.md
-                )
-                .testTag("climate_title")
+                .heightIn(min = 56.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
+            Icon(
+                imageVector = TrailIcons.Ant,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(TrailSenseSize.leadingIcon)
             )
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = text,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
+/** Month initials under a year-long chart; the chosen month is emphasized so the chart and the hero read together. */
 @Composable
-private fun SourceLabel(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.fillMaxWidth(),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
+private fun ClimateMonthAxis(selectedMonth: Month) {
+    val locale = Locale.getDefault()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = TrailSenseSpacing.sm)
+            .clearAndSetSemantics { }
+    ) {
+        Month.entries.forEach { month ->
+            val isSelected = month == selectedMonth
+            Text(
+                text = month.getDisplayName(java.time.format.TextStyle.NARROW, locale),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -750,7 +765,7 @@ private fun DatePickerInput(
             modifier = Modifier.testTag("prev_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
@@ -786,7 +801,7 @@ private fun DatePickerInput(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_date),
+                imageVector = TrailIcons.Date,
                 contentDescription = dateLabel,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -797,7 +812,7 @@ private fun DatePickerInput(
             modifier = Modifier.testTag("next_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -895,7 +910,7 @@ private fun CoordinateInput(
                 modifier = Modifier.testTag("gps_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
+                    imageVector = TrailIcons.Location,
                     contentDescription = stringResource(R.string.gps)
                 )
             }
@@ -926,7 +941,7 @@ private fun CoordinateInput(
             modifier = Modifier.testTag("coordinate_input_help_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_help),
+                imageVector = TrailIcons.Help,
                 contentDescription = stringResource(R.string.location_input_help_title)
             )
         }
@@ -1046,7 +1061,7 @@ private fun ElevationInput(
                 modifier = Modifier.testTag("elevation_gps_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_altitude),
+                    imageVector = TrailIcons.Altitude,
                     contentDescription = stringResource(R.string.elevation)
                 )
             }
@@ -1067,7 +1082,7 @@ private fun ElevationInput(
         )
         Spacer(modifier = Modifier.size(8.dp))
         Box(modifier = Modifier.weight(1f)) {
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = { isUnitOpen = true },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1123,9 +1138,10 @@ private fun TemperatureChart(
     val data = temperatures.orEmpty()
     val lowColor = Color(AppColor.Blue.color)
     val highColor = Color(AppColor.Red.color)
-    val grid = MaterialTheme.colorScheme.outlineVariant
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
-    val freezingColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
+    val guideColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
+    val freezingColor = Color(AppColor.Gray.color).copy(alpha = 0.16f)
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val year = data.firstOrNull()?.first?.year ?: selectedDate.year
 
@@ -1133,7 +1149,6 @@ private fun TemperatureChart(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .padding(top = 8.dp)
             .testTag("temperature_chart")
             .pointerInput(data, year) {
                 detectTapGestures { offset ->
@@ -1149,11 +1164,13 @@ private fun TemperatureChart(
         contentAlignment = Alignment.Center
     ) {
         if (data.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (temperatures != null) {
+                Text(
+                    text = stringResource(R.string.no_data),
+                    color = textColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
             return@Box
         }
 
@@ -1179,15 +1196,6 @@ private fun TemperatureChart(
             }
 
             repeat(5) { index ->
-                val x = index / 4f * size.width
-                drawLine(
-                    color = grid,
-                    start = androidx.compose.ui.geometry.Offset(x, 0f),
-                    end = androidx.compose.ui.geometry.Offset(x, size.height),
-                    strokeWidth = 1.dp.toPx()
-                )
-            }
-            repeat(5) { index ->
                 val y = index / 4f * size.height
                 drawLine(
                     color = grid,
@@ -1212,10 +1220,19 @@ private fun TemperatureChart(
                         color = color,
                         start = androidx.compose.ui.geometry.Offset(x(start.first), y(start.second)),
                         end = androidx.compose.ui.geometry.Offset(x(end.first), y(end.second)),
-                        strokeWidth = 2.dp.toPx()
+                        strokeWidth = 2.5.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
                     )
                 }
             }
+
+            val selectedX = x(selectedDate.dayOfYear.toFloat())
+            drawLine(
+                color = guideColor,
+                start = androidx.compose.ui.geometry.Offset(selectedX, 0f),
+                end = androidx.compose.ui.geometry.Offset(selectedX, size.height),
+                strokeWidth = 1.dp.toPx()
+            )
 
             drawSeries(lows, lowColor)
             drawSeries(highs, highColor)
@@ -1247,7 +1264,7 @@ private fun PrecipitationChart(
 ) {
     val data = precipitation.orEmpty()
     val barColor = Color(AppColor.Blue.color)
-    val grid = MaterialTheme.colorScheme.outlineVariant
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -1255,7 +1272,6 @@ private fun PrecipitationChart(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .padding(top = 8.dp)
             .testTag("precipitation_chart")
             .pointerInput(data) {
                 detectTapGestures { offset ->
@@ -1269,11 +1285,13 @@ private fun PrecipitationChart(
         contentAlignment = Alignment.Center
     ) {
         if (data.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (precipitation != null) {
+                Text(
+                    text = stringResource(R.string.no_data),
+                    color = textColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
             return@Box
         }
 
@@ -1286,7 +1304,7 @@ private fun PrecipitationChart(
             val maxValue = values.maxOfOrNull { it.second } ?: 0f
             val yMaximum = max(maxValue + margin, minRange)
 
-            fun x(month: Float): Float = (month / 13f).coerceIn(0f, 1f) * size.width
+            fun x(month: Float): Float = ((month - 0.5f) / 12f).coerceIn(0f, 1f) * size.width
             fun y(value: Float): Float {
                 return size.height - (value / yMaximum).coerceIn(0f, 1f) * size.height
             }
@@ -1301,14 +1319,26 @@ private fun PrecipitationChart(
                 )
             }
 
+            val barWidth = size.width / 12f * 0.6f
+            val corner = androidx.compose.ui.geometry.CornerRadius(barWidth / 4f, barWidth / 4f)
             values.forEach { (month, value) ->
                 val centerX = x(month)
-                val barWidth = size.width / 13f * 0.6f
                 val top = y(value)
-                drawRect(
-                    color = barColor,
-                    topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, top),
-                    size = androidx.compose.ui.geometry.Size(barWidth, size.height - top)
+                val isSelected = month.toInt() == selectedMonth.value
+                drawPath(
+                    path = androidx.compose.ui.graphics.Path().apply {
+                        addRoundRect(
+                            androidx.compose.ui.geometry.RoundRect(
+                                left = centerX - barWidth / 2f,
+                                top = top,
+                                right = centerX + barWidth / 2f,
+                                bottom = size.height,
+                                topLeftCornerRadius = corner,
+                                topRightCornerRadius = corner
+                            )
+                        )
+                    },
+                    color = if (isSelected) barColor else barColor.copy(alpha = 0.45f)
                 )
             }
 
@@ -1336,7 +1366,7 @@ private fun ClimateScreenPreview() {
             date = LocalDate.now(),
             location = null,
             elevation = null,
-            temperatureTitle = "Temperature: 82 °F / 62 °F",
+            temperatureRange = "82 °F / 62 °F",
             precipitationTitle = "Precipitation: 3.8 in monthly total",
             climateZoneTitle = "Continental",
             climateZoneDescription = "Warm summers with no dry season.",
