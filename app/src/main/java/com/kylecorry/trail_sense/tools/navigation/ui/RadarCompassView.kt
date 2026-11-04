@@ -190,8 +190,10 @@ class RadarCompassView(
         iconSize = dp(24f).toInt()
         compassSize = min(canvasHeight, canvasWidth).toInt() - 2 * iconSize - 2 * dp(2f).toInt()
         centerPixel = PixelCoordinate(canvasWidth / 2f, canvasHeight / 2f)
+        // The radar (nearby paths) draws only inside the dial's graduations, never past its edge.
+        val clipRadius = if (DialVariant.bezel == 6) outerRadius * WAVY_RADIUS - dp(30f) else compassSize / 2f
         compassPath = Path().apply {
-            addCircle(centerPixel.x, centerPixel.y, compassSize / 2f, Path.Direction.CW)
+            addCircle(centerPixel.x, centerPixel.y, clipRadius, Path.Direction.CW)
         }
         distanceSize = sp(10f)
         cardinalSize = sp(18f)
@@ -733,8 +735,10 @@ class RadarCompassView(
         paint.style = Paint.Style.FILL
         paint.alpha = if (stopAt != null) 18 else 40
 
-        val inset = iconSize.toFloat() + dp(2f)
-        arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
+        // Centred on the dial (not the canvas corner), inside the graduations.
+        val turnRadius = if (DialVariant.bezel == 6) outerRadius * WAVY_RADIUS - dp(30f) else outerRadius * DOT_RING
+        fun centred(radius: Float) = arcRect.set(centerPixel.x - radius, centerPixel.y - radius, centerPixel.x + radius, centerPixel.y + radius)
+        centred(turnRadius)
         val sweep = deltaAngle(azimuth, bearing.bearing)
         nativeCanvas.drawArc(arcRect, azimuth - 90, sweep, true, paint)
 
@@ -745,8 +749,7 @@ class RadarCompassView(
             paint.strokeWidth = stroke
             paint.strokeCap = Paint.Cap.ROUND
             paint.alpha = 255
-            val arcRadius = outerRadius * DOT_RING
-            arcRect.set(centerPixel.x - arcRadius, centerPixel.y - arcRadius, centerPixel.x + arcRadius, centerPixel.y + arcRadius)
+            centred(turnRadius - stroke / 2f)
             // The rounded caps end exactly on the wedge's edges instead of overhanging them.
             val capDegrees = Math.toDegrees((stroke / 2f / (arcRect.width() / 2f)).toDouble()).toFloat()
             if (kotlin.math.abs(sweep) > capDegrees * 2) {
@@ -761,7 +764,6 @@ class RadarCompassView(
             }
             paint.style = Paint.Style.FILL
             paint.strokeCap = Paint.Cap.BUTT
-            arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
         }
 
         stopAt?.let {

@@ -52,6 +52,11 @@
     <string name="direction_north">N</string>
     <string name="direction_north_full">North</string>
     <string name="navigation_places">Places</string>
+    <string name="location_accuracy_label">Accuracy</string>
+    <string name="location_satellites_label">Satellites</string>
+    <string name="location_updated_label">Updated</string>
+    <string name="location_datum_value">%s datum</string>
+    <string name="navigation_elevation_value">%s elevation</string>
     <string name="pref_navigation_dial_lobes" translatable="false">pref_navigation_dial_lobes</string>
     <string name="navigation_dial_shape">Dial shape</string>
     <string name="navigation_dial_shape_12">12 waves · 30°</string>

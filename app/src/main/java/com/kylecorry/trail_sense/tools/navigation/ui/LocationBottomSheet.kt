@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +59,8 @@ fun LocationSheet(
     onFormatSelected: (BuiltInCoordinateFormat) -> Unit,
     onPickFormat: (BuiltInCoordinateFormat, (BuiltInCoordinateFormat) -> Unit) -> Unit,
     onShare: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCopy: ((String) -> Unit)? = null
 ) {
     var selectedFormat by remember(initialFormat) { mutableStateOf(initialFormat) }
     var state by remember(selectedFormat) { mutableStateOf(getState(selectedFormat)) }
@@ -81,144 +83,114 @@ fun LocationSheet(
             }
         },
         onShare = onShare,
+        onCopy = onCopy?.let { copy -> { copy(state.location) } },
         modifier = modifier
     )
 }
 
+/**
+ * Where you are, as a sheet: the coordinates large and left-aligned with their format right under them, three small
+ * facts (accuracy, satellites, last fix) as tiles, the datum as a footnote, and the two things people do with a
+ * location (copy it, share it) as full buttons. One surface, no inner background.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LocationSheetContent(
     state: LocationSheetState,
     onFormatClick: () -> Unit,
     onShare: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCopy: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.screen),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Text(
+            text = stringResource(R.string.location),
+            style = MaterialTheme.typography.titleMedium,
+            color = scheme.onSurfaceVariant
+        )
+        Text(
+            text = state.location,
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+            color = scheme.onSurface,
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .testTag("location_title")
+        )
+        androidx.compose.material3.AssistChip(
+            onClick = onFormatClick,
+            label = { Text(state.coordinateFormat) },
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .testTag("location_format")
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 48.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = state.location,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.testTag("location_title")
-                    )
-                    Row(
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .heightIn(min = 48.dp)
-                            .clickable(onClick = onFormatClick)
-                            .testTag("location_format"),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = state.coordinateFormat,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .testTag("location_share")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = stringResource(R.string.share_ellipsis),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            LocationStats(state)
-
-            Row(
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .testTag("datum"),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = TrailIcons.Datum,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = state.datum,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-            }
+            state.accuracy?.let { LocationFact(it, stringResource(R.string.location_accuracy_label), Modifier.weight(1f).testTag("accuracy")) }
+            state.satellites?.let { LocationFact(it, stringResource(R.string.location_satellites_label), Modifier.weight(1f).testTag("satellites")) }
+            state.time?.let { LocationFact(it, stringResource(R.string.location_updated_label), Modifier.weight(1f).testTag("time")) }
         }
-    }
-}
-
-@Composable
-private fun LocationStats(state: LocationSheetState) {
-    val stats = listOfNotNull(
-        state.accuracy?.let { "accuracy" to it },
-        state.satellites?.let { "satellites" to it },
-        state.time?.let { "time" to it }
-    )
-
-    if (stats.isEmpty()) {
-        return
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        stats.forEach { (tag, text) ->
-            LocationStat(
-                text = text,
+        Text(
+            text = stringResource(R.string.location_datum_value, state.datum),
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .testTag("datum")
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (onCopy != null) {
+                androidx.compose.material3.FilledTonalButton(
+                    onClick = onCopy,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 56.dp)
+                ) {
+                    Icon(androidx.compose.material.icons.Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(android.R.string.copy), style = MaterialTheme.typography.titleSmall)
+                }
+            }
+            androidx.compose.material3.Button(
+                onClick = onShare,
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(tag)
-            )
+                    .heightIn(min = 56.dp)
+                    .testTag("location_share")
+            ) {
+                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.share_ellipsis).removeSuffix("…").removeSuffix("..."), style = MaterialTheme.typography.titleSmall)
+            }
         }
     }
 }
 
+/** One fact as a small tile: the value, and what it is under it. */
 @Composable
-private fun LocationStat(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
-        modifier = modifier.padding(horizontal = 4.dp)
-    )
+private fun LocationFact(value: String, label: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(value, style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
+    }
 }
 
 @Preview(showBackground = true)
@@ -229,8 +201,8 @@ private fun LocationSheetContentPreview() {
             state = LocationSheetState(
                 location = "40.7128, -74.0060",
                 coordinateFormat = "Decimal degrees",
-                accuracy = "5 m accuracy",
-                satellites = "8 satellites",
+                accuracy = "± 5 m",
+                satellites = "8",
                 time = "1 min ago",
                 datum = stringResource(R.string.wgs84)
             ),

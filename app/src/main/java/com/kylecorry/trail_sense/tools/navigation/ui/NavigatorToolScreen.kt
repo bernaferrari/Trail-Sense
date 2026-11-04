@@ -305,7 +305,10 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                     onShare = {
                         Share.shareLocation(host, gps.location, locationFormat)
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    onCopy = { text ->
+                        com.kylecorry.andromeda.clipboard.Clipboard.copy(host.requireContext(), text, host.getString(R.string.copied_to_clipboard_toast))
+                    }
                 )
             }
         }
@@ -578,7 +581,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             val accuracyStr = formatService.formatDistance(
                 Distance.meters(it).convertTo(baseDistanceUnits)
             )
-            host.getString(R.string.accuracy_distance_format, accuracyStr)
+            "± $accuracyStr"
         }
 
         val timeAgo = Duration.between(gps.eventTime, Instant.now())
@@ -586,7 +589,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             location = formatService.formatLocation(gps.location, format),
             coordinateFormat = formatService.formatCoordinateType(format),
             accuracy = accuracy,
-            satellites = host.getString(R.string.num_satellites, gps.satellites ?: 0),
+            satellites = (gps.satellites ?: 0).toString(),
             time = host.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
             datum = host.getString(R.string.wgs84)
         )
@@ -898,7 +901,15 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         declination = declinationProvider.getDeclination()
         compass.declination = declination
 
-        views.navigationTitle.subtitle = formatService.formatLocation(location)
+        // Readable at a glance: hemispheres instead of minus signs, 4 decimals (about 10 m) for decimal degrees; other
+        // formats (UTM, MGRS, DMS…) as the person chose them.
+        views.navigationTitle.subtitle = if (userPrefs.coordinateFormat == BuiltInCoordinateFormat.DecimalDegrees) {
+            val lat = "%.4f° %s".format(kotlin.math.abs(location.latitude), if (location.latitude >= 0) "N" else "S")
+            val lon = "%.4f° %s".format(kotlin.math.abs(location.longitude), if (location.longitude >= 0) "E" else "W")
+            "$lat  $lon"
+        } else {
+            formatService.formatLocation(location)
+        }
 
         views.radarCompassMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
@@ -1140,8 +1151,8 @@ private fun NavigationWhereabouts(
     speed: NavigatorDataPointState,
     modifier: Modifier = Modifier
 ) {
-    // One quiet line: coordinates · altitude (· speed while moving).
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+    // Two calm lines, Apple Compass-style: where you are, then how high (and how fast, while moving).
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = state.subtitle,
             modifier = Modifier
@@ -1150,18 +1161,28 @@ private fun NavigationWhereabouts(
                     onClick = { state.onSubtitleClick?.invoke() },
                     onLongClick = { state.onSubtitleLongClick?.invoke() }
                 )
-                .padding(horizontal = TrailSenseSpacing.xs, vertical = TrailSenseSpacing.xxs),
-            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.xxs),
+            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1
         )
-        if (altitude.title.isNotEmpty()) {
-            NavigationDot()
-            altitude.Content()
-        }
-        if (speed.title.isNotEmpty()) {
-            NavigationDot()
-            speed.Content()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (altitude.title.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.navigation_elevation_value, altitude.title),
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(TrailSenseSpacing.sm))
+                        .clickable(enabled = altitude.onClick != null) { altitude.onClick?.invoke() }
+                        .padding(horizontal = TrailSenseSpacing.xs, vertical = TrailSenseSpacing.xxs),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+            if (speed.title.isNotEmpty()) {
+                NavigationDot()
+                speed.Content()
+            }
         }
     }
 }

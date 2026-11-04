@@ -206,8 +206,9 @@ class NavigationSheetView(private val context: Context) {
                             shape = (if (facing) MaterialShapes.Cookie12Sided else (state.badgeShape?.polygon() ?: MaterialShapes.Cookie9Sided)).toShape(),
                             color = badgeContainer,
                             contentColor = badgeContent,
+                            // Sized to sit level with the close button (48 dp), not loom over the line.
                             modifier = Modifier
-                                .size(56.dp)
+                                .size(44.dp)
                                 .graphicsLayer {
                                     scaleX = badgeScale
                                     scaleY = badgeScale
@@ -218,7 +219,7 @@ class NavigationSheetView(private val context: Context) {
                                     imageVector = state.arrowIcon,
                                     contentDescription = state.bearingText,
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(22.dp)
                                         .rotate(rotation)
                                 )
                             }
@@ -277,8 +278,6 @@ class NavigationSheetView(private val context: Context) {
                     if (state.showCancel) {
                         FilledTonalIconButton(
                             onClick = ::requestCancelNavigation,
-                            // Top-aligned with the name, like a sheet's close, rather than floating mid-card.
-                            modifier = Modifier.align(Alignment.Top),
                             colors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
                                 containerColor = scheme.surfaceContainerHighest,
                                 contentColor = scheme.onSurface
