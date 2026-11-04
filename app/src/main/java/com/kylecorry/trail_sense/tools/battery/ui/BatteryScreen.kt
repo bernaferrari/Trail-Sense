@@ -522,11 +522,6 @@ private fun BatteryScreen(
                 }
             }
         }
-
-        // Clear of the gesture bar.
-        item("bottom_inset") {
-            Spacer(Modifier.navigationBarsPadding())
-        }
     }
 }
 
