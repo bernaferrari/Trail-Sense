@@ -299,7 +299,7 @@ fun TrailSenseCameraUnavailable(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scheme = MaterialTheme.colorScheme
-    val bracket = scheme.primary.copy(alpha = 0.55f)
+    val bracket = scheme.primary
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -341,9 +341,9 @@ fun TrailSenseCameraUnavailable(
             TrailSenseShapeBadge(
                 icon = Icons.Rounded.NoPhotography,
                 shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
-                size = 150.dp,
-                containerColor = scheme.secondaryContainer,
-                contentColor = scheme.onSecondaryContainer
+                size = 172.dp,
+                containerColor = scheme.primaryContainer,
+                contentColor = scheme.onPrimaryContainer
             )
         }
         Spacer(Modifier.size(TrailSenseSpacing.xl))
@@ -360,17 +360,18 @@ fun TrailSenseCameraUnavailable(
             color = scheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.size(TrailSenseSpacing.xl))
+        Spacer(Modifier.weight(1f))
         androidx.compose.material3.Button(
             onClick = {
                 com.kylecorry.andromeda.core.tryOrNothing {
                     context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
                 }
             },
-            modifier = Modifier.heightIn(min = 56.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
         ) {
             Text(stringResource(R.string.open_settings), style = MaterialTheme.typography.titleMedium)
         }
-        Spacer(Modifier.weight(1f))
     }
 }

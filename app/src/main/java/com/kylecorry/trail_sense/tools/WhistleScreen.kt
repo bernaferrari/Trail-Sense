@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -165,7 +167,7 @@ fun WhistleScreen(
                 context.getString(R.string.sos),
                 Signals.sos(Duration.ofMillis(400)) + listOf(Signal.off(Duration.ofMillis(400 * 7))),
                 loop = true,
-                icon = TrailIcons.WhistleSos,
+                icon = TrailIcons.ToolWhistle,
                 shape = MaterialShapes.SoftBurst
             ),
             WhistleSignal(
@@ -255,7 +257,10 @@ fun WhistleScreen(
                 stringResource(R.string.whistle_emergency) to emergency,
                 stringResource(R.string.whistle_signals) to calls
             ).forEach { (title, group) ->
-                TrailSenseRowGroup(title = title) {
+                TrailSenseRowGroup(
+                    title = title,
+                    footer = if (group === calls) stringResource(R.string.whistle_legend) else null
+                ) {
                     group.forEach { signal ->
                         row { position ->
                             WhistleSignalRow(
@@ -287,21 +292,29 @@ private fun WhistleSignalRow(
 ) {
     val scheme = MaterialTheme.colorScheme
     val container by animateColorAsState(
-        if (playing) scheme.primaryContainer else scheme.surfaceContainerLow,
+        when {
+            playing -> scheme.primaryContainer
+            signal.loop -> scheme.errorContainer
+            else -> scheme.surfaceContainerLow
+        },
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "signalRow"
     )
     val badgeColor = when {
         playing -> scheme.primary
-        signal.loop -> scheme.errorContainer
+        signal.loop -> scheme.error
         else -> scheme.secondaryContainer
     }
     val badgeContent = when {
         playing -> scheme.onPrimary
-        signal.loop -> scheme.onErrorContainer
+        signal.loop -> scheme.onError
         else -> scheme.onSecondaryContainer
     }
-    val ink = if (playing) scheme.onPrimaryContainer else scheme.onSurface
+    val ink = when {
+        playing -> scheme.onPrimaryContainer
+        signal.loop -> scheme.onErrorContainer
+        else -> scheme.onSurface
+    }
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -334,7 +347,7 @@ private fun WhistleSignalRow(
                 )
             }
             Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(
+            TrailSenseValueChip(
                 text = if (playing) {
                     stringResource(R.string.whistle_playing)
                 } else if (signal.loop) {
@@ -342,8 +355,12 @@ private fun WhistleSignalRow(
                 } else {
                     stringResource(R.string.whistle_once)
                 },
-                style = MaterialTheme.typography.labelLarge,
-                color = if (playing) scheme.primary else scheme.onSurfaceVariant
+                tone = when {
+                    playing -> TrailSenseTone.Primary
+                    signal.loop -> TrailSenseTone.Error
+                    else -> TrailSenseTone.Secondary
+                },
+                strong = playing
             )
         }
     }

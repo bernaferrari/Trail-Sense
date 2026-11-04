@@ -442,6 +442,21 @@ private fun PanelSideView(
             StrokeCap.Round,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
         )
+        // How far the panel still has to swing: a dashed arc from the live panel to the target.
+        val arcRadius = length * 0.32f
+        drawArc(
+            color = color.copy(alpha = 0.7f),
+            startAngle = tilt - 180f,
+            sweepAngle = targetTilt - tilt,
+            useCenter = false,
+            topLeft = Offset(pivot.x - arcRadius, pivot.y - arcRadius),
+            size = androidx.compose.ui.geometry.Size(arcRadius * 2, arcRadius * 2),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = StrokeCap.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 6.dp.toPx()))
+            )
+        )
         drawLine(ink, pivot, Offset(pivot.x, ground), 4.dp.toPx(), StrokeCap.Round)
         drawLine(color, start(tilt), end(tilt), 10.dp.toPx(), StrokeCap.Round)
         drawCircle(ink, 5.dp.toPx(), pivot)
@@ -534,8 +549,8 @@ private fun SolarPanelReadout(
 }
 
 /**
- * One axis: the target large, where the phone is now beside it, a gauge that fills as the two meet, and a chip that
- * says which way to move ("Tilt up 12°"). Aligned turns the card to the good tone with a check badge.
+ * One axis: what to do is the headline ("Tilt up 65°", or "Aligned"), the target and where the phone is now sit
+ * under it, a gauge fills as the two meet, and a shaped arrow badge points the way. Aligned turns the card green.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -596,21 +611,24 @@ private fun SolarReadoutCard(
                         style = MaterialTheme.typography.titleSmall,
                         color = if (isComplete) contentColor else scheme.primary
                     )
-                    Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = if (isComplete) stringResource(R.string.solar_aligned) else move,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
                         Text(
-                            text = desired,
+                            text = stringResource(R.string.solar_target, desired),
                             modifier = Modifier.testTag(desiredTag),
-                            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                            color = contentColor.copy(alpha = 0.75f)
                         )
-                        Spacer(Modifier.width(TrailSenseSpacing.md))
                         Text(
                             text = stringResource(R.string.solar_now, current),
-                            modifier = Modifier
-                                .padding(bottom = TrailSenseSpacing.xs)
-                                .testTag(currentTag),
-                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                            color = contentColor.copy(alpha = 0.72f)
+                            modifier = Modifier.testTag(currentTag),
+                            style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                            color = contentColor.copy(alpha = 0.75f)
                         )
                     }
                 }
@@ -628,18 +646,6 @@ private fun SolarReadoutCard(
                 color = accent,
                 trackColor = contentColor.copy(alpha = 0.12f)
             )
-            Surface(
-                shape = CircleShape,
-                color = if (isComplete) status.good else scheme.secondaryContainer,
-                contentColor = if (isComplete) status.goodContainer else scheme.onSecondaryContainer
-            ) {
-                Text(
-                    text = if (isComplete) stringResource(R.string.solar_aligned) else move,
-                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-                )
-            }
         }
     }
 }

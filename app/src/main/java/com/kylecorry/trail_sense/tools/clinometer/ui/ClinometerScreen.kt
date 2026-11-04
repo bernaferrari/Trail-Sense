@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
@@ -672,13 +673,29 @@ private fun ClinometerReading(
     state: ClinometerTitleState,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    ) {
+    Column(
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg),
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
+        Text(
+            stringResource(R.string.clinometer_incline),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TrailSenseReading(value = state.title.ifEmpty { "--" }, style = MaterialTheme.typography.displayMedium)
+            TrailSenseReading(
+                value = state.title.ifEmpty { stringResource(R.string.dash) },
+                style = MaterialTheme.typography.displayMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.weight(1f, fill = false)
+            )
             AnimatedVisibility(
                 visible = state.isLocked,
                 enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
@@ -700,11 +717,11 @@ private fun ClinometerReading(
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Text(
-                    text = state.subtitle.ifEmpty { "--" },
+                    text = state.subtitle.ifEmpty { stringResource(R.string.dash) },
                     style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -714,8 +731,8 @@ private fun ClinometerReading(
             AnimatedVisibility(visible = state.isLocked) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
                 ) {
                     Text(
                         text = stringResource(R.string.clinometer_locked),
@@ -726,6 +743,7 @@ private fun ClinometerReading(
                 }
             }
         }
+    }
     }
 }
 
@@ -751,6 +769,7 @@ private fun ClinometerHost(
                 .pointerInteropFilter { event ->
                     views.onTouch?.invoke(event) ?: false
                 }
+                .navigationBarsPadding()
                 .padding(
                     start = TrailSenseSpacing.lg,
                     end = TrailSenseSpacing.lg,

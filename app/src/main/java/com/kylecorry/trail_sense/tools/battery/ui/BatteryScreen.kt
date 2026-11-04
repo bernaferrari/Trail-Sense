@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -465,6 +466,7 @@ private fun BatteryScreen(
         item(key = "hero") {
             Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 BatteryHeroCard(
+                    metrics = metrics,
                     percent = percent,
                     isCharging = isCharging,
                     isLow = isLow,
@@ -473,10 +475,7 @@ private fun BatteryScreen(
                     deepSleepText = deepSleepText,
                     position = TrailSenseGroupPosition.Single
                 )
-                if (metrics.isNotEmpty()) {
-                    // A lone tile spans the row; two or three share it.
-                    TrailSenseStatGrid(stats = metrics, columns = metrics.size.coerceIn(1, 3))
-                }
+
             }
         }
 
@@ -535,6 +534,7 @@ private fun BatteryScreen(
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BatteryHeroCard(
+    metrics: List<TrailSenseStat>,
     percent: Float,
     isCharging: Boolean,
     isLow: Boolean,
@@ -549,6 +549,7 @@ private fun BatteryHeroCard(
         else -> TrailSenseTone.Primary
     }
     val colors = trailSenseToneColors(tone)
+    val scheme = MaterialTheme.colorScheme
     val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
     val container by animateColorAsState(colors.container, effects, label = "batteryContainer")
     val content by animateColorAsState(colors.content, effects, label = "batteryContent")
@@ -643,6 +644,39 @@ private fun BatteryHeroCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = content.copy(alpha = 0.75f)
                     )
+                }
+                // Time, capacity and health ride in the hero as frosted tiles instead of a crowded card under it.
+                if (metrics.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.padding(top = TrailSenseSpacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                    ) {
+                        metrics.forEachIndexed { index, stat ->
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = trailSenseGridCellShape(index, metrics.size, 0, 1),
+                                color = scheme.surfaceContainerLowest.copy(alpha = 0.6f),
+                                contentColor = content
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+                                ) {
+                                    Text(
+                                        stat.label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = content.copy(alpha = 0.78f),
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        stat.value,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -803,13 +837,14 @@ private fun formatFrequency(frequency: Duration, formatter: FormatService): Stri
 
 @Composable
 private fun formatBatteryUsage(usage: BatteryUsage): String {
+    // Short, so the row stays on one line; the badge already carries the colour of the cost.
     val usageString = when (usage) {
         BatteryUsage.Unknown -> stringResource(R.string.unknown)
         BatteryUsage.Low -> stringResource(R.string.low)
         BatteryUsage.Moderate -> stringResource(R.string.moderate)
         BatteryUsage.High -> stringResource(R.string.high)
     }
-    return stringResource(R.string.battery_usage, usageString)
+    return stringResource(R.string.battery_use_short, usageString)
 }
 
 private fun getBatteryUsage(service: RunningService): BatteryUsage {
