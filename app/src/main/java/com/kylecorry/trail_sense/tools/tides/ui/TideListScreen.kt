@@ -1,7 +1,14 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -221,6 +228,8 @@ private fun TideListScreen(
                 onClick = onCreate,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.tide_table)) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_btn")
             )
         }
@@ -229,18 +238,11 @@ private fun TideListScreen(
 
         if (tides.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
-                    icon = Icons.Rounded.Waves,
+                PlacesEmptyState(
+                    icon = TrailIcons.TideTable,
                     title = stringResource(R.string.no_tides),
                     description = stringResource(R.string.tides_empty_description),
-                    action = {
-                        FilledTonalButton(onClick = onCreate) {
-                            Text(stringResource(R.string.tide_table))
-                        }
-                    },
-                    modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
-                        .testTag("tide_empty_text")
+                    modifier = Modifier.testTag("tide_empty_text")
                 )
             }
             return@TrailSensePage
@@ -293,7 +295,23 @@ private fun TideTableRow(
         modifier = Modifier.testTag("tide_table_item"),
         onClick = { onSelect(tide) },
         leading = {
-            TidesIconWell(rememberVectorPainter(getTideIcon(if (tide.isVisible) tideType else null)))
+            val scheme = MaterialTheme.colorScheme
+            val type = if (tide.isVisible) tideType else null
+            PlacesBadge(
+                containerColor = when (type) {
+                    TideType.High -> scheme.primaryContainer
+                    TideType.Low -> scheme.tertiaryContainer
+                    null -> scheme.surfaceContainerHighest
+                },
+                contentColor = when (type) {
+                    TideType.High -> scheme.onPrimaryContainer
+                    TideType.Low -> scheme.onTertiaryContainer
+                    null -> scheme.onSurfaceVariant
+                },
+                icon = getTideIcon(type),
+                shape = if (tide.isEditable) MaterialShapes.Cookie6Sided.toShape() else MaterialShapes.Sunny.toShape(),
+                modifier = Modifier.padding(start = TrailSenseSpacing.sm)
+            )
         },
         trailing = if (tide.isEditable) {
             {
@@ -316,7 +334,7 @@ private fun TideTableRow(
         Text(
             text = getTideTitle(tide, formatter),
             modifier = Modifier.testTag("tide_table_title"),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

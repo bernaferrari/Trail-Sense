@@ -1,7 +1,25 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -345,96 +363,87 @@ private fun BeaconDetailsScreen(
         if (beacon == null) return@TrailSensePage
 
         item(key = "hero") {
-            TrailSenseHeroCard(
+            val badgeColor = ComposeColor(beacon.color)
+            TrailSenseSpotlight(
                 modifier = Modifier.testTag("beacon_distance"),
                 eyebrow = stringResource(R.string.distance),
                 title = distance.ifBlank { placeholder },
+                titleStyle = MaterialTheme.typography.displaySmall,
                 supportingText = direction,
-                icon = rememberVectorPainter(beacon.icon?.icon ?: TrailIcons.Location),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                tone = TrailSenseTone.Primary,
+                badge = {
+                    TrailSenseShapeBadge(
+                        icon = beacon.icon?.icon ?: TrailIcons.Location,
+                        shape = MaterialShapes.Cookie9Sided.toShape(),
+                        size = 64.dp,
+                        containerColor = badgeColor,
+                        contentColor = if (badgeColor.luminance() > 0.5f) ComposeColor.Black else ComposeColor.White
+                    )
+                },
+                actions = listOf(
+                    TrailSenseSpotlightAction(
+                        stringResource(R.string.navigate),
+                        TrailIcons.NavigationArrow,
+                        onNavigate
+                    )
+                )
             ) {
                 if (coordinates.isNotBlank()) {
-                    SelectionContainer {
-                        Text(
-                            text = coordinates,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.82f)
-                        )
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                rememberVectorPainter(TrailIcons.Location),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(TrailSenseSpacing.sm))
+                            SelectionContainer {
+                                Text(
+                                    text = coordinates,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum")
+                                )
+                            }
+                        }
                     }
-                }
-                Button(
-                    onClick = onNavigate,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                        .padding(top = TrailSenseSpacing.xs)
-                ) {
-                    Icon(
-                        painter = rememberVectorPainter(TrailIcons.NavigationArrow),
-                        contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
-                    )
-                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(stringResource(R.string.navigate))
                 }
             }
         }
 
-        trailSenseSection(key = "conditions", title = detailsTitle) {
-            altitude?.let {
-                row { position ->
-                    DetailRow(
-                        tag = "beacon_altitude",
-                        title = it,
-                        description = stringResource(R.string.elevation),
-                        icon = TrailIcons.Altitude,
-                        position = position
-                    )
-                }
-            }
-            row { position ->
-                DetailRow(
-                    tag = "beacon_temperature",
-                    title = temperature.ifBlank { placeholder },
-                    description = stringResource(R.string.temperature_high_low),
-                    icon = TrailIcons.TemperatureRange,
-                    position = position,
+        item(key = "conditions") {
+            val tiles = listOfNotNull(
+                altitude?.let {
+                    BeaconTile("beacon_altitude", stringResource(R.string.elevation), it, TrailIcons.Altitude)
+                },
+                BeaconTile(
+                    "beacon_temperature",
+                    stringResource(R.string.temperature_high_low),
+                    temperature.ifBlank { placeholder },
+                    TrailIcons.TemperatureRange,
                     onClick = onTemperatureClick
-                )
-            }
-            sunrise?.let {
-                row { position ->
-                    DetailRow(
-                        tag = "beacon_sunrise",
-                        title = it,
-                        description = stringResource(R.string.sunrise),
-                        icon = TrailIcons.SunriseNotification,
-                        position = position
-                    )
+                ),
+                sunrise?.let {
+                    BeaconTile("beacon_sunrise", stringResource(R.string.sunrise), it, TrailIcons.SunriseNotification, warm = true)
+                },
+                sunset?.let {
+                    BeaconTile("beacon_sunset", stringResource(R.string.sunset), it, TrailIcons.SunsetNotification, warm = true)
+                },
+                tide?.let {
+                    BeaconTile("beacon_tide", stringResource(R.string.tide), it, tideIcon)
                 }
-            }
-            sunset?.let {
-                row { position ->
-                    DetailRow(
-                        tag = "beacon_sunset",
-                        title = it,
-                        description = stringResource(R.string.sunset),
-                        icon = TrailIcons.SunsetNotification,
-                        position = position
-                    )
-                }
-            }
-            tide?.let {
-                row { position ->
-                    DetailRow(
-                        tag = "beacon_tide",
-                        title = it,
-                        description = stringResource(R.string.tide),
-                        icon = tideIcon,
-                        position = position
-                    )
-                }
+            )
+            Column {
+                TrailSenseGroupHeader(detailsTitle)
+                BeaconTileGrid(tiles)
             }
         }
 
@@ -513,23 +522,72 @@ private fun BeaconDetailsActions(
     }
 }
 
+private data class BeaconTile(
+    val tag: String,
+    val label: String,
+    val value: String,
+    val icon: ImageVector,
+    val warm: Boolean = false,
+    val onClick: (() -> Unit)? = null
+)
+
+/**
+ * Conditions at the beacon as connected value tiles, two to a row: sun times warm in tertiary, the rest quiet. Each
+ * tile keeps its test tag.
+ */
 @Composable
-private fun DetailRow(
-    tag: String,
-    title: String,
-    description: String,
-    icon: ImageVector,
-    position: TrailSenseGroupPosition,
-    onClick: (() -> Unit)? = null
-) {
-    TrailSenseListItem(
-        title = title,
-        subtitle = description,
-        icon = rememberVectorPainter(icon),
-        position = position,
-        onClick = onClick,
-        modifier = Modifier.testTag(tag)
-    )
+private fun BeaconTileGrid(tiles: List<BeaconTile>) {
+    val rows = tiles.chunked(2)
+    val scheme = MaterialTheme.colorScheme
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        rows.forEachIndexed { rowIndex, row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                row.forEachIndexed { columnIndex, tile ->
+                    val container = if (tile.warm) scheme.tertiaryContainer else scheme.surfaceContainerLow
+                    val content = if (tile.warm) scheme.onTertiaryContainer else scheme.onSurface
+                    val shape = trailSenseGridCellShape(columnIndex, if (row.size == 1 && rows.size > 1) 2 else row.size, rowIndex, rows.size)
+                    val body: @Composable () -> Unit = {
+                        Column(
+                            Modifier
+                                .heightIn(min = 96.dp)
+                                .padding(TrailSenseSpacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                        ) {
+                            Icon(
+                                rememberVectorPainter(tile.icon),
+                                contentDescription = null,
+                                tint = if (tile.warm) scheme.tertiary else scheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                tile.value,
+                                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                            Text(
+                                tile.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = content.copy(alpha = 0.75f),
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    val tileModifier = Modifier
+                        .weight(1f)
+                        .testTag(tile.tag)
+                    if (tile.onClick != null) {
+                        Surface(onClick = tile.onClick, modifier = tileModifier, shape = shape, color = container, contentColor = content) { body() }
+                    } else {
+                        Surface(modifier = tileModifier, shape = shape, color = container, contentColor = content) { body() }
+                    }
+                }
+                if (row.size == 1 && rows.size > 1) {
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)

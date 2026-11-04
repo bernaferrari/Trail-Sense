@@ -69,6 +69,7 @@ internal fun TidesGroupRow(
     onLongClick: (() -> Unit)? = null,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -86,7 +87,7 @@ internal fun TidesGroupRow(
                 scaleY = scale
             },
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = containerColor
     ) {
         Row(
             modifier = Modifier

@@ -1,5 +1,28 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
@@ -615,110 +638,212 @@ private fun OfflineMapListScreen(
     onMapGroupAction: (MapGroup, MapGroupAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                OfflineMapListHeader(
-                    title = title,
+    val listState = rememberLazyListState()
+    LaunchedEffect(resetKey) {
+        listState.scrollToItem(0)
+    }
+    val currentMap = remember(items) { items.firstOrNull { it !is MapGroup && gpsLocationOnMap(it) } }
+
+    Box(modifier = modifier.testTag("map_list_title")) {
+        TrailSensePage(
+            title = title,
+            backLabel = stringResource(R.string.back),
+            state = listState,
+            contentPadding = PaddingValues(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.sm,
+                bottom = 112.dp
+            ),
+            actions = {
+                OfflineMapListMenu(
                     sortMenuText = sortMenuText,
                     showSort = !isEmpty,
-                    onToolbarAction = onToolbarAction,
-                    modifier = Modifier.fillMaxWidth()
+                    onToolbarAction = onToolbarAction
                 )
-                if (!isEmpty) {
-                    TrailSenseSearchBar(
-                        value = searchText,
-                        onValueChange = onSearchChange,
-                        placeholder = stringResource(R.string.search),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = TrailSenseSpacing.screen)
-                            .testTag("searchbox")
+            },
+            floatingActionButton = {
+                OfflineMapCreateButton(
+                    isOpen = isCreateMenuOpen,
+                    enabled = isCreateEnabled,
+                    onOpenChange = onCreateMenuOpenChange,
+                    onAction = onCreateAction
+                )
+            }
+        ) {
+            if (isEmpty) {
+                item(key = "empty") {
+                    PlacesEmptyState(
+                        icon = TrailIcons.Maps,
+                        title = stringResource(R.string.no_offline_maps),
+                        description = stringResource(R.string.map_empty_description),
+                        modifier = Modifier.testTag("map_empty_text"),
+                        extra = { MapSourceHints() }
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(top = TrailSenseSpacing.lg)
-                ) {
-                    if (isEmpty) {
-                        TrailSenseEmptyState(
-                            icon = TrailSenseIcons.Filled.Map,
-                            title = stringResource(R.string.no_offline_maps),
-                            description = stringResource(R.string.map_empty_description),
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .testTag("map_empty_text")
+                return@TrailSensePage
+            }
+
+            if (currentMap != null && searchText.isBlank()) {
+                item(key = "current") {
+                    TrailSenseSpotlight(
+                        eyebrow = stringResource(R.string.places_maps_you_are_on),
+                        title = currentMap.name,
+                        titleStyle = MaterialTheme.typography.headlineMedium,
+                        supportingText = stringResource(
+                            if (currentMap is PhotoMap) R.string.map_type_photo else R.string.map_type_trail
+                        ),
+                        tone = TrailSenseTone.Primary,
+                        badge = {
+                            TrailSenseShapeBadge(
+                                icon = TrailIcons.Location,
+                                shape = MaterialShapes.Sunny.toShape(),
+                                size = 64.dp
+                            )
+                        },
+                        actions = listOf(
+                            TrailSenseSpotlightAction(stringResource(R.string.open), TrailIcons.Maps) {
+                                when (currentMap) {
+                                    is PhotoMap -> onPhotoMapAction(currentMap, MapAction.View)
+                                    is VectorMap -> onVectorMapAction(currentMap, VectorMapAction.View)
+                                }
+                            }
                         )
-                    } else {
-                        OfflineMapList(
-                            items = items,
-                            resetKey = resetKey,
-                            gpsLocationOnMap = gpsLocationOnMap,
-                            onPhotoMapAction = onPhotoMapAction,
-                            onVectorMapAction = onVectorMapAction,
-                            onMapGroupAction = onMapGroupAction,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
+                    )
                 }
             }
-            OfflineMapCreateButton(
-                isOpen = isCreateMenuOpen,
-                enabled = isCreateEnabled,
-                onOpenChange = onCreateMenuOpenChange,
-                onAction = onCreateAction,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(TrailSenseSpacing.screen)
-            )
+
+            item(key = "search") {
+                TrailSenseSearchBar(
+                    value = searchText,
+                    onValueChange = onSearchChange,
+                    placeholder = stringResource(R.string.search),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("searchbox")
+                )
+            }
+
+            if (items.isEmpty()) {
+                item(key = "no_results") {
+                    PlacesEmptyState(
+                        icon = TrailIcons.Search,
+                        title = stringResource(R.string.no_results)
+                    )
+                }
+            }
+
+            placesGroup(
+                key = "maps",
+                items = items,
+                itemKey = { item ->
+                    when (item) {
+                        is PhotoMap -> "p${item.id}"
+                        is VectorMap -> "v${item.id}"
+                        is MapGroup -> "g${item.id}"
+                        else -> "o${item.id}"
+                    }
+                }
+            ) { item, position, rowModifier ->
+                val tagged = if (position.isFirst) rowModifier.testTag("map_list") else rowModifier
+                when (item) {
+                    is PhotoMap -> PhotoMapRow(
+                        map = item,
+                        onMap = gpsLocationOnMap(item),
+                        position = position,
+                        modifier = tagged,
+                        onAction = { onPhotoMapAction(item, it) }
+                    )
+
+                    is VectorMap -> VectorMapRow(
+                        map = item,
+                        onMap = gpsLocationOnMap(item),
+                        position = position,
+                        modifier = tagged,
+                        onAction = { onVectorMapAction(item, it) }
+                    )
+
+                    is MapGroup -> MapGroupRow(
+                        group = item,
+                        position = position,
+                        modifier = tagged,
+                        onAction = { onMapGroupAction(item, it) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Under the empty state: the three kinds of map you can add, as small shaped marks, so the add button makes sense. */
+@Composable
+private fun MapSourceHints() {
+    val scheme = MaterialTheme.colorScheme
+    Spacer(Modifier.height(TrailSenseSpacing.xl))
+    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)) {
+        listOf(
+            Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, MaterialShapes.Cookie6Sided),
+            Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, MaterialShapes.Sunny),
+            Triple(R.string.blank, TrailSenseIcons.Filled.Draw, MaterialShapes.Clover4Leaf)
+        ).forEachIndexed { index, (label, icon, shape) ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                PlacesBadge(
+                    containerColor = when (index) {
+                        0 -> scheme.secondaryContainer
+                        1 -> scheme.tertiaryContainer
+                        else -> scheme.primaryContainer
+                    },
+                    contentColor = when (index) {
+                        0 -> scheme.onSecondaryContainer
+                        1 -> scheme.onTertiaryContainer
+                        else -> scheme.onPrimaryContainer
+                    },
+                    icon = icon,
+                    shape = shape.toShape(),
+                    size = 52.dp
+                )
+                Spacer(Modifier.height(TrailSenseSpacing.sm))
+                Text(
+                    stringResource(label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = scheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun OfflineMapListHeader(
-    title: String,
+private fun OfflineMapListMenu(
     sortMenuText: String,
     showSort: Boolean,
-    onToolbarAction: (OfflineMapToolbarAction) -> Unit,
-    modifier: Modifier = Modifier
+    onToolbarAction: (OfflineMapToolbarAction) -> Unit
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-    TrailSenseTopBar(
-        title = title,
-        modifier = modifier.testTag("map_list_title"),
-        backLabel = stringResource(R.string.back),
-        actions = {
-            if (showSort) Box {
-                IconButton(
-                    onClick = { isMenuOpen = true },
-                    modifier = Modifier.testTag("map_list_menu_btn")
-                ) {
-                    Icon(
-                        imageVector = TrailSenseIcons.Filled.MoreVert,
-                        contentDescription = stringResource(R.string.sort)
-                    )
-                }
-                DropdownMenu(
-                    expanded = isMenuOpen,
-                    onDismissRequest = { isMenuOpen = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(sortMenuText) },
-                        onClick = {
-                            isMenuOpen = false
-                            onToolbarAction(OfflineMapToolbarAction.Sort)
-                        }
-                    )
-                }
-            }
+    if (showSort) Box {
+        IconButton(
+            onClick = { isMenuOpen = true },
+            modifier = Modifier.testTag("map_list_menu_btn")
+        ) {
+            Icon(
+                imageVector = TrailSenseIcons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.sort)
+            )
         }
-    )
+        DropdownMenu(
+            expanded = isMenuOpen,
+            onDismissRequest = { isMenuOpen = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(sortMenuText) },
+                leadingIcon = { Icon(TrailIcons.SortAscending, contentDescription = null) },
+                onClick = {
+                    isMenuOpen = false
+                    onToolbarAction(OfflineMapToolbarAction.Sort)
+                }
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -747,6 +872,8 @@ private fun OfflineMapCreateButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .testTag("add_btn"),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             icon = {
                 Icon(
                     imageVector = if (isOpen) {
@@ -780,22 +907,34 @@ private fun OfflineMapCreateSheet(
                 vertical = TrailSenseSpacing.md
             )
         )
-        OfflineMapCreateMenuItem(
-            R.string.map_file, TrailSenseIcons.Filled.FileOpen,
-            onAction, OfflineMapCreateAction.ImportFile
+        val entries = listOf(
+            Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
+            Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, OfflineMapCreateAction.ImportCamera),
+            Triple(R.string.blank, TrailSenseIcons.Filled.Draw, OfflineMapCreateAction.CreateBlank),
+            Triple(R.string.group, TrailSenseIcons.Filled.Folder, OfflineMapCreateAction.CreateGroup)
         )
-        OfflineMapCreateMenuItem(
-            R.string.camera, TrailSenseIcons.Filled.PhotoCamera,
-            onAction, OfflineMapCreateAction.ImportCamera
-        )
-        OfflineMapCreateMenuItem(
-            R.string.blank, TrailSenseIcons.Filled.Draw,
-            onAction, OfflineMapCreateAction.CreateBlank
-        )
-        OfflineMapCreateMenuItem(
-            R.string.group, TrailSenseIcons.Filled.Folder,
-            onAction, OfflineMapCreateAction.CreateGroup
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            entries.forEachIndexed { index, (label, icon, action) ->
+                PlacesRow(
+                    title = stringResource(label),
+                    position = TrailSenseGroupPosition.at(index, entries.size),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    leading = {
+                        PlacesBadge(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            icon = icon,
+                            shape = MaterialShapes.Cookie6Sided.toShape(),
+                            size = 44.dp
+                        )
+                    },
+                    onClick = { onAction(action) }
+                )
+            }
+        }
         androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.xl))
     }
 }
@@ -819,77 +958,32 @@ private fun OfflineMapCreateMenuItem(
 }
 
 @Composable
-private fun OfflineMapList(
-    items: List<IMap>,
-    resetKey: Int,
-    gpsLocationOnMap: (IMap) -> Boolean,
-    onPhotoMapAction: (PhotoMap, MapAction) -> Unit,
-    onVectorMapAction: (VectorMap, VectorMapAction) -> Unit,
-    onMapGroupAction: (MapGroup, MapGroupAction) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val listState = rememberLazyListState()
-
-    LaunchedEffect(resetKey) {
-        listState.scrollToItem(0)
-    }
-
-    LazyColumn(
-        state = listState,
-        modifier = modifier.testTag("map_list")
-    ) {
-        items(items, key = { item ->
-            when (item) {
-                is PhotoMap -> item.id
-                is VectorMap -> item.id + 10000
-                is MapGroup -> -item.id
-                else -> item.id
-            }
-        }) { item ->
-            when (item) {
-                is PhotoMap -> PhotoMapRow(
-                    map = item,
-                    onMap = gpsLocationOnMap(item),
-                    onAction = { onPhotoMapAction(item, it) }
-                )
-
-                is VectorMap -> VectorMapRow(
-                    map = item,
-                    onMap = gpsLocationOnMap(item),
-                    onAction = { onVectorMapAction(item, it) }
-                )
-
-                is MapGroup -> MapGroupRow(
-                    group = item,
-                    onAction = { onMapGroupAction(item, it) }
-                )
-            }
-            TrailSenseDivider()
-        }
-    }
-}
-
-@Composable
 private fun PhotoMapRow(
     map: PhotoMap,
     onMap: Boolean,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onAction: (MapAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val formatter = getAppService<FormatService>()
     val subtitle = formatter.join(
+        stringResource(R.string.map_type_photo),
         map.createdOn?.let { formatter.formatDate(it.toZonedDateTime(), includeWeekDay = false) },
-        formatter.formatFileSize(map.fileSizeBytes),
         separator = FormatService.Separator.Dot
     )
 
-    TrailSenseListItem(
+    PlacesRow(
         title = map.name,
-        subtitle = mapTypeSubtitle(subtitle, R.string.map_type_photo, onMap),
-        icon = rememberVectorPainter(TrailIcons.Maps),
-        iconTint = Color(AppColor.Gray.color),
+        subtitle = subtitle,
+        position = position,
+        modifier = modifier,
+        dimmed = !map.visible,
+        leading = { MapBadge(icon = TrailIcons.PhotoMaps, onMap = onMap, photo = true) },
+        value = if (onMap) stringResource(R.string.on_map) else formatter.formatFileSize(map.fileSizeBytes),
+        valueColor = if (onMap) trailSenseStatusColors().good else MaterialTheme.colorScheme.onSurfaceVariant,
         onClick = { onAction(MapAction.View) },
-        trailing = {
+        actions = {
             MapVisibilityButton(
                 visible = map.visible,
                 tag = "map_visibility_toggle_${map.name}",
@@ -901,9 +995,28 @@ private fun PhotoMapRow(
                 onMenuOpenChange = { menuOpen = it },
                 onAction = onAction
             )
+        }
+    )
+}
+
+/** A map's leading mark: photo maps on a soft cookie, trail maps on a sharper one; green while you're on it. */
+@Composable
+private fun MapBadge(icon: ImageVector, onMap: Boolean, photo: Boolean) {
+    val scheme = MaterialTheme.colorScheme
+    val status = trailSenseStatusColors()
+    PlacesBadge(
+        containerColor = when {
+            onMap -> status.goodContainer
+            photo -> scheme.tertiaryContainer
+            else -> scheme.primaryContainer
         },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+        contentColor = when {
+            onMap -> status.onGoodContainer
+            photo -> scheme.onTertiaryContainer
+            else -> scheme.onPrimaryContainer
+        },
+        icon = icon,
+        shape = if (photo) MaterialShapes.Cookie6Sided.toShape() else MaterialShapes.Cookie9Sided.toShape()
     )
 }
 
@@ -961,6 +1074,8 @@ private fun PhotoMapMenuItem(
 private fun VectorMapRow(
     map: VectorMap,
     onMap: Boolean,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onAction: (VectorMapAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -968,20 +1083,32 @@ private fun VectorMapRow(
     val externalLabel = if (map.isExternal) stringResource(R.string.map_external) else null
     val missingLabel = if (!map.isAvailable) stringResource(R.string.map_file_missing) else null
     val subtitle = formatter.join(
+        stringResource(R.string.map_type_trail),
         formatter.formatDate(map.createdOn.toZonedDateTime(), includeWeekDay = false),
-        formatter.formatFileSize(map.sizeBytes),
         externalLabel,
         missingLabel,
         separator = FormatService.Separator.Dot
     )
 
-    TrailSenseListItem(
+    PlacesRow(
         title = map.name,
-        subtitle = mapTypeSubtitle(subtitle, R.string.map_type_trail, onMap),
-        icon = rememberVectorPainter(TrailIcons.Maps),
-        iconTint = Color(AppColor.Gray.color),
+        subtitle = subtitle,
+        position = position,
+        modifier = modifier,
+        dimmed = !map.visible || !map.isAvailable,
+        leading = { MapBadge(icon = TrailIcons.Maps, onMap = onMap, photo = false) },
+        value = when {
+            !map.isAvailable -> stringResource(R.string.map_file_missing)
+            onMap -> stringResource(R.string.on_map)
+            else -> formatter.formatFileSize(map.sizeBytes)
+        },
+        valueColor = when {
+            !map.isAvailable -> MaterialTheme.colorScheme.error
+            onMap -> trailSenseStatusColors().good
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        },
         onClick = { onAction(VectorMapAction.View) },
-        trailing = {
+        actions = {
             MapVisibilityButton(
                 visible = map.visible,
                 tag = "map_visibility_toggle_${map.name}",
@@ -993,9 +1120,7 @@ private fun VectorMapRow(
                 onMenuOpenChange = { menuOpen = it },
                 onAction = onAction
             )
-        },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+        }
     )
 }
 
@@ -1080,18 +1205,28 @@ private fun MapVisibilityButton(
 @Composable
 private fun MapGroupRow(
     group: MapGroup,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onAction: (MapGroupAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val count = group.count ?: 0
 
-    TrailSenseListItem(
+    PlacesRow(
         title = group.name,
-        subtitle = stringResource(R.plurals.map_group_summary, count, count),
-        icon = rememberVectorPainter(TrailIcons.MapGroup),
-        iconTint = Color(AppColor.Gray.color),
+        subtitle = pluralStringResource(R.plurals.map_group_summary, count, count),
+        position = position,
+        modifier = modifier,
+        leading = {
+            PlacesBadge(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                text = count.toString(),
+                shape = MaterialShapes.Clover4Leaf.toShape()
+            )
+        },
         onClick = { onAction(MapGroupAction.View) },
-        trailing = {
+        actions = {
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
@@ -1114,9 +1249,7 @@ private fun MapGroupRow(
                     MapGroupMenuItem(R.string.delete, { menuOpen = it }, onAction, MapGroupAction.Delete)
                 }
             }
-        },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+        }
     )
 }
 

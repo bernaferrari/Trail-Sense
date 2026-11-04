@@ -36,31 +36,21 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
         }
         val isInvalid = coordinateText.isNotBlank() && coordinate == null
 
-        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
-            ConvertResult(result)
-
-            TrailSenseRowGroup {
-                row { position ->
-                    TrailSenseInputField(
-                        value = coordinateText,
-                        onValueChange = { coordinateText = it },
-                        label = stringResource(R.string.location),
-                        position = position,
-                        keyboardType = KeyboardType.Text,
-                        isError = isInvalid,
-                        errorText = stringResource(R.string.coordinate_input_invalid_location)
-                    )
-                }
-                row { position ->
-                    TrailSenseListItem(
-                        title = formatService.formatCoordinateType(format),
-                        subtitle = stringResource(R.string.distance_to),
-                        position = position,
-                        onClick = { showPicker = true }
-                    )
-                }
-            }
-        }
+        ConvertPair(
+            value = coordinateText,
+            onValueChange = { coordinateText = it },
+            fromLabel = stringResource(R.string.location),
+            fromUnit = null,
+            onFromUnitClick = null,
+            result = result,
+            toLabel = stringResource(R.string.distance_to),
+            toUnit = formatService.formatCoordinateType(format),
+            onToUnitClick = { showPicker = true },
+            placeholder = stringResource(R.string.places_convert_coordinate_hint),
+            keyboardType = KeyboardType.Text,
+            isError = isInvalid,
+            errorText = stringResource(R.string.coordinate_input_invalid_location)
+        )
 
         if (showPicker) {
             TrailSenseOptionsDialog(

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Beacons -->
+    <string name="places_nearest_beacon">Nearest beacon</string>
+    <string name="places_beacon_direction">%1$s · %2$s</string>
+    <string name="places_beacon_empty_action">Place a beacon</string>
+    <string name="places_beacon_form_hint">Add a location below</string>
+    <string name="places_hidden">Hidden</string>
+    <!-- Paths -->
+    <string name="places_paths_empty_action">Start Backtrack</string>
+    <string name="places_backtrack_recording">Recording</string>
+    <string name="places_backtrack_on_description">Your trail is being saved as you walk.</string>
+    <string name="places_backtrack_off_description">Start it to save your trail as you walk.</string>
+    <string name="places_backtrack_every">Every %1$s</string>
+    <!-- Triangulate -->
+    <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
+    <!-- Offline maps -->
+    <string name="places_maps_you_are_on">You are on this map</string>
+    <!-- Packing lists -->
+    <string name="places_packs_all">All lists</string>
+    <string name="places_packs_latest">Latest list</string>
+    <string name="places_packs_ready">Ready to go</string>
+    <string name="places_packs_packed_of">%1$d of %2$d items packed</string>
+    <string name="places_percent">%1$d%%</string>
+    <plurals name="places_packs_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <!-- Notes -->
+    <string name="places_notes_latest">Latest note</string>
+    <!-- Convert -->
+    <string name="places_convert_hint">Type an amount above</string>
+    <string name="places_convert_coordinate_hint">Type or paste a location above</string>
+    <!-- Turn back -->
+    <string name="places_turn_back_in">Turn back in</string>
+    <string name="places_turn_back_back_by">Back by</string>
+    <!-- Declination -->
+    <string name="places_declination_aligned">Aligned</string>
+    <string name="places_declination_of_true_north">of true north</string>
+</resources>

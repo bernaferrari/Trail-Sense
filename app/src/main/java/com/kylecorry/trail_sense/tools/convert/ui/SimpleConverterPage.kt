@@ -77,44 +77,24 @@ fun <T> SimpleConvertScreen(
         convert(amount, from, to)
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
-        ConvertResult(result)
-
-        TrailSenseRowGroup {
-            row { position ->
-                TrailSenseInputField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = stringResource(R.string.distance_from),
-                    position = position,
-                    unit = getUnitName(from),
-                    onUnitClick = { picker = UnitPicker.From }
-                )
-            }
-            row { position ->
-                TrailSenseListItem(
-                    title = getUnitName(to),
-                    subtitle = stringResource(R.string.distance_to),
-                    position = position,
-                    onClick = { picker = UnitPicker.To },
-                    trailing = {
-                        FilledTonalIconButton(
-                            onClick = {
-                                val previousFrom = from
-                                from = to
-                                to = previousFrom
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.SwapVert,
-                                contentDescription = stringResource(R.string.convert_swap_units)
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    }
+    ConvertPair(
+        value = amountText,
+        onValueChange = { amountText = it },
+        fromLabel = stringResource(R.string.distance_from),
+        fromUnit = getUnitName(from),
+        onFromUnitClick = { picker = UnitPicker.From },
+        result = if (amountText.isBlank()) "" else result,
+        toLabel = stringResource(R.string.distance_to),
+        toUnit = getUnitName(to),
+        onToUnitClick = { picker = UnitPicker.To },
+        placeholder = stringResource(R.string.places_convert_hint),
+        onSwap = {
+            val previousFrom = from
+            from = to
+            to = previousFrom
+        },
+        swapLabel = stringResource(R.string.convert_swap_units)
+    )
 
     picker?.let { unitPicker ->
         TrailSenseOptionsDialog(

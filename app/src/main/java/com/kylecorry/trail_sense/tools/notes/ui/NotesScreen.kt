@@ -1,7 +1,18 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -108,6 +119,8 @@ fun NotesScreen(
             ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.add)) }
             )
@@ -117,33 +130,97 @@ fun NotesScreen(
 
         if (items.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                PlacesEmptyState(
+                    icon = TrailIcons.ToolNotes,
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
-                    modifier = Modifier
-                        .heightIn(max = 480.dp)
-                        .testTag("notes_empty_text")
+                    modifier = Modifier.testTag("notes_empty_text")
                 )
             }
         } else {
-            item(key = "notes") {
-                TrailSenseRowGroup(modifier = Modifier.testTag("note_list")) {
-                    items.forEach { note ->
-                        row { position ->
-                            NoteRow(
-                                note = note,
-                                position = position,
-                                onEdit = onEdit,
-                                onDelete = onDelete,
-                                onShowQR = onShowQR
-                            )
-                        }
-                    }
-                }
+            val latest = items.first()
+            item(key = "latest") {
+                LatestNoteSpotlight(note = latest, onEdit = onEdit, onShowQR = onShowQR, onDelete = onDelete)
+            }
+            val rest = items.drop(1)
+            placesGroup(
+                key = "notes",
+                items = rest,
+                itemKey = { it.id }
+            ) { note, position, rowModifier ->
+                NoteRow(
+                    note = note,
+                    position = position,
+                    modifier = if (position.isFirst) rowModifier.testTag("note_list") else rowModifier,
+                    onEdit = onEdit,
+                    onDelete = onDelete,
+                    onShowQR = onShowQR
+                )
             }
         }
     }
+}
+
+/** The newest note, opened up on a warm card: its title, the start of what it says, and the two things you do with it. */
+@Composable
+private fun LatestNoteSpotlight(
+    note: Note,
+    onEdit: (Note) -> Unit,
+    onShowQR: (Note) -> Unit,
+    onDelete: (Note) -> Unit
+) {
+    var isMenuOpen by remember { mutableStateOf(false) }
+    val title = if (note.title?.trim().isNullOrEmpty()) {
+        stringResource(android.R.string.untitled)
+    } else {
+        note.title.orEmpty().trim()
+    }
+    val preview = remember(note.contents) {
+        note.contents.orEmpty().trim().replace(Regex("\\s+"), " ").let {
+            if (it.length > 160) it.take(160).trimEnd() + "…" else it
+        }
+    }
+    val timestamp = remember(note.createdOn) { formatTimestamp(note.createdOn) }
+    TrailSenseSpotlight(
+        eyebrow = listOfNotNull(stringResource(R.string.places_notes_latest), timestamp).joinToString(" · "),
+        title = title,
+        titleStyle = MaterialTheme.typography.headlineSmall,
+        supportingText = preview.ifEmpty { null },
+        tone = TrailSenseTone.Tertiary,
+        trailing = {
+            Box {
+                IconButton(onClick = { isMenuOpen = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.note_more_options)
+                    )
+                }
+                DropdownMenu(expanded = isMenuOpen, onDismissRequest = { isMenuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete)) },
+                        leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null) },
+                        onClick = {
+                            isMenuOpen = false
+                            onDelete(note)
+                        }
+                    )
+                }
+            }
+        },
+        badge = {
+            TrailSenseShapeBadge(
+                icon = TrailIcons.ToolNotes,
+                shape = MaterialShapes.Cookie7Sided.toShape(),
+                size = 56.dp,
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        },
+        actions = listOf(
+            TrailSenseSpotlightAction(stringResource(R.string.edit), TrailIcons.Edit) { onEdit(note) },
+            TrailSenseSpotlightAction(stringResource(R.string.qr_code), TrailIcons.QrCode) { onShowQR(note) }
+        )
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -151,6 +228,7 @@ fun NotesScreen(
 private fun NoteRow(
     note: Note,
     position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
     onShowQR: (Note) -> Unit
@@ -165,7 +243,10 @@ private fun NoteRow(
     val preview = remember(note.contents) {
         note.contents.orEmpty().trim().replace(Regex("\\s+"), " ")
     }
-    val subtitle = listOfNotNull(timestamp, preview.ifEmpty { null }).joinToString(" · ")
+    val subtitle = preview.ifEmpty { timestamp.orEmpty() }
+    val date = remember(note.createdOn) {
+        if (note.createdOn <= 0L) null else Instant.ofEpochMilli(note.createdOn).atZone(ZoneId.systemDefault())
+    }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -176,7 +257,7 @@ private fun NoteRow(
     )
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .graphicsLayer {
                 scaleX = scale
@@ -203,28 +284,32 @@ private fun NoteRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = rememberVectorPainter(TrailIcons.ToolNotes),
-                        contentDescription = null,
-                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
+            // The day it was written, on a soft cookie, with the month under it: notes read like a dated notebook.
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                PlacesBadge(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    text = date?.dayOfMonth?.toString(),
+                    icon = if (date == null) TrailIcons.ToolNotes else null,
+                    shape = MaterialShapes.Cookie4Sided.toShape(),
+                    size = 44.dp
+                )
+                if (date != null) {
+                    Text(
+                        date.format(monthFormatter),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -276,6 +361,8 @@ private fun NoteRow(
         }
     }
 }
+
+private val monthFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM")
 
 private val timestampFormatter: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)

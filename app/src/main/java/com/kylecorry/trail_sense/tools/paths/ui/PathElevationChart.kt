@@ -93,6 +93,13 @@ class PathElevationChart(private val context: Context) {
         val textColor = MaterialTheme.colorScheme.onSurfaceVariant
         val gridColor = MaterialTheme.colorScheme.outlineVariant
         val highlightColor = MaterialTheme.colorScheme.onSurface
+        val highlightRing = MaterialTheme.colorScheme.surfaceContainerLow
+        val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
+        val steepColors = mapOf(
+            Steepness.Low to status.good,
+            Steepness.Medium to status.caution,
+            Steepness.High to MaterialTheme.colorScheme.error
+        )
         val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = textColor.toArgb()
             textSize = Resources.sp(context, 10f)
@@ -136,7 +143,16 @@ class PathElevationChart(private val context: Context) {
                 val fraction = idx / 2f
                 val y = bottom - (bottom - top) * fraction
                 val value = yRange.start + (yRange.end - yRange.start) * fraction
-                drawLine(gridColor, Offset(left, y), Offset(right, y), strokeWidth = 1.dp.toPx())
+                drawLine(
+                    gridColor,
+                    Offset(left, y),
+                    Offset(right, y),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                        floatArrayOf(3.dp.toPx(), 5.dp.toPx())
+                    ),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
                 drawContext.canvas.nativeCanvas.drawText(
                     formatElevation(value),
                     left - 6.dp.toPx(),
@@ -170,24 +186,21 @@ class PathElevationChart(private val context: Context) {
                 }
                 drawPath(
                     area,
-                    Color(getColor(end.steepness)).copy(alpha = 0.24f)
+                    (steepColors[end.steepness] ?: Color(getColor(end.steepness))).copy(alpha = 0.32f)
                 )
                 drawLine(
                     Color(start.lineColor),
                     p1,
                     p2,
-                    strokeWidth = 2.dp.toPx()
+                    strokeWidth = 3.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
             }
 
             highlight?.let {
                 val point = toScreen(it, xRange, left, right, top, bottom)
-                drawCircle(
-                    color = highlightColor,
-                    radius = 5.dp.toPx(),
-                    center = point,
-                    style = Stroke(width = 2.dp.toPx())
-                )
+                drawCircle(color = highlightRing, radius = 9.dp.toPx(), center = point)
+                drawCircle(color = highlightColor, radius = 6.dp.toPx(), center = point)
             }
         }
     }

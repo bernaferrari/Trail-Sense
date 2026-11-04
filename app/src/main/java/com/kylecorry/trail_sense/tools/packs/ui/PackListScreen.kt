@@ -1,7 +1,35 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesMiniBar
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
+import com.kylecorry.trail_sense.tools.packs.domain.PackService
+import kotlin.math.roundToInt
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
@@ -62,9 +90,19 @@ fun PackListToolScreen(host: TrailSenseDestinationHost) {
         onDispose {}
     }
 
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(controller, lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) controller.refreshSummaries()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     PackListScreen(
         packs = controller.packs,
         loaded = controller.loaded,
+        summaries = controller.summaries,
         onImportPack = controller::importPack,
         onCreatePack = controller::createPack,
         onOpenPack = { controller.openPack(it.id) },
@@ -86,6 +124,8 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
         private set
     var loaded by mutableStateOf(false)
         private set
+    var summaries by mutableStateOf(emptyMap<Long, PackSummary>())
+        private set
 
     fun onCreate() {
         if (isInitialized) {
@@ -99,6 +139,28 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
         packRepo.getPacks().observe(host.lifecycleOwner) {
             packs = it.sortedWith(compareBy { pack -> -pack.id })
             loaded = true
+            loadSummaries(packs)
+        }
+    }
+
+    fun refreshSummaries() {
+        if (loaded) loadSummaries(packs)
+    }
+
+    private fun loadSummaries(packs: List<Pack>) {
+        host.inBackground {
+            val service = PackService()
+            val result = withContext(Dispatchers.IO) {
+                packs.associate { pack ->
+                    val items = packRepo.getItemsFromPackAsync(pack.id)
+                    pack.id to PackSummary(
+                        itemCount = items.size,
+                        packedCount = items.count { it.isFullyPacked },
+                        percentPacked = if (items.isEmpty()) 0f else service.getPercentPacked(items)
+                    )
+                }
+            }
+            summaries = result
         }
     }
 
@@ -199,14 +261,19 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
 
 }
 
+/** How far along a packing list is, for its row and the Spotlight. */
+internal data class PackSummary(val itemCount: Int, val packedCount: Int, val percentPacked: Float)
+
 /**
- * Packing lists: every list as one grouped row (newest first) with its actions behind the overflow, and the add menu
- * (new or imported list) on the FAB. The empty state waits for the first load and offers to start a list.
+ * Packing lists: the newest list as the Spotlight (how packed it is, as a percentage on a cookie and a wavy bar),
+ * then every list as a row with its packed share as a coloured value and a mini bar, newest first. Add (new or
+ * imported list) stays on the floating button, the screen's only add action, including when there are no lists.
  */
 @Composable
 private fun PackListScreen(
     packs: List<Pack>,
     loaded: Boolean,
+    summaries: Map<Long, PackSummary>,
     onImportPack: () -> Unit,
     onCreatePack: () -> Unit,
     onOpenPack: (Pack) -> Unit,
@@ -218,17 +285,26 @@ private fun PackListScreen(
     onBack: (() -> Unit)? = null
 ) {
     var isCreateMenuOpen by remember { mutableStateOf(false) }
+    val listsTitle = stringResource(R.string.places_packs_all)
 
     TrailSensePage(
         title = stringResource(R.string.packing_lists),
         onBack = onBack,
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("pack_list_title"),
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.sm,
+            bottom = 112.dp
+        ),
         floatingActionButton = {
             Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
                     modifier = Modifier.testTag("add_btn"),
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                     text = { Text(stringResource(R.string.add)) }
                 )
@@ -240,6 +316,7 @@ private fun PackListScreen(
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.new_packing_list)) },
+                        leadingIcon = { Icon(TrailIcons.Add, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
                             onCreatePack()
@@ -247,6 +324,7 @@ private fun PackListScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.import_packing_list)) },
+                        leadingIcon = { Icon(TrailIcons.ImportExport, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
                             onImportPack()
@@ -260,39 +338,90 @@ private fun PackListScreen(
 
         if (packs.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
+                PlacesEmptyState(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
-                    action = {
-                        FilledTonalButton(onClick = onCreatePack) {
-                            Text(stringResource(R.string.new_packing_list))
-                        }
-                    },
-                    modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
-                        .testTag("empty_text")
+                    modifier = Modifier.testTag("empty_text")
                 )
             }
             return@TrailSensePage
         }
 
-        item(key = "packs") {
-            TrailSenseRowGroup(modifier = Modifier.testTag("pack_list")) {
-                packs.forEach { pack ->
-                    row { position ->
-                        PackListItem(
-                            pack = pack,
-                            position = position,
-                            onOpenPack = onOpenPack,
-                            onRenamePack = onRenamePack,
-                            onCopyPack = onCopyPack,
-                            onExportPack = onExportPack,
-                            onDeletePack = onDeletePack
-                        )
-                    }
-                }
+        val latest = packs.first()
+        item(key = "latest") {
+            PackSpotlight(
+                pack = latest,
+                summary = summaries[latest.id],
+                onOpen = { onOpenPack(latest) }
+            )
+        }
+
+        placesGroup(
+            key = "packs",
+            items = packs,
+            itemKey = { it.id },
+            title = listsTitle
+        ) { pack, position, rowModifier ->
+            PackListItem(
+                pack = pack,
+                summary = summaries[pack.id],
+                position = position,
+                modifier = if (position.isFirst) rowModifier.testTag("pack_list") else rowModifier,
+                onOpenPack = onOpenPack,
+                onRenamePack = onRenamePack,
+                onCopyPack = onCopyPack,
+                onExportPack = onExportPack,
+                onDeletePack = onDeletePack
+            )
+        }
+    }
+}
+
+@Composable
+private fun PackSpotlight(pack: Pack, summary: PackSummary?, onOpen: () -> Unit) {
+    val percent = summary?.percentPacked ?: 0f
+    val done = summary != null && summary.itemCount > 0 && percent >= 100f
+    val tone = if (done) TrailSenseTone.Good else TrailSenseTone.Primary
+    val colors = trailSenseToneColors(tone)
+    val progress by animateFloatAsState(
+        (percent / 100f).coerceIn(0f, 1f),
+        MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "packProgress"
+    )
+    TrailSenseSpotlight(
+        eyebrow = stringResource(if (done) R.string.places_packs_ready else R.string.places_packs_latest),
+        title = pack.name,
+        titleStyle = MaterialTheme.typography.headlineMedium,
+        supportingText = summary?.let {
+            if (it.itemCount == 0) {
+                stringResource(R.string.inventory_empty_text)
+            } else {
+                stringResource(R.string.places_packs_packed_of, it.packedCount, it.itemCount)
             }
+        },
+        tone = tone,
+        badge = {
+            TrailSenseShapeBadge(
+                text = stringResource(R.string.places_percent, percent.roundToInt()),
+                icon = if (done) TrailIcons.Check else null,
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                size = 72.dp,
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
+            )
+        },
+        actions = listOf(
+            TrailSenseSpotlightAction(stringResource(R.string.open), TrailIcons.ToolPack, onOpen)
+        )
+    ) {
+        if (summary != null && summary.itemCount > 0) {
+            LinearWavyProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = colors.accent,
+                trackColor = colors.content.copy(alpha = 0.14f)
+            )
         }
     }
 }
@@ -300,19 +429,47 @@ private fun PackListScreen(
 @Composable
 private fun PackListItem(
     pack: Pack,
+    summary: PackSummary?,
     position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onOpenPack: (Pack) -> Unit,
     onRenamePack: (Pack) -> Unit,
     onCopyPack: (Pack) -> Unit,
     onExportPack: (Pack) -> Unit,
     onDeletePack: (Pack) -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val status = trailSenseStatusColors()
+    val percent = summary?.percentPacked ?: 0f
+    val done = summary != null && summary.itemCount > 0 && percent >= 100f
     PacksGroupRow(
         position = position,
-        modifier = Modifier.testTag("pack_list_item"),
+        modifier = modifier.testTag("pack_list_item"),
         onClick = { onOpenPack(pack) },
-        leading = { PacksIconWell(rememberVectorPainter(TrailIcons.ToolPack)) },
+        leading = {
+            PlacesBadge(
+                containerColor = if (done) status.goodContainer else scheme.secondaryContainer,
+                contentColor = if (done) status.onGoodContainer else scheme.onSecondaryContainer,
+                icon = if (done) TrailIcons.Check else TrailIcons.ToolPack,
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                modifier = Modifier.padding(start = TrailSenseSpacing.sm)
+            )
+        },
         trailing = {
+            if (summary != null && summary.itemCount > 0) {
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                    Text(
+                        stringResource(R.string.places_percent, percent.roundToInt()),
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (done) status.good else scheme.primary
+                    )
+                    PlacesMiniBar(
+                        percent / 100f,
+                        color = if (done) status.good else scheme.primary
+                    )
+                }
+            }
             PacksOverflowMenu(
                 contentDescription = stringResource(R.string.packs_more_options),
                 modifier = Modifier.testTag("pack_list_item_menu"),
@@ -330,11 +487,18 @@ private fun PackListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("pack_list_item_title"),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            color = scheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+        if (summary != null) {
+            Text(
+                text = pluralStringResource(R.plurals.places_packs_items, summary.itemCount, summary.itemCount),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -348,6 +512,7 @@ private fun PackListScreenPreview() {
                 Pack(2, "Day hike")
             ),
             loaded = true,
+            summaries = emptyMap(),
             onImportPack = {},
             onCreatePack = {},
             onOpenPack = {},

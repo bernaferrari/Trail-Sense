@@ -1,7 +1,33 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -300,90 +326,117 @@ private fun TurnBackScreen(
         label = "turnBackProgress"
     )
 
-    val returnTitle = stringResource(R.string.return_time)
+    val turnFraction = run {
+        val turnBack = turnBackTime
+        val ret = returnTime
+        if (turnBack == null || ret == null) {
+            0.4f
+        } else {
+            val total = Duration.between(now, ret).toMillis()
+            val out = Duration.between(now, turnBack).toMillis().coerceAtLeast(0)
+            if (total <= 0L) 1f else (out.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+        }
+    }
+    val animatedTurn by animateFloatAsState(
+        targetValue = turnFraction,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "turnFraction"
+    )
+    val isLate = isActive && remaining != null && remaining < Duration.ofMinutes(10)
+    val tone = when {
+        !isActive -> TrailSenseTone.Secondary
+        isLate -> TrailSenseTone.Caution
+        else -> TrailSenseTone.Tertiary
+    }
+    val colors = trailSenseToneColors(tone)
+
     TrailSensePage(
         title = stringResource(R.string.tool_turn_back),
         onBack = rememberTrailSenseBack(),
         modifier = modifier
     ) {
         item("hero") {
-            Box(modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
-                if (isActive) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TrailSenseSpacing.xl),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                    ) {
-                        TrailSenseReading(
-                            value = formattedRemainingTime ?: "--",
-                            style = MaterialTheme.typography.displayMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = instructionText,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("instructions"),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = TrailSenseSpacing.sm),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                        )
-                        TrailSenseMetricRow(
-                            items = listOf(
-                                TrailSenseMetricItem(
-                                    stringResource(R.string.tool_turn_back),
-                                    formattedTurnBackTime.orEmpty()
-                                ),
-                                TrailSenseMetricItem(
-                                    stringResource(R.string.return_time),
-                                    formattedReturnTime.orEmpty()
-                                )
-                            ),
-                            modifier = Modifier.padding(top = TrailSenseSpacing.sm)
-                        )
-                    }
-                } else {
-                    TrailSenseEmptyState(
-                        icon = Icons.Default.Schedule,
-                        title = instructionText,
-                        description = stringResource(R.string.turn_back_empty_description),
-                        modifier = Modifier
-                            .testTag("instructions")
-                            .semantics(mergeDescendants = true) {}
+            TrailSenseSpotlight(
+                modifier = Modifier
+                    .testTag("instructions")
+                    .semantics(mergeDescendants = true) {},
+                eyebrow = stringResource(if (isActive) R.string.places_turn_back_in else R.string.tool_turn_back),
+                title = if (isActive) formattedRemainingTime ?: "--" else instructionText,
+                titleStyle = if (isActive) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
+                supportingText = if (isActive) instructionText else stringResource(R.string.turn_back_empty_description),
+                tone = tone,
+                badge = {
+                    TrailSenseShapeBadge(
+                        icon = if (isActive) TrailIcons.Flag else TrailIcons.ToolClock,
+                        shape = if (isActive) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
+                        size = 64.dp,
+                        containerColor = colors.accent,
+                        contentColor = colors.onAccent
                     )
                 }
-            }
-        }
-
-        trailSenseSection(key = "return", title = returnTitle) {
-            row { position ->
-                TrailSenseListItem(
-                    title = stringResource(R.string.return_time),
-                    subtitle = formattedReturnTime ?: stringResource(R.string.time_not_set),
-                    icon = rememberVectorPainter(Icons.Default.Schedule),
-                    onClick = { onPickReturnTime(returnTime) },
-                    position = position,
-                    modifier = Modifier.testTag("edittext")
-                )
-            }
-            row { position ->
-                TrailSenseListItem(
-                    title = stringResource(R.string.return_before_dark),
-                    icon = rememberVectorPainter(Icons.Default.WbSunny),
-                    onClick = onUseSunset,
-                    position = position,
-                    modifier = Modifier.testTag("sunset_button")
-                )
+            ) {
+                if (isActive) {
+                    JourneyTrack(
+                        turnFraction = animatedTurn,
+                        color = colors.accent,
+                        trackColor = colors.content.copy(alpha = 0.16f),
+                        markerRing = colors.container
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                        JourneyTile(
+                            label = stringResource(R.string.tool_turn_back),
+                            value = formattedTurnBackTime.orEmpty(),
+                            shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp, topEnd = 6.dp, bottomEnd = 6.dp),
+                            contentColor = colors.content,
+                            modifier = Modifier.weight(1f)
+                        )
+                        JourneyTile(
+                            label = stringResource(R.string.places_turn_back_back_by),
+                            value = formattedReturnTime.orEmpty(),
+                            shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp),
+                            contentColor = colors.content,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                // How to set the return time, inside the card it changes.
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                    Button(
+                        onClick = { onPickReturnTime(returnTime) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 52.dp)
+                            .testTag("edittext"),
+                        shape = RoundedCornerShape(topStart = 26.dp, bottomStart = 26.dp, topEnd = 8.dp, bottomEnd = 8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.accent, contentColor = colors.onAccent),
+                        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
+                    ) {
+                        Icon(TrailIcons.ToolClock, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(
+                            formattedReturnTime ?: stringResource(R.string.return_time),
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum")
+                        )
+                    }
+                    FilledTonalButton(
+                        onClick = onUseSunset,
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 52.dp)
+                            .testTag("sunset_button"),
+                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 26.dp, bottomEnd = 26.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                            contentColor = colors.content
+                        ),
+                        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
+                    ) {
+                        Icon(TrailIcons.SunsetNotification, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(stringResource(R.string.return_before_dark), maxLines = 1)
+                    }
+                }
             }
         }
 
@@ -397,12 +450,69 @@ private fun TurnBackScreen(
                     onClick = onCancel,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                        .testTag("cancel_button")
+                        .heightIn(min = 52.dp)
+                        .testTag("cancel_button"),
+                    shapes = ButtonDefaults.shapes(),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 ) {
+                    Icon(TrailIcons.Cancel, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
                     Text(stringResource(R.string.turn_back_cancel))
                 }
             }
         }
     }
 }
+
+/**
+ * The walk as a track: out to the turn-around point in full colour, the way back faded, a flag where you turn and
+ * a home dot at the end. It shortens as the turn-around time gets closer.
+ */
+@Composable
+private fun JourneyTrack(turnFraction: Float, color: Color, trackColor: Color, markerRing: Color) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(28.dp)
+    ) {
+        val stroke = 12.dp.toPx()
+        val y = size.height / 2
+        val start = stroke / 2
+        val end = size.width - stroke / 2
+        val turnX = start + (end - start) * turnFraction
+        drawLine(trackColor, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color, Offset(start, y), Offset(turnX, y), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawCircle(markerRing, radius = 12.dp.toPx(), center = Offset(turnX, y))
+        drawCircle(color, radius = 8.dp.toPx(), center = Offset(turnX, y))
+        drawCircle(color.copy(alpha = 0.55f), radius = 5.dp.toPx(), center = Offset(end, y))
+    }
+}
+
+@Composable
+private fun JourneyTile(
+    label: String,
+    value: String,
+    shape: androidx.compose.ui.graphics.Shape,
+    contentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+        contentColor = contentColor
+    ) {
+        Column(Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = contentColor.copy(alpha = 0.8f))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
