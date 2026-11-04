@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroupScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Row
@@ -163,73 +164,80 @@ fun ScopeAdjustmentPage(
             }
         }
 
-        MissGroup(
-            title = stringResource(R.string.windage_miss),
-            offset = offsetX,
-            onOffsetChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
-            options = listOf(
-                TrailSenseChoice(ScopeDirection.Left, stringResource(R.string.left)),
-                TrailSenseChoice(ScopeDirection.Right, stringResource(R.string.right))
-            ),
-            direction = offsetDirectionX,
-            onDirectionChange = { offsetDirectionX = it },
-            fieldTag = "miss_distance_x",
-            directionTag = "miss_direction_x"
-        )
-
-        MissGroup(
-            title = stringResource(R.string.elevation_miss),
-            offset = offsetY,
-            onOffsetChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
-            options = listOf(
-                TrailSenseChoice(ScopeDirection.Up, stringResource(R.string.above)),
-                TrailSenseChoice(ScopeDirection.Down, stringResource(R.string.below))
-            ),
-            direction = offsetDirectionY,
-            onDirectionChange = { offsetDirectionY = it },
-            fieldTag = "miss_distance_y",
-            directionTag = "miss_direction_y"
-        )
+        val windageLabel = stringResource(R.string.windage_miss)
+        val leftLabel = stringResource(R.string.left)
+        val rightLabel = stringResource(R.string.right)
+        val elevationLabel = stringResource(R.string.elevation_miss)
+        val aboveLabel = stringResource(R.string.above)
+        val belowLabel = stringResource(R.string.below)
+        val missUnits = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits)
+        TrailSenseRowGroup(title = stringResource(R.string.ballistics_where_hit)) {
+            missRows(
+                label = windageLabel,
+                offset = offsetX,
+                onOffsetChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
+                options = listOf(
+                    TrailSenseChoice(ScopeDirection.Left, leftLabel),
+                    TrailSenseChoice(ScopeDirection.Right, rightLabel)
+                ),
+                direction = offsetDirectionX,
+                onDirectionChange = { offsetDirectionX = it },
+                fieldTag = "miss_distance_x",
+                directionTag = "miss_direction_x",
+                units = missUnits
+            )
+            missRows(
+                label = elevationLabel,
+                offset = offsetY,
+                onOffsetChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
+                options = listOf(
+                    TrailSenseChoice(ScopeDirection.Up, aboveLabel),
+                    TrailSenseChoice(ScopeDirection.Down, belowLabel)
+                ),
+                direction = offsetDirectionY,
+                onDirectionChange = { offsetDirectionY = it },
+                fieldTag = "miss_distance_y",
+                directionTag = "miss_direction_y",
+                units = missUnits
+            )
+        }
     }
 }
 
-/** One miss: how far off, then which side, as one group. */
-@Composable
-private fun MissGroup(
-    title: String,
+/** One miss: how far off, then which side, as two rows of the shared group. */
+private fun TrailSenseRowGroupScope.missRows(
+    label: String,
     offset: Distance,
     onOffsetChange: (Distance?) -> Unit,
     options: List<TrailSenseChoice<ScopeDirection>>,
     direction: ScopeDirection,
     onDirectionChange: (ScopeDirection) -> Unit,
     fieldTag: String,
-    directionTag: String
+    directionTag: String,
+    units: List<DistanceUnits>
 ) {
-    val formatter = remember { DependencyRegistry.get<FormatService>() }
-    TrailSenseRowGroup(title = title) {
-        row { position ->
-            DistanceField(
-                label = stringResource(R.string.distance),
-                value = offset,
-                units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-                defaultUnit = DistanceUnits.Inches,
-                onValueChange = onOffsetChange,
-                position = position,
-                modifier = Modifier.testTag(fieldTag)
+    row { position ->
+        DistanceField(
+            label = label,
+            value = offset,
+            units = units,
+            defaultUnit = DistanceUnits.Inches,
+            onValueChange = onOffsetChange,
+            position = position,
+            modifier = Modifier.testTag(fieldTag)
+        )
+    }
+    row { position ->
+        TrailSenseGroupCard(
+            position = position,
+            contentPadding = PaddingValues(TrailSenseSpacing.sm)
+        ) {
+            TrailSenseConnectedChoice(
+                options = options,
+                selected = direction,
+                onSelect = onDirectionChange,
+                modifier = Modifier.testTag(directionTag)
             )
-        }
-        row { position ->
-            TrailSenseGroupCard(
-                position = position,
-                contentPadding = PaddingValues(TrailSenseSpacing.sm)
-            ) {
-                TrailSenseConnectedChoice(
-                    options = options,
-                    selected = direction,
-                    onSelect = onDirectionChange,
-                    modifier = Modifier.testTag(directionTag)
-                )
-            }
         }
     }
 }
@@ -304,8 +312,40 @@ private fun ScopeHero(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                 ) {
-                    TurretMove(adjustmentX, MaterialShapes.Cookie9Sided)
-                    TurretMove(adjustmentY, MaterialShapes.Cookie6Sided)
+                    val waiting = adjustmentX == null && adjustmentY == null
+                    val onTarget = !waiting && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
+                    when {
+                        waiting -> {
+                            Text(
+                                stringResource(R.string.ballistics_waiting),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                stringResource(R.string.ballistics_waiting_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+
+                        onTarget -> {
+                            TrailSenseShapeBadge(
+                                icon = TrailIcons.Check,
+                                shape = MaterialShapes.Sunny.toShape(),
+                                size = 52.dp
+                            )
+                            Text(
+                                stringResource(R.string.ballistics_on_target),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        else -> {
+                            TurretMove(adjustmentX, MaterialShapes.Cookie9Sided)
+                            TurretMove(adjustmentY, MaterialShapes.Cookie6Sided)
+                        }
+                    }
                 }
             }
         }
@@ -339,7 +379,7 @@ private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.sh
                 } else {
                     pluralStringResource(R.plurals.ballistics_clicks, adjustment.clicks, adjustment.clicks)
                 },
-                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
