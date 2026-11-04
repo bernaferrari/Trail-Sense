@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
 import android.content.Context
@@ -6,6 +8,32 @@ import android.os.Bundle
 import androidx.annotation.StringRes
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ripple
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Camera
+import com.kylecorry.trail_sense.shared.icons.trail.CameraOff
+import com.kylecorry.trail_sense.shared.icons.trail.Cancel
+import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
+import com.kylecorry.trail_sense.shared.icons.trail.Layers
+import com.kylecorry.trail_sense.shared.icons.trail.Search
+import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
+import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentPanel
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentTopBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
@@ -79,7 +107,6 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.withId
@@ -453,7 +480,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
     // TODO: Move this to the AR view
     private fun startCamera() {
         isCameraEnabled = true
-        views.cameraToggle.setImageResource(R.drawable.ic_camera)
+        views.cameraToggle.setIcon(TrailIcons.Camera)
         views.arView.backgroundFillColor = Color.TRANSPARENT
         host.requestCamera {
             if (it) {
@@ -464,7 +491,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
             } else {
                 views.camera.isInvisible = true
                 isCameraEnabled = false
-                views.cameraToggle.setImageResource(R.drawable.ic_camera_off)
+                views.cameraToggle.setIcon(TrailIcons.CameraOff)
                 views.arView.backgroundFillColor = Color.BLACK
                 host.alertNoCameraPermission()
             }
@@ -472,7 +499,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
     }
 
     private fun stopCamera() {
-        views.cameraToggle.setImageResource(R.drawable.ic_camera_off)
+        views.cameraToggle.setIcon(TrailIcons.CameraOff)
         isCameraEnabled = false
         views.arView.backgroundFillColor = Color.BLACK
         views.camera.stop()
@@ -882,111 +909,112 @@ private class ArVisibilityState(initialVisible: Boolean = true) {
     var isVisible by mutableStateOf(initialVisible)
 }
 
+/**
+ * The AR instrument: the camera and overlay fill the screen; a small top bar (back, title, layers) sits on a soft
+ * scrim so it reads over a bright sky; everything you act on is gathered at the bottom, nearest the thumb: the
+ * sensor badge, the focused object's action or the calibration prompt, the guidance target, then one floating
+ * panel of controls, with the time slider opening beneath it.
+ */
 @Composable
 private fun AugmentedRealityHost(
     views: AugmentedRealityViews,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier) {
+    val overlayContent = ComposeColor.White
+    Box(modifier = modifier.background(ComposeColor.Black)) {
         CameraPreview(
             state = views.camera,
             modifier = Modifier.fillMaxSize()
         )
         views.arView.Content(Modifier.fillMaxSize())
 
-        // Top-start floating controls (calibrate, layers)
-        Surface(
+        Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(TrailSenseSpacing.screen),
-            shape = MaterialTheme.shapes.large,
-            color = ComposeColor(Color.BLACK).copy(alpha = 0.58f)
-        ) {
-            Column(
-                modifier = Modifier.padding(TrailSenseSpacing.xs),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-            ) {
-                views.calibrateBtn.Content()
-                views.layersBtn.Content()
-            }
-        }
-
-        // Top-end floating controls (camera toggle, locate, time)
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(TrailSenseSpacing.screen),
-            shape = MaterialTheme.shapes.large,
-            color = ComposeColor(Color.BLACK).copy(alpha = 0.58f)
-        ) {
-            Column(
-                modifier = Modifier.padding(TrailSenseSpacing.xs),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-            ) {
-                views.cameraToggle.Content()
-                views.searchBtn.Content()
-                views.timeBtn.Content()
-            }
-        }
-
-        views.accuracyView.Content(
-            Modifier
-                .align(Alignment.BottomStart)
-                .navigationBarsPadding()
-                .padding(start = TrailSenseSpacing.screen, bottom = 136.dp)
-        )
-        views.focusActionButton.Content(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 96.dp)
-        )
-        views.calibrationPanel.Content(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 96.dp)
-        )
-        if (views.guidancePanel.isVisible) {
-            TrailSenseCard(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        bottom = if (views.timeSheet.isVisible) 96.dp else TrailSenseSpacing.screen
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(ComposeColor.Black.copy(alpha = 0.55f), ComposeColor.Transparent)
                     )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    views.arGuideIcon.Content()
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = TrailSenseSpacing.lg)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.target),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Box(modifier = Modifier.padding(top = TrailSenseSpacing.xs)) {
-                            views.arGuideName.Content()
-                        }
-                    }
-                    views.arGuideCancel.Content()
-                }
-            }
+                )
+        ) {
+            TrailSenseInstrumentTopBar(
+                title = stringResource(R.string.augmented_reality),
+                onBack = LocalTrailSenseBack.current,
+                containerColor = ComposeColor.Transparent,
+                contentColor = overlayContent,
+                actions = { views.layersBtn.Content() }
+            )
         }
-        views.timeSheet.Content(
-            Modifier
+
+        Column(
+            modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-        )
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .navigationBarsPadding()
+                .padding(TrailSenseSpacing.lg)
+                .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            views.accuracyView.Content(Modifier.align(Alignment.Start))
+            views.focusActionButton.Content()
+            views.calibrationPanel.Content()
+
+            AnimatedVisibility(
+                visible = views.guidancePanel.isVisible,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
+                        fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
+                        fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
+            ) {
+                TrailSenseInstrumentPanel(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(
+                            start = TrailSenseSpacing.lg,
+                            end = TrailSenseSpacing.xs,
+                            top = TrailSenseSpacing.sm,
+                            bottom = TrailSenseSpacing.sm
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        views.arGuideIcon.Content()
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = TrailSenseSpacing.md),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.target),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            views.arGuideName.Content()
+                        }
+                        views.arGuideCancel.Content()
+                    }
+                }
+            }
+
+            TrailSenseInstrumentPanel(
+                containerColor = ComposeColor.Black.copy(alpha = 0.55f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(TrailSenseSpacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    views.calibrateBtn.Content()
+                    views.cameraToggle.Content()
+                    views.searchBtn.Content()
+                    views.timeBtn.Content()
+                }
+            }
+
+            views.timeSheet.Content(Modifier.fillMaxWidth())
+        }
     }
 }
 
@@ -995,13 +1023,13 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val arView = AugmentedRealityView(context)
 
-    val cameraToggle = createArIconButton(R.drawable.ic_camera, R.string.camera)
-    val calibrate = createArIconButton(R.drawable.ic_compass_icon, R.string.calibrate)
-    val layers = createArIconButton(R.drawable.ic_layers, R.string.map_layers)
-    val search = createArIconButton(R.drawable.ic_search, R.string.search).apply {
+    val cameraToggle = createArIconButton(TrailIcons.Camera, R.string.camera)
+    val calibrate = createArIconButton(TrailIcons.CompassIcon, R.string.calibrate)
+    val layers = createArIconButton(TrailIcons.Layers, R.string.map_layers)
+    val search = createArIconButton(TrailIcons.Search, R.string.search).apply {
         isVisible = false
     }
-    val time = createArIconButton(R.drawable.ic_tool_clock, R.string.time)
+    val time = createArIconButton(TrailIcons.ToolClock, R.string.time)
     val accuracy = SensorStatusBadgeView(context).apply {
         alpha = 0.6f
     }
@@ -1014,7 +1042,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 
     val guideIcon = ArGuideIconView()
     val guideCancel = createTransparentIconButton(
-        R.drawable.ic_cancel,
+        TrailIcons.Cancel,
         Resources.androidTextColorSecondary(context),
         android.R.string.cancel
     )
@@ -1042,12 +1070,12 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     )
 }
 
-private fun createArIconButton(icon: Int, @StringRes contentDescription: Int): ArIconButton {
+private fun createArIconButton(icon: ImageVector, @StringRes contentDescription: Int): ArIconButton {
     return createTransparentIconButton(icon, Color.WHITE, contentDescription)
 }
 
 private fun createTransparentIconButton(
-    icon: Int,
+    icon: ImageVector,
     tint: Int,
     @StringRes contentDescription: Int
 ): ArIconButton {
@@ -1055,11 +1083,11 @@ private fun createTransparentIconButton(
 }
 
 private class ArIconButton(
-    icon: Int,
+    icon: ImageVector,
     private val tint: Int,
     @StringRes private val contentDescription: Int
 ) {
-    private var iconRes by mutableIntStateOf(icon)
+    private var iconVector by mutableStateOf(icon)
     private var buttonVisible by mutableStateOf(true)
     private var alphaState by mutableStateOf(1f)
     var onClick by mutableStateOf<(() -> Unit)?>(null)
@@ -1077,8 +1105,8 @@ private class ArIconButton(
             buttonVisible = value
         }
 
-    fun setImageResource(icon: Int) {
-        iconRes = icon
+    fun setIcon(icon: ImageVector) {
+        iconVector = icon
     }
 
     @Composable
@@ -1086,11 +1114,16 @@ private class ArIconButton(
         if (!buttonVisible) {
             return
         }
+        val interactionSource = remember { MutableInteractionSource() }
         Box(
             modifier = modifier
-                .size(48.dp)
+                .size(TrailSenseSize.minimumTouchTarget)
+                .trailSensePressScale(interactionSource)
                 .alpha(alphaState)
+                .clip(CircleShape)
                 .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(),
                     onClickLabel = stringResource(contentDescription),
                     onClick = { onClick?.invoke() },
                     onLongClick = { onLongClick?.invoke() }
@@ -1098,7 +1131,7 @@ private class ArIconButton(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(iconRes),
+                imageVector = iconVector,
                 contentDescription = stringResource(contentDescription),
                 tint = ComposeColor(tint),
                 modifier = Modifier.size(24.dp)
@@ -1156,21 +1189,28 @@ private class ArCalibrationPanelView {
         if (!panelVisible) {
             return
         }
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(onClick = { onConfirmClick?.invoke() }) {
-                Text(text = stringResource(R.string.calibrate))
-            }
-            Box(modifier = Modifier.width(8.dp))
-            IconButton(onClick = { onCancelClick?.invoke() }) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_cancel),
-                    contentDescription = stringResource(android.R.string.cancel),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
+        TrailSenseInstrumentPanel(modifier = modifier) {
+            Row(
+                modifier = Modifier.padding(
+                    start = TrailSenseSpacing.sm,
+                    end = TrailSenseSpacing.xs,
+                    top = TrailSenseSpacing.xs,
+                    bottom = TrailSenseSpacing.xs
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(onClick = { onConfirmClick?.invoke() }) {
+                    Text(text = stringResource(R.string.calibrate))
+                }
+                Box(modifier = Modifier.width(TrailSenseSpacing.xs))
+                IconButton(onClick = { onCancelClick?.invoke() }) {
+                    Icon(
+                        imageVector = TrailIcons.Cancel,
+                        contentDescription = stringResource(android.R.string.cancel),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -1203,14 +1243,14 @@ private class ArGuideIconView {
             shape = CircleShape
         ) {
             Box(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(TrailSenseSize.compactIconContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(14.dp)
+                        .size(TrailSenseSize.compactIcon)
                         .rotate(iconRotation)
                 )
             }
@@ -1228,7 +1268,10 @@ private class ArTextView(
         Text(
             modifier = modifier,
             text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = when (style) {
+                ArTextStyle.Label -> MaterialTheme.colorScheme.onSurfaceVariant
+                ArTextStyle.Title -> MaterialTheme.colorScheme.onSurface
+            },
             style = when (style) {
                 ArTextStyle.Label -> MaterialTheme.typography.bodySmall
                 ArTextStyle.Title -> MaterialTheme.typography.bodyLarge
