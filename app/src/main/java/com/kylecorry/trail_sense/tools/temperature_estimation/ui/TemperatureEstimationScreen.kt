@@ -20,6 +20,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
+import com.kylecorry.trail_sense.shared.icons.trail.CategoryWater
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -271,7 +272,14 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     isError = humidityError,
                     errorText = humidityErrorText,
-                    unit = "%"
+                    unit = "%",
+                    trailingIcon = {
+                        Icon(
+                            painter = rememberVectorPainter(TrailIcons.CategoryWater),
+                            contentDescription = null,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md)
+                        )
+                    }
                 )
             }
             row { position ->
@@ -450,7 +458,7 @@ private fun TemperatureEstimateHero(
                 fontWeight = FontWeight.SemiBold,
                 color = colors.content,
                 maxLines = 1,
-                autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = 88.sp),
+                autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = if (celsius == null) 64.sp else 88.sp),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -484,9 +492,9 @@ private fun ThermometerBar(celsius: Float?, markerColor: androidx.compose.ui.gra
     androidx.compose.foundation.Canvas(
         Modifier
             .fillMaxWidth()
-            .height(24.dp)
+            .height(28.dp)
     ) {
-        val barHeight = 12.dp.toPx()
+        val barHeight = 18.dp.toPx()
         val top = (size.height - barHeight) / 2f
         drawRoundRect(
             brush = androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(cold, mild, warm, hot)),

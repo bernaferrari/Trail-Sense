@@ -619,7 +619,6 @@ private fun ClimateScreen(
                     TrailSenseStat(
                         label = precipitationLabel,
                         value = precipitationValue ?: "--",
-                        supportingText = stringResource(R.string.climate_monthly_total),
                         tone = TrailSenseTone.Tertiary,
                         icon = TrailIcons.LightRain
                     )

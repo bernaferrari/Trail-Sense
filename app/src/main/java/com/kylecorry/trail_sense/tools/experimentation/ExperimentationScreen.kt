@@ -103,11 +103,6 @@ internal fun ExperimentationContent() {
                     )
                 }
                 // Dashed outlines where installed plugins will sit, so the page previews what it is for.
-                item(key = "slots") {
-                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                        repeat(2) { ExperimentationDashedSlot() }
-                    }
-                }
             }
 
             else -> {

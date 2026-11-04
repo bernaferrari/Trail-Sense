@@ -719,12 +719,12 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
     val poorColor = trailSenseToneColors(TrailSenseTone.Error).container
     val track = colors.content.copy(alpha = 0.12f)
     TrailSenseSpotlight(
-        title = stringResource(R.string.sky_sensors_good, good, total),
-        eyebrow = stringResource(R.string.sensors),
-        supportingText = when {
+        title = when {
             poor + moderate == 0 -> stringResource(R.string.sky_sensors_all_good)
             else -> stringResource(R.string.sky_sensors_attention, poor + moderate)
         },
+        eyebrow = stringResource(R.string.sensors),
+        supportingText = stringResource(R.string.sky_sensors_good, good, total),
         tone = tone,
         titleStyle = MaterialTheme.typography.headlineMedium,
         badge = {

@@ -291,11 +291,7 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
                                     containerColor = wells.content,
                                     contentColor = wells.container
                                 )
-                                Spacer(Modifier.weight(1f))
-                                SurvivalChevron(
-                                    MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
-                                    wells.content
-                                )
+
                             }
                             Spacer(Modifier.height(TrailSenseSpacing.sm))
                             Text(

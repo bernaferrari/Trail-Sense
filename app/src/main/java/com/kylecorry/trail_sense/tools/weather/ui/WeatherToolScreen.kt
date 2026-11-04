@@ -617,6 +617,17 @@ private fun WeatherHost(
                     )
                 }
 
+                item(key = "weather_monitor") {
+                    WeatherMonitorPlayBar(
+                        state = monitorState,
+                        frequency = monitorFrequency,
+                        formatService = formatService,
+                        onSubtitleClick = onChangeMonitorFrequency,
+                        onPlayClick = onToggleMonitor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
 
                 // Pressure leads as one full-width card holding its value, where it is heading and its history;
                 // the other readings sit two-up under it.
@@ -658,20 +669,6 @@ private fun WeatherHost(
                 }
             }
 
-            WeatherMonitorPlayBar(
-                state = monitorState,
-                frequency = monitorFrequency,
-                formatService = formatService,
-                onSubtitleClick = onChangeMonitorFrequency,
-                onPlayClick = onToggleMonitor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
-                        bottom = TrailSenseSpacing.lg
-                    )
-            )
         }
     }
 }
@@ -1301,8 +1298,8 @@ private fun WeatherHeroCard(
                 Surface(
                     onClick = { alert.onClick?.invoke() },
                     shape = RoundedCornerShape(50),
-                    color = trailSenseToneColors(TrailSenseTone.Caution).accent,
-                    contentColor = trailSenseToneColors(TrailSenseTone.Caution).onAccent,
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                     modifier = Modifier
                         .padding(top = TrailSenseSpacing.md)
                         .testTag("weather_item_${alert.id}")

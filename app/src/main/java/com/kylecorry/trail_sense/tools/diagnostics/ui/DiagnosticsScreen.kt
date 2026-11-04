@@ -408,10 +408,7 @@ private fun DiagnosticListItem(
             }
 
             Spacer(Modifier.width(TrailSenseSpacing.sm))
-            TrailSenseValueChip(
-                text = stringResource(if (severity == ToolDiagnosticSeverity.Error) R.string.error else R.string.warning),
-                tone = if (severity == ToolDiagnosticSeverity.Error) TrailSenseTone.Error else TrailSenseTone.Caution
-            )
+            DiagnosticsChevron()
         }
     }
 }

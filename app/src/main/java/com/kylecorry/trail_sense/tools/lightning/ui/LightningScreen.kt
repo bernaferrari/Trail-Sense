@@ -347,7 +347,8 @@ private fun StrikeHero(
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                Row {
+                val placeholder = value == "—"
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         value,
                         style = MaterialTheme.typography.displayLarge.copy(
@@ -356,7 +357,7 @@ private fun StrikeHero(
                             fontFeatureSettings = "tnum"
                         ),
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.alignByBaseline()
+                        modifier = if (placeholder) Modifier else Modifier.alignByBaseline()
                     )
                     Text(
                         unit,
@@ -365,7 +366,7 @@ private fun StrikeHero(
                         color = colors.content.copy(alpha = 0.78f),
                         modifier = Modifier
                             .padding(start = TrailSenseSpacing.sm)
-                            .alignByBaseline()
+                            .then(if (placeholder) Modifier else Modifier.alignByBaseline())
                     )
                 }
                 Text(
