@@ -342,11 +342,11 @@ class RadarCompassView(
         paint.strokeCap = Paint.Cap.ROUND
         paint.color = surfaceColor
         paint.strokeWidth = dp(8f)
-        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(12f), centerPixel.x, centerPixel.y - r + dp(16f), paint)
+        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(4f), centerPixel.x, centerPixel.y - r + dp(20f), paint)
         // Lined up with a cardinal, the lubber takes the primary colour with the hub's detent.
         paint.color = androidx.core.graphics.ColorUtils.blendARGB(textColor, primaryColor, hubProgress)
         paint.strokeWidth = dp(4f)
-        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(12f), centerPixel.x, centerPixel.y - r + dp(16f), paint)
+        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(4f), centerPixel.x, centerPixel.y - r + dp(20f), paint)
         if (!crosshair) return
         paint.strokeWidth = dp(1.5f)
         paint.alpha = 120
