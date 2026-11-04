@@ -3,10 +3,16 @@
     <!-- Bubble level -->
     <string name="level_is_level">Level</string>
     <string name="level_off_by">Off by %1$s</string>
+    <string name="level_right_high">Right side is high</string>
+    <string name="level_left_high">Left side is high</string>
+    <string name="level_top_high">Top edge is high</string>
+    <string name="level_bottom_high">Bottom edge is high</string>
 
     <!-- Clinometer -->
     <string name="clinometer_vertical">Vertical</string>
     <string name="clinometer_incline">Incline</string>
+    <string name="clinometer_verdict">%1$s · %2$s avalanche risk</string>
+    <string name="clinometer_waiting">Turn your phone to measure</string>
 
     <!-- Water boil timer -->
     <string name="water_boil_seconds_left">Seconds left</string>
@@ -53,6 +59,10 @@
     <string name="battery_low">Battery low</string>
     <string name="battery_on_battery">On battery</string>
     <string name="battery_use_short">%1$s use</string>
+    <string name="battery_deep_sleep_label">Deep sleep</string>
+    <string name="battery_last_window">Last %1$s</string>
+    <string name="battery_full_in">Full in %1$s</string>
+    <string name="battery_lasts_about">Lasts about %1$s</string>
 
     <!-- Signal finder -->
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
