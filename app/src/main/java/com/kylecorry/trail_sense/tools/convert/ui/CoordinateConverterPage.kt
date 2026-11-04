@@ -57,13 +57,16 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
         }
         val isInvalid = coordinateText.isNotBlank() && coordinate == null
 
+        // Opening Convert doesn't pop the keyboard; it comes back only after picking a format.
+        var settled by remember { mutableStateOf(false) }
         LaunchedEffect(picking) {
             if (picking) {
                 focusManager.clearFocus()
                 keyboard?.hide()
-            } else {
+            } else if (settled) {
                 focusRequester.requestFocus()
             }
+            settled = true
         }
         BackHandler(enabled = picking) { picking = false }
 

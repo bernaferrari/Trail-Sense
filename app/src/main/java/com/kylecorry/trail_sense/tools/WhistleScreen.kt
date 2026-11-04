@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools
 
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip

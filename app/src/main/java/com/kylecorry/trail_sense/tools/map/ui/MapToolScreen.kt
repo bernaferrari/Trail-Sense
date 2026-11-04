@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -780,14 +779,12 @@ private fun MapHost(
             views = views,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
                 .padding(end = TrailSenseSpacing.screen, bottom = 88.dp)
         )
 
         views.sensorStatusBadges.Content(
             Modifier
                 .align(Alignment.BottomStart)
-                .navigationBarsPadding()
                 .padding(start = TrailSenseSpacing.screen, bottom = 96.dp)
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {

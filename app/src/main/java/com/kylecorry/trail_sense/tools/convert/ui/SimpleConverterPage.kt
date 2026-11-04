@@ -88,8 +88,12 @@ fun <T : Serializable> SimpleConvertScreen(
 
     fun symbolOf(unit: T): String = symbol(format(1f, unit), DecimalFormatter.format(1f, 4, false))
 
+    // Opening Convert doesn't pop the keyboard; it comes up once you tap a row or come back from the units.
+    var settled by remember { mutableStateOf(false) }
     LaunchedEffect(picking, topActive) {
-        if (picking == null) {
+        if (!settled) {
+            settled = true
+        } else if (picking == null) {
             focusRequester.requestFocus()
         } else {
             focusManager.clearFocus()

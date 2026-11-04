@@ -7,7 +7,6 @@ import com.kylecorry.trail_sense.tools.level.ui.CalmKeyValue
 import androidx.compose.material3.LinearWavyProgressIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
-import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode

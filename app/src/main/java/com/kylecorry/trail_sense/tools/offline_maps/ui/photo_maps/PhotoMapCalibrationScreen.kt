@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -524,13 +523,11 @@ private fun PhotoMapCalibrationHost(
         views.zoomInBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
                 .padding(end = TrailSenseSpacing.screen, bottom = 232.dp)
         )
         views.zoomOutBtn.Content(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
                 .padding(end = TrailSenseSpacing.screen, bottom = 176.dp)
         )
         if (views.mapCalibrationBottomPanel.isVisible) {

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.DropdownMenu
@@ -289,7 +288,6 @@ private fun VectorMapScreen(
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .navigationBarsPadding()
                         .padding(end = TrailSenseSpacing.screen, bottom = TrailSenseSpacing.xxl),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.surfaceContainerHighest,

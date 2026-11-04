@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
@@ -47,6 +45,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseChoiceColors
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseImePadding
+
+/** Distance, in [ConvertScreen]'s category order. */
+private const val DEFAULT_CATEGORY = 1
 
 @Composable
 fun ConvertScreen(
@@ -89,7 +91,8 @@ fun ConverterTabs(
     modifier: Modifier = Modifier
 ) {
     // One question: what is this amount in the other unit?
-    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+    // Opens on Distance, the everyday conversion.
+    var selectedIndex by rememberSaveable { mutableIntStateOf(DEFAULT_CATEGORY) }
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     // Each converter keeps what you typed and the units you chose while you look at another one.
@@ -103,9 +106,10 @@ fun ConverterTabs(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding()
+                // Only the part of an open keyboard that covers this page (the bar below already takes the
+                // rest); nothing while it is closed. Scrolls, so the card is never cropped.
+                .trailSenseImePadding()
                 .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
                 .padding(bottom = TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)

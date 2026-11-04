@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -671,7 +670,6 @@ private fun ViewPhotoMapHost(
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .navigationBarsPadding()
                     .padding(
                         start = TrailSenseSpacing.screen,
                         bottom = 120.dp
@@ -692,7 +690,6 @@ private fun ViewPhotoMapHost(
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()
                     .padding(end = TrailSenseSpacing.screen, bottom = 176.dp),
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -712,7 +709,6 @@ private fun ViewPhotoMapHost(
         views.lockBtn.Content(
             Modifier
                 .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
                 .padding(end = TrailSenseSpacing.screen, bottom = 120.dp)
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {

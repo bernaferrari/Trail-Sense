@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import androidx.compose.ui.draw.alpha
-import androidx.compose.foundation.layout.navigationBarsPadding
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
@@ -747,7 +746,6 @@ private fun ClinometerHost(
                 .pointerInteropFilter { event ->
                     views.onTouch?.invoke(event) ?: false
                 }
-                .navigationBarsPadding()
                 .padding(
                     start = TrailSenseSpacing.lg,
                     end = TrailSenseSpacing.lg,

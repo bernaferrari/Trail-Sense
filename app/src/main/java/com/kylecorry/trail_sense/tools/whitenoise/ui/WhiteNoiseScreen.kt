@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
-import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kylecorry.trail_sense.shared.icons.trail.Grass
 import com.kylecorry.trail_sense.shared.icons.trail.Beach
 import com.kylecorry.trail_sense.shared.icons.trail.Wind
