@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.draw.clip
@@ -1006,9 +1007,18 @@ private fun MetalChart(
                 return size.height - ((value - minimum) / range).coerceIn(0f, 1f) * size.height
             }
 
-            // Beyond the band is where metal shows: a soft tint above and below it.
+            // Beyond the band is where metal shows: a soft tint above and below it, all clipped to the panel.
             val top = y(upperThreshold)
             val bottom = y(lowerThreshold)
+            val panel = androidx.compose.ui.graphics.Path().apply {
+                addRoundRect(
+                    androidx.compose.ui.geometry.RoundRect(
+                        plotLeft, 0f, size.width, size.height,
+                        androidx.compose.ui.geometry.CornerRadius(18.dp.toPx())
+                    )
+                )
+            }
+            clipPath(panel) {
             drawRect(
                 Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.22f), metalColor.copy(alpha = 0.04f)), endY = top),
                 topLeft = androidx.compose.ui.geometry.Offset(plotLeft, 0f),
@@ -1068,6 +1078,7 @@ private fun MetalChart(
             val now = androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last))
             drawCircle(lineColor.copy(alpha = 0.18f), 14.dp.toPx(), now)
             drawCircle(lineColor, 6.dp.toPx(), now)
+            }
 
             // Word labels for the bands, in the gutter, right-aligned against the panel: no trace can cross them.
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {

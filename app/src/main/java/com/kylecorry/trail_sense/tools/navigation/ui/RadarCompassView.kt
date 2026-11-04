@@ -89,6 +89,7 @@ class RadarCompassView(
 
     private var sunBackColor: Int = Color.YELLOW
     private var moonBackColor: Int = Color.DKGRAY
+    private var moonInkColor: Int = Color.WHITE
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -97,7 +98,8 @@ class RadarCompassView(
         textColor = MaterialTheme.colorScheme.onSurface.toArgb()
         turnColor = MaterialTheme.colorScheme.tertiary.toArgb()
         sunBackColor = MaterialTheme.colorScheme.tertiaryContainer.toArgb()
-        moonBackColor = MaterialTheme.colorScheme.inverseSurface.toArgb()
+        moonBackColor = MaterialTheme.colorScheme.secondaryContainer.toArgb()
+        moonInkColor = MaterialTheme.colorScheme.onSecondaryContainer.toArgb()
         Canvas(
             modifier = modifier
                 .fillMaxSize()
@@ -362,18 +364,23 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
         paint.alpha = (255 * reference.opacity).toInt()
-        paint.colorFilter = reference.tint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
+        // The moon's art renders dark on the dial; it takes the disc's on-colour instead, a quiet badge.
+        val tint = reference.tint ?: moonInkColor.takeIf { reference.icon != TrailIcons.Sun }
+        paint.colorFilter = tint?.let { PorterDuffColorFilter(it, PorterDuff.Mode.SRC_IN) }
 
         nativeCanvas.save()
         nativeCanvas.rotate(reference.bearing, centerPixel.x, centerPixel.y)
         nativeCanvas.translate(centerPixel.x, iconSize / 2f + dp(1f))
-        // The sun and moon ride the rim on a small disc of their own (a warm day disc, a night disc for the moon),
+        // The sun and moon ride the rim on a small disc of their own (a warm tertiary disc for the sun, a secondary one for the moon),
         // so the moon's pale art never reads as a hole in the dial.
-        val back = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = if (reference.icon == TrailIcons.Sun) sunBackColor else moonBackColor
-            alpha = (255 * reference.opacity).toInt()
+        // Tinted references (beacons) keep their own mark; only the untinted sky art gets a disc.
+        if (reference.tint == null) {
+            val back = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (reference.icon == TrailIcons.Sun) sunBackColor else moonBackColor
+                alpha = (255 * reference.opacity).toInt()
+            }
+            nativeCanvas.drawCircle(0f, 0f, sizeDp / 2f + dp(3f), back)
         }
-        nativeCanvas.drawCircle(0f, 0f, sizeDp / 2f + dp(3f), back)
         nativeCanvas.rotate(reference.rotation)
         nativeCanvas.drawBitmap(bitmap, -bitmap.width / 2f, -bitmap.height / 2f, paint)
         nativeCanvas.restore()

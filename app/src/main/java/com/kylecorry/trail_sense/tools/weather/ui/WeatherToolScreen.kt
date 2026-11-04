@@ -1036,13 +1036,7 @@ private fun WeatherPressureChart(
         ) {
             val pad = 12.dp.toPx()
             val h = size.height - 2 * pad
-            // No numeric grid: a soft middle band marks the window's usual range, the words at the left do the rest.
-            drawRoundRect(
-                grid.copy(alpha = 0.22f),
-                topLeft = Offset(0f, pad + h / 3f),
-                size = androidx.compose.ui.geometry.Size(size.width, h / 3f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx())
-            )
+            // No numeric grid and no band: the gutter's words carry the scale, the panel is the only frame.
 
             fun at(point: WeatherPressureChartPoint) = Offset(
                 chartPoints.x(point.x, size.width),
