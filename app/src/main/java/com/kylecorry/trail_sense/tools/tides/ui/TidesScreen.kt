@@ -4,9 +4,9 @@ package com.kylecorry.trail_sense.tools.tides.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.annotation.SuppressLint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -279,10 +279,9 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         )
     }
 
-    @DrawableRes
-    fun getCurrentTideIcon(): Int {
-        val current = current ?: return R.drawable.ic_tide_half
-        return TideFormatter(host.requireContext()).getTideTypeImage(current.type)
+    fun getCurrentTideIcon(): ImageVector {
+        val current = current ?: return TrailIcons.TideHalf
+        return TideFormatter(host.requireContext()).getTideTypeIcon(current.type)
     }
 
     @SuppressLint("SetTextI18n")
@@ -318,7 +317,7 @@ private fun TidesScreen(
     subtitle: String,
     isRising: Boolean?,
     nextTide: String?,
-    @DrawableRes icon: Int,
+    icon: ImageVector,
     isLoading: Boolean,
     displayDate: LocalDate,
     daily: DailyTideData?,
@@ -355,7 +354,7 @@ private fun TidesScreen(
                 eyebrow = subtitle.ifBlank { null },
                 title = title,
                 supportingText = supporting,
-                icon = painterResource(icon),
+                icon = rememberVectorPainter(icon),
                 action = if (isLoading) {
                     {
                         CircularProgressIndicator(
@@ -704,7 +703,7 @@ private fun TidesScreenPreview() {
             subtitle = "Harbor",
             isRising = true,
             nextTide = "Next: Low at 3:42 PM",
-            icon = R.drawable.ic_tide_high,
+            icon = TrailIcons.TideHigh,
             isLoading = false,
             displayDate = LocalDate.now(),
             daily = null,

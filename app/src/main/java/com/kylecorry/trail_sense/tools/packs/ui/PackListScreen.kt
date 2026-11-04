@@ -261,7 +261,7 @@ private fun PackListScreen(
         if (packs.isEmpty()) {
             item(key = "empty") {
                 TrailSenseEmptyState(
-                    icon = ImageVector.vectorResource(R.drawable.ic_tool_pack),
+                    icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
                     action = {

@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+
 import android.text.InputType
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
@@ -409,7 +411,7 @@ private fun CategoryInput(
             position = position,
             modifier = Modifier.testTag("category_spinner"),
             onClick = { isOpen = true },
-            leading = { PacksIconWell(painterResource(iconMapper.getIcon(category))) }
+            leading = { PacksIconWell(rememberVectorPainter(iconMapper.getIconVector(category))) }
         ) {
             Text(
                 text = stringResource(R.string.category),
@@ -435,7 +437,7 @@ private fun CategoryInput(
                     text = { Text(option.second) },
                     leadingIcon = {
                         Icon(
-                            painter = painterResource(iconMapper.getIcon(option.first)),
+                            painter = rememberVectorPainter(iconMapper.getIconVector(option.first)),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )

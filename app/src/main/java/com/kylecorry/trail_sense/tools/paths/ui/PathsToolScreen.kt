@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
@@ -866,8 +867,8 @@ private fun BacktrackRow(
                         .testTag("play_btn")
                 ) {
                     Icon(
-                        painter = painterResource(
-                            if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
+                        painter = rememberVectorPainter(
+                            if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
                         ),
                         contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
                     )
@@ -905,7 +906,7 @@ private fun PathRow(
     TrailSenseListItem(
         title = title,
         subtitle = subtitle,
-        icon = painterResource(getPathIcon(path)),
+        icon = rememberVectorPainter(getPathIcon(path)),
         iconTint = androidx.compose.ui.graphics.Color(path.style.color),
         position = position,
         onClick = { onAction(PathAction.Show) },
@@ -936,8 +937,8 @@ private fun PathRowActions(
             modifier = Modifier.testTag("path_visibility_toggle_$title")
         ) {
             Icon(
-                painter = painterResource(
-                    if (path.style.visible) R.drawable.ic_visible else R.drawable.ic_not_visible
+                painter = rememberVectorPainter(
+                    if (path.style.visible) TrailIcons.Visible else TrailIcons.NotVisible
                 ),
                 contentDescription = stringResource(if (path.style.visible) R.string.hide else R.string.show),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1050,19 +1051,19 @@ private fun PathGroupMenuItem(
     )
 }
 
-private fun getPathIcon(path: Path): Int {
+private fun getPathIcon(path: Path): ImageVector {
     if (!path.style.visible) {
-        return R.drawable.ic_not_visible
+        return TrailIcons.NotVisible
     }
 
     return when (path.style.line) {
-        LineStyle.Solid -> R.drawable.path_solid
-        LineStyle.Dotted -> R.drawable.path_dotted
-        LineStyle.Arrow -> R.drawable.path_arrow
-        LineStyle.Dashed -> R.drawable.path_dashed
-        LineStyle.Square -> R.drawable.path_square
-        LineStyle.Diamond -> R.drawable.path_diamond
-        LineStyle.Cross -> R.drawable.path_cross
+        LineStyle.Solid -> TrailIcons.PathSolid
+        LineStyle.Dotted -> TrailIcons.PathDotted
+        LineStyle.Arrow -> TrailIcons.PathArrow
+        LineStyle.Dashed -> TrailIcons.PathDashed
+        LineStyle.Square -> TrailIcons.PathSquare
+        LineStyle.Diamond -> TrailIcons.PathDiamond
+        LineStyle.Cross -> TrailIcons.PathCross
     }
 }
 

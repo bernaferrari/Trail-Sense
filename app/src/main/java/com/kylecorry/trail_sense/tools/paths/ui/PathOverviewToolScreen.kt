@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -384,7 +385,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
             } else {
                 Resources.dp(host.requireContext(), 250f).toInt()
             }
-            views.pathMapFullscreenToggle.setImageResource(if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_recenter)
+            views.pathMapFullscreenToggle.setIcon(if (isFullscreen) TrailIcons.FullscreenExit else TrailIcons.Recenter)
             val timer = CoroutineTimer {
                 if (isViewReady) {
                     views.root.scrollToTop()
@@ -990,7 +991,7 @@ private class PathTitleState {
 
 private class PathDataPointState(
     initialDescription: String,
-    val icon: Int
+    val icon: ImageVector
 ) {
     var title by mutableStateOf("")
     var description by mutableStateOf(initialDescription)
@@ -1215,7 +1216,7 @@ private fun PathSummaryHero(views: PathOverviewViews) {
     TrailSenseHeroCard(
         eyebrow = distance.description,
         title = distance.title.ifBlank { stringResource(R.string.dash) },
-        icon = painterResource(distance.icon),
+        icon = rememberVectorPainter(distance.icon),
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
@@ -1263,7 +1264,7 @@ private fun PathStat(state: PathDataPointState, modifier: Modifier = Modifier) {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(state.icon),
+                    painter = rememberVectorPainter(state.icon),
                     contentDescription = null,
                     modifier = Modifier.size(TrailSenseSize.compactIcon)
                 )
@@ -1290,7 +1291,7 @@ private fun PathStat(state: PathDataPointState, modifier: Modifier = Modifier) {
 private fun PathStatRow(state: PathDataPointState, position: TrailSenseGroupPosition) {
     TrailSenseListItem(
         title = state.description,
-        icon = painterResource(state.icon),
+        icon = rememberVectorPainter(state.icon),
         position = position,
         onClick = state.onClick,
         trailing = {
@@ -1331,21 +1332,21 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
         keepScreenOn = true
     }
 
-    val fullscreenToggle = PathIconButton(R.drawable.ic_recenter, R.string.center)
+    val fullscreenToggle = PathIconButton(TrailIcons.Recenter, R.string.center)
 
     val selectedPoint = PathSelectedPointView().apply {
         isVisible = false
     }
 
     val legend = ColorScaleState()
-    val duration = createDataPoint(context, R.drawable.ic_tool_clock, R.string.duration)
-    val distance = createDataPoint(context, R.drawable.ruler, R.string.distance)
-    val points = createDataPoint(context, R.drawable.ic_location, R.string.points)
-    val difficulty = createDataPoint(context, R.drawable.steps, R.string.difficulty)
-    val gain = createDataPoint(context, R.drawable.ic_elevation_gain, R.string.ascent)
-    val loss = createDataPoint(context, R.drawable.ic_elevation_loss, R.string.descent)
-    val min = createDataPoint(context, R.drawable.ic_elevation_loss, R.string.lowest_point_elevation)
-    val max = createDataPoint(context, R.drawable.ic_elevation_gain, R.string.highest_point_elevation)
+    val duration = createDataPoint(context, TrailIcons.ToolClock, R.string.duration)
+    val distance = createDataPoint(context, TrailIcons.Ruler, R.string.distance)
+    val points = createDataPoint(context, TrailIcons.Location, R.string.points)
+    val difficulty = createDataPoint(context, TrailIcons.Steps, R.string.difficulty)
+    val gain = createDataPoint(context, TrailIcons.ElevationGain, R.string.ascent)
+    val loss = createDataPoint(context, TrailIcons.ElevationLoss, R.string.descent)
+    val min = createDataPoint(context, TrailIcons.ElevationLoss, R.string.lowest_point_elevation)
+    val max = createDataPoint(context, TrailIcons.ElevationGain, R.string.highest_point_elevation)
 
     val chart = PathElevationChart(context)
 
@@ -1447,14 +1448,14 @@ private class PathActionsView {
 }
 
 private class PathIconButton(
-    icon: Int,
+    icon: ImageVector,
     private val contentDescription: Int
 ) {
-    private var iconRes by mutableIntStateOf(icon)
+    private var iconVector by mutableStateOf(icon)
     var onClick by mutableStateOf<(() -> Unit)?>(null)
 
-    fun setImageResource(icon: Int) {
-        iconRes = icon
+    fun setIcon(icon: ImageVector) {
+        iconVector = icon
     }
 
     @Composable
@@ -1468,7 +1469,7 @@ private class PathIconButton(
             )
         ) {
             Icon(
-                painter = painterResource(iconRes),
+                painter = rememberVectorPainter(iconVector),
                 contentDescription = stringResource(contentDescription),
                 modifier = Modifier.size(TrailSenseSize.leadingIcon)
             )
@@ -1478,7 +1479,7 @@ private class PathIconButton(
 
 private fun createDataPoint(
     context: Context,
-    icon: Int,
+    icon: ImageVector,
     description: Int
 ): PathDataPointState {
     return PathDataPointState(

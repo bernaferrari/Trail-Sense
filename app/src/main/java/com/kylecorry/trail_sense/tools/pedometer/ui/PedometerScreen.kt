@@ -4,9 +4,9 @@ package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
@@ -56,7 +56,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -214,13 +213,13 @@ internal fun PedometerScreen(
             tag = "pedometer_speed",
             title = currentSpeed,
             label = stringResource(R.string.current_speed),
-            icon = R.drawable.ic_speed
+            icon = TrailIcons.Speed
         ),
         PedometerDataPoint(
             tag = "pedometer_average_speed",
             title = averageSpeed,
             label = stringResource(R.string.average_speed),
-            icon = R.drawable.ic_speed
+            icon = TrailIcons.Speed
         )
     )
     val paceData = listOf(
@@ -228,13 +227,13 @@ internal fun PedometerScreen(
             tag = "pedometer_pace",
             title = currentPace,
             label = stringResource(R.string.current_pace),
-            icon = R.drawable.ic_tool_clock
+            icon = TrailIcons.ToolClock
         ),
         PedometerDataPoint(
             tag = "pedometer_average_pace",
             title = averagePace,
             label = stringResource(R.string.average_pace),
-            icon = R.drawable.ic_tool_clock
+            icon = TrailIcons.ToolClock
         )
     )
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -472,13 +471,13 @@ private fun HourlyStepsHistory(
                         tag = "hourly_steps_total_steps",
                         title = DecimalFormatter.format(totalSteps, 0),
                         label = stringResource(R.string.steps),
-                        icon = R.drawable.steps
+                        icon = TrailIcons.Steps
                     ),
                     PedometerDataPoint(
                         tag = "hourly_steps_total_distance",
                         title = formatStepsDistance(totalSteps),
                         label = stringResource(R.string.distance),
-                        icon = R.drawable.ruler
+                        icon = TrailIcons.Ruler
                     )
                 ),
                 position = position
@@ -520,13 +519,13 @@ private fun HourlyStepsHistory(
                             tag = "hourly_steps_details_steps",
                             title = DecimalFormatter.format(selectedHour.steps, 0),
                             label = stringResource(R.string.steps),
-                            icon = R.drawable.steps
+                            icon = TrailIcons.Steps
                         ),
                         PedometerDataPoint(
                             tag = "hourly_steps_details_distance",
                             title = formatStepsDistance(selectedHour.steps),
                             label = stringResource(R.string.distance),
-                            icon = R.drawable.ruler
+                            icon = TrailIcons.Ruler
                         )
                     ),
                     position = position,
@@ -664,7 +663,7 @@ private fun PedometerMetricPair(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                painter = painterResource(point.icon),
+                                painter = rememberVectorPainter(point.icon),
                                 contentDescription = null,
                                 modifier = Modifier.size(TrailSenseSize.compactIcon)
                             )
@@ -751,8 +750,8 @@ private fun PedometerStartStopRow(
                 shape = if (isOn) MaterialTheme.shapes.large else CircleShape
             ) {
                 Icon(
-                    painter = painterResource(
-                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
+                    painter = rememberVectorPainter(
+                        if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
                     ),
                     contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
                 )
@@ -877,5 +876,5 @@ private data class PedometerDataPoint(
     val tag: String,
     val title: String,
     val label: String,
-    @DrawableRes val icon: Int
+    val icon: ImageVector
 )

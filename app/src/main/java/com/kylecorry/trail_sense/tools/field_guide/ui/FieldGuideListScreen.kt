@@ -39,8 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.Lifecycle
@@ -137,18 +138,18 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     )
 
     private val tagImageMap = mapOf(
-        FieldGuidePageTag.Plant to R.drawable.ic_category_natural,
-        FieldGuidePageTag.Fungus to R.drawable.mushroom,
-        FieldGuidePageTag.Animal to R.drawable.paw,
-        FieldGuidePageTag.Mammal to R.drawable.ic_deer,
-        FieldGuidePageTag.Bird to R.drawable.bird,
-        FieldGuidePageTag.Reptile to R.drawable.lizard,
-        FieldGuidePageTag.Amphibian to R.drawable.frog,
-        FieldGuidePageTag.Fish to R.drawable.fish,
-        FieldGuidePageTag.Invertebrate to R.drawable.ant,
-        FieldGuidePageTag.Rock to R.drawable.gem,
-        FieldGuidePageTag.Weather to R.drawable.cloud,
-        FieldGuidePageTag.Other to R.drawable.ic_help
+        FieldGuidePageTag.Plant to TrailIcons.CategoryNatural,
+        FieldGuidePageTag.Fungus to TrailIcons.Mushroom,
+        FieldGuidePageTag.Animal to TrailIcons.Paw,
+        FieldGuidePageTag.Mammal to TrailIcons.Deer,
+        FieldGuidePageTag.Bird to TrailIcons.Bird,
+        FieldGuidePageTag.Reptile to TrailIcons.Lizard,
+        FieldGuidePageTag.Amphibian to TrailIcons.Frog,
+        FieldGuidePageTag.Fish to TrailIcons.Fish,
+        FieldGuidePageTag.Invertebrate to TrailIcons.Ant,
+        FieldGuidePageTag.Rock to TrailIcons.Gem,
+        FieldGuidePageTag.Weather to TrailIcons.Cloud,
+        FieldGuidePageTag.Other to TrailIcons.Help
     )
 
     fun onCreate() {
@@ -210,7 +211,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                             filteredPages.count { it.tags.contains(tag) },
                             filteredPages.count { it.tags.contains(tag) }
                         ),
-                        icon = tagImageMap[tag] ?: R.drawable.ic_help,
+                        icon = tagImageMap[tag] ?: TrailIcons.Help,
                         onClick = { tagFilter = tag }
                     )
                 }
@@ -236,8 +237,8 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
         return headingTags.map { it to mapper.getName(it) }
     }
 
-    fun getTagIcon(tag: FieldGuidePageTag): Int {
-        return tagImageMap[tag] ?: R.drawable.ic_help
+    fun getTagIcon(tag: FieldGuidePageTag): ImageVector {
+        return tagImageMap[tag] ?: TrailIcons.Help
     }
 
     fun toggleTag(tag: FieldGuidePageTag) {
@@ -339,7 +340,7 @@ private fun FieldGuideScreen(
     items: FieldGuideListItems,
     tagFilter: FieldGuidePageTag?,
     tagFilters: List<Pair<FieldGuidePageTag, String>>,
-    tagIcon: (FieldGuidePageTag) -> Int,
+    tagIcon: (FieldGuidePageTag) -> ImageVector,
     onTagSelected: (FieldGuidePageTag) -> Unit,
     onBack: () -> Unit,
     onQueryChange: (String) -> Unit,
@@ -412,7 +413,7 @@ private fun FieldGuideScreen(
                             title = AnnotatedString(category.title),
                             subtitle = category.subtitle,
                             position = position,
-                            leading = { FieldGuideIconWell(painterResource(category.icon)) },
+                            leading = { FieldGuideIconWell(rememberVectorPainter(category.icon)) },
                             onClick = category.onClick
                         )
                     }
@@ -481,7 +482,7 @@ private const val LETTER_SECTION_THRESHOLD = 12
 private fun FieldGuideTagFilters(
     tags: List<Pair<FieldGuidePageTag, String>>,
     selected: FieldGuidePageTag?,
-    tagIcon: (FieldGuidePageTag) -> Int,
+    tagIcon: (FieldGuidePageTag) -> ImageVector,
     onSelect: (FieldGuidePageTag) -> Unit
 ) {
     val state = rememberLazyListState()
@@ -509,7 +510,7 @@ private fun FieldGuideTagFilters(
                         painter = if (isSelected) {
                             rememberVectorPainter(Icons.Rounded.Check)
                         } else {
-                            painterResource(tagIcon(tag))
+                            rememberVectorPainter(tagIcon(tag))
                         },
                         contentDescription = null,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
@@ -615,7 +616,7 @@ private sealed interface FieldGuideListItem {
         val tag: FieldGuidePageTag,
         val title: String,
         val subtitle: String,
-        val icon: Int,
+        val icon: ImageVector,
         val onClick: () -> Unit
     ) : FieldGuideListItem {
         override val id: Long = tag.id

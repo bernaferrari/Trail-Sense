@@ -4,9 +4,9 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -153,7 +153,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
         private set
     var tide by mutableStateOf<String?>(null)
         private set
-    var tideIcon by mutableStateOf(R.drawable.ic_tide_half)
+    var tideIcon by mutableStateOf(TrailIcons.TideHalf)
         private set
 
     fun onResume() {
@@ -223,7 +223,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
     private suspend fun updateBeaconTides(beacon: Beacon) {
         val nearestTide = tides.getNearestTide(beacon.coordinate)
         tide = nearestTide?.let { tideFormatter.getTideTypeName(it.now.type) }
-        tideIcon = tideFormatter.getTideTypeImage(nearestTide?.now?.type)
+        tideIcon = tideFormatter.getTideTypeIcon(nearestTide?.now?.type)
     }
 
     private suspend fun updateBeaconTemperature(beacon: Beacon) {
@@ -308,7 +308,7 @@ private fun BeaconDetailsScreen(
     sunrise: String?,
     sunset: String?,
     tide: String?,
-    @DrawableRes tideIcon: Int,
+    tideIcon: ImageVector,
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onNavigate: () -> Unit,
@@ -388,7 +388,7 @@ private fun BeaconDetailsScreen(
                         tag = "beacon_altitude",
                         title = it,
                         description = stringResource(R.string.elevation),
-                        icon = R.drawable.ic_altitude,
+                        icon = TrailIcons.Altitude,
                         position = position
                     )
                 }
@@ -398,7 +398,7 @@ private fun BeaconDetailsScreen(
                     tag = "beacon_temperature",
                     title = temperature.ifBlank { placeholder },
                     description = stringResource(R.string.temperature_high_low),
-                    icon = R.drawable.ic_temperature_range,
+                    icon = TrailIcons.TemperatureRange,
                     position = position,
                     onClick = onTemperatureClick
                 )
@@ -409,7 +409,7 @@ private fun BeaconDetailsScreen(
                         tag = "beacon_sunrise",
                         title = it,
                         description = stringResource(R.string.sunrise),
-                        icon = R.drawable.ic_sunrise_notification,
+                        icon = TrailIcons.SunriseNotification,
                         position = position
                     )
                 }
@@ -420,7 +420,7 @@ private fun BeaconDetailsScreen(
                         tag = "beacon_sunset",
                         title = it,
                         description = stringResource(R.string.sunset),
-                        icon = R.drawable.ic_sunset_notification,
+                        icon = TrailIcons.SunsetNotification,
                         position = position
                     )
                 }
@@ -518,14 +518,14 @@ private fun DetailRow(
     tag: String,
     title: String,
     description: String,
-    @DrawableRes icon: Int,
+    icon: ImageVector,
     position: TrailSenseGroupPosition,
     onClick: (() -> Unit)? = null
 ) {
     TrailSenseListItem(
         title = title,
         subtitle = description,
-        icon = painterResource(icon),
+        icon = rememberVectorPainter(icon),
         position = position,
         onClick = onClick,
         modifier = Modifier.testTag(tag)
@@ -545,7 +545,7 @@ private fun BeaconDetailsScreenPreview() {
             sunrise = "6:00 AM",
             sunset = "7:30 PM",
             tide = "High",
-            tideIcon = R.drawable.ic_tide_high,
+            tideIcon = TrailIcons.TideHigh,
             onShare = {},
             onDelete = {},
             onNavigate = {},

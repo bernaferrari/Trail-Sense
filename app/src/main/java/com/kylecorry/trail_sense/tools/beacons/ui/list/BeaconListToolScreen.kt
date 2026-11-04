@@ -2,12 +2,12 @@ package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -875,22 +875,22 @@ private fun BeaconListMenu(
             expanded = isMenuOpen,
             onDismissRequest = { isMenuOpen = false }
         ) {
-            BeaconMenuEntry(sortMenuText, R.drawable.sort_ascending) {
+            BeaconMenuEntry(sortMenuText, TrailIcons.SortAscending) {
                 isMenuOpen = false
                 onToolbarAction(BeaconToolbarAction.Sort)
             }
-            BeaconMenuEntry(stringResource(R.string.export), R.drawable.ic_import_export) {
+            BeaconMenuEntry(stringResource(R.string.export), TrailIcons.ImportExport) {
                 isMenuOpen = false
                 onToolbarAction(BeaconToolbarAction.Export)
             }
             BeaconMenuEntry(
                 stringResource(R.string.navigate_to_nearest_cell_signal),
-                R.drawable.signal_cellular_3
+                TrailIcons.SignalCellular3
             ) {
                 isMenuOpen = false
                 onToolbarAction(BeaconToolbarAction.NavigateToNearestCellSignal)
             }
-            BeaconMenuEntry(stringResource(R.string.delete), R.drawable.ic_delete) {
+            BeaconMenuEntry(stringResource(R.string.delete), TrailIcons.Delete) {
                 isMenuOpen = false
                 onToolbarAction(BeaconToolbarAction.Delete)
             }
@@ -901,12 +901,12 @@ private fun BeaconListMenu(
 @Composable
 private fun BeaconMenuEntry(
     label: String,
-    @DrawableRes icon: Int,
+    icon: ImageVector,
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
         text = { Text(label) },
-        leadingIcon = { Icon(painterResource(icon), contentDescription = null) },
+        leadingIcon = { Icon(icon, contentDescription = null) },
         onClick = onClick
     )
 }
@@ -920,10 +920,10 @@ private fun BeaconCreateMenu(
     onAction: (BeaconCreateAction) -> Unit
 ) {
     val entries = listOf(
-        Triple(R.string.qr_code, R.drawable.ic_qr_code, BeaconCreateAction.ImportQr),
-        Triple(R.string.import_gpx, R.drawable.ic_import_export, BeaconCreateAction.ImportGpx),
-        Triple(R.string.group, R.drawable.ic_beacon_group, BeaconCreateAction.CreateGroup),
-        Triple(R.string.beacon, R.drawable.ic_location, BeaconCreateAction.CreateBeacon)
+        Triple(R.string.qr_code, TrailIcons.QrCode, BeaconCreateAction.ImportQr),
+        Triple(R.string.import_gpx, TrailIcons.ImportExport, BeaconCreateAction.ImportGpx),
+        Triple(R.string.group, TrailIcons.BeaconGroup, BeaconCreateAction.CreateGroup),
+        Triple(R.string.beacon, TrailIcons.Location, BeaconCreateAction.CreateBeacon)
     )
     FloatingActionButtonMenu(
         expanded = isOpen,
@@ -947,7 +947,7 @@ private fun BeaconCreateMenu(
         entries.forEach { (label, icon, action) ->
             FloatingActionButtonMenuItem(
                 onClick = { onAction(action) },
-                icon = { Icon(painterResource(icon), contentDescription = null) },
+                icon = { Icon(icon, contentDescription = null) },
                 text = { Text(stringResource(label)) }
             )
         }
@@ -1006,11 +1006,11 @@ private fun BeaconRowActions(
                 modifier = Modifier.testTag("beacon_visibility_toggle")
             ) {
                 Icon(
-                    painter = painterResource(
+                    painter = rememberVectorPainter(
                         if (beacon.visible) {
-                            R.drawable.ic_visible
+                            TrailIcons.Visible
                         } else {
-                            R.drawable.ic_not_visible
+                            TrailIcons.NotVisible
                         }
                     ),
                     contentDescription = stringResource(

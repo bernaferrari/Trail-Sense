@@ -4,7 +4,9 @@ package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
@@ -24,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -292,7 +293,7 @@ private fun TideTableRow(
         modifier = Modifier.testTag("tide_table_item"),
         onClick = { onSelect(tide) },
         leading = {
-            TidesIconWell(painterResource(getTideIcon(if (tide.isVisible) tideType else null)))
+            TidesIconWell(rememberVectorPainter(getTideIcon(if (tide.isVisible) tideType else null)))
         },
         trailing = if (tide.isEditable) {
             {
@@ -329,12 +330,11 @@ private fun TideTableRow(
     }
 }
 
-@DrawableRes
-private fun getTideIcon(tide: TideType?): Int {
+private fun getTideIcon(tide: TideType?): ImageVector {
     return when (tide) {
-        TideType.High -> R.drawable.ic_tide_high
-        TideType.Low -> R.drawable.ic_tide_low
-        null -> R.drawable.ic_tide_half
+        TideType.High -> TrailIcons.TideHigh
+        TideType.Low -> TrailIcons.TideLow
+        null -> TrailIcons.TideHalf
     }
 }
 

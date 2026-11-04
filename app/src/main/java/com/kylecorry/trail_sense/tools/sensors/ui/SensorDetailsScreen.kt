@@ -4,13 +4,13 @@ package com.kylecorry.trail_sense.tools.sensors.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -72,7 +71,6 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
@@ -200,7 +198,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
                 "",
                 host.getString(R.string.unavailable),
                 CustomUiUtils.getQualityColor(Quality.Poor),
-                R.drawable.ic_compass_icon
+                TrailIcons.CompassIcon
             )
         }
     }
@@ -263,7 +261,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             ),
             formatService.formatQuality(gyroscope.quality),
             CustomUiUtils.getQualityColor(gyroscope.quality),
-            R.drawable.ic_gyro
+            TrailIcons.Gyro
         )
     }
 
@@ -276,7 +274,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             ),
             formatService.formatQuality(Quality.Good),
             CustomUiUtils.getQualityColor(Quality.Good),
-            R.drawable.ic_tool_clock
+            TrailIcons.ToolClock
         )
     }
 
@@ -286,7 +284,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatLocation(cachedGPS.location),
             getGPSCacheStatus(),
             CustomUiUtils.getQualityColor(getGPSCacheQuality()),
-            R.drawable.satellite
+            TrailIcons.Satellite
         )
     }
 
@@ -302,7 +300,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatDistance(altitude),
             getAltimeterCacheStatus(),
             CustomUiUtils.getQualityColor(getAltimeterCacheQuality()),
-            R.drawable.ic_altitude
+            TrailIcons.Altitude
         )
     }
 
@@ -317,7 +315,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatDistance(altitude),
             getAltimeterStatus(),
             getAltimeterColor(),
-            R.drawable.ic_altitude
+            TrailIcons.Altitude
         )
     }
 
@@ -332,7 +330,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatPercentage(battery.percent),
             formatService.formatBatteryHealth(battery.health),
             CustomUiUtils.getQualityColor(quality),
-            R.drawable.ic_tool_battery
+            TrailIcons.ToolBattery
         )
     }
 
@@ -350,7 +348,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             ),
             formatService.formatQuality(barometer.quality),
             CustomUiUtils.getQualityColor(barometer.quality),
-            R.drawable.ic_weather
+            TrailIcons.Weather
         )
     }
 
@@ -360,7 +358,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             "${formatService.formatLocation(gps.location)}\n${gps.satellites ?: 0} ${host.getString(R.string.satellites)}",
             getGPSStatus(),
             getGPSColor(),
-            R.drawable.satellite
+            TrailIcons.Satellite
         )
     }
 
@@ -371,7 +369,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
                 "-",
                 unavailableText,
                 CustomUiUtils.getQualityColor(Quality.Unknown),
-                R.drawable.ic_compass_icon
+                TrailIcons.CompassIcon
             )
         } else {
             SensorDetails(
@@ -379,7 +377,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
                 formatService.formatDegrees(compass.rawBearing, replace360 = true),
                 formatService.formatQuality(compass.quality),
                 CustomUiUtils.getQualityColor(compass.quality),
-                R.drawable.ic_compass_icon
+                TrailIcons.CompassIcon
             )
         }
     }
@@ -394,7 +392,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatTemperature(temperature),
             formatService.formatQuality(thermometer.quality),
             CustomUiUtils.getQualityColor(thermometer.quality),
-            R.drawable.thermometer
+            TrailIcons.Thermometer
         )
     }
 
@@ -408,7 +406,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatPercentage(hygrometer.humidity),
             formatService.formatQuality(hygrometer.quality),
             CustomUiUtils.getQualityColor(hygrometer.quality),
-            R.drawable.ic_category_water
+            TrailIcons.CategoryWater
         )
     }
 
@@ -418,7 +416,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatAcceleration(gravity.acceleration.magnitude(), 2),
             formatService.formatQuality(gravity.quality),
             CustomUiUtils.getQualityColor(gravity.quality),
-            R.drawable.ic_tool_cliff_height
+            TrailIcons.ToolCliffHeight
         )
     }
 
@@ -428,7 +426,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatAcceleration(accelerometer.acceleration.magnitude(), 2),
             formatService.formatQuality(accelerometer.quality),
             CustomUiUtils.getQualityColor(accelerometer.quality),
-            R.drawable.ic_tool_cliff_height
+            TrailIcons.ToolCliffHeight
         )
     }
 
@@ -445,7 +443,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             })",
             formatService.formatQuality(signal?.quality ?: Quality.Unknown),
             CustomUiUtils.getQualityColor(signal?.quality ?: Quality.Unknown),
-            CellSignalUtils.getCellQualityImage(signal?.quality)
+            getCellQualityIcon(signal?.quality)
         )
     }
 
@@ -455,7 +453,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             formatService.formatMagneticField(magnetometer.magneticField.magnitude()),
             formatService.formatQuality(magnetometer.quality),
             CustomUiUtils.getQualityColor(magnetometer.quality),
-            R.drawable.ic_tool_metal_detector
+            TrailIcons.ToolMetalDetector
         )
     }
 
@@ -571,12 +569,22 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
 }
 
+/** The cell signal bars for a quality; mirrors CellSignalUtils.getCellQualityImage. */
+private fun getCellQualityIcon(quality: Quality?): ImageVector {
+    return when (quality) {
+        Quality.Poor -> TrailIcons.SignalCellular1
+        Quality.Moderate -> TrailIcons.SignalCellular2
+        Quality.Good -> TrailIcons.SignalCellular3
+        else -> TrailIcons.SignalCellularOutline
+    }
+}
+
 data class SensorDetails(
     val name: String,
     val description: String,
     val statusMessage: String,
     @ColorInt val statusColor: Int,
-    @DrawableRes val statusIcon: Int
+    val statusIcon: ImageVector
 )
 
 /**
@@ -631,7 +639,7 @@ private fun SensorDetailsRow(
     TrailSenseListItem(
         title = sensor.name,
         subtitle = sensor.description.takeIf { it.isNotBlank() },
-        icon = painterResource(sensor.statusIcon),
+        icon = rememberVectorPainter(sensor.statusIcon),
         position = position,
         trailing = { SensorStatus(sensor) }
     )

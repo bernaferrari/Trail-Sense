@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
@@ -465,7 +467,7 @@ private fun PackItemScreen(
         if (items.isEmpty()) {
             item(key = "empty") {
                 TrailSenseEmptyState(
-                    icon = ImageVector.vectorResource(R.drawable.ic_tool_pack),
+                    icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.inventory_empty_text),
                     description = stringResource(R.string.packs_items_empty_description),
                     action = {
