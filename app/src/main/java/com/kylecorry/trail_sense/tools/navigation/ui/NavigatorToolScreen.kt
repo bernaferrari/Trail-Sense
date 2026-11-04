@@ -783,11 +783,13 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         val currentDestination =
             destination ?: getSelectedBeacon(nearbyBeacons)?.let { Destination.Beacon(it) }
         if (currentDestination != null) {
+            // The heading too, so the card's arrow turns with you (it pointed at 0° forever without it).
             views.navigationSheet.updateNavigationSensorValues(
                 gps.location,
                 altimeter.altitude,
                 speedometer.speed.value,
-                declination
+                declination,
+                compass.rawBearing
             )
             views.navigationSheet.show(currentDestination, destination != null)
         } else {

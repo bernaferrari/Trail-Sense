@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.google_sans_flex_bold
+import com.kylecorry.trail_sense.shared.generated.resources.google_sans_flex_medium
+import com.kylecorry.trail_sense.shared.generated.resources.google_sans_flex_regular
+import com.kylecorry.trail_sense.shared.generated.resources.google_sans_flex_semibold
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -56,6 +61,36 @@ enum class TrailSenseColorStyle(val id: String, val palette: PaletteStyle) {
 
 /** Material 3 Expressive's own shape scheme. */
 val TrailSenseExpressiveShapes = Shapes()
+
+/** Google Sans Flex (OFL), the M3 Expressive typeface the family uses (Calcula, WiFi Weakspot). */
+@Composable
+fun trailSenseFont(): androidx.compose.ui.text.font.FontFamily = androidx.compose.ui.text.font.FontFamily(
+    org.jetbrains.compose.resources.Font(Res.font.google_sans_flex_regular, FontWeight.Normal),
+    org.jetbrains.compose.resources.Font(Res.font.google_sans_flex_medium, FontWeight.Medium),
+    org.jetbrains.compose.resources.Font(Res.font.google_sans_flex_semibold, FontWeight.SemiBold),
+    org.jetbrains.compose.resources.Font(Res.font.google_sans_flex_bold, FontWeight.Bold)
+)
+
+/** The family's scale in Google Sans Flex: bold display and large titles, semibold headlines, medium titles/labels. */
+fun trailSenseTypography(family: androidx.compose.ui.text.font.FontFamily): Typography = with(Typography()) {
+    Typography(
+        displayLarge = displayLarge.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        displayMedium = displayMedium.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        displaySmall = displaySmall.copy(fontFamily = family, fontWeight = FontWeight.Bold),
+        headlineLarge = headlineLarge.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        headlineMedium = headlineMedium.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        headlineSmall = headlineSmall.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        titleLarge = titleLarge.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        titleMedium = titleMedium.copy(fontFamily = family, fontWeight = FontWeight.Medium),
+        titleSmall = titleSmall.copy(fontFamily = family, fontWeight = FontWeight.Medium),
+        bodyLarge = bodyLarge.copy(fontFamily = family),
+        bodyMedium = bodyMedium.copy(fontFamily = family),
+        bodySmall = bodySmall.copy(fontFamily = family),
+        labelLarge = labelLarge.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        labelMedium = labelMedium.copy(fontFamily = family, fontWeight = FontWeight.Medium),
+        labelSmall = labelSmall.copy(fontFamily = family, fontWeight = FontWeight.Medium)
+    )
+}
 
 /** QuietGuard's type scale: Material's sizes, semibold headlines and large titles, medium titles and labels. */
 val TrailSenseExpressiveTypography: Typography = with(Typography()) {
@@ -122,9 +157,11 @@ fun TrailSenseTheme(
     val scheme = remember(palette, style, darkTheme, black, wallpaperScheme) {
         trailSenseColorScheme(palette, style, darkTheme, black, wallpaperScheme)
     }
+    val font = trailSenseFont()
+    val typography = remember(font) { trailSenseTypography(font) }
     MaterialExpressiveTheme(
         colorScheme = scheme,
-        typography = TrailSenseExpressiveTypography,
+        typography = typography,
         content = content
     )
 }

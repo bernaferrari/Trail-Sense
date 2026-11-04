@@ -29,6 +29,8 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
+            // Google Sans Flex (OFL), the family's M3 Expressive typeface
+            implementation(compose.components.resources)
 
             // Portable expressive theming
             implementation("com.materialkolor:material-kolor-material3:6.0.0")

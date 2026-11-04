@@ -77,6 +77,10 @@ class RadarCompassView(
     private val formatService by lazy { FormatService.getInstance(context) }
     private val drawDialBezel = prefs.navigation.drawDialBezel
     private val lobes = prefs.navigation.dialLobes
+    /** The dial's letters in the app's typeface (Google Sans Flex), not the system font. */
+    private val letterTypeface: Typeface = runCatching {
+        androidx.core.content.res.ResourcesCompat.getFont(context, R.font.google_sans_flex_semibold)
+    }.getOrNull() ?: Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val arcRect = RectF()
     private var mapView: MapView? = null
@@ -303,7 +307,7 @@ class RadarCompassView(
             paint.color = if (degrees == 0f) primaryColor else textColor
             paint.textSize = cardinalSize * 1.15f
             paint.textAlign = Paint.Align.CENTER
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            paint.typeface = letterTypeface
             nativeCanvas.drawText(text, x, y + cardinalSize * 0.42f, paint)
             nativeCanvas.restore()
         }
@@ -391,7 +395,7 @@ class RadarCompassView(
             paint.color = if (degrees == 0f) primaryColor else textColor
             paint.textSize = cardinalSize * 1.1f
             paint.textAlign = Paint.Align.CENTER
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            paint.typeface = letterTypeface
             nativeCanvas.drawText(text, x, y + cardinalSize * 0.4f, paint)
             nativeCanvas.restore()
         }
@@ -635,7 +639,7 @@ class RadarCompassView(
         paint.color = if (isNorth) onPrimaryColor else textColor
         paint.textSize = cardinalSize
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        paint.typeface = letterTypeface
         nativeCanvas.drawText(text, x, y + cardinalSize * 0.36f, paint)
         nativeCanvas.restore()
         paint.typeface = Typeface.DEFAULT
