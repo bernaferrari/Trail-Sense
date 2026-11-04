@@ -2161,4 +2161,5 @@
         <item quantity="one">%d point</item>
         <item quantity="other">%d points</item>
     </plurals>
+    <string name="experimentation_no_plugins">No plugins connected</string>
 </resources>
