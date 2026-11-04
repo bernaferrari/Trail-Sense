@@ -371,9 +371,12 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     private fun updateGPS() {
         sensorDetailsMap["gps"] = SensorDetails(
             host.getString(R.string.gps),
-            // The coordinates take the two lines a row has; the satellite count goes with the status it explains.
-            formatService.formatLocation(gps.location),
-            getGPSStatus() + (gps.satellites?.let { "\n$it ${host.getString(R.string.satellites)}" } ?: ""),
+            // The status stays one word on the right. The satellite count that explains it is the row's quiet
+            // supporting line; the coordinates wrap to two lines here and the GPS cache row already shows the fix, so
+            // they only show when there is no count (a manual or unavailable GPS).
+            gps.satellites?.let { host.requireContext().resources.getQuantityString(R.plurals.sensor_gps_satellites, it, it) }
+                ?: formatService.formatLocation(gps.location),
+            getGPSStatus(),
             getGPSColor(),
             TrailIcons.Satellite
         )
@@ -779,7 +782,9 @@ private fun SensorStatus(sensor: SensorDetails) {
             text = sensor.statusMessage,
             style = MaterialTheme.typography.labelLarge,
             color = color,
-            maxLines = 2,
+            // One status word per row, never two lines jammed into the cell.
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             modifier = Modifier.widthIn(max = 120.dp)
         )
     }
