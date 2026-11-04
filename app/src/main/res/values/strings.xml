@@ -2162,4 +2162,15 @@
         <item quantity="other">%d points</item>
     </plurals>
     <string name="experimentation_no_plugins">No plugins connected</string>
+    <!-- Family redesign: packs, tides -->
+    <string name="packs_empty_description">Plan what to bring on a trip and check things off as you pack.</string>
+    <string name="packs_items_empty_description">Add what you plan to bring. Items are grouped by category.</string>
+    <string name="packs_more_options">More options</string>
+    <string name="packs_items_packed">%1$d of %2$d items packed</string>
+    <string name="tides_rising">Rising</string>
+    <string name="tides_falling">Falling</string>
+    <string name="tides_next_tide">Next: %1$s at %2$s</string>
+    <string name="tides_more_options">More options</string>
+    <string name="tides_hidden">Hidden</string>
+    <string name="tides_empty_description">Enter tides from an official tide table to estimate the tides for your trip.</string>
 </resources>

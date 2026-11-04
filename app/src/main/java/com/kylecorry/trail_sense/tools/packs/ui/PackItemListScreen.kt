@@ -3,69 +3,60 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import android.os.Bundle
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.rounded.Sort
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.observe
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
@@ -75,7 +66,6 @@ import com.kylecorry.trail_sense.tools.packs.domain.sort.PackedPercentPackItemSo
 import com.kylecorry.trail_sense.tools.packs.domain.sort.WeightPackItemSort
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
-import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import java.lang.Double.max
 import kotlin.math.floor
@@ -85,6 +75,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun PackItemListToolScreen(host: TrailSenseDestinationHost) {
     val controller = remember(host) { PackItemListController(host) }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -97,6 +88,9 @@ fun PackItemListToolScreen(host: TrailSenseDestinationHost) {
         totalPercentPacked = controller.totalPercentPacked,
         totalPackedWeight = controller.totalPackedWeight,
         showWeightOverview = controller.showWeightOverview,
+        packedFraction = controller.packedFraction,
+        packedCount = controller.packedCount,
+        loaded = controller.loaded,
         onSort = controller::changeSort,
         onRename = { controller.pack?.let { current -> controller.renamePack(current) } },
         onExport = { controller.pack?.let { current -> controller.exportPack(current) } },
@@ -109,7 +103,8 @@ fun PackItemListToolScreen(host: TrailSenseDestinationHost) {
         onSubtractAmount = controller::subtract,
         onEditItem = controller::editItem,
         onDeleteItem = controller::deleteItem,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -134,6 +129,12 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     var totalPackedWeight by mutableStateOf("")
         private set
     var showWeightOverview by mutableStateOf(false)
+        private set
+    var packedFraction by mutableFloatStateOf(0f)
+        private set
+    var packedCount by mutableStateOf(0 to 0)
+        private set
+    var loaded by mutableStateOf(false)
         private set
 
     fun onCreate() {
@@ -162,6 +163,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
         itemRepo.getItemsFromPack(packId).observe(host.lifecycleOwner) {
             items = it
             updateItems()
+            loaded = true
         }
     }
 
@@ -375,11 +377,18 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
         }
         totalPercentPacked =
             host.getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
+        packedFraction = (packedPercent / 100f).coerceIn(0f, 1f)
+        packedCount = items.count { it.isFullyPacked } to items.size
         sortedItems = sorts[prefs.packs.packSort]?.sort(items) ?: items
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * One packing list. The hero says how packed you are (percent, a progress line, how many items, the packed weight);
+ * below it the items in their sorted order, consecutive items of a category as one titled group. Each row is a
+ * checkbox (pack it all or unpack), the name, and a calm `count · weight · optional` line; tapping the row edits it
+ * and its overflow adds or subtracts an amount. Sort sits in the top bar; the list's own actions in its overflow.
+ */
 @Composable
 private fun PackItemScreen(
     title: String,
@@ -387,6 +396,9 @@ private fun PackItemScreen(
     totalPercentPacked: String,
     totalPackedWeight: String,
     showWeightOverview: Boolean,
+    packedFraction: Float,
+    packedCount: Pair<Int, Int>,
+    loaded: Boolean,
     onSort: () -> Unit,
     onRename: () -> Unit,
     onExport: () -> Unit,
@@ -399,105 +411,103 @@ private fun PackItemScreen(
     onSubtractAmount: (PackItem) -> Unit,
     onEditItem: (PackItem) -> Unit,
     onDeleteItem: (PackItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            PackItemHeader(
-                title = title,
-                onSort = onSort,
-                onRename = onRename,
-                onExport = onExport,
-                onDeletePack = onDeletePack,
-                onClearAmounts = onClearAmounts
+    val context = LocalContext.current
+    val categoryNames = remember(context) { ItemCategoryStringMapper(context) }
+
+    // Group consecutive items by category, preserving the sorted order.
+    val groups = remember(items) {
+        val result = mutableListOf<Pair<ItemCategory, MutableList<PackItem>>>()
+        items.forEach { item ->
+            val last = result.lastOrNull()
+            if (last != null && last.first == item.category) {
+                last.second.add(item)
+            } else {
+                result.add(item.category to mutableListOf(item))
+            }
+        }
+        result
+    }
+
+    TrailSensePage(
+        title = title,
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("inventory_list_title"),
+        actions = {
+            IconButton(onClick = onSort, modifier = Modifier.testTag("inventory_sort_btn")) {
+                Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = stringResource(R.string.sort))
+            }
+            PacksOverflowMenu(
+                contentDescription = stringResource(R.string.packs_more_options),
+                modifier = Modifier.testTag("inventory_menu_btn"),
+                actions = listOf(
+                    PacksMenuAction(stringResource(R.string.rename), onRename),
+                    PacksMenuAction(stringResource(R.string.clear_amounts), onClearAmounts),
+                    PacksMenuAction(stringResource(R.string.export), onExport),
+                    PacksMenuAction(stringResource(R.string.delete), onDeletePack)
+                )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAddItem,
                 modifier = Modifier.testTag("add_btn"),
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add)
-                    )
-                },
-                text = {
-                    Text(
-                        text = stringResource(R.string.add),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                text = { Text(stringResource(R.string.add)) }
             )
         }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            if (items.isEmpty()) {
+    ) {
+        if (!loaded) return@TrailSensePage
+
+        if (items.isEmpty()) {
+            item(key = "empty") {
                 TrailSenseEmptyState(
-                    icon = Icons.AutoMirrored.Filled.List,
+                    icon = ImageVector.vectorResource(R.drawable.ic_tool_pack),
                     title = stringResource(R.string.inventory_empty_text),
+                    description = stringResource(R.string.packs_items_empty_description),
+                    action = {
+                        FilledTonalButton(onClick = onAddItem) {
+                            Text(stringResource(R.string.create_item_title))
+                        }
+                    },
                     modifier = Modifier
-                        .align(Alignment.Center)
+                        .fillParentMaxHeight(0.8f)
                         .testTag("inventory_empty_text")
                 )
-            } else {
-                // Group consecutive items by category, preserving the sorted order.
-                val groups = remember(items) {
-                    val result = mutableListOf<Pair<ItemCategory, MutableList<PackItem>>>()
-                    items.forEach { item ->
-                        val last = result.lastOrNull()
-                        if (last != null && last.first == item.category) {
-                            last.second.add(item)
-                        } else {
-                            result.add(item.category to mutableListOf(item))
-                        }
-                    }
-                    result
-                }
+            }
+            return@TrailSensePage
+        }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .widthIn(max = TrailSenseSize.maximumContentWidth)
-                        .fillMaxSize()
-                        .testTag("inventory_list"),
-                    contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        top = TrailSenseSpacing.lg,
-                        bottom = 96.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                ) {
-                    item(key = "pack_hero") {
-                        PackHeroCard(
-                            totalPercentPacked = totalPercentPacked,
-                            totalPackedWeight = totalPackedWeight,
-                            showWeightOverview = showWeightOverview
+        item(key = "pack_hero") {
+            PackHeroCard(
+                totalPercentPacked = totalPercentPacked,
+                totalPackedWeight = totalPackedWeight,
+                showWeightOverview = showWeightOverview,
+                packedFraction = packedFraction,
+                packedCount = packedCount
+            )
+        }
+
+        groups.forEachIndexed { index, (category, categoryItems) ->
+            trailSenseSection(
+                key = "category_${index}_${category.id}",
+                title = categoryNames.getString(category)
+            ) {
+                categoryItems.forEach { item ->
+                    row { position ->
+                        PackItemRow(
+                            item = item,
+                            position = position,
+                            onClick = { onItemClick(item) },
+                            onCheckedChange = { onItemCheckedChange(item) },
+                            onAddAmount = { onAddAmount(item) },
+                            onSubtractAmount = { onSubtractAmount(item) },
+                            onEditItem = { onEditItem(item) },
+                            onDeleteItem = { onDeleteItem(item) }
                         )
-                    }
-
-                    groups.forEachIndexed { index, (category, categoryItems) ->
-                        item(key = "category_$index") {
-                            PackCategoryGroup(
-                                category = category,
-                                items = categoryItems,
-                                onItemClick = onItemClick,
-                                onItemCheckedChange = onItemCheckedChange,
-                                onAddAmount = onAddAmount,
-                                onSubtractAmount = onSubtractAmount,
-                                onEditItem = onEditItem,
-                                onDeleteItem = onDeleteItem
-                            )
-                        }
                     }
                 }
             }
@@ -505,160 +515,72 @@ private fun PackItemScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PackItemHeader(
-    title: String,
-    onSort: () -> Unit,
-    onRename: () -> Unit,
-    onExport: () -> Unit,
-    onDeletePack: () -> Unit,
-    onClearAmounts: () -> Unit
-) {
-    var isMenuOpen by remember { mutableStateOf(false) }
-
-    TopAppBar(
-        title = {
-            Text(
-                text = title,
-                modifier = Modifier.testTag("inventory_list_title"),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        actions = {
-            Box {
-                IconButton(
-                    onClick = { isMenuOpen = true },
-                    modifier = Modifier.testTag("inventory_menu_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.sort),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                DropdownMenu(
-                    expanded = isMenuOpen,
-                    onDismissRequest = { isMenuOpen = false }
-                ) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.sort)) }, onClick = {
-                        isMenuOpen = false
-                        onSort()
-                    })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = {
-                        isMenuOpen = false
-                        onRename()
-                    })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.export)) }, onClick = {
-                        isMenuOpen = false
-                        onExport()
-                    })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = {
-                        isMenuOpen = false
-                        onDeletePack()
-                    })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.clear_amounts)) }, onClick = {
-                        isMenuOpen = false
-                        onClearAmounts()
-                    })
-                }
-            }
-        }
-    )
-}
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PackHeroCard(
     totalPercentPacked: String,
     totalPackedWeight: String,
-    showWeightOverview: Boolean
+    showWeightOverview: Boolean,
+    packedFraction: Float,
+    packedCount: Pair<Int, Int>
 ) {
+    val progress by animateFloatAsState(
+        targetValue = packedFraction,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "packedProgress"
+    )
+    val content = MaterialTheme.colorScheme.onSecondaryContainer
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = content
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            Text(
-                text = totalPercentPacked,
-                modifier = Modifier.testTag("total_percent_packed"),
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                textAlign = TextAlign.Center
-            )
-            if (showWeightOverview) {
-                Spacer(Modifier.height(TrailSenseSpacing.xs))
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = totalPackedWeight,
-                    modifier = Modifier.testTag("total_packed_weight"),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFeatureSettings = "tnum"
-                    ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
+                    text = totalPercentPacked,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("total_percent_packed"),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
                 )
+                if (showWeightOverview) {
+                    Text(
+                        text = totalPackedWeight,
+                        modifier = Modifier
+                            .padding(start = TrailSenseSpacing.md)
+                            .testTag("total_packed_weight"),
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        color = content.copy(alpha = 0.82f)
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun PackCategoryGroup(
-    category: ItemCategory,
-    items: List<PackItem>,
-    onItemClick: (PackItem) -> Unit,
-    onItemCheckedChange: (PackItem) -> Unit,
-    onAddAmount: (PackItem) -> Unit,
-    onSubtractAmount: (PackItem) -> Unit,
-    onEditItem: (PackItem) -> Unit,
-    onDeleteItem: (PackItem) -> Unit
-) {
-    val context = LocalContext.current
-    val categoryTextMapper = remember(context) { ItemCategoryStringMapper(context) }
-
-    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = categoryTextMapper.getString(category),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(Modifier.height(TrailSenseSpacing.sm))
-        items.forEachIndexed { index, item ->
-            if (index > 0) {
-                Spacer(Modifier.height(TrailSenseSpacing.xs))
-            }
-            PackItemRow(
-                item = item,
-                onClick = { onItemClick(item) },
-                onCheckedChange = { onItemCheckedChange(item) },
-                onAddAmount = { onAddAmount(item) },
-                onSubtractAmount = { onSubtractAmount(item) },
-                onEditItem = { onEditItem(item) },
-                onDeleteItem = { onDeleteItem(item) }
+            LinearWavyProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = content.copy(alpha = 0.16f)
+            )
+            Text(
+                text = stringResource(R.string.packs_items_packed, packedCount.first, packedCount.second),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = content.copy(alpha = 0.82f)
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PackItemRow(
     item: PackItem,
+    position: TrailSenseGroupPosition,
     onClick: () -> Unit,
     onCheckedChange: () -> Unit,
     onAddAmount: () -> Unit,
@@ -667,123 +589,82 @@ private fun PackItemRow(
     onDeleteItem: () -> Unit
 ) {
     val context = LocalContext.current
-    val iconMapper = remember { ItemCategoryIconMapper() }
     val formatService = remember(context) { FormatService.getInstance(context) }
-    var isMenuOpen by remember { mutableStateOf(false) }
     val count = formatItemCount(item)
     val packedWeight = item.weight?.let {
         item.packedWeight?.let { weight ->
             formatService.formatWeight(weight, Units.getDecimalPlaces(weight.units), false)
         }
     }
+    val titleColor by animateColorAsState(
+        targetValue = if (item.isFullyPacked) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "packedTitle"
+    )
+    val supporting = MaterialTheme.typography.bodyMedium
+    val supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("inventory_item"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = item.isFullyPacked,
-            onCheckedChange = { onCheckedChange() },
-            modifier = Modifier.testTag("item_checkbox")
-        )
-
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(iconMapper.getIcon(item.category)),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onClick)
-                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-        ) {
-            Text(
-                text = item.name,
-                modifier = Modifier.testTag("item_title"),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+    PacksGroupRow(
+        position = position,
+        modifier = Modifier.testTag("inventory_item"),
+        onClick = onClick,
+        leading = {
+            Checkbox(
+                checked = item.isFullyPacked,
+                onCheckedChange = { onCheckedChange() },
+                modifier = Modifier.testTag("item_checkbox")
             )
-            Row(
-                modifier = Modifier.padding(top = TrailSenseSpacing.xxs),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = count,
-                    modifier = Modifier.testTag("item_count"),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFeatureSettings = "tnum"
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        trailing = {
+            PacksOverflowMenu(
+                contentDescription = stringResource(R.string.packs_more_options),
+                modifier = Modifier.testTag("item_menu"),
+                actions = listOf(
+                    PacksMenuAction(stringResource(R.string.add), onAddAmount),
+                    PacksMenuAction(stringResource(R.string.subtract), onSubtractAmount),
+                    PacksMenuAction(stringResource(R.string.edit), onEditItem),
+                    PacksMenuAction(stringResource(R.string.delete), onDeleteItem)
                 )
-                if (packedWeight != null) {
-                    Text(
-                        text = packedWeight,
-                        modifier = Modifier.testTag("item_weight"),
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (item.isOptional) {
-                    Text(
-                        text = stringResource(R.string.packing_list_optional),
-                        modifier = Modifier.testTag("item_optional"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            )
         }
-
-        Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("item_menu")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.edit),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+    ) {
+        Text(
+            text = item.name,
+            modifier = Modifier.testTag("item_title"),
+            style = MaterialTheme.typography.bodyLarge,
+            color = titleColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+            Text(
+                text = count,
+                modifier = Modifier.testTag("item_count"),
+                style = supporting.copy(fontFeatureSettings = "tnum"),
+                color = supportingColor
+            )
+            if (packedWeight != null) {
+                Text("·", style = supporting, color = supportingColor)
+                Text(
+                    text = packedWeight,
+                    modifier = Modifier.testTag("item_weight"),
+                    style = supporting.copy(fontFeatureSettings = "tnum"),
+                    color = supportingColor
                 )
             }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(text = { Text(stringResource(R.string.add)) }, onClick = {
-                    isMenuOpen = false
-                    onAddAmount()
-                })
-                DropdownMenuItem(text = { Text(stringResource(R.string.subtract)) }, onClick = {
-                    isMenuOpen = false
-                    onSubtractAmount()
-                })
-                DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, onClick = {
-                    isMenuOpen = false
-                    onEditItem()
-                })
-                DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = {
-                    isMenuOpen = false
-                    onDeleteItem()
-                })
+            if (item.isOptional) {
+                Text("·", style = supporting, color = supportingColor)
+                Text(
+                    text = stringResource(R.string.packing_list_optional),
+                    modifier = Modifier.testTag("item_optional"),
+                    style = supporting,
+                    color = supportingColor,
+                    maxLines = 1
+                )
             }
         }
     }
@@ -803,11 +684,18 @@ private fun formatItemCount(item: PackItem): String {
 private fun PackItemScreenPreview() {
     TrailSenseTheme {
         PackItemScreen(
-            title = "Weekend Kit",
-            items = emptyList(),
+            title = "Weekend kit",
+            items = listOf(
+                PackItem(1, 1, "Water bottle", ItemCategory.Hydration, 1.0, 2.0),
+                PackItem(2, 1, "Trail mix", ItemCategory.Food, 3.0, 3.0),
+                PackItem(3, 1, "Rain jacket", ItemCategory.Clothing, 0.0, 1.0, isOptional = true)
+            ),
             totalPercentPacked = "50% packed",
             totalPackedWeight = "8 lb",
             showWeightOverview = true,
+            packedFraction = 0.5f,
+            packedCount = 1 to 3,
+            loaded = true,
             onSort = {},
             onRename = {},
             onExport = {},
