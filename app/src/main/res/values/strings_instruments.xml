@@ -100,7 +100,9 @@
     <!-- Ruler -->
     <string name="ruler_on_the_ground">On the ground</string>
     <string name="ruler_measure_first">Measure on the ruler first</string>
-    <string name="ruler_enter_scale">Enter the map\'s scale above</string>
+    <string name="ruler_enter_scale">Set the map\'s scale above</string>
+    <string name="ruler_scale">Scale</string>
+    <string name="ruler_scale_not_set">Not set</string>
 
     <!-- Light meter -->
     <string name="light_meter_peak_label">Peak</string>

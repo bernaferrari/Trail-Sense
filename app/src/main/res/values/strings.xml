@@ -2232,6 +2232,8 @@
     <string name="weather_empty_action">Start weather monitor</string>
     <string name="tides_until_high">Until high tide</string>
     <string name="tides_until_low">Until low tide</string>
+    <string name="tides_source_nearby">Nearby: estimated for your location</string>
+    <string name="tides_source_table">Tide table: %1$s</string>
     <string name="tides_more_options">More options</string>
     <string name="tides_hidden">Hidden</string>
     <string name="tides_empty_description">Enter tides from an official tide table to estimate the tides for your trip.</string>

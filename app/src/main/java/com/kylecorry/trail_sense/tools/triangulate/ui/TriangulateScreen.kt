@@ -19,8 +19,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingDialog
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.res.ColorStateList
-import android.graphics.Color
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -99,6 +97,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.drawText
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -122,9 +124,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.geojson.GeoJsonFeature
-import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
@@ -138,17 +137,11 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.AppUtils
-import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryMarkerColor
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.extensions.from
-import com.kylecorry.trail_sense.shared.extensions.lineString
-import com.kylecorry.trail_sense.shared.extensions.point
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.ConfigurableGeoJsonLayer
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
@@ -164,10 +157,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
-import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
-import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
-import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -235,23 +225,18 @@ private class TriangulateController(
     private var bearing1TrueNorth by mutableStateOf(false)
     private var bearing2TrueNorth by mutableStateOf(false)
     private var compassBearingText by mutableStateOf("")
+    private var compassBearing by mutableStateOf<Float?>(null)
+    private var result by mutableStateOf<Coordinate?>(null)
 
-    private var map: MapView? = null
     private var isViewCreated = false
-    private var isSetup = false
 
     private val isBound: Boolean
-        get() = map != null
+        get() = isViewCreated
 
     private val compass by lazy { SensorService(host.requireContext()).getCompass() }
     private val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
     private var cameraBearingIndex: Int? = null
-
-    private val layer = ConfigurableGeoJsonLayer()
-    private val scaleBarLayer = ScaleBarLayer()
-
-    private val radius = Distance.meters(100f)
 
     private val recommendedMinDistance by lazy {
         if (prefs.distanceUnits == UserPreferences.DistanceUnits.Feet) {
@@ -286,6 +271,8 @@ private class TriangulateController(
             bearing1TrueNorth = bearing1TrueNorth,
             bearing2TrueNorth = bearing2TrueNorth,
             compassBearingText = compassBearingText,
+            compassBearing = compassBearing,
+            result = result,
             hasCompass = hasCompass,
             onModeChanged = {
                 shouldCalculateMyLocation = it
@@ -295,10 +282,6 @@ private class TriangulateController(
             onNavigate = ::navigateToLocation,
             onShareLocation = ::shareLocation,
             onUpdateGpsOverride = ::updateGpsOverride,
-            onMapReady = {
-                map = it
-                maybeSetup()
-            },
             onLocation1Change = ::updateLocation1Coordinate,
             onLocation2Change = ::updateLocation2Coordinate,
             onBearing1Change = { bearing, trueNorth -> updateBearing(1, bearing, trueNorth) },
@@ -315,18 +298,6 @@ private class TriangulateController(
 
     fun onViewCreated() {
         isViewCreated = true
-        maybeSetup()
-    }
-
-    private fun maybeSetup() {
-        if (!isViewCreated || isSetup || !isBound) {
-            return
-        }
-
-        isSetup = true
-        layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = true)
-        layer.renderer.configurePointRenderer(shouldRenderLabels = true)
-        map?.setLayers(listOf(layer, scaleBarLayer))
         update()
     }
 
@@ -403,60 +374,6 @@ private class TriangulateController(
         }
     }
 
-    private fun updateMap() {
-        val map = map ?: return
-        val location1 = location1Coordinate
-        val location2 = location2Coordinate
-        val destination = location
-
-        val fences = listOfNotNull(
-            location1,
-            location2,
-            destination
-        ).map {
-            Geofence(it, radius)
-        }
-
-        val bounds = CoordinateBounds.from(fences)
-
-        map.fitIntoView(bounds)
-
-        val points = listOfNotNull(
-            location1?.let {
-                GeoJsonFeature.point(
-                    it,
-                    id = 1,
-                    name = "1",
-                    color = Resources.getPrimaryMarkerColor(host.requireContext()),
-                    strokeColor = Color.WHITE
-                )
-            },
-            location2?.let {
-                GeoJsonFeature.point(
-                    it,
-                    id = 2,
-                    name = "2",
-                    color = Resources.getPrimaryMarkerColor(host.requireContext()),
-                    strokeColor = Color.WHITE
-                )
-            },
-            destination?.let {
-                GeoJsonFeature.point(
-                    it,
-                    id = 3,
-                    color = AppColor.Green.color,
-                    strokeColor = Color.WHITE
-                )
-            }
-        )
-
-        val path1 = getPath(1)
-        val path2 = getPath(2)
-        val paths = listOfNotNull(path1, path2)
-
-        layer.setData(GeoJsonFeatureCollection(points + paths))
-    }
-
     private fun updateDistances() {
         if (!isBound) {
             return
@@ -526,40 +443,11 @@ private class TriangulateController(
             .toRelativeDistance()
     }
 
-    private fun getPath(locationIdx: Int): GeoJsonFeature? {
-        val destination = location
-        val start = if (locationIdx == 1) location1Coordinate else location2Coordinate
-        val direction = if (locationIdx == 1) bearing1Value else bearing2Value
-        val trueNorth = if (locationIdx == 1) bearing1TrueNorth else bearing2TrueNorth
-
-        val end = if (start != null && direction != null) {
-            val declination = if (trueNorth == true) 0f else Geophysics.getGeomagneticDeclination(start)
-            val bearing = Bearing.from(direction).withDeclination(declination)
-            destination ?: start.plus(
-                Distance.kilometers(1f),
-                if (shouldCalculateMyLocation) bearing.inverse() else bearing
-            )
-        } else {
-            null
-        }
-
-        return if (start != null && end != null) {
-            val pts = listOf(start, end)
-            GeoJsonFeature.lineString(
-                if (shouldCalculateMyLocation) pts.reversed() else pts,
-                locationIdx.toLong(),
-                color = Resources.getPrimaryMarkerColor(host.requireContext()),
-                lineStyle = LineStyle.Arrow
-            )
-        } else {
-            null
-        }
-    }
-
     fun onResume() {
         compass.start {
             val bearing = compass.rawBearing
             compassBearingText = formatService.formatDegrees(bearing, replace360 = true)
+            compassBearing = bearing
             cameraSheet?.bearing = bearing
             true
         }
@@ -574,12 +462,10 @@ private class TriangulateController(
     }
 
     fun onDestroyView() {
-        map = null
         cameraSheet?.dismiss()
         cameraSheet = null
         cameraBearingIndex = null
         isViewCreated = false
-        isSetup = false
     }
 
     private fun update() {
@@ -617,6 +503,7 @@ private class TriangulateController(
 
     private fun setLocation(location: Coordinate?) {
         this.location = location
+        result = location
         if (location == null || location.latitude.isNaN() || location.longitude.isNaN()) {
             title = host.getString(R.string.could_not_triangulate)
             actionsVisible = false
@@ -629,7 +516,6 @@ private class TriangulateController(
         updateGpsOverrideVisible =
             prefs.gps.locationSource == GPSLocationSource.Manual && shouldCalculateMyLocation
 
-        updateMap()
         updateDistances()
     }
 
@@ -700,10 +586,10 @@ private class TriangulateController(
 }
 
 /**
- * Triangulate: what is being found on top (a destination, or where I am), then the answer as the screen's one
- * emphasised thing (until there is one, the next step to take), the map of both sightings under it, and the two
- * sightings as two plain groups: where you stood, which way you looked, and the ways to take that bearing. Reset lives
- * in the top bar so it can't be hit by accident.
+ * Triangulate: what is being found on top (a destination, or where I am), then the object: a plot of the sightings
+ * whose lines cross as you take them. Under it, the answer (until there is one, the next step to take, in one line),
+ * and the two sightings as two plain groups: where you stood, which way you looked, and the ways to take that bearing.
+ * Reset lives in the top bar so it can't be hit by accident.
  */
 @Composable
 private fun TriangulateScreen(
@@ -725,13 +611,14 @@ private fun TriangulateScreen(
     bearing1TrueNorth: Boolean,
     bearing2TrueNorth: Boolean,
     compassBearingText: String,
+    compassBearing: Float?,
+    result: Coordinate?,
     hasCompass: Boolean,
     onModeChanged: (Boolean) -> Unit,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
     onShareLocation: () -> Unit,
     onUpdateGpsOverride: () -> Unit,
-    onMapReady: (MapView) -> Unit,
     onLocation1Change: (Coordinate?) -> Unit,
     onLocation2Change: (Coordinate?) -> Unit,
     onBearing1Change: (Float?, Boolean) -> Unit,
@@ -743,10 +630,8 @@ private fun TriangulateScreen(
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Where do my two sightings meet? The answer at the top says it; the map and the two sightings support it.
-    // The map is held here, outside the lazy list, so scrolling it off screen never trades it for a fresh, empty one.
-    val mapView = rememberTriangulateMap(onMapReady)
-    val hasSighting = location1 != null || location2 != null
+    // Where do my two sightings meet? The plot shows the lines crossing, the answer under it says it, and the two
+    // sightings below are the steps that draw them.
     val completed = listOf(location1Complete, location2Complete).count { it }
     // The sighting still to take carries the screen's one filled button (its compass bearing); none once both are in.
     val activeSighting = when {
@@ -780,6 +665,25 @@ private fun TriangulateScreen(
             )
         }
 
+        item(key = "map") {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                SightingPlot(
+                    location1 = location1,
+                    location2 = location2,
+                    bearing1 = bearing1,
+                    bearing2 = bearing2,
+                    trueNorth1 = bearing1TrueNorth,
+                    trueNorth2 = bearing2TrueNorth,
+                    result = result.takeIf { actionsVisible },
+                    shouldCalculateMyLocation = shouldCalculateMyLocation,
+                    liveBearing = compassBearing.takeIf { hasCompass },
+                    activeSighting = activeSighting,
+                    completed = completed,
+                    modifier = Modifier.testTag("map")
+                )
+            }
+        }
+
         item(key = "result") {
             TriangulateAnswer(
                 title = title,
@@ -791,28 +695,6 @@ private fun TriangulateScreen(
                 onNavigate = onNavigate,
                 onCreateBeacon = onCreateBeacon
             )
-        }
-
-        // The map only appears once there's something to put on it.
-        item(key = "map") {
-            AnimatedVisibility(
-                visible = hasSighting,
-                enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
-                        fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
-                        fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
-            ) {
-                val shape = RoundedCornerShape(TrailSenseShape.groupOuter)
-                Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceContainer) {
-                    mapView.Content(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                            .clip(shape)
-                            .testTag("map")
-                    )
-                }
-            }
         }
 
         // What else to do with the answer, besides the main button: quiet rows.
@@ -911,7 +793,8 @@ private fun TriangulateAnswer(
             .fillMaxWidth()
             .testTag("triangulate_title")
             .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (solved) {
             val display = MaterialTheme.typography.displaySmall
@@ -927,6 +810,7 @@ private fun TriangulateAnswer(
             Text(
                 text = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
                 style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
                 color = scheme.onSurfaceVariant
             )
             Spacer(Modifier.height(TrailSenseSpacing.md))
@@ -945,36 +829,20 @@ private fun TriangulateAnswer(
                         else -> R.string.places_triangulate_check
                     }
                 ),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
                 color = scheme.onSurface
             )
             Text(
                 // Both in but no meeting point: the line says so ("Could not triangulate").
                 text = if (completed == 2) title else nextInstructions,
                 style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
                 color = scheme.onSurfaceVariant
             )
         }
     }
-}
-
-@Composable
-private fun rememberTriangulateMap(onMapReady: (MapView) -> Unit): MapView {
-    val context = LocalContext.current
-    val background = MaterialTheme.colorScheme.surfaceContainer.toArgb()
-    val mapView = remember {
-        MapView(context).apply {
-            id = R.id.map
-        }
-    }
-    SideEffect {
-        mapView.backgroundTintList = ColorStateList.valueOf(background)
-        mapView.backgroundColorOverride = background
-    }
-    SideEffect {
-        onMapReady(mapView)
-    }
-    return mapView
 }
 
 /**
@@ -1341,13 +1209,14 @@ private fun TriangulateScreenPreview() {
             bearing1TrueNorth = false,
             bearing2TrueNorth = false,
             compassBearingText = "120 deg",
+            compassBearing = 120f,
+            result = null,
             hasCompass = true,
             onModeChanged = {},
             onCreateBeacon = {},
             onNavigate = {},
             onShareLocation = {},
             onUpdateGpsOverride = {},
-            onMapReady = {},
             onLocation1Change = {},
             onLocation2Change = {},
             onBearing1Change = { _, _ -> },
@@ -1361,3 +1230,223 @@ private fun TriangulateScreenPreview() {
     }
 }
 
+/**
+ * The screen's object, drawn like the boil timer's pot: a round plot of the ground, north up, inside a thick wavy
+ * ring that fills with each sighting taken. Each sighting is a numbered point with its line drawn out along its
+ * bearing; while one is being taken, a dashed line follows the compass from where you stand. Once the two lines
+ * cross, the answer springs in where they meet as a cookie.
+ */
+@Composable
+private fun SightingPlot(
+    location1: Coordinate?,
+    location2: Coordinate?,
+    bearing1: Float?,
+    bearing2: Float?,
+    trueNorth1: Boolean,
+    trueNorth2: Boolean,
+    result: Coordinate?,
+    shouldCalculateMyLocation: Boolean,
+    liveBearing: Float?,
+    activeSighting: Int,
+    completed: Int,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val labelStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+    val north = stringResource(R.string.direction_north)
+
+    val progress by animateFloatAsState(
+        targetValue = completed / 2f,
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
+        label = "sightingsTaken"
+    )
+    // Each line draws out along its bearing once it is taken.
+    val reach1 by animateFloatAsState(
+        targetValue = if (bearing1 != null) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "sighting1Reach"
+    )
+    val reach2 by animateFloatAsState(
+        targetValue = if (bearing2 != null) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "sighting2Reach"
+    )
+    val solved = result != null && !result.latitude.isNaN() && !result.longitude.isNaN()
+    val answerScale by animateFloatAsState(
+        targetValue = if (solved) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "answerScale"
+    )
+
+    val plot = remember(location1, location2, result, solved) {
+        SightingProjection(listOfNotNull(location1, location2, result?.takeIf { solved }))
+    }
+    // The line runs the way the bearing points from the sighting; finding yourself, you stand back along it.
+    fun lineBearing(point: Coordinate?, bearing: Float, trueNorth: Boolean): Float {
+        val declination = if (trueNorth || point == null) 0f else Geophysics.getGeomagneticDeclination(point)
+        val corrected = Bearing.from(bearing).withDeclination(declination)
+        return (if (shouldCalculateMyLocation) corrected.inverse() else corrected).value
+    }
+    val line1 = bearing1?.let { lineBearing(location1, it, trueNorth1) }
+    val line2 = bearing2?.let { lineBearing(location2, it, trueNorth2) }
+    val livePoint = if (activeSighting == 2) location2 else location1
+    val live = liveBearing?.takeIf {
+        activeSighting != 0 && (if (activeSighting == 2) bearing2 else bearing1) == null
+    }?.let { lineBearing(livePoint, it, false) }
+
+    val ring = scheme.primary
+    val ink = scheme.onSurface
+    val faint = scheme.outlineVariant
+    val face = scheme.surfaceContainerLow
+    val stroke = with(density) { 12.dp.toPx() }
+
+    Box(
+        modifier = modifier
+            .padding(vertical = TrailSenseSpacing.sm)
+            .size(264.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.material3.CircularWavyProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxSize(),
+            color = ring,
+            trackColor = scheme.surfaceVariant,
+            stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            trackStroke = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            wavelength = 36.dp
+        )
+        androidx.compose.foundation.layout.BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .clip(CircleShape)
+                .background(face)
+        ) {
+            val radiusPx = with(density) { maxWidth.toPx() } / 2f
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                fun screen(p: Offset) = Offset(center.x + p.x * radiusPx, center.y - p.y * radiusPx)
+                fun direction(bearing: Float): Offset {
+                    val rad = Math.toRadians(bearing.toDouble())
+                    return Offset(kotlin.math.sin(rad).toFloat(), kotlin.math.cos(rad).toFloat())
+                }
+
+                // The ground: a faint ring and cross, and north at the top.
+                drawCircle(faint, radius = radiusPx * 0.62f, center = center, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
+                drawLine(faint, Offset(center.x, 0f), Offset(center.x, size.height), 1.dp.toPx())
+                drawLine(faint, Offset(0f, center.y), Offset(size.width, center.y), 1.dp.toPx())
+                val northLabel = measurer.measure(north, labelStyle.copy(color = scheme.onSurfaceVariant))
+                drawText(
+                    northLabel,
+                    topLeft = Offset(center.x - northLabel.size.width / 2f, 10.dp.toPx())
+                )
+
+                fun start(point: Coordinate?) = screen(point?.let { plot.project(it) } ?: Offset.Zero)
+
+                // The compass, live, from where the sighting is being taken.
+                if (live != null) {
+                    val from = start(livePoint)
+                    val dir = direction(live)
+                    drawLine(
+                        ring.copy(alpha = 0.6f),
+                        from,
+                        Offset(from.x + dir.x * size.width * 1.2f, from.y - dir.y * size.width * 1.2f),
+                        strokeWidth = 3.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                            floatArrayOf(8.dp.toPx(), 8.dp.toPx())
+                        )
+                    )
+                }
+
+                // The sightings taken: solid lines out along their bearings.
+                listOf(
+                    Triple(location1, line1, reach1),
+                    Triple(location2, line2, reach2)
+                ).forEach { (point, bearing, reach) ->
+                    if (bearing == null || reach <= 0f) return@forEach
+                    val from = start(point)
+                    val dir = direction(bearing)
+                    val length = size.width * 1.2f * reach
+                    drawLine(
+                        ring,
+                        from,
+                        Offset(from.x + dir.x * length, from.y - dir.y * length),
+                        strokeWidth = 4.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                }
+
+                // Where each sighting was taken: a numbered point.
+                listOf(location1 to "1", location2 to "2").forEach { (point, number) ->
+                    point ?: return@forEach
+                    val at = screen(plot.project(point))
+                    drawCircle(face, radius = 10.dp.toPx(), center = at)
+                    drawCircle(ink, radius = 7.dp.toPx(), center = at)
+                    val label = measurer.measure(number, labelStyle.copy(color = ink))
+                    drawText(label, topLeft = Offset(at.x + 10.dp.toPx(), at.y - label.size.height - 4.dp.toPx()))
+                }
+            }
+
+            // The answer, where the lines meet.
+            if (solved && result != null) {
+                val at = plot.project(result)
+                val markerSize = 36.dp
+                Surface(
+                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                    color = scheme.primary,
+                    contentColor = scheme.onPrimary,
+                    modifier = Modifier
+                        .offset {
+                            androidx.compose.ui.unit.IntOffset(
+                                (radiusPx + at.x * radiusPx - markerSize.toPx() / 2f).toInt(),
+                                (radiusPx - at.y * radiusPx - markerSize.toPx() / 2f).toInt()
+                            )
+                        }
+                        .size(markerSize)
+                        .graphicsLayer {
+                            scaleX = answerScale
+                            scaleY = answerScale
+                        }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (shouldCalculateMyLocation) TrailIcons.Location else TrailIcons.Flag,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Lays the points out flat around their middle, north up, scaled so the farthest sits at 62% of the radius (the faint
+ * ring). One point alone sits at the centre.
+ */
+private class SightingProjection(points: List<Coordinate>) {
+    private val originLatitude = points.map { it.latitude }.average().takeIf { !it.isNaN() } ?: 0.0
+    private val originLongitude = points.map { it.longitude }.average().takeIf { !it.isNaN() } ?: 0.0
+    private val metersPerDegreeLongitude = 111_320.0 * kotlin.math.cos(Math.toRadians(originLatitude))
+    private val scale: Float
+
+    init {
+        val extent = points.maxOfOrNull { local(it).getDistance() } ?: 0f
+        scale = 0.62f / extent.coerceAtLeast(25f)
+    }
+
+    private fun local(point: Coordinate): Offset = Offset(
+        ((point.longitude - originLongitude) * metersPerDegreeLongitude).toFloat(),
+        ((point.latitude - originLatitude) * 110_540.0).toFloat()
+    )
+
+    /** The point in the plot's units: -1..1 across the face, y up. */
+    fun project(point: Coordinate): Offset {
+        val p = local(point)
+        return Offset(p.x * scale, p.y * scale)
+    }
+}
