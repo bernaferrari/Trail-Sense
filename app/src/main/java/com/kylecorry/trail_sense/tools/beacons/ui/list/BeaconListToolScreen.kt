@@ -1081,7 +1081,8 @@ private fun BeaconRow(
     val badgeColor = Color(getBeaconBadgeColor(beacon, formatService))
     val badgeContent = if (badgeColor.luminance() > 0.5f) Color.Black else Color.White
     val subtitle = listOfNotNull(
-        // "SE 131°", not a lone "SE", so the line under the name says which way to walk.
+        // "SE 131° · 2.87 km": which way and how far share the line under the name, so the name is the row's one
+        // focal point and the trailing edge only holds the row's controls.
         if (hasLocation) {
             "${formatService.formatDirection(bearing.direction)} ${
                 formatService.formatDegrees(bearing.value, replace360 = true)
@@ -1089,6 +1090,7 @@ private fun BeaconRow(
         } else {
             null
         },
+        formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
         beacon.elevation?.let {
             formatService.formatElevation(Distance.meters(it).convertTo(baseDistanceUnits))
         },
@@ -1113,7 +1115,6 @@ private fun BeaconRow(
                 }
             )
         },
-        value = formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
         barFraction = null,
         onClick = { onAction(BeaconAction.View) },
         onLongClick = { onAction(BeaconAction.Navigate) },
