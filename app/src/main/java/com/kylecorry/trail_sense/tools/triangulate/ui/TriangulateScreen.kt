@@ -820,6 +820,7 @@ private fun TriangulateScreen(
                 title = location1Title,
                 instructions = location1Instructions,
                 isComplete = location1Complete,
+                isActive = !location1Complete,
                 isExpanded = location1Expanded,
                 onExpandedChange = onLocation1ExpandedChange,
                 coordinate = location1,
@@ -842,6 +843,7 @@ private fun TriangulateScreen(
                 title = location2Title,
                 instructions = location2Instructions,
                 isComplete = location2Complete,
+                isActive = location1Complete && !location2Complete,
                 isExpanded = location2Expanded,
                 onExpandedChange = onLocation2ExpandedChange,
                 coordinate = location2,
@@ -919,55 +921,6 @@ private fun TriangulateResultCard(
             emptyList()
         }
     ) {
-        if (!actionsVisible) {
-            // The two sightings as equal tiles that fill in as you take them.
-            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                repeat(2) { index ->
-                    val done = index < completed
-                    val active = index == completed
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(
-                            topStart = if (index == 0) 20.dp else 6.dp,
-                            bottomStart = if (index == 0) 20.dp else 6.dp,
-                            topEnd = if (index == 1) 20.dp else 6.dp,
-                            bottomEnd = if (index == 1) 20.dp else 6.dp
-                        ),
-                        color = if (done) colors.accent else MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                        contentColor = if (done) colors.onAccent else colors.content
-                    ) {
-                        Row(
-                            Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            PlacesBadge(
-                                containerColor = when {
-                                    done -> colors.onAccent
-                                    active -> colors.accent
-                                    else -> colors.accent.copy(alpha = 0.22f)
-                                },
-                                contentColor = when {
-                                    done -> colors.accent
-                                    active -> colors.onAccent
-                                    else -> colors.content
-                                },
-                                icon = if (done) TrailIcons.Check else null,
-                                text = if (done) null else (index + 1).toString(),
-                                shape = MaterialShapes.Cookie4Sided.toShape(),
-                                size = 40.dp
-                            )
-                            Spacer(Modifier.width(TrailSenseSpacing.md))
-                            Text(
-                                stringResource(R.string.location_number, index + 1),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-            }
-        }
         if (actionsVisible && updateGpsOverrideVisible) {
             FilledTonalButton(
                 onClick = onUpdateGpsOverride,
@@ -1017,6 +970,7 @@ private fun TriangulateLocationCard(
     title: String,
     instructions: String,
     isComplete: Boolean,
+    isActive: Boolean = false,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     coordinate: Coordinate?,
@@ -1056,7 +1010,8 @@ private fun TriangulateLocationCard(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
         Surface(
             shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = true, isLast = !isExpanded)),
-            color = scheme.surfaceContainerLow
+            color = if (isActive) scheme.primaryContainer else scheme.surfaceContainerLow,
+            contentColor = if (isActive) scheme.onPrimaryContainer else scheme.onSurface
         ) {
             Row(
                 modifier = Modifier
@@ -1070,8 +1025,8 @@ private fun TriangulateLocationCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PlacesBadge(
-                    containerColor = if (isComplete) badgeColor else scheme.primaryContainer,
-                    contentColor = if (isComplete) scheme.onPrimary else scheme.onPrimaryContainer,
+                    containerColor = if (isComplete || isActive) scheme.primary else scheme.primaryContainer,
+                    contentColor = if (isComplete || isActive) scheme.onPrimary else scheme.onPrimaryContainer,
                     icon = if (isComplete) Icons.Rounded.Check else null,
                     text = if (isComplete) null else number.toString(),
                     shape = MaterialShapes.Cookie4Sided.toShape(),
@@ -1086,7 +1041,7 @@ private fun TriangulateLocationCard(
                     Text(
                         text = headline,
                         style = MaterialTheme.typography.titleMedium,
-                        color = scheme.onSurface
+                        color = if (isActive) scheme.onPrimaryContainer else scheme.onSurface
                     )
                     if (distance != null) {
                         Text(
