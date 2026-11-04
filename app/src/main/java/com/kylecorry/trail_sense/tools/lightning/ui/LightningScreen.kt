@@ -14,6 +14,10 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +32,7 @@ import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -48,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
@@ -97,7 +104,8 @@ private enum class StrikeStage { Ready, Counting, Result }
  * Lightning distance, like the boil timer: the object is the storm seen from above. The flash lights it, then the
  * sound spreads out of the middle as rings at the speed of sound, its distance riding on the front, until you tap at
  * the thunder and the front stops where the strike is. The danger zone fades in as the sound nears it; the previous
- * strike of the same storm is a ghost ring. One instruction (or verdict) line and one button that names what to tap for next: Lightning, Thunder, Again.
+ * strike of the same storm is a ghost ring. One instruction (or verdict) line and one button that names what to tap
+ * for next: Lightning, Thunder, Again. The sky is itself that button, so you can tap the storm without looking down.
  */
 @Composable
 fun LightningScreen(
@@ -166,6 +174,47 @@ fun LightningScreen(
         formatService.formatDistance(it, 0, false)
     }
 
+    val actionLabel = stringResource(
+        when (stage) {
+            StrikeStage.Ready -> R.string.lightning
+            StrikeStage.Counting -> R.string.thunder
+            StrikeStage.Result -> R.string.lightning_again
+        }
+    )
+
+    // The one action, shared by the button and the sky itself: both tap for the next step.
+    fun act() {
+        when (stage) {
+            StrikeStage.Ready -> {
+                lightningTime = Instant.now()
+                now = Instant.now()
+                scope.launch {
+                    flash.snapTo(1f)
+                    flash.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
+                }
+            }
+
+            StrikeStage.Counting -> {
+                val thunder = Instant.now()
+                val distance = getDistance(lightningTime!!, thunder)
+                val currentStrike = Reading(LightningStrike(0, distance), thunder)
+                strike = currentStrike
+                lightningTime = null
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        repo.add(currentStrike)
+                    }
+                }
+            }
+
+            StrikeStage.Result -> {
+                // This strike becomes the ghost the next one is compared against.
+                lastStrike = strike
+                strike = null
+            }
+        }
+    }
+
     TrailSensePage(
         title = stringResource(R.string.tool_lightning_title),
         onBack = rememberTrailSenseBack(),
@@ -186,7 +235,9 @@ fun LightningScreen(
                     danger = isDangerous,
                     ghostMeters = ghostMeters,
                     dangerLabel = dangerLabel,
-                    flash = flash.value
+                    flash = flash.value,
+                    actionLabel = actionLabel,
+                    onClick = { act() }
                 )
                 // The one line: what to do next, or the verdict once the thunder came.
                 val line = when {
@@ -221,50 +272,14 @@ fun LightningScreen(
                 contentAlignment = Alignment.Center
             ) {
                 TrailSenseButton(
-                    text = stringResource(
-                        when (stage) {
-                            StrikeStage.Ready -> R.string.lightning
-                            StrikeStage.Counting -> R.string.thunder
-                            StrikeStage.Result -> R.string.lightning_again
-                        }
-                    ),
+                    text = actionLabel,
                     icon = when (stage) {
                         StrikeStage.Ready -> Icons.Rounded.Bolt
                         StrikeStage.Counting -> TrailIcons.Thunder
                         StrikeStage.Result -> TrailIcons.BaselineRefresh24
                     },
                     style = if (stage == StrikeStage.Result) TrailSenseButtonStyle.Tonal else TrailSenseButtonStyle.Filled,
-                    onClick = {
-                        when (stage) {
-                            StrikeStage.Ready -> {
-                                lightningTime = Instant.now()
-                                now = Instant.now()
-                                scope.launch {
-                                    flash.snapTo(1f)
-                                    flash.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
-                                }
-                            }
-
-                            StrikeStage.Counting -> {
-                                val thunder = Instant.now()
-                                val distance = getDistance(lightningTime!!, thunder)
-                                val currentStrike = Reading(LightningStrike(0, distance), thunder)
-                                strike = currentStrike
-                                lightningTime = null
-                                scope.launch {
-                                    withContext(Dispatchers.IO) {
-                                        repo.add(currentStrike)
-                                    }
-                                }
-                            }
-
-                            StrikeStage.Result -> {
-                                // This strike becomes the ghost the next one is compared against.
-                                lastStrike = strike
-                                strike = null
-                            }
-                        }
-                    },
+                    onClick = { act() },
                     modifier = Modifier
                         .widthIn(max = TrailSenseSize.maximumContentWidth)
                         .fillMaxWidth()
@@ -290,7 +305,9 @@ private fun StormSky(
     danger: Boolean,
     ghostMeters: Float?,
     dangerLabel: String,
-    flash: Float
+    flash: Float,
+    actionLabel: String,
+    onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val effects = MaterialTheme.motionScheme.defaultEffectsSpec<androidx.compose.ui.graphics.Color>()
@@ -346,6 +363,14 @@ private fun StormSky(
         label = "roll"
     )
     val description = value?.let { "$it $unit" } ?: stringResource(R.string.lightning_hint_flash)
+    // The sky is the button too: it presses in under the finger and ripples, then springs back.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val press by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "press"
+    )
 
     Box(
         modifier = Modifier
@@ -353,6 +378,18 @@ private fun StormSky(
             .widthIn(max = 320.dp)
             .fillMaxWidth()
             .aspectRatio(1f)
+            .graphicsLayer {
+                scaleX = press
+                scaleY = press
+            }
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = interaction,
+                indication = ripple(),
+                role = Role.Button,
+                onClickLabel = actionLabel,
+                onClick = onClick
+            )
             .testTag("lightning_sky")
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center
