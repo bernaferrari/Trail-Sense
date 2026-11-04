@@ -10,6 +10,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -829,7 +831,23 @@ private fun MapEmptyState(
     onAddMap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    // A tab root like Tools: the large title on top, the empty state centred below it.
+    androidx.compose.foundation.layout.Column(
+        modifier
+            .fillMaxSize()
+            .then(Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.statusBars))
+    ) {
+        Text(
+            text = stringResource(R.string.map),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.lg + TrailSenseSpacing.xs,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.xl
+            )
+        )
         TrailSenseEmptyState(
             icon = TrailSenseIcons.Filled.Map,
             title = stringResource(R.string.no_offline_maps),
