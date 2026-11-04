@@ -45,7 +45,7 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
                 R.string.daylight_duration,
                 formatter.formatDuration(daylight, false)
             ),
-            icon(TrailIcons.Sun),
+            icon(TrailIcons.SunRays),
             data = riseSetTransit(times)
         ) {
             val advancedData = listOf(

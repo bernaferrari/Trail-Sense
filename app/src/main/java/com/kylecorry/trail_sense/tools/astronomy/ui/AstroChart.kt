@@ -120,6 +120,13 @@ class AstroChart(
         val limitColor = scheme.outlineVariant
         val horizonColor = scheme.outline
         val ringColor = scheme.background
+        val moonOutline = scheme.onSurface
+        val moonShadow = scheme.outlineVariant
+        val moonPaint = androidx.compose.runtime.remember(moonShadow) {
+            android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                colorFilter = android.graphics.ColorMatrixColorFilter(moonPhaseColorMatrix(moonShadow, MoonLit))
+            }
+        }
         androidx.compose.foundation.layout.Column(modifier) {
             TrailSenseChartFrame(
                 yLabels = listOf(
@@ -177,6 +184,8 @@ class AstroChart(
                     drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
 
                     moonPosition?.let {
+                        // A clean phase disc: the lit part pale, the shadow in outlineVariant (not a black blob),
+                        // inside a thin onSurface outline. The sun's "now" dot stays the one primary accent.
                         val point = toScreen(it, left, right, top, bottom)
                         drawCircle(ringColor, imageSize / 2f + 3.dp.toPx(), point)
                         val canvas = drawContext.canvas.nativeCanvas
@@ -187,9 +196,10 @@ class AstroChart(
                             image,
                             point.x - image.width / 2f,
                             point.y - image.height / 2f,
-                            null
+                            moonPaint
                         )
                         canvas.restore()
+                        drawCircle(moonOutline, imageSize / 2f, point, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
                     }
                     sunPosition?.let {
                         drawTrailSenseNowDot(toScreen(it, left, right, top, bottom), sunColor, ringColor)
@@ -309,4 +319,20 @@ class AstroChart(
         private const val MIN_Y = -100f
         private const val MAX_Y = 100f
     }
+}
+
+/** The moon's lit face: the real moon is pale whatever the theme. */
+internal val MoonLit = androidx.compose.ui.graphics.Color(0xFFF4F4F0)
+
+/**
+ * Recolours a phase bitmap (white lit limb, near-black shadow) by its brightness: black becomes [shadow] and white
+ * becomes [lit]. A 4x5 colour matrix with offsets in 0..255, usable by both Android and Compose colour filters.
+ */
+internal fun moonPhaseColorMatrix(
+    shadow: androidx.compose.ui.graphics.Color,
+    lit: androidx.compose.ui.graphics.Color
+): FloatArray {
+    fun row(s: Float, l: Float) = floatArrayOf(l - s, 0f, 0f, 0f, s * 255f)
+    return row(shadow.red, lit.red) + row(shadow.green, lit.green) + row(shadow.blue, lit.blue) +
+        floatArrayOf(0f, 0f, 0f, 1f, 0f)
 }

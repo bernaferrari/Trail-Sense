@@ -818,8 +818,9 @@ private fun AstronomyTitle(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-            state.leftButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-            state.rightButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+            // The user's quick actions, quiet like app-bar actions: no filled disc louder than the countdown.
+            state.leftButton.Content(offContainerColor = Color.Transparent, offContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+            state.rightButton.Content(offContainerColor = Color.Transparent, offContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -863,7 +864,8 @@ private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGrou
                     AstronomyIconChip(
                         icon = rememberAstronomyIconPainter(icon),
                         tint = icon.tint?.let { Color(it) } ?: Color.Unspecified,
-                        rotation = icon.rotation
+                        rotation = icon.rotation,
+                        isPhase = icon.bitmap != null
                     )
                     Spacer(Modifier.size(TrailSenseSpacing.md))
                 }
@@ -905,8 +907,10 @@ private fun rememberAstronomyIconPainter(icon: com.kylecorry.trail_sense.tools.a
 private fun AstronomyIconChip(
     icon: Painter,
     tint: Color,
-    rotation: Float
+    rotation: Float,
+    isPhase: Boolean = false
 ) {
+    val shadow = MaterialTheme.colorScheme.outlineVariant
     Surface(
         shape = MaterialShapes.Cookie6Sided.toShape(),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -914,14 +918,31 @@ private fun AstronomyIconChip(
         modifier = Modifier.size(44.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = if (tint == Color.Unspecified) MaterialTheme.colorScheme.onSecondaryContainer else tint,
-                modifier = Modifier
-                    .size(26.dp)
-                    .rotate(rotation)
-            )
+            if (isPhase) {
+                // A drawn phase (the moon) keeps its shape: recoloured, not flattened into one tint, so the moon's
+                // badge shows tonight's phase and never looks like the sun's.
+                androidx.compose.foundation.Image(
+                    painter = icon,
+                    contentDescription = null,
+                    colorFilter = remember(shadow) {
+                        androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+                            androidx.compose.ui.graphics.ColorMatrix(moonPhaseColorMatrix(shadow, MoonLit))
+                        )
+                    },
+                    modifier = Modifier
+                        .size(26.dp)
+                        .rotate(rotation)
+                )
+            } else {
+                Icon(
+                    painter = icon,
+                    contentDescription = null,
+                    tint = if (tint == Color.Unspecified) MaterialTheme.colorScheme.onSecondaryContainer else tint,
+                    modifier = Modifier
+                        .size(26.dp)
+                        .rotate(rotation)
+                )
+            }
         }
     }
 }
