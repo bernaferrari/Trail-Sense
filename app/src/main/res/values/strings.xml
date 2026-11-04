@@ -2172,6 +2172,11 @@
     <string name="search_tools">Search tools</string>
     <!-- Settings pages: section headers, footers and rows -->
     <string name="settings_section_measurements">Measurements</string>
+    <string name="units_metric">Metric</string>
+    <string name="units_imperial">Imperial</string>
+    <string name="units_metric_example">km · °C · kg</string>
+    <string name="units_imperial_example">mi · °F · lb</string>
+    <string name="units_fine_tune">Fine-tune</string>
     <string name="settings_time_format_example">Times look like %s</string>
     <string name="settings_bottom_navigation_slot">Slot %d</string>
     <string name="settings_bottom_navigation_tools_slot">Slot %d always opens Tools</string>

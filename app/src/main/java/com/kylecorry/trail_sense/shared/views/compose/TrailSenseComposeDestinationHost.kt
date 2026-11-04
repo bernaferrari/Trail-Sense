@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.material.icons.rounded.Straighten
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Scale
 import androidx.compose.material.icons.rounded.Compress
@@ -951,6 +953,7 @@ class TrailSenseComposeDestinationHost(
         }
 
         val measurementsTitle = stringResource(R.string.settings_section_measurements)
+        val fineTuneTitle = stringResource(R.string.units_fine_tune)
         val locationTitle = stringResource(R.string.location)
         val timeTitle = stringResource(R.string.time)
         val timeExample = stringResource(
@@ -959,86 +962,63 @@ class TrailSenseComposeDestinationHost(
         )
 
         SettingsList(title = stringResource(R.string.units)) {
-            trailSenseSection("measurements", title = measurementsTitle) {
-                row { position ->
-                    UnitChoiceRow(
-                        icon = androidx.compose.material.icons.Icons.Rounded.Straighten,
-                        label = stringResource(R.string.distance),
-                        options = distanceOptions,
-                        selected = distanceUnits,
-                        onSelected = {
-                            distanceUnits = it
-                            putString(cache, R.string.pref_distance_units, it)
-                        },
-                        position = position
-                    )
-                }
+            // The one question most people have: metric or imperial. One tap sets every unit; the rows below are
+            // for the few who mix them (metres with °F), each showing its current value.
+            val metric = listOf("meters", "c", "kg") + if (hasBarometer) listOf("hpa") else emptyList()
+            val imperial = listOf("feet_miles", "f", "lbs") + if (hasBarometer) listOf("in") else emptyList()
+            val current = listOf(distanceUnits, temperatureUnits, weightUnits) + if (hasBarometer) listOf(pressureUnits) else emptyList()
+            fun applySystem(values: List<String>) {
+                distanceUnits = values[0]; putString(cache, R.string.pref_distance_units, values[0])
+                temperatureUnits = values[1]; putString(cache, R.string.pref_temperature_units, values[1])
+                weightUnits = values[2]; putString(cache, R.string.pref_weight_units, values[2])
                 if (hasBarometer) {
-                    row { position ->
-                        UnitPickerRow(
-                            icon = androidx.compose.material.icons.Icons.Rounded.Compress,
-                            label = stringResource(R.string.pressure),
-                            options = pressureOptions,
-                            selected = pressureUnits,
-                            onSelected = {
-                                pressureUnits = it
-                                putString(cache, R.string.pref_pressure_units, it)
-                            },
-                            position = position
-                        )
+                    pressureUnits = values[3]; putString(cache, R.string.pref_pressure_units, values[3])
+                }
+            }
+            item("system") {
+                UnitSystemCards(
+                    metricSelected = current == metric,
+                    imperialSelected = current == imperial,
+                    onMetric = { applySystem(metric) },
+                    onImperial = { applySystem(imperial) }
+                )
+            }
+            trailSenseSection("fine_tune", title = fineTuneTitle) {
+                row { position ->
+                    UnitValueRow(stringResource(R.string.distance), distanceOptions, distanceUnits, position) {
+                        distanceUnits = it; putString(cache, R.string.pref_distance_units, it)
                     }
                 }
                 row { position ->
-                    UnitChoiceRow(
-                        icon = androidx.compose.material.icons.Icons.Rounded.Thermostat,
-                        label = stringResource(R.string.temperature),
-                        options = temperatureOptions,
-                        selected = temperatureUnits,
-                        onSelected = {
-                            temperatureUnits = it
-                            putString(cache, R.string.pref_temperature_units, it)
-                        },
-                        position = position
-                    )
+                    UnitValueRow(stringResource(R.string.temperature), temperatureOptions, temperatureUnits, position) {
+                        temperatureUnits = it; putString(cache, R.string.pref_temperature_units, it)
+                    }
                 }
                 row { position ->
-                    UnitChoiceRow(
-                        icon = androidx.compose.material.icons.Icons.Rounded.Scale,
-                        label = stringResource(R.string.weight),
-                        options = weightOptions,
-                        selected = weightUnits,
-                        onSelected = {
-                            weightUnits = it
-                            putString(cache, R.string.pref_weight_units, it)
-                        },
-                        position = position
-                    )
+                    UnitValueRow(stringResource(R.string.weight), weightOptions, weightUnits, position) {
+                        weightUnits = it; putString(cache, R.string.pref_weight_units, it)
+                    }
+                }
+                if (hasBarometer) {
+                    row { position ->
+                        UnitValueRow(stringResource(R.string.pressure), pressureOptions, pressureUnits, position) {
+                            pressureUnits = it; putString(cache, R.string.pref_pressure_units, it)
+                        }
+                    }
                 }
             }
             trailSenseSection("location", title = locationTitle) {
                 row { position ->
-                    UnitPickerRow(
-                        label = stringResource(R.string.pref_coordinate_format_title),
-                        options = coordinateOptions,
-                        selected = coordinateFormat,
-                        onSelected = {
-                            coordinateFormat = it
-                            putString(cache, R.string.pref_coordinate_format, it)
-                        },
-                        position = position
-                    )
+                    UnitValueRow(stringResource(R.string.pref_coordinate_format_title), coordinateOptions, coordinateFormat, position) {
+                        coordinateFormat = it
+                        putString(cache, R.string.pref_coordinate_format, it)
+                    }
                 }
                 row { position ->
-                    UnitPickerRow(
-                        label = stringResource(R.string.pref_map_url_source_title),
-                        options = mapOptions,
-                        selected = mapSite,
-                        onSelected = {
-                            mapSite = it
-                            putString(cache, R.string.pref_map_url_source, it)
-                        },
-                        position = position
-                    )
+                    UnitValueRow(stringResource(R.string.pref_map_url_source_title), mapOptions, mapSite, position) {
+                        mapSite = it
+                        putString(cache, R.string.pref_map_url_source, it)
+                    }
                 }
             }
             trailSenseSection("time", title = timeTitle, footer = timeExample) {
@@ -3025,6 +3005,76 @@ class TrailSenseComposeDestinationHost(
             position = position,
             icon = icon
         )
+    }
+
+    /** A unit as one calm row: its name, and its current value on the right; tap to pick another. */
+    @Composable
+    internal fun UnitValueRow(
+        label: String,
+        options: List<SettingsOption>,
+        selected: String,
+        position: TrailSenseGroupPosition,
+        onSelected: (String) -> Unit
+    ) {
+        TrailSenseListItem(
+            title = label,
+            trailingText = optionLabel(options, selected),
+            onClick = { pickOption(label, options, selected, onSelected) },
+            position = position
+        )
+    }
+
+    /**
+     * Metric or Imperial as two big cards with what each looks like (km · °C · kg); the chosen one fills with the
+     * primary container and a check. With mixed units, neither is chosen.
+     */
+    @Composable
+    internal fun UnitSystemCards(
+        metricSelected: Boolean,
+        imperialSelected: Boolean,
+        onMetric: () -> Unit,
+        onImperial: () -> Unit
+    ) {
+        androidx.compose.foundation.layout.Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = TrailSenseSpacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            UnitSystemCard(stringResource(R.string.units_metric), stringResource(R.string.units_metric_example), metricSelected, onMetric, Modifier.weight(1f))
+            UnitSystemCard(stringResource(R.string.units_imperial), stringResource(R.string.units_imperial_example), imperialSelected, onImperial, Modifier.weight(1f))
+        }
+    }
+
+    @Composable
+    private fun UnitSystemCard(title: String, example: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
+        val scheme = MaterialTheme.colorScheme
+        val container by androidx.compose.animation.animateColorAsState(
+            if (selected) scheme.primaryContainer else scheme.surfaceContainer, label = "unitCard"
+        )
+        val content = if (selected) scheme.onPrimaryContainer else scheme.onSurface
+        androidx.compose.material3.Surface(
+            selected = selected,
+            onClick = onClick,
+            modifier = modifier.heightIn(min = 120.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+            color = container,
+            contentColor = content
+        ) {
+            Box(Modifier.fillMaxWidth().padding(20.dp)) {
+                androidx.compose.foundation.layout.Column(Modifier.align(Alignment.BottomStart)) {
+                    Text(title, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        example,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = content.copy(alpha = 0.75f)
+                    )
+                }
+                androidx.compose.animation.AnimatedVisibility(selected, modifier = Modifier.align(Alignment.TopEnd)) {
+                    Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null)
+                }
+            }
+        }
     }
 
     /** A unit with two to four short options, all on view at once. */
