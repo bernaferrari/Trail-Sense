@@ -1,5 +1,17 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -569,7 +581,26 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             nextSunset = astronomyService.getNextSunset(location, sunTimesMode)
         }
 
+        // Where the sun is on today's arc (day) or tonight's (night), for the hero's sun path.
+        val rise0 = nextSunrise
+        val set0 = nextSunset
+        val sunUp = set0 != null && (rise0 == null || set0.isBefore(rise0))
+        val arcProgress = run {
+            val rise = rise0
+            val set = set0
+            if (rise == null || set == null) return@run null
+            val dayLength = astronomyService.getLengthOfDay(location, sunTimesMode, LocalDate.now()).seconds.toFloat()
+            if (dayLength <= 0f) return@run null
+            if (sunUp) {
+                1f - Duration.between(currentTime, set).seconds / dayLength
+            } else {
+                1f - Duration.between(currentTime, rise).seconds / (86_400f - dayLength).coerceAtLeast(1f)
+            }
+        }?.coerceIn(0f, 1f)
+
         withContext(Dispatchers.Main) {
+            views.astronomyTitle.sunUp = sunUp || (nextSunset == null && nextSunrise == null && astronomyService.isSunUp(location))
+            views.astronomyTitle.progress = arcProgress
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
@@ -675,6 +706,8 @@ private class AstronomyTitleState {
     val rightButton = ComposeQuickActionButtonView()
     var title by mutableStateOf("")
     var subtitle by mutableStateOf("")
+    var sunUp by mutableStateOf(true)
+    var progress by mutableStateOf<Float?>(null)
 }
 
 private class AstronomyDatePickerState(context: Context) {
@@ -751,52 +784,138 @@ private class AstronomyDatePickerState(context: Context) {
     }
 }
 
+/**
+ * The hero: the time until the next sunrise or sunset under a dashed sky arc, with the sun (or the moon at night) as
+ * a turning shaped badge at its place on the arc. Warm tertiary by day, cool primary by night. The two quick actions
+ * sit in the top corners.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AstronomyTitle(
     state: AstronomyTitleState,
     modifier: Modifier = Modifier
 ) {
-    TrailSenseCard(
+    val tone = if (state.sunUp) TrailSenseTone.Tertiary else TrailSenseTone.Primary
+    val colors = trailSenseToneColors(tone)
+    val container by androidx.compose.animation.animateColorAsState(
+        colors.container,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "astroHero"
+    )
+    val progress by androidx.compose.animation.core.animateFloatAsState(
+        state.progress ?: 0.5f,
+        MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "sunArc"
+    )
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        contentPadding = PaddingValues(
-            horizontal = TrailSenseSpacing.sm,
-            vertical = TrailSenseSpacing.lg
-        )
+        shape = RoundedCornerShape(TrailSenseShape.hero),
+        color = container,
+        contentColor = colors.content
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            state.leftButton.Content()
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.sm),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        Box(Modifier.fillMaxWidth()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(TrailSenseSpacing.md),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                state.leftButton.Content()
+                state.rightButton.Content()
+            }
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.xl),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val badgeSize = 56.dp
+                BoxWithConstraints(
+                    Modifier
+                        .size(width = 240.dp, height = 150.dp)
+                ) {
+                    val track = colors.content.copy(alpha = 0.28f)
+                    val trail = colors.accent
+                    androidx.compose.foundation.Canvas(Modifier.matchParentSize()) {
+                        val inset = badgeSize.toPx() / 2f
+                        val arcRect = androidx.compose.ui.geometry.Rect(
+                            inset,
+                            inset,
+                            size.width - inset,
+                            size.width - inset
+                        )
+                        val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                            floatArrayOf(3.dp.toPx(), 7.dp.toPx())
+                        )
+                        drawArc(
+                            color = track,
+                            startAngle = 180f,
+                            sweepAngle = 180f,
+                            useCenter = false,
+                            topLeft = arcRect.topLeft,
+                            size = arcRect.size,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = 3.dp.toPx(),
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                pathEffect = dash
+                            )
+                        )
+                        if (state.progress != null) {
+                            drawArc(
+                                color = trail,
+                                startAngle = 180f,
+                                sweepAngle = 180f * progress,
+                                useCenter = false,
+                                topLeft = arcRect.topLeft,
+                                size = arcRect.size,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 5.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
+                        // The horizon.
+                        drawLine(
+                            track,
+                            androidx.compose.ui.geometry.Offset(0f, arcRect.center.y),
+                            androidx.compose.ui.geometry.Offset(size.width, arcRect.center.y),
+                            strokeWidth = 2.dp.toPx(),
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round
+                        )
+                    }
+                    // The sun or moon at its place on the arc.
+                    val radius = (maxWidth - badgeSize) / 2
+                    val angle = Math.toRadians((180.0 + 180.0 * progress))
+                    val cx = maxWidth / 2 + radius * kotlin.math.cos(angle).toFloat()
+                    val cy = badgeSize / 2 + radius + radius * kotlin.math.sin(angle).toFloat()
+                    SkyFocalShape(
+                        icon = if (state.sunUp) TrailIcons.Sun else TrailIcons.Moon,
+                        shape = if (state.sunUp) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
+                        size = badgeSize,
+                        containerColor = colors.accent,
+                        contentColor = colors.onAccent,
+                        modifier = Modifier.offset(x = cx - badgeSize / 2, y = cy - badgeSize / 2)
+                    )
+                }
+                Spacer(Modifier.height(TrailSenseSpacing.md))
                 Text(
                     text = state.title,
                     style = MaterialTheme.typography.displaySmall.copy(
                         fontFeatureSettings = "tnum"
                     ),
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
                 )
                 if (state.subtitle.isNotEmpty()) {
                     Text(
                         text = state.subtitle,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.content.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                 }
             }
-            state.rightButton.Content()
         }
     }
 }
@@ -850,8 +969,8 @@ private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGrou
                 ) {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     item.subtitle?.let {
@@ -884,10 +1003,11 @@ private fun AstronomyIconChip(
     tint: Color,
     rotation: Float
 ) {
+    val wells = trailSenseWellColors(if (tint == Color.Unspecified) TrailSenseAccents.Periwinkle else tint)
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        modifier = Modifier.size(44.dp)
+        shape = MaterialShapes.Cookie9Sided.toShape(),
+        color = wells.container,
+        modifier = Modifier.size(48.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
@@ -906,20 +1026,22 @@ private fun AstronomyIconChip(
 private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 56.dp),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
         verticalAlignment = Alignment.Top
     ) {
         data.forEach {
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(14.dp))
+                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
                     .testTag("astronomy_detail_data")
             ) {
                 Text(
                     text = it.value,
                     style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
                 )
@@ -957,7 +1079,7 @@ private fun AstronomyScreen(
 
             views.displayDate.Content()
 
-            TrailSenseGroupCard(TrailSenseGroupPosition.Single) {
+            TrailSenseGroupCard(TrailSenseGroupPosition.Single, contentPadding = PaddingValues(TrailSenseSpacing.sm)) {
                 views.sunMoonChart.Content(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -967,7 +1089,11 @@ private fun AstronomyScreen(
             }
 
             if (views.timeSeeker.isVisible) {
-                TrailSenseCard {
+                TrailSenseCard(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = RoundedCornerShape(TrailSenseShape.groupOuter)
+                ) {
                     views.timeSeekerDetails.Content()
                     Slider(
                         value = views.timeSeeker.value,

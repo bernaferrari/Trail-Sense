@@ -1,7 +1,20 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Color
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.tools.weather.ui.SkyButton
+import com.kylecorry.trail_sense.tools.weather.ui.SkyConnectedButtons
+import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Size
@@ -288,6 +301,8 @@ private fun CloudScreen(
             Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.testTag("add_btn"),
                     icon = {
                         Icon(
@@ -339,13 +354,36 @@ private fun CloudScreen(
     ) {
         if (loaded && clouds.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
+                SkyEmptyState(
                     icon = TrailIcons.Cloud,
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
+                    shape = MaterialShapes.Puffy.toShape(),
+                    companionShape = MaterialShapes.Sunny.toShape(),
+                    companionIcon = TrailIcons.Sunny,
                     modifier = Modifier
                         .fillParentMaxHeight(0.8f)
-                        .testTag("cloud_empty_text")
+                        .testTag("cloud_empty_text"),
+                    action = {
+                        SkyConnectedButtons(
+                            listOf(
+                                SkyButton(stringResource(R.string.camera), TrailIcons.Camera, onCameraClick),
+                                SkyButton(stringResource(R.string.file), TrailIcons.File, onFileClick),
+                                SkyButton(stringResource(R.string.manual), TrailIcons.Edit, onManualClick)
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
+        clouds.firstOrNull()?.let { latest ->
+            item(key = "latest") {
+                CloudSkyHero(
+                    reading = latest,
+                    count = clouds.size,
+                    onClick = { onCloudClick(latest) },
+                    onImageClick = { onCloudImageClick(latest) }
                 )
             }
         }
@@ -484,18 +522,96 @@ private fun CloudReadingRow(
     }
 }
 
+/**
+ * The latest cloud as the screen's hero, on a sky that follows the time of day: its photo in a puffy shape, its name
+ * and what it may bring, and how many clouds are in the log.
+ */
+@Composable
+private fun CloudSkyHero(
+    reading: Reading<CloudObservation>,
+    count: Int,
+    onClick: () -> Unit,
+    onImageClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val details = remember(context) { CloudDetailsService(context) }
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    val cloud = reading.value.genus
+    val name = details.getCloudName(cloud)
+    val hour = java.time.LocalTime.now().hour
+    val scheme = MaterialTheme.colorScheme
+    val sky = if (hour in 7..18) {
+        listOf(scheme.primaryContainer, scheme.tertiaryContainer)
+    } else {
+        listOf(scheme.secondaryContainer, scheme.primaryContainer)
+    }
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(TrailSenseShape.hero),
+        color = Color.Transparent,
+        contentColor = scheme.onPrimaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            Modifier
+                .background(androidx.compose.ui.graphics.Brush.linearGradient(sky))
+                .padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CloudThumbnail(
+                    drawable = details.getCloudImage(context, cloud),
+                    contentDescription = name,
+                    onClick = onImageClick,
+                    size = 104.dp,
+                    shape = MaterialShapes.Puffy.toShape()
+                )
+                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        formatter.formatTime(reading.time, includeSeconds = false),
+                        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                        color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
+                    )
+                    Text(
+                        name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                TrailSenseShapeBadge(
+                    text = count.toString(),
+                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                    size = 52.dp,
+                    containerColor = scheme.primary,
+                    contentColor = scheme.onPrimary
+                )
+            }
+            Text(
+                details.getCloudForecast(cloud),
+                style = MaterialTheme.typography.bodyLarge,
+                color = scheme.onPrimaryContainer.copy(alpha = 0.88f)
+            )
+        }
+    }
+}
+
 @Composable
 private fun CloudThumbnail(
     drawable: Drawable?,
     contentDescription: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    size: androidx.compose.ui.unit.Dp = 56.dp,
+    shape: androidx.compose.ui.graphics.Shape = MaterialShapes.Cookie9Sided.toShape()
 ) {
     val bitmap = remember(drawable) {
-        drawable?.toBitmap(112, 112)
+        drawable?.toBitmap(240, 240)
     }
     val modifier = Modifier
-        .size(56.dp)
-        .clip(RoundedCornerShape(TrailSenseSpacing.md))
+        .size(size)
+        .clip(shape)
         .background(MaterialTheme.colorScheme.secondaryContainer)
         .clickable(onClick = onClick)
         .semantics { this.contentDescription = contentDescription }

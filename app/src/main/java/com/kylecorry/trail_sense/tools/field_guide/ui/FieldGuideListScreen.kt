@@ -1,7 +1,31 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.kylecorry.trail_sense.shared.icons.trail.Grass
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
+import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
@@ -212,9 +236,11 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                             filteredPages.count { it.tags.contains(tag) }
                         ),
                         icon = tagImageMap[tag] ?: TrailIcons.Help,
+                        count = filteredPages.count { it.tags.contains(tag) },
                         onClick = { tagFilter = tag }
                     )
-                }
+                },
+                totalPages = filteredPages.size
             )
         } else {
             FieldGuideListItems(
@@ -364,9 +390,18 @@ private fun FieldGuideScreen(
         onBack = onBack,
         backLabel = stringResource(R.string.back),
         modifier = Modifier.testTag("list"),
+        // Room under the last row for the floating button.
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.sm,
+            bottom = 112.dp
+        ),
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreate,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_btn"),
                 icon = {
                     Icon(
@@ -406,28 +441,29 @@ private fun FieldGuideScreen(
         }
 
         if (isBrowsing) {
-            trailSenseSection(key = "categories") {
-                categories.forEach { category ->
-                    row { position ->
-                        FieldGuideRow(
-                            title = AnnotatedString(category.title),
-                            subtitle = category.subtitle,
-                            position = position,
-                            leading = { FieldGuideIconWell(rememberVectorPainter(category.icon)) },
-                            onClick = category.onClick
-                        )
-                    }
-                }
+            item(key = "notebook") {
+                FieldGuideNotebookHero(
+                    pages = items.totalPages,
+                    kinds = categories.count { it.count > 0 }
+                )
+            }
+            item(key = "categories") {
+                FieldGuideCategoryGrid(categories)
             }
         } else if (pages.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
+                SkyEmptyState(
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     title = stringResource(R.string.no_pages),
                     description = noPagesDescription,
+                    shape = MaterialShapes.Clover4Leaf.toShape(),
+                    companionShape = MaterialShapes.Flower.toShape(),
+                    companionIcon = TrailIcons.Grass,
                     modifier = Modifier.testTag("empty_text"),
                     action = {
-                        FilledTonalButton(onClick = onCreate) {
+                        androidx.compose.material3.Button(onClick = onCreate) {
+                            Icon(Icons.Rounded.Add, contentDescription = null)
+                            Spacer(Modifier.width(TrailSenseSpacing.sm))
                             Text(stringResource(R.string.create_page))
                         }
                     }
@@ -606,7 +642,8 @@ private fun FieldGuidePageRow(
 }
 
 private data class FieldGuideListItems(
-    val items: List<FieldGuideListItem>
+    val items: List<FieldGuideListItem>,
+    val totalPages: Int = 0
 )
 
 private sealed interface FieldGuideListItem {
@@ -617,6 +654,7 @@ private sealed interface FieldGuideListItem {
         val title: String,
         val subtitle: String,
         val icon: ImageVector,
+        val count: Int = 0,
         val onClick: () -> Unit
     ) : FieldGuideListItem {
         override val id: Long = tag.id
@@ -628,5 +666,112 @@ private sealed interface FieldGuideListItem {
         val subtitle: String
     ) : FieldGuideListItem {
         override val id: Long = page.id
+    }
+}
+
+/** One hue and one shape per kind of life, so the grid reads like the tabs of a field notebook. */
+private val categoryAccents = listOf(
+    TrailSenseAccents.Leaf,
+    TrailSenseAccents.Apricot,
+    TrailSenseAccents.Coral,
+    TrailSenseAccents.Sky,
+    TrailSenseAccents.Sun,
+    TrailSenseAccents.Seafoam,
+    TrailSenseAccents.Mint,
+    TrailSenseAccents.Periwinkle,
+    TrailSenseAccents.Lavender,
+    TrailSenseAccents.Rose,
+    TrailSenseAccents.Stone
+)
+
+@Composable
+private fun categoryShape(index: Int): androidx.compose.ui.graphics.Shape = when (index % 8) {
+    0 -> MaterialShapes.Clover4Leaf
+    1 -> MaterialShapes.Puffy
+    2 -> MaterialShapes.Cookie9Sided
+    3 -> MaterialShapes.Sunny
+    4 -> MaterialShapes.Flower
+    5 -> MaterialShapes.Cookie6Sided
+    6 -> MaterialShapes.Pentagon
+    else -> MaterialShapes.Gem
+}.toShape()
+
+/** The notebook's cover: a leaf in a turning clover, how many pages it holds and across how many kinds. */
+@Composable
+private fun FieldGuideNotebookHero(pages: Int, kinds: Int) {
+    TrailSenseSpotlight(
+        title = androidx.compose.ui.res.pluralStringResource(R.plurals.page_group_summary, pages, pages),
+        eyebrow = stringResource(R.string.field_guide),
+        supportingText = stringResource(R.string.sky_field_guide_kinds, kinds),
+        tone = TrailSenseTone.Good,
+        titleStyle = MaterialTheme.typography.headlineMedium,
+        badge = {
+            SkyFocalShape(
+                icon = TrailIcons.Grass,
+                shape = MaterialShapes.Clover8Leaf.toShape(),
+                size = 80.dp,
+                containerColor = trailSenseToneColors(TrailSenseTone.Good).accent,
+                contentColor = trailSenseToneColors(TrailSenseTone.Good).onAccent
+            )
+        }
+    )
+}
+
+/** The kinds as connected tiles, two to a row: a shaped icon in the kind's hue, its name, and its page count. */
+@Composable
+private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>) {
+    val rows = categories.chunked(2)
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        rows.forEachIndexed { rowIndex, row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                row.forEachIndexed { columnIndex, category ->
+                    val index = rowIndex * 2 + columnIndex
+                    val wells = trailSenseWellColors(categoryAccents[index % categoryAccents.size])
+                    val empty = category.count == 0
+                    Surface(
+                        onClick = category.onClick,
+                        shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            Modifier.padding(TrailSenseSpacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TrailSenseShapeBadge(
+                                    icon = category.icon,
+                                    shape = categoryShape(index),
+                                    size = 48.dp,
+                                    containerColor = if (empty) MaterialTheme.colorScheme.surfaceContainerHighest else wells.container,
+                                    contentColor = if (empty) MaterialTheme.colorScheme.onSurfaceVariant else wells.content
+                                )
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    category.count.toString(),
+                                    style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (empty) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Spacer(Modifier.height(TrailSenseSpacing.xs))
+                            Text(
+                                category.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                category.subtitle,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,15 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.icons.trail.Grass
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+import com.kylecorry.trail_sense.tools.weather.ui.SkyChartCallout
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
@@ -646,6 +654,15 @@ private fun ClimateScreen(
         ) {
             row { position ->
                 TrailSenseGroupCard(position = position) {
+                    if (highLow != null && temperatures?.isNotEmpty() == true) {
+                        val maxDay = if (date.isLeapYear) 366f else 365f
+                        SkyChartCallout(
+                            fraction = (date.dayOfYear - 1f) / (maxDay - 1f),
+                            text = stringResource(R.string.slash_separated_pair, highLow.first, highLow.second),
+                            icon = TrailIcons.TemperatureRange,
+                            modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
+                        )
+                    }
                     TemperatureChart(
                         temperatures = temperatures,
                         selectedDate = date,
@@ -664,6 +681,14 @@ private fun ClimateScreen(
         ) {
             row { position ->
                 TrailSenseGroupCard(position = position) {
+                    if (precipitationValue != null && precipitation?.isNotEmpty() == true) {
+                        SkyChartCallout(
+                            fraction = (date.monthValue - 0.5f) / 12f,
+                            text = precipitationValue,
+                            icon = TrailIcons.LightRain,
+                            modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
+                        )
+                    }
                     PrecipitationChart(
                         precipitation = precipitation,
                         selectedMonth = date.month,
@@ -679,18 +704,34 @@ private fun ClimateScreen(
             item(key = "zone") {
                 TrailSenseRowGroup(modifier = Modifier.animateItem()) {
                     row { position ->
-                        TrailSenseGroupCard(position = position) {
-                            Text(
-                                text = climateZoneTitle,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(Modifier.height(TrailSenseSpacing.xs))
-                            Text(
-                                text = climateZoneDescription,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        TrailSenseGroupCard(
+                            position = position,
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TrailSenseShapeBadge(
+                                    icon = TrailIcons.Grass,
+                                    shape = MaterialShapes.Clover4Leaf.toShape(),
+                                    size = 52.dp,
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    contentColor = MaterialTheme.colorScheme.onSecondary
+                                )
+                                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        text = climateZoneTitle,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Spacer(Modifier.height(TrailSenseSpacing.xs))
+                                    Text(
+                                        text = climateZoneDescription,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -736,11 +777,13 @@ private fun ClimateEcologyRow(
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = TrailIcons.Ant,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(TrailSenseSize.leadingIcon)
+            val wells = trailSenseWellColors(TrailSenseAccents.Leaf)
+            TrailSenseShapeBadge(
+                icon = TrailIcons.Ant,
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                containerColor = wells.container,
+                contentColor = wells.content
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(

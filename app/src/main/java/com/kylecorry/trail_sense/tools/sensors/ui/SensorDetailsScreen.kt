@@ -2,6 +2,20 @@
 
 package com.kylecorry.trail_sense.tools.sensors.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -241,7 +255,9 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         updateGyro()
         updateClock()
         synchronized(this) {
-            sensorDetails = sensorDetailsMap.toList().mapNotNull { it.second }.sortedBy { it.name }
+            sensorDetails = sensorDetailsMap.toList()
+                .mapNotNull { (key, details) -> details?.copy(category = sensorCategory(key)) }
+                .sortedBy { it.name }
         }
         return true
     }
@@ -584,12 +600,31 @@ data class SensorDetails(
     val description: String,
     val statusMessage: String,
     @ColorInt val statusColor: Int,
-    val statusIcon: ImageVector
+    val statusIcon: ImageVector,
+    val category: SensorCategory = SensorCategory.Device
 )
 
+enum class SensorCategory { Location, Orientation, Environment, Device }
+
+private fun sensorCategory(key: String): SensorCategory = when (key) {
+    "gps", "gps_cache", "altimeter", "altimeter_cache", "cell" -> SensorCategory.Location
+    "compass", "gyroscope", "gravity", "accelerometer", "magnetometer" -> SensorCategory.Orientation
+    "barometer", "thermometer", "hygrometer" -> SensorCategory.Environment
+    else -> SensorCategory.Device
+}
+
+/** The status colours the sensors report, read back as the family's tones. */
+private fun sensorTone(@ColorInt color: Int): TrailSenseTone = when (color) {
+    AppColor.Green.color -> TrailSenseTone.Good
+    AppColor.Yellow.color -> TrailSenseTone.Caution
+    AppColor.Red.color -> TrailSenseTone.Error
+    else -> TrailSenseTone.Neutral
+}
+
 /**
- * Sensor details: every sensor as one row of a group, its live reading underneath the name and its status (a colored
- * dot and a word) at the end. The raw Android sensor list sits behind the top bar action.
+ * Sensor details: a health hero (a ring split by status around the count of good sensors), the counts per status as
+ * toned tiles, then the sensors grouped by what they measure, each with its status as a toned badge and chip. The raw
+ * Android sensor list sits behind the top bar action.
  */
 @Composable
 private fun SensorDetailsScreen(
@@ -598,6 +633,10 @@ private fun SensorDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val tones = sensors.map { sensorTone(it.statusColor) }
+    val good = tones.count { it == TrailSenseTone.Good }
+    val moderate = tones.count { it == TrailSenseTone.Caution }
+    val poor = tones.count { it == TrailSenseTone.Error }
     TrailSensePage(
         title = stringResource(R.string.pref_sensor_details_title),
         onBack = { dispatcher?.onBackPressed() },
@@ -617,13 +656,51 @@ private fun SensorDetailsScreen(
     ) {
         // Readings arrive a moment after the screen opens; until then the page stays quiet instead of empty.
         if (sensors.isNotEmpty()) {
+            item(key = "health") {
+                SensorHealthHero(good = good, moderate = moderate, poor = poor, total = sensors.size)
+            }
+            item(key = "counts") {
+                TrailSenseStatGrid(
+                    stats = listOf(
+                        TrailSenseStat(stringResource(R.string.sky_sensors_good_label), good.toString(), tone = TrailSenseTone.Good),
+                        TrailSenseStat(
+                            stringResource(R.string.sky_sensors_moderate_label),
+                            moderate.toString(),
+                            tone = if (moderate > 0) TrailSenseTone.Caution else TrailSenseTone.Neutral
+                        ),
+                        TrailSenseStat(
+                            stringResource(R.string.sky_sensors_poor_label),
+                            poor.toString(),
+                            tone = if (poor > 0) TrailSenseTone.Error else TrailSenseTone.Neutral
+                        )
+                    ),
+                    columns = 3,
+                    valueStyle = MaterialTheme.typography.headlineMedium
+                )
+            }
             item(key = "sensors") {
-                TrailSenseRowGroup(
-                    title = stringResource(R.string.sensors),
-                    modifier = Modifier.testTag("sensors_list")
+                Column(
+                    modifier = Modifier.testTag("sensors_list"),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                 ) {
-                    sensors.forEach { sensor ->
-                        row { position -> SensorDetailsRow(sensor, position) }
+                    SensorCategory.entries.forEach { category ->
+                        val inCategory = sensors.filter { it.category == category }
+                        if (inCategory.isNotEmpty()) {
+                            TrailSenseRowGroup(
+                                title = stringResource(
+                                    when (category) {
+                                        SensorCategory.Location -> R.string.location
+                                        SensorCategory.Orientation -> R.string.sky_sensors_orientation
+                                        SensorCategory.Environment -> R.string.sky_sensors_environment
+                                        SensorCategory.Device -> R.string.sky_sensors_device
+                                    }
+                                )
+                            ) {
+                                inCategory.forEach { sensor ->
+                                    row { position -> SensorDetailsRow(sensor, position) }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -631,15 +708,84 @@ private fun SensorDetailsScreen(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
+    val tone = when {
+        poor == 0 && moderate == 0 -> TrailSenseTone.Good
+        good >= total / 2 -> TrailSenseTone.Caution
+        else -> TrailSenseTone.Error
+    }
+    val colors = trailSenseToneColors(tone)
+    val status = trailSenseStatusColors()
+    val goodColor = status.good
+    val moderateColor = status.caution
+    val poorColor = MaterialTheme.colorScheme.error
+    val track = colors.content.copy(alpha = 0.12f)
+    TrailSenseSpotlight(
+        title = stringResource(R.string.sky_sensors_good, good, total),
+        eyebrow = stringResource(R.string.sensors),
+        supportingText = when {
+            poor + moderate == 0 -> stringResource(R.string.sky_sensors_all_good)
+            else -> stringResource(R.string.sky_sensors_attention, poor + moderate)
+        },
+        tone = tone,
+        titleStyle = MaterialTheme.typography.headlineMedium,
+        badge = {
+            Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
+                androidx.compose.foundation.Canvas(Modifier.size(96.dp)) {
+                    val stroke = 12.dp.toPx()
+                    val inset = stroke / 2
+                    val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
+                    val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+                    drawArc(track, 0f, 360f, false, topLeft, arcSize, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+                    val gap = if (total > 1) 6f else 0f
+                    var start = -90f
+                    listOf(good to goodColor, moderate to moderateColor, poor to poorColor).forEach { (count, color) ->
+                        if (count > 0 && total > 0) {
+                            val sweep = 360f * count / total
+                            drawArc(
+                                color,
+                                start + gap / 2,
+                                (sweep - gap).coerceAtLeast(1f),
+                                false,
+                                topLeft,
+                                arcSize,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                            )
+                            start += sweep
+                        }
+                    }
+                }
+                TrailSenseShapeBadge(
+                    text = good.toString(),
+                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                    size = 56.dp,
+                    containerColor = colors.accent,
+                    contentColor = colors.onAccent
+                )
+            }
+        }
+    )
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SensorDetailsRow(
     sensor: SensorDetails,
     position: TrailSenseGroupPosition
 ) {
-    TrailSenseListItem(
+    val colors = trailSenseToneColors(sensorTone(sensor.statusColor))
+    SkyValueRow(
         title = sensor.name,
         subtitle = sensor.description.takeIf { it.isNotBlank() },
-        icon = rememberVectorPainter(sensor.statusIcon),
+        icon = sensor.statusIcon,
+        accent = colors.accent,
+        badgeShape = when (sensorTone(sensor.statusColor)) {
+            TrailSenseTone.Good -> MaterialShapes.Cookie9Sided.toShape()
+            TrailSenseTone.Caution -> MaterialShapes.Pentagon.toShape()
+            else -> MaterialShapes.Diamond.toShape()
+        },
         position = position,
         trailing = { SensorStatus(sensor) }
     )
@@ -647,27 +793,17 @@ private fun SensorDetailsRow(
 
 @Composable
 private fun SensorStatus(sensor: SensorDetails) {
-    val color by animateColorAsState(
-        ComposeColor(sensor.statusColor),
+    val colors = trailSenseToneColors(sensorTone(sensor.statusColor))
+    val container by animateColorAsState(
+        colors.container,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "sensorStatus"
     )
-    Row(
-        modifier = Modifier.widthIn(max = 128.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color, CircleShape)
-        )
-        Spacer(Modifier.width(TrailSenseSpacing.sm))
-        Text(
-            text = sensor.statusMessage,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+    Spacer(Modifier.width(TrailSenseSpacing.sm))
+    SkyPill(
+        text = sensor.statusMessage,
+        containerColor = container,
+        contentColor = colors.content,
+        modifier = Modifier.widthIn(max = 140.dp)
+    )
 }

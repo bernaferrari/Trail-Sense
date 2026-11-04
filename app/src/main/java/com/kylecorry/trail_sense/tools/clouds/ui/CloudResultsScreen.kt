@@ -1,7 +1,11 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.foundation.layout.height
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -315,7 +319,7 @@ private fun CloudResultsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(4f / 3f)
-                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape.hero))
                         .background(MaterialTheme.colorScheme.surfaceContainerLow)
                         .testTag("cloud_image")
                 )
@@ -458,7 +462,8 @@ private fun CloudSelectionRow(
         ) {
             CloudIconChip(
                 drawable = details.getCloudImage(context, selection.genus),
-                size = if (showDescription) 64.dp else 48.dp,
+                size = if (showDescription) 88.dp else 52.dp,
+                shape = if (showDescription) MaterialShapes.Puffy.toShape() else MaterialShapes.Cookie9Sided.toShape(),
                 isSelected = selection.isSelected,
                 contentDescription = name,
                 onClick = { onCloudImageClick(selection.genus) }
@@ -472,7 +477,7 @@ private fun CloudSelectionRow(
                 Text(
                     text = name,
                     style = if (showDescription) {
-                        MaterialTheme.typography.titleMedium
+                        MaterialTheme.typography.headlineSmall
                     } else {
                         MaterialTheme.typography.bodyLarge
                     },
@@ -487,6 +492,33 @@ private fun CloudSelectionRow(
                         color = supportingColor,
                         maxLines = 1
                     )
+                }
+                selection.confidence?.let { confidence ->
+                    // How sure the match is, as a rounded bar (Keepout's mini bars).
+                    val barHeight = if (showDescription) 10.dp else 6.dp
+                    val fill by animateFloatAsState(
+                        confidence.coerceIn(0f, 1f),
+                        MaterialTheme.motionScheme.slowSpatialSpec(),
+                        label = "cloudConfidence"
+                    )
+                    Box(
+                        Modifier
+                            .padding(vertical = TrailSenseSpacing.xs)
+                            .fillMaxWidth()
+                            .height(barHeight)
+                            .clip(CircleShape)
+                            .background(contentColor.copy(alpha = 0.12f))
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth(fill)
+                                .height(barHeight)
+                                .clip(CircleShape)
+                                .background(
+                                    if (selection.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                                )
+                        )
+                    }
                 }
                 if (showDescription) {
                     Text(
@@ -517,6 +549,7 @@ private fun CloudSelectionRow(
 private fun CloudIconChip(
     drawable: Drawable?,
     size: Dp,
+    shape: androidx.compose.ui.graphics.Shape = CircleShape,
     isSelected: Boolean,
     contentDescription: String,
     onClick: () -> Unit
@@ -532,7 +565,7 @@ private fun CloudIconChip(
     Box(
         modifier = Modifier
             .size(size)
-            .clip(CircleShape)
+            .clip(shape)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .clickable(onClick = onClick)
             .semantics { this.contentDescription = contentDescription },

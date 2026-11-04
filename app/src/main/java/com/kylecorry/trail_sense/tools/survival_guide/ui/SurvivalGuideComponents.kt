@@ -93,6 +93,8 @@ internal fun SurvivalGuideGroupRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: Painter? = null,
+    iconShape: Shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+    accent: Color = Color.Unspecified,
     titleModifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null
 ) {
@@ -110,10 +112,11 @@ internal fun SurvivalGuideGroupRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
+                val wells = com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors(accent)
                 Surface(
-                    shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = iconShape,
+                    color = wells.container,
+                    contentColor = wells.content,
                     modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
                 ) {
                     Box(contentAlignment = Alignment.Center) {

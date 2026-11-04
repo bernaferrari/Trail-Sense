@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the expressive pass of the sky and knowledge tools (weather, astronomy, guides, sensors). -->
+<resources>
+    <string name="sky_strike_distance">Strike distance</string>
+    <string name="sky_seconds_short">%s s</string>
+    <string name="sky_strike_time">Time</string>
+    <string name="sky_strike_last_distance">Distance</string>
+    <string name="sky_temperature_change">%s from here</string>
+    <string name="sky_temperature_hint">Enter the temperature where you are, then a destination elevation, humidity or wind.</string>
+    <string name="sky_experimentation_empty">Install a Trail Sense plugin and it will show up here, with the features it adds.</string>
+    <string name="sky_experimentation_features">Features</string>
+    <string name="sky_sensors_good">%1$d of %2$d good</string>
+    <string name="sky_sensors_all_good">Every sensor is reporting well</string>
+    <string name="sky_sensors_attention">%d need attention</string>
+    <string name="sky_sensors_good_label">Good</string>
+    <string name="sky_sensors_moderate_label">Moderate</string>
+    <string name="sky_sensors_poor_label">Poor</string>
+    <string name="sky_sensors_orientation">Motion and orientation</string>
+    <string name="sky_sensors_environment">Environment</string>
+    <string name="sky_sensors_device">Device</string>
+    <string name="sky_minutes_read">%d min read</string>
+    <string name="sky_in_this_guide">In this guide</string>
+    <plurals name="sky_sections">
+        <item quantity="one">%d section</item>
+        <item quantity="other">%d sections</item>
+    </plurals>
+    <string name="sky_guides_count">%d guides</string>
+    <string name="sky_guides_supporting">How every tool works, in %d topics</string>
+    <string name="sky_guides_no_results">Nothing matches \"%s\". Try a tool name or a shorter word.</string>
+    <string name="sky_survival_chapters">%d chapters · works offline</string>
+    <string name="sky_diagnostics_checks">Checks</string>
+    <string name="sky_diagnostics_tools">Tools</string>
+    <string name="sky_field_guide_kinds">Plants, animals and fungi across %d kinds</string>
+</resources>

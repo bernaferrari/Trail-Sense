@@ -2,6 +2,9 @@ package com.kylecorry.trail_sense.tools.guide.infrastructure
 
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.Apps
+import com.kylecorry.trail_sense.shared.icons.trail.Layers
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -23,7 +26,8 @@ object Guides {
                 UserGuide(
                     tool.name,
                     tool.description,
-                    tool.guideId
+                    tool.guideId,
+                    tool.icon
                 )
             } + listOfNotNull(
                 // Add map layers guide to the bottom of the location category
@@ -31,7 +35,8 @@ object Guides {
                     UserGuide(
                         context.getString(R.string.guide_map_layers),
                         null,
-                        R.raw.guide_tool_map_layers
+                        R.raw.guide_tool_map_layers,
+                        TrailIcons.Layers
                     )
                 } else null
             )
@@ -52,7 +57,8 @@ object Guides {
                     UserGuide(
                         context.getString(R.string.tools),
                         null,
-                        R.raw.guide_tool_tools
+                        R.raw.guide_tool_tools,
+                        TrailIcons.Apps
                     )
                 )
             )

@@ -1,5 +1,20 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.experimentation
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Arrangement
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -75,17 +90,51 @@ internal fun ExperimentationContent() {
                 LoadingIndicator(modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp))
             }
 
-            loaded.isEmpty() -> item(key = "empty") {
-                TrailSenseEmptyState(
-                    icon = Icons.Rounded.Extension,
-                    title = stringResource(R.string.experimentation_no_plugins),
-                    modifier = Modifier.heightIn(max = 420.dp)
-                )
+            loaded.isEmpty() -> {
+                item(key = "empty") {
+                    SkyEmptyState(
+                        icon = Icons.Rounded.Extension,
+                        title = stringResource(R.string.experimentation_no_plugins),
+                        description = stringResource(R.string.sky_experimentation_empty),
+                        shape = MaterialShapes.Clover4Leaf.toShape(),
+                        companionShape = MaterialShapes.Gem.toShape(),
+                        companionIcon = TrailIcons.Experimental
+                    )
+                }
+                // Empty slots where plugins will appear, so the page shows what it is for.
+                item(key = "slots") {
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                        repeat(3) { index ->
+                            ExperimentationEmptySlot(TrailSenseGroupPosition.at(index, 3), alpha = 1f - index * 0.3f)
+                        }
+                    }
+                }
             }
 
-            else -> trailSenseSection(key = "plugins", title = pluginsTitle) {
-                loaded.forEach { plugin ->
-                    row { position -> ExperimentationPluginRow(plugin, position) }
+            else -> {
+                item(key = "summary") {
+                    TrailSenseStatGrid(
+                        stats = listOf(
+                            TrailSenseStat(
+                                label = pluginsTitle,
+                                value = loaded.size.toString(),
+                                tone = TrailSenseTone.Primary,
+                                icon = Icons.Rounded.Extension
+                            ),
+                            TrailSenseStat(
+                                label = stringResource(R.string.sky_experimentation_features),
+                                value = loaded.sumOf { it.features.weather.size + it.features.mapLayers.size }.toString(),
+                                tone = TrailSenseTone.Tertiary,
+                                icon = TrailIcons.Experimental
+                            )
+                        ),
+                        columns = 2
+                    )
+                }
+                trailSenseSection(key = "plugins", title = pluginsTitle) {
+                    loaded.forEach { plugin ->
+                        row { position -> ExperimentationPluginRow(plugin, position) }
+                    }
                 }
             }
         }
@@ -99,10 +148,12 @@ private fun ExperimentationPluginRow(
 ) {
     var expanded by rememberSaveable(plugin.packageId) { mutableStateOf(false) }
     Column {
-        TrailSenseListItem(
+        SkyValueRow(
             title = plugin.name,
             subtitle = listOfNotNull(plugin.packageId, plugin.version).joinToString(" · "),
-            icon = rememberVectorPainter(TrailIcons.Experimental),
+            icon = Icons.Rounded.Extension,
+            accent = TrailSenseAccents.Lavender,
+            badgeShape = MaterialShapes.Clover4Leaf.toShape(),
             position = if (expanded) position.copy(isLast = false) else position,
             onClick = { expanded = !expanded }
         )
@@ -124,6 +175,40 @@ private fun ExperimentationPluginRow(
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+    }
+}
+
+/** A ghost row: where a plugin will sit once one is installed. */
+@Composable
+private fun ExperimentationEmptySlot(position: TrailSenseGroupPosition, alpha: Float) {
+    Surface(
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = alpha),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        androidx.compose.foundation.layout.Row(
+            Modifier.padding(TrailSenseSpacing.lg),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = MaterialShapes.Clover4Leaf.toShape(),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha),
+                modifier = Modifier.size(44.dp)
+            ) {}
+            androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.lg))
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha),
+                    modifier = Modifier.size(width = 140.dp, height = 12.dp)
+                ) {}
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = alpha),
+                    modifier = Modifier.size(width = 200.dp, height = 10.dp)
+                ) {}
             }
         }
     }
