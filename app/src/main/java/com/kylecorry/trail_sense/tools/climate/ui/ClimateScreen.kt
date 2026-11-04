@@ -70,6 +70,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.unit.IntOffset
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
@@ -449,30 +457,26 @@ private fun ClimateScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                val coldest = months.minOf { it.lowCelsius }
-                val warmest = months.maxOf { it.highCelsius }
-                val wettest = months.maxOfOrNull {
-                    it.precipitation?.convertTo(DistanceUnits.Millimeters)?.value ?: 0f
-                } ?: 0f
-                TrailSenseRowGroup(footer = stringResource(R.string.climate_sources)) {
-                    months.forEach { month ->
-                        row { position ->
-                            ClimateMonthRow(
-                                month = month,
-                                position = position,
-                                isSelected = month.month == selectedMonth,
-                                isCurrent = month.month == currentMonth,
-                                low = formatTemperature(month.lowCelsius),
-                                high = formatTemperature(month.highCelsius),
-                                precipitation = month.precipitation?.let(formatPrecipitation),
-                                scaleMin = coldest,
-                                scaleMax = warmest,
-                                wettest = wettest,
-                                reveal = { reveal.value },
-                                onClick = { onMonthSelected(month.month) }
-                            )
-                        }
-                    }
+                Column {
+                    ClimateYear(
+                        months = months,
+                        selectedMonth = selectedMonth,
+                        currentMonth = currentMonth,
+                        formatTemperature = formatTemperature,
+                        formatPrecipitation = formatPrecipitation,
+                        reveal = { reveal.value },
+                        onMonthSelected = onMonthSelected
+                    )
+                    Text(
+                        text = stringResource(R.string.climate_sources),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(
+                            start = TrailSenseSpacing.lg,
+                            end = TrailSenseSpacing.lg,
+                            top = TrailSenseSpacing.sm
+                        )
+                    )
                 }
             }
         }
@@ -619,13 +623,71 @@ private fun ClimateHero(monthName: String, high: String?, low: String?, verdict:
 }
 
 /**
- * One month: its name, the low, the rounded temperature bar on the year's shared scale, the high, and a small
- * droplet bar for its precipitation. The selected month is marked by a leading line, never a dot.
+ * The whole year at a glance, like a weather app's daily columns: 12 months side by side in one card, each a rounded
+ * vertical capsule from its low to its high on one scale shared by the year, coloured by temperature. The high
+ * floats over the capsule, the low under it, then a small droplet bar for the month's rain and the month's initial.
+ * Fits 12 columns on a regular phone; only very narrow screens scroll sideways.
  */
 @Composable
-private fun ClimateMonthRow(
+private fun ClimateYear(
+    months: List<ClimateMonth>,
+    selectedMonth: Month,
+    currentMonth: Month,
+    formatTemperature: (Float) -> String,
+    formatPrecipitation: (Distance) -> String,
+    reveal: () -> Float,
+    onMonthSelected: (Month) -> Unit
+) {
+    val coldest = months.minOf { it.lowCelsius }
+    val warmest = months.maxOf { it.highCelsius }
+    val wettest = months.maxOf { it.precipitation?.convertTo(DistanceUnits.Millimeters)?.value ?: 0f }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        BoxWithConstraints(
+            Modifier.padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.lg)
+        ) {
+            val fits = maxWidth / months.size >= ClimateColumnMinWidth
+            val columnWidth = if (fits) maxWidth / months.size else ClimateColumnMinWidth
+            Row(
+                modifier = if (fits) Modifier.fillMaxWidth() else Modifier.horizontalScroll(rememberScrollState())
+            ) {
+                months.forEach { month ->
+                    ClimateMonthColumn(
+                        month = month,
+                        width = columnWidth,
+                        isSelected = month.month == selectedMonth,
+                        isCurrent = month.month == currentMonth,
+                        low = formatTemperature(month.lowCelsius),
+                        high = formatTemperature(month.highCelsius),
+                        precipitation = month.precipitation?.let(formatPrecipitation),
+                        scaleMin = coldest,
+                        scaleMax = warmest,
+                        wettest = wettest,
+                        reveal = reveal,
+                        onClick = { onMonthSelected(month.month) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val ClimateColumnMinWidth = 28.dp
+private val ClimateLabelHeight = 20.dp
+private val ClimatePlotHeight = 196.dp
+
+/**
+ * One month's column. Selected: its texts at full strength and a short primary line under its initial (a line,
+ * never a dot); the others are a little quieter.
+ */
+@Composable
+private fun ClimateMonthColumn(
     month: ClimateMonth,
-    position: TrailSenseGroupPosition,
+    width: androidx.compose.ui.unit.Dp,
     isSelected: Boolean,
     isCurrent: Boolean,
     low: String,
@@ -638,157 +700,174 @@ private fun ClimateMonthRow(
     onClick: () -> Unit
 ) {
     val locale = Locale.getDefault()
-    val name = month.month.getDisplayName(java.time.format.TextStyle.SHORT_STANDALONE, locale)
-    val fullName = month.month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, locale)
+    val label = month.month.getDisplayName(
+        if (width >= 44.dp) java.time.format.TextStyle.SHORT_STANDALONE else java.time.format.TextStyle.NARROW_STANDALONE,
+        locale
+    )
     val description = stringResource(
         R.string.climate_month_row_description,
-        fullName,
+        month.month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, locale),
         low,
         high,
         precipitation.orEmpty()
     ).trimEnd(',', ' ')
 
-    val container by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surfaceContainer,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "month_container"
-    )
-    val accent by animateFloatAsState(
-        if (isSelected) 1f else 0f,
-        MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "month_accent"
-    )
-    val accentColor = MaterialTheme.colorScheme.primary
-    val track = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-    val lowFraction by animateFloatAsState(
-        fraction(month.lowCelsius, scaleMin, scaleMax),
-        MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "month_low"
-    )
-    val highFraction by animateFloatAsState(
-        fraction(month.highCelsius, scaleMin, scaleMax),
-        MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "month_high"
-    )
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val strength by animateFloatAsState(if (isSelected) 1f else 0f, effects, label = "column_strength")
+    val line by animateFloatAsState(if (isSelected) 1f else 0f, spatial, label = "column_line")
+    val lowFraction by animateFloatAsState(fraction(month.lowCelsius, scaleMin, scaleMax), spatial, label = "column_low")
+    val highFraction by animateFloatAsState(fraction(month.highCelsius, scaleMin, scaleMax), spatial, label = "column_high")
     val wetFraction by animateFloatAsState(
         if (wettest > 0f) {
             ((month.precipitation?.convertTo(DistanceUnits.Millimeters)?.value ?: 0f) / wettest).coerceIn(0f, 1f)
         } else {
             0f
         },
-        MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "month_wet"
+        spatial,
+        label = "column_wet"
     )
 
-    Surface(
-        onClick = onClick,
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val quiet = MaterialTheme.colorScheme.onSurfaceVariant
+    val textColor = lerp(quiet.copy(alpha = 0.8f), onSurface, strength)
+    val track = onSurface.copy(alpha = 0.06f)
+    val accent = MaterialTheme.colorScheme.primary
+    // Narrow columns step the numbers down a size so "-12°" never clips.
+    val numberStyle = (if (width >= 34.dp) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium)
+        .copy(fontFeatureSettings = "tnum", letterSpacing = 0.sp)
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val labelHeightPx = with(density) { ClimateLabelHeight.toPx() }
+    val plotHeightPx = with(density) { ClimatePlotHeight.toPx() }
+
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .testTag("climate_month_${month.month.value}")
-            .semantics {
-                contentDescription = description
-                selected = isSelected
-            },
-        shape = trailSenseGroupShape(position),
-        color = container
+            .width(width)
+            .clip(RoundedCornerShape(TrailSenseShape.groupInner * 2))
+            .semantics { contentDescription = description }
+            .selectable(selected = isSelected, role = Role.Tab, onClick = onClick)
+            .padding(vertical = TrailSenseSpacing.xs)
+            .testTag("climate_month_${month.month.value}"),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            // The row reads as one sentence (its description), so its pieces stay silent.
-            modifier = Modifier
-                .heightIn(min = 64.dp)
-                .padding(end = TrailSenseSpacing.lg)
-                .clearAndSetSemantics { },
-            verticalAlignment = Alignment.CenterVertically
+        // The capsule's span: room for the high above it and the low below it.
+        val capsuleTop = labelHeightPx
+        val capsuleSpan = plotHeightPx - 2 * labelHeightPx
+        fun capsuleY(fraction: Float) = capsuleTop + (1f - fraction) * capsuleSpan
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(ClimatePlotHeight)
+                .clearAndSetSemantics { }
         ) {
-            // The selection line: a short primary bar on the leading edge that grows in.
-            Canvas(
-                Modifier
-                    .padding(start = TrailSenseSpacing.sm)
-                    .size(width = 4.dp, height = 28.dp)
-            ) {
-                val h = size.height * accent
-                if (h > 0f) {
-                    drawRoundRect(
-                        color = accentColor,
-                        topLeft = Offset(0f, (size.height - h) / 2f),
-                        size = Size(size.width, h),
-                        cornerRadius = CornerRadius(size.width / 2f)
-                    )
-                }
-            }
-            Text(
-                text = name,
-                modifier = Modifier
-                    .padding(start = TrailSenseSpacing.md)
-                    .width(52.dp),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (isSelected || isCurrent) FontWeight.SemiBold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-            Text(
-                text = low,
-                modifier = Modifier.width(48.dp),
-                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.End,
-                maxLines = 1
-            )
-            Canvas(
-                Modifier
-                    .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.md)
-                    .height(12.dp)
-            ) {
-                val radius = size.height / 2f
-                drawRoundRect(color = track, cornerRadius = CornerRadius(radius))
-                val lowX = lowFraction * size.width
-                val highX = highFraction * size.width
-                val middle = (lowX + highX) / 2f
+            Canvas(Modifier.matchParentSize()) {
+                val capsuleWidth = min(10.dp.toPx(), size.width * 0.45f)
+                val radius = capsuleWidth / 2f
+                val left = (size.width - capsuleWidth) / 2f
+                drawRoundRect(
+                    color = track,
+                    topLeft = Offset(left, capsuleTop),
+                    size = Size(capsuleWidth, capsuleSpan),
+                    cornerRadius = CornerRadius(radius)
+                )
+                val highY = capsuleY(highFraction)
+                val lowY = capsuleY(lowFraction)
+                val middle = (highY + lowY) / 2f
                 val grow = reveal()
-                var start = middle + (lowX - middle) * grow
-                var end = middle + (highX - middle) * grow
-                if (end - start < size.height) {
-                    val center = ((start + end) / 2f).coerceIn(radius, size.width - radius)
-                    start = center - radius
-                    end = center + radius
+                var top = middle + (highY - middle) * grow
+                var bottom = middle + (lowY - middle) * grow
+                if (bottom - top < capsuleWidth) {
+                    val center = (top + bottom) / 2f
+                    top = center - radius
+                    bottom = center + radius
                 }
                 val stops = 6
                 val colors = (0..stops).map {
-                    temperatureColor(month.lowCelsius + (month.highCelsius - month.lowCelsius) * it / stops)
+                    temperatureColor(month.highCelsius - (month.highCelsius - month.lowCelsius) * it / stops)
                 }
                 drawRoundRect(
-                    brush = Brush.horizontalGradient(colors, startX = start, endX = end),
-                    topLeft = Offset(start, 0f),
-                    size = Size(end - start, size.height),
-                    cornerRadius = CornerRadius(radius)
+                    brush = Brush.verticalGradient(colors, startY = top, endY = bottom),
+                    topLeft = Offset(left, top),
+                    size = Size(capsuleWidth, bottom - top),
+                    cornerRadius = CornerRadius(radius),
+                    alpha = 0.7f + 0.3f * strength
                 )
             }
             Text(
                 text = high,
-                modifier = Modifier.width(48.dp),
-                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                style = numberStyle,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
+                color = textColor,
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ClimateLabelHeight)
+                    .offset { IntOffset(0, (capsuleY(highFraction) - labelHeightPx).toInt()) }
+                    .wrapContentHeight(Alignment.Bottom)
             )
-            if (precipitation != null) {
-                // The droplet bar: how wet the month is next to the wettest month of the year.
-                Canvas(
-                    Modifier
-                        .padding(start = TrailSenseSpacing.sm)
-                        .size(width = 6.dp, height = 28.dp)
-                ) {
-                    val radius = size.width / 2f
-                    drawRoundRect(color = track, cornerRadius = CornerRadius(radius))
-                    val h = max(size.width, size.height * wetFraction * reveal())
-                    drawRoundRect(
-                        color = RainColor,
-                        topLeft = Offset(0f, size.height - h),
-                        size = Size(size.width, h),
-                        cornerRadius = CornerRadius(radius)
-                    )
-                }
+            Text(
+                text = low,
+                style = numberStyle,
+                color = lerp(quiet.copy(alpha = 0.7f), quiet, strength),
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(ClimateLabelHeight)
+                    .offset { IntOffset(0, capsuleY(lowFraction).toInt()) }
+                    .wrapContentHeight(Alignment.Top)
+            )
+        }
+
+        if (precipitation != null) {
+            // The droplet bar: this month's rain against the wettest month of the year.
+            Canvas(
+                Modifier
+                    .padding(top = TrailSenseSpacing.md)
+                    .size(width = min(18.dp.value, width.value * 0.6f).dp, height = 4.dp)
+                    .clearAndSetSemantics { }
+            ) {
+                val radius = size.height / 2f
+                drawRoundRect(color = track, cornerRadius = CornerRadius(radius))
+                val w = max(size.height, size.width * wetFraction * reveal())
+                drawRoundRect(
+                    color = RainColor,
+                    size = Size(w, size.height),
+                    cornerRadius = CornerRadius(radius),
+                    alpha = 0.6f + 0.4f * strength
+                )
+            }
+        }
+
+        Text(
+            text = label,
+            modifier = Modifier
+                .padding(top = TrailSenseSpacing.md)
+                .clearAndSetSemantics { },
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = if (isSelected || isCurrent) FontWeight.Bold else FontWeight.Medium,
+            color = textColor,
+            maxLines = 1,
+            softWrap = false
+        )
+        // The selection line under the label, growing out from its middle.
+        Canvas(
+            Modifier
+                .padding(top = TrailSenseSpacing.xs)
+                .size(width = 16.dp, height = 3.dp)
+        ) {
+            val w = size.width * line
+            if (w > 0f) {
+                drawRoundRect(
+                    color = accent,
+                    topLeft = Offset((size.width - w) / 2f, 0f),
+                    size = Size(w, size.height),
+                    cornerRadius = CornerRadius(size.height / 2f)
+                )
             }
         }
     }
