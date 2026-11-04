@@ -338,15 +338,15 @@ fun <T> TrailSenseConnectedChoice(
 }
 
 object TrailSenseChoiceDefaults {
-    /** Every selection control in the family is this tall (the touch target still grows to 48 dp). */
-    val height = 40.dp
+    /** Every selection control in the family is this tall. */
+    val height = 48.dp
 }
 
-/** The selection colours: chosen = secondaryContainer, the rest a quiet raised surface. */
+/** The family's selection colours (WiFi Weakspot, Keepout): chosen = solid primary, the rest a quiet raised surface. */
 @Composable
 fun trailSenseChoiceColors() = ToggleButtonDefaults.toggleButtonColors(
-    checkedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-    checkedContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    checkedContainerColor = MaterialTheme.colorScheme.primary,
+    checkedContentColor = MaterialTheme.colorScheme.onPrimary,
     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
@@ -402,7 +402,7 @@ fun TrailSenseGroupCard(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(TrailSenseSpacing.lg),
-    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable ColumnScope.() -> Unit
 ) {
     androidx.compose.material3.Surface(

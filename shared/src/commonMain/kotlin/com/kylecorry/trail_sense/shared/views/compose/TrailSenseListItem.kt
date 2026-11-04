@@ -38,9 +38,9 @@ import kotlinx.coroutines.delay
 /**
  * The family's list row. Every grouped list follows this spec:
  * - 16 dp side padding, 12 dp top and bottom; at least 56 dp tall with one line, 72 dp with a supporting line.
- * - An optional leading icon in a 48 dp rounded square (secondaryContainer). Use icons only when they differ in
+ * - An optional leading icon in a 40 dp, 12 dp-radius tile tinted 12% primary (the family's well). Use icons only when they differ in
  *   meaning; if every row would get the same icon, pass none.
- * - Title in bodyLarge onSurface; one supporting line in bodyMedium onSurfaceVariant (at most two lines).
+ * - Title in titleMedium onSurface; one supporting line in bodyMedium onSurfaceVariant (at most two lines).
  * - At most one trailing element: either [trailingText] (a short value, bodyLarge onSurfaceVariant) or [trailing]
  *   (one switch, icon button or chevron), never both.
  * - State colour comes from the caller only for real meaning: error for danger, tertiary for attention.
@@ -58,7 +58,7 @@ fun TrailSenseListItem(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     position: TrailSenseGroupPosition? = null,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     // Off by default: in a LazyColumn this would re-fire every time a row scrolls
     // back into view, which reads as jank. Opt in for short, static lists only.
     animateEntrance: Boolean = false
@@ -121,12 +121,10 @@ fun TrailSenseListItem(
         ) {
             if (icon != null) {
                 Surface(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                        TrailSenseShape.iconContainer
-                    ),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = iconTint.copy(alpha = 0.12f),
                     contentColor = iconTint,
-                    modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     androidx.compose.foundation.layout.Box(
                         contentAlignment = Alignment.Center
@@ -150,7 +148,7 @@ fun TrailSenseListItem(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (subtitle != null) {

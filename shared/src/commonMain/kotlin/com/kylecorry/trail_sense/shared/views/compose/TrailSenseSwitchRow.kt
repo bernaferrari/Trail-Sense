@@ -31,7 +31,7 @@ fun TrailSenseSwitchRow(
     position: TrailSenseGroupPosition? = null
 ) {
     // A checked switch says so itself: the row keeps the group's tone so a group reads as one object.
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
     androidx.compose.material3.Surface(
         modifier = modifier
             .fillMaxWidth()

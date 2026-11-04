@@ -201,33 +201,7 @@ private fun SettingsScreen(
                 appearance()
             }
         }
-        // The navigation bar's two switches. With compact mode on there are no labels to show, so that switch
-        // stays in place but turns off rather than vanishing (the group never shrinks to one row).
-        trailSenseSection("navigation_bar", title = navigationBarTitle) {
-            row { position ->
-                SettingsSwitchRow(
-                    label = stringResource(R.string.compact_mode),
-                    checked = quick.compact,
-                    onCheckedChange = {
-                        quick = quick.copy(compact = it)
-                        onCompactModeChanged(it)
-                    },
-                    position = position
-                )
-            }
-            row { position ->
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_show_all_bottom_navigation_labels),
-                    checked = quick.allLabels && !quick.compact,
-                    enabled = !quick.compact,
-                    onCheckedChange = {
-                        quick = quick.copy(allLabels = it)
-                        onShowAllLabelsChanged(it)
-                    },
-                    position = position
-                )
-            }
-        }
+        // (No navigation bar section: the bar is the family's fixed four tabs, nothing to tune.)
         trailSenseSection("general", title = generalTitle) {
             row { position ->
                 SettingsNavRow(
@@ -386,7 +360,7 @@ private fun SettingsNavRow(
                 scaleY = scale
             },
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier
@@ -412,11 +386,12 @@ private fun SettingsNavRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // The family's icon well: 40 dp, 12 dp corners, a 12% primary tint.
             Surface(
-                shape = RoundedCornerShape(TrailSenseSpacing.md),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(TrailSenseSize.compactIconContainer)
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -434,7 +409,7 @@ private fun SettingsNavRow(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

@@ -43,7 +43,8 @@ data class ThemeChoice(val mode: ThemeMode, val black: Boolean, val night: Boole
             val mode = when (base) {
                 Theme.Light -> ThemeMode.Light
                 Theme.Dark, Theme.Black -> ThemeMode.Dark
-                Theme.SunriseSunset -> ThemeMode.Sun
+                // Sunrise/sunset is no longer offered; it reads as Auto (the system follows the day too).
+                Theme.SunriseSunset -> ThemeMode.System
                 else -> ThemeMode.System
             }
             return ThemeChoice(mode, base == Theme.Black || base == Theme.SystemBlack, theme == Theme.Night)
@@ -81,12 +82,22 @@ fun ThemeAppearanceControls(
         onThemeChanged(next.toTheme())
     }
     val modes = listOf(
-        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
-        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light), Icons.Rounded.LightMode),
-        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark), Icons.Rounded.DarkMode),
-        TrailSenseChoice(ThemeMode.Sun, stringResource(R.string.theme_mode_sun), Icons.Rounded.WbTwilight)
+        // Plain labels, centred: three words need no icons.
+        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto)),
+        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light)),
+        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark))
     )
-    val palettes = TrailSensePalette.entries.filter { it != TrailSensePalette.Wallpaper || wallpaperAvailable }
+    // Eight choices in two even rows: the wallpaper, then seven clearly different hues.
+    val palettes = listOf(
+        TrailSensePalette.Wallpaper,
+        TrailSensePalette.Orange,
+        TrailSensePalette.Amber,
+        TrailSensePalette.Green,
+        TrailSensePalette.Teal,
+        TrailSensePalette.Blue,
+        TrailSensePalette.Indigo,
+        TrailSensePalette.Pink
+    ).filter { it != TrailSensePalette.Wallpaper || wallpaperAvailable }
     val paletteNames = mapOf(
         TrailSensePalette.Wallpaper to stringResource(R.string.theme_palette_wallpaper),
         TrailSensePalette.Orange to stringResource(R.string.theme_palette_orange),
@@ -130,18 +141,6 @@ fun ThemeAppearanceControls(
         styleTitle = stringResource(R.string.color_style)
     )
     TrailSenseRowGroup(footer = sunSummary.takeIf { choice.mode == ThemeMode.Sun && !choice.night }) {
-        if (choice.mode != ThemeMode.Light && choice.mode != ThemeMode.Sun) {
-            row { position ->
-                SettingsSwitchRow(
-                    label = stringResource(R.string.theme_black_background),
-                    summary = stringResource(R.string.theme_black_background_summary),
-                    checked = choice.black && !choice.night,
-                    enabled = !choice.night,
-                    onCheckedChange = { update(choice.copy(black = it)) },
-                    position = position
-                )
-            }
-        }
         row { position ->
             SettingsSwitchRow(
                 label = stringResource(R.string.theme_night_vision),
@@ -165,20 +164,7 @@ fun ThemeAppearanceControls(
                 )
             }
         }
-        if (palette == TrailSensePalette.Wallpaper) {
-            row { position ->
-                SettingsSwitchRow(
-                    label = stringResource(R.string.compass_wallpaper_colors),
-                    summary = stringResource(R.string.compass_wallpaper_colors_summary),
-                    checked = compassColors,
-                    onCheckedChange = {
-                        compassColors = it
-                        onCompassWallpaperColorsChanged(it)
-                    },
-                    position = position
-                )
-            }
-        }
+        // (Wallpaper colours on the compass: gone; the dial takes the theme's primary container.)
     }
     }
 }

@@ -116,14 +116,14 @@ fun TrailSenseEmptyState(
                     Button(
                         onClick = onAction,
                         shapes = ButtonDefaults.shapes(),
-                        modifier = actionModifier.heightIn(min = 48.dp),
-                        contentPadding = ButtonDefaults.contentPaddingFor(48.dp)
+                        modifier = actionModifier.heightIn(min = ButtonDefaults.MediumContainerHeight),
+                        contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight)
                     ) {
                         if (actionIcon != null) {
-                            Icon(actionIcon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.iconSizeFor(48.dp)))
-                            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(48.dp)))
+                            Icon(actionIcon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.iconSizeFor(ButtonDefaults.MediumContainerHeight)))
+                            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
                         }
-                        Text(actionLabel, style = MaterialTheme.typography.labelLarge)
+                        Text(actionLabel, style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight))
                     }
                 }
                 if (secondaryActionLabel != null && onSecondaryAction != null) {

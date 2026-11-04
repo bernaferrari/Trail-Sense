@@ -88,7 +88,7 @@ fun SettingsSwitchRow(
     position: TrailSenseGroupPosition = SettingsInnerPosition
 ) {
     // A checked switch says so itself: the row keeps the group's tone so a group reads as one object.
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -112,7 +112,7 @@ fun SettingsSwitchRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (summary != null) {

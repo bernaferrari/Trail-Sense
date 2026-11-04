@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -22,7 +23,7 @@ fun TrailSenseButton(
     Button(
         onClick = onClick,
         shapes = ButtonDefaults.shapesFor(buttonHeight),
-        modifier = modifier.height(buttonHeight),
+        modifier = modifier.heightIn(min = buttonHeight),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary
@@ -31,7 +32,7 @@ fun TrailSenseButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge
+            style = ButtonDefaults.textStyleFor(buttonHeight)
         )
     }
 }

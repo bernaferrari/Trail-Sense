@@ -126,8 +126,10 @@ fun <M> TrailSenseAppearancePicker(
                 )
                 .padding(TrailSenseSpacing.lg)
                 .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+            // Even rows (4 + 4 for eight), never a lone swatch on its own line.
+            maxItemsInEachRow = if (palettes.size % 4 == 0) 4 else if (palettes.size % 5 == 0) 5 else 6
         ) {
             palettes.forEach { palette ->
                 Swatch(
