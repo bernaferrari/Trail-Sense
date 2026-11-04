@@ -28,6 +28,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -362,61 +363,34 @@ private fun BeaconDetailsScreen(
     ) {
         if (beacon == null) return@TrailSensePage
 
+        // How far is this place, and which way? The distance answers it; Navigate is the one filled action.
         item(key = "hero") {
-            val badgeColor = ComposeColor(beacon.color)
-            TrailSenseSpotlight(
+            com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue(
                 modifier = Modifier.testTag("beacon_distance"),
-                eyebrow = stringResource(R.string.distance),
-                title = distance.ifBlank { placeholder },
-                titleStyle = MaterialTheme.typography.displaySmall,
-                supportingText = direction,
-                tone = TrailSenseTone.Primary,
-                badge = {
-                    TrailSenseShapeBadge(
-                        icon = beacon.icon?.icon ?: TrailIcons.Location,
-                        shape = MaterialShapes.Cookie9Sided.toShape(),
-                        size = 64.dp,
-                        containerColor = badgeColor,
-                        contentColor = if (badgeColor.luminance() > 0.5f) ComposeColor.Black else ComposeColor.White
-                    )
-                },
-                actions = listOf(
-                    TrailSenseSpotlightAction(
-                        stringResource(R.string.navigate),
-                        TrailIcons.NavigationArrow,
-                        onClick = onNavigate
-                    )
-                )
-            ) {
-                if (coordinates.isNotBlank()) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ) {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                rememberVectorPainter(TrailIcons.Location),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
+                value = distance.ifBlank { placeholder },
+                verdict = direction?.ifBlank { null },
+                below = {
+                    if (coordinates.isNotBlank()) {
+                        SelectionContainer {
+                            Text(
+                                text = coordinates,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(Modifier.width(TrailSenseSpacing.sm))
-                            SelectionContainer {
-                                Text(
-                                    text = coordinates,
-                                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum")
-                                )
-                            }
                         }
                     }
+                    Spacer(Modifier.height(TrailSenseSpacing.sm))
+                    Button(
+                        onClick = onNavigate,
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.heightIn(min = 48.dp)
+                    ) {
+                        Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(stringResource(R.string.navigate))
+                    }
                 }
-            }
+            )
         }
 
         item(key = "conditions") {
@@ -532,8 +506,7 @@ private data class BeaconTile(
 )
 
 /**
- * Conditions at the beacon as connected value tiles, two to a row: sun times warm in tertiary, the rest quiet. Each
- * tile keeps its test tag.
+ * Conditions at the beacon as connected quiet value tiles, two to a row. Each tile keeps its test tag.
  */
 @Composable
 private fun BeaconTileGrid(tiles: List<BeaconTile>) {
@@ -543,8 +516,9 @@ private fun BeaconTileGrid(tiles: List<BeaconTile>) {
         rows.forEachIndexed { rowIndex, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 row.forEachIndexed { columnIndex, tile ->
-                    val container = if (tile.warm) scheme.tertiaryContainer else scheme.surfaceContainerLow
-                    val content = if (tile.warm) scheme.onTertiaryContainer else scheme.onSurface
+                    // Every tile quiet: the distance above is the screen's one emphasised value.
+                    val container = scheme.surfaceContainerLow
+                    val content = scheme.onSurface
                     val shape = trailSenseGridCellShape(columnIndex, if (row.size == 1 && rows.size > 1) 2 else row.size, rowIndex, rows.size)
                     val body: @Composable () -> Unit = {
                         Column(
@@ -556,13 +530,13 @@ private fun BeaconTileGrid(tiles: List<BeaconTile>) {
                             Icon(
                                 rememberVectorPainter(tile.icon),
                                 contentDescription = null,
-                                tint = if (tile.warm) scheme.tertiary else scheme.primary,
+                                tint = scheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
                                 tile.value,
-                                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.Medium,
                                 maxLines = 1
                             )
                             Text(
