@@ -180,7 +180,7 @@ fun RulerScreen(
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
                 TrailSenseSpotlight(
-                    eyebrow = stringResource(R.string.tool_ruler_title),
+                    eyebrow = stringResource(R.string.ruler_length),
                     title = measurement.ifEmpty { "--" },
                     titleStyle = MaterialTheme.typography.displaySmall,
                     supportingText = mapDistance.takeIf { it.isNotEmpty() }
@@ -449,31 +449,37 @@ private fun FractionalScaleInput(
     onToChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    // "1 : 25000" on one line, the way a map prints its scale.
+    Row(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         TrailSenseInputField(
             value = from,
             onValueChange = onFromChanged,
             label = stringResource(R.string.distance_from),
-            position = TrailSenseGroupPosition(isFirst = true, isLast = false),
-            modifier = Modifier.testTag("fractional_map_from")
+            position = TrailSenseGroupPosition.Single,
+            modifier = Modifier
+                .weight(1f)
+                .testTag("fractional_map_from")
+        )
+        Text(
+            text = stringResource(R.string.map_fractional_separator),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .padding(horizontal = TrailSenseSpacing.xs)
+                .testTag("textView12")
         )
         TrailSenseInputField(
             value = to,
             onValueChange = onToChanged,
             label = stringResource(R.string.distance_to),
-            position = TrailSenseGroupPosition(isFirst = false, isLast = true),
-            leadingIcon = {
-                Text(
-                    text = stringResource(R.string.map_fractional_separator),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("textView12")
-                )
-            },
-            modifier = Modifier.testTag("fractional_map_to")
+            position = TrailSenseGroupPosition.Single,
+            modifier = Modifier
+                .weight(2f)
+                .testTag("fractional_map_to")
         )
     }
 }

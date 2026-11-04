@@ -370,22 +370,32 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.color = bearing.color
         paint.style = Paint.Style.FILL
-        paint.alpha = if (stopAt != null) 25 else 100
+        paint.alpha = if (stopAt != null) 18 else 46
 
         val inset = iconSize.toFloat() + dp(2f)
         arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
-        nativeCanvas.drawArc(
-            arcRect,
-            azimuth - 90,
-            deltaAngle(azimuth, bearing.bearing),
-            true,
-            paint
-        )
+        val sweep = deltaAngle(azimuth, bearing.bearing)
+        nativeCanvas.drawArc(arcRect, azimuth - 90, sweep, true, paint)
+
+        // The turn still to make, as a bold rounded arc on the dial's edge: the wedge is only its soft shadow.
+        if (kotlin.math.abs(sweep) > 0.5f) {
+            val stroke = dp(7f)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = stroke
+            paint.strokeCap = Paint.Cap.ROUND
+            paint.alpha = 255
+            val ring = compassSize * 0.155f + stroke / 2f + dp(4f)
+            arcRect.inset(ring, ring)
+            nativeCanvas.drawArc(arcRect, azimuth - 90, sweep, false, paint)
+            paint.style = Paint.Style.FILL
+            paint.strokeCap = Paint.Cap.BUTT
+            arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
+        }
 
         stopAt?.let {
             val pixel = mapView?.toPixel(it) ?: return@let
             val size = min(compassSize.toFloat(), pixel.distanceTo(centerPixel) * 2)
-            paint.alpha = 75
+            paint.alpha = 40
             arcRect.set(
                 centerPixel.x - size / 2f,
                 centerPixel.y - size / 2f,

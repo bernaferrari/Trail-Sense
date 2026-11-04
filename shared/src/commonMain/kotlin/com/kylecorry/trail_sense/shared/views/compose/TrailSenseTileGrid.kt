@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,17 +84,26 @@ data class TrailSenseWellColors(val container: Color, val content: Color)
  */
 @Composable
 fun trailSenseWellColors(accent: Color): TrailSenseWellColors {
+    val tones = trailSenseAccentScheme(accent)
+    return TrailSenseWellColors(tones.primaryContainer, tones.onPrimaryContainer)
+}
+
+/**
+ * The full tonal palette of an accent, harmonized toward the theme: its container for tinted tiles, its primary for
+ * badges. Tonal rather than vibrant, so greens and cyans stay soft instead of turning neon beside the theme.
+ */
+@Composable
+fun trailSenseAccentScheme(accent: Color): androidx.compose.material3.ColorScheme {
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.surface.luminance() < 0.5f
     val hue = if (accent == Color.Unspecified) scheme.primary else harmonize(accent, scheme.primary)
     return remember(hue, dark) {
-        val tones = dynamicColorScheme(
+        dynamicColorScheme(
             seedColor = hue,
             isDark = dark,
-            style = PaletteStyle.Vibrant,
+            style = PaletteStyle.TonalSpot,
             specVersion = ColorSpec.SpecVersion.SPEC_2025
         )
-        TrailSenseWellColors(tones.primaryContainer, tones.onPrimaryContainer)
     }
 }
 
@@ -127,7 +137,7 @@ fun trailSenseGridCellShape(column: Int, columns: Int, row: Int, rows: Int): Rou
 
 /**
  * Tiles in a connected grid: two columns on a phone, more on wide screens. A short last row stretches its tiles
- * across, so an odd count never leaves a hole. Tiles in a row share one height, and every title on the grid uses one
+ * across the column width only, so the grid keeps one rhythm. Tiles in a row share one height, and every title on the grid uses one
  * size, the largest that keeps the longest title on one line beside its icon.
  */
 @Composable
@@ -146,15 +156,33 @@ fun TrailSenseTileGrid(tiles: List<TrailSenseTile>, modifier: Modifier = Modifie
                     horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                 ) {
                     row.forEachIndexed { column, tile ->
+                        // A lone last tile keeps its column's width (the grid's rhythm holds), and rounds the corner
+                        // the empty cell leaves open.
+                        val short = row.size < columns && column == row.lastIndex
+                        val base = trailSenseGridCellShape(column, columns, rowIndex, rows.size)
                         Tile(
                             tile = tile,
-                            shape = trailSenseGridCellShape(column, row.size, rowIndex, rows.size),
+                            shape = if (short) {
+                                base.copy(
+                                    bottomEnd = androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter),
+                                    topEnd = if (rows.size == 1) {
+                                        androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter)
+                                    } else {
+                                        base.topEnd
+                                    }
+                                )
+                            } else if (rowIndex == rows.size - 2 && column >= rows.last().size && column == columns - 1) {
+                                base.copy(bottomEnd = androidx.compose.foundation.shape.CornerSize(TrailSenseShape.groupOuter))
+                            } else {
+                                base
+                            },
                             titleSize = size,
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
                         )
                     }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

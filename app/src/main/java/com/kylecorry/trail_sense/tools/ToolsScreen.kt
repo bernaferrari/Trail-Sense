@@ -1,5 +1,12 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.draw.clip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseAccentScheme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -214,9 +221,10 @@ fun ToolsScreen(
                         item("pinned") {
                             Column {
                                 TrailSenseGroupHeader(stringResource(R.string.pinned))
-                                TrailSenseTileGrid(
-                                    pinned.map { it.tile(onToolClick, onToolLongClick) },
-                                    titleSize = titleSize
+                                PinnedToolGrid(
+                                    tools = pinned,
+                                    onClick = onToolClick,
+                                    onLongClick = onToolLongClick
                                 )
                             }
                         }
@@ -320,4 +328,74 @@ private fun ToolSearchField(
         ),
         modifier = modifier.focusRequester(focusRequester)
     )
+}
+
+/**
+ * The tools someone reaches for most, as the hub's hero: big tiles washed in each tool's category colour, the icon in
+ * an expressive shape, the name below. Two to a row; a lone last tile spans the row.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun PinnedToolGrid(
+    tools: List<Tool>,
+    onClick: (Tool) -> Unit,
+    onLongClick: (Tool) -> Unit
+) {
+    val rows = tools.chunked(2)
+    val shapes = listOf(
+        androidx.compose.material3.MaterialShapes.Cookie9Sided,
+        androidx.compose.material3.MaterialShapes.Sunny,
+        androidx.compose.material3.MaterialShapes.Cookie6Sided,
+        androidx.compose.material3.MaterialShapes.Clover4Leaf
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        rows.forEachIndexed { rowIndex, row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(androidx.compose.foundation.layout.IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                row.forEachIndexed { column, tool ->
+                    val tones = trailSenseAccentScheme(tool.category.accent())
+                    val shape = trailSenseGridCellShape(column, row.size, rowIndex, rows.size)
+                    Surface(
+                        shape = shape,
+                        color = tones.primaryContainer,
+                        contentColor = tones.onPrimaryContainer,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(shape)
+                            .combinedClickable(
+                                role = androidx.compose.ui.semantics.Role.Button,
+                                onClick = { onClick(tool) },
+                                onLongClick = { onLongClick(tool) },
+                                onLongClickLabel = tool.name
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(TrailSenseSpacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                        ) {
+                            TrailSenseShapeBadge(
+                                icon = tool.icon,
+                                shape = shapes[(rowIndex * 2 + column) % shapes.size].toShape(),
+                                size = 52.dp,
+                                containerColor = tones.primary,
+                                contentColor = tones.onPrimary
+                            )
+                            Text(
+                                tool.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

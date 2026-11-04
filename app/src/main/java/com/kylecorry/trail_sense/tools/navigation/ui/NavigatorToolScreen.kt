@@ -1273,24 +1273,24 @@ private fun NavigatorIconButton(
 ) {
     androidx.compose.material3.Surface(
         modifier = modifier
-            .size(80.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .size(64.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
             .combinedClickable(
                 onClickLabel = contentDescription,
                 onLongClickLabel = stringResource(R.string.navigate),
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        shadowElevation = 3.dp
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shadowElevation = 2.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
     }
