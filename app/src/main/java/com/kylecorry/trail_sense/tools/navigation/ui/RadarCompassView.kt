@@ -90,6 +90,7 @@ class RadarCompassView(
     private var sunBackColor: Int = Color.YELLOW
     private var moonBackColor: Int = Color.DKGRAY
     private var moonInkColor: Int = Color.WHITE
+    private var surfaceColor: Int = Color.WHITE
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -100,6 +101,7 @@ class RadarCompassView(
         sunBackColor = MaterialTheme.colorScheme.tertiaryContainer.toArgb()
         moonBackColor = MaterialTheme.colorScheme.secondaryContainer.toArgb()
         moonInkColor = MaterialTheme.colorScheme.onSecondaryContainer.toArgb()
+        surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
         Canvas(
             modifier = modifier
                 .fillMaxSize()
@@ -373,6 +375,21 @@ class RadarCompassView(
         nativeCanvas.translate(centerPixel.x, iconSize / 2f + dp(1f))
         // The sun and moon ride the rim on a small disc of their own (a warm tertiary disc for the sun, a secondary one for the moon),
         // so the moon's pale art never reads as a hole in the dial.
+        // A beacon is a waypoint dot in its own colour, ringed in the dial's surface (Apple Compass-style): the wedge
+        // and arc already point at it, so it doesn't need an arrow of its own. Its icon, if any, rides on top.
+        if (reference.icon == TrailIcons.ArrowTarget) {
+            val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha = (255 * reference.opacity).toInt() }
+            dot.color = surfaceColor
+            dot.alpha = (255 * reference.opacity).toInt()
+            nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.46f, dot)
+            dot.color = reference.tint ?: primaryColor
+            dot.alpha = (255 * reference.opacity).toInt()
+            nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.36f, dot)
+            nativeCanvas.restore()
+            paint.alpha = 255
+            paint.colorFilter = null
+            return
+        }
         // Tinted references (beacons) keep their own mark; only the untinted sky art gets a disc.
         if (reference.tint == null) {
             val back = Paint(Paint.ANTI_ALIAS_FLAG).apply {

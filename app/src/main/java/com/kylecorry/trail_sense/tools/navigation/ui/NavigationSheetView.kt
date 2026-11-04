@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.remember
@@ -228,18 +230,12 @@ class NavigationSheetView(private val context: Context) {
                             .clickable(enabled = titleAction != null) { titleAction?.invoke() }
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (state.titleIcon != null) {
-                                Icon(
-                                    imageVector = state.titleIcon,
-                                    contentDescription = state.titleDescription,
-                                    tint = scheme.primary,
-                                    modifier = Modifier
-                                        .padding(end = 6.dp)
-                                        .size(18.dp)
-                                )
-                            }
+                            // No leading pin: the arrow badge already says "this is where you're going".
                             Text(
                                 text = state.title,
+                                modifier = Modifier.semantics {
+                                    state.titleDescription?.let { contentDescription = it }
+                                },
                                 style = MaterialTheme.typography.titleLarge,
                                 color = scheme.onSurface,
                                 maxLines = 1,
