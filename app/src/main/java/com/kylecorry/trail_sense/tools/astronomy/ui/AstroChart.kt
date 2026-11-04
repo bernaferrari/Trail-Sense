@@ -8,6 +8,14 @@ import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.drawTrailSenseNowDot
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -56,7 +64,6 @@ class AstroChart(
     private var moonTilt = 0f
     private var moonBitmap: Bitmap? = null
     private var moonImage = bitmapLoader.load(TrailIcons.Moon, imageSize)
-    private val sunImage = bitmapLoader.load(TrailIcons.Sun, imageSize)
 
     fun setBands(show: Boolean) {
         if (show == showBands) return
@@ -104,144 +111,106 @@ class AstroChart(
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        // Two distinct roles: the sun a bold amber line, the moon a thinner cool primary one; night is a primary
-        // wash under the dashed horizon, guides are light and dashed.
+        // The frame style: Above / Horizon / Below in the gutter, the sun as the one primary line, the moon a quiet
+        // dotted line, the horizon (and twilight limits when asked for) as dashed limits, and the sun's place as the
+        // "now" dot. No day and night bands and no washes under the curves.
         val scheme = androidx.compose.material3.MaterialTheme.colorScheme
-        val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
-        val textColor = scheme.onSurfaceVariant
-        val lineColor = scheme.outlineVariant
-        val sunColor = status.caution
+        val sunColor = scheme.primary
         val moonColor = scheme.outline
-        val haloColor = scheme.surfaceContainerLowest
-        val nightColor = scheme.surfaceContainerHighest
-        val dayColor = status.cautionContainer.copy(alpha = 0.45f)
-        val nowColor = scheme.onSurface.copy(alpha = 0.35f)
+        val limitColor = scheme.outlineVariant
         val horizonColor = scheme.outline
-        val labelBackground = scheme.surfaceContainerLow
-        // The horizon's name sits just under its line at the right end, inside the night band, away from the markers
-        // (which start the day at the left).
-        val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = scheme.onSurfaceVariant.toArgb()
-            textSize = Resources.sp(context, 11f)
-            textAlign = Paint.Align.RIGHT
-            isFakeBoldText = true
-        }
-        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = textColor.copy(alpha = 0.7f).toArgb()
-            textSize = Resources.sp(context, 10f)
-            textAlign = Paint.Align.CENTER
-        }
-        Canvas(
-            modifier = modifier
-                .fillMaxSize()
-                .pointerInput(renderVersion) {
-                    detectTapGestures { offset ->
-                        val sun = sunPosition
-                        val moon = moonPosition
-                        if (sun != null && isNear(offset, sun, size.width.toFloat(), size.height.toFloat())) {
-                            onChartClicked(null)
-                            return@detectTapGestures
+        val ringColor = scheme.background
+        androidx.compose.foundation.layout.Column(modifier) {
+            TrailSenseChartFrame(
+                yLabels = listOf(
+                    androidx.compose.ui.res.stringResource(R.string.sky_axis_above),
+                    androidx.compose.ui.res.stringResource(R.string.horizon),
+                    androidx.compose.ui.res.stringResource(R.string.sky_axis_below)
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(renderVersion) {
+                            detectTapGestures { offset ->
+                                val sun = sunPosition
+                                val moon = moonPosition
+                                if (sun != null && isNear(offset, sun, size.width.toFloat(), size.height.toFloat())) {
+                                    onChartClicked(null)
+                                    return@detectTapGestures
+                                }
+                                if (moon != null && isNear(offset, moon, size.width.toFloat(), size.height.toFloat())) {
+                                    onChartClicked(null)
+                                    return@detectTapGestures
+                                }
+                                val time = startTime.plus(Time.hours(screenToHour(offset.x, size.width.toFloat()).toDouble()))
+                                    .toZonedDateTime()
+                                onChartClicked(time)
+                            }
                         }
-                        if (moon != null && isNear(offset, moon, size.width.toFloat(), size.height.toFloat())) {
-                            onChartClicked(null)
-                            return@detectTapGestures
+                ) {
+                    renderVersion
+                    val inset = TrailSenseChartInset.toPx()
+                    val left = inset
+                    val right = size.width - inset
+                    val top = inset
+                    val bottom = size.height - inset
+
+                    if (showBands) {
+                        listOf(
+                            AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL,
+                            AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
+                            AstronomyService.SUN_MIN_ALTITUDE_CIVIL
+                        ).forEach {
+                            drawHorizontal(it, limitColor, left, right, top, bottom, dashed = true)
                         }
-                        val time = startTime.plus(Time.hours(screenToHour(offset.x, size.width.toFloat()).toDouble()))
-                            .toZonedDateTime()
-                        onChartClicked(time)
+                    }
+                    drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
+
+                    drawLineChart(
+                        moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
+                        dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
+                    )
+                    drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
+
+                    moonPosition?.let {
+                        val point = toScreen(it, left, right, top, bottom)
+                        drawCircle(ringColor, imageSize / 2f + 3.dp.toPx(), point)
+                        val canvas = drawContext.canvas.nativeCanvas
+                        val image = moonBitmap ?: moonImage
+                        canvas.save()
+                        canvas.rotate(moonTilt, point.x, point.y)
+                        canvas.drawBitmap(
+                            image,
+                            point.x - image.width / 2f,
+                            point.y - image.height / 2f,
+                            null
+                        )
+                        canvas.restore()
+                    }
+                    sunPosition?.let {
+                        drawTrailSenseNowDot(toScreen(it, left, right, top, bottom), sunColor, ringColor)
                     }
                 }
-        ) {
-            renderVersion
-            val left = 12.dp.toPx()
-            val right = size.width - 12.dp.toPx()
-            val top = 12.dp.toPx()
-            val bottom = size.height - 24.dp.toPx()
-
-            if (showBands) {
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL, MIN_Y, nightColor.copy(alpha = 0.25f), left, right, top, bottom)
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL, MIN_Y, nightColor.copy(alpha = 0.3f), left, right, top, bottom)
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_CIVIL, MIN_Y, nightColor.copy(alpha = 0.4f), left, right, top, bottom)
-                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.6f), left, right, top, bottom)
-                listOf(
-                    AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL,
-                    AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
-                    AstronomyService.SUN_MIN_ALTITUDE_CIVIL
-                ).forEach {
-                    drawHorizontal(it, lineColor, left, right, top, bottom, dashed = true)
+            }
+            // The hours of the charted day under the plot; none is "now", so none is emphasised.
+            androidx.compose.foundation.layout.Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = TrailSenseChartGutter + TrailSenseChartInset - 4.dp, top = TrailSenseSpacing.sm),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+            ) {
+                renderVersion
+                listOf(0, 6, 12, 18, 24).forEach { hour ->
+                    androidx.compose.material3.Text(
+                        startTime.plus(Time.hours(hour.toDouble())).toZonedDateTime().hour.toString(),
+                        style = androidx.compose.material3.MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                        color = scheme.onSurfaceVariant
+                    )
                 }
-            } else {
-                drawBand(0f, MIN_Y, nightColor, left, right, top, bottom)
-            }
-            // Day and night as a two-tone band: a warm sky above the horizon, the night below it.
-            drawBand(MAX_Y, 0f, dayColor, left, right, top, bottom)
-
-            // Now: a hairline through the day at the sun's current place.
-            sunPosition?.let {
-                val x = toScreen(it, left, right, top, bottom).x
-                drawLine(nowColor, Offset(x, top), Offset(x, bottom), strokeWidth = 1.5.dp.toPx())
-            }
-
-            drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
-            // The label sits on a small pill of the card's colour so a curve passing under it never cuts it.
-            val horizonLabel = context.getString(R.string.horizon)
-            val labelBaseline = toScreen(Vector2(0f, 0f), left, right, top, bottom).y + 16.dp.toPx()
-            val labelWidth = horizonPaint.measureText(horizonLabel)
-            val pad = 6.dp.toPx()
-            drawRoundRect(
-                labelBackground,
-                topLeft = Offset(right - 6.dp.toPx() - labelWidth - pad, labelBaseline - horizonPaint.textSize - pad / 2),
-                size = androidx.compose.ui.geometry.Size(labelWidth + pad * 2, horizonPaint.textSize + pad * 1.5f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(50f, 50f)
-            )
-            drawContext.canvas.nativeCanvas.drawText(horizonLabel, right - 6.dp.toPx(), labelBaseline, horizonPaint)
-
-            drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.3f), left, right, top, bottom)
-            drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.14f), left, right, top, bottom)
-            drawLineChart(
-                moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
-                dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
-            )
-            drawLineChart(sunLine, sunColor, left, right, top, bottom, 4.dp.toPx())
-
-            // A light halo lifts each marker off the curves and off each other when they meet.
-            val halo = imageSize / 2f + 4.dp.toPx()
-            moonPosition?.let { drawCircle(haloColor, halo, toScreen(it, left, right, top, bottom)) }
-            sunPosition?.let {
-                val point = toScreen(it, left, right, top, bottom)
-                drawCircle(haloColor, halo, point)
-                drawCircle(sunColor, halo, point, style = Stroke(2.dp.toPx()))
-                drawContext.canvas.nativeCanvas.drawBitmap(
-                    sunImage,
-                    point.x - imageSize / 2f,
-                    point.y - imageSize / 2f,
-                    null
-                )
-            }
-            moonPosition?.let {
-                val point = toScreen(it, left, right, top, bottom)
-                val canvas = drawContext.canvas.nativeCanvas
-                val image = moonBitmap ?: moonImage
-                canvas.save()
-                canvas.rotate(moonTilt, point.x, point.y)
-                canvas.drawBitmap(
-                    image,
-                    point.x - image.width / 2f,
-                    point.y - image.height / 2f,
-                    null
-                )
-                canvas.restore()
-            }
-
-            repeat(7) { idx ->
-                val hour = idx * 4f
-                val x = left + (right - left) * (hour / 24f)
-                drawContext.canvas.nativeCanvas.drawText(
-                    startTime.plus(Time.hours(hour.toDouble())).toZonedDateTime().hour.toString(),
-                    x,
-                    size.height - 6.dp.toPx(),
-                    textPaint
-                )
             }
         }
     }
@@ -254,63 +223,22 @@ class AstroChart(
         top: Float,
         bottom: Float,
         strokeWidth: Float,
-        dash: androidx.compose.ui.graphics.PathEffect? = null
+        dash: androidx.compose.ui.graphics.PathEffect? = null,
+        smooth: Boolean = false
     ) {
         if (points.size < 2) return
-        val path = Path()
-        points.forEachIndexed { index, point ->
-            val screen = toScreen(point, left, right, top, bottom)
-            if (index == 0) {
-                path.moveTo(screen.x, screen.y)
-            } else {
-                path.lineTo(screen.x, screen.y)
+        val screenPoints = points.map { toScreen(it, left, right, top, bottom) }
+        val path = if (smooth) {
+            trailSenseSmoothPath(screenPoints)
+        } else {
+            Path().apply {
+                screenPoints.forEachIndexed { index, screen ->
+                    if (index == 0) moveTo(screen.x, screen.y) else lineTo(screen.x, screen.y)
+                }
             }
         }
         drawPath(path, color, style = Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round, pathEffect = dash))
 
-    }
-
-    private fun DrawScope.drawArea(
-        points: List<Vector2>,
-        marker: Vector2?,
-        color: Color,
-        left: Float,
-        right: Float,
-        top: Float,
-        bottom: Float
-    ) {
-        val markerPoint = marker ?: return
-        val areaPoints = points.filter { it.x <= markerPoint.x } + markerPoint
-        if (areaPoints.size < 2) return
-        val path = Path()
-        val first = toScreen(areaPoints.first(), left, right, top, bottom)
-        path.moveTo(first.x, bottom)
-        areaPoints.forEach {
-            val screen = toScreen(it, left, right, top, bottom)
-            path.lineTo(screen.x, screen.y)
-        }
-        val last = toScreen(areaPoints.last(), left, right, top, bottom)
-        path.lineTo(last.x, bottom)
-        path.close()
-        drawPath(path, color)
-    }
-
-    private fun DrawScope.drawBand(
-        topValue: Float,
-        bottomValue: Float,
-        color: Color,
-        left: Float,
-        right: Float,
-        top: Float,
-        bottom: Float
-    ) {
-        val topY = toScreen(Vector2(0f, topValue), left, right, top, bottom).y
-        val bottomY = toScreen(Vector2(0f, bottomValue), left, right, top, bottom).y
-        drawRect(
-            color = color,
-            topLeft = Offset(left, topY),
-            size = androidx.compose.ui.geometry.Size(right - left, bottomY - topY)
-        )
     }
 
     private fun DrawScope.drawHorizontal(
@@ -353,17 +281,19 @@ class AstroChart(
         return readings.map { it.toVector() }
     }
 
+    private val chartInset = Resources.dp(context, 14f)
+
     private fun screenToHour(x: Float, width: Float): Float {
-        val left = Resources.dp(context, 12f)
-        val right = width - Resources.dp(context, 12f)
+        val left = chartInset
+        val right = width - chartInset
         return (((x - left) / (right - left)) * 24f).coerceIn(0f, 24f)
     }
 
     private fun isNear(offset: Offset, point: Vector2, width: Float, height: Float): Boolean {
-        val left = Resources.dp(context, 12f)
-        val right = width - Resources.dp(context, 12f)
-        val top = Resources.dp(context, 12f)
-        val bottom = height - Resources.dp(context, 24f)
+        val left = chartInset
+        val right = width - chartInset
+        val top = chartInset
+        val bottom = height - chartInset
         val screen = toScreen(point, left, right, top, bottom)
         return (screen.x - offset.x).absoluteValue <= Resources.dp(context, 24f) &&
             (screen.y - offset.y).absoluteValue <= Resources.dp(context, 24f)
