@@ -107,6 +107,18 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
         pluginsEnabled = plugins.arePluginsEnabled(),
         onBack = { host.mainActivity.onBackPressedDispatcher.onBackPressed() },
         onNavigate = { host.findNavController().navigateWithAnimation(it) },
+        appearance = {
+            val prefs = remember { com.kylecorry.trail_sense.shared.UserPreferences(host.requireContext()) }
+            ThemeAppearanceControls(
+                prefs = prefs,
+                wallpaperAvailable = remember { com.google.android.material.color.DynamicColors.isDynamicColorAvailable() },
+                onThemeChanged = {
+                    prefs.theme = it
+                    host.mainActivity.reloadTheme()
+                },
+                onPaletteChanged = { com.kylecorry.trail_sense.main.theme.ThemeChoices.changed() }
+            )
+        },
         onOpenUrl = { host.startActivity(Intents.url(it)) },
         onEmailDeveloper = {
             val intent = Intents.email(
@@ -134,7 +146,8 @@ private fun SettingsScreen(
     onBack: () -> Unit,
     onNavigate: (Int) -> Unit,
     onOpenUrl: (String) -> Unit,
-    onEmailDeveloper: () -> Unit
+    onEmailDeveloper: () -> Unit,
+    appearance: @Composable () -> Unit = {}
 ) {
     val context = LocalContext.current
     val toolGroups = remember {
@@ -163,6 +176,13 @@ private fun SettingsScreen(
     ) {
         // One question: where do I change this? The list answers it; the two settings people change most lead it,
         // with their live values.
+        // Appearance applies in place, like ChangeDetection: no sub-page for the choices people make most.
+        item("appearance") {
+            Column {
+                TrailSenseGroupHeader(stringResource(R.string.appearance))
+                appearance()
+            }
+        }
         trailSenseSection("general", title = generalTitle) {
             row { position ->
                 SettingsNavRow(

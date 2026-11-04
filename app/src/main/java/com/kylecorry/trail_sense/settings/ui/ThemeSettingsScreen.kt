@@ -238,3 +238,74 @@ fun ThemeSettingsScreen(
         }
     }
 }
+
+
+/**
+ * Appearance, right on the Settings page (ChangeDetection's pattern): the theme as connected buttons, every palette
+ * as a swatch (the wallpaper's colours first), and the four colour styles as one strip. Each choice applies at once;
+ * the Theme page keeps the rarer options (black, night vision, navigation bar, widgets).
+ */
+@Composable
+fun ThemeAppearanceControls(
+    prefs: UserPreferences,
+    wallpaperAvailable: Boolean,
+    onThemeChanged: (Theme) -> Unit,
+    onPaletteChanged: () -> Unit
+) {
+    var choice by remember { mutableStateOf(ThemeChoice.from(prefs.theme, prefs.lastTheme)) }
+    var palette by remember { mutableStateOf(prefs.palette) }
+    var style by remember { mutableStateOf(prefs.colorStyle) }
+    fun update(next: ThemeChoice) {
+        if (next == choice) return
+        if (!choice.night) prefs.lastTheme = choice.toTheme()
+        choice = next
+        onThemeChanged(next.toTheme())
+    }
+    val modes = listOf(
+        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
+        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light), Icons.Rounded.LightMode),
+        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark), Icons.Rounded.DarkMode)
+    )
+    val palettes = TrailSensePalette.entries.filter { it != TrailSensePalette.Wallpaper || wallpaperAvailable }
+    val paletteNames = mapOf(
+        TrailSensePalette.Wallpaper to stringResource(R.string.theme_palette_wallpaper),
+        TrailSensePalette.Orange to stringResource(R.string.theme_palette_orange),
+        TrailSensePalette.Amber to stringResource(R.string.theme_palette_amber),
+        TrailSensePalette.Lime to stringResource(R.string.theme_palette_lime),
+        TrailSensePalette.Green to stringResource(R.string.theme_palette_green),
+        TrailSensePalette.Teal to stringResource(R.string.theme_palette_teal),
+        TrailSensePalette.Cyan to stringResource(R.string.theme_palette_cyan),
+        TrailSensePalette.Blue to stringResource(R.string.theme_palette_blue),
+        TrailSensePalette.Indigo to stringResource(R.string.theme_palette_indigo),
+        TrailSensePalette.Purple to stringResource(R.string.theme_palette_purple),
+        TrailSensePalette.Pink to stringResource(R.string.theme_palette_pink)
+    )
+    val styleNames = mapOf(
+        TrailSenseColorStyle.Expressive to stringResource(R.string.color_style_expressive),
+        TrailSenseColorStyle.Vibrant to stringResource(R.string.color_style_vibrant),
+        TrailSenseColorStyle.Tonal to stringResource(R.string.color_style_tonal),
+        TrailSenseColorStyle.Muted to stringResource(R.string.color_style_muted)
+    )
+    TrailSenseAppearancePicker(
+        modes = modes,
+        // Sunrise/sunset lives on the Theme page; here it reads as Auto.
+        selectedMode = if (choice.mode == ThemeMode.Sun) ThemeMode.System else choice.mode,
+        onModeSelected = { update(choice.copy(mode = it, night = false)) },
+        palettes = palettes,
+        selectedPalette = palette,
+        onPaletteSelected = {
+            palette = it
+            prefs.palette = it
+            onPaletteChanged()
+        },
+        paletteLabel = { paletteNames.getValue(it) },
+        selectedStyle = style,
+        onStyleSelected = {
+            style = it
+            prefs.colorStyle = it
+            onPaletteChanged()
+        },
+        styleLabel = { styleNames.getValue(it) },
+        styleTitle = stringResource(R.string.color_style)
+    )
+}
