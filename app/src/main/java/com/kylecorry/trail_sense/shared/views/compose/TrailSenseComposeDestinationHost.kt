@@ -718,9 +718,11 @@ class TrailSenseComposeDestinationHost(
             photoImportDialog?.Content()
             val currentActionSheet = actionSheet
             if (currentActionSheet != null) {
-                ModalBottomSheet(onDismissRequest = { dismissActionSheet(null) }) {
+                TrailSenseSheet(
+                    onDismissRequest = { dismissActionSheet(null) },
+                    title = currentActionSheet.title
+                ) {
                     ActionSheetContent(
-                        title = currentActionSheet.title,
                         subtitle = currentActionSheet.subtitle,
                         actions = currentActionSheet.actions,
                         onAction = ::dismissActionSheet,

@@ -137,6 +137,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.math.hypot
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 fun openAugmentedReality(
     navController: NavController,
@@ -310,8 +311,9 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
         )
 
         if (showLayersSheet) {
-            ModalBottomSheet(
-                onDismissRequest = ::dismissLayersSheet
+            TrailSenseSheet(
+                onDismissRequest = ::dismissLayersSheet,
+                title = stringResource(R.string.layers)
             ) {
                 ARLayersContent(
                     showBeaconLayer = showBeaconLayer,
@@ -334,7 +336,6 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
                         showGridLayer = it
                         userPrefs.augmentedReality.showGridLayer = it
                     },
-                    onClose = ::dismissLayersSheet,
                     modifier = Modifier.fillMaxSize()
                 )
             }

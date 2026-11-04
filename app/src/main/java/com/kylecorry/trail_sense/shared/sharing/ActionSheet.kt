@@ -22,37 +22,29 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import androidx.compose.foundation.layout.fillMaxWidth
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ActionSheetContent(
-    title: String,
     subtitle: String?,
     actions: List<ActionItem>,
     onAction: (ActionItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(TrailSenseSpacing.screen),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
+    // The sheet supplies the title and the padding
+    Column(modifier = modifier) {
         if (subtitle != null) {
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         FlowRow(
-            modifier = Modifier.padding(top = TrailSenseSpacing.lg),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.sm),
             horizontalArrangement = Arrangement.Center,
             verticalArrangement = Arrangement.Center,
             maxItemsInEachRow = 4
@@ -108,7 +100,6 @@ private fun ActionTile(
 private fun ActionSheetContentPreview() {
     TrailSenseTheme {
         ActionSheetContent(
-            title = "Share",
             subtitle = "Choose a format",
             actions = listOf(
                 ActionItem("Text", TrailIcons.Altitude, {}),

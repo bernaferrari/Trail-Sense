@@ -177,6 +177,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @Composable
 fun PathOverviewToolScreen(
@@ -287,12 +288,12 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         )
 
         if (showPathPointsSheet) {
-            ModalBottomSheet(
+            TrailSenseSheet(
                 onDismissRequest = {
                     showPathPointsSheet = false
                 },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                // The list brings its own gutters
+                contentPadding = PaddingValues(0.dp)
             ) {
                 PathPointsContent(
                     points = pathPointsSheetPoints,

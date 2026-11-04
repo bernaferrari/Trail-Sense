@@ -62,6 +62,7 @@ import androidx.graphics.shapes.RoundedPolygon
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 /** The Material shape each beacon shape is drawn with. */
 fun BeaconShape.polygon(): RoundedPolygon = when (this) {
@@ -110,21 +111,17 @@ fun BeaconShapeSheet(
     onColor: (AppColor) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheet = MaterialTheme.colorScheme.surfaceContainerLow
     val title = stringResource(R.string.places_shape_and_color)
     val haptics = LocalHapticFeedback.current
-    ModalBottomSheet(
+    // The title stays in the content, centred under the live preview it names
+    TrailSenseSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = sheet,
         modifier = Modifier.semantics { paneTitle = title }
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 28.dp),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Stage(icon, Color(color.color), shape)

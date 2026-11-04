@@ -36,17 +36,18 @@ fun TrailSenseSheet(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        Column(Modifier.fillMaxWidth().padding(contentPadding)) {
-            if (title != null) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = TrailSenseSpacing.lg)
-                )
-            }
-            content()
+        // The title keeps the standard 24 dp sides even when edge-to-edge content passes a smaller contentPadding
+        if (title != null) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, bottom = TrailSenseSpacing.lg)
+            )
         }
+        Column(Modifier.fillMaxWidth().padding(contentPadding), content = content)
     }
 }
 

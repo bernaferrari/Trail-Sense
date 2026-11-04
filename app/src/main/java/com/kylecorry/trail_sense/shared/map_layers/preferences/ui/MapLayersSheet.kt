@@ -80,6 +80,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 class MapLayersSheetState(
     private val mapId: String,
@@ -137,10 +138,11 @@ class MapLayersSheetState(
             }
         }
 
-        ModalBottomSheet(
+        TrailSenseSheet(
             onDismissRequest = { dismissAndUpdateWidgets(context) },
-            shape = MaterialTheme.shapes.extraLarge,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            title = stringResource(R.string.layers),
+            // The list brings its own gutters
+            contentPadding = PaddingValues(0.dp)
         ) {
             MapLayersContent(
                 mapId = mapId,
@@ -150,7 +152,6 @@ class MapLayersSheetState(
                 alwaysEnabledLayerIds = alwaysEnabledLayerIds,
                 refreshKey = refreshKey,
                 listState = listState,
-                onClose = { dismissAndUpdateWidgets(context) },
                 onToggleLayerExpansion = { layer ->
                     expandedLayerIds = if (expandedLayerIds.contains(layer.id)) {
                         expandedLayerIds - layer.id
@@ -328,7 +329,6 @@ private fun MapLayersContent(
     alwaysEnabledLayerIds: List<String>,
     refreshKey: Int,
     listState: LazyListState,
-    onClose: () -> Unit,
     onToggleLayerExpansion: (MapLayerDefinition) -> Unit,
     onMoveLayerUp: (MapLayerDefinition) -> Unit,
     onMoveLayerDown: (MapLayerDefinition) -> Unit,
@@ -348,176 +348,135 @@ private fun MapLayersContent(
             .reversed()
     }
 
-    Surface(
+    // The sheet supplies the "Layers" title and the surface
+    LazyColumn(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        state = listState,
+        contentPadding = PaddingValues(bottom = TrailSenseSpacing.xxxl)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(bottom = TrailSenseSpacing.xxxl)
-        ) {
-            item("title") {
-                MapLayerTitle(onClose)
-            }
-
-            if (layers == null) {
-                item("loading") {
-                    TrailSenseLoadingIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = TrailSenseSpacing.xxxl)
-                    )
-                }
-                return@LazyColumn
-            }
-
-            activeLayers.forEachIndexed { index, layer ->
-                if (index > 0) {
-                    item("divider_${layer.id}") {
-                        TrailSenseDivider(
-                            modifier = Modifier.padding(vertical = TrailSenseSpacing.sm)
-                        )
-                    }
-                }
-
-                val currentIndex = selectedLayerIds.indexOf(layer.id)
-                val isExpanded = expandedLayerIds.contains(layer.id)
-                val isAlwaysEnabled = alwaysEnabledLayerIds.contains(layer.id)
-                val isLayerEnabled = isAlwaysEnabled || getBooleanPreference(
-                    context,
-                    MapLayerPreferenceRepo.getPreferenceKey(
-                        mapId,
-                        layer.id,
-                        DefaultMapLayerDefinitions.ENABLED
-                    ),
-                    true
+        if (layers == null) {
+            item("loading") {
+                TrailSenseLoadingIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = TrailSenseSpacing.xxxl)
                 )
-                item("header_${layer.id}") {
-                    MapLayerHeader(
-                        layer = layer,
-                        isExpanded = isExpanded,
-                        isLayerEnabled = isLayerEnabled,
-                        canMoveUp = currentIndex < selectedLayerIds.size - 1,
-                        canMoveDown = currentIndex > 0,
-                        onToggle = { onToggleLayerExpansion(layer) },
-                        onMoveUp = { onMoveLayerUp(layer) },
-                        onMoveDown = { onMoveLayerDown(layer) },
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm)
-                    )
-                }
-
-                if (isExpanded) {
-                    val preferences = DefaultMapLayerDefinitions.getBasePreferences(
-                        context,
-                        context.getString(R.string.visible)
-                    ) + layer.preferences
-
-                    preferences.forEach { preference ->
-                        if (isAlwaysEnabled && preference.id == DefaultMapLayerDefinitions.ENABLED) {
-                            return@forEach
-                        }
-
-                        item("preference_${layer.id}_${preference.id}_$refreshKey") {
-                            MapLayerPreferenceRow(
-                                mapId = mapId,
-                                layerId = layer.id,
-                                preference = preference,
-                                enabled = isMapLayerPreferenceEnabled(
-                                    context = context,
-                                    mapId = mapId,
-                                    layerId = layer.id,
-                                    preference = preference
-                                ),
-                                refreshKey = refreshKey,
-                                onPreferenceChanged = onPreferenceChanged,
-                                onNavigate = onNavigate,
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                            )
-                        }
-                    }
-
-                    layer.attribution?.let { attribution ->
-                        item("attribution_${layer.id}") {
-                            MapLayerAttributionRow(
-                                attribution = attribution,
-                                markdown = markdown,
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                            )
-                        }
-                    }
-
-                    item("copy_${layer.id}") {
-                        SettingsActionRow(
-                            label = stringResource(R.string.copy_settings_to_other_maps),
-                            onClick = { onCopySettings(layer) },
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                        )
-                    }
-
-                    if (!isAlwaysEnabled) {
-                        item("remove_${layer.id}") {
-                            SettingsActionRow(
-                                label = stringResource(R.string.remove_layer),
-                                onClick = { onRemoveLayer(layer) },
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                            )
-                        }
-                    }
-                }
             }
+            return@LazyColumn
+        }
 
-            if (activeLayers.isNotEmpty()) {
-                item("additional_divider") {
+        activeLayers.forEachIndexed { index, layer ->
+            if (index > 0) {
+                item("divider_${layer.id}") {
                     TrailSenseDivider(
                         modifier = Modifier.padding(vertical = TrailSenseSpacing.sm)
                     )
                 }
             }
 
-            item("additional_layers") {
-                TrailSenseListItem(
-                    title = stringResource(R.string.additional_layers),
-                    icon = rememberVectorPainter(TrailIcons.Add),
-                    onClick = onAddLayers,
-                    animateEntrance = false,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+            val currentIndex = selectedLayerIds.indexOf(layer.id)
+            val isExpanded = expandedLayerIds.contains(layer.id)
+            val isAlwaysEnabled = alwaysEnabledLayerIds.contains(layer.id)
+            val isLayerEnabled = isAlwaysEnabled || getBooleanPreference(
+                context,
+                MapLayerPreferenceRepo.getPreferenceKey(
+                    mapId,
+                    layer.id,
+                    DefaultMapLayerDefinitions.ENABLED
+                ),
+                true
+            )
+            item("header_${layer.id}") {
+                MapLayerHeader(
+                    layer = layer,
+                    isExpanded = isExpanded,
+                    isLayerEnabled = isLayerEnabled,
+                    canMoveUp = currentIndex < selectedLayerIds.size - 1,
+                    canMoveDown = currentIndex > 0,
+                    onToggle = { onToggleLayerExpansion(layer) },
+                    onMoveUp = { onMoveLayerUp(layer) },
+                    onMoveDown = { onMoveLayerDown(layer) },
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm)
                 )
-                TrailSenseDivider()
+            }
+
+            if (isExpanded) {
+                val preferences = DefaultMapLayerDefinitions.getBasePreferences(
+                    context,
+                    context.getString(R.string.visible)
+                ) + layer.preferences
+
+                preferences.forEach { preference ->
+                    if (isAlwaysEnabled && preference.id == DefaultMapLayerDefinitions.ENABLED) {
+                        return@forEach
+                    }
+
+                    item("preference_${layer.id}_${preference.id}_$refreshKey") {
+                        MapLayerPreferenceRow(
+                            mapId = mapId,
+                            layerId = layer.id,
+                            preference = preference,
+                            enabled = isMapLayerPreferenceEnabled(
+                                context = context,
+                                mapId = mapId,
+                                layerId = layer.id,
+                                preference = preference
+                            ),
+                            refreshKey = refreshKey,
+                            onPreferenceChanged = onPreferenceChanged,
+                            onNavigate = onNavigate,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                    }
+                }
+
+                layer.attribution?.let { attribution ->
+                    item("attribution_${layer.id}") {
+                        MapLayerAttributionRow(
+                            attribution = attribution,
+                            markdown = markdown,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                    }
+                }
+
+                item("copy_${layer.id}") {
+                    SettingsActionRow(
+                        label = stringResource(R.string.copy_settings_to_other_maps),
+                        onClick = { onCopySettings(layer) },
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                    )
+                }
+
+                if (!isAlwaysEnabled) {
+                    item("remove_${layer.id}") {
+                        SettingsActionRow(
+                            label = stringResource(R.string.remove_layer),
+                            onClick = { onRemoveLayer(layer) },
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+                        )
+                    }
+                }
             }
         }
-    }
-}
 
-@Composable
-private fun MapLayerTitle(
-    onClose: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = TrailSenseSpacing.screen,
-                end = TrailSenseSpacing.sm,
-                top = TrailSenseSpacing.sm,
-                bottom = TrailSenseSpacing.sm
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.layers),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(android.R.string.cancel)
+        if (activeLayers.isNotEmpty()) {
+            item("additional_divider") {
+                TrailSenseDivider(
+                    modifier = Modifier.padding(vertical = TrailSenseSpacing.sm)
+                )
+            }
+        }
+
+        item("additional_layers") {
+            TrailSenseListItem(
+                title = stringResource(R.string.additional_layers),
+                icon = rememberVectorPainter(TrailIcons.Add),
+                onClick = onAddLayers,
+                animateEntrance = false,
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
             )
+            TrailSenseDivider()
         }
     }
 }
@@ -951,7 +910,6 @@ private fun MapLayersContentPreview() {
             alwaysEnabledLayerIds = emptyList(),
             refreshKey = 0,
             listState = rememberLazyListState(),
-            onClose = {},
             onToggleLayerExpansion = {},
             onMoveLayerUp = {},
             onMoveLayerDown = {},

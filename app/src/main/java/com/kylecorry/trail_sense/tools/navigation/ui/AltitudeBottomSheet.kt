@@ -43,52 +43,32 @@ fun AltitudeContent(
     onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.screen)
-        ) {
-            Text(
-                text = stringResource(R.string.elevation_history),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.sm,
-                    bottom = TrailSenseSpacing.sm
+    // The sheet supplies the "Elevation history" title, the surface and the padding
+    Column(modifier = modifier) {
+        TrailSenseListItem(
+            title = historySummary,
+            trailing = {
+                Icon(
+                    imageVector = TrailIcons.DropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            )
+            },
+            onClick = onHistoryClick,
+            animateEntrance = false,
+            modifier = Modifier.testTag("altitude_history_length")
+        )
+        TrailSenseDivider()
 
-            TrailSenseListItem(
-                title = historySummary,
-                trailing = {
-                    Icon(
-                        imageVector = TrailIcons.DropDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                onClick = onHistoryClick,
-                animateEntrance = false,
-                modifier = Modifier.testTag("altitude_history_length")
-            )
-            TrailSenseDivider()
-
-            AltitudeChartView(
-                readings = readings,
-                units = units,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-                    .padding(top = TrailSenseSpacing.lg)
-                    .testTag("chart")
-            )
-        }
+        AltitudeChartView(
+            readings = readings,
+            units = units,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.chart_height))
+                .padding(top = TrailSenseSpacing.lg)
+                .testTag("chart")
+        )
     }
 }
 

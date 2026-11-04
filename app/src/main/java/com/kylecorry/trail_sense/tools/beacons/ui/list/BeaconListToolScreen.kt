@@ -157,6 +157,7 @@ import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import com.kylecorry.trail_sense.tools.qr.ui.QRImportContent
 import java.time.Instant
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 interface BeaconListControllerHost {
     fun refreshBeaconList()
@@ -260,7 +261,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             modifier = modifier
         )
         if (showQrImport) {
-            ModalBottomSheet(
+            TrailSenseSheet(
                 onDismissRequest = {
                     hideQrImport()
                 }

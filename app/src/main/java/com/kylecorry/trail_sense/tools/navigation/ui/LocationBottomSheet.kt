@@ -105,9 +105,7 @@ private fun LocationSheetContent(
     onCopy: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-    ) {
+    Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.location),
             style = MaterialTheme.typography.titleMedium,

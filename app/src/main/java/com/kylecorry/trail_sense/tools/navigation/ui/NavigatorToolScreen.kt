@@ -131,6 +131,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @Composable
 fun NavigatorToolScreen(
@@ -292,7 +293,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             modifier = modifier
         )
         if (showLocationSheet) {
-            ModalBottomSheet(
+            TrailSenseSheet(
                 onDismissRequest = {
                     showLocationSheet = false
                 }
@@ -315,10 +316,11 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             }
         }
         if (showAltitudeSheet) {
-            ModalBottomSheet(
+            TrailSenseSheet(
                 onDismissRequest = {
                     showAltitudeSheet = false
-                }
+                },
+                title = stringResource(R.string.elevation_history)
             ) {
                 val historyDurationTitle = host.getString(R.string.elevation_history_length)
                 AltitudeContent(

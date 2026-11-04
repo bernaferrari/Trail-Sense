@@ -38,40 +38,14 @@ fun ARLayersContent(
     onShowAstronomyLayerChange: (Boolean) -> Unit,
     showGridLayer: Boolean,
     onShowGridLayerChange: (Boolean) -> Unit,
-    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val overrideMessage = stringResource(R.string.ar_layer_override_message)
+    // The sheet supplies the "Layers" title and the padding
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            bottom = TrailSenseSpacing.xxxl
-        ),
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
     ) {
-        item("title") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = TrailSenseSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.layers),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(android.R.string.cancel)
-                    )
-                }
-            }
-        }
         trailSenseSection(
             key = "layers",
             footer = overrideMessage
@@ -124,8 +98,7 @@ private fun ARLayersContentPreview() {
             showAstronomyLayer = true,
             onShowAstronomyLayerChange = {},
             showGridLayer = true,
-            onShowGridLayerChange = {},
-            onClose = {}
+            onShowGridLayerChange = {}
         )
     }
 }

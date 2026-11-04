@@ -129,6 +129,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.VectorMapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @Composable
 fun OfflineMapListToolScreen(
@@ -850,28 +851,17 @@ private fun OfflineMapCreateSheet(
     onDismiss: () -> Unit,
     onAction: (OfflineMapCreateAction) -> Unit
 ) {
-    ModalBottomSheet(
+    TrailSenseSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        title = stringResource(R.string.add_offline_map)
     ) {
-        Text(
-            text = stringResource(R.string.add_offline_map),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.xl,
-                vertical = TrailSenseSpacing.md
-            )
-        )
         val entries = listOf(
             Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
             Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, OfflineMapCreateAction.ImportCamera),
             Triple(R.string.blank, TrailSenseIcons.Filled.Draw, OfflineMapCreateAction.CreateBlank),
             Triple(R.string.group, TrailSenseIcons.Filled.Folder, OfflineMapCreateAction.CreateGroup)
         )
-        Column(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
             entries.forEachIndexed { index, (label, icon, action) ->
                 PlacesRow(
                     title = stringResource(label),
@@ -884,7 +874,6 @@ private fun OfflineMapCreateSheet(
                 )
             }
         }
-        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.xl))
     }
 }
 

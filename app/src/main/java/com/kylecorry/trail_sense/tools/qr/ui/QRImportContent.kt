@@ -43,12 +43,9 @@ fun QRImportContent(
     onCameraReady: (CameraState) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // The sheet supplies the side and bottom padding
     Column(
-        modifier = modifier.padding(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            bottom = TrailSenseSpacing.xl
-        ),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
     ) {
         Row(
