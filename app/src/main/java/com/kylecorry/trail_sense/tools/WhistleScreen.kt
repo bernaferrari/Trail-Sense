@@ -403,12 +403,8 @@ private fun EmergencyTile(
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
-    val container by animateColorAsState(
-        if (playing) scheme.error else scheme.errorContainer,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "emergencyTile"
-    )
-    val content = if (playing) scheme.onError else scheme.onErrorContainer
+    val container = scheme.errorContainer
+    val content = scheme.onErrorContainer
     Surface(onClick = onClick, modifier = modifier, shape = shape, color = container, contentColor = content) {
         Column(
             modifier = Modifier.padding(TrailSenseSpacing.lg),
@@ -418,11 +414,11 @@ private fun EmergencyTile(
                 icon = if (playing) TrailIcons.BaselineStop24 else signal.icon,
                 shape = signal.shape.toShape(),
                 size = 56.dp,
-                containerColor = if (playing) scheme.onError else scheme.error,
-                contentColor = if (playing) scheme.error else scheme.onError
+                containerColor = scheme.error,
+                contentColor = scheme.onError
             )
             Text(signal.label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            SignalRhythm(signal = signal.signal, color = if (playing) scheme.onError else scheme.error, playing = playing)
+            SignalRhythm(signal = signal.signal, color = scheme.error, playing = playing)
             Text(
                 stringResource(if (playing) R.string.whistle_playing else R.string.whistle_repeats_short),
                 style = MaterialTheme.typography.labelLarge,
