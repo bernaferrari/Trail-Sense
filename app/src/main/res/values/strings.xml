@@ -2353,4 +2353,7 @@
         <item quantity="one">%d map layer</item>
         <item quantity="other">%d map layers</item>
     </plurals>
+    <string name="light_meter_flashlight_summary">Measure a beam\'s brightness and reach</string>
+    <string name="light_meter_scale_dark">Dark</string>
+    <string name="light_meter_scale_bright">Sun</string>
 </resources>

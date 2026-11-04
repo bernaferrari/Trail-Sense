@@ -156,6 +156,7 @@ fun LightMeterScreen(
 
 
     var showUnitPicker by remember { mutableStateOf(false) }
+    var isTestingFlashlight by remember { mutableStateOf(false) }
     val luxText = formatter.formatLux(illuminance)
     // One question: how bright is it here?
     // One live object, a ring that fills with the light, the reading inside it and the verdict under it. Testing a
@@ -173,11 +174,31 @@ fun LightMeterScreen(
             )
         }
 
+        // Testing a flashlight is a second job: one row until it is asked for, so the reading stays the screen's topic.
         trailSenseSection(
             "flashlight",
-            title = context.getString(R.string.light_meter_flashlight_title),
-            footer = context.getString(R.string.light_meter_preview_hint)
+            footer = if (isTestingFlashlight) context.getString(R.string.light_meter_preview_hint) else null
         ) {
+            row { position ->
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem(
+                    title = stringResource(R.string.light_meter_flashlight_title),
+                    subtitle = stringResource(R.string.light_meter_flashlight_summary),
+                    icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.Flashlight),
+                    position = position,
+                    onClick = { isTestingFlashlight = !isTestingFlashlight },
+                    modifier = Modifier.testTag("light_test_flashlight"),
+                    trailing = {
+                        androidx.compose.material3.Icon(
+                            painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(
+                                if (isTestingFlashlight) TrailIcons.DropDownExpanded else TrailIcons.DropDown
+                            ),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+            }
+            if (!isTestingFlashlight) return@trailSenseSection
             row { position ->
                 TrailSenseInputField(
                     value = beamDistanceAmount,
@@ -269,8 +290,10 @@ private fun lightScalePosition(lux: Float): Float {
 }
 
 /**
- * The instrument: a thick ring that fills along the worded light scale (dark, dim, indoor, daylight), with the
- * reading inside it and the verdict as the headline under it.
+ * The instrument: a sun inside a ring that fills along the worded light scale (dark, dim, indoor, daylight, with a
+ * notch between each band and the two ends named). The sun is the reading made visible: unlit grey in the dark, it
+ * warms from primary to tertiary, its rays lengthen and its glow spreads as the light rises, and it turns slowly.
+ * The reading sits under the sun and the verdict under the ring.
  */
 @Composable
 private fun LightHero(
@@ -296,6 +319,16 @@ private fun LightHero(
     val detail = verdict.substringAfter(" · ", "").replaceFirstChar { it.uppercase() }
     val track = scheme.surfaceContainerHighest
     val fill = scheme.primary
+    val surface = scheme.surface
+    val unlit = scheme.outlineVariant
+    val warm = scheme.tertiary
+    val turn = rememberInfiniteTransition(label = "sun")
+    val spin by turn.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(90_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "sunSpin"
+    )
 
     Column(
         modifier = modifier
@@ -307,45 +340,105 @@ private fun LightHero(
         // The arc is open at the bottom, so its box is shorter than the circle: the verdict sits right under it.
         Box(
             modifier = Modifier
-                .width(260.dp)
-                .height(228.dp),
+                .width(280.dp)
+                .height(248.dp),
             contentAlignment = Alignment.TopCenter
         ) {
           Box(
             modifier = Modifier
-                .requiredSize(260.dp),
+                .requiredSize(280.dp),
             contentAlignment = Alignment.Center
           ) {
             Canvas(Modifier.fillMaxSize()) {
-                val stroke = 22.dp.toPx()
+                val stroke = 20.dp.toPx()
                 val inset = stroke / 2f
                 val arcSize = Size(size.width - stroke, size.height - stroke)
-                drawArc(
-                    color = track,
-                    startAngle = 135f,
-                    sweepAngle = 270f,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = arcSize,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                val ringStyle = androidx.compose.ui.graphics.drawscope.Stroke(
+                    stroke,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
+                drawArc(track, 135f, 270f, false, Offset(inset, inset), arcSize, style = ringStyle)
                 // At rest the fill is a short primary stub, so the instrument never reads as empty.
                 drawArc(
-                    color = fill,
-                    startAngle = 135f,
-                    sweepAngle = (270f * animatedPosition).coerceAtLeast(10f),
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = arcSize,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    fill,
+                    135f,
+                    (270f * animatedPosition).coerceAtLeast(10f),
+                    false,
+                    Offset(inset, inset),
+                    arcSize,
+                    style = ringStyle
                 )
+                // Notches between the four bands, so the fill's position has meaning.
+                val ringRadius = arcSize.width / 2f
+                for (band in 1..3) {
+                    val angle = Math.toRadians((135.0 + 270.0 * band / 4.0))
+                    val dir = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
+                    drawLine(
+                        surface,
+                        center + dir * (ringRadius - stroke / 2f - 1f),
+                        center + dir * (ringRadius + stroke / 2f + 1f),
+                        strokeWidth = 3.dp.toPx()
+                    )
+                }
+
+                // The sun, in the upper half of the ring.
+                val b = animatedPosition.coerceIn(0f, 1f)
+                val sunCenter = Offset(center.x, center.y - 30.dp.toPx())
+                val core = 26.dp.toPx()
+                val sun = if (b < 0.5f) lerp(unlit, fill, b * 2f) else lerp(fill, warm, (b - 0.5f) * 2f)
+                if (b > 0.05f) {
+                    val glow = core + 50.dp.toPx() * b
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(sun.copy(alpha = 0.35f * b), Color.Transparent),
+                            center = sunCenter,
+                            radius = glow
+                        ),
+                        radius = glow,
+                        center = sunCenter
+                    )
+                }
+                val rayStart = core + 7.dp.toPx()
+                val rayLength = 4.dp.toPx() + 26.dp.toPx() * b
+                for (ray in 0 until 12) {
+                    val angle = Math.toRadians((ray * 30f + spin).toDouble())
+                    val dir = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
+                    drawLine(
+                        sun.copy(alpha = 0.45f + 0.55f * b),
+                        sunCenter + dir * rayStart,
+                        sunCenter + dir * (rayStart + rayLength),
+                        strokeWidth = 5.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
+                }
+                drawCircle(sun, core, sunCenter)
             }
             Text(
                 text = luxText,
-                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.padding(top = 120.dp)
             )
+          }
+          // The scale's two ends, named under the arc's tips.
+          Row(
+              modifier = Modifier
+                  .align(Alignment.BottomCenter)
+                  .fillMaxWidth()
+                  .padding(horizontal = 18.dp),
+              horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+              Text(
+                  stringResource(R.string.light_meter_scale_dark),
+                  style = MaterialTheme.typography.labelMedium,
+                  color = scheme.onSurfaceVariant
+              )
+              Text(
+                  stringResource(R.string.light_meter_scale_bright),
+                  style = MaterialTheme.typography.labelMedium,
+                  color = scheme.onSurfaceVariant
+              )
           }
         }
         Text(
