@@ -7,6 +7,12 @@
     <string name="sky_strike_last_distance">Distance</string>
     <string name="sky_temperature_change">%s from here</string>
     <string name="sky_temperature_hint">Enter the temperature where you are, then a destination elevation, humidity or wind.</string>
+    <string name="sky_temperature_start">Start with the temperature where you are.</string>
+    <string name="sky_temperature_here">Where you are</string>
+    <string name="sky_temperature_there">Where you\'re going</string>
+    <string name="sky_temperature_conditions">Conditions</string>
+    <string name="sky_temperature_conditions_footer">Humidity makes heat feel hotter; wind makes cold feel colder.</string>
+    <string name="sky_temperature_read_thermometer">Read the phone\'s thermometer</string>
     <string name="sky_experimentation_empty">Install a Trail Sense plugin and it will show up here, with the features it adds.</string>
     <string name="sky_experimentation_features">Features</string>
     <string name="sky_sensors_good">%1$d of %2$d good</string>

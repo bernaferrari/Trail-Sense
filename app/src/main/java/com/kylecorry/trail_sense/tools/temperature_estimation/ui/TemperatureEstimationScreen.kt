@@ -1,4 +1,5 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
@@ -43,6 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sense.readAll
@@ -191,9 +195,11 @@ private fun TemperatureEstimationScreen(
     val humidity = humidityText.toFloatOrNull()
     val humidityError = humidityText.isNotEmpty() && (humidity == null || humidity !in 0f..100f)
 
-    val weatherTitle = stringResource(R.string.weather)
-    val elevationTitle = stringResource(R.string.elevation)
-    val autofillLabel = stringResource(R.string.autofill)
+    val hereTitle = stringResource(R.string.sky_temperature_here)
+    val thereTitle = stringResource(R.string.sky_temperature_there)
+    val conditionsTitle = stringResource(R.string.sky_temperature_conditions)
+    val conditionsFooter = stringResource(R.string.sky_temperature_conditions_footer)
+    val readThermometerLabel = stringResource(R.string.sky_temperature_read_thermometer)
     val humidityErrorText = stringResource(R.string.humidity_must_be_between_0_and_100)
     val labels = TemperatureLabels(
         baseElevation = stringResource(R.string.base_elevation),
@@ -202,43 +208,24 @@ private fun TemperatureEstimationScreen(
         humidity = stringResource(R.string.humidity),
         windSpeed = stringResource(R.string.wind_speed)
     )
+    val elevationLabel = stringResource(R.string.elevation)
+
+    fun autofill() {
+        scope.launch {
+            isLoading = true
+            readThermometer()
+            setThermometerFieldFromSensor()
+            isLoading = false
+        }
+    }
 
     TrailSensePage(
         title = stringResource(R.string.tool_temperature_estimation_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
-        // Reading the phone's thermometer is a page action, so the temperature field holds only its value and unit.
-        actions = {
-            Box(
-                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                isLoading = true
-                                readThermometer()
-                                setThermometerFieldFromSensor()
-                                isLoading = false
-                            }
-                        }
-                    ) {
-                        Icon(
-                            painter = rememberVectorPainter(TrailIcons.Thermometer),
-                            contentDescription = autofillLabel
-                        )
-                    }
-                }
-            }
-        }
+        backLabel = stringResource(R.string.back)
     ) {
-        // One question: how warm will it be there? The estimate answers it; the inputs that drive it sit below.
+        // How warm will it feel there? The estimate answers it; the inputs sit below in the order you think of
+        // them: here, where you're going, then what the air is doing.
         item("estimate") {
             val estimateCelsius = estimated?.takeIf { !it.value.isNaN() }?.celsius()?.value
             val baseInOutput = baseTemperatureText.toFloatOrNull()?.let {
@@ -253,7 +240,7 @@ private fun TemperatureEstimationScreen(
             )
         }
 
-        trailSenseSection(key = "weather", title = weatherTitle) {
+        trailSenseSection(key = "here", title = hereTitle) {
             row { position ->
                 TrailSenseInputField(
                     value = baseTemperatureText,
@@ -262,9 +249,49 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     enabled = !isLoading,
                     unit = formatService.getTemperatureUnitName(baseTemperatureUnit, true),
-                    onUnitClick = { picker = Picker.Temperature }
+                    onUnitClick = { picker = Picker.Temperature },
+                    modifier = Modifier.testTag("temp_est_base_temperature"),
+                    // The phone's thermometer fills this field, so its button sits in front of it.
+                    leadingIcon = {
+                        TemperatureWell(
+                            isLoading = isLoading,
+                            contentDescription = readThermometerLabel,
+                            onClick = ::autofill,
+                            modifier = Modifier.testTag("temp_est_autofill")
+                        )
+                    }
                 )
             }
+            row { position ->
+                TrailSenseInputField(
+                    value = baseElevationText,
+                    onValueChange = { baseElevationText = it },
+                    label = elevationLabel,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getDistanceUnitName(baseElevationUnit, true),
+                    onUnitClick = { picker = Picker.BaseElevation },
+                    modifier = Modifier.testTag("temp_est_base_elevation")
+                )
+            }
+        }
+
+        trailSenseSection(key = "there", title = thereTitle) {
+            row { position ->
+                TrailSenseInputField(
+                    value = destElevationText,
+                    onValueChange = { destElevationText = it },
+                    label = elevationLabel,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getDistanceUnitName(destElevationUnit, true),
+                    onUnitClick = { picker = Picker.DestinationElevation },
+                    modifier = Modifier.testTag("temp_est_dest_elevation")
+                )
+            }
+        }
+
+        trailSenseSection(key = "conditions", title = conditionsTitle, footer = conditionsFooter) {
             row { position ->
                 TrailSenseInputField(
                     value = humidityText,
@@ -273,7 +300,8 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     isError = humidityError,
                     errorText = humidityErrorText,
-                    unit = "%"
+                    unit = "%",
+                    modifier = Modifier.testTag("temp_est_humidity")
                 )
             }
             row { position ->
@@ -284,32 +312,8 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     enabled = !isLoading,
                     unit = formatService.getSpeedUnitName(windSpeedUnit.distance, windSpeedUnit.time, true),
-                    onUnitClick = { picker = Picker.WindSpeed }
-                )
-            }
-        }
-
-        trailSenseSection(key = "elevation", title = elevationTitle) {
-            row { position ->
-                TrailSenseInputField(
-                    value = baseElevationText,
-                    onValueChange = { baseElevationText = it },
-                    label = labels.baseElevation,
-                    position = position,
-                    enabled = !isLoading,
-                    unit = formatService.getDistanceUnitName(baseElevationUnit, true),
-                    onUnitClick = { picker = Picker.BaseElevation }
-                )
-            }
-            row { position ->
-                TrailSenseInputField(
-                    value = destElevationText,
-                    onValueChange = { destElevationText = it },
-                    label = labels.destinationElevation,
-                    position = position,
-                    enabled = !isLoading,
-                    unit = formatService.getDistanceUnitName(destElevationUnit, true),
-                    onUnitClick = { picker = Picker.DestinationElevation }
+                    onUnitClick = { picker = Picker.WindSpeed },
+                    modifier = Modifier.testTag("temp_est_wind_speed")
                 )
             }
         }
@@ -369,8 +373,8 @@ private fun TemperatureEstimationScreen(
 }
 
 /**
- * The estimate on the plain page: the value in emphasised type, one verdict in words, and how far it is from the
- * temperature where you are. Before there is an estimate, the question and how to answer it.
+ * The estimate on the plain page: the value as the display number, what to pack as the headlineSmall verdict, and how
+ * far it is from where you are. Before there is an estimate, the question and the one thing to do first.
  */
 @Composable
 private fun TemperatureEstimateHero(
@@ -382,21 +386,20 @@ private fun TemperatureEstimateHero(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.lg)
-            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         if (celsius == null) {
             Text(
                 text = stringResource(R.string.sky_temperature_idle),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = stringResource(R.string.sky_temperature_hint),
+                text = stringResource(R.string.sky_temperature_start),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
             Text(
@@ -416,9 +419,8 @@ private fun TemperatureEstimateHero(
                         else -> R.string.sky_temperature_verdict_hot
                     }
                 ),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (delta != null) {
                 Text(
@@ -426,8 +428,42 @@ private fun TemperatureEstimateHero(
                         R.string.sky_temperature_change,
                         String.format(java.util.Locale.getDefault(), "%+.1f", delta) + " " + unitSymbol
                     ),
-                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/** The family's 40 dp Cookie6 well in 12% primary, as the button that reads the phone's thermometer. */
+@Composable
+private fun TemperatureWell(
+    isLoading: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    Surface(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier = modifier
+            .padding(start = TrailSenseSpacing.xs)
+            .size(40.dp)
+            .semantics { this.contentDescription = contentDescription },
+        shape = MaterialShapes.Cookie6Sided.toShape(),
+        color = primary.copy(alpha = 0.12f),
+        contentColor = primary
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(
+                    painter = rememberVectorPainter(TrailIcons.Thermometer),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
