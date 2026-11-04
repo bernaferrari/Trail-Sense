@@ -595,17 +595,18 @@ private fun ClimateScreen(
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.lg)
                     .testTag("climate_title"),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl),
-                verticalAlignment = Alignment.Bottom
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
                 ClimateHeroValue(
                     caption = stringResource(R.string.high),
+                    modifier = Modifier.alignByBaseline(),
                     value = highLow?.first ?: "--",
                     style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 ClimateHeroValue(
                     caption = stringResource(R.string.low),
+                    modifier = Modifier.alignByBaseline(),
                     value = highLow?.second ?: "--",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -727,9 +728,10 @@ private fun ClimateHeroValue(
     caption: String,
     value: String,
     style: androidx.compose.ui.text.TextStyle,
-    color: androidx.compose.ui.graphics.Color
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier) {
         Text(
             text = caption,
             style = MaterialTheme.typography.labelLarge,

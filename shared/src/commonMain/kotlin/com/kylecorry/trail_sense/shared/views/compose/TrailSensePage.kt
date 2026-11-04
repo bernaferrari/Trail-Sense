@@ -352,26 +352,48 @@ fun trailSenseChoiceColors() = ToggleButtonDefaults.toggleButtonColors(
 )
 
 /**
- * A choice button's content with a fixed label position: the leading slot (icon, or check when chosen) is always
- * there, so the label sits in the same place whether or not it is chosen.
+ * A choice button's content with a fixed label position: the label is centred in the button (shifted only when it
+ * would otherwise not fit), and the leading slot (the option's icon, or the check when chosen) sits just before it in
+ * the free space. Choosing only fills the slot; the label never moves.
  */
 @Composable
 fun RowScope.TrailSenseChoiceContent(label: String, icon: ImageVector?, checked: Boolean) {
     val slot = ToggleButtonDefaults.IconSize
+    val gap = ToggleButtonDefaults.IconSpacing
     val shown = if (checked) Icons.Rounded.Check else icon
-    Box(Modifier.size(slot), contentAlignment = Alignment.Center) {
-        if (shown != null) {
-            Icon(shown, contentDescription = null, modifier = Modifier.size(slot))
+    androidx.compose.ui.layout.Layout(
+        content = {
+            Box(Modifier.size(slot), contentAlignment = Alignment.Center) {
+                if (shown != null) {
+                    Icon(shown, contentDescription = null, modifier = Modifier.size(slot))
+                }
+            }
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    ) { measurables, constraints ->
+        val lead = (slot + gap).roundToPx()
+        val slotPlaceable = measurables[0].measure(androidx.compose.ui.unit.Constraints())
+        val bounded = constraints.hasBoundedWidth
+        val text = measurables[1].measure(
+            androidx.compose.ui.unit.Constraints(
+                maxWidth = if (bounded) (constraints.maxWidth - lead).coerceAtLeast(0) else androidx.compose.ui.unit.Constraints.Infinity
+            )
+        )
+        // Wrapping (scrollable rows): room for the slot on both sides, so the label stays centred.
+        val width = if (bounded) constraints.maxWidth else text.width + 2 * lead
+        val height = maxOf(slotPlaceable.height, text.height).coerceAtLeast(constraints.minHeight)
+        val centred = (width - text.width) / 2
+        val textX = centred.coerceAtLeast(lead)
+        layout(width, height) {
+            slotPlaceable.place(textX - lead, (height - slotPlaceable.height) / 2)
+            text.place(textX, (height - text.height) / 2)
         }
     }
-    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-    Text(
-        label,
-        modifier = Modifier.padding(end = TrailSenseSpacing.xs),
-        style = MaterialTheme.typography.labelLarge,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis
-    )
 }
 
 /** A group card holding anything (a chart, a choice, a preview) with the group's shape and tone. */
