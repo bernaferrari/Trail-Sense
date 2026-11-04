@@ -116,18 +116,18 @@ fun <T> SimpleConvertScreen(
     }
 }
 
-/** The converted value: the one thing that matters on a converter, on the accent tone. */
+/** The converted value: the one thing that matters on a converter, as emphasised type on a quiet surface. */
 @Composable
 internal fun ConvertResult(text: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Text(
             text = text.ifBlank { stringResource(R.string.dash) },
-            style = MaterialTheme.typography.headlineLarge.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()

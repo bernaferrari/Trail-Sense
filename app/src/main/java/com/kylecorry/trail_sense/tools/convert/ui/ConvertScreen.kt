@@ -96,6 +96,7 @@ fun ConverterTabs(
     modifier: Modifier = Modifier,
     icons: List<ImageVector?> = emptyList()
 ) {
+    // One question: what is this amount in the other unit?
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
@@ -154,12 +155,12 @@ private fun CategoryTile(
 ) {
     val scheme = MaterialTheme.colorScheme
     val container by androidx.compose.animation.animateColorAsState(
-        if (selected) scheme.primary else scheme.surfaceContainerLow,
+        if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "categoryTile"
     )
     val content by androidx.compose.animation.animateColorAsState(
-        if (selected) scheme.onPrimary else scheme.onSurface,
+        if (selected) scheme.onSecondaryContainer else scheme.onSurface,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "categoryTileContent"
     )
@@ -180,7 +181,7 @@ private fun CategoryTile(
                 Icon(
                     icon,
                     contentDescription = null,
-                    tint = if (selected) content else scheme.primary,
+                    tint = if (selected) content else scheme.onSurfaceVariant,
                     modifier = Modifier.size(22.dp)
                 )
             }
