@@ -232,8 +232,14 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         loaded -> stringResource(R.string.no_issues)
         else -> stringResource(R.string.diagnostics_checking)
     }
+    // One quiet line under the count: the split by severity, or why "no issues" is good news.
+    val errorsLabel = stringResource(R.string.errors)
+    val warningsLabel = stringResource(R.string.diagnostics_warnings)
     val supporting = when {
-        issueCount > 0 -> stringResource(R.string.diagnostics_issues_summary)
+        issueCount > 0 -> listOfNotNull(
+            errorCount.takeIf { it > 0 }?.let { "$it $errorsLabel" },
+            warningCount.takeIf { it > 0 }?.let { "$it $warningsLabel" }
+        ).joinToString(" · ")
         loaded -> stringResource(R.string.diagnostics_no_issues_summary)
         else -> null
     }
@@ -242,7 +248,7 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "diagnosticsProgress"
     )
-    // The answer on the plain page: how many issues, what to do about them, and how many checks have reported.
+    // The answer on the plain page: how many issues, and one line saying how they split.
     Column(
         Modifier
             .fillMaxWidth()
@@ -259,22 +265,12 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         if (supporting != null) {
             Text(
                 supporting,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
             )
         }
-        if (loaded) {
-            Text(
-                listOfNotNull(
-                    errorCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.errors)}" },
-                    warningCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.diagnostics_warnings)}" },
-                    stringResource(R.string.sky_diagnostics_checks_count, reported.coerceAtMost(checks), checks)
-                ).joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
+        if (!loaded) {
             // While the checks run, the bar fills as they report: the motion carries the progress.
             androidx.compose.material3.LinearWavyProgressIndicator(
                 progress = { progress },
@@ -299,8 +295,9 @@ private fun DiagnosticListItem(
         title = item.result.name,
         subtitle = item.result.description,
         icon = statusIcon(severity),
-        iconContainerColor = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
-        iconContentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+        // Same cookie for both; the role carries severity: error for errors, tertiary for warnings.
+        iconContainerColor = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
+        iconContentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer,
         position = position,
         onClick = onClick,
         modifier = Modifier.semantics {
