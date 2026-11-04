@@ -86,8 +86,10 @@
     <string name="declination_verdict_aligned">Magnetic north lines up with true north here</string>
     <string name="declination_magnetic_to_true">Magnetic to true</string>
     <string name="declination_true_to_magnetic">True to magnetic</string>
-    <string name="declination_to_a_compass_bearing">Apply to a compass bearing</string>
-    <string name="declination_to_a_map_bearing">Apply to a map bearing</string>
+    <string name="declination_add_to_compass_bearing">Add it to a compass bearing</string>
+    <string name="declination_subtract_from_compass_bearing">Subtract it from a compass bearing</string>
+    <string name="declination_add_to_map_bearing">Add it to a map bearing</string>
+    <string name="declination_subtract_from_map_bearing">Subtract it from a map bearing</string>
 
     <!-- Convert -->
     <string name="convert_copy">Copy</string>
