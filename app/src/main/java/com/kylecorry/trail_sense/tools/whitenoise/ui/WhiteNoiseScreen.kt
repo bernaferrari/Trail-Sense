@@ -177,6 +177,7 @@ fun WhiteNoiseScreen(
 
     val soundName = soundTypes.first { it.first == selectedSound }.second
 
+    // One question: is the sound playing, and which one?
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_white_noise_title),
         modifier = modifier
@@ -215,14 +216,17 @@ fun WhiteNoiseScreen(
                 )
 
                 Text(
-                    text = if (isRunning) {
-                        stringResource(R.string.dot_separated_pair, stringResource(R.string.on), soundName)
-                    } else {
-                        stringResource(R.string.dot_separated_pair, stringResource(R.string.off), soundName)
-                    },
-                    style = MaterialTheme.typography.titleLarge,
+                    text = soundName,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.sm),
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (isRunning) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = stringResource(if (isRunning) R.string.on else R.string.off),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
@@ -234,32 +238,25 @@ fun WhiteNoiseScreen(
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 TrailSenseGroupHeader(stringResource(R.string.tool_sound))
-                // Every sound one tap away instead of behind a dialog: one connected grid, the chosen one solid
-                // primary, and a lone last sound stretched across the row so nothing orphans.
+                // Every sound one tap away instead of behind a dialog, as one quiet list with the chosen one checked.
                 Column(
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
                     modifier = Modifier.selectableGroup()
                 ) {
-                    val rows = soundTypes.chunked(2)
-                    rows.forEachIndexed { rowIndex, row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                            row.forEachIndexed { columnIndex, sound ->
-                                SoundTile(
-                                    label = sound.second,
-                                    icon = soundIcon(sound.first),
-                                    selected = sound.first == selectedSound,
-                                    shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        if (sound.first != selectedSound) {
-                                            selectedSound = sound.first
-                                            cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
-                                            stopWhiteNoise()
-                                        }
-                                    }
-                                )
+                    soundTypes.forEachIndexed { index, sound ->
+                        SoundTile(
+                            label = sound.second,
+                            icon = soundIcon(sound.first),
+                            selected = sound.first == selectedSound,
+                            shape = trailSenseGroupShape(TrailSenseGroupPosition.at(index, soundTypes.size)),
+                            onClick = {
+                                if (sound.first != selectedSound) {
+                                    selectedSound = sound.first
+                                    cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
+                                    stopWhiteNoise()
+                                }
                             }
-                        }
+                        )
                     }
                 }
                 Spacer(Modifier.height(TrailSenseSpacing.lg))
@@ -350,15 +347,15 @@ fun WhiteNoiseScreen(
 }
 
 /**
- * The control is the hero: a large cookie that plays and stops the sound. At rest it is a calm tonal shape saying
- * "tap to play"; while sound plays it fills primary, breathes, turns slowly, and soft rings swell out behind it.
+ * The main action: a large primary cookie that plays and stops the sound. It rounds a little while sound plays, so
+ * the shape says the state; there is no idle motion.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayControl(
     isRunning: Boolean,
-    sound: SleepSound,
-    soundName: String,
+    @Suppress("UNUSED_PARAMETER") sound: SleepSound,
+    @Suppress("UNUSED_PARAMETER") soundName: String,
     contentDescription: String,
     stateDescription: String,
     onClick: () -> Unit,
@@ -366,108 +363,44 @@ private fun PlayControl(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val scheme = MaterialTheme.colorScheme
-    val containerColor by animateColorAsState(
-        targetValue = if (isRunning) scheme.tertiary else scheme.tertiaryContainer,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "playContainerColor"
-    )
-    val contentColor by animateColorAsState(
-        targetValue = if (isRunning) scheme.onTertiary else scheme.onTertiaryContainer,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "playContentColor"
-    )
-    val transition = rememberInfiniteTransition(label = "breath")
-    val breath by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(3600), RepeatMode.Reverse),
-        label = "breathing"
-    )
-    val spin by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(40_000, easing = LinearEasing), RepeatMode.Restart),
-        label = "spin"
-    )
-    val active by animateFloatAsState(
+    val round by animateFloatAsState(
         if (isRunning) 1f else 0f,
-        MaterialTheme.motionScheme.slowEffectsSpec(),
-        label = "active"
+        MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "round"
     )
-    val ring = scheme.tertiary
-    // The blob takes the sound's character: spiky for white noise, softer down to a gentle round for brown.
-    val target = soundShape(sound)
-    var from by remember { mutableStateOf(target) }
-    var to by remember { mutableStateOf(target) }
-    val morphProgress = remember { androidx.compose.animation.core.Animatable(1f) }
-    LaunchedEffect(target) {
-        if (target != to) {
-            from = to
-            to = target
-            morphProgress.snapTo(0f)
-            morphProgress.animateTo(1f, androidx.compose.animation.core.tween(600))
-        }
-    }
-    val morph = remember(from, to) { androidx.graphics.shapes.Morph(from, to) }
-    val blobShape = remember(morph, morphProgress.value) { NoiseMorphShape(morph, morphProgress.value) }
+    val morph = remember { androidx.graphics.shapes.Morph(MaterialShapes.Cookie12Sided, MaterialShapes.Cookie9Sided) }
+    val blobShape = remember(round) { NoiseMorphShape(morph, round) }
 
     Box(
-        modifier = modifier.size(264.dp),
+        modifier = modifier.size(232.dp),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            if (active > 0f) {
-                val base = size.minDimension * 0.36f
-                listOf(0.16f, 0.1f, 0.06f).forEachIndexed { i, alpha ->
-                    drawCircle(
-                        ring.copy(alpha = alpha * active),
-                        radius = base + (i + 1) * size.minDimension * (0.035f + 0.025f * breath)
-                    )
-                }
-            }
-        }
         Surface(
             onClick = onClick,
             interactionSource = interactionSource,
             shape = blobShape,
-            color = containerColor,
-            contentColor = contentColor,
+            color = scheme.primary,
+            contentColor = scheme.onPrimary,
             modifier = Modifier
                 .size(208.dp)
-                .graphicsLayer {
-                    val s = 1f + 0.035f * breath * active
-                    scaleX = s
-                    scaleY = s
-                    rotationZ = spin * active
-                }
                 .trailSensePressScale(interactionSource)
                 .semantics {
                     this.contentDescription = contentDescription
                     this.stateDescription = stateDescription
                 }
         ) {}
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                painter = rememberVectorPainter(
-                    if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
-                ),
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(64.dp)
-            )
-            Text(
-                text = stringResource(if (isRunning) R.string.white_noise_tap_to_stop else R.string.white_noise_tap_to_play),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = contentColor,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.widthIn(max = 150.dp)
-            )
-        }
+        Icon(
+            painter = rememberVectorPainter(
+                if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
+            ),
+            contentDescription = null,
+            tint = scheme.onPrimary,
+            modifier = Modifier.size(72.dp)
+        )
     }
 }
 
-/** A sound as an equal tile: icon and name, the chosen one solid primary with a check. */
+/** A sound as a quiet list row: its icon and name, the chosen one checked. */
 @Composable
 private fun SoundTile(
     label: String,
@@ -478,48 +411,37 @@ private fun SoundTile(
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val container by animateColorAsState(
-        if (selected) scheme.primary else scheme.secondaryContainer,
-        MaterialTheme.motionScheme.fastEffectsSpec(),
-        label = "soundTile"
-    )
-    val content by animateColorAsState(
-        if (selected) scheme.onPrimary else scheme.onSecondaryContainer,
-        MaterialTheme.motionScheme.fastEffectsSpec(),
-        label = "soundTileContent"
-    )
     Surface(
         modifier = modifier
-            .heightIn(min = 64.dp)
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         shape = shape,
-        color = container,
-        contentColor = content
+        color = scheme.surfaceContainerLow,
+        contentColor = scheme.onSurface
     ) {
         Row(
             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                rememberVectorPainter(if (selected) TrailIcons.Check else icon),
+                rememberVectorPainter(icon),
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                tint = scheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(Modifier.size(TrailSenseSpacing.sm))
-            Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 2)
+            Spacer(Modifier.size(TrailSenseSpacing.lg))
+            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            if (selected) {
+                Icon(
+                    rememberVectorPainter(TrailIcons.Check),
+                    contentDescription = null,
+                    tint = scheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
-}
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-private fun soundShape(sound: SleepSound): androidx.graphics.shapes.RoundedPolygon = when (sound) {
-    SleepSound.WhiteNoise -> MaterialShapes.VerySunny
-    SleepSound.PinkNoise -> MaterialShapes.Cookie12Sided
-    SleepSound.BrownNoise -> MaterialShapes.Cookie6Sided
-    SleepSound.Crickets, SleepSound.CricketsNoChirp -> MaterialShapes.Flower
-    SleepSound.OceanWaves -> MaterialShapes.Cookie9Sided
-    SleepSound.Fan -> MaterialShapes.Clover4Leaf
-    else -> MaterialShapes.Cookie12Sided
 }
 
 private class NoiseMorphShape(
@@ -553,12 +475,12 @@ private fun SoundChip(
 ) {
     val scheme = MaterialTheme.colorScheme
     val container by animateColorAsState(
-        if (selected) scheme.primary else scheme.secondaryContainer,
+        if (selected) scheme.secondary else scheme.secondaryContainer,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "soundChip"
     )
     val content by animateColorAsState(
-        if (selected) scheme.onPrimary else scheme.onSecondaryContainer,
+        if (selected) scheme.onSecondary else scheme.onSecondaryContainer,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "soundChipContent"
     )
