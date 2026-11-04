@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.system.Resources
@@ -117,10 +118,12 @@ class AstroChart(
         // "now" dot. Daylight (the sun's curve above the horizon) is one soft primaryContainer lake.
         val scheme = androidx.compose.material3.MaterialTheme.colorScheme
         val sunColor = scheme.primary
-        val daylightColor = scheme.primaryContainer.copy(alpha = 0.55f)
+        val daylightColor = scheme.primary.copy(alpha = 0.32f)
+        val isDark = scheme.surface.luminance() < 0.5f
+        val nightColor = if (isDark) NightSky.copy(alpha = 0.45f) else NightSky.copy(alpha = 0.07f)
         val moonColor = scheme.outline
         val limitColor = scheme.outlineVariant
-        val horizonColor = scheme.outline
+        val horizonColor = scheme.outline.copy(alpha = 0.8f)
         val ringColor = scheme.background
         val moonOutline = scheme.outlineVariant
         val moonShadow = scheme.surfaceContainerHighest
@@ -177,32 +180,71 @@ class AstroChart(
                             drawHorizontal(it, limitColor, left, right, top, bottom, dashed = true)
                         }
                     }
-                    // Daylight as a filled lake: the area under the sun's curve while it is above the horizon.
+                    val horizonY = toScreen(Vector2(0f, 0f), left, right, top, bottom).y
+                    // The night under the horizon: a deeper band of sky, so the horizon reads as a real edge.
+                    drawRect(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(nightColor.copy(alpha = nightColor.alpha * 0.4f), nightColor),
+                            startY = horizonY,
+                            endY = size.height
+                        ),
+                        topLeft = Offset(0f, horizonY),
+                        size = androidx.compose.ui.geometry.Size(size.width, size.height - horizonY)
+                    )
+                    // Daylight as a lake under the sun's curve while it is up, brightest where the sun is highest.
                     if (sunLine.size >= 2) {
-                        val horizonY = toScreen(Vector2(0f, 0f), left, right, top, bottom).y
                         val screen = sunLine.map { toScreen(it, left, right, top, bottom) }
+                        val peak = screen.minOf { it.y }
                         val lake = trailSenseSmoothPath(screen).apply {
                             lineTo(screen.last().x, horizonY)
                             lineTo(screen.first().x, horizonY)
                             close()
                         }
                         clipRect(left = left, top = 0f, right = right, bottom = horizonY) {
-                            drawPath(lake, daylightColor)
+                            drawPath(
+                                lake,
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(daylightColor, daylightColor.copy(alpha = daylightColor.alpha * 0.25f)),
+                                    startY = peak,
+                                    endY = horizonY
+                                )
+                            )
                         }
                     }
-                    drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
+                    drawLine(
+                        horizonColor,
+                        Offset(left, horizonY),
+                        Offset(right, horizonY),
+                        strokeWidth = 1.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                    )
 
                     drawLineChart(
                         moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
                         dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
                     )
-                    drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
+                    // The sun's path: full strength while it is up, quieter once it has set.
+                    clipRect(left = 0f, top = 0f, right = size.width, bottom = horizonY) {
+                        drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
+                    }
+                    clipRect(left = 0f, top = horizonY, right = size.width, bottom = size.height) {
+                        drawLineChart(sunLine, sunColor.copy(alpha = 0.45f), left, right, top, bottom, 3.dp.toPx(), smooth = true)
+                    }
 
                     moonPosition?.let {
-                        // A clean phase disc: the lit part pale, the shadow a quiet raised tone, a hairline rim so a
-                        // thin crescent still reads as the whole moon. The sun's "now" dot stays the one primary accent.
+                        // A clean phase disc in a soft moonlight glow: the lit part pale, the shadow a quiet raised
+                        // tone, a hairline rim so a thin crescent still reads as the whole moon.
                         val point = toScreen(it, left, right, top, bottom)
-                        drawCircle(ringColor, imageSize / 2f + 3.dp.toPx(), point)
+                        drawCircle(
+                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                listOf(MoonLit.copy(alpha = 0.22f), MoonLit.copy(alpha = 0f)),
+                                center = point,
+                                radius = imageSize / 2f + 12.dp.toPx()
+                            ),
+                            imageSize / 2f + 12.dp.toPx(),
+                            point
+                        )
+                        drawCircle(ringColor, imageSize / 2f + 2.dp.toPx(), point)
                         val canvas = drawContext.canvas.nativeCanvas
                         val image = moonBitmap ?: moonImage
                         canvas.save()
@@ -217,7 +259,27 @@ class AstroChart(
                         drawCircle(moonOutline, imageSize / 2f, point, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
                     }
                     sunPosition?.let {
-                        drawTrailSenseNowDot(toScreen(it, left, right, top, bottom), sunColor, ringColor)
+                        // The sun itself on its path: a warm disc in a soft halo (dimmer once it has set), on the
+                        // chart's "now" line.
+                        val point = toScreen(it, left, right, top, bottom)
+                        val up = point.y <= horizonY
+                        drawLine(
+                            sunColor.copy(alpha = 0.5f),
+                            Offset(point.x, 0f),
+                            Offset(point.x, size.height),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                        drawCircle(
+                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                listOf(SunWarm.copy(alpha = if (up) 0.45f else 0.18f), SunWarm.copy(alpha = 0f)),
+                                center = point,
+                                radius = 18.dp.toPx()
+                            ),
+                            18.dp.toPx(),
+                            point
+                        )
+                        drawCircle(ringColor, 8.dp.toPx(), point)
+                        drawCircle(if (up) SunWarm else SunWarm.copy(alpha = 0.6f), 6.dp.toPx(), point)
                     }
                 }
             }
@@ -335,6 +397,12 @@ class AstroChart(
         private const val MAX_Y = 100f
     }
 }
+
+/** The sun's own warm colour on the chart, the same in light and dark. */
+private val SunWarm = androidx.compose.ui.graphics.Color(0xFFFFC94D)
+
+/** The deep blue of the night sky under the horizon. */
+private val NightSky = androidx.compose.ui.graphics.Color(0xFF070B1F)
 
 /** The moon's lit face: the real moon is pale whatever the theme. */
 internal val MoonLit = androidx.compose.ui.graphics.Color(0xFFF4F4F0)
