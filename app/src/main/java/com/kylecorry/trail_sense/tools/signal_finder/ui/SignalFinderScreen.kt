@@ -2,6 +2,14 @@
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular1
+import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular2
+import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular3
+import com.kylecorry.trail_sense.shared.icons.trail.SignalCellularOutline
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.CellTower
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -392,7 +399,7 @@ private fun SignalHero(
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
         Icon(
-            painter = painterResource(CellSignalUtils.getCellQualityImage(signal.quality)),
+            painter = rememberVectorPainter(cellQualityIcon(signal.quality)),
             contentDescription = null,
             modifier = Modifier.size(40.dp),
             tint = strengthColor
@@ -460,7 +467,7 @@ private fun CellSignalRow(
     TrailSenseListItem(
         title = formatter.formatCellNetwork(signal.network),
         subtitle = description,
-        icon = painterResource(CellSignalUtils.getCellQualityImage(signal.quality)),
+        icon = rememberVectorPainter(cellQualityIcon(signal.quality)),
         iconTint = Color(CustomUiUtils.getQualityColor(signal.quality)),
         position = position
     )
@@ -506,7 +513,7 @@ private fun CellTowerRow(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(R.drawable.cell_tower),
+                        painter = rememberVectorPainter(TrailIcons.CellTower),
                         contentDescription = null,
                         modifier = Modifier.size(TrailSenseSize.leadingIcon)
                     )
@@ -558,4 +565,11 @@ private fun SignalDisclaimer(
         style = MaterialTheme.typography.bodySmall,
         textAlign = TextAlign.Center
     )
+}
+
+private fun cellQualityIcon(quality: com.kylecorry.andromeda.core.sensors.Quality?): ImageVector = when (quality) {
+    com.kylecorry.andromeda.core.sensors.Quality.Poor -> TrailIcons.SignalCellular1
+    com.kylecorry.andromeda.core.sensors.Quality.Moderate -> TrailIcons.SignalCellular2
+    com.kylecorry.andromeda.core.sensors.Quality.Good -> TrailIcons.SignalCellular3
+    else -> TrailIcons.SignalCellularOutline
 }

@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sense.readAll
@@ -250,7 +252,7 @@ private fun TemperatureEstimationScreen(
                                     }
                                 ) {
                                     Icon(
-                                        painter = painterResource(R.drawable.thermometer),
+                                        painter = rememberVectorPainter(TrailIcons.Thermometer),
                                         contentDescription = autofillLabel
                                     )
                                 }

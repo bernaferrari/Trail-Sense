@@ -2,6 +2,13 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.Vibrate
+import com.kylecorry.trail_sense.shared.icons.trail.VolumeUp
+import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Metal
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
@@ -45,7 +52,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -483,7 +489,7 @@ private fun MetalDetectorScreen(
             ToolToggle(
                 checked = vibrationEnabled,
                 onToggle = onVibrationToggle,
-                icon = R.drawable.vibrate,
+                icon = TrailIcons.Vibrate,
                 label = stringResource(R.string.tool_vibration),
                 modifier = Modifier.testTag("metal_vibration_btn")
             )
@@ -491,7 +497,7 @@ private fun MetalDetectorScreen(
                 ToolToggle(
                     checked = audioEnabled,
                     onToggle = onAudioToggle,
-                    icon = R.drawable.volume_up,
+                    icon = TrailIcons.VolumeUp,
                     label = stringResource(R.string.tool_sound),
                     modifier = Modifier.testTag("metal_audio_btn")
                 )
@@ -560,7 +566,7 @@ private fun MetalDetectorScreen(
                         ) {
                             if (metalDetected) {
                                 Icon(
-                                    painter = painterResource(R.drawable.metal),
+                                    painter = rememberVectorPainter(TrailIcons.Metal),
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -667,7 +673,7 @@ private fun MetalDetectorScreen(
 private fun ToolToggle(
     checked: Boolean,
     onToggle: () -> Unit,
-    icon: Int,
+    icon: ImageVector,
     label: String,
     modifier: Modifier = Modifier
 ) {
@@ -680,7 +686,7 @@ private fun ToolToggle(
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     ) {
-        Icon(painter = painterResource(icon), contentDescription = label)
+        Icon(icon, contentDescription = label)
     }
 }
 
@@ -729,7 +735,7 @@ private fun AccuracyBadge(
                 Surface(shape = CircleShape, color = Color(badge.color), modifier = Modifier.fillMaxSize()) {}
             }
             Icon(
-                painter = painterResource(badge.icon),
+                imageVector = TrailIcons.CompassIcon,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )

@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.ToolWhiteNoise
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -46,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
@@ -206,7 +208,7 @@ fun WhiteNoiseScreen(
                 TrailSenseListItem(
                     title = stringResource(R.string.tool_sound),
                     subtitle = soundName,
-                    icon = painterResource(R.drawable.ic_tool_white_noise),
+                    icon = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
                     onClick = { showSoundPicker = true },
                     position = TrailSenseGroupPosition(isFirst = true, isLast = false)
                 )
@@ -359,7 +361,7 @@ private fun PlayControl(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_tool_white_noise),
+                    painter = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
                     contentDescription = contentDescription,
                     modifier = Modifier.size(80.dp)
                 )

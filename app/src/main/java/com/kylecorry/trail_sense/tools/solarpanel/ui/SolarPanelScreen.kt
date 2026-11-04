@@ -3,6 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Arrow
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.Edit
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
@@ -40,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -235,7 +239,7 @@ fun SolarPanelScreen(
                         modifier = Modifier.padding(top = TrailSenseSpacing.sm),
                         trailing = {
                             Icon(
-                                painter = painterResource(R.drawable.ic_edit),
+                                painter = rememberVectorPainter(TrailIcons.Edit),
                                 contentDescription = stringResource(R.string.edit),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -481,7 +485,7 @@ private fun SolarCue(
     Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
         when {
             isComplete -> Icon(
-                painter = painterResource(R.drawable.ic_check),
+                painter = rememberVectorPainter(TrailIcons.Check),
                 contentDescription = null,
                 modifier = Modifier
                     .size(32.dp)
@@ -497,7 +501,7 @@ private fun SolarCue(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_arrow),
+                        painter = rememberVectorPainter(TrailIcons.Arrow),
                         contentDescription = null,
                         modifier = Modifier
                             .size(28.dp)

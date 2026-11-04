@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.declination.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Help
+import com.kylecorry.trail_sense.shared.icons.trail.Location
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +40,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -237,7 +240,7 @@ private fun CoordinateInput(
                         modifier = Modifier.testTag("gps_btn")
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_location),
+                            painter = rememberVectorPainter(TrailIcons.Location),
                             contentDescription = stringResource(R.string.gps),
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -251,7 +254,7 @@ private fun CoordinateInput(
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_help),
+                    painter = rememberVectorPainter(TrailIcons.Help),
                     contentDescription = stringResource(R.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

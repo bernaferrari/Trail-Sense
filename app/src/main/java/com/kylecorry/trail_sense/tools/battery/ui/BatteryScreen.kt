@@ -3,6 +3,17 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.Help
+import com.kylecorry.trail_sense.shared.icons.trail.CheckOutline
+import com.kylecorry.trail_sense.shared.icons.trail.Alert
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Cancel
+import com.kylecorry.trail_sense.shared.icons.trail.Chart
+import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
+import com.kylecorry.trail_sense.shared.icons.trail.Power
+import com.kylecorry.trail_sense.shared.icons.trail.Settings
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
@@ -38,7 +49,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -405,7 +415,7 @@ private fun BatteryScreen(
                     modifier = Modifier.testTag("battery_history_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_chart),
+                        painter = rememberVectorPainter(TrailIcons.Chart),
                         contentDescription = stringResource(
                             R.string.battery_usage,
                             stringResource(R.string.app_name)
@@ -419,7 +429,7 @@ private fun BatteryScreen(
                     modifier = Modifier.testTag("battery_settings_btn")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_settings),
+                        painter = rememberVectorPainter(TrailIcons.Settings),
                         contentDescription = stringResource(R.string.settings)
                     )
                 }
@@ -549,7 +559,7 @@ private fun BatteryHeroCard(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_power),
+                            painter = rememberVectorPainter(TrailIcons.Power),
                             contentDescription = null,
                             modifier = Modifier.size(TrailSenseSize.leadingIcon)
                         )
@@ -608,7 +618,7 @@ private fun RunningServiceRow(
             formatBatteryUsage(usage),
             separator = FormatService.Separator.Dot
         ),
-        icon = painterResource(getUsageIcon(usage)),
+        icon = rememberVectorPainter(getUsageIcon(usage)),
         iconTint = Color(getUsageColor(usage)),
         position = position,
         trailing = {
@@ -619,7 +629,7 @@ private fun RunningServiceRow(
                     .testTag("battery_service_stop_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_cancel),
+                    painter = rememberVectorPainter(TrailIcons.Cancel),
                     contentDescription = stringResource(R.string.stop),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -637,13 +647,13 @@ private fun SystemTipRow(
     TrailSenseListItem(
         title = tip.name,
         subtitle = tip.description,
-        icon = painterResource(getUsageIcon(tip.batteryUsage)),
+        icon = rememberVectorPainter(getUsageIcon(tip.batteryUsage)),
         iconTint = Color(getUsageColor(tip.batteryUsage)),
         position = position,
         trailing = if (tip.manage != null) {
             {
                 Icon(
-                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                    painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -717,12 +727,12 @@ private fun getBatteryUsage(service: RunningService): BatteryUsage {
     }
 }
 
-private fun getUsageIcon(usage: BatteryUsage): Int {
+private fun getUsageIcon(usage: BatteryUsage): ImageVector {
     return when (usage) {
-        BatteryUsage.Unknown -> R.drawable.ic_help
-        BatteryUsage.Low -> R.drawable.ic_check_outline
-        BatteryUsage.Moderate -> R.drawable.ic_alert
-        BatteryUsage.High -> R.drawable.ic_alert
+        BatteryUsage.Unknown -> TrailIcons.Help
+        BatteryUsage.Low -> TrailIcons.CheckOutline
+        BatteryUsage.Moderate -> TrailIcons.Alert
+        BatteryUsage.High -> TrailIcons.Alert
     }
 }
 

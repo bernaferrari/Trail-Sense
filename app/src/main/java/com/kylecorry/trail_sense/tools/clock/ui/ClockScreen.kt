@@ -3,6 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Satellite
+import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
 import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
@@ -46,7 +51,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -236,8 +240,8 @@ private fun ClockScreen(
                         isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
                         else -> null
                     },
-                    icon = painterResource(
-                        if (isGpsTime) R.drawable.satellite else R.drawable.ic_tool_clock
+                    icon = rememberVectorPainter(
+                        if (isGpsTime) TrailIcons.Satellite else TrailIcons.ToolClock
                     ),
                     trailing = if (isUpdatingClock) {
                         {

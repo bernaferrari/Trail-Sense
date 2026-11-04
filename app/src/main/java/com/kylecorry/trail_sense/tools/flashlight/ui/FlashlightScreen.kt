@@ -3,6 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
+import com.kylecorry.trail_sense.shared.icons.trail.Power
+import com.kylecorry.trail_sense.shared.icons.trail.ScreenFlashlight
+import com.kylecorry.trail_sense.shared.icons.trail.Strobe
+import com.kylecorry.trail_sense.shared.icons.trail.TorchOn
+import com.kylecorry.trail_sense.shared.icons.trail.WhistleSos
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -45,7 +53,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.semantics
@@ -354,17 +361,17 @@ private fun FlashlightControls(
         TrailSenseChoice(
             FlashlightModeKind.Torch,
             stringResource(R.string.flashlight_mode_steady),
-            ImageVector.vectorResource(R.drawable.ic_torch_on)
+            TrailIcons.TorchOn
         ),
         TrailSenseChoice(
             FlashlightModeKind.Strobe,
             stringResource(R.string.flashlight_mode_strobe),
-            ImageVector.vectorResource(R.drawable.ic_strobe)
+            TrailIcons.Strobe
         ),
         TrailSenseChoice(
             FlashlightModeKind.Sos,
             stringResource(R.string.sos),
-            ImageVector.vectorResource(R.drawable.ic_whistle_sos)
+            TrailIcons.WhistleSos
         )
     )
     val modeLabel = stringResource(R.string.flashlight_mode)
@@ -444,12 +451,12 @@ private fun FlashlightControls(
             TrailSenseListItem(
                 title = stringResource(R.string.flashlight_use_screen),
                 subtitle = stringResource(R.string.flashlight_use_screen_summary),
-                icon = painterResource(R.drawable.ic_screen_flashlight),
+                icon = rememberVectorPainter(TrailIcons.ScreenFlashlight),
                 position = position,
                 onClick = onOpenScreenFlashlight,
                 trailing = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                        painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -512,7 +519,7 @@ private fun PowerToggle(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_power),
+                    painter = rememberVectorPainter(TrailIcons.Power),
                     contentDescription = stringResource(R.string.flashlight_title),
                     modifier = Modifier.size(88.dp),
                     tint = content

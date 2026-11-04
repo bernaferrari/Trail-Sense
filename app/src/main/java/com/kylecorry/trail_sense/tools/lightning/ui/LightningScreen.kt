@@ -3,6 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.TorchOn
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Thunder
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
@@ -39,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -220,7 +224,7 @@ fun LightningScreen(
                     TrailSenseListItem(
                         title = stringResource(R.string.previous),
                         subtitle = previousStrikeText,
-                        icon = painterResource(R.drawable.ic_thunder),
+                        icon = rememberVectorPainter(TrailIcons.Thunder),
                         position = TrailSenseGroupPosition.Single
                     )
                 }
@@ -263,8 +267,8 @@ private fun StrikeButton(
         contentPadding = ButtonDefaults.contentPaddingFor(height)
     ) {
         Icon(
-            painter = painterResource(
-                if (waitingForThunder) R.drawable.ic_thunder else R.drawable.ic_torch_on
+            painter = rememberVectorPainter(
+                if (waitingForThunder) TrailIcons.Thunder else TrailIcons.TorchOn
             ),
             contentDescription = null,
             modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))

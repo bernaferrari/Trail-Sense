@@ -3,6 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Link
+import com.kylecorry.trail_sense.shared.icons.trail.Location
+import com.kylecorry.trail_sense.shared.icons.trail.Maps
+import com.kylecorry.trail_sense.shared.icons.trail.ToolNotes
+import com.kylecorry.trail_sense.shared.icons.trail.Copy
+import com.kylecorry.trail_sense.shared.icons.trail.Delete
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -47,7 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -559,7 +567,7 @@ private fun QrResultCard(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(type.icon),
+                        imageVector = type.icon,
                         contentDescription = null,
                         modifier = Modifier
                             .size(TrailSenseSize.compactIcon)
@@ -596,7 +604,7 @@ private fun QrResultCard(
                 if (type == ScanType.Url) {
                     QrActionChip(
                         text = stringResource(R.string.open),
-                        icon = R.drawable.ic_link,
+                        icon = TrailIcons.Link,
                         tag = "qr_web",
                         onClick = { onOpenUrl(text) }
                     )
@@ -605,13 +613,13 @@ private fun QrResultCard(
                 if (type == ScanType.Geo) {
                     QrActionChip(
                         text = stringResource(R.string.beacon),
-                        icon = R.drawable.ic_location,
+                        icon = TrailIcons.Location,
                         tag = "qr_beacon",
                         onClick = { onCreateBeacon(text) }
                     )
                     QrActionChip(
                         text = stringResource(R.string.maps),
-                        icon = R.drawable.maps,
+                        icon = TrailIcons.Maps,
                         tag = "qr_location",
                         onClick = { onOpenMap(text) }
                     )
@@ -620,7 +628,7 @@ private fun QrResultCard(
                 if (type == ScanType.Text) {
                     QrActionChip(
                         text = stringResource(R.string.note),
-                        icon = R.drawable.ic_tool_notes,
+                        icon = TrailIcons.ToolNotes,
                         tag = "qr_save_note",
                         onClick = { onCreateNote(text) }
                     )
@@ -628,13 +636,13 @@ private fun QrResultCard(
 
                 QrActionChip(
                     text = stringResource(android.R.string.copy),
-                    icon = R.drawable.ic_copy,
+                    icon = TrailIcons.Copy,
                     tag = "qr_copy",
                     onClick = { onCopy(text) }
                 )
                 QrActionChip(
                     text = stringResource(R.string.delete),
-                    icon = R.drawable.ic_delete,
+                    icon = TrailIcons.Delete,
                     tag = "qr_delete",
                     onClick = { onDelete(text) }
                 )
@@ -646,7 +654,7 @@ private fun QrResultCard(
 @Composable
 private fun QrActionChip(
     text: String,
-    icon: Int,
+    icon: ImageVector,
     tag: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -659,7 +667,7 @@ private fun QrActionChip(
         contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
     ) {
         Icon(
-            painter = painterResource(icon),
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(18.dp)
         )
@@ -677,11 +685,11 @@ private enum class ScanType {
     Geo
 }
 
-private val ScanType.icon: Int
+private val ScanType.icon: ImageVector
     get() = when (this) {
-        ScanType.Text -> R.drawable.ic_tool_notes
-        ScanType.Url -> R.drawable.ic_link
-        ScanType.Geo -> R.drawable.ic_location
+        ScanType.Text -> TrailIcons.ToolNotes
+        ScanType.Url -> TrailIcons.Link
+        ScanType.Geo -> TrailIcons.Location
     }
 
 private fun getScanType(text: String): ScanType {
