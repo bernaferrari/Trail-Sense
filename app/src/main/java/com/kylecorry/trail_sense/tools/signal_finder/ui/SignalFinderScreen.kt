@@ -1,4 +1,5 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
@@ -18,6 +19,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.graphics.shapes.toPath
 import com.kylecorry.trail_sense.shared.icons.trail.NavigationArrow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
@@ -320,7 +325,7 @@ private fun SignalFinderScreen(
     // One question: how good is my signal here, and which way is the nearest tower?
     // Presentation-only: the strongest registered/available signal is the reading.
     val bestSignal = signals.maxByOrNull { it.strength }
-    val signalsTitle = stringResource(R.string.cell_signal)
+    val otherSignalsTitle = stringResource(R.string.signal_finder_other_signals)
     val towersTitle = stringResource(R.string.cell_towers)
 
     TrailSenseInstrumentScaffold(
@@ -395,7 +400,13 @@ private fun SignalFinderScreen(
                             )
                         }
                         if (bestSignal != null) {
-                            SignalReading(signal = bestSignal, formatter = formatter)
+                            SignalReading(
+                                signal = bestSignal,
+                                nearestTower = sortedTowers.firstOrNull(),
+                                location = location,
+                                formatter = formatter,
+                                prefs = prefs
+                            )
                         }
                     }
                 }
@@ -404,7 +415,7 @@ private fun SignalFinderScreen(
                 // and percentage is shown twice.
                 val otherSignals = signals.filter { it !== bestSignal }
                 if (otherSignals.isNotEmpty()) {
-                    trailSenseSection(key = "signals", title = signalsTitle) {
+                    trailSenseSection(key = "signals", title = otherSignalsTitle) {
                         otherSignals.forEach { signal ->
                             row { position ->
                                 CellSignalRow(signal, formatter, prefs, position)
@@ -440,15 +451,42 @@ private fun SignalFinderScreen(
     }
 }
 
-/** The reading: the strongest signal's strength, the service it gives as the verdict, and its network. */
+/**
+ * The answer: the strongest signal's strength as the one display value, a plain verdict on it (or "Emergency calls
+ * only" in error when the phone has no service), and one quiet line with its network and the way to the nearest tower.
+ */
 @Composable
 private fun SignalReading(
     signal: CellSignal,
+    nearestTower: ApproximateCoordinate?,
+    location: Coordinate,
     formatter: FormatService,
+    prefs: UserPreferences,
     modifier: Modifier = Modifier
 ) {
+    val verdict = stringResource(
+        when {
+            !signal.isRegistered -> R.string.emergency_calls_only
+            signal.strength >= 75f -> R.string.signal_verdict_strong
+            signal.strength >= 50f -> R.string.signal_verdict_good
+            signal.strength >= 25f -> R.string.signal_verdict_fair
+            else -> R.string.signal_verdict_weak
+        }
+    )
+    val towerLine = nearestTower?.let { tower ->
+        val distance = Distance.meters(location.distanceTo(tower.coordinate))
+            .convertTo(prefs.baseDistanceUnits)
+            .toRelativeDistance()
+        stringResource(
+            R.string.signal_finder_nearest_tower,
+            formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
+            formatter.formatDirection(location.bearingTo(tower.coordinate).direction)
+        )
+    }
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("signal_reading"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
@@ -458,19 +496,21 @@ private fun SignalReading(
             fontWeight = FontWeight.SemiBold,
             maxLines = 1
         )
-        // The percentage is the one display value; the service and network are a single line under it.
+        Text(
+            text = verdict,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = if (signal.isRegistered) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
         Text(
             text = formatter.join(
-                if (signal.isRegistered) {
-                    stringResource(R.string.full_service)
-                } else {
-                    stringResource(R.string.emergency_calls_only)
-                },
                 formatter.formatCellNetwork(signal.network),
+                towerLine,
                 separator = FormatService.Separator.Dot
             ),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (signal.isRegistered) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
     }
@@ -518,7 +558,7 @@ private fun CellSignalRow(
         distance?.let {
             formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)) +
                     if (maxDistance != null) {
-                        " - ${
+                        " – ${
                             formatter.formatDistance(
                                 maxDistance,
                                 Units.getDecimalPlaces(maxDistance.units)
@@ -528,7 +568,6 @@ private fun CellSignalRow(
                         ""
                     }
         },
-        formatter.formatTime(signal.time),
         if (signal.isRegistered) {
             stringResource(R.string.full_service)
         } else {
@@ -553,7 +592,8 @@ private fun CellSignalRow(
 
 /**
  * The nearby towers on a radar, north up: you in the middle, distance rings with their ranges named, and each tower
- * as a numbered dot at its bearing, pushed out by distance (20 km at the rim). The nearest tower is the one accent.
+ * as a numbered cookie at its bearing, pushed out by distance (20 km at the rim). The nearest tower is the one accent:
+ * larger, in tertiary, with a line from you to it. A ring pulses out from you, faster the stronger the signal.
  */
 @Composable
 private fun TowerRadar(
@@ -566,8 +606,10 @@ private fun TowerRadar(
     val scheme = MaterialTheme.colorScheme
     val disc = scheme.surfaceContainerLow
     val ringLine = scheme.outlineVariant
-    val dot = scheme.primary
-    val onDot = scheme.onPrimary
+    val dot = scheme.primaryContainer
+    val onDot = scheme.onPrimaryContainer
+    // The towers' shape, the same Cookie6 as the list's badges, normalised to a unit square.
+    val cookie = remember { MaterialShapes.Cookie6Sided.toPath() }
     val nearest = scheme.tertiary
     val onNearest = scheme.onTertiary
     val you = scheme.onSurface
@@ -592,10 +634,13 @@ private fun TowerRadar(
     } else {
         -1f
     }
+    val radarDescription = stringResource(R.string.cell_towers)
     Canvas(
         Modifier
             .fillMaxWidth()
             .height(300.dp)
+            .testTag("signal_radar")
+            .semantics { contentDescription = radarDescription }
     ) {
             val radius = size.minDimension / 2f - 10.dp.toPx()
             drawCircle(disc, radius, center)
@@ -604,7 +649,7 @@ private fun TowerRadar(
             }
             if (pulse >= 0f) {
                 drawCircle(
-                    dot.copy(alpha = 0.35f * (1f - pulse)),
+                    scheme.primary.copy(alpha = 0.35f * (1f - pulse)),
                     radius * pulse,
                     center,
                     style = Stroke(width = 3.dp.toPx())
@@ -645,16 +690,14 @@ private fun TowerRadar(
                 drawContext.canvas.nativeCanvas.drawText(rangeLabels[i], x, y, paint)
             }
             paint.isFakeBoldText = true
-            drawCircle(you, 7.dp.toPx(), center)
-            drawCircle(scheme.surfaceContainerLowest, 3.dp.toPx(), center)
             // Towers close together are nudged apart (outward, then sideways) so no two markers overlap.
             // You count as a marker too, so no tower sits on your dot.
             val placed = mutableListOf(center)
-            val markerGap = 28.dp.toPx()
-            towers.forEachIndexed { index, tower ->
+            val markerGap = 32.dp.toPx()
+            towers.forEach { tower ->
                 val bearingDegrees = location.bearingTo(tower.coordinate).value
                 val bearing = Math.toRadians(bearingDegrees.toDouble() - 90)
-                var fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.12f, 1f)
+                var fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.14f, 1f)
                 var angle = bearing
                 fun at() = Offset(
                     center.x + kotlin.math.cos(angle).toFloat() * radius * fraction,
@@ -672,12 +715,45 @@ private fun TowerRadar(
                     tries++
                 }
                 placed += p
+            }
+            val markers = placed.drop(1)
+
+            // The answer to "which way?": a line from you to the nearest tower.
+            markers.firstOrNull()?.let { target ->
+                drawLine(
+                    nearest.copy(alpha = 0.55f),
+                    center,
+                    target,
+                    strokeWidth = 3.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+            }
+
+            // Every tower is a numbered cookie (the same shape as its row's badge); the nearest is larger and in the
+            // one accent, the rest are quiet tonal ones.
+            markers.forEachIndexed { index, p ->
                 val isNearest = index == 0
-                val fill = if (isNearest) nearest else dot
-                drawCircle(fill, 13.dp.toPx(), p)
+                val markerSize = (if (isNearest) 36.dp else 28.dp).toPx()
+                val marker = android.graphics.Path(cookie).apply {
+                    transform(
+                        android.graphics.Matrix().apply {
+                            setScale(markerSize, markerSize)
+                            postTranslate(p.x - markerSize / 2f, p.y - markerSize / 2f)
+                        }
+                    )
+                }
+                if (isNearest) {
+                    drawCircle(nearest.copy(alpha = 0.18f), markerSize * 0.85f, p)
+                }
+                drawPath(marker.asComposePath(), if (isNearest) nearest else dot)
                 paint.color = (if (isNearest) onNearest else onDot).toArgb()
                 drawContext.canvas.nativeCanvas.drawText((index + 1).toString(), p.x, p.y + labelSize / 3f, paint)
             }
+
+            // You, on top of the line: a dot ringed in the disc's colour.
+            drawCircle(disc, 10.dp.toPx(), center)
+            drawCircle(you, 7.dp.toPx(), center)
+            drawCircle(scheme.surfaceContainerLowest, 3.dp.toPx(), center)
     }
 }
 
@@ -726,8 +802,8 @@ private fun CellTowerRow(
                 shape = MaterialShapes.Cookie6Sided.toShape(),
                 size = 40.dp,
                 // The same colours as its dot on the radar, so the number and the dot read as one tower.
-                containerColor = if (isNearest) scheme.tertiary else scheme.primary,
-                contentColor = if (isNearest) scheme.onTertiary else scheme.onPrimary
+                containerColor = if (isNearest) scheme.tertiary else scheme.primaryContainer,
+                contentColor = if (isNearest) scheme.onTertiary else scheme.onPrimaryContainer
             )
             Spacer(Modifier.width(TrailSenseSpacing.lg))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
