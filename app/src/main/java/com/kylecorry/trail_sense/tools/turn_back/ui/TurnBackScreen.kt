@@ -347,7 +347,7 @@ private fun TurnBackScreen(
     )
     val isLate = isActive && remaining != null && remaining < Duration.ofMinutes(10)
     val tone = when {
-        !isActive -> TrailSenseTone.Secondary
+        !isActive -> TrailSenseTone.Primary
         isLate -> TrailSenseTone.Caution
         else -> TrailSenseTone.Tertiary
     }
@@ -382,7 +382,7 @@ private fun TurnBackScreen(
                 // The track is always there: a preview of the plan until a time is set, the live journey after.
                 JourneyTrack(
                     turnFraction = if (isActive) animatedTurn else 0.4f,
-                    color = if (isActive) colors.accent else colors.accent.copy(alpha = 0.45f),
+                    color = colors.accent,
                     trackColor = colors.content.copy(alpha = 0.16f),
                     markerRing = colors.container
                 )
@@ -496,6 +496,11 @@ private fun JourneyTrack(turnFraction: Float, color: Color, trackColor: Color, m
         val end = size.width - stroke / 2
         val turnX = start + (end - start) * turnFraction
         drawLine(trackColor, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
+        // Quarter ticks so the track reads as time, not a slider.
+        for (i in 1..3) {
+            val x = start + (end - start) * i / 4f
+            drawCircle(color.copy(alpha = 0.5f), radius = 2.dp.toPx(), center = Offset(x, y))
+        }
         drawLine(color, Offset(start, y), Offset(turnX, y), strokeWidth = stroke, cap = StrokeCap.Round)
         drawCircle(markerRing, radius = 12.dp.toPx(), center = Offset(turnX, y))
         drawCircle(color, radius = 8.dp.toPx(), center = Offset(turnX, y))
@@ -521,7 +526,7 @@ private fun JourneyTile(
             Text(label, style = MaterialTheme.typography.labelLarge, color = contentColor.copy(alpha = 0.8f))
             Text(
                 value,
-                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold
             )
         }

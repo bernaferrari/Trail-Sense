@@ -297,8 +297,15 @@ private fun PackListScreen(
             top = TrailSenseSpacing.sm,
             bottom = 112.dp
         ),
+        actions = {
+            PacksOverflowMenu(
+                contentDescription = stringResource(R.string.packs_more_options),
+                modifier = Modifier.testTag("pack_list_menu_btn"),
+                actions = listOf(PacksMenuAction(stringResource(R.string.import_packing_list), onImportPack))
+            )
+        },
         floatingActionButton = {
-            Box {
+            if (loaded && packs.isNotEmpty()) Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
                     modifier = Modifier.testTag("add_btn"),
@@ -341,7 +348,13 @@ private fun PackListScreen(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
-                    modifier = Modifier.testTag("empty_text")
+                    actionLabel = stringResource(R.string.new_packing_list),
+                    actionIcon = TrailIcons.Add,
+                    onAction = onCreatePack,
+                    actionModifier = Modifier.testTag("add_btn"),
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.8f)
+                        .testTag("empty_text")
                 )
             }
             return@TrailSensePage

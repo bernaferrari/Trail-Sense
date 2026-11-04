@@ -1102,7 +1102,7 @@ private fun BeaconRow(
         },
         value = formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
         valueColor = MaterialTheme.colorScheme.primary,
-        barFraction = if (hasLocation) proximity else null,
+        barFraction = null,
         onClick = { onAction(BeaconAction.View) },
         onLongClick = { onAction(BeaconAction.Navigate) },
         actions = {

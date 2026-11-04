@@ -174,7 +174,7 @@ fun PlacesBearingField(
                         topEnd = if (last) outer else inner,
                         bottomEnd = if (last) outer else inner
                     )
-                    val weight = if (kind == 1) 0.6f else 1f
+                    val weight = if (kind == 0) 2.2f else 0.8f
                     when (kind) {
                         0 -> Button(
                             onClick = onCompassClick,
@@ -218,11 +218,13 @@ fun PlacesBearingField(
                                 .weight(weight)
                                 .heightIn(min = 48.dp)
                                 .testTag("manual_bearing"),
-                            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
+                            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm)
                         ) {
-                            Icon(TrailIcons.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(TrailSenseSpacing.sm))
-                            Text(stringResource(R.string.enter_manually), maxLines = 1)
+                            Icon(
+                                TrailIcons.Edit,
+                                contentDescription = stringResource(R.string.enter_manually),
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }

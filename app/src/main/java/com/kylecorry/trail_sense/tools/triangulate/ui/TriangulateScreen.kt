@@ -877,7 +877,7 @@ private fun TriangulateResultCard(
     onShareLocation: () -> Unit,
     onUpdateGpsOverride: () -> Unit
 ) {
-    val tone = if (actionsVisible) TrailSenseTone.Primary else TrailSenseTone.Secondary
+    val tone = TrailSenseTone.Primary
     val colors = trailSenseToneColors(tone)
     TrailSenseSpotlight(
         modifier = Modifier.testTag("triangulate_title"),
@@ -924,6 +924,7 @@ private fun TriangulateResultCard(
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 repeat(2) { index ->
                     val done = index < completed
+                    val active = index == completed
                     Surface(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(
@@ -940,8 +941,16 @@ private fun TriangulateResultCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             PlacesBadge(
-                                containerColor = if (done) colors.onAccent else colors.accent.copy(alpha = 0.16f),
-                                contentColor = if (done) colors.accent else colors.content,
+                                containerColor = when {
+                                    done -> colors.onAccent
+                                    active -> colors.accent
+                                    else -> colors.accent.copy(alpha = 0.22f)
+                                },
+                                contentColor = when {
+                                    done -> colors.accent
+                                    active -> colors.onAccent
+                                    else -> colors.content
+                                },
                                 icon = if (done) TrailIcons.Check else null,
                                 text = if (done) null else (index + 1).toString(),
                                 shape = MaterialShapes.Cookie4Sided.toShape(),
@@ -951,6 +960,7 @@ private fun TriangulateResultCard(
                             Text(
                                 stringResource(R.string.location_number, index + 1),
                                 style = MaterialTheme.typography.titleSmall,
+                                fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1
                             )
                         }
@@ -1060,8 +1070,8 @@ private fun TriangulateLocationCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PlacesBadge(
-                    containerColor = badgeColor,
-                    contentColor = if (isComplete) scheme.onPrimary else scheme.onSurfaceVariant,
+                    containerColor = if (isComplete) badgeColor else scheme.primaryContainer,
+                    contentColor = if (isComplete) scheme.onPrimary else scheme.onPrimaryContainer,
                     icon = if (isComplete) Icons.Rounded.Check else null,
                     text = if (isComplete) null else number.toString(),
                     shape = MaterialShapes.Cookie4Sided.toShape(),
