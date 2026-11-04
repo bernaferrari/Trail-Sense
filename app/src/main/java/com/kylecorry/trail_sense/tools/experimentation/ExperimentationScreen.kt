@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
+import com.kylecorry.trail_sense.shared.extensions.findNavController
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -95,11 +96,16 @@ internal fun ExperimentationContent() {
 
             loaded.isEmpty() -> {
                 item(key = "empty") {
-                    // One clear message; there is nothing to do here until a plugin is installed.
+                    // One message and one way out: the plugin settings, which list the plugins that can be connected.
                     TrailSenseEmptyState(
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
                         description = stringResource(R.string.sky_experimentation_empty),
+                        actionLabel = stringResource(R.string.experimentation_find_plugins),
+                        onAction = {
+                            context.findComponentActivity()?.findNavController()
+                                ?.navigate(R.id.pluginsSettingsFragment)
+                        },
                         modifier = Modifier.heightIn(min = 340.dp)
                     )
                 }
@@ -179,3 +185,10 @@ private fun ExperimentationPluginRow(
         }
     }
 }
+
+private tailrec fun android.content.Context.findComponentActivity(): androidx.activity.ComponentActivity? =
+    when (this) {
+        is androidx.activity.ComponentActivity -> this
+        is android.content.ContextWrapper -> baseContext.findComponentActivity()
+        else -> null
+    }

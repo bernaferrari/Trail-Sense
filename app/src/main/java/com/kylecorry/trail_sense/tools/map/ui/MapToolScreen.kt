@@ -835,34 +835,26 @@ private fun MapEmptyState(
     onAddMap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // A tab root like Tools: the large title on top, the empty state centred below it.
-    androidx.compose.foundation.layout.Column(
-        modifier
-            .fillMaxSize()
-            .then(Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.statusBars))
+    // A tab root like the other tabs: the kit's large top app bar (no back arrow), and the empty state filling the
+    // rest of the page.
+    com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
+        title = stringResource(R.string.map),
+        onBack = null,
+        modifier = modifier
     ) {
-        Text(
-            text = stringResource(R.string.map),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.lg + TrailSenseSpacing.xs,
-                end = TrailSenseSpacing.lg,
-                top = TrailSenseSpacing.lg
+        item(key = "empty") {
+            // Where am I on my map? Until there is a map, the one thing to do is add one: one filled button, no
+            // chips that all lead to the same place.
+            TrailSenseEmptyState(
+                icon = TrailSenseIcons.Filled.Map,
+                title = stringResource(R.string.no_offline_maps),
+                description = stringResource(R.string.map_empty_description),
+                actionLabel = stringResource(R.string.add_offline_map),
+                actionIcon = TrailSenseIcons.Filled.Add,
+                onAction = onAddMap,
+                modifier = Modifier.fillParentMaxHeight()
             )
-        )
-        // Where am I on my map? Until there is a map, the one thing to do is add one: one filled button, no chips
-        // that all lead to the same place.
-        TrailSenseEmptyState(
-            icon = TrailSenseIcons.Filled.Map,
-            title = stringResource(R.string.no_offline_maps),
-            description = stringResource(R.string.map_empty_description),
-            actionLabel = stringResource(R.string.add_offline_map),
-            actionIcon = TrailSenseIcons.Filled.Add,
-            onAction = onAddMap,
-            modifier = Modifier.padding(bottom = TrailSenseSpacing.xxxl)
-        )
+        }
     }
 }
 

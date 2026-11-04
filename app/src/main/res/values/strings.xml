@@ -1311,7 +1311,7 @@
     <string name="astronomy_rise">Rise</string>
     <string name="horizon">Horizon</string>
     <string name="offline_maps_summary">Use photos, PDFs, and map files offline</string>
-    <string name="map_empty_description">Add a photo, PDF, or map file to use the map tools.</string>
+    <string name="map_empty_description">Add a photo, PDF or map file to see where you are, even without a signal.</string>
     <string name="add_offline_map">Add offline map</string>
     <string name="photo_map_disclaimer">Always carry a physical map for backup and verify the accuracy of Trail Sense.\n\nMap files are not included with Trail Sense and must be downloaded or calibrated from a photo. You can find maps to download at https://kylecorry.com/Trail-Sense/offline_maps.html</string>
     <string name="photo_map_disclaimer_shown" translatable="false">photo_map_disclaimer_shown_v2</string>
@@ -2220,10 +2220,12 @@
     <!-- Family redesign: sensor tools -->
     <string name="lightning_hint_flash">Tap when you see the flash</string>
     <string name="lightning_hint_thunder">Tap again when you hear the thunder</string>
+    <string name="lightning_hint_both_taps">Tap at the flash, then again at the thunder</string>
     <string name="tool_sound">Sound</string>
     <string name="tool_vibration">Vibration</string>
     <string name="metal_detected">Metal detected</string>
     <string name="metal_not_detected">No metal nearby</string>
+    <string name="metal_detector_accuracy">Accuracy: %1$s</string>
     <string name="turn_back_empty_description">Pick when you need to be back and you\'ll be told when to turn around</string>
     <string name="turn_back_cancel">Cancel turn back alert</string>
     <!-- Family redesign: flashlight, battery, QR -->
@@ -2235,6 +2237,7 @@
     <string name="flashlight_use_screen_summary">Light up the whole screen, in white or red</string>
     <string name="flashlight_unavailable_title">No flashlight on this device</string>
     <string name="flashlight_unavailable_description">You can still use the screen as a light.</string>
+    <string name="flashlight_use_screen_action">Use screen as light</string>
     <string name="screen_flashlight_white">White</string>
     <string name="screen_flashlight_red">Red</string>
     <string name="battery_time_left">Time left</string>
@@ -2253,6 +2256,10 @@
     <string name="clinometer_locked">Reading locked</string>
     <string name="ruler_tap_hint">Tap the ruler at the end of what you\'re measuring</string>
     <string name="camera_unavailable_description">Allow camera access in settings to use this tool.</string>
+    <string name="magnifier_camera_needed_title">Magnifier needs camera access</string>
+    <string name="magnifier_camera_needed_description">It shows a zoomed view of what the camera sees.</string>
+    <string name="magnifier_allow_camera">Allow camera</string>
+    <string name="experimentation_find_plugins">Find plugins</string>
     <!-- Family redesign: field guide -->
     <string name="field_guide_clear_search">Clear search</string>
     <string name="field_guide_more_options">More options</string>

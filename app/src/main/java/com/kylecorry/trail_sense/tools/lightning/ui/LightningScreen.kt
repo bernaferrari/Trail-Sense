@@ -157,64 +157,72 @@ fun LightningScreen(
     val distanceUnit = formatService.getDistanceUnitName(relativeDistance?.units ?: units, true)
     val elapsed = lightningTime?.let { Duration.between(it, now).toMillis() / 1000f }
 
-    TrailSenseInstrumentScaffold(
+    // An instrument with the large title like the other instruments; the ring, then its one button, then the
+    // previous strike as a quiet list.
+    com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
         title = stringResource(R.string.tool_lightning_title),
+        onBack = com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
         modifier = modifier
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(TrailSenseSpacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
-            // One question: how far away was that strike? The ring answers it; the verdict says if it is too close.
-            StrikeHero(
-                value = distanceValue,
-                unit = distanceUnit,
-                hint = when {
-                    isDangerous -> stringResource(R.string.lightning_dangerously_close)
-                    waitingForThunder -> stringResource(R.string.lightning_hint_thunder)
-                    else -> stringResource(R.string.lightning_hint_flash)
-                },
-                danger = isDangerous,
-                elapsedSeconds = elapsed,
-                flash = flash.value,
-                modifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)
-            )
-            Spacer(Modifier.weight(1f))
-            Box(Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)) {
-                StrikeButton(
-                    waitingForThunder = waitingForThunder,
-                    onClick = {
-                        val startedAt = lightningTime
-                        if (startedAt == null) {
-                            lightningTime = Instant.now()
-                            scope.launch {
-                                flash.snapTo(0.9f)
-                                flash.animateTo(0f, tween(550))
-                            }
-                        } else {
-                            val distance = getDistance(startedAt, Instant.now())
-                            val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
-                            strike?.let { lastStrike = it }
-                            strike = currentStrike
-                            lightningTime = null
-                            scope.launch {
-                                withContext(Dispatchers.IO) {
-                                    repo.add(currentStrike)
+        item(key = "strike") {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                // One question: how far away was that strike? The ring answers it; the verdict says if it is too
+                // close. The ring is a display only: the button under it is the one thing to tap.
+                StrikeHero(
+                    value = distanceValue,
+                    unit = distanceUnit,
+                    hint = when {
+                        isDangerous -> stringResource(R.string.lightning_dangerously_close)
+                        waitingForThunder -> stringResource(R.string.lightning_hint_thunder)
+                        else -> stringResource(R.string.lightning_hint_both_taps)
+                    },
+                    danger = isDangerous,
+                    elapsedSeconds = elapsed,
+                    flash = flash.value,
+                    modifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)
+                )
+                Box(Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)) {
+                    StrikeButton(
+                        waitingForThunder = waitingForThunder,
+                        onClick = {
+                            val startedAt = lightningTime
+                            if (startedAt == null) {
+                                lightningTime = Instant.now()
+                                scope.launch {
+                                    flash.snapTo(0.9f)
+                                    flash.animateTo(0f, tween(550))
+                                }
+                            } else {
+                                val distance = getDistance(startedAt, Instant.now())
+                                val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
+                                strike?.let { lastStrike = it }
+                                strike = currentStrike
+                                lightningTime = null
+                                scope.launch {
+                                    withContext(Dispatchers.IO) {
+                                        repo.add(currentStrike)
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
+        }
 
+        item(key = "previous") {
             AnimatedVisibility(
                 visible = lastStrike != null,
                 enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
                 exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(),
-                modifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.lg)
             ) {
                 val last = lastStrike
                 if (last != null) {
@@ -247,7 +255,6 @@ fun LightningScreen(
                 }
             }
         }
-
     }
 }
 
@@ -295,7 +302,7 @@ private fun StrikeHero(
                 val maxRadius = size.minDimension / 2f
                 // The flash lights the ring's face for a moment.
                 drawCircle(androidx.compose.ui.graphics.lerp(track, accent.copy(alpha = 0.35f), flash), radius = core, center = center)
-                drawCircle(accent, radius = core, center = center, style = Stroke(width = 6.dp.toPx()))
+                drawCircle(accent, radius = core, center = center, style = Stroke(width = 3.dp.toPx()))
                 if (counting) {
                     repeat(3) { index ->
                         val t = (phase + index / 3f) % 1f
@@ -309,11 +316,12 @@ private fun StrikeHero(
                 }
             }
             if (value == "—") {
-                Icon(
-                    androidx.compose.material.icons.Icons.Rounded.Bolt,
-                    contentDescription = null,
-                    tint = accent,
-                    modifier = Modifier.size(72.dp)
+                // At rest the ring is a stopwatch at zero, so it reads as a display, not as a second button.
+                Text(
+                    stringResource(R.string.sky_seconds_short, DecimalFormatter.format(0f, 1, true)),
+                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = scheme.onSurfaceVariant
                 )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -349,9 +357,9 @@ private fun StrikeHero(
         }
         Text(
             hint,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = if (danger) scheme.error else scheme.onSurface,
+            style = if (danger) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+            fontWeight = if (danger) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (danger) scheme.error else scheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
         )
@@ -377,7 +385,7 @@ private fun StrikeButton(
         contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height)
     ) {
         Icon(
-            imageVector = if (waitingForThunder) TrailIcons.Thunder else TrailIcons.TorchOn,
+            imageVector = if (waitingForThunder) TrailIcons.Thunder else androidx.compose.material.icons.Icons.Rounded.Bolt,
             contentDescription = null,
             modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(height))
         )

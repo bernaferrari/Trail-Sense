@@ -120,7 +120,11 @@ internal fun MagnifierScreen(
         modifier = modifier
     ) {
         if (hasPermissionAnswer && !isCameraEnabled) {
-            MagnifierCameraUnavailable()
+            MagnifierCameraUnavailable(
+                onRequestCamera = {
+                    onRequestCamera { isCameraEnabled = it }
+                }
+            )
             return@TrailSenseInstrumentScaffold
         }
 

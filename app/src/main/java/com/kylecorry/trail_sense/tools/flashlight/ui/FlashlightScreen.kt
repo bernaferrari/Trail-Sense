@@ -560,9 +560,9 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
 private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
     TrailSenseEmptyState(
         icon = TrailIcons.TorchOff,
+        // The headline says what's missing; the button says what to do instead, so no sentence repeats it.
         title = stringResource(R.string.flashlight_unavailable_title),
-        description = stringResource(R.string.flashlight_unavailable_description),
-        actionLabel = stringResource(R.string.flashlight_use_screen),
+        actionLabel = stringResource(R.string.flashlight_use_screen_action),
         actionIcon = TrailIcons.ScreenFlashlight,
         onAction = onOpenScreenFlashlight,
         actionModifier = Modifier.testTag("screen_flashlight_btn"),

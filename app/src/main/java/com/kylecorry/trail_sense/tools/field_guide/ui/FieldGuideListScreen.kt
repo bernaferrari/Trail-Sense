@@ -703,7 +703,10 @@ private fun FieldGuideNotebookHero(
     }
 }
 
-/** The kinds as one grouped list: the kind's icon in the screen's one shape, its name, and its page count. */
+/**
+ * The kinds as one grouped list: the kind's icon in the screen's one shape, its name, and how many pages it holds
+ * as the supporting line ("No pages" when empty), so an empty kind reads as empty, not as a missing number.
+ */
 @Composable
 private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>) {
     com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup {
@@ -711,7 +714,15 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
             row { position ->
                 SkyValueRow(
                     title = category.title,
-                    value = category.count.takeIf { it > 0 }?.toString(),
+                    subtitle = if (category.count > 0) {
+                        androidx.compose.ui.res.pluralStringResource(
+                            R.plurals.page_group_summary,
+                            category.count,
+                            category.count
+                        )
+                    } else {
+                        stringResource(R.string.no_pages)
+                    },
                     icon = category.icon,
                     position = position,
                     onClick = category.onClick
