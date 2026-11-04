@@ -65,6 +65,7 @@ internal fun ConvertPair(
     onToUnitClick: () -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
+    emptyValue: String = "0",
     keyboardType: KeyboardType = KeyboardType.Decimal,
     isError: Boolean = false,
     errorText: String? = null,
@@ -147,12 +148,20 @@ internal fun ConvertPair(
                     ) { blank ->
                         val text = result
                         if (blank) {
-                            Text(
-                                placeholder,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = scheme.onPrimaryContainer.copy(alpha = 0.6f),
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
-                            )
+                            // A waiting value at full size, so the answer tile reads as ready rather than empty.
+                            Column(Modifier.padding(horizontal = TrailSenseSpacing.lg)) {
+                                Text(
+                                    emptyValue,
+                                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = scheme.onPrimaryContainer.copy(alpha = 0.38f)
+                                )
+                                Text(
+                                    placeholder,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = scheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
                         } else {
                             Text(
                                 text,

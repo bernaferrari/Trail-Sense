@@ -4,6 +4,9 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -350,6 +353,7 @@ private fun TurnBackScreen(
     }
     val colors = trailSenseToneColors(tone)
 
+    val returnTitle = stringResource(R.string.return_time)
     TrailSensePage(
         title = stringResource(R.string.tool_turn_back),
         onBack = rememberTrailSenseBack(),
@@ -362,7 +366,7 @@ private fun TurnBackScreen(
                     .semantics(mergeDescendants = true) {},
                 eyebrow = stringResource(if (isActive) R.string.places_turn_back_in else R.string.tool_turn_back),
                 title = if (isActive) formattedRemainingTime ?: "--" else instructionText,
-                titleStyle = if (isActive) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
+                titleStyle = if (isActive) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineMedium,
                 supportingText = if (isActive) instructionText else stringResource(R.string.turn_back_empty_description),
                 tone = tone,
                 badge = {
@@ -375,68 +379,76 @@ private fun TurnBackScreen(
                     )
                 }
             ) {
-                if (isActive) {
-                    JourneyTrack(
-                        turnFraction = animatedTurn,
-                        color = colors.accent,
-                        trackColor = colors.content.copy(alpha = 0.16f),
-                        markerRing = colors.container
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                        JourneyTile(
-                            label = stringResource(R.string.tool_turn_back),
-                            value = formattedTurnBackTime.orEmpty(),
-                            shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp, topEnd = 6.dp, bottomEnd = 6.dp),
-                            contentColor = colors.content,
-                            modifier = Modifier.weight(1f)
-                        )
-                        JourneyTile(
-                            label = stringResource(R.string.places_turn_back_back_by),
-                            value = formattedReturnTime.orEmpty(),
-                            shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp),
-                            contentColor = colors.content,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                // How to set the return time, inside the card it changes.
+                // The track is always there: a preview of the plan until a time is set, the live journey after.
+                JourneyTrack(
+                    turnFraction = if (isActive) animatedTurn else 0.4f,
+                    color = if (isActive) colors.accent else colors.accent.copy(alpha = 0.45f),
+                    trackColor = colors.content.copy(alpha = 0.16f),
+                    markerRing = colors.container
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                    Button(
-                        onClick = { onPickReturnTime(returnTime) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 52.dp)
-                            .testTag("edittext"),
-                        shape = RoundedCornerShape(topStart = 26.dp, bottomStart = 26.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.accent, contentColor = colors.onAccent),
-                        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
-                    ) {
-                        Icon(TrailIcons.ToolClock, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(
-                            formattedReturnTime ?: stringResource(R.string.return_time),
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum")
+                    JourneyTile(
+                        label = stringResource(R.string.tool_turn_back),
+                        value = formattedTurnBackTime ?: "--:--",
+                        shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp, topEnd = 6.dp, bottomEnd = 6.dp),
+                        contentColor = colors.content,
+                        modifier = Modifier.weight(1f)
+                    )
+                    JourneyTile(
+                        label = stringResource(R.string.places_turn_back_back_by),
+                        value = formattedReturnTime ?: "--:--",
+                        shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp),
+                        contentColor = colors.content,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        trailSenseSection(key = "return", title = returnTitle) {
+            row { position ->
+                PlacesRow(
+                    title = stringResource(R.string.return_time),
+                    subtitle = stringResource(R.string.places_turn_back_pick_hint),
+                    position = position,
+                    modifier = Modifier.testTag("edittext"),
+                    leading = {
+                        PlacesBadge(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            icon = TrailIcons.ToolClock,
+                            shape = MaterialShapes.Cookie9Sided.toShape()
+                        )
+                    },
+                    value = formattedReturnTime ?: stringResource(R.string.places_turn_back_set),
+                    valueColor = MaterialTheme.colorScheme.primary,
+                    onClick = { onPickReturnTime(returnTime) }
+                )
+            }
+            row { position ->
+                PlacesRow(
+                    title = stringResource(R.string.return_before_dark),
+                    subtitle = stringResource(R.string.places_turn_back_sunset_hint),
+                    position = position,
+                    modifier = Modifier.testTag("sunset_button"),
+                    leading = {
+                        PlacesBadge(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            icon = TrailIcons.SunsetNotification,
+                            shape = MaterialShapes.Sunny.toShape()
+                        )
+                    },
+                    onClick = onUseSunset,
+                    actions = {
+                        Icon(
+                            TrailIcons.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = TrailSenseSpacing.md)
                         )
                     }
-                    FilledTonalButton(
-                        onClick = onUseSunset,
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 52.dp)
-                            .testTag("sunset_button"),
-                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 26.dp, bottomEnd = 26.dp),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                            contentColor = colors.content
-                        ),
-                        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.md)
-                    ) {
-                        Icon(TrailIcons.SunsetNotification, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(stringResource(R.string.return_before_dark), maxLines = 1)
-                    }
-                }
+                )
             }
         }
 

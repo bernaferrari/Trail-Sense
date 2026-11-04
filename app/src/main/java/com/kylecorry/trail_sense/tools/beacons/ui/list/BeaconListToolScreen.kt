@@ -105,7 +105,6 @@ import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
@@ -855,7 +854,7 @@ private fun BeaconListScreen(
             if (items.isEmpty()) {
                 item(key = "empty") {
                     val isSearching = searchText.isNotBlank()
-                    PlacesEmptyState(
+                    TrailSenseEmptyState(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Beacon,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_beacons),
                         description = if (isSearching) {

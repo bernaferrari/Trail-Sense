@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -238,7 +237,7 @@ private fun TideListScreen(
 
         if (tides.isEmpty()) {
             item(key = "empty") {
-                PlacesEmptyState(
+                TrailSenseEmptyState(
                     icon = TrailIcons.TideTable,
                     title = stringResource(R.string.no_tides),
                     description = stringResource(R.string.tides_empty_description),

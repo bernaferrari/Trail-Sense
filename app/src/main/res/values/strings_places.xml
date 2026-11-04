@@ -13,6 +13,9 @@
     <string name="places_backtrack_off_description">Start it to save your trail as you walk.</string>
     <string name="places_backtrack_every">Every %1$s</string>
     <!-- Triangulate -->
+    <string name="places_triangulate_take_first">Take your first sighting</string>
+    <string name="places_triangulate_take_second">Take one more sighting</string>
+    <string name="places_triangulate_check">Check your sightings</string>
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
     <!-- Offline maps -->
     <string name="places_maps_you_are_on">You are on this map</string>
@@ -27,14 +30,20 @@
         <item quantity="other">%d items</item>
     </plurals>
     <!-- Notes -->
+    <string name="places_notes_new">New note</string>
     <string name="places_notes_latest">Latest note</string>
     <!-- Convert -->
     <string name="places_convert_hint">Type an amount above</string>
     <string name="places_convert_coordinate_hint">Type or paste a location above</string>
     <!-- Turn back -->
+    <string name="places_turn_back_pick_hint">When you need to be back</string>
+    <string name="places_turn_back_sunset_hint">Back by tonight\'s sunset</string>
+    <string name="places_turn_back_set">Set</string>
     <string name="places_turn_back_in">Turn back in</string>
     <string name="places_turn_back_back_by">Back by</string>
     <!-- Declination -->
+    <string name="places_declination_here">At your location</string>
+    <string name="places_declination_with_true_north">with true north</string>
     <string name="places_declination_aligned">Aligned</string>
     <string name="places_declination_of_true_north">of true north</string>
 </resources>

@@ -17,7 +17,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesMiniBar
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesJoinNext
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
@@ -487,7 +486,7 @@ private fun PackItemScreen(
 
         if (items.isEmpty()) {
             item(key = "empty") {
-                PlacesEmptyState(
+                TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.inventory_empty_text),
                     description = stringResource(R.string.packs_items_empty_description),

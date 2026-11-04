@@ -20,7 +20,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -673,12 +672,12 @@ private fun OfflineMapListScreen(
         ) {
             if (isEmpty) {
                 item(key = "empty") {
-                    PlacesEmptyState(
+                    TrailSenseEmptyState(
                         icon = TrailIcons.Maps,
                         title = stringResource(R.string.no_offline_maps),
                         description = stringResource(R.string.map_empty_description),
                         modifier = Modifier.testTag("map_empty_text"),
-                        extra = { MapSourceHints() }
+                        action = { MapSourceHints(onCreateAction) }
                     )
                 }
                 return@TrailSensePage
@@ -726,7 +725,7 @@ private fun OfflineMapListScreen(
 
             if (items.isEmpty()) {
                 item(key = "no_results") {
-                    PlacesEmptyState(
+                    TrailSenseEmptyState(
                         icon = TrailIcons.Search,
                         title = stringResource(R.string.no_results)
                     )
@@ -775,40 +774,52 @@ private fun OfflineMapListScreen(
     }
 }
 
-/** Under the empty state: the three kinds of map you can add, as small shaped marks, so the add button makes sense. */
+/** Under the empty state: the three kinds of map you can add, as a group of rows that each start one. */
 @Composable
-private fun MapSourceHints() {
+private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val entries = listOf(
+        Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
+        Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, OfflineMapCreateAction.ImportCamera),
+        Triple(R.string.blank, TrailSenseIcons.Filled.Draw, OfflineMapCreateAction.CreateBlank)
+    )
+    val shapes = listOf(MaterialShapes.Cookie6Sided, MaterialShapes.Sunny, MaterialShapes.Clover4Leaf)
     Spacer(Modifier.height(TrailSenseSpacing.xl))
-    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)) {
-        listOf(
-            Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, MaterialShapes.Cookie6Sided),
-            Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, MaterialShapes.Sunny),
-            Triple(R.string.blank, TrailSenseIcons.Filled.Draw, MaterialShapes.Clover4Leaf)
-        ).forEachIndexed { index, (label, icon, shape) ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                PlacesBadge(
-                    containerColor = when (index) {
-                        0 -> scheme.secondaryContainer
-                        1 -> scheme.tertiaryContainer
-                        else -> scheme.primaryContainer
-                    },
-                    contentColor = when (index) {
-                        0 -> scheme.onSecondaryContainer
-                        1 -> scheme.onTertiaryContainer
-                        else -> scheme.onPrimaryContainer
-                    },
-                    icon = icon,
-                    shape = shape.toShape(),
-                    size = 52.dp
-                )
-                Spacer(Modifier.height(TrailSenseSpacing.sm))
-                Text(
-                    stringResource(label),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.onSurfaceVariant
-                )
-            }
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+    ) {
+        entries.forEachIndexed { index, (label, icon, action) ->
+            PlacesRow(
+                title = stringResource(label),
+                position = TrailSenseGroupPosition.at(index, entries.size),
+                leading = {
+                    PlacesBadge(
+                        containerColor = when (index) {
+                            0 -> scheme.secondaryContainer
+                            1 -> scheme.tertiaryContainer
+                            else -> scheme.primaryContainer
+                        },
+                        contentColor = when (index) {
+                            0 -> scheme.onSecondaryContainer
+                            1 -> scheme.onTertiaryContainer
+                            else -> scheme.onPrimaryContainer
+                        },
+                        icon = icon,
+                        shape = shapes[index].toShape(),
+                        size = 44.dp
+                    )
+                },
+                onClick = { onAction(action) },
+                actions = {
+                    Icon(
+                        TrailIcons.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = scheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = TrailSenseSpacing.md)
+                    )
+                }
+            )
         }
     }
 }
